@@ -49,6 +49,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
@@ -67,6 +69,9 @@ public class ArrayExpressLoadService {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
@@ -583,6 +588,17 @@ public class ArrayExpressLoadService {
                 adParser.parse( fileToParse.getLocalURL().getPath() );
                 Collection<CompositeSequence> results = adParser.getResults();
                 design.setCompositeSequences( results );
+
+                if ( design.getPrimaryTaxon() == null && adParser.getTaxonName() != null ) {
+                    Taxon t = taxonService.findByScientificName( adParser.getTaxonName() );
+                    if ( t != null ) design.setPrimaryTaxon( t );
+                }
+
+                if ( results.isEmpty() ) {
+                    throw new IllegalStateException( "Got no compositeSequences from the Array design file: "
+                            + fileToParse.asFile() );
+                }
+
                 for ( CompositeSequence sequence : results ) {
                     sequence.setArrayDesign( design );
                 }

@@ -46,10 +46,11 @@ public class ArrayDesignParserTest extends TestCase {
         is.close();
 
         Collection<CompositeSequence> probes = parser.getResults();
-        assertEquals( 124, probes.size() );
+        assertEquals( 258, probes.size() );
 
         for ( CompositeSequence cs : probes ) {
             assertNotNull( cs.getName() );
+            assertTrue( cs.getName(), cs.getName().endsWith( "_at" ) || cs.getName().endsWith( "_st" ) );
         }
 
     }
@@ -69,7 +70,7 @@ public class ArrayDesignParserTest extends TestCase {
         is.close();
 
         Collection<CompositeSequence> probes = parser.getResults();
-        assertEquals( 445, probes.size() );
+        assertEquals( 442, probes.size() );
 
         for ( CompositeSequence cs : probes ) {
             assertNotNull( cs.getName() );
@@ -91,12 +92,11 @@ public class ArrayDesignParserTest extends TestCase {
         is.close();
 
         Collection<CompositeSequence> probes = parser.getResults();
-        assertEquals( 61, probes.size() );
+        assertEquals( 227, probes.size() );
 
         for ( CompositeSequence cs : probes ) {
             assertNotNull( cs.getName() );
-            // log.info( cs.getName() );
-            // log.info( cs.getDescription() );
+            assertTrue( cs.getName(), cs.getName().startsWith( "GI_" ) );
         }
 
     }
@@ -114,13 +114,36 @@ public class ArrayDesignParserTest extends TestCase {
         is.close();
 
         Collection<CompositeSequence> probes = parser.getResults();
-        assertEquals( 95, probes.size() );
+        assertEquals( 104, probes.size() );
 
         for ( CompositeSequence cs : probes ) {
             assertNotNull( cs.getName() );
-            assertTrue( cs.getName().endsWith( "CompositeSequence" ) );
+            assertTrue( cs.getName(), cs.getName().endsWith( "CompositeSequence" ) );
         }
 
     }
 
+    /**
+     * @throws Exception
+     */
+    final public void testE() throws Exception {
+
+        InputStream is = ArrayDesignParserTest.class
+                .getResourceAsStream( "/data/loader/expression/mage/A-MEXP-153.arrayDesignDetails.newformat.test.txt" );
+        ArrayDesignParser parser = new ArrayDesignParser();
+        parser.setUseReporterId( false );
+        parser.parse( is );
+        is.close();
+
+        assertEquals( "Mus musculus", parser.getTaxonName() );
+
+        Collection<CompositeSequence> probes = parser.getResults();
+        assertEquals( 9, probes.size() );
+
+        for ( CompositeSequence cs : probes ) {
+            assertNotNull( cs.getName() );
+            assertTrue( cs.getName(), cs.getName().startsWith( "NMA" ) );
+        }
+
+    }
 }

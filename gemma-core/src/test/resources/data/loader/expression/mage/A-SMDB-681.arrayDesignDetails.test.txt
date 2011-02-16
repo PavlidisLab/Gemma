@@ -1,101 +1,125 @@
-MetaColumn	MetaRow	Column	Row	Reporter Identifier	Reporter Name	Reporter BioSequence Database Entry [ebi.ac.uk:Database:locus]	Reporter BioSequence Database Entry [ebi.ac.uk:Database:image]	Reporter BioSequence Database Entry [ebi.ac.uk:Database:embl]	Reporter Biosequence Type	Reporter actual Sequence	Reporter Comment	Reporter Group Role	Reporter Control Type	CompositeSequence Identifier	CompositeSequence Name	CompositeSequence Database Entry [ebi.ac.uk:Database:unigene:184]	CompositeSequence Database Entry [ebi.ac.uk:Database:locus]	CompositeSequence Database Entry [ebi.ac.uk:Database:embl]	CompositeSequence Database Entry [ebi.ac.uk:Database:unigene:147]	CompositeSequence Database Entry [ebi.ac.uk:Database:unigene:143]	Composite Sequence Comment
-3	9	3	13	URN:LSID:smd.stanford.edu:stanfordseq.suid:105651/MAGE.Reporter	IMAGE:179163	2905	179163	H50114	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Hs\.436980/MAGE.CompositeSequence	Hs.436980	Hs.436980	2905	GRIN2C			
-3	7	3	13	URN:LSID:smd.stanford.edu:stanfordseq.suid:108689/MAGE.Reporter	IMAGE:1031799	6847	1031799	AA609655	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Hs\.112743/MAGE.CompositeSequence	Hs.112743	Hs.112743	6847	SYCP1			
-3	11	3	13	URN:LSID:smd.stanford.edu:stanfordseq.suid:317846/MAGE.Reporter	IMAGE:2214020	2906	2214020	AI565972	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Hs\.445015/MAGE.CompositeSequence	Hs.445015	Hs.445015	2906	GRIN2D			
-4	1	30	10	URN:LSID:smd.stanford.edu:stanfordseq.suid:451068/MAGE.Reporter	H3149C07			H3149C07	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.103187/MAGE.CompositeSequence	Mm.103187				Mm.103187		
-1	2	27	23	URN:LSID:smd.stanford.edu:stanfordseq.suid:208486/MAGE.Reporter	2210009G19			AV074485	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.6988/MAGE.CompositeSequence	Mm.6988		17025	Alad	Mm.6988		
-3	4	2	28	URN:LSID:smd.stanford.edu:stanfordseq.suid:208486/MAGE.Reporter	2210009G19			AV074485	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.6988/MAGE.CompositeSequence	Mm.6988		17025	Alad	Mm.6988		
-3	2	8	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:202092/MAGE.Reporter	1810014B22			AV050522	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.328673/MAGE.CompositeSequence	Mm.328673		12469	Cct8	Mm.328673		
-2	7	29	16	URN:LSID:smd.stanford.edu:stanfordseq.suid:203295/MAGE.Reporter	1700027J05			AV043330	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.358725/MAGE.CompositeSequence	Mm.358725		69440	1700027J05Rik	Mm.358725		
-4	11	9	15	URN:LSID:smd.stanford.edu:stanfordseq.suid:204180/MAGE.Reporter	2310008E13			AV084703	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:204180CS/MAGE.CompositeSequence	204180CS						
-1	2	11	11	URN:LSID:smd.stanford.edu:stanfordseq.suid:438310/MAGE.Reporter	H3155H01			H3155H01	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.276856/MAGE.CompositeSequence	Mm.276856				Mm.276856		
-1	10	20	13	URN:LSID:smd.stanford.edu:stanfordseq.suid:336364/MAGE.Reporter	IMAGE:442438		442438	AA015546	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.293266/MAGE.CompositeSequence	Mm.293266		14391	Gabpb1	Mm.293266		
-3	3	6	19	URN:LSID:smd.stanford.edu:stanfordseq.suid:202255/MAGE.Reporter	2810407J07			AV141036	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.291015/MAGE.CompositeSequence	Mm.291015		106200	2810408E11Rik	Mm.291015		
-1	4	14	2	URN:LSID:smd.stanford.edu:stanfordseq.suid:439580/MAGE.Reporter	H3023D08			H3023D08	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.30130/MAGE.CompositeSequence	Mm.30130		76282	Gpt1	Mm.30130		
-3	9	24	23	URN:LSID:smd.stanford.edu:stanfordseq.suid:209485/MAGE.Reporter	2210010B11			AV074625	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:209485CS/MAGE.CompositeSequence	209485CS						
-4	12	29	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:203979/MAGE.Reporter	1810054E17			AV058588	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.17815/MAGE.CompositeSequence	Mm.17815		236794	Slc9a6	Mm.17815		
-4	6	16	24	URN:LSID:smd.stanford.edu:stanfordseq.suid:197437/MAGE.Reporter	2310020N01			AV086259	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:197437CS/MAGE.CompositeSequence	197437CS						
-1	12	19	23	URN:LSID:smd.stanford.edu:stanfordseq.suid:193126/MAGE.Reporter	1110061A13			AV015673	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.271619/MAGE.CompositeSequence	Mm.271619		70045	2610528A11Rik	Mm.271619		
-1	10	4	15	URN:LSID:smd.stanford.edu:stanfordseq.suid:194357/MAGE.Reporter	2310046P03			AV090033	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:194357CS/MAGE.CompositeSequence	194357CS						
-2	5	20	1	URN:LSID:smd.stanford.edu:stanfordseq.suid:418204/MAGE.Reporter	C0108D07			C0108D07	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.198803/MAGE.CompositeSequence	Mm.198803		22234	Ugcg	Mm.198803		
-4	1	17	13	URN:LSID:smd.stanford.edu:stanfordseq.suid:335862/MAGE.Reporter	IMAGE:605305		605305	AA154597	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.350630/MAGE.CompositeSequence	Mm.350630		434821		Mm.350630		
-3	9	18	20	URN:LSID:smd.stanford.edu:stanfordseq.suid:204140/MAGE.Reporter	2400001C10			AV093398	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:204140CS/MAGE.CompositeSequence	204140CS						
-2	7	28	13	URN:LSID:smd.stanford.edu:stanfordseq.suid:337655/MAGE.Reporter	IMAGE:421699		421699	AI385716	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.306163/MAGE.CompositeSequence	Mm.306163		19085	Prkar1b	Mm.306163		
-2	7	29	13	URN:LSID:smd.stanford.edu:stanfordseq.suid:337753/MAGE.Reporter	IMAGE:472597		472597	AA037956	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.31239/MAGE.CompositeSequence	Mm.31239		52838	D2Bwg1335e	Mm.31239		
-2	2	4	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:196561/MAGE.Reporter	1810010K12			AV049592	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:196561CS/MAGE.CompositeSequence	196561CS						
-4	5	24	1	URN:LSID:smd.stanford.edu:stanfordseq.suid:442048/MAGE.Reporter	H3009G09			H3009G09	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.27608/MAGE.CompositeSequence	Mm.27608		73737	1110008P14Rik	Mm.27608		
-3	2	1	11	URN:LSID:smd.stanford.edu:stanfordseq.suid:430443/MAGE.Reporter	L0277C05			L0277C05	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.22778/MAGE.CompositeSequence	Mm.22778		230809	Pdik1l	Mm.22778		
-3	1	22	4	URN:LSID:smd.stanford.edu:stanfordseq.suid:441608/MAGE.Reporter	H3056G07			H3056G07	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.297584/MAGE.CompositeSequence	Mm.297584				Mm.297584		
-2	7	7	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:199063/MAGE.Reporter	1810008A09			AV048923	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.46269/MAGE.CompositeSequence	Mm.46269		16333	Ins1	Mm.46269		
-3	11	7	5	URN:LSID:smd.stanford.edu:stanfordseq.suid:446317/MAGE.Reporter	H3064G06			H3064G06	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.213582/MAGE.CompositeSequence	Mm.213582		77590	4631426J05Rik	Mm.213582		
-2	12	7	22	URN:LSID:smd.stanford.edu:stanfordseq.suid:203128/MAGE.Reporter	1600019A09			AV036342	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.24750/MAGE.CompositeSequence	Mm.24750		170706	Tmem37	Mm.24750		
-4	11	1	22	URN:LSID:smd.stanford.edu:stanfordseq.suid:204100/MAGE.Reporter	1500037N10			AV032830	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:204100CS/MAGE.CompositeSequence	204100CS						
-4	5	24	16	URN:LSID:smd.stanford.edu:stanfordseq.suid:195607/MAGE.Reporter	1700025P13			AV043073	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.38543/MAGE.CompositeSequence	Mm.38543		75524	1700018C11Rik	Mm.38543		
-4	12	2	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:200987/MAGE.Reporter	1810009O02			AV049404	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.222/MAGE.CompositeSequence	Mm.222		22059	Trp53	Mm.222		
-4	12	13	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:201020/MAGE.Reporter	1810025P19			AV053205	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:201020CS/MAGE.CompositeSequence	201020CS						
-1	6	13	22	URN:LSID:smd.stanford.edu:stanfordseq.suid:199642/MAGE.Reporter	1700008K13			AV039747	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.63765/MAGE.CompositeSequence	Mm.63765		75177	4930533D04Rik	Mm.63765		
-3	7	27	23	URN:LSID:smd.stanford.edu:stanfordseq.suid:209479/MAGE.Reporter	2210401M07			AV077915	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.361660/MAGE.CompositeSequence	Mm.361660				Mm.361660		
-3	5	23	1	URN:LSID:smd.stanford.edu:stanfordseq.suid:441459/MAGE.Reporter	H3012G03			H3012G03	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.200898/MAGE.CompositeSequence	Mm.200898		102247	AU041707	Mm.200898		
-3	4	28	18	URN:LSID:smd.stanford.edu:stanfordseq.suid:196521/MAGE.Reporter	2610016C23			AV112814	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:196521CS/MAGE.CompositeSequence	196521CS						
-1	10	28	22	URN:LSID:smd.stanford.edu:stanfordseq.suid:201938/MAGE.Reporter	1110012M14			AV008570	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:201938CS/MAGE.CompositeSequence	201938CS						
-2	12	9	24	URN:LSID:smd.stanford.edu:stanfordseq.suid:194814/MAGE.Reporter	2310004K04			AV083924	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.27831/MAGE.CompositeSequence	Mm.27831		66249	1810003N24Rik	Mm.27831		
-1	1	18	21	URN:LSID:smd.stanford.edu:stanfordseq.suid:207273/MAGE.Reporter	1500034G02			AV032201	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.44241/MAGE.CompositeSequence	Mm.44241		68566	Drd1ip	Mm.44241		
-4	7	15	9	URN:LSID:smd.stanford.edu:stanfordseq.suid:447041/MAGE.Reporter	H3125G04			H3125G04	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.271937/MAGE.CompositeSequence	Mm.271937		58988	Rps6kb2	Mm.271937		
-3	3	2	11	URN:LSID:smd.stanford.edu:stanfordseq.suid:446601/MAGE.Reporter	H3152E08			H3152E08	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.372467/MAGE.CompositeSequence	Mm.372467				Mm.372467		
-3	5	23	26	URN:LSID:smd.stanford.edu:stanfordseq.suid:198746/MAGE.Reporter	2810004I21			AV134168	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:198746CS/MAGE.CompositeSequence	198746CS						
-3	3	7	18	URN:LSID:smd.stanford.edu:stanfordseq.suid:196067/MAGE.Reporter	2200003L16			AV072450	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.171558/MAGE.CompositeSequence	Mm.171558		69136	Tusc1	Mm.171558		
-3	12	10	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:192586/MAGE.Reporter	1810027M14			AV053643	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:192586CS/MAGE.CompositeSequence	192586CS						
-3	10	9	9	URN:LSID:smd.stanford.edu:stanfordseq.suid:446993/MAGE.Reporter	H3127A05			H3127A05	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.260139/MAGE.CompositeSequence	Mm.260139		212974	BC023151	Mm.260139		
-3	3	28	6	URN:LSID:smd.stanford.edu:stanfordseq.suid:450245/MAGE.Reporter	H3092A08			H3092A08	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.240871/MAGE.CompositeSequence	Mm.240871		93871	Wdr9	Mm.240871		
-4	12	9	6	URN:LSID:smd.stanford.edu:stanfordseq.suid:444489/MAGE.Reporter	H3078G06			H3078G06	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.338784/MAGE.CompositeSequence	Mm.338784		79560	BC002236	Mm.338784		
-3	3	20	20	URN:LSID:smd.stanford.edu:stanfordseq.suid:203205/MAGE.Reporter	2400002D05			AV093469	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:203205CS/MAGE.CompositeSequence	203205CS						
-1	6	24	23	URN:LSID:smd.stanford.edu:stanfordseq.suid:195517/MAGE.Reporter	2210009N02			AV074570	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.244966/MAGE.CompositeSequence	Mm.244966		242505	Rasef	Mm.244966		
-3	2	28	17	URN:LSID:smd.stanford.edu:stanfordseq.suid:200125/MAGE.Reporter	1810057C20			AV059091	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:200125CS/MAGE.CompositeSequence	200125CS						
-4	11	13	19	URN:LSID:smd.stanford.edu:stanfordseq.suid:205826/MAGE.Reporter	2810413C03			AV141588	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.200714/MAGE.CompositeSequence	Mm.200714		102774	Bbs4	Mm.200714		
-4	1	1	9	URN:LSID:smd.stanford.edu:stanfordseq.suid:451089/MAGE.Reporter	H3121A01			H3121A01	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.258759/MAGE.CompositeSequence	Mm.258759		17968	Ncam2	Mm.258759		
-1	1	16	23	URN:LSID:smd.stanford.edu:stanfordseq.suid:197870/MAGE.Reporter	1110063P23			AV016190	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:197870CS/MAGE.CompositeSequence	197870CS						
-2	2	24	12	URN:LSID:smd.stanford.edu:stanfordseq.suid:334944/MAGE.Reporter	IMAGE:1078221		1078221	AA822936	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.5022/MAGE.CompositeSequence	Mm.5022		17386	Mmp13	Mm.5022		
-2	11	6	30	URN:LSID:smd.stanford.edu:stanfordseq.suid:334944/MAGE.Reporter	IMAGE:1078221		1078221	AA822936	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.5022/MAGE.CompositeSequence	Mm.5022		17386	Mmp13	Mm.5022		
-1	10	21	29	URN:LSID:smd.stanford.edu:stanfordseq.suid:432260/MAGE.Reporter	MPC:428			NM_013790	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.20845/MAGE.CompositeSequence	Mm.20845		27416	Abcc5	Mm.20845		
-3	9	15	26	URN:LSID:smd.stanford.edu:stanfordseq.suid:202679/MAGE.Reporter	2700002G09			AV123130	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.28077/MAGE.CompositeSequence	Mm.28077		101314	6720456B07Rik	Mm.28077		
-1	3	20	7	URN:LSID:smd.stanford.edu:stanfordseq.suid:443693/MAGE.Reporter	H3100H08			H3100H08	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.193021/MAGE.CompositeSequence	Mm.193021		70497	Arhgap17	Mm.193021		
-4	11	9	28	URN:LSID:smd.stanford.edu:stanfordseq.suid:200049/MAGE.Reporter	2610529A15			AV122808	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.2036/MAGE.CompositeSequence	Mm.2036		15958	Ifit2	Mm.2036		
-4	12	19	1	URN:LSID:smd.stanford.edu:stanfordseq.suid:425035/MAGE.Reporter	C0110F11			C0110F11	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.260362/MAGE.CompositeSequence	Mm.260362		319604	B930006L02Rik	Mm.260362		
-4	11	7	24	URN:LSID:smd.stanford.edu:stanfordseq.suid:205819/MAGE.Reporter	2310002F04			AV083360	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.290414/MAGE.CompositeSequence	Mm.290414		67414	Mfn1	Mm.290414		
-1	4	4	28	URN:LSID:smd.stanford.edu:stanfordseq.suid:209948/MAGE.Reporter	2310005J19			AV084189	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.371548/MAGE.CompositeSequence	Mm.371548		12268	C4	Mm.371548		
-3	12	13	24	URN:LSID:smd.stanford.edu:stanfordseq.suid:209948/MAGE.Reporter	2310005J19			AV084189	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.371548/MAGE.CompositeSequence	Mm.371548		12268	C4	Mm.371548		
-3	6	30	2	URN:LSID:smd.stanford.edu:stanfordseq.suid:445494/MAGE.Reporter	H3031C09			H3031C09	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.27063/MAGE.CompositeSequence	Mm.27063		22051	Trip6	Mm.27063		
-2	10	3	10	URN:LSID:smd.stanford.edu:stanfordseq.suid:448284/MAGE.Reporter	H3138B05			H3138B05	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.180337/MAGE.CompositeSequence	Mm.180337		70356	St13	Mm.180337		
-1	5	22	26	URN:LSID:smd.stanford.edu:stanfordseq.suid:205096/MAGE.Reporter	2810004N20			AV134235	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.23926/MAGE.CompositeSequence	Mm.23926		66461	2810004N20Rik	Mm.23926		
-4	9	24	27	URN:LSID:smd.stanford.edu:stanfordseq.suid:209664/MAGE.Reporter	2900001G02			AV149903	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.1022/MAGE.CompositeSequence	Mm.1022		12540	Cdc42	Mm.1022		
-3	10	2	27	URN:LSID:smd.stanford.edu:stanfordseq.suid:209664/MAGE.Reporter	2900001G02			AV149903	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.1022/MAGE.CompositeSequence	Mm.1022		12540	Cdc42	Mm.1022		
-2	9	10	12	URN:LSID:smd.stanford.edu:stanfordseq.suid:335036/MAGE.Reporter	UI-M-AM1-afu-f-08-0-UI			UI-M-AM1-afu-f-08-0-UI	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.40336/MAGE.CompositeSequence	Mm.40336		320100	Tnfrsf19l	Mm.40336		
-1	8	17	22	URN:LSID:smd.stanford.edu:stanfordseq.suid:204554/MAGE.Reporter	1700010N04			AV040086	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:204554CS/MAGE.CompositeSequence	204554CS						
-1	3	2	22	URN:LSID:smd.stanford.edu:stanfordseq.suid:193513/MAGE.Reporter	1600009D10			AV034275	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.86560/MAGE.CompositeSequence	Mm.86560		68020	2810002N01Rik	Mm.86560		
-2	9	15	15	URN:LSID:smd.stanford.edu:stanfordseq.suid:333710/MAGE.Reporter	1500001L08			AV028767	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.32889/MAGE.CompositeSequence	Mm.32889		66892	Eif4e3	Mm.32889		
-3	1	8	25	URN:LSID:smd.stanford.edu:stanfordseq.suid:198893/MAGE.Reporter	1200004C20			AV024565	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.130610/MAGE.CompositeSequence	Mm.130610		72175	2810423E13Rik	Mm.130610		
-4	2	11	16	URN:LSID:smd.stanford.edu:stanfordseq.suid:206582/MAGE.Reporter	1700015B01			AV040970	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.76862/MAGE.CompositeSequence	Mm.76862		20834	Znrf4	Mm.76862		
-3	12	30	1	URN:LSID:smd.stanford.edu:stanfordseq.suid:442069/MAGE.Reporter	H3015E12			H3015E12	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.277236/MAGE.CompositeSequence	Mm.277236		13196	Ddef1	Mm.277236		
-2	10	15	20	URN:LSID:smd.stanford.edu:stanfordseq.suid:205281/MAGE.Reporter	2310037I18			AV088388	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.46403/MAGE.CompositeSequence	Mm.46403		67133	Gp2	Mm.46403		
-3	6	8	18	URN:LSID:smd.stanford.edu:stanfordseq.suid:193895/MAGE.Reporter	1810074P14			AV061708	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:193895CS/MAGE.CompositeSequence	193895CS						
-3	6	27	20	URN:LSID:smd.stanford.edu:stanfordseq.suid:208086/MAGE.Reporter	2410001H22			AV094515	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:208086CS/MAGE.CompositeSequence	208086CS						
-4	4	27	9	URN:LSID:smd.stanford.edu:stanfordseq.suid:449234/MAGE.Reporter	H3134C02			H3134C02	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.6354/MAGE.CompositeSequence	Mm.6354		14755	Pigq	Mm.6354		
-3	1	22	29	URN:LSID:smd.stanford.edu:stanfordseq.suid:432485/MAGE.Reporter	MPC:501			MPC:501	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.336851/MAGE.CompositeSequence	Mm.336851		12370	Casp8	Mm.336851		
-2	9	1	18	URN:LSID:smd.stanford.edu:stanfordseq.suid:192547/MAGE.Reporter	1810049K24			AV058250	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.264680/MAGE.CompositeSequence	Mm.264680		78892	1810049K24Rik	Mm.264680		
-4	7	25	4	URN:LSID:smd.stanford.edu:stanfordseq.suid:451144/MAGE.Reporter	H3057C04			H3057C04	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.318341/MAGE.CompositeSequence	Mm.318341				Mm.318341		
-1	5	18	15	URN:LSID:smd.stanford.edu:stanfordseq.suid:338364/MAGE.Reporter	2010110K18			AV066686	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.33719/MAGE.CompositeSequence	Mm.33719		75701	2010110K18Rik	Mm.33719		
-2	5	14	28	URN:LSID:smd.stanford.edu:stanfordseq.suid:201434/MAGE.Reporter	2310015D24			AV085751	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:201434CS/MAGE.CompositeSequence	201434CS						
-1	9	12	15	URN:LSID:smd.stanford.edu:stanfordseq.suid:201434/MAGE.Reporter	2310015D24			AV085751	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:201434CS/MAGE.CompositeSequence	201434CS						
-2	3	16	8	URN:LSID:smd.stanford.edu:stanfordseq.suid:443786/MAGE.Reporter	H3113B08			H3113B08	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.136093/MAGE.CompositeSequence	Mm.136093		11958	Atp5k	Mm.136093		
-4	8	7	2	URN:LSID:smd.stanford.edu:stanfordseq.suid:444974/MAGE.Reporter	H3018E04			H3018E04	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.313104/MAGE.CompositeSequence	Mm.313104		238403	Kif26a	Mm.313104		
-1	3	28	23	URN:LSID:smd.stanford.edu:stanfordseq.suid:209819/MAGE.Reporter	2210401D21			AV077858	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:209819CS/MAGE.CompositeSequence	209819CS						
-1	3	29	24	URN:LSID:smd.stanford.edu:stanfordseq.suid:196935/MAGE.Reporter	1190022F01			AV021310	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:196935CS/MAGE.CompositeSequence	196935CS						
-4	3	8	28	URN:LSID:smd.stanford.edu:stanfordseq.suid:206739/MAGE.Reporter	2700016C21			AV124069	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:206739CS/MAGE.CompositeSequence	206739CS						
-3	12	15	10	URN:LSID:smd.stanford.edu:stanfordseq.suid:440133/MAGE.Reporter	H3143E06			H3143E06	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.61064/MAGE.CompositeSequence	Mm.61064		216578	Papolg	Mm.61064		
-4	4	17	20	URN:LSID:smd.stanford.edu:stanfordseq.suid:208046/MAGE.Reporter	2310038A02			AV088428	cDNA_clone					URN:LSID:smd.stanford.edu:stanfordseq.suid:208046CS/MAGE.CompositeSequence	208046CS						
-4	5	26	5	URN:LSID:smd.stanford.edu:stanfordseq.suid:447602/MAGE.Reporter	H3073A09			H3073A09	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.242170/MAGE.CompositeSequence	Mm.242170				Mm.242170		
-4	9	5	12	URN:LSID:smd.stanford.edu:stanfordseq.suid:334796/MAGE.Reporter	UI-M-AN0-acr-g-10-0-UI			UI-M-AN0-acr-g-10-0-UI	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.316592/MAGE.CompositeSequence	Mm.316592		244962	Snx14	Mm.316592		
-4	2	15	22	URN:LSID:smd.stanford.edu:stanfordseq.suid:195115/MAGE.Reporter	1700007C05			AV039429	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.274473/MAGE.CompositeSequence	Mm.274473		68961	Phkg2	Mm.274473		
-3	9	30	8	URN:LSID:smd.stanford.edu:stanfordseq.suid:438251/MAGE.Reporter	H3120G11			H3120G11	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.232472/MAGE.CompositeSequence	Mm.232472		16499	Kcnab3	Mm.232472		
-1	9	9	3	URN:LSID:smd.stanford.edu:stanfordseq.suid:447491/MAGE.Reporter	H3036F05			H3036F05	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.157684/MAGE.CompositeSequence	Mm.157684		258415	Olfr887	Mm.157684		
-3	1	21	24	URN:LSID:smd.stanford.edu:stanfordseq.suid:207246/MAGE.Reporter	2310024I18			AV086873	cDNA_clone					URN:LSID:smd.stanford.edu:UniGeneID:Mm\.259907/MAGE.CompositeSequence	Mm.259907		216767	Mrpl22	Mm.259907		
+Array Design Name	SMD Mus musculus Array MML
+Provider	Joan Hebert (jhebert@genome.Stanford.edu)
+Comment[ArrayExpressAccession]	A-SMDB-681
+Comment[SubmittedName]	SMD Mus musculus Array MML
+Comment[Organism]	Mus musculus
+Technology Type	unknown;spotted_ds_DNA_features
+Technology Type Term Accession Number	#spotted_ds_DNA_features
+Technology Type Term Source REF	mo
+Surface Type	unknown_surface_type
+Surface Type Term Accession Number	#unknown_surface_type
+Surface Type Term Source REF	mo
+Term Source Name	mo	embl	image	locus	unigene:143	unigene:147	unigene:184
+Term Source File	http://mged.sourceforge.net/ontologies/MGEDontology.php	http://www.ebi.ac.uk/embl/	http://image.llnl.gov/image/html/query_tools.shtml/	http://www.ncbi.nlm.nih.gov/LocusLink/	http://www.ncbi.nlm.nih.gov/UniGene/		http://www.ncbi.nlm.nih.gov/UniGene/
+Term Source Version					143	147	184
+
+Block Column	Block Row	Column	Row	Reporter Name	Comment[AEReporterName]	Reporter Database Entry[locus]	Reporter Database Entry[image]	Reporter Database Entry[embl]	Control Type	Composite Element Name	Comment[AECompositeName]	Composite Element Database Entry[embl]	Composite Element Database Entry[locus]	Composite Element Database Entry[unigene:184:184]	Composite Element Database Entry[unigene:147:147]	Composite Element Database Entry[unigene:143:143]	Composite Element Comment
+3	9	3	13	105651/MAGE.Reporter	IMAGE:179163	2905	179163	H50114		UniGeneID:Hs\.436980/MAGE.CompositeSequence	Hs.436980	GRIN2C	2905	Hs.436980			
+3	7	3	13	108689/MAGE.Reporter	IMAGE:1031799	6847	1031799	AA609655		UniGeneID:Hs\.112743/MAGE.CompositeSequence	Hs.112743	SYCP1	6847	Hs.112743			
+3	11	3	13	317846/MAGE.Reporter	IMAGE:2214020	2906	2214020	AI565972		UniGeneID:Hs\.445015/MAGE.CompositeSequence	Hs.445015	GRIN2D	2906	Hs.445015			glutamate receptor, ionotropic, N-methyl D-aspartate 2D
+4	1	30	10	451068/MAGE.Reporter	H3149C07			H3149C07		UniGeneID:Mm\.103187/MAGE.CompositeSequence	Mm.103187				Mm.103187		
+1	2	27	23	208486/MAGE.Reporter	2210009G19			AV074485		UniGeneID:Mm\.6988/MAGE.CompositeSequence	Mm.6988	Alad	17025		Mm.6988		delta-aminolevulinate dehydratase
+3	4	2	28	208486/MAGE.Reporter	2210009G19			AV074485		UniGeneID:Mm\.6988/MAGE.CompositeSequence	Mm.6988	Alad	17025		Mm.6988		delta-aminolevulinate dehydratase
+3	2	8	17	202092/MAGE.Reporter	1810014B22			AV050522		UniGeneID:Mm\.328673/MAGE.CompositeSequence	Mm.328673	Cct8	12469		Mm.328673		chaperonin subunit 8 (theta)
+2	7	29	16	203295/MAGE.Reporter	1700027J05			AV043330		UniGeneID:Mm\.358725/MAGE.CompositeSequence	Mm.358725	1700027J05Rik	69440		Mm.358725		ESTs
+4	11	9	15	204180/MAGE.Reporter	2310008E13			AV084703		stanfordseq.suid:204180CS/MAGE.CompositeSequence	204180CS						EST (AV084703)
+1	2	11	11	438310/MAGE.Reporter	H3155H01			H3155H01		UniGeneID:Mm\.276856/MAGE.CompositeSequence	Mm.276856				Mm.276856		
+1	10	20	13	336364/MAGE.Reporter	IMAGE:442438		442438	AA015546		UniGeneID:Mm\.293266/MAGE.CompositeSequence	Mm.293266	Gabpb1	14391		Mm.293266		
+3	3	6	19	202255/MAGE.Reporter	2810407J07			AV141036		UniGeneID:Mm\.291015/MAGE.CompositeSequence	Mm.291015	2810408E11Rik	106200		Mm.291015		ESTs
+1	4	14	2	439580/MAGE.Reporter	H3023D08			H3023D08		UniGeneID:Mm\.30130/MAGE.CompositeSequence	Mm.30130	Gpt1	76282		Mm.30130		
+3	9	24	23	209485/MAGE.Reporter	2210010B11			AV074625		stanfordseq.suid:209485CS/MAGE.CompositeSequence	209485CS						transforming growth factor beta 1 induced transcript 1
+4	12	29	17	203979/MAGE.Reporter	1810054E17			AV058588		UniGeneID:Mm\.17815/MAGE.CompositeSequence	Mm.17815	Slc9a6	236794		Mm.17815		EST (AV058588)
+4	6	16	24	197437/MAGE.Reporter	2310020N01			AV086259		stanfordseq.suid:197437CS/MAGE.CompositeSequence	197437CS						EST (AV086259)
+1	12	19	23	193126/MAGE.Reporter	1110061A13			AV015673		UniGeneID:Mm\.271619/MAGE.CompositeSequence	Mm.271619	2610528A11Rik	70045		Mm.271619		ESTs
+1	10	4	15	194357/MAGE.Reporter	2310046P03			AV090033		stanfordseq.suid:194357CS/MAGE.CompositeSequence	194357CS						EST
+2	5	20	1	418204/MAGE.Reporter	C0108D07			C0108D07		UniGeneID:Mm\.198803/MAGE.CompositeSequence	Mm.198803	Ugcg	22234		Mm.198803		
+4	1	17	13	335862/MAGE.Reporter	IMAGE:605305		605305	AA154597		UniGeneID:Mm\.350630/MAGE.CompositeSequence	Mm.350630		434821		Mm.350630		
+3	9	18	20	204140/MAGE.Reporter	2400001C10			AV093398		stanfordseq.suid:204140CS/MAGE.CompositeSequence	204140CS						thioredoxin peroxidase 1
+2	7	28	13	337655/MAGE.Reporter	IMAGE:421699		421699	AI385716		UniGeneID:Mm\.306163/MAGE.CompositeSequence	Mm.306163	Prkar1b	19085		Mm.306163		
+2	7	29	13	337753/MAGE.Reporter	IMAGE:472597		472597	AA037956		UniGeneID:Mm\.31239/MAGE.CompositeSequence	Mm.31239	D2Bwg1335e	52838		Mm.31239		
+2	2	4	17	196561/MAGE.Reporter	1810010K12			AV049592		stanfordseq.suid:196561CS/MAGE.CompositeSequence	196561CS						EST (AV049592)
+4	5	24	1	442048/MAGE.Reporter	H3009G09			H3009G09		UniGeneID:Mm\.27608/MAGE.CompositeSequence	Mm.27608	1110008P14Rik	73737		Mm.27608		
+3	2	1	11	430443/MAGE.Reporter	L0277C05			L0277C05		UniGeneID:Mm\.22778/MAGE.CompositeSequence	Mm.22778	Pdik1l	230809		Mm.22778		
+3	1	22	4	441608/MAGE.Reporter	H3056G07			H3056G07		UniGeneID:Mm\.297584/MAGE.CompositeSequence	Mm.297584				Mm.297584		
+2	7	7	17	199063/MAGE.Reporter	1810008A09			AV048923		UniGeneID:Mm\.46269/MAGE.CompositeSequence	Mm.46269	Ins1	16333		Mm.46269		insulin I
+3	11	7	5	446317/MAGE.Reporter	H3064G06			H3064G06		UniGeneID:Mm\.213582/MAGE.CompositeSequence	Mm.213582	4631426J05Rik	77590		Mm.213582		
+2	12	7	22	203128/MAGE.Reporter	1600019A09			AV036342		UniGeneID:Mm\.24750/MAGE.CompositeSequence	Mm.24750	Tmem37	170706		Mm.24750		ESTs
+4	11	1	22	204100/MAGE.Reporter	1500037N10			AV032830		stanfordseq.suid:204100CS/MAGE.CompositeSequence	204100CS						EST
+4	5	24	16	195607/MAGE.Reporter	1700025P13			AV043073		UniGeneID:Mm\.38543/MAGE.CompositeSequence	Mm.38543	1700018C11Rik	75524		Mm.38543		ESTs
+4	12	2	17	200987/MAGE.Reporter	1810009O02			AV049404		UniGeneID:Mm\.222/MAGE.CompositeSequence	Mm.222	Trp53	22059		Mm.222		transformation related protein 53
+4	12	13	17	201020/MAGE.Reporter	1810025P19			AV053205		stanfordseq.suid:201020CS/MAGE.CompositeSequence	201020CS						EST (AV053205)
+1	6	13	22	199642/MAGE.Reporter	1700008K13			AV039747		UniGeneID:Mm\.63765/MAGE.CompositeSequence	Mm.63765	4930533D04Rik	75177		Mm.63765		EST
+3	7	27	23	209479/MAGE.Reporter	2210401M07			AV077915		UniGeneID:Mm\.361660/MAGE.CompositeSequence	Mm.361660				Mm.361660		AA114747 EST:embryo:Mus musculus
+3	5	23	1	441459/MAGE.Reporter	H3012G03			H3012G03		UniGeneID:Mm\.200898/MAGE.CompositeSequence	Mm.200898	AU041707	102247		Mm.200898		
+3	4	28	18	196521/MAGE.Reporter	2610016C23			AV112814		stanfordseq.suid:196521CS/MAGE.CompositeSequence	196521CS						EST
+1	10	28	22	201938/MAGE.Reporter	1110012M14			AV008570		stanfordseq.suid:201938CS/MAGE.CompositeSequence	201938CS						ESTs
+2	12	9	24	194814/MAGE.Reporter	2310004K04			AV083924		UniGeneID:Mm\.27831/MAGE.CompositeSequence	Mm.27831	1810003N24Rik	66249		Mm.27831		ESTs, Weakly similar to cDNA EST EMBL:D75703 comes from this gene [C.elegans]
+1	1	18	21	207273/MAGE.Reporter	1500034G02			AV032201		UniGeneID:Mm\.44241/MAGE.CompositeSequence	Mm.44241	Drd1ip	68566		Mm.44241		ESTs, Weakly similar to P19 PROTEIN [M.musculus]
+4	7	15	9	447041/MAGE.Reporter	H3125G04			H3125G04		UniGeneID:Mm\.271937/MAGE.CompositeSequence	Mm.271937	Rps6kb2	58988		Mm.271937		
+3	3	2	11	446601/MAGE.Reporter	H3152E08			H3152E08		UniGeneID:Mm\.372467/MAGE.CompositeSequence	Mm.372467				Mm.372467		
+3	5	23	26	198746/MAGE.Reporter	2810004I21			AV134168		stanfordseq.suid:198746CS/MAGE.CompositeSequence	198746CS						EST
+3	3	7	18	196067/MAGE.Reporter	2200003L16			AV072450		UniGeneID:Mm\.171558/MAGE.CompositeSequence	Mm.171558	Tusc1	69136		Mm.171558		ESTs
+3	12	10	17	192586/MAGE.Reporter	1810027M14			AV053643		stanfordseq.suid:192586CS/MAGE.CompositeSequence	192586CS						EST
+3	10	9	9	446993/MAGE.Reporter	H3127A05			H3127A05		UniGeneID:Mm\.260139/MAGE.CompositeSequence	Mm.260139	BC023151	212974		Mm.260139		
+3	3	28	6	450245/MAGE.Reporter	H3092A08			H3092A08		UniGeneID:Mm\.240871/MAGE.CompositeSequence	Mm.240871	Wdr9	93871		Mm.240871		
+4	12	9	6	444489/MAGE.Reporter	H3078G06			H3078G06		UniGeneID:Mm\.338784/MAGE.CompositeSequence	Mm.338784	BC002236	79560		Mm.338784		
+3	3	20	20	203205/MAGE.Reporter	2400002D05			AV093469		stanfordseq.suid:203205CS/MAGE.CompositeSequence	203205CS						ESTs, Weakly similar to Ras-binding protein SUR-8 [M.musculus]
+1	6	24	23	195517/MAGE.Reporter	2210009N02			AV074570		UniGeneID:Mm\.244966/MAGE.CompositeSequence	Mm.244966	Rasef	242505		Mm.244966		EST
+3	2	28	17	200125/MAGE.Reporter	1810057C20			AV059091		stanfordseq.suid:200125CS/MAGE.CompositeSequence	200125CS						EST
+4	11	13	19	205826/MAGE.Reporter	2810413C03			AV141588		UniGeneID:Mm\.200714/MAGE.CompositeSequence	Mm.200714	Bbs4	102774		Mm.200714		ESTs
+4	1	1	9	451089/MAGE.Reporter	H3121A01			H3121A01		UniGeneID:Mm\.258759/MAGE.CompositeSequence	Mm.258759	Ncam2	17968		Mm.258759		
+1	1	16	23	197870/MAGE.Reporter	1110063P23			AV016190		stanfordseq.suid:197870CS/MAGE.CompositeSequence	197870CS						ESTs
+2	2	24	12	334944/MAGE.Reporter	IMAGE:1078221		1078221	AA822936		UniGeneID:Mm\.5022/MAGE.CompositeSequence	Mm.5022	Mmp13	17386		Mm.5022		
+2	11	6	30	334944/MAGE.Reporter	IMAGE:1078221		1078221	AA822936		UniGeneID:Mm\.5022/MAGE.CompositeSequence	Mm.5022	Mmp13	17386		Mm.5022		
+1	10	21	29	432260/MAGE.Reporter	MPC:428			NM_013790		UniGeneID:Mm\.20845/MAGE.CompositeSequence	Mm.20845	Abcc5	27416		Mm.20845		
+3	9	15	26	202679/MAGE.Reporter	2700002G09			AV123130		UniGeneID:Mm\.28077/MAGE.CompositeSequence	Mm.28077	6720456B07Rik	101314		Mm.28077		ESTs
+1	3	20	7	443693/MAGE.Reporter	H3100H08			H3100H08		UniGeneID:Mm\.193021/MAGE.CompositeSequence	Mm.193021	Arhgap17	70497		Mm.193021		
+4	11	9	28	200049/MAGE.Reporter	2610529A15			AV122808		UniGeneID:Mm\.2036/MAGE.CompositeSequence	Mm.2036	Ifit2	15958		Mm.2036		EST
+4	12	19	1	425035/MAGE.Reporter	C0110F11			C0110F11		UniGeneID:Mm\.260362/MAGE.CompositeSequence	Mm.260362	B930006L02Rik	319604		Mm.260362		
+4	11	7	24	205819/MAGE.Reporter	2310002F04			AV083360		UniGeneID:Mm\.290414/MAGE.CompositeSequence	Mm.290414	Mfn1	67414		Mm.290414		EST
+1	4	4	28	209948/MAGE.Reporter	2310005J19			AV084189		UniGeneID:Mm\.371548/MAGE.CompositeSequence	Mm.371548	C4	12268		Mm.371548		Mouse MHC (H-2) S region complement component C4 gene, complete cds
+3	12	13	24	209948/MAGE.Reporter	2310005J19			AV084189		UniGeneID:Mm\.371548/MAGE.CompositeSequence	Mm.371548	C4	12268		Mm.371548		Mouse MHC (H-2) S region complement component C4 gene, complete cds
+3	6	30	2	445494/MAGE.Reporter	H3031C09			H3031C09		UniGeneID:Mm\.27063/MAGE.CompositeSequence	Mm.27063	Trip6	22051		Mm.27063		
+2	10	3	10	448284/MAGE.Reporter	H3138B05			H3138B05		UniGeneID:Mm\.180337/MAGE.CompositeSequence	Mm.180337	St13	70356		Mm.180337		
+1	5	22	26	205096/MAGE.Reporter	2810004N20			AV134235		UniGeneID:Mm\.23926/MAGE.CompositeSequence	Mm.23926	2810004N20Rik	66461		Mm.23926		ESTs, Weakly similar to Similarity to Human MAP kinase phosphatase-1 [C.elegans]
+4	9	24	27	209664/MAGE.Reporter	2900001G02			AV149903		UniGeneID:Mm\.1022/MAGE.CompositeSequence	Mm.1022	Cdc42	12540		Mm.1022		CDC42
+3	10	2	27	209664/MAGE.Reporter	2900001G02			AV149903		UniGeneID:Mm\.1022/MAGE.CompositeSequence	Mm.1022	Cdc42	12540		Mm.1022		CDC42
+2	9	10	12	335036/MAGE.Reporter	UI-M-AM1-afu-f-08-0-UI			UI-M-AM1-afu-f-08-0-UI		UniGeneID:Mm\.40336/MAGE.CompositeSequence	Mm.40336	Tnfrsf19l	320100		Mm.40336		
+1	8	17	22	204554/MAGE.Reporter	1700010N04			AV040086		stanfordseq.suid:204554CS/MAGE.CompositeSequence	204554CS						EST (AV040086)
+1	3	2	22	193513/MAGE.Reporter	1600009D10			AV034275		UniGeneID:Mm\.86560/MAGE.CompositeSequence	Mm.86560	2810002N01Rik	68020		Mm.86560		ESTs
+2	9	15	15	333710/MAGE.Reporter	1500001L08			AV028767		UniGeneID:Mm\.32889/MAGE.CompositeSequence	Mm.32889	Eif4e3	66892		Mm.32889		
+3	1	8	25	198893/MAGE.Reporter	1200004C20			AV024565		UniGeneID:Mm\.130610/MAGE.CompositeSequence	Mm.130610	2810423E13Rik	72175		Mm.130610		ESTs
+4	2	11	16	206582/MAGE.Reporter	1700015B01			AV040970		UniGeneID:Mm\.76862/MAGE.CompositeSequence	Mm.76862	Znrf4	20834		Mm.76862		EST, Moderately similar to Sperizin [M.musculus]
+3	12	30	1	442069/MAGE.Reporter	H3015E12			H3015E12		UniGeneID:Mm\.277236/MAGE.CompositeSequence	Mm.277236	Ddef1	13196		Mm.277236		
+2	10	15	20	205281/MAGE.Reporter	2310037I18			AV088388		UniGeneID:Mm\.46403/MAGE.CompositeSequence	Mm.46403	Gp2	67133		Mm.46403		ESTs
+3	6	8	18	193895/MAGE.Reporter	1810074P14			AV061708		stanfordseq.suid:193895CS/MAGE.CompositeSequence	193895CS						pale ear
+3	6	27	20	208086/MAGE.Reporter	2410001H22			AV094515		stanfordseq.suid:208086CS/MAGE.CompositeSequence	208086CS						EST, Moderately similar to cytochrome-c oxidase [M.musculus]
+4	4	27	9	449234/MAGE.Reporter	H3134C02			H3134C02		UniGeneID:Mm\.6354/MAGE.CompositeSequence	Mm.6354	Pigq	14755		Mm.6354		
+3	1	22	29	432485/MAGE.Reporter	MPC:501			MPC:501		UniGeneID:Mm\.336851/MAGE.CompositeSequence	Mm.336851	Casp8	12370		Mm.336851		
+2	9	1	18	192547/MAGE.Reporter	1810049K24			AV058250		UniGeneID:Mm\.264680/MAGE.CompositeSequence	Mm.264680	1810049K24Rik	78892		Mm.264680		ESTs
+4	7	25	4	451144/MAGE.Reporter	H3057C04			H3057C04		UniGeneID:Mm\.318341/MAGE.CompositeSequence	Mm.318341				Mm.318341		
+1	5	18	15	338364/MAGE.Reporter	2010110K18			AV066686		UniGeneID:Mm\.33719/MAGE.CompositeSequence	Mm.33719	2010110K18Rik	75701		Mm.33719		
+2	5	14	28	201434/MAGE.Reporter	2310015D24			AV085751		stanfordseq.suid:201434CS/MAGE.CompositeSequence	201434CS						EST (AV085751)
+1	9	12	15	201434/MAGE.Reporter	2310015D24			AV085751		stanfordseq.suid:201434CS/MAGE.CompositeSequence	201434CS						EST (AV085751)
+2	3	16	8	443786/MAGE.Reporter	H3113B08			H3113B08		UniGeneID:Mm\.136093/MAGE.CompositeSequence	Mm.136093	Atp5k	11958		Mm.136093		
+4	8	7	2	444974/MAGE.Reporter	H3018E04			H3018E04		UniGeneID:Mm\.313104/MAGE.CompositeSequence	Mm.313104	Kif26a	238403		Mm.313104		
+1	3	28	23	209819/MAGE.Reporter	2210401D21			AV077858		stanfordseq.suid:209819CS/MAGE.CompositeSequence	209819CS						X98494 M phase phosphoprotein 10:lambda gt11:Homo sapiens
+1	3	29	24	196935/MAGE.Reporter	1190022F01			AV021310		stanfordseq.suid:196935CS/MAGE.CompositeSequence	196935CS						EST
+4	3	8	28	206739/MAGE.Reporter	2700016C21			AV124069		stanfordseq.suid:206739CS/MAGE.CompositeSequence	206739CS						EST
+3	12	15	10	440133/MAGE.Reporter	H3143E06			H3143E06		UniGeneID:Mm\.61064/MAGE.CompositeSequence	Mm.61064	Papolg	216578		Mm.61064		
+4	4	17	20	208046/MAGE.Reporter	2310038A02			AV088428		stanfordseq.suid:208046CS/MAGE.CompositeSequence	208046CS						ESTs, Moderately similar to LUTHERAN BLOOD GROUP GLYCOPROTEIN PRECURSOR [H.sapiens]
+4	5	26	5	447602/MAGE.Reporter	H3073A09			H3073A09		UniGeneID:Mm\.242170/MAGE.CompositeSequence	Mm.242170				Mm.242170		
+4	9	5	12	334796/MAGE.Reporter	UI-M-AN0-acr-g-10-0-UI			UI-M-AN0-acr-g-10-0-UI		UniGeneID:Mm\.316592/MAGE.CompositeSequence	Mm.316592	Snx14	244962		Mm.316592		
+4	2	15	22	195115/MAGE.Reporter	1700007C05			AV039429		UniGeneID:Mm\.274473/MAGE.CompositeSequence	Mm.274473	Phkg2	68961		Mm.274473		ESTs, Highly  similar to PHOSPHORYLASE B KINASE GAMMA CATALYTIC CHAIN, TESTIS ISOFORM [Rattus norvegicus]
+3	9	30	8	438251/MAGE.Reporter	H3120G11			H3120G11		UniGeneID:Mm\.232472/MAGE.CompositeSequence	Mm.232472	Kcnab3	16499		Mm.232472		
+1	9	9	3	447491/MAGE.Reporter	H3036F05			H3036F05		UniGeneID:Mm\.157684/MAGE.CompositeSequence	Mm.157684	Olfr887	258415		Mm.157684		
+3	1	21	24	207246/MAGE.Reporter	2310024I18			AV086873		UniGeneID:Mm\.259907/MAGE.CompositeSequence	Mm.259907	Mrpl22	216767		Mm.259907		ESTs, Weakly similar to cDNA EST yk471b2.5 comes from this gene [C.elegans]
+4	1	15	2	438242/MAGE.Reporter	H3021E01			H3021E01		UniGeneID:Mm\.43640/MAGE.CompositeSequence	Mm.43640	4921506J03Rik	382423		Mm.43640		
+4	6	26	23	202829/MAGE.Reporter	2210006M07			AV074068		UniGeneID:Mm\.196699/MAGE.CompositeSequence	Mm.196699	Pcdhb14	93885		Mm.196699		EST (AV074068)
+2	5	28	16	197387/MAGE.Reporter	1700026K22			AV043186		stanfordseq.suid:197387CS/MAGE.CompositeSequence	197387CS						EST
+2	11	16	20	201545/MAGE.Reporter	2310034J09			AV088048		UniGeneID:Mm\.24395/MAGE.CompositeSequence	Mm.24395	Decr1	67460		Mm.24395		ESTs, Weakly similar to peroxisomal D2,D4-dienoyl-CoA reductase [M.musculus]
+4	10	21	13	335622/MAGE.Reporter	IMAGE:426428		426428	AA002476		UniGeneID:Mm\.22144/MAGE.CompositeSequence	Mm.22144	Copz2	56358		Mm.22144		
+1	4	1	23	193815/MAGE.Reporter	1110014A18			AV008744		stanfordseq.suid:193815CS/MAGE.CompositeSequence	193815CS						EST
+3	6	1	18	204090/MAGE.Reporter	1810058L23			AV059445		stanfordseq.suid:204090CS/MAGE.CompositeSequence	204090CS						EST (AV059445)
+2	5	26	17	197414/MAGE.Reporter	1810048C09			AV057913		UniGeneID:Mm\.953/MAGE.CompositeSequence	Mm.953	Smpd2	20598		Mm.953		EST (AV057913)
+2	1	1	16	339712/MAGE.Reporter	2310034L04			AV088072		UniGeneID:Mm\.41891/MAGE.CompositeSequence	Mm.41891	2310034L04Rik	67864		Mm.41891		

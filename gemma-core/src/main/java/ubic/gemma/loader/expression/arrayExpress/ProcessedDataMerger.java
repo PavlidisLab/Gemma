@@ -26,7 +26,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.logging.LogFactory; 
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.QuantitationTypeParameterGuesser;
@@ -115,7 +115,7 @@ public class ProcessedDataMerger {
                     log.error( name );
                 }
                 throw new IllegalStateException( "Sample name in Processed data " + sampleName[i]
-                        + " does not match the MAGE-ML" );
+                        + " does not match the MAGE-ML names: " + StringUtils.join( nameMap.keySet(), "," ) );
             }
 
             bad.getBioAssays().add( nameMap.get( sampleName[i] ) );
@@ -139,7 +139,8 @@ public class ProcessedDataMerger {
             CompositeSequence cs = csNameMap.get( csName );
             if ( cs == null ) {
                 throw new IllegalStateException( "CompositeSequence name '" + csName
-                        + "' in Processed data  does not match the array design" );
+                        + "' in Processed data  does not match the array design, which has names like "
+                        + csNameMap.keySet().iterator().next() );
             }
 
             /*

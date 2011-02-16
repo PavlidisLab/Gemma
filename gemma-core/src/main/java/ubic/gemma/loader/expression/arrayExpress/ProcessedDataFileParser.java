@@ -103,6 +103,7 @@ public class ProcessedDataFileParser extends LineMapParser<String, Map<String, L
         String rawProbeNameString = fields[0];
 
         String compositeSequenceName = getUnqualifiedIdentifier( rawProbeNameString );
+        compositeSequenceName = compositeSequenceName.replaceFirst( "^A-[A-Z]{4}-[0-9]+\\.", "" );
 
         if ( results.containsKey( compositeSequenceName ) ) {
             /*
