@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.bioAssayData;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,12 +31,9 @@ import net.sf.ehcache.Element;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -247,11 +243,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, fullMap );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArrays(java.util.Collection
+     * , java.util.Collection)
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         return this.handleGetProcessedExpressionDataArrays( expressionExperiments, genes, true );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedDataArraysByProbe(java.
+     * util.Collection, java.util.Collection, boolean)
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe( Collection<? extends BioAssaySet> ees,
             Collection<CompositeSequence> probes, boolean fullMap ) {
 
@@ -263,6 +273,15 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         } else {
             cs2gene = CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
         }
+
+        Collection<CompositeSequence> noGeneProbes = new HashSet<CompositeSequence>();
+
+        for ( CompositeSequence p : probes ) {
+            if ( !cs2gene.containsKey( p ) || cs2gene.get( p ).isEmpty() ) {
+                noGeneProbes.add( p );
+            }
+        }
+
         /*
          * To Check the cached we need the list of genes 1st. Get from CS2Gene list then check the cache.
          */
@@ -275,19 +294,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<Gene> genesToSearch = new HashSet<Gene>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
 
-        if ( needToSearch.size() != 0 ) {
-
-            if ( cs2gene.size() == 0 ) {
-                if ( results.isEmpty() ) {
-                    log.warn( "No composite sequences found for genes" );
-                    return new HashSet<DoubleVectorValueObject>();
-                }
-                return results;
-
-            }
-
+        /*
+         * FIXME noGeneProbes are never cached.
+         */
+        if ( !noGeneProbes.isEmpty() || needToSearch.size() != 0 ) {
             /*
-             * FIXME this doesn't resolve ExpressionExperimentSubSets.
+             * FIXME this doesn't resolve ExpressionExperimentSubSets. Actually I think it might.
              */
             Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
                     needToSearch, cs2gene );

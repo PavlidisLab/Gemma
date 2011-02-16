@@ -19,14 +19,11 @@
 package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
-import java.util.List;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * <p>

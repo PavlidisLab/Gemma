@@ -170,14 +170,14 @@ public class CommonQueries {
      */
     public static Map<CompositeSequence, Collection<Gene>> getCs2GeneMap( Collection<Gene> genes,
             Collection<ArrayDesign> arrays, Session session ) {
-        
+
         StopWatch timer = new StopWatch();
         timer.start();
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp"
-                + " and gene in (:genes) and cs.arrayDesign in (:ars) "; 
-        
+                + " and gene in (:genes) and cs.arrayDesign in (:ars) ";
+
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();
         org.hibernate.Query queryObject = session.createQuery( csQueryString );
         queryObject.setCacheable( true );
@@ -267,13 +267,14 @@ public class CommonQueries {
     /**
      * @param probes
      * @param session
-     * @return map of probes to all the genes 'detected' by those probes -- including PARs and predicted genes.
+     * @return map of probes to all the genes 'detected' by those probes (including PARs and predicted genes, if these
+     *         are in use). Probes that don't map to genes will have an empty gene collection.
      */
     public static Map<CompositeSequence, Collection<Gene>> getFullCs2AllGeneMap( Collection<CompositeSequence> probes,
             Session session ) {
 
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
+                + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) ";
 
         return getFullCs2GeneMap( probes, session, csQueryString );
@@ -283,47 +284,49 @@ public class CommonQueries {
      * @param probes
      * @param session
      * @return map of probes to all the genes 'detected' by those probes -- but excluding PARs and predicted genes.
+     *         Probes that don't map to genes will have an empty gene collection.
      */
     public static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
             Session session ) {
 
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
-                + " inner join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
+                + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) and gene.class='GeneImpl'";
 
         return getFullCs2GeneMap( probes, session, csQueryString );
     }
 
-    /**
-     * Given gene ids, return map of of gene id -> probes for that gene.
-     * 
-     * @param genes
-     * @param session
-     * @return
-     */
-    public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
-        Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
-
-        String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
-        org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
-        queryObject.addScalar( "csid", new LongType() );
-        queryObject.addScalar( "geneId", new LongType() );
-
-        queryObject.setParameterList( "geneIds", genes );
-        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
-        while ( results.next() ) {
-            Long csid = results.getLong( 0 );
-            Long geneId = results.getLong( 1 );
-
-            if ( !cs2genes.containsKey( geneId ) ) {
-                cs2genes.put( geneId, new HashSet<Long>() );
-            }
-            cs2genes.get( geneId ).add( csid );
-        }
-        results.close();
-
-        return cs2genes;
-    }
+    // Removed because it uses the Gene2CS table, which isn't 100% safe: it has to be updated.
+    // /**
+    // * Given gene ids, return map of of gene id -> probes for that gene.
+    // *
+    // * @param genes
+    // * @param session
+    // * @return
+    // */
+    // public static Map<Long, Collection<Long>> getGene2CSMap( Collection<Long> genes, Session session ) {
+    // Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
+    //
+    // String queryString = "SELECT CS as csid, GENE as geneId FROM GENE2CS g WHERE g.GENE in (:geneIds)";
+    // org.hibernate.SQLQuery queryObject = session.createSQLQuery( queryString );
+    // queryObject.addScalar( "csid", new LongType() );
+    // queryObject.addScalar( "geneId", new LongType() );
+    //
+    // queryObject.setParameterList( "geneIds", genes );
+    // ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+    // while ( results.next() ) {
+    // Long csid = results.getLong( 0 );
+    // Long geneId = results.getLong( 1 );
+    //
+    // if ( !cs2genes.containsKey( geneId ) ) {
+    // cs2genes.put( geneId, new HashSet<Long>() );
+    // }
+    // cs2genes.get( geneId ).add( csid );
+    // }
+    // results.close();
+    //
+    // return cs2genes;
+    // }
 
     private static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
             Session session, final String csQueryString ) {
@@ -343,11 +346,20 @@ public class CommonQueries {
             }
             cs2gene.get( cs ).add( g );
         }
+
+        /*
+         * This shouldn't be necessary if we do the correct outer join, should it?
+         */
+        for ( CompositeSequence cs : probes ) {
+            if ( !cs2gene.containsKey( cs ) ) {
+                cs2gene.put( cs, new HashSet<Gene>() );
+            }
+        }
+
         results.close();
         if ( timer.getTime() > 200 ) {
             log.info( "Get full cs2gene map for " + probes.size() + " :" + timer.getTime() + "ms" );
         }
         return cs2gene;
     }
-
 }

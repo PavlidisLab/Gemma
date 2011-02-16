@@ -154,6 +154,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         }
     }
 
+    @Override
     public void handleThaw( DifferentialExpressionAnalysis differentialExpressionAnalysis ) {
         this.doThaw( differentialExpressionAnalysis, false );
     }

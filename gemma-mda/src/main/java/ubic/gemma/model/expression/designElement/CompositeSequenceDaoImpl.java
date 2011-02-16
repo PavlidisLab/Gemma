@@ -758,6 +758,17 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
             results.get( csa ).add( ba );
         }
+
+        /*
+         * This is kind of important. We ensure we return an empty map for probes that do not have a mapping.
+         */
+        for ( CompositeSequence cs : batch ) {
+            if ( !results.containsKey( cs ) ) {
+                results.put( cs, new HashSet<BioSequence2GeneProduct>() );
+            }
+
+        }
+
     }
 
 }

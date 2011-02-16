@@ -30,7 +30,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
-import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.type.LongType;
@@ -78,22 +77,24 @@ public class DifferentialExpressionResultDaoImpl extends
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
             + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
-            + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
+            + "left join p.biologicalCharacteristic bs left join bs2gp.geneProduct gp left join gp.gene g"
             + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed) and r.correctedPvalue < :threshold order by r.correctedPvalue";
 
+    /**
+     * No constraint on gene
+     */
     private static final String fetchResultsByResultSetQuery = "select distinct rs, r "
-            + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
-            + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
-            + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
-            + " where bs2gp.bioSequence=bs and rs in (:resultsAnalyzed)"; // no order by clause, we add it later
+            + " from DifferentialExpressionAnalysisImpl a "
+            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
+            + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
+            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later
 
     private static final String fetchResultsByResultSetAndGeneQuery = "select distinct dear.ID "
-        + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s, PROBE_ANALYSIS_RESULT par "
-        + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
-        + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "        
-        + " and dear.CORRECTED_PVALUE < :threshold order by dear.CORRECTED_PVALUE ASC";
-        
+            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s, PROBE_ANALYSIS_RESULT par "
+            + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
+            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
+            + " and dear.CORRECTED_PVALUE < :threshold order by dear.CORRECTED_PVALUE ASC";
+
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -401,11 +402,12 @@ public class DifferentialExpressionResultDaoImpl extends
         return results;
     }
 
-    public List<Long> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, double threshold, Integer limit ) {
+    public List<Long> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold,
+            Integer limit ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
-                      
+
         List<Long> results = null;
 
         try {
@@ -415,20 +417,20 @@ public class DifferentialExpressionResultDaoImpl extends
             queryObject.setLong( "gene_id", gene.getId() );
             queryObject.setLong( "rs_id", resultSet.getId() );
             queryObject.setDouble( "threshold", threshold );
-            
+
             queryObject.addScalar( "ID", new LongType() );
             results = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-                     
+
         timer.stop();
         log.info( "Fetching probeResults from 1 resultSet for 1 gene took : " + timer.getTime() + " ms" );
-        
+
         return results;
     }
-        
+
     public Collection<ProbeAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
@@ -444,16 +446,16 @@ public class DifferentialExpressionResultDaoImpl extends
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( result, LockMode.NONE );
                 Hibernate.initialize( result );
-                
+
                 CompositeSequence cs = result.getProbe();
                 Hibernate.initialize( cs );
 
                 Collection<ContrastResult> contrasts = result.getContrasts();
-                for (ContrastResult contrast : contrasts) {
+                for ( ContrastResult contrast : contrasts ) {
                     FactorValue f = contrast.getFactorValue();
                     Hibernate.initialize( f );
                 }
-                
+
                 return null;
             }
         } );
