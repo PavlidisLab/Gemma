@@ -44,6 +44,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
     protected Log log = LogFactory.getLog( getClass() );
 
     int linesParsed = 0;
+    protected BufferedReader br;
 
     /*
      * (non-Javadoc)
@@ -52,17 +53,19 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
      */
     public void parse( InputStream is ) throws IOException {
 
-        if ( is == null ) {
-            throw new IllegalArgumentException( "Inputstream null" );
-        }
-
-        if ( is.available() == 0 ) {
-            throw new IOException( "No bytes available to read from inputStream" );
-        }
-
         linesParsed = 0;
         int nullLines = 0;
-        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+        if ( br == null ) {
+            if ( is == null ) {
+                throw new IllegalArgumentException( "Inputstream null" );
+            }
+
+            if ( is.available() == 0 ) {
+                throw new IOException( "No bytes available to read from inputStream" );
+            }
+            br = new BufferedReader( new InputStreamReader( is ) );
+        }
 
         String line = null;
 
