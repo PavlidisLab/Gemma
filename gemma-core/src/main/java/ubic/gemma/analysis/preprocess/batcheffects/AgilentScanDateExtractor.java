@@ -154,7 +154,7 @@ public class AgilentScanDateExtractor implements ScanDateExtractor {
 
             if ( line.startsWith( "\"DateTime" ) ) {
                 String dateString = line.replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
-                DateFormat f = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" ); // 2005/11/09 11:36:27
+                DateFormat f = new SimpleDateFormat( "yyyy/mm/dd hh:mm:ss" ); // 2005/11/09 11:36:27
                 f.setLenient( true );
                 d = f.parse( dateString );
                 break;
