@@ -55,7 +55,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
     public Date extract( InputStream is ) {
 
         DataInputStream str = new DataInputStream( is );
-
+        BufferedReader reader = null;
         Date date = null;
 
         try {
@@ -99,7 +99,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                 /*
                  * Must not be a version 4 file, assume version 3 plain text.
                  */
-                BufferedReader reader = new BufferedReader( new InputStreamReader( is ) );
+                reader = new BufferedReader( new InputStreamReader( is ) );
                 String line = null;
                 int count = 0;
                 while ( ( line = reader.readLine() ) != null ) {
@@ -113,7 +113,6 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                         break;
                     }
                 }
-                reader.close();
             }
 
             if ( date == null ) {
@@ -127,6 +126,15 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
             throw new RuntimeException( e );
         } catch ( ParseException e ) {
             throw new RuntimeException( e );
+        } finally {
+            try {
+                str.close();
+                if ( reader != null ) {
+                    reader.close();
+                }
+            } catch ( IOException e ) {
+                log.error( "Failed to close open file handle: " + e.getMessage() );
+            }
         }
 
     }

@@ -60,12 +60,13 @@ public class AgilentScanDateExtractor implements ScanDateExtractor {
      */
     @Override
     public Date extract( InputStream is ) {
+        BufferedReader reader = null;
         try {
             /*
              * Read the first three characters. IF they are ATF, it's a Axon file. If it's TYPE then it's probably an
              * agilent file.
              */
-            BufferedReader reader = new BufferedReader( new InputStreamReader( is ) );
+            reader = new BufferedReader( new InputStreamReader( is ) );
 
             String line = reader.readLine();
 
@@ -101,7 +102,7 @@ public class AgilentScanDateExtractor implements ScanDateExtractor {
                     DateFormat f = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss" ); // 10-18-2005 13:02:36
                     f.setLenient( true );
                     Date d = f.parse( date );
-                    reader.close();
+
                     return d;
                 }
             } else {
@@ -112,6 +113,12 @@ public class AgilentScanDateExtractor implements ScanDateExtractor {
             throw new RuntimeException( e );
         } catch ( ParseException e ) {
             throw new RuntimeException( e );
+        } finally {
+            try {
+                if ( reader != null ) reader.close();
+            } catch ( IOException e ) {
+                log.error( "Failed to close open file handle: " + e.getMessage() );
+            }
         }
         return null;
     }

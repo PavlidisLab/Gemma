@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -56,7 +58,8 @@ public class BatchInfoParser {
 
         if ( assayAccessions.isEmpty() ) {
             throw new UnsupportedOperationException(
-                    "Couldn't get any scan date information, could not determine provider or it is not supported." );
+                    "Couldn't get any scan date information, could not determine provider or it is not supported for "
+                            + ee.getShortName() );
         }
 
         Map<BioAssay, File> bioAssays2Files = matchBioAssaysToRawDataFilse( files, assayAccessions );
@@ -64,9 +67,21 @@ public class BatchInfoParser {
         /*
          * Check if we should go on
          */
-        if ( bioAssays2Files.size() != assayAccessions.size() ) {
-            throw new IllegalStateException( "Did not get raw file for each bioassay: got " + bioAssays2Files.size()
-                    + ", expected " + assayAccessions.size() );
+        if ( bioAssays2Files.size() < assayAccessions.size() ) {
+
+            if ( bioAssays2Files.size() > 0 ) {
+                /*
+                 * Missing a few for some reason.
+                 */
+                for ( BioAssay ba : bioAssays2Files.keySet() ) {
+                    if ( !assayAccessions.containsKey( ba.getAccession().getAccession() ) ) {
+                        log.warn( "Missing raw data file for " + ba + " on " + ee.getShortName() );
+                    }
+                }
+            }
+
+            throw new IllegalStateException( "Did not get enough raw files :got " + bioAssays2Files.size()
+                    + ", expected " + assayAccessions.size() + " while processing " + ee.getShortName() );
         }
 
         Map<BioMaterial, Date> result = getBatchInformationFromFiles( bioAssays2Files );
@@ -95,7 +110,8 @@ public class BatchInfoParser {
 
             if ( StringUtils.isBlank( accession.getAccession() ) ) {
                 throw new IllegalStateException(
-                        "Must have accession for each bioassay to get batch information from source" );
+                        "Must have accession for each bioassay to get batch information from source for "
+                                + ee.getShortName() );
             }
 
             assayAccessions.put( accession.getAccession(), ba );
@@ -146,8 +162,8 @@ public class BatchInfoParser {
                         || arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) {
                     ex = new AgilentScanDateExtractor();
                 } else {
-                    throw new UnsupportedRawdataFileFormatException( "Provider: " + providerName
-                            + " not supported for scan date extraction." );
+                    throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
+                            + " not matched to a supported platform type for scan date extraction for " + ba );
                 }
 
                 InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
@@ -174,6 +190,9 @@ public class BatchInfoParser {
      */
     private Map<BioAssay, File> matchBioAssaysToRawDataFilse( Collection<LocalFile> files,
             Map<String, BioAssay> assayAccessions ) {
+
+        Pattern regex = Pattern.compile( "(GSM[0-9]+).+" );
+
         Map<BioAssay, File> bioAssays2Files = new HashMap<BioAssay, File>();
         for ( LocalFile file : files ) {
             File f = file.asFile();
@@ -194,7 +213,13 @@ public class BatchInfoParser {
             /*
              * keep just the GSMNNNNNN part. FIXME: only works with GEO
              */
-            String acc = n.replaceAll( "\\..+", "" );
+            Matcher matcher = regex.matcher( n );
+            if ( !matcher.matches() ) {
+                continue;
+            }
+            String acc = matcher.group( 1 );
+
+            assert acc.matches( "GSM[0-9]+" );
 
             BioAssay ba = assayAccessions.get( acc );
             if ( ba == null ) {
