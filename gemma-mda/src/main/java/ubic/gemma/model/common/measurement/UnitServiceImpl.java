@@ -20,6 +20,7 @@ package ubic.gemma.model.common.measurement;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UnitServiceImpl implements UnitService {
 
+    @Autowired
     private UnitDao unitDao;
 
     /**
