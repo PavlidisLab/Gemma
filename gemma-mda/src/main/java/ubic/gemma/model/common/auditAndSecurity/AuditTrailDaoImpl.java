@@ -140,6 +140,10 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 Hibernate.initialize( auditTrail );
                 if ( auditTrail.getEvents() == null ) return null;
                 for ( AuditEvent ae : auditTrail.getEvents() ) {
+                    if (ae == null) {
+                        log.warn("Null event in audit trail with id=" + auditTrail.getId());
+                        continue;
+                    }
                     Hibernate.initialize( ae );
                     if ( ae.getPerformer() != null ) {
                         User performer = ( User ) session.get( UserImpl.class, ae.getPerformer().getId() );
