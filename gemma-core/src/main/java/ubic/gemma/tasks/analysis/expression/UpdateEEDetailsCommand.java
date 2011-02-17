@@ -25,6 +25,8 @@ import ubic.gemma.job.TaskCommand;
  * @version $Id$
  */
 public class UpdateEEDetailsCommand extends TaskCommand {
+ 
+    private static final long serialVersionUID = 1L;
 
     String shortName;
 

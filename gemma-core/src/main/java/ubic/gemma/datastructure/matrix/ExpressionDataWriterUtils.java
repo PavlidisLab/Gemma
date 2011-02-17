@@ -164,10 +164,8 @@ public class ExpressionDataWriterUtils {
 
         if ( bioMaterial.getExternalAccession() != null ) {
             name = bioMaterial.getExternalAccession().getAccession();
-        }
-
-        List<String> ids = new ArrayList<String>();
-        if ( StringUtils.isBlank( name ) && !bioAssays.isEmpty() ) {
+        } else if ( StringUtils.isBlank( name ) && !bioAssays.isEmpty() ) {
+            List<String> ids = new ArrayList<String>();
             for ( BioAssay ba : bioAssays ) {
                 if ( ba.getAccession() != null ) {
                     ids.add( ba.getAccession().getAccession() );

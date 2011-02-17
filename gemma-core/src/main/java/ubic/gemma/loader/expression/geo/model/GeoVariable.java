@@ -135,7 +135,7 @@ public class GeoVariable {
             if ( other.type != null ) return false;
         } else if ( !type.equals( other.type ) ) return false;
         return true;
-    };
+    }
 
     /**
      * @return Returns the description.

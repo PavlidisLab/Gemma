@@ -28,6 +28,11 @@ package ubic.gemma.model.common;
 public abstract class DescribableImpl extends ubic.gemma.model.common.Describable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
      * @see ubic.gemma.model.common.Describable#toString()
      */
     @Override

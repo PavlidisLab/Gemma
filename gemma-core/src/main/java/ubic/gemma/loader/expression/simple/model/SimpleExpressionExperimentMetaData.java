@@ -40,6 +40,11 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class SimpleExpressionExperimentMetaData extends TaskCommand {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     private String name;
 
     private String shortName;

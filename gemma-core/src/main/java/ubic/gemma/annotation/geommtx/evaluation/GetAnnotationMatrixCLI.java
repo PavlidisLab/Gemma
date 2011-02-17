@@ -26,7 +26,6 @@ import ubic.GEOMMTx.ParentFinder;
 import ubic.GEOMMTx.evaluation.MakeHistogramData;
 import ubic.basecode.dataStructure.StringToStringSetMap;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;

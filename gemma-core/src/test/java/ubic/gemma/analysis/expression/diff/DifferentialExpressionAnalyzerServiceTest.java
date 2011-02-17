@@ -72,7 +72,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
-    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
 

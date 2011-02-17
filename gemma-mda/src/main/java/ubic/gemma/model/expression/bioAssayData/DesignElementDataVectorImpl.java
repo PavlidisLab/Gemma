@@ -24,4 +24,9 @@ package ubic.gemma.model.expression.bioAssayData;
 public abstract class DesignElementDataVectorImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVector {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
 }

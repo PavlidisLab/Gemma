@@ -496,8 +496,8 @@ public class DatasetCombiner {
 
                         if ( allMatched.contains( testAcc ) ) continue;
 
-                        boolean shouldTest = shouldTest( accToDatasetOrPlatform, accToOrganism, alreadyMatched,
-                                datasetOrPlatformA, targetAcc, datasetOrPlatformB, testAcc );
+                        boolean shouldTest = shouldTest( accToDatasetOrPlatform, alreadyMatched, datasetOrPlatformA,
+                                targetAcc, datasetOrPlatformB, testAcc );
 
                         if ( !shouldTest ) continue;
 
@@ -766,7 +766,6 @@ public class DatasetCombiner {
      * Implements constraints on samples to test.
      * 
      * @param accToDatasetOrPlatform (depending on which we are using, platforms or data sets)
-     * @param accToOrganism
      * @param alreadyMatched
      * @param allmatched
      * @param datasetA
@@ -776,8 +775,8 @@ public class DatasetCombiner {
      * @return
      */
     private boolean shouldTest( LinkedHashMap<String, String> accToDatasetOrPlatform,
-            LinkedHashMap<String, String> accToOrganism, Map<String, Collection<String>> alreadyMatched,
-            String datasetA, String targetAcc, String datasetB, String testAcc ) {
+            Map<String, Collection<String>> alreadyMatched, String datasetA, String targetAcc, String datasetB,
+            String testAcc ) {
         boolean shouldTest = true;
 
         // initialize data structure.

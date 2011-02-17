@@ -48,8 +48,7 @@ public class Ontology {
     public String toString() {
         if ( this.getName() != null )
             return this.getName();
-        else
-            return this.getWebUri();
+        return this.getWebUri();
     }
 
 }

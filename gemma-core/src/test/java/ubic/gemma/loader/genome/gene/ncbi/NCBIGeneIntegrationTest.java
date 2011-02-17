@@ -24,7 +24,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.junit.After;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.genome.Gene;
@@ -41,14 +43,32 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
 
+    @Autowired
+    GeneService geneService;
+
+    @Autowired
+    TaxonService taxonService;
+
+    Gene g = null;
+
+    @After
+    public void teardown() {
+        if ( g != null ) {
+            try {
+                geneService.remove( g );
+            } catch ( Exception e ) {
+
+            }
+        }
+    }
+
     /**
      * @throws Exception
      */
     @Test
     public void testGeneLoader() throws Exception {
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
         NcbiGeneLoader loader = new NcbiGeneLoader( persisterHelper );
-        loader.setTaxonService( ( TaxonService ) getBean( "taxonService" ) );
+        loader.setTaxonService( taxonService );
         String geneInfoTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene_info.sample.gz";
         String gene2AccTestFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2accession.sample.gz";
         String geneHistoryFile = "/gemma-core/src/test/resources/data/loader/genome/gene/geneHistory.sample.gz";
@@ -71,7 +91,7 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         // (depends on information in gene_info and gene2accession file
         // gene_info
         Collection<Gene> geneCollection = geneService.findByOfficialName( "orf31" );
-        Gene g = geneCollection.iterator().next();
+        g = geneCollection.iterator().next();
         g = geneService.thaw( g );
 
         Collection<GeneProduct> products = g.getProducts();
@@ -111,5 +131,6 @@ public class NCBIGeneIntegrationTest extends BaseSpringContextTest {
         g = updatedTestGene.iterator().next();
         assertEquals( "1343074", g.getPreviousNcbiId() );
         assertEquals( "9343074", g.getNcbiId() );
+
     }
 }

@@ -41,7 +41,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrixUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType; 
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
@@ -207,7 +207,7 @@ public class ProcessedExpressionDataVectorCreateService {
              */
             Collection<BioAssay> bioAssays = bioAssayDimension.getBioAssays();
 
-            assert bioAssays instanceof List;
+            assert bioAssays instanceof List<?>;
 
             /*
              * Initialize the new bioassay list.

@@ -18,6 +18,10 @@ import java.io.Serializable;
  */
 public class ProbePair implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private Long queryProbeId;
     private Long targetProbeId;
     private double score;

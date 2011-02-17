@@ -31,6 +31,7 @@ import ubic.gemma.loader.expression.geo.model.GeoVariable.VariableType;
  */
 public class GeoSubset extends GeoData {
 
+    private static final long serialVersionUID = 2392295178038874633L;
     private GeoDataset owningDataset;
     private String description = "";
     private Collection<GeoSample> samples;
@@ -104,7 +105,5 @@ public class GeoSubset extends GeoData {
     public void setOwningDataset( GeoDataset owningDataset ) {
         this.owningDataset = owningDataset;
     }
-    
-   
 
 }

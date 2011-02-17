@@ -21,7 +21,6 @@ package ubic.gemma.loader.protein;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.association.Gene2GeneProteinAssociationServiceException;
 import ubic.gemma.model.common.description.DatabaseEntry;
 
 /**

@@ -52,6 +52,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class GeoValues implements Serializable {
 
+    private static final long serialVersionUID = 3748363645735281578L;
+
     private static Log log = LogFactory.getLog( GeoValues.class.getName() );
 
     /*

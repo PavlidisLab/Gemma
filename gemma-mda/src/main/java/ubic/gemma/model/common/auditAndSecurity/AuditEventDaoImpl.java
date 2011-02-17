@@ -192,7 +192,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         return canonicalName.endsWith( "Impl" ) ? type.getName() : type.getName() + "Impl";
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );

@@ -85,6 +85,10 @@ public class OntologyService implements InitializingBean {
     // Private class for sorting Characteristics
     static class TermComparator implements Comparator<Characteristic>, Serializable {
 
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
         String comparator;
 
         public TermComparator( String comparator ) {
@@ -707,9 +711,8 @@ public class OntologyService implements InitializingBean {
     private String foundValueKey( Characteristic c ) {
         if ( c instanceof VocabCharacteristic ) {
             return ( ( VocabCharacteristic ) c ).getValueUri();
-        } else {
-            return c.getValue();
         }
+        return c.getValue();
     }
 
     /**
@@ -852,10 +855,9 @@ public class OntologyService implements InitializingBean {
                 if ( o1.getDescription().startsWith( USED ) ) {
                     if ( o2.getDescription().startsWith( USED ) ) {
                         return compareByUri( o1, o2 );
-                    } else {
-                        // o1 is used, o2 is not
-                        return -1;
                     }
+                    // o1 is used, o2 is not
+                    return -1;
 
                 } else if ( o2.getDescription().startsWith( USED ) ) {
                     // o2 is used and o1 is not.

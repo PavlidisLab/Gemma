@@ -82,7 +82,7 @@ public class GeoReplication {
      */
     public enum ReplicationType {
         biologicalReplicate, technicalReplicateExtract, technicalReplicateLabeledExtract
-    };
+    }
 
     /**
      * Convert a string e.g. "biological Replicate" into the corresponding ReplicationType.

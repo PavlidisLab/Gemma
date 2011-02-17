@@ -76,8 +76,8 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
 
     ArrayDesign arrayDesign;
     String arrayDesignName = "AD_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );
-    String compositeSequenceName1 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );;
-    String compositeSequenceName2 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH );;
+    String compositeSequenceName1 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ); 
+    String compositeSequenceName2 = "Design Element_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ); 
 
     /*
      * (non-Javadoc)

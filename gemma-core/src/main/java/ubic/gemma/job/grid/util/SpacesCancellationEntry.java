@@ -24,4 +24,9 @@ package ubic.gemma.job.grid.util;
  */
 public class SpacesCancellationEntry extends SpacesGenericEntry {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
 }

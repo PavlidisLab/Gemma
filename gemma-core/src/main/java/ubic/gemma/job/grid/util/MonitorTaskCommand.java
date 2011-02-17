@@ -28,6 +28,10 @@ import ubic.gemma.job.TaskCommand;
  */
 public class MonitorTaskCommand extends TaskCommand {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private int runTimeMillis = 2000;
     
     public MonitorTaskCommand() {

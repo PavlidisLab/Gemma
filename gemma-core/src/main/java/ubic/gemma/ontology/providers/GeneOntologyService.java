@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.ehcache.CacheManager;
- 
+
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -93,7 +93,7 @@ public class GeneOntologyService implements InitializingBean {
 
     private static Log log = LogFactory.getLog( GeneOntologyService.class.getName() );
 
-    private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";;
+    private final static String MF_URL = "http://www.berkeleybop.org/ontologies/obo-all/molecular_function/molecular_function.owl";
 
     // private DirectedGraph graph = null;
 
@@ -334,7 +334,7 @@ public class GeneOntologyService implements InitializingBean {
         if ( log.isDebugEnabled() ) log.debug( "Searching Gene Ontology for '" + queryString + "'" );
 
         // make sure we are all-inclusive
-        //String pquery = queryString.replaceAll( "\\s+", " +" );
+        // String pquery = queryString.replaceAll( "\\s+", " +" );
 
         Collection<OntologyResource> rawMatches = new HashSet<OntologyResource>();
         for ( IndexLARQ index : this.indices ) {
@@ -657,10 +657,8 @@ public class GeneOntologyService implements InitializingBean {
         if ( !this.isReady() ) {
             throw new UnsupportedOperationException( "Gene ontology isn't ready so cannot check validity of IDs" );
         }
-        if ( uri2Term.containsKey( toUri( goId ) ) )
-            return true;
-        else
-            return uri2Term.containsKey( toUri( goId.replaceFirst( "_", ":" ) ) );
+        if ( uri2Term.containsKey( toUri( goId ) ) ) return true;
+        return uri2Term.containsKey( toUri( goId.replaceFirst( "_", ":" ) ) );
     }
 
     /**

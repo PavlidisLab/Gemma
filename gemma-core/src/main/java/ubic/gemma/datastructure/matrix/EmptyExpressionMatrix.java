@@ -36,6 +36,10 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  */
 public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private int numCols;
 
     @Override

@@ -95,7 +95,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Iterator<? extends ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
                         .hasNext(); ) {
-                    create( transform, ( ExpressionExperiment ) entityIterator.next() );
+                    create( transform, entityIterator.next() );
                 }
                 return null;
             }

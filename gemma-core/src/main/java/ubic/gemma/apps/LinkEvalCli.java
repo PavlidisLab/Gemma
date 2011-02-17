@@ -95,6 +95,11 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     private static class GenePair extends ArrayList<List<Gene>> implements Comparable<GenePair> {
 
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 1L;
+
         public GenePair() {
             super( 0 );
             this.add( new ArrayList<Gene>() );

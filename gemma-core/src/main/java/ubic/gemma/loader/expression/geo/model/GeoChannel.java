@@ -41,7 +41,7 @@ public class GeoChannel {
 
     public enum ChannelMolecule {
         totalRNA, polyARNA, cytoplasmicRNA, nuclearRNA, genomicDNA, protein, other
-    };
+    }
 
     public static ChannelMolecule convertStringToMolecule( String string ) {
         if ( string.equals( "total RNA" ) ) {
@@ -64,7 +64,7 @@ public class GeoChannel {
     }
 
     String sourceName = "";
-    Collection<String> characteristics = new HashSet<String>();;
+    Collection<String> characteristics = new HashSet<String>();
     String bioMaterialProvider = "";
     String growthProtocol = "";
     String treatmentProtocol = "";

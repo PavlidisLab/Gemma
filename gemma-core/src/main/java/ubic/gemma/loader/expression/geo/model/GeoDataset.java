@@ -33,6 +33,8 @@ import org.apache.commons.logging.LogFactory;
  */
 public class GeoDataset extends GeoData {
 
+    private static final long serialVersionUID = 2659028881509672793L;
+
     private static Log log = LogFactory.getLog( GeoDataset.class.getName() );
 
     public ExperimentType experimentType;
@@ -40,7 +42,7 @@ public class GeoDataset extends GeoData {
 
     private String datasetType;
 
-    private String description;;
+    private String description;
 
     private String featureCount;
 

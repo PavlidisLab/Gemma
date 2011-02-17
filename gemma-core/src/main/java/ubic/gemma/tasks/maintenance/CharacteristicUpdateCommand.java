@@ -29,6 +29,8 @@ import ubic.gemma.model.common.description.AnnotationValueObject;
  * @version $Id$
  */
 public class CharacteristicUpdateCommand extends TaskCommand {
+ 
+    private static final long serialVersionUID = 1L;
 
     private Collection<AnnotationValueObject> annotationValueObjects;
 

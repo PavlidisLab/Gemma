@@ -27,7 +27,6 @@ import org.compass.gps.impl.SingleCompassGps;
 import org.compass.gps.spi.CompassGpsInterfaceDevice;
 
 import ubic.gemma.job.TaskMethod;
-import ubic.gemma.job.TaskResult;
 import ubic.gemma.util.CompassUtils;
 import ubic.gemma.util.MailEngine;
 

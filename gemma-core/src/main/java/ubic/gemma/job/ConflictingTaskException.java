@@ -28,6 +28,11 @@ package ubic.gemma.job;
  */
 public class ConflictingTaskException extends RuntimeException {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     private TaskCommand attemptedCommand;
 
     private TaskCommand collidingCommand;

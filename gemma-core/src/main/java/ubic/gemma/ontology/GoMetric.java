@@ -65,7 +65,7 @@ public class GoMetric {
 
     public static final String BASE_GO_URI = "http://purl.org/obo/owl/GO#";
 
-    private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() );;
+    private static org.apache.commons.logging.Log log = LogFactory.getLog( GoMetric.class.getName() ); 
 
     /**
      * @param ontoM

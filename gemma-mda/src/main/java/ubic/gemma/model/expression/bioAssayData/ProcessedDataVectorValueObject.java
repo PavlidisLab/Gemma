@@ -24,6 +24,10 @@ package ubic.gemma.model.expression.bioAssayData;
  */
 public class ProcessedDataVectorValueObject extends DataVectorValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     protected Double rankByMean;
     protected Double rankByMax;
 

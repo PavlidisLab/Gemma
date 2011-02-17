@@ -32,6 +32,11 @@ package ubic.gemma.model.genome;
 public abstract class ChromosomeLocationImpl extends ubic.gemma.model.genome.ChromosomeLocation {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
+    /**
      * @see ubic.gemma.model.genome.ChromosomeLocation#compareTo(java.lang.Object)
      */
     @Override

@@ -29,7 +29,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.expression.geo.fetcher.DatasetFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.PlatformFetcher;
-import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.loader.expression.geo.fetcher.SeriesFetcher;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
@@ -330,24 +329,24 @@ public class GeoDomainObjectGenerator implements SourceDomainObjectGenerator {
         return dataSetPath;
     }
 
-    /**
-     * Fetch any raw data files
-     * 
-     * @param series
-     */
-    private void processRawData( GeoSeries series ) {
-        if ( StringUtils.isBlank( series.getSupplementaryFile() ) ) {
-            return;
-        }
-
-        RawDataFetcher rawFetcher = new RawDataFetcher();
-        Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getSupplementaryFile() );
-        if ( rawFiles != null ) {
-            // FIXME maybe do something more. These are usually (always?) CEL files so they can be parsed and
-            // assembled or left alone.
-            log.info( "Downloaded raw data files" );
-        }
-    }
+//    /**
+//     * Fetch any raw data files
+//     * 
+//     * @param series
+//     */
+//    private void processRawData( GeoSeries series ) {
+//        if ( StringUtils.isBlank( series.getSupplementaryFile() ) ) {
+//            return;
+//        }
+//
+//        RawDataFetcher rawFetcher = new RawDataFetcher();
+//        Collection<LocalFile> rawFiles = rawFetcher.fetch( series.getSupplementaryFile() );
+//        if ( rawFiles != null ) {
+//            // FIXME maybe do something more. These are usually (always?) CEL files so they can be parsed and
+//            // assembled or left alone.
+//            log.info( "Downloaded raw data files" );
+//        }
+//    }
 
     /**
      * @param datasetFetcher The datasetFetcher to set.

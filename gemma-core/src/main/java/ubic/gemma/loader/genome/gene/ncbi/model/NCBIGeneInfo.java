@@ -95,16 +95,16 @@ public class NCBIGeneInfo {
     private NcbiGeneHistory history;
 
     /**
-     * See http://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/objects/entrezgene/entrezgene.asn unknown (0) ,
-     * 36
+     * See http://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/objects/entrezgene/entrezgene.asn unknown (0)
+     * , 36
      */
     public enum GeneType {
         UNKNOWN, TRNA, RRNA, SNRNA, SCRNA, SNORNA, PROTEINCODING, PSEUDO, TRANSPOSON, MISCRNA, NCRNA, OTHER
-    };
+    }
 
     public enum NomenclatureStatus {
         OFFICIAL, INTERIM, UNKNOWN
-    };
+    }
 
     /**
      * Convert string to GeneType. See
@@ -134,9 +134,9 @@ public class NCBIGeneInfo {
             return GeneType.TRANSPOSON;
         } else if ( typeString.equals( "miscRNA" ) ) {
             return GeneType.MISCRNA;
-        }else if ( typeString.equals( "ncRNA" ) ) {
+        } else if ( typeString.equals( "ncRNA" ) ) {
             return GeneType.NCRNA;
-        }else if ( typeString.equals( "other" ) ) {
+        } else if ( typeString.equals( "other" ) ) {
             return GeneType.OTHER;
         } else {
             throw new IllegalArgumentException( "Unknown gene type '" + typeString + "'" );

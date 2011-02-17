@@ -357,9 +357,11 @@ public class AllenBrainAtlasService {
         } catch ( SAXException se ) {
             log.warn( se );
         } catch ( FileNotFoundException fnfe ) {
-
             return null;
+        }
 
+        if ( geneDoc == null ) {
+            return null;
         }
 
         Collection<String> xmlData = XMLUtils.extractTagData( geneDoc, "geneid" );

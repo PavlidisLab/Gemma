@@ -22,8 +22,6 @@ import static org.junit.Assert.*;
 
 import java.util.zip.GZIPInputStream;
 
-import junit.framework.TestCase;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.junit.After;

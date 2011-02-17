@@ -291,7 +291,7 @@ public class ExperimentalDesignVisualizationService {
             int j = 0;
 
             Collection<BioAssay> oldOrdering = bad.getBioAssays();
-            assert oldOrdering instanceof List;
+            assert oldOrdering instanceof List<?>;
             for ( BioAssay ba : oldOrdering ) {
 
                 if ( !ordering.containsKey( ba ) ) {

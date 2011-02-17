@@ -448,7 +448,7 @@ public class Blat {
             } catch ( IllegalThreadStateException e1 ) {
                 log.info( "Server seems to have started" );
             } catch ( InterruptedException e1 ) {
-                ;
+                
             }
 
         }
@@ -458,7 +458,7 @@ public class Blat {
      * Stop the gfServer, if it was started by this.
      */
     public void stopServer( int port ) {
-        if ( false && !doShutdown ) {
+        if (  !doShutdown ) {
             return;
         }
         log.info( "Shutting down gfServer" );

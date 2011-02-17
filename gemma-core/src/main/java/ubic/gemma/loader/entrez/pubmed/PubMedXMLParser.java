@@ -124,7 +124,7 @@ public class PubMedXMLParser {
                         al.append( "; " );
 
                     } else if ( f.getNodeName().equals( "Initials" ) ) {
-                        ;
+                        // noop ;
                     }
                 }
             }

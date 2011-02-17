@@ -141,7 +141,7 @@ public class MatrixConversionTest extends TestCase {
 
     public final void testColumnMapping() {
         Collection<QuantitationType> quantTypes = new HashSet<QuantitationType>();
-        for ( int quantitationTypeNum = 0; quantitationTypeNum < 2; quantitationTypeNum++ ) {
+        for ( int quantitationTypeNum = 0; quantitationTypeNum < 2; ) {
             QuantitationType quantType = PersistentDummyObjectHelper.getTestNonPersistentQuantitationType();
             quantType.setId( ( long ) quantitationTypeNum );
             quantTypes.add( quantType );

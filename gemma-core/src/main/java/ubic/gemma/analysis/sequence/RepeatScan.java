@@ -235,17 +235,17 @@ public class RepeatScan {
             // okay, something is wrong for sure.
             throw new RuntimeException( "Repeatmasker seems to have failed, it left no useful output (looking for "
                     + outputSequencePath + " or " + outputSummary );
-        } else {
-            InputStream is = new FileInputStream( outputSummary );
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String nothingFound = "There were no repetitive sequences detected";
-            String line = br.readLine();
-            if ( line == null || line.startsWith( nothingFound ) ) {
-                log.info( "There were no repeats found" );
-            } else {
-                log.warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );
-            }
         }
+        InputStream is = new FileInputStream( outputSummary );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+        String nothingFound = "There were no repetitive sequences detected";
+        String line = br.readLine();
+        if ( line == null || line.startsWith( nothingFound ) ) {
+            log.info( "There were no repeats found" );
+        } else {
+            log.warn( "Something might have gone wrong with repeatmasking. The output file reads: " + line );
+        }
+
     }
 
 }

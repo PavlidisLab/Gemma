@@ -498,7 +498,7 @@ public class MageMLConverterHelper {
             // Note that these are be the same factorvalues as referred to by the experimentalfactors.
             // simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "Channels" ) ) {
-            ; // we don't support this.
+            // we don't support this.
         } else {
             log.warn( "Unsupported or unknown bioassay association: " + associationName );
         }
@@ -914,9 +914,9 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Species" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter, "Taxon" );
         } else if ( associationName.equals( "SeqFeatures" ) ) {
-            ; // list of Sequence features, we ignore
+            // list of Sequence features, we ignore
         } else if ( associationName.equals( "OntologyEntries" ) ) {
-            ; // list of generic ontology entries, we ignore.
+            // list of generic ontology entries, we ignore.
         } else {
             log.debug( "Unknown or unsupported type " + associationName );
         }
@@ -1021,7 +1021,7 @@ public class MageMLConverterHelper {
                 log.warn( "*** More than one BiologicalCharacteristic for a MAGE CompositeSequence!" );
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "BiologicalCharacteristic" );
         } else if ( associationName.equals( "CompositeCompositeMaps" ) ) {
-            ; // we don't support.
+            // we don't support.
         } else if ( associationName.equals( "ReporterCompositeMaps" ) ) {
             // special case. This is complicated, because the mage model has compositeSequence ->
             // reportercompositemap(s) -> reporterposition(s) -> reporter(1)
@@ -1173,13 +1173,15 @@ public class MageMLConverterHelper {
             DatabaseEntry gemmaObj, Method getter ) {
         Object associatedObject = intializeConversion( mageObj, getter );
         String associationName = getterToPropertyName( getter );
-        if ( associatedObject == null ) return;
-        if ( associationName.equals( "Database" ) )
+        if ( associatedObject == null ) {
+            return;
+        } else if ( associationName.equals( "Database" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
-        else if ( associationName.equals( "Type" ) )
-            ; // we ain't got that.
-        else
+        } else if ( associationName.equals( "Type" ) ) {
+            // we ain't got that.
+        } else {
             log.debug( "Unsupported or unknown association: " + associationName );
+        }
     }
 
     /**
@@ -1557,8 +1559,8 @@ public class MageMLConverterHelper {
             // Note that these should be the same factorvalues as referred to by the bioassays.
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, false );
             for ( FactorValue factorValue : gemmaObj.getFactorValues() ) {
-                if (factorValue.getMeasurement() != null) {
-                    gemmaObj.setType(FactorType.CONTINUOUS);
+                if ( factorValue.getMeasurement() != null ) {
+                    gemmaObj.setType( FactorType.CONTINUOUS );
                 }
                 factorValue.setExperimentalFactor( gemmaObj );
             }
@@ -1685,7 +1687,7 @@ public class MageMLConverterHelper {
      */
     public void convertExtendable( Extendable mageObj, ubic.gemma.model.common.Describable gemmaObj ) {
         if ( mageObj == null || gemmaObj == null ) return;
-        ; // nothing to do, we aren't using this.
+        // nothing to do, we aren't using this.
     }
 
     /**
@@ -1734,7 +1736,7 @@ public class MageMLConverterHelper {
         if ( associationName.equals( "ExperimentalFactor" ) ) {
             // we let the ExperimentalFactor manage this association.
         } else if ( associationName.equals( "Measurement" ) ) {
-            if (gemmaObj.getExperimentalFactor() != null) {
+            if ( gemmaObj.getExperimentalFactor() != null ) {
                 gemmaObj.getExperimentalFactor().setType( FactorType.CONTINUOUS );
             }
             simpleFillIn( associatedObject, gemmaObj, getter, "Measurement" );
@@ -2358,14 +2360,14 @@ public class MageMLConverterHelper {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "SurfaceType" ) ) {
-            ; // we don't support this
+            // we don't support this
         } else if ( associationName.equals( "ZoneGroups" ) ) {
             assert associatedObject instanceof List;
             // we don't support this.
         } else if ( associationName.equals( "ReporterGroups" ) || associationName.equals( "FeatureGroups" )
                 || associationName.equals( "DesignProviders" ) || associationName.equals( "CompositeGroups" )
                 || associationName.equals( "ProtocolApplications" ) ) {
-            ; // nothing, superclass.
+            // nothing, superclass.
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -2654,7 +2656,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "Scale" ) ) {
             gemmaObj.setScale( convertScale( mageObj.getScale() ) );
         } else if ( associationName.equals( "QuantitationTypeMaps" ) ) {
-            ; // special case - transformations.
+            // special case - transformations.
         } else if ( associationName.equals( "TargetQuantitationType" ) ) { // from ConfidenceIndicator.
             // this is an association to another QuantitationType: the confidence in it. I think we skip for now.
         } else {
@@ -4127,7 +4129,8 @@ public class MageMLConverterHelper {
             for ( org.biomage.DesignElement.CompositeSequence compseq : reps ) {
                 CompositeSequence csconv = convertCompositeSequence( compseq );
 
-                taxon = csconv.getBiologicalCharacteristic().getTaxon();
+                if ( csconv.getBiologicalCharacteristic().getTaxon() != null )
+                    taxon = csconv.getBiologicalCharacteristic().getTaxon();
                 csconv.setArrayDesign( gemmaObj );
                 if ( !designObjs.contains( csconv ) ) designObjs.add( csconv );
             }

@@ -30,6 +30,10 @@ import java.io.Serializable;
  */
 public class CoexpressionCacheValueObject implements Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private Long coexpressedGene;
     private Long coexpressedProbe;
     private Long expressionExperiment;

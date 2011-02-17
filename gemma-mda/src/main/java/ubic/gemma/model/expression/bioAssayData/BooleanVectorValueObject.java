@@ -26,6 +26,10 @@ import ubic.gemma.model.common.quantitationtype.PrimitiveType;
  */
 public class BooleanVectorValueObject extends DataVectorValueObject {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private boolean[] data;
 
     public BooleanVectorValueObject( DesignElementDataVector dedv ) {

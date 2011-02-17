@@ -30,6 +30,10 @@ import java.util.Date;
 public class TaskResult implements Serializable {
 
     /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    /**
      * The answer
      */
     private Object answer = null; // result

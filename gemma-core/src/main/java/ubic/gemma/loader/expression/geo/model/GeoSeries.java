@@ -34,6 +34,7 @@ import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
  */
 public class GeoSeries extends GeoData {
 
+    private static final long serialVersionUID = -1058350558444775537L;
     private String summary = "";
     private String overallDesign = "";
     private Collection<String> keyWords;
@@ -87,10 +88,10 @@ public class GeoSeries extends GeoData {
     /**
      * Add a group of samples to this series.
      * 
-     * @param samples
+     * @param s
      */
-    public void addSamples( Collection<GeoSample> samples ) {
-        this.samples.addAll( samples );
+    public void addSamples( Collection<GeoSample> s ) {
+        this.samples.addAll( s );
     }
 
     /**

@@ -80,8 +80,8 @@ public class GeneServiceImpl extends GeneServiceBase {
 
         if ( gpCollection == null ) return null;
 
-        Long minStartNt = null;
-        Long maxEndNt = null;
+        Long minStartNt = Long.MAX_VALUE;
+        Long maxEndNt = Long.MIN_VALUE;
         String strand = null;
         Chromosome chromosone = null;
 
@@ -89,7 +89,7 @@ public class GeneServiceImpl extends GeneServiceBase {
 
             PhysicalLocation pLoc = gp.getPhysicalLocation();
             if ( pLoc == null ) {
-                log.warn( "No phyiscal location for Gene: " + gene.getOfficialSymbol() + "'s Gene Product: "
+                log.warn( "No physical location for Gene: " + gene.getOfficialSymbol() + "'s Gene Product: "
                         + gp.getId() + ". Skipping." );
                 continue;
             }
@@ -100,7 +100,7 @@ public class GeneServiceImpl extends GeneServiceBase {
             Long currentEndNt = currentStartNt + pLoc.getNucleotideLength();
 
             // 1st time through loop
-            if ( minStartNt == null ) {
+            if ( minStartNt == Long.MAX_VALUE ) {
                 minStartNt = currentStartNt;
                 maxEndNt = currentEndNt;
                 strand = currentStrand;

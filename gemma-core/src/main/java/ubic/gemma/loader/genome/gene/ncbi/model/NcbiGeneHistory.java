@@ -49,9 +49,9 @@ public class NcbiGeneHistory {
     public String getPreviousId() {
         if ( history.size() == 1 ) {
             return null;
-        } else {
-            return history.get( history.size() - 2 );
         }
+        return history.get( history.size() - 2 );
+
     }
 
     public boolean usedToBe( String oldId ) {

@@ -25,7 +25,8 @@ import ubic.gemma.job.TaskCommand;
  * @version $Id$
  */
 public class UpdatePubMedCommand extends TaskCommand {
-
+ 
+    private static final long serialVersionUID = 1L;
     private String pubmedId;
 
     public UpdatePubMedCommand() {
