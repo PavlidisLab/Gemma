@@ -64,9 +64,8 @@ public class TestTaskController extends AbstractTaskService {
 
         if ( forceLocal ) {
             return this.startTask( getInProcessRunner( command ) );
-        } else {
-            return super.run( command );
         }
+        return super.run( command );
     }
 
     @Override

@@ -31,6 +31,11 @@ import ubic.gemma.web.controller.common.auditAndSecurity.FileUpload;
  */
 public class ArrayDesignSequenceAddCommand extends TaskCommand {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     ArrayDesign arrayDesign;
 
     FileUpload sequenceFile;

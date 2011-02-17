@@ -26,6 +26,10 @@ import ubic.gemma.job.TaskCommand;
  */
 public class ExpressionExperimentDataFetchCommand extends TaskCommand {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private Long quantitationTypeId;
     private Long expressionExperimentId;
     private boolean filter;

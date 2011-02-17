@@ -28,7 +28,6 @@ import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Represents data for displaying a factor (+ factor values) in a chart.

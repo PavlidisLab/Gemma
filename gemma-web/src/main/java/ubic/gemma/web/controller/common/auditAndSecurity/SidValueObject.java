@@ -30,6 +30,11 @@ import org.springframework.security.acls.model.Sid;
  */
 public class SidValueObject implements Comparable<SidValueObject>, Serializable {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     private static final String rolePrefix = "GROUP_";
 
     private String authority;

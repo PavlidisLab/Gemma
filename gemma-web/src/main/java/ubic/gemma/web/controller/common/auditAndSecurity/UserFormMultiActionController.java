@@ -44,7 +44,6 @@ import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.util.JSONUtil;
 
 import org.apache.commons.validator.EmailValidator;
-import org.apache.commons.validator.Validator;
 
 /**
  * Controller to edit profile of users.

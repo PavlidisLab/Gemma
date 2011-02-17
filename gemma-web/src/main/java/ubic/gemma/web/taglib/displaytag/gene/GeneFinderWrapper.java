@@ -100,19 +100,19 @@ public class GeneFinderWrapper extends TableDecorator {
         ArrayList<String> matches = new ArrayList<String>();
         if ( geneMatch.contains( object ) ) {
             matches.add( "Symbol" );
-            ;
+            
         }
         if ( aliasMatch.contains( object ) ) {
             matches.add( "Alias" );
-            ;
+            
         }
         if ( geneProductMatch.contains( object ) ) {
             matches.add( "GeneProduct" );
-            ;
+            
         }
         if ( bioSequenceMatch.contains( object ) ) {
             matches.add( "BioSequence" );
-            ;
+            
         }
         return StringUtils.join( matches.toArray(), "," );
     }

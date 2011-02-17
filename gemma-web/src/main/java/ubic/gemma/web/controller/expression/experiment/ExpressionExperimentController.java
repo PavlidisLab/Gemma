@@ -820,7 +820,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Long id = Long.parseLong( idStr );
 
         ExpressionExperiment expressionExperiment = expressionExperimentService.load( id );
-        expressionExperiment = expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
+        expressionExperiment = expressionExperimentService.thawLite( expressionExperiment );
 
         if ( expressionExperiment == null ) {
             throw new EntityNotFoundException( id + " not found" );

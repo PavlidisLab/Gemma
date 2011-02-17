@@ -32,6 +32,11 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class SimpleExpressionExperimentLoadCommand extends SimpleExpressionExperimentMetaData {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     private String serverFilePath;
 
     private String originalFileName;

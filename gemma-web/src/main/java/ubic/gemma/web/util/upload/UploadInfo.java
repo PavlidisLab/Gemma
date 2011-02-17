@@ -37,6 +37,10 @@ import java.io.Serializable;
  * @version $Id$
  */
 public class UploadInfo implements Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private long totalSize = 0;
     private long bytesRead = 0;
     private String status = "done";
