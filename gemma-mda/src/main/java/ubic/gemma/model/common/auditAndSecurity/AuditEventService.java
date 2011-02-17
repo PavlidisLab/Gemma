@@ -63,7 +63,7 @@ public interface AuditEventService {
      * @param type
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public AuditEvent getLastEvent( Auditable auditable, Class<? extends AuditEventType> type );
 
     /**
