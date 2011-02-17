@@ -28,16 +28,27 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.apps.ExpressionExperimentManipulatingCLI#buildOptions()
+     */
     @Override
     protected void buildOptions() {
         super.buildOptions();
         addForceOption();
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
+     */
     @Override
     protected Exception doWork( String[] args ) {
 
-        super.processCommandLine( "BatchEffectPopulation", args );
+        Exception ex = super.processCommandLine( "BatchEffectPopulation", args );
+        if ( ex != null ) return ex;
 
         BatchInfoPopulationService ser = ( BatchInfoPopulationService ) getBean( "batchInfoPopulationService" );
 
@@ -50,7 +61,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                     log.info( "Can't or don't need to run " + bas );
                     continue;
                 }
-          
+
                 try {
                     ExperimentalFactor ef = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
                     if ( ef == null ) {
@@ -67,12 +78,13 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
             }
         }
 
+        summarizeProcessing();
         return null;
     }
 
     public static void main( String[] args ) {
         BatchEffectPopulationCli b = new BatchEffectPopulationCli();
-        b.doWork( args );
+        Exception ex = b.doWork( args );
     }
 
 }
