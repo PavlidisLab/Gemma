@@ -176,10 +176,11 @@ public class NcbiGeneDomainObjectGenerator {
             NcbiGeneHistory history = historyParser.get( geneInfo.getGeneId() );
             geneInfo.setHistory( history );
 
-            if ( !taxaCount.containsKey( geneInfo.getTaxId() ) ) {
-                taxaCount.put( new Integer( geneInfo.getTaxId() ), new Integer( 0 ) );
+            int taxId = geneInfo.getTaxId();
+            if ( !taxaCount.containsKey( taxId ) ) {
+                taxaCount.put( new Integer( taxId ), new Integer( 0 ) );
             }
-            taxaCount.put( geneInfo.getTaxId(), taxaCount.get( geneInfo.getTaxId() ) + 1 );
+            taxaCount.put( taxId, taxaCount.get( taxId ) + 1 );
             geneInfoMap.put( geneInfo.getGeneId(), geneInfo );
         }
         supportedTaxaWithNCBIGenes = new HashSet<Taxon>();
@@ -187,7 +188,8 @@ public class NcbiGeneDomainObjectGenerator {
 
             if ( taxaCount.get( taxId ) > 0 ) {
                 log.debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
-                supportedTaxaWithNCBIGenes.add( supportedTaxa.get( taxId ) );
+                Taxon t = supportedTaxa.get( taxId );
+                supportedTaxaWithNCBIGenes.add( t );
             }
         }
 
