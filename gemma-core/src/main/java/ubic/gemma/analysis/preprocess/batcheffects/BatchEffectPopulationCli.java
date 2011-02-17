@@ -29,6 +29,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        addForceOption();
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
 
         super.processCommandLine( "BatchEffectPopulation", args );
@@ -43,10 +49,10 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                  * If we're not using the database, always run it.
                  */
                 if ( !force && !needToRun( bas, BatchInformationFetchingEvent.class ) ) {
-                    log.info( "Can't or Don't need to run " + bas );
+                    log.info( "Can't or don't need to run " + bas );
                     continue;
                 }
-                ExperimentalFactor ef = ser.fillBatchInformation( ( ExpressionExperiment ) bas );
+                ExperimentalFactor ef = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
 
                 if ( ef == null ) {
                     /*

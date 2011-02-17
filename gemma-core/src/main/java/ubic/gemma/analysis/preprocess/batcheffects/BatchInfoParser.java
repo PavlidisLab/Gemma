@@ -143,7 +143,7 @@ public class BatchInfoParser {
                 } else if ( providerName.equalsIgnoreCase( "agilent" ) ) {
                     ex = new AgilentScanDateExtractor();
                 } else {
-                    throw new UnsupportedOperationException( "Provider: " + providerName
+                    throw new UnsupportedRawdataFileFormatException( "Provider: " + providerName
                             + " not supported for scan date extraction." );
                 }
                 Date d = ex.extract( is );

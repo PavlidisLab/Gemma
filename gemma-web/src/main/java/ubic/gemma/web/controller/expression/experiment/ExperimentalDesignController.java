@@ -244,6 +244,10 @@ public class ExperimentalDesignController extends BaseController {
         }
 
         Collection<ExperimentalFactor> experimentalFactorsToRemove = new HashSet<ExperimentalFactor>();
+        /*
+         * FIXME push this code into a service elsewhere.
+         */
+
         for ( Long efId : efIds ) {
             ExperimentalFactor experimentalFactor = experimentalFactorService.load( efId );
             experimentalFactorsToRemove.add( experimentalFactor );

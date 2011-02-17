@@ -33,6 +33,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
@@ -66,13 +68,19 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 @Service
 public class BatchInfoPopulationService {
 
+    public static final String BATCH_FACTOR_CATEGORY_URI = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction";
+
+    public static final String BATCH_FACTOR_CATEGORY_NAME = "ComplexAction";
+
+    public static final String BATCH_FACTOR_NAME = "batch";
+
     /**
      * How many hours do we allow to pass between samples, before we consider them to be a separate batch (if they are
      * not run on the same day). This 'slack' is necessary to allow for the possibility that all the hybridizations were
      * run together, but the scanning took a while to complete. Of course we are still always recording the actual
      * dates, this is only used for the creation of ExperimentalFactors.
      */
-    private static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 2;
+    protected static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 2;
 
     /**
      * Delete unpacked raw data files when done? The zipped/tarred archived will be left alone anyway.
@@ -105,24 +113,37 @@ public class BatchInfoPopulationService {
     @Autowired
     AuditEventService auditEventService;
 
+    @Autowired
+    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
     /**
      * Attempt to obtain batch information from the data provider and populate it into the given experiment. The method
      * used may vary. For GEO, the default method is to download the raw data files, and look in them for a date. This
      * is not implemented for every possible type of raw data file.
      * 
      * @param ee
-     * @return a persistent factor representing the batch factor.
+     * @return
      */
     public ExperimentalFactor fillBatchInformation( ExpressionExperiment ee ) {
+        return this.fillBatchInformation( ee, false );
+    }
+
+    /**
+     * Attempt to obtain batch information from the data provider and populate it into the given experiment. The method
+     * used may vary. For GEO, the default method is to download the raw data files, and look in them for a date. This
+     * is not implemented for every possible type of raw data file.
+     * 
+     * @param ee
+     * @param force
+     * @return a persistent factor representing the batch factor.
+     */
+    public ExperimentalFactor fillBatchInformation( ExpressionExperiment ee, boolean force ) {
         ExpressionExperiment tee = expressionExperimentService.thawLite( ee );
 
-        boolean needed = needToRun( tee );
+        boolean needed = force || needToRun( tee );
 
         if ( !needed ) {
-            /*
-             * What to do? Return it?
-             */
-            log.info( "Study already has batch information, or it is known to be unavailable." );
+            log.info( "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
             return null;
         }
 
@@ -146,31 +167,18 @@ public class BatchInfoPopulationService {
 
             this.auditTrailService.addUpdateEvent( tee, BatchInformationFetchingEvent.class, "", "" );
         } catch ( Exception e ) {
+
+            /*
+             * If it is an unsupported format, don't add this event, because we might add support.
+             */
+            // if ( !( e instanceof UnsupportedRawdataFileFormatException ) ) {
             this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getFullStackTrace( e ) );
+            // }
             return null;
         }
 
         return factor;
-    }
-
-    /**
-     * @param ee
-     * @return true if it needs processing
-     */
-    private boolean needToRun( ExpressionExperiment ee ) {
-
-        AuditEvent e = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
-        if ( e == null ) return true;
-
-        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getClass() ) ) return false; // don't bother
-        // running again
-
-        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) ) return true; // worth trying
-        // again perhaps
-
-        return false; // already did it.
-
     }
 
     /**
@@ -201,9 +209,9 @@ public class BatchInfoPopulationService {
                 fv.setValue( batchId );
                 Collection<Characteristic> chars = new HashSet<Characteristic>();
                 VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
-                c.setCategory( "ComplexAction" ); // FIXME
+                c.setCategory( BATCH_FACTOR_CATEGORY_NAME );
                 c.setValue( batchId );
-                c.setCategoryUri( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction" );
+                c.setCategoryUri( BATCH_FACTOR_CATEGORY_URI );
                 c.setEvidenceCode( GOEvidenceCode.IIA );
 
                 chars.add( c );
@@ -250,6 +258,171 @@ public class BatchInfoPopulationService {
         }
 
         return ef;
+    }
+
+    /**
+     * Currently only supports GEO
+     * 
+     * @param ee
+     * @return
+     */
+    private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
+        RawDataFetcher fetcher = new RawDataFetcher();
+        return fetcher.fetch( ee.getAccession().getAccession() );
+    }
+
+    /**
+     * @param ee
+     * @param files Local copies of raw data files obtained from the data provider (e.g. GEO)
+     * @return
+     */
+    private ExperimentalFactor getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
+        BatchInfoParser batchInfoParser = new BatchInfoParser();
+        Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
+
+        removeExistingBatchFactor( ee );
+
+        ExperimentalFactor factor = convertToFactor( ee, dates );
+        return factor;
+    }
+
+    /**
+     * @return
+     */
+    private VocabCharacteristic getBatchFactorCategory() {
+        VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+        c.setCategory( BATCH_FACTOR_CATEGORY_NAME );
+        c.setValue( BATCH_FACTOR_CATEGORY_NAME );
+        c.setValueUri( BATCH_FACTOR_CATEGORY_URI );
+        c.setCategoryUri( BATCH_FACTOR_CATEGORY_URI );
+        c.setEvidenceCode( GOEvidenceCode.IIA );
+        return c;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private ExperimentalFactor makeFactorForBatch( ExpressionExperiment ee ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setCategory( getBatchFactorCategory() );
+        ef.setExperimentalDesign( ed );
+        ef.setName( BATCH_FACTOR_NAME );
+        ef.setDescription( "Scan date or similar proxy for 'sample processing batch'"
+                + " extracted from the raw data files." );
+
+        ef = persistFactor( ee, ef );
+        return ef;
+    }
+
+    /**
+     * @param ee
+     * @return true if it needs processing
+     */
+    private boolean needToRun( ExpressionExperiment ee ) {
+
+        AuditEvent e = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
+        if ( e == null ) return true;
+
+        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getClass() ) ) return false; // don't bother
+        // running again
+
+        if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) ) return true; // worth trying
+        // again perhaps
+
+        return false; // already did it.
+
+    }
+
+    /**
+     * @param ee
+     * @param factor
+     * @return
+     */
+    private ExperimentalFactor persistFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
+        ExperimentalDesign ed = experimentalDesignService.load( ee.getId() );
+
+        /*
+         * Note: this call should not be needed because of cascade behaviour.
+         */
+        // experimentalFactorService.create( ef );
+
+        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
+        ed.getExperimentalFactors().add( factor );
+
+        experimentalDesignService.update( ed );
+
+        return factor;
+
+    }
+
+    /**
+     * Remove an existing batch factor, if it exists. This is really only relevant in a 'force' situation.
+     * 
+     * @param ee
+     */
+    private void removeExistingBatchFactor( ExpressionExperiment ee ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+
+        ExperimentalFactor toRemove = null;
+
+        for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
+            Characteristic c = ef.getCategory();
+            if ( c instanceof VocabCharacteristic ) {
+                VocabCharacteristic v = ( VocabCharacteristic ) c;
+                if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) && v.getName().equals( BATCH_FACTOR_NAME ) ) {
+                    toRemove = ef;
+                    break;
+                    /*
+                     * FIXME handle the case where we somehow have two or more.
+                     */
+                }
+            }
+        }
+
+        if ( toRemove == null ) {
+            return;
+        }
+
+        /*
+         * FIXME this code is basically copied from ExperimentalFactorController and should be moved down into a
+         * Model-level service.
+         */
+
+        /*
+         * First, check to see if there are any diff results that use this factor.
+         */
+        Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+                .findByFactor( toRemove );
+        for ( DifferentialExpressionAnalysis a : analyses ) {
+            differentialExpressionAnalysisService.delete( a );
+        }
+
+        ee = expressionExperimentService.thawLite( ee );
+
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+
+                Collection<FactorValue> factorValuesToRemoveFromBioMaterial = new HashSet<FactorValue>();
+                for ( FactorValue factorValue : bm.getFactorValues() ) {
+                    if ( toRemove.equals( factorValue.getExperimentalFactor() ) ) {
+                        factorValuesToRemoveFromBioMaterial.add( factorValue );
+                    }
+                }
+                // if there are factors to remove
+                if ( factorValuesToRemoveFromBioMaterial.size() > 0 ) {
+                    bm.getFactorValues().removeAll( factorValuesToRemoveFromBioMaterial );
+                    bioMaterialService.update( bm );
+                }
+            }
+        }
+
+        ed.getExperimentalFactors().remove( toRemove );
+        // delete the experimental factor this cascades to values.
+        experimentalFactorService.delete( toRemove );
+        experimentalDesignService.update( ed );
     }
 
     /**
@@ -303,75 +476,6 @@ public class BatchInfoPopulationService {
         }
 
         return result;
-
-    }
-
-    private ExperimentalFactor makeFactorForBatch( ExpressionExperiment ee ) {
-        ExperimentalDesign ed = ee.getExperimentalDesign();
-        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
-        ef.setType( FactorType.CATEGORICAL );
-        ef.setCategory( getBatchFactorCategory() );
-        ef.setExperimentalDesign( ed );
-        ef.setName( "batch" );
-        ef
-                .setDescription( "Scan date or similar proxy for 'sample processing batch' extracted from the raw data files." );
-
-        ef = persistFactor( ee, ef );
-        return ef;
-    }
-
-    private VocabCharacteristic getBatchFactorCategory() {
-        VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
-        c.setCategory( "ComplexAction" );
-        c.setValue( "ComplexAction" );
-        c.setValueUri( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction" );
-        c.setCategoryUri( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction" );
-        c.setEvidenceCode( GOEvidenceCode.IIA );
-        return c;
-    }
-
-    /**
-     * Currently only supports GEO
-     * 
-     * @param ee
-     * @return
-     */
-    private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
-        RawDataFetcher fetcher = new RawDataFetcher();
-        return fetcher.fetch( ee.getAccession().getAccession() );
-    }
-
-    /**
-     * @param ee
-     * @param files Local copies of raw data files obtained from the data provider (e.g. GEO)
-     * @return
-     */
-    private ExperimentalFactor getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
-        BatchInfoParser batchInfoParser = new BatchInfoParser();
-        Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
-        ExperimentalFactor factor = convertToFactor( ee, dates );
-        return factor;
-    }
-
-    /**
-     * @param ee
-     * @param factor
-     * @return
-     */
-    private ExperimentalFactor persistFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
-        ExperimentalDesign ed = experimentalDesignService.load( ee.getId() );
-
-        /*
-         * Note: this call should not be needed because of cascade behaviour.
-         */
-        // experimentalFactorService.create( ef );
-
-        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
-        ed.getExperimentalFactors().add( factor );
-
-        experimentalDesignService.update( ed );
-
-        return factor;
 
     }
 
