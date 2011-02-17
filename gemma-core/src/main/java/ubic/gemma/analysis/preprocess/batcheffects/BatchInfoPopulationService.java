@@ -179,6 +179,8 @@ public class BatchInfoPopulationService {
             return null;
         }
 
+        if ( factor != null ) log.info( "Got batch information for :" + ee.getShortName() );
+
         return factor;
     }
 
