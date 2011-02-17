@@ -30,6 +30,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
+    @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        super.addForceOption();
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -50,16 +56,15 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
             }
 
             try {
+                log.info( "Processing: " + bas );
                 svdser.svd( ( ExpressionExperiment ) bas );
-                SVDValueObject svd = svdser.retrieveSvd( bas.getId() );
-                svdser.svdFactorAnalysis( ( ExpressionExperiment ) bas, svd );
-                this.successObjects.add( bas );
+                this.successObjects.add( bas.toString() );
             } catch ( Exception e ) {
                 log.error( e, e );
-                this.errorObjects.add( e.getMessage() );
+                this.errorObjects.add( ee + ": " + e.getMessage() );
             }
         }
-
+        summarizeProcessing();
         return null;
     }
 

@@ -360,9 +360,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
         if ( hasOption( "knownGenesOnly" ) ) {
             linkAnalysisConfig.setKnownGenesOnly( true );
         }
-        if ( hasOption( "force" ) ) {
-            this.force = true;
-        }
+
         if ( hasOption( "noimages" ) ) {
             linkAnalysisConfig.setMakeSampleCorrMatImages( false );
         }
