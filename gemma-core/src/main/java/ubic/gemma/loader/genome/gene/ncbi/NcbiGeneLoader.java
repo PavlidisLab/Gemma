@@ -81,7 +81,7 @@ public class NcbiGeneLoader {
      * @param geneInfoFile the gene_info file
      * @param gene2AccFile the gene2accession file
      * @param filterTaxa should we filter out taxa we're not supporting
-     */ 
+     */
     public void load( String geneInfoFile, String gene2AccFile, String geneHistoryFile, boolean filterTaxa ) {
 
         /*
@@ -203,7 +203,8 @@ public class NcbiGeneLoader {
             for ( Taxon taxon : taxaGenesLoaded ) {
 
                 if ( taxon == null ) {
-                    throw new IllegalStateException( "null taxon" );
+                    log.warn( "null taxon" );
+                    continue;
                 }
 
                 Boolean genesUsableParent = false;
@@ -212,12 +213,12 @@ public class NcbiGeneLoader {
                     genesUsableParent = true;
                     taxon.setIsGenesUsable( false );
                     taxonService.update( taxon );
-                    log.warn( "Parent taxon found: " + parentTaxon + ": Not using genes from taxon: " + taxon );
+                    log.debug( "Parent taxon found: " + parentTaxon + ": Not using genes from taxon: " + taxon );
                 }
                 if ( !taxon.getIsGenesUsable() && !genesUsableParent ) {
                     taxon.setIsGenesUsable( true );
                     taxonService.update( taxon );
-                    log.info( "Updating taxon genes usable to true for taxon " + taxon );
+                    log.debug( "Updating taxon genes usable to true for taxon " + taxon );
                 }
             }
         } else {
