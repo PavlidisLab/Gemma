@@ -19,9 +19,8 @@
 
 package ubic.gemma.analysis.preprocess.svd;
 
-import java.util.Collection;
-
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -36,19 +35,22 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception ee = super.processCommandLine( "SVD", args );
 
         if ( ee != null ) return ee;
 
-        SVDService svdser = ( SVDService ) this.getBean( "svdService" );
+        SVDService svdser = ( SVDService ) this.getBean( "sVDService" );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
 
+            if ( !force && !needToRun( bas, PCAAnalysisEvent.class ) ) {
+                continue;
+            }
+
             try {
-                svdser.svd( ( Collection<ExpressionExperiment> ) bas );
+                svdser.svd( ( ExpressionExperiment ) bas );
                 SVDValueObject svd = svdser.retrieveSvd( bas.getId() );
                 svdser.svdFactorAnalysis( ( ExpressionExperiment ) bas, svd );
                 this.successObjects.add( bas );

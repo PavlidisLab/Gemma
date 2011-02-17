@@ -72,13 +72,13 @@ public class SVDServiceImpl implements SVDService {
     @Autowired
     private AuditTrailService auditTrailService;
 
-    private String EE_SVD_SUMMARY = "SVDSummary";
+    private static String EE_SVD_SUMMARY = "SVDSummary";
 
-    private String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
+    private static String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
 
-    private String EE_REPORT_DIR = "ExpressionExperimentReports";
+    private static String EE_REPORT_DIR = "ExpressionExperimentReports";
 
-    private String EE_SVD_DIR = "SVD";
+    private static String EE_SVD_DIR = "SVD";
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -132,6 +132,7 @@ public class SVDServiceImpl implements SVDService {
      * @see ubic.gemma.analysis.preprocess.SVDService#svd(ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     public SVDValueObject svd( ExpressionExperiment ee ) {
+        assert ee != null;
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
@@ -168,6 +169,11 @@ public class SVDServiceImpl implements SVDService {
      * ExpressionExperiment, ubic.gemma.analysis.preprocess.svd.SVDValueObject)
      */
     public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee, SVDValueObject svo ) {
+        DoubleMatrix<Integer, Integer> vMatrix = svo.getvMatrix();
+
+        if ( vMatrix == null || vMatrix.columns() == 0 ) {
+            throw new IllegalArgumentException( "SVD must already be run" );
+        }
 
         /*
          * Get bioassay/biomaterial dates and factor mappings
@@ -187,8 +193,9 @@ public class SVDServiceImpl implements SVDService {
 
                 for ( FactorValue fv : bm.getFactorValues() ) {
 
-                    if ( !bioMaterialFactorMap.containsKey( fv.getExperimentalFactor() ) ) {
-                        bioMaterialFactorMap.put( fv.getExperimentalFactor(), new HashMap<Long, Double>() );
+                    ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
+                    if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
+                        bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
                     }
 
                     double valueToStore;
@@ -199,13 +206,16 @@ public class SVDServiceImpl implements SVDService {
                             log.warn( "Measurement wasn't a number for " + fv );
                             continue;// FIXME
                         }
-                        isContinuous.put( fv.getExperimentalFactor(), true );
+                        isContinuous.put( experimentalFactor, true );
                     } else {
                         valueToStore = fv.getId().doubleValue();
-                        assert !isContinuous.containsKey( fv.getExperimentalFactor() );
-                        isContinuous.put( fv.getExperimentalFactor(), false );
+                        assert !isContinuous.containsKey( experimentalFactor )
+                                || !isContinuous.get( experimentalFactor ) : experimentalFactor
+
+                        + " shouldn't be considered continuous?";
+                        isContinuous.put( experimentalFactor, false );
                     }
-                    bioMaterialFactorMap.get( fv.getExperimentalFactor() ).put( bm.getId(), valueToStore );
+                    bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
                 }
 
             }
@@ -218,8 +228,9 @@ public class SVDServiceImpl implements SVDService {
 
         Long[] svdBioMaterials = svo.getBioMaterialIds();
 
-        DoubleMatrix<Integer, Integer> vMatrix = svo.getvMatrix();
-
+        if ( svdBioMaterials == null || svdBioMaterials.length == 0 ) {
+            throw new IllegalStateException( "SVD did not have biomaterial information" );
+        }
         // since we use rank correlation/anova, we just use the casted ids or dates as the covariate
         for ( int componentNumber = 0; componentNumber < Math.min( vMatrix.columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
 
@@ -242,9 +253,6 @@ public class SVDServiceImpl implements SVDService {
 
                 double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
 
-                /*
-                 * Store in the SVDO.
-                 */
                 svo.setPCDateCorrelation( componentNumber, dateCorrelation );
             }
 
@@ -255,6 +263,7 @@ public class SVDServiceImpl implements SVDService {
                 Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
 
                 double[] fvs = new double[svdBioMaterials.length];
+                assert fvs.length > 0;
 
                 for ( int j = 0; j < svdBioMaterials.length; j++ ) {
                     fvs[j] = bmToFv.get( svdBioMaterials[j] ).doubleValue();
@@ -265,9 +274,6 @@ public class SVDServiceImpl implements SVDService {
 
                     svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
 
-                    /*
-                     * Store in the SVDO .
-                     */
                 } else {
 
                     // Do one-way anova (KW)
@@ -275,7 +281,7 @@ public class SVDServiceImpl implements SVDService {
                     IntArrayList groupings = new IntArrayList( fvs.length );
                     int k = 0;
                     for ( double d : fvs ) {
-                        groupings.set( k, ( int ) d );
+                        groupings.add( ( int ) d );
                         groups.add( ( int ) d );
                         k++;
                     }
@@ -294,9 +300,6 @@ public class SVDServiceImpl implements SVDService {
                         svo.setPCFactorPvalue( componentNumber, ef, kwpval );
                     }
 
-                    /*
-                     * Store in the SVDO .
-                     */
                 }
             }
         }
@@ -304,8 +307,9 @@ public class SVDServiceImpl implements SVDService {
         return svo;
     }
 
-    private String getReportPath( long id ) {
-        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_SVD_SUMMARY + "." + id;
+    public static String getReportPath( long id ) {
+        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_SVD_DIR + File.separatorChar
+                + EE_SVD_SUMMARY + "." + id;
     }
 
     /**

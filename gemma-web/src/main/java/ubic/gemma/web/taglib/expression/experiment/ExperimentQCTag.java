@@ -22,7 +22,6 @@ import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
-import ubic.gemma.security.SecurityService;
 
 /**
  * @author paul
@@ -118,9 +117,9 @@ public class ExperimentQCTag extends TagSupport {
         buf.append( "<table border=\"0\" cellspacing=\"4\" style=\"background-color:#DDDDDD\" >" );
 
         buf.append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation (black &le; "
-                + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH
-                + ")</strong></th>"
-                // + "<th valign=\"top\" align=\"center\"><strong>PCA</strong></th>"
+                + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH + ")</strong></th>"
+                + "<th valign=\"top\" align=\"center\"><strong>PCA Scree</strong></th>"
+                + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
                 // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Probe correlation</strong</th>"
                 + "<th valign=\"top\" align=\"center\"><strong>Pvalue distributions</strong></th>" + "</tr>" );
@@ -135,13 +134,13 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a target=\"_blank\" title=\"Click for larger version (new page)\" href=\"visualizeCorrMat.html?id="
                             + this.eeid
                             + "&nocache="
-                            + (int)Math.rint(Math.random()*1000)
+                            + ( int ) Math.rint( Math.random() * 1000 )
                             + "&size=large\"><img src=\"visualizeCorrMat.html?id="
                             + this.eeid
                             + "&size="
                             + this.size
                             + "&nocache="
-                            + (int)Math.rint(Math.random()*1000)
+                            + ( int ) Math.rint( Math.random() * 1000 )
                             + "\" alt='Image unavailable'/></a>" );
 
             // link to lower contrast version
@@ -149,13 +148,12 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<ul><li><a class=\"newpage\" target=\"_blank\" title=\"Click for larger lower contrast version\" href=\"visualizeCorrMat.html?id="
                             + this.eeid
                             + "&nocache="
-                            + (int)Math.rint(Math.random()*1000)
+                            + ( int ) Math.rint( Math.random() * 1000 )
                             + "&size=large&contr=lo\">View low contrast version (black &le;"
                             + ExpressionDataSampleCorrelation.LO_CONTRAST_COR_THRESH + ")</a></li>" );
             buf
                     .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"visualizeCorrMat.html?id="
-                            + this.eeid                            
-                            + "&text=1\">Get data</a></li>" );
+                            + this.eeid + "&text=1\">Get data</a></li>" );
 
             /* Need to have a security check before showing this. */
             // buf
@@ -168,20 +166,22 @@ public class ExperimentQCTag extends TagSupport {
         } else {
             buf.append( placeHolder );
         }
-        //
-        // if ( hasPCAFile ) {
-        // buf
-        // .append(
-        // "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='PCA' src=\"visualizePCA.html?id="
-        // + this.eeid + "\" /></td>" );
-        // } else {
-        // buf.append( placeHolder );
-        // }
-        //
+
+        if ( hasPCAFile ) {
+            buf
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"pcaScree.html?id="
+                            + this.eeid + "\" /></td>" );
+            buf
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlations of PCs with expermiental factors' src=\"pcaFactors.html?id="
+                            + this.eeid + "\" /></td>" );
+        } else {
+            buf.append( placeHolder );
+        }
+
         // if ( hasNodeDegreeDistFile ) {
         // buf
         // .append(
-        // "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Node degree dist' src=\"visualizeNodeDegreeDist.html?id="
+        // "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Gene network node degree distribution' src=\"visualizeNodeDegreeDist.html?id="
         // + this.eeid + "\" /></td>" );
         // } else {
         // buf.append( placeHolder );
@@ -189,7 +189,7 @@ public class ExperimentQCTag extends TagSupport {
 
         if ( hasCorrDistFile ) {
             buf
-                    .append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Correlation distribution' src=\"visualizeProbeCorrDist.html?id="
+                    .append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"visualizeProbeCorrDist.html?id="
                             + this.eeid + "\" /></td>" );
         } else {
             buf.append( placeHolder );
@@ -197,7 +197,7 @@ public class ExperimentQCTag extends TagSupport {
 
         if ( hasPvalueDistFiles ) {
             buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img alt='Pvalue distribution' src=\"visualizePvalueDist.html?id="
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Differential expression value distribution' src=\"visualizePvalueDist.html?id="
                             + this.eeid + "\" /></td>" );
         } else {
             buf.append( placeHolder );
