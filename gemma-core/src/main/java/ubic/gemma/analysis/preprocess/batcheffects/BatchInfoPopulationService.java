@@ -171,7 +171,7 @@ public class BatchInfoPopulationService {
             /*
              * If it is an unsupported format, don't add this event, because we might add support.
              */
-            log.info( e.getMessage() );
+            log.info( e );
             // if ( !( e instanceof UnsupportedRawdataFileFormatException ) ) {
             this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getFullStackTrace( e ) );
@@ -365,12 +365,16 @@ public class BatchInfoPopulationService {
      * @param ee
      */
     private void removeExistingBatchFactor( ExpressionExperiment ee ) {
+        log.info( "Removing existing batch factor" );
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
         ExperimentalFactor toRemove = null;
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
             Characteristic c = ef.getCategory();
+            if ( c == null ) {
+                continue;
+            }
             if ( c instanceof VocabCharacteristic ) {
                 VocabCharacteristic v = ( VocabCharacteristic ) c;
                 if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) && v.getName().equals( BATCH_FACTOR_NAME ) ) {
