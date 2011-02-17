@@ -365,7 +365,6 @@ public class BatchInfoPopulationService {
      * @param ee
      */
     private void removeExistingBatchFactor( ExpressionExperiment ee ) {
-        log.info( "Removing existing batch factor" );
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
         ExperimentalFactor toRemove = null;
@@ -375,15 +374,20 @@ public class BatchInfoPopulationService {
             if ( c == null ) {
                 continue;
             }
+
+            boolean looksLikeBatch = ef.getName().equals( BATCH_FACTOR_NAME );
+
             if ( c instanceof VocabCharacteristic ) {
                 VocabCharacteristic v = ( VocabCharacteristic ) c;
-                if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) && v.getName().equals( BATCH_FACTOR_NAME ) ) {
+                if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) ) {
                     toRemove = ef;
                     break;
                     /*
                      * FIXME handle the case where we somehow have two or more.
                      */
                 }
+            } else if ( looksLikeBatch ) {
+                toRemove = ef;
             }
         }
 
@@ -395,6 +399,7 @@ public class BatchInfoPopulationService {
          * FIXME this code is basically copied from ExperimentalFactorController and should be moved down into a
          * Model-level service.
          */
+        log.info( "Removing existing batch factor: " + toRemove );
 
         /*
          * First, check to see if there are any diff results that use this factor.
