@@ -65,7 +65,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
         assertNotNull( svd.getvMatrix() );
     }
 
-    // @Before
+    @Before
     public void setUp() throws Exception {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
@@ -84,7 +84,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
 
     }
 
-    // @After
+    @After
     public void tearDown() {
         if ( ee != null ) {
             try {
