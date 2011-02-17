@@ -101,7 +101,7 @@ public class AgilentScanDateExtractor implements ScanDateExtractor {
                     DateFormat f = new SimpleDateFormat( "MM-dd-yyyy hh:mm:ss" ); // 10-18-2005 13:02:36
                     f.setLenient( true );
                     Date d = f.parse( date );
-                    is.close();
+                    reader.close();
                     return d;
                 }
             } else {
@@ -164,7 +164,7 @@ public class AgilentScanDateExtractor implements ScanDateExtractor {
         if ( d == null ) {
             throw new IllegalStateException( "Failed to find the 'DateTime' line" );
         }
-
+        reader.close();
         return d;
     }
 

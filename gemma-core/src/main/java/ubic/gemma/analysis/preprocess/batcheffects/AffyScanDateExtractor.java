@@ -94,30 +94,33 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                         date = parseDatHeader( string );
                     }
                 }
-            }
+            } else {
 
-            /*
-             * Must not be a version 4 file, assume version 3 plain text.
-             */
-            BufferedReader reader = new BufferedReader( new InputStreamReader( is ) );
-            String line = null;
-            int count = 0;
-            while ( ( line = reader.readLine() ) != null ) {
-                // log.info( line );
-                if ( line.startsWith( "DatHeader" ) ) {
-                    date = parseDatHeader( line );
+                /*
+                 * Must not be a version 4 file, assume version 3 plain text.
+                 */
+                BufferedReader reader = new BufferedReader( new InputStreamReader( is ) );
+                String line = null;
+                int count = 0;
+                while ( ( line = reader.readLine() ) != null ) {
+                    // log.info( line );
+                    if ( line.startsWith( "DatHeader" ) ) {
+                        date = parseDatHeader( line );
+                    }
+                    if ( ++count > 100 ) {
+                        // give up.
+                        reader.close();
+                        break;
+                    }
                 }
-                if ( ++count > 100 ) {
-                    // give up.
-                    reader.close();
-                    break;
-                }
+                reader.close();
             }
 
             if ( date == null ) {
                 throw new IllegalStateException( "Failed to find date" );
             }
             log.debug( date );
+
             return date;
 
         } catch ( IOException e ) {

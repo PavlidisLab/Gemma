@@ -91,7 +91,7 @@ public class BatchInfoParser {
                 continue;
             }
 
-            accession.getExternalDatabase(); // check for GEO
+            // accession.getExternalDatabase(); // check for GEO
 
             if ( StringUtils.isBlank( accession.getAccession() ) ) {
                 throw new IllegalStateException(
@@ -104,6 +104,10 @@ public class BatchInfoParser {
     }
 
     private boolean isSupported( ArrayDesign arrayDesignUsed ) {
+
+        if ( arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) return true;
+
+        if ( arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) return true;
 
         if ( arrayDesignUsed.getDesignProvider() == null
                 || StringUtils.isBlank( arrayDesignUsed.getDesignProvider().getName() ) ) return false;
@@ -128,24 +132,25 @@ public class BatchInfoParser {
         for ( BioAssay ba : bioAssays2Files.keySet() ) {
             File f = bioAssays2Files.get( ba );
 
-            if ( ba.getArrayDesignUsed().getDesignProvider() == null ) {
-                log.warn( "Cannot determine provider for " + ba.getArrayDesignUsed() );
-                continue;
-            }
+            ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
 
             try {
-                InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+
                 ScanDateExtractor ex = null;
 
-                String providerName = ba.getArrayDesignUsed().getDesignProvider().getName();
-                if ( providerName.equalsIgnoreCase( "affymetrix" ) ) {
+                String providerName = arrayDesignUsed.getDesignProvider().getName();
+                if ( providerName.equalsIgnoreCase( "affymetrix" )
+                        || arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) {
                     ex = new AffyScanDateExtractor();
-                } else if ( providerName.equalsIgnoreCase( "agilent" ) ) {
+                } else if ( providerName.equalsIgnoreCase( "agilent" )
+                        || arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) {
                     ex = new AgilentScanDateExtractor();
                 } else {
                     throw new UnsupportedRawdataFileFormatException( "Provider: " + providerName
                             + " not supported for scan date extraction." );
                 }
+
+                InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
                 Date d = ex.extract( is );
                 for ( BioMaterial bm : ba.getSamplesUsed() ) {
                     result.put( bm, d );
@@ -182,6 +187,10 @@ public class BatchInfoParser {
                 continue;
             }
 
+            if ( n.contains( "CHP" ) || n.contains( "DAT" ) ) {
+                continue;
+            }
+
             /*
              * keep just the GSMNNNNNN part. FIXME: only works with GEO
              */
@@ -193,6 +202,9 @@ public class BatchInfoParser {
                  * Warn? Throw exception?
                  */
                 continue;
+            }
+            if ( bioAssays2Files.containsKey( ba ) ) {
+                log.warn( "Multiple files matching " + ba + ": " + bioAssays2Files.get( ba ) + "; " + f );
             }
             bioAssays2Files.put( ba, f );
         }

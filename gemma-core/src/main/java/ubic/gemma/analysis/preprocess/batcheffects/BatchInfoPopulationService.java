@@ -171,6 +171,7 @@ public class BatchInfoPopulationService {
             /*
              * If it is an unsupported format, don't add this event, because we might add support.
              */
+            log.info( e.getMessage() );
             // if ( !( e instanceof UnsupportedRawdataFileFormatException ) ) {
             this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getFullStackTrace( e ) );
