@@ -172,7 +172,7 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"pcaScree.html?id="
                             + this.eeid + "\" /></td>" );
             buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlations of PCs with expermiental factors' src=\"pcaFactors.html?id="
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlations of PCs with experimental factors' src=\"pcaFactors.html?id="
                             + this.eeid + "\" /></td>" );
         } else {
             buf.append( placeHolder );
