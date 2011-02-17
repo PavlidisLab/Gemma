@@ -187,7 +187,7 @@ public class BatchInfoParser {
                 continue;
             }
 
-            if ( n.contains( "CHP" ) || n.contains( "DAT" ) ) {
+            if ( n.contains( "CHP" ) || n.contains( "DAT" ) || n.contains( "EXP" ) ) {
                 continue;
             }
 

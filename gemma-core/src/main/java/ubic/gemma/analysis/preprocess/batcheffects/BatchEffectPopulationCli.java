@@ -52,16 +52,21 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                     log.info( "Can't or don't need to run " + bas );
                     continue;
                 }
-                ExperimentalFactor ef = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
+                log.info( "Processing: " + bas );
 
-                if ( ef == null ) {
-                    /*
-                     * Failures
-                     */
-                    this.errorObjects.add( bas );
-                } else {
-                    this.successObjects.add( bas );
+                try {
+                    ExperimentalFactor ef = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
+                    if ( ef == null ) {
+                        this.errorObjects.add( bas.toString() + ": Null factor returned" );
+                    } else {
+                        this.successObjects.add( bas.toString() );
+                    }
+
+                } catch ( Exception e ) {
+                    log.error( e, e );
+                    this.errorObjects.add( bas + ": " + e.getMessage() );
                 }
+
             }
         }
 
