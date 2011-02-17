@@ -84,7 +84,7 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
     public static void main( String[] args ) {
         BatchEffectPopulationCli b = new BatchEffectPopulationCli();
-        Exception ex = b.doWork( args );
+        b.doWork( args );
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006 University of British Columbia
+ * Copyright (c) 2006-2011 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -74,6 +75,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     private AnalysisType type = null;
     private List<Long> factorIds = new ArrayList<Long>();
     private List<String> factorNames = new ArrayList<String>();
+
+    /**
+     * Whether batch factors should be included (if they exist)
+     */
+    private boolean ignoreBatch = false;
 
     /*
      * (non-Javadoc)
@@ -126,6 +132,13 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 .create( "type" );
 
         super.addOption( analysisType );
+
+        Option ignoreBatchOption = OptionBuilder
+                .withDescription(
+                        "If a 'batch' factor is available, ignore it. Otherwise, batch information can/will be included in the analysis." )
+                .create( "ignorebatch" );
+
+        super.addOption( ignoreBatchOption );
 
     }
 
@@ -193,6 +206,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             this.type = AnalysisType.valueOf( getOptionValue( "type" ) );
         }
 
+        if ( hasOption( "ignorebatch" ) ) {
+            this.ignoreBatch = true;
+        }
+
         if ( hasOption( "factors" ) ) {
 
             if ( this.expressionExperiments.size() > 1 ) {
@@ -236,6 +253,11 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 // has already implemented way of figuring out human-friendly name of factor value.
                 ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
 
+                if ( ignoreBatch && BatchInfoPopulationService.isBatchFactor( experimentalFactor ) ) {
+                    log.debug( "Skipping batch:" + experimentalFactor );
+                    continue;
+                }
+
                 if ( factorNames.contains( experimentalFactor.getName() ) ) {
                     factors.add( experimentalFactor );
                 } else if ( fvo.getCategory() != null && factorNames.contains( fvo.getCategory() ) ) {
@@ -259,6 +281,12 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 if ( !factor.getExperimentalDesign().equals( ee.getExperimentalDesign() ) ) {
                     throw new IllegalArgumentException( "Factor with id=" + factorId + " does not belong to " + ee );
                 }
+
+                if ( ignoreBatch && BatchInfoPopulationService.isBatchFactor( factor ) ) {
+                    log.warn( "Selected factor looks like a batch, and 'ignoreBatch' is true, skipping:" + factor );
+                    continue;
+                }
+
                 factors.add( factor );
             }
         }

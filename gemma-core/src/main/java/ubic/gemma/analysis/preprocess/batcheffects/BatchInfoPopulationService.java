@@ -179,7 +179,9 @@ public class BatchInfoPopulationService {
             return null;
         }
 
-        if ( factor != null ) log.info( "Got batch information for :" + ee.getShortName() );
+        if ( factor != null )
+            log.info( "Got batch information for: " + ee.getShortName() + ", with " + factor.getFactorValues().size()
+                    + " batches." );
 
         return factor;
     }
@@ -376,24 +378,13 @@ public class BatchInfoPopulationService {
         ExperimentalFactor toRemove = null;
 
         for ( ExperimentalFactor ef : ed.getExperimentalFactors() ) {
-            Characteristic c = ef.getCategory();
-            if ( c == null ) {
-                continue;
-            }
 
-            boolean looksLikeBatch = ef.getName().equals( BATCH_FACTOR_NAME );
-
-            if ( c instanceof VocabCharacteristic ) {
-                VocabCharacteristic v = ( VocabCharacteristic ) c;
-                if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) ) {
-                    toRemove = ef;
-                    break;
-                    /*
-                     * FIXME handle the case where we somehow have two or more.
-                     */
-                }
-            } else if ( looksLikeBatch ) {
+            if ( isBatchFactor( ef ) ) {
                 toRemove = ef;
+                break;
+                /*
+                 * FIXME handle the case where we somehow have two or more.
+                 */
             }
         }
 
@@ -439,6 +430,30 @@ public class BatchInfoPopulationService {
         // delete the experimental factor this cascades to values.
         experimentalFactorService.delete( toRemove );
         experimentalDesignService.update( ed );
+    }
+
+    /**
+     * @param ef
+     * @return true if the factor seems to be a 'batch' factor.
+     */
+    public static boolean isBatchFactor( ExperimentalFactor ef ) {
+        Characteristic c = ef.getCategory();
+
+        boolean isBatchFactor = false;
+
+        boolean looksLikeBatch = ef.getName().equals( BATCH_FACTOR_NAME );
+
+        if ( c != null && c instanceof VocabCharacteristic ) {
+            VocabCharacteristic v = ( VocabCharacteristic ) c;
+            if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) ) {
+                isBatchFactor = true;
+
+            }
+        } else if ( looksLikeBatch ) {
+            isBatchFactor = true;
+        }
+
+        return isBatchFactor;
     }
 
     /**
