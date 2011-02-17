@@ -347,6 +347,10 @@ public class BatchInfoPopulationService {
     private ExperimentalFactor persistFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
         ExperimentalDesign ed = experimentalDesignService.load( ee.getId() );
 
+        if ( ed == null ) {
+            throw new IllegalStateException( "No experimental design for " + ee );
+        }
+
         /*
          * Note: this call should not be needed because of cascade behaviour.
          */
