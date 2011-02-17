@@ -41,7 +41,7 @@ public class FilterConfig implements Serializable {
     /**
      * Fewer rows than this, and we bail.
      */
-    public static final int MINIMUM_ROWS_TO_BOTHER = 100;
+    public static final int MINIMUM_ROWS_TO_BOTHER = 50;
 
     /**
      * How many samples a dataset has to have before we consider analyzing it.
