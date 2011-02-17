@@ -1,0 +1,1 @@
+Various scanner format files, non-affymetrix.

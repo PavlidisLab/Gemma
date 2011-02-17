@@ -24,6 +24,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -41,6 +43,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class BatchInfoParser {
 
+    private static Log log = LogFactory.getLog( BatchInfoParser.class );
+
     /**
      * @param ee
      * @param files
@@ -49,6 +53,11 @@ public class BatchInfoParser {
     public Map<BioMaterial, Date> getBatchInfo( ExpressionExperiment ee, Collection<LocalFile> files ) {
 
         Map<String, BioAssay> assayAccessions = getAccessionToBioAssayMap( ee );
+
+        if ( assayAccessions.isEmpty() ) {
+            throw new UnsupportedOperationException(
+                    "Couldn't get any scan date information, could not determine provider or it is not supported." );
+        }
 
         Map<BioAssay, File> bioAssays2Files = matchBioAssaysToRawDataFilse( files, assayAccessions );
 
@@ -77,10 +86,9 @@ public class BatchInfoParser {
             DatabaseEntry accession = ba.getAccession();
             ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
 
-            // temporary until we support others
-            if ( !arrayDesignUsed.getDesignProvider().getName().equalsIgnoreCase( "affymetrix" ) ) {
-                throw new UnsupportedOperationException( "Can't get batch information for non-affymetrix array type:"
-                        + arrayDesignUsed );
+            if ( !isSupported( arrayDesignUsed ) ) {
+                log.warn( "Can't get batch information for:" + arrayDesignUsed );
+                continue;
             }
 
             accession.getExternalDatabase(); // check for GEO
@@ -95,6 +103,19 @@ public class BatchInfoParser {
         return assayAccessions;
     }
 
+    private boolean isSupported( ArrayDesign arrayDesignUsed ) {
+
+        if ( arrayDesignUsed.getDesignProvider() == null
+                || StringUtils.isBlank( arrayDesignUsed.getDesignProvider().getName() ) ) return false;
+
+        if ( arrayDesignUsed.getDesignProvider().getName().equalsIgnoreCase( "affymetrix" ) ) return true;
+
+        if ( arrayDesignUsed.getDesignProvider().getName().equalsIgnoreCase( "agilent" ) ) return true;
+
+        return false;
+
+    }
+
     /**
      * Now we can parse the file to get the batch information
      * 
@@ -107,21 +128,28 @@ public class BatchInfoParser {
         for ( BioAssay ba : bioAssays2Files.keySet() ) {
             File f = bioAssays2Files.get( ba );
 
+            if ( ba.getArrayDesignUsed().getDesignProvider() == null ) {
+                log.warn( "Cannot determine provider for " + ba.getArrayDesignUsed() );
+                continue;
+            }
+
             try {
                 InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
+                ScanDateExtractor ex = null;
 
-                // parse
-                if ( ba.getArrayDesignUsed().getDesignProvider().getName().equalsIgnoreCase( "affymetrix" ) ) {
-                    AffyScanDateExtractor ex = new AffyScanDateExtractor();
-                    Date d = ex.extract( is );
-
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        result.put( bm, d );
-                    }
-
+                String providerName = ba.getArrayDesignUsed().getDesignProvider().getName();
+                if ( providerName.equalsIgnoreCase( "affymetrix" ) ) {
+                    ex = new AffyScanDateExtractor();
+                } else if ( providerName.equalsIgnoreCase( "agilent" ) ) {
+                    ex = new AgilentScanDateExtractor();
+                } else {
+                    throw new UnsupportedOperationException( "Provider: " + providerName
+                            + " not supported for scan date extraction." );
                 }
-
-                is.close();
+                Date d = ex.extract( is );
+                for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                    result.put( bm, d );
+                }
             } catch ( FileNotFoundException e ) {
                 throw new RuntimeException( e );
             } catch ( IOException e ) {
@@ -148,9 +176,9 @@ public class BatchInfoParser {
             String n = f.getName();
 
             /*
-             * FIXME support other file types!
+             * We only support the newer style of storing these.
              */
-            if ( !n.toLowerCase().contains( ".cel." ) ) {
+            if ( !n.startsWith( "GSM" ) ) {
                 continue;
             }
 
