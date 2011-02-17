@@ -134,21 +134,16 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 							// get experimental factor string and build analysis parent node text
 							var analysisName = this.getFactorNameText(resultSet);
 							var nodeText= '';
-							if (resultSet.numberOfDiffExpressedProbes == 0) {
-								nodeText = "&nbsp;&nbsp;None (threshold: "+resultSet.threshold+")";
+							//if there's subset text, add baseline and links to it to maintain order
+							if(subsetText!=''){
+								subsetText += this.getBaseline(resultSet);
+								subsetText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
+							}else{
+								nodeText += this.getBaseline(resultSet);
+								nodeText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
 							}
-							else {
-								//if there's subset text, add baseline and links to it to maintain order
-								if(subsetText!=''){
-									subsetText += this.getBaseline(resultSet);
-									subsetText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
-								}else{
-									nodeText += this.getBaseline(resultSet);
-									nodeText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
-									//nodeText += this.getExpressionNumbers(resultSet);
-								}
 								
-							}
+							
 						parentText = '<b>' +analysisName[0]+'</b> '+nodeText;
 					}
 					// if analysis has >1 result set, create result set children
@@ -169,17 +164,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 							}
 
 							var nodeText= '';
-							if (resultSet.numberOfDiffExpressedProbes == 0) {
-								nodeText = "&nbsp;&nbsp;None (threshold: "+resultSet.threshold+")";
-							}
-							else {
-								nodeText += this.getBaseline(resultSet);
-								nodeText += this.getActionLinks(resultSet,factor,this.ee.id,(nodeId+1));
-								
-								
-								//nodeText += this.getExpressionNumbers(resultSet);
-							}
-							
+							nodeText += this.getBaseline(resultSet);
+							nodeText += this.getActionLinks(resultSet,factor,this.ee.id,(nodeId+1));
+														
 							//make child nodes for each analysis and add them to parent factor node
 							var analysisNode = new Ext.tree.TreeNode({
 								id: 'node'+ (nodeId++),
@@ -334,14 +321,14 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		var ctx, up, down, diffExpressed, interesting;
 		for (i = 0; i < this.contrastPercents.size(); i++) {
 			if (Ext.get('chartDiv' + i)) {
-				up = this.contrastPercents[i].up;
-				down = this.contrastPercents[i].down;
-				diffExpressed = this.contrastPercents[i].diffExpressed;
 				ctx = Ext.get('chartDiv' + i).dom.getContext("2d");
-				interesting=false;
 				if(this.totalProbes==null || this.totalProbes==0 || this.contrastPercents[i]==null){
 					drawOneColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'grey');
 				}else{
+					up = this.contrastPercents[i].up;
+					down = this.contrastPercents[i].down;
+					diffExpressed = this.contrastPercents[i].diffExpressed;
+					interesting=false;
 					if(diffExpressed<0.07){diffExpressed=0.07,interesting = true};
 					if(diffExpressed<0.20){interesting = true};
 					if(interesting){

@@ -738,7 +738,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						html : this.renderCoExpressionLinkCount(e),
 						width : 80
 					}, {
-						html : 'Diff. expr. Probes'
+						html : 'Differential Expr.<br>Analyses'
 					}, {
 						id: 'DiffExpressedProbes-region',
 						items: new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
