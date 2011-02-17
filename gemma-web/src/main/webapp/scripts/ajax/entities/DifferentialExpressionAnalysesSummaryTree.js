@@ -135,7 +135,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 							var analysisName = this.getFactorNameText(resultSet);
 							var nodeText= '';
 							if (resultSet.numberOfDiffExpressedProbes == 0) {
-								nodeText = "&nbsp;&nbsp;No expressed probes.";
+								nodeText = "&nbsp;&nbsp;None (threshold: "+resultSet.threshold+")";
 							}
 							else {
 								//if there's subset text, add baseline and links to it to maintain order
@@ -170,7 +170,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 
 							var nodeText= '';
 							if (resultSet.numberOfDiffExpressedProbes == 0) {
-								nodeText = "&nbsp;&nbsp;No expressed probes.";
+								nodeText = "&nbsp;&nbsp;None (threshold: "+resultSet.threshold+")";
 							}
 							else {
 								nodeText += this.getBaseline(resultSet);
