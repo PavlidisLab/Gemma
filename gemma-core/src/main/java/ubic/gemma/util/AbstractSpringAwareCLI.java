@@ -146,6 +146,9 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         // count.
         for ( int j = events.size() - 1; j >= 0; j-- ) {
             AuditEvent event = events.get( j );
+            if ( event == null ) {
+                continue; // defensive, this shouldn't happen!
+            }
             AuditEventType eventType = event.getEventType();
             if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )
                     && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
