@@ -1,478 +1,224 @@
-//
-// This code is released to the public domain by Jim Studt, 2007.
-// He may keep some sort of up to date copy at http://www.federated.com/~jim/canvastext/
-//
-var CanvasTextFunctions = { };
-
-CanvasTextFunctions.letters = {
-    ' ': { width: 16, points: [] },
-    '!': { width: 10, points: [[5,21],[5,7],[-1,-1],[5,2],[4,1],[5,0],[6,1],[5,2]] },
-    '"': { width: 16, points: [[4,21],[4,14],[-1,-1],[12,21],[12,14]] },
-    '#': { width: 21, points: [[11,25],[4,-7],[-1,-1],[17,25],[10,-7],[-1,-1],[4,12],[18,12],[-1,-1],[3,6],[17,6]] },
-    '$': { width: 20, points: [[8,25],[8,-4],[-1,-1],[12,25],[12,-4],[-1,-1],[17,18],[15,20],[12,21],[8,21],[5,20],[3,18],[3,16],[4,14],[5,13],[7,12],[13,10],[15,9],[16,8],[17,6],[17,3],[15,1],[12,0],[8,0],[5,1],[3,3]] },
-    '%': { width: 24, points: [[21,21],[3,0],[-1,-1],[8,21],[10,19],[10,17],[9,15],[7,14],[5,14],[3,16],[3,18],[4,20],[6,21],[8,21],[10,20],[13,19],[16,19],[19,20],[21,21],[-1,-1],[17,7],[15,6],[14,4],[14,2],[16,0],[18,0],[20,1],[21,3],[21,5],[19,7],[17,7]] },
-    '&': { width: 26, points: [[23,12],[23,13],[22,14],[21,14],[20,13],[19,11],[17,6],[15,3],[13,1],[11,0],[7,0],[5,1],[4,2],[3,4],[3,6],[4,8],[5,9],[12,13],[13,14],[14,16],[14,18],[13,20],[11,21],[9,20],[8,18],[8,16],[9,13],[11,10],[16,3],[18,1],[20,0],[22,0],[23,1],[23,2]] },
-    '\'': { width: 10, points: [[5,19],[4,20],[5,21],[6,20],[6,18],[5,16],[4,15]] },
-    '(': { width: 14, points: [[11,25],[9,23],[7,20],[5,16],[4,11],[4,7],[5,2],[7,-2],[9,-5],[11,-7]] },
-    ')': { width: 14, points: [[3,25],[5,23],[7,20],[9,16],[10,11],[10,7],[9,2],[7,-2],[5,-5],[3,-7]] },
-    '*': { width: 16, points: [[8,21],[8,9],[-1,-1],[3,18],[13,12],[-1,-1],[13,18],[3,12]] },
-    '+': { width: 26, points: [[13,18],[13,0],[-1,-1],[4,9],[22,9]] },
-    ',': { width: 10, points: [[6,1],[5,0],[4,1],[5,2],[6,1],[6,-1],[5,-3],[4,-4]] },
-    '-': { width: 26, points: [[4,9],[22,9]] },
-    '.': { width: 10, points: [[5,2],[4,1],[5,0],[6,1],[5,2]] },
-    '/': { width: 22, points: [[20,25],[2,-7]] },
-    '0': { width: 20, points: [[9,21],[6,20],[4,17],[3,12],[3,9],[4,4],[6,1],[9,0],[11,0],[14,1],[16,4],[17,9],[17,12],[16,17],[14,20],[11,21],[9,21]] },
-    '1': { width: 20, points: [[6,17],[8,18],[11,21],[11,0]] },
-    '2': { width: 20, points: [[4,16],[4,17],[5,19],[6,20],[8,21],[12,21],[14,20],[15,19],[16,17],[16,15],[15,13],[13,10],[3,0],[17,0]] },
-    '3': { width: 20, points: [[5,21],[16,21],[10,13],[13,13],[15,12],[16,11],[17,8],[17,6],[16,3],[14,1],[11,0],[8,0],[5,1],[4,2],[3,4]] },
-    '4': { width: 20, points: [[13,21],[3,7],[18,7],[-1,-1],[13,21],[13,0]] },
-    '5': { width: 20, points: [[15,21],[5,21],[4,12],[5,13],[8,14],[11,14],[14,13],[16,11],[17,8],[17,6],[16,3],[14,1],[11,0],[8,0],[5,1],[4,2],[3,4]] },
-    '6': { width: 20, points: [[16,18],[15,20],[12,21],[10,21],[7,20],[5,17],[4,12],[4,7],[5,3],[7,1],[10,0],[11,0],[14,1],[16,3],[17,6],[17,7],[16,10],[14,12],[11,13],[10,13],[7,12],[5,10],[4,7]] },
-    '7': { width: 20, points: [[17,21],[7,0],[-1,-1],[3,21],[17,21]] },
-    '8': { width: 20, points: [[8,21],[5,20],[4,18],[4,16],[5,14],[7,13],[11,12],[14,11],[16,9],[17,7],[17,4],[16,2],[15,1],[12,0],[8,0],[5,1],[4,2],[3,4],[3,7],[4,9],[6,11],[9,12],[13,13],[15,14],[16,16],[16,18],[15,20],[12,21],[8,21]] },
-    '9': { width: 20, points: [[16,14],[15,11],[13,9],[10,8],[9,8],[6,9],[4,11],[3,14],[3,15],[4,18],[6,20],[9,21],[10,21],[13,20],[15,18],[16,14],[16,9],[15,4],[13,1],[10,0],[8,0],[5,1],[4,3]] },
-    ':': { width: 10, points: [[5,14],[4,13],[5,12],[6,13],[5,14],[-1,-1],[5,2],[4,1],[5,0],[6,1],[5,2]] },
-    ',': { width: 10, points: [[5,14],[4,13],[5,12],[6,13],[5,14],[-1,-1],[6,1],[5,0],[4,1],[5,2],[6,1],[6,-1],[5,-3],[4,-4]] },
-    '<': { width: 24, points: [[20,18],[4,9],[20,0]] },
-    '=': { width: 26, points: [[4,12],[22,12],[-1,-1],[4,6],[22,6]] },
-    '>': { width: 24, points: [[4,18],[20,9],[4,0]] },
-    '?': { width: 18, points: [[3,16],[3,17],[4,19],[5,20],[7,21],[11,21],[13,20],[14,19],[15,17],[15,15],[14,13],[13,12],[9,10],[9,7],[-1,-1],[9,2],[8,1],[9,0],[10,1],[9,2]] },
-    '@': { width: 27, points: [[18,13],[17,15],[15,16],[12,16],[10,15],[9,14],[8,11],[8,8],[9,6],[11,5],[14,5],[16,6],[17,8],[-1,-1],[12,16],[10,14],[9,11],[9,8],[10,6],[11,5],[-1,-1],[18,16],[17,8],[17,6],[19,5],[21,5],[23,7],[24,10],[24,12],[23,15],[22,17],[20,19],[18,20],[15,21],[12,21],[9,20],[7,19],[5,17],[4,15],[3,12],[3,9],[4,6],[5,4],[7,2],[9,1],[12,0],[15,0],[18,1],[20,2],[21,3],[-1,-1],[19,16],[18,8],[18,6],[19,5]] },
-    'A': { width: 18, points: [[9,21],[1,0],[-1,-1],[9,21],[17,0],[-1,-1],[4,7],[14,7]] },
-    'B': { width: 21, points: [[4,21],[4,0],[-1,-1],[4,21],[13,21],[16,20],[17,19],[18,17],[18,15],[17,13],[16,12],[13,11],[-1,-1],[4,11],[13,11],[16,10],[17,9],[18,7],[18,4],[17,2],[16,1],[13,0],[4,0]] },
-    'C': { width: 21, points: [[18,16],[17,18],[15,20],[13,21],[9,21],[7,20],[5,18],[4,16],[3,13],[3,8],[4,5],[5,3],[7,1],[9,0],[13,0],[15,1],[17,3],[18,5]] },
-    'D': { width: 21, points: [[4,21],[4,0],[-1,-1],[4,21],[11,21],[14,20],[16,18],[17,16],[18,13],[18,8],[17,5],[16,3],[14,1],[11,0],[4,0]] },
-    'E': { width: 19, points: [[4,21],[4,0],[-1,-1],[4,21],[17,21],[-1,-1],[4,11],[12,11],[-1,-1],[4,0],[17,0]] },
-    'F': { width: 18, points: [[4,21],[4,0],[-1,-1],[4,21],[17,21],[-1,-1],[4,11],[12,11]] },
-    'G': { width: 21, points: [[18,16],[17,18],[15,20],[13,21],[9,21],[7,20],[5,18],[4,16],[3,13],[3,8],[4,5],[5,3],[7,1],[9,0],[13,0],[15,1],[17,3],[18,5],[18,8],[-1,-1],[13,8],[18,8]] },
-    'H': { width: 22, points: [[4,21],[4,0],[-1,-1],[18,21],[18,0],[-1,-1],[4,11],[18,11]] },
-    'I': { width: 8, points: [[4,21],[4,0]] },
-    'J': { width: 16, points: [[12,21],[12,5],[11,2],[10,1],[8,0],[6,0],[4,1],[3,2],[2,5],[2,7]] },
-    'K': { width: 21, points: [[4,21],[4,0],[-1,-1],[18,21],[4,7],[-1,-1],[9,12],[18,0]] },
-    'L': { width: 17, points: [[4,21],[4,0],[-1,-1],[4,0],[16,0]] },
-    'M': { width: 24, points: [[4,21],[4,0],[-1,-1],[4,21],[12,0],[-1,-1],[20,21],[12,0],[-1,-1],[20,21],[20,0]] },
-    'N': { width: 22, points: [[4,21],[4,0],[-1,-1],[4,21],[18,0],[-1,-1],[18,21],[18,0]] },
-    'O': { width: 22, points: [[9,21],[7,20],[5,18],[4,16],[3,13],[3,8],[4,5],[5,3],[7,1],[9,0],[13,0],[15,1],[17,3],[18,5],[19,8],[19,13],[18,16],[17,18],[15,20],[13,21],[9,21]] },
-    'P': { width: 21, points: [[4,21],[4,0],[-1,-1],[4,21],[13,21],[16,20],[17,19],[18,17],[18,14],[17,12],[16,11],[13,10],[4,10]] },
-    'Q': { width: 22, points: [[9,21],[7,20],[5,18],[4,16],[3,13],[3,8],[4,5],[5,3],[7,1],[9,0],[13,0],[15,1],[17,3],[18,5],[19,8],[19,13],[18,16],[17,18],[15,20],[13,21],[9,21],[-1,-1],[12,4],[18,-2]] },
-    'R': { width: 21, points: [[4,21],[4,0],[-1,-1],[4,21],[13,21],[16,20],[17,19],[18,17],[18,15],[17,13],[16,12],[13,11],[4,11],[-1,-1],[11,11],[18,0]] },
-    'S': { width: 20, points: [[17,18],[15,20],[12,21],[8,21],[5,20],[3,18],[3,16],[4,14],[5,13],[7,12],[13,10],[15,9],[16,8],[17,6],[17,3],[15,1],[12,0],[8,0],[5,1],[3,3]] },
-    'T': { width: 16, points: [[8,21],[8,0],[-1,-1],[1,21],[15,21]] },
-    'U': { width: 22, points: [[4,21],[4,6],[5,3],[7,1],[10,0],[12,0],[15,1],[17,3],[18,6],[18,21]] },
-    'V': { width: 18, points: [[1,21],[9,0],[-1,-1],[17,21],[9,0]] },
-    'W': { width: 24, points: [[2,21],[7,0],[-1,-1],[12,21],[7,0],[-1,-1],[12,21],[17,0],[-1,-1],[22,21],[17,0]] },
-    'X': { width: 20, points: [[3,21],[17,0],[-1,-1],[17,21],[3,0]] },
-    'Y': { width: 18, points: [[1,21],[9,11],[9,0],[-1,-1],[17,21],[9,11]] },
-    'Z': { width: 20, points: [[17,21],[3,0],[-1,-1],[3,21],[17,21],[-1,-1],[3,0],[17,0]] },
-    '[': { width: 14, points: [[4,25],[4,-7],[-1,-1],[5,25],[5,-7],[-1,-1],[4,25],[11,25],[-1,-1],[4,-7],[11,-7]] },
-    '\\': { width: 14, points: [[0,21],[14,-3]] },
-    ']': { width: 14, points: [[9,25],[9,-7],[-1,-1],[10,25],[10,-7],[-1,-1],[3,25],[10,25],[-1,-1],[3,-7],[10,-7]] },
-    '^': { width: 16, points: [[6,15],[8,18],[10,15],[-1,-1],[3,12],[8,17],[13,12],[-1,-1],[8,17],[8,0]] },
-    '_': { width: 16, points: [[0,-2],[16,-2]] },
-    '`': { width: 10, points: [[6,21],[5,20],[4,18],[4,16],[5,15],[6,16],[5,17]] },
-    'a': { width: 19, points: [[15,14],[15,0],[-1,-1],[15,11],[13,13],[11,14],[8,14],[6,13],[4,11],[3,8],[3,6],[4,3],[6,1],[8,0],[11,0],[13,1],[15,3]] },
-    'b': { width: 19, points: [[4,21],[4,0],[-1,-1],[4,11],[6,13],[8,14],[11,14],[13,13],[15,11],[16,8],[16,6],[15,3],[13,1],[11,0],[8,0],[6,1],[4,3]] },
-    'c': { width: 18, points: [[15,11],[13,13],[11,14],[8,14],[6,13],[4,11],[3,8],[3,6],[4,3],[6,1],[8,0],[11,0],[13,1],[15,3]] },
-    'd': { width: 19, points: [[15,21],[15,0],[-1,-1],[15,11],[13,13],[11,14],[8,14],[6,13],[4,11],[3,8],[3,6],[4,3],[6,1],[8,0],[11,0],[13,1],[15,3]] },
-    'e': { width: 18, points: [[3,8],[15,8],[15,10],[14,12],[13,13],[11,14],[8,14],[6,13],[4,11],[3,8],[3,6],[4,3],[6,1],[8,0],[11,0],[13,1],[15,3]] },
-    'f': { width: 12, points: [[10,21],[8,21],[6,20],[5,17],[5,0],[-1,-1],[2,14],[9,14]] },
-    'g': { width: 19, points: [[15,14],[15,-2],[14,-5],[13,-6],[11,-7],[8,-7],[6,-6],[-1,-1],[15,11],[13,13],[11,14],[8,14],[6,13],[4,11],[3,8],[3,6],[4,3],[6,1],[8,0],[11,0],[13,1],[15,3]] },
-    'h': { width: 19, points: [[4,21],[4,0],[-1,-1],[4,10],[7,13],[9,14],[12,14],[14,13],[15,10],[15,0]] },
-    'i': { width: 8, points: [[3,21],[4,20],[5,21],[4,22],[3,21],[-1,-1],[4,14],[4,0]] },
-    'j': { width: 10, points: [[5,21],[6,20],[7,21],[6,22],[5,21],[-1,-1],[6,14],[6,-3],[5,-6],[3,-7],[1,-7]] },
-    'k': { width: 17, points: [[4,21],[4,0],[-1,-1],[14,14],[4,4],[-1,-1],[8,8],[15,0]] },
-    'l': { width: 8, points: [[4,21],[4,0]] },
-    'm': { width: 30, points: [[4,14],[4,0],[-1,-1],[4,10],[7,13],[9,14],[12,14],[14,13],[15,10],[15,0],[-1,-1],[15,10],[18,13],[20,14],[23,14],[25,13],[26,10],[26,0]] },
-    'n': { width: 19, points: [[4,14],[4,0],[-1,-1],[4,10],[7,13],[9,14],[12,14],[14,13],[15,10],[15,0]] },
-    'o': { width: 19, points: [[8,14],[6,13],[4,11],[3,8],[3,6],[4,3],[6,1],[8,0],[11,0],[13,1],[15,3],[16,6],[16,8],[15,11],[13,13],[11,14],[8,14]] },
-    'p': { width: 19, points: [[4,14],[4,-7],[-1,-1],[4,11],[6,13],[8,14],[11,14],[13,13],[15,11],[16,8],[16,6],[15,3],[13,1],[11,0],[8,0],[6,1],[4,3]] },
-    'q': { width: 19, points: [[15,14],[15,-7],[-1,-1],[15,11],[13,13],[11,14],[8,14],[6,13],[4,11],[3,8],[3,6],[4,3],[6,1],[8,0],[11,0],[13,1],[15,3]] },
-    'r': { width: 13, points: [[4,14],[4,0],[-1,-1],[4,8],[5,11],[7,13],[9,14],[12,14]] },
-    's': { width: 17, points: [[14,11],[13,13],[10,14],[7,14],[4,13],[3,11],[4,9],[6,8],[11,7],[13,6],[14,4],[14,3],[13,1],[10,0],[7,0],[4,1],[3,3]] },
-    't': { width: 12, points: [[5,21],[5,4],[6,1],[8,0],[10,0],[-1,-1],[2,14],[9,14]] },
-    'u': { width: 19, points: [[4,14],[4,4],[5,1],[7,0],[10,0],[12,1],[15,4],[-1,-1],[15,14],[15,0]] },
-    'v': { width: 16, points: [[2,14],[8,0],[-1,-1],[14,14],[8,0]] },
-    'w': { width: 22, points: [[3,14],[7,0],[-1,-1],[11,14],[7,0],[-1,-1],[11,14],[15,0],[-1,-1],[19,14],[15,0]] },
-    'x': { width: 17, points: [[3,14],[14,0],[-1,-1],[14,14],[3,0]] },
-    'y': { width: 16, points: [[2,14],[8,0],[-1,-1],[14,14],[8,0],[6,-4],[4,-6],[2,-7],[1,-7]] },
-    'z': { width: 17, points: [[14,14],[3,0],[-1,-1],[3,14],[14,14],[-1,-1],[3,0],[14,0]] },
-    '{': { width: 14, points: [[9,25],[7,24],[6,23],[5,21],[5,19],[6,17],[7,16],[8,14],[8,12],[6,10],[-1,-1],[7,24],[6,22],[6,20],[7,18],[8,17],[9,15],[9,13],[8,11],[4,9],[8,7],[9,5],[9,3],[8,1],[7,0],[6,-2],[6,-4],[7,-6],[-1,-1],[6,8],[8,6],[8,4],[7,2],[6,1],[5,-1],[5,-3],[6,-5],[7,-6],[9,-7]] },
-    '|': { width: 8, points: [[4,25],[4,-7]] },
-    '}': { width: 14, points: [[5,25],[7,24],[8,23],[9,21],[9,19],[8,17],[7,16],[6,14],[6,12],[8,10],[-1,-1],[7,24],[8,22],[8,20],[7,18],[6,17],[5,15],[5,13],[6,11],[10,9],[6,7],[5,5],[5,3],[6,1],[7,0],[8,-2],[8,-4],[7,-6],[-1,-1],[8,8],[6,6],[6,4],[7,2],[8,1],[9,-1],[9,-3],[8,-5],[7,-6],[5,-7]] },
-    '~': { width: 24, points: [[3,6],[3,8],[4,11],[6,12],[8,12],[10,11],[14,8],[16,7],[18,7],[20,8],[21,10],[-1,-1],[3,8],[4,10],[6,11],[8,11],[10,10],[14,7],[16,6],[18,6],[20,7],[21,10],[21,12]] }
-};
-
-CanvasTextFunctions.letter = function (ch)
-{
-    return CanvasTextFunctions.letters[ch];
-}
-
-CanvasTextFunctions.ascent = function( font, size)
-{
-    return size;
-}
-
-CanvasTextFunctions.descent = function( font, size)
-{
-    return 7.0*size/25.0;
-}
-
-CanvasTextFunctions.measure = function( font, size, str)
-{
-    var total = 0;
-    var len = str.length;
-
-    for ( i = 0; i < len; i++) {
-	var c = CanvasTextFunctions.letter( str.charAt(i));
-	if ( c) total += c.width * size / 25.0;
-    }
-    return total;
-}
-
-
-CanvasTextFunctions.draw = function(ctx,font,size,x,y,str)
-{
-    var total = 0;
-    var len = str.length;
-    var mag = size / 25.0;
-
-    ctx.save();
-    ctx.lineCap = "round";
-    ctx.lineWidth = 2.0 * mag;
-
-    for ( i = 0; i < len; i++) {
-	var c = CanvasTextFunctions.letter( str.charAt(i));
-	if ( !c) continue;
-
-	ctx.beginPath();
-
-	var penUp = 1;
-	var needStroke = 0;
-	for ( j = 0; j < c.points.length; j++) {
-	    var a = c.points[j];
-	    if ( a[0] == -1 && a[1] == -1) {
-		penUp = 1;
-		continue;
-	    }
-	    if ( penUp) {
-		ctx.moveTo( x + a[0]*mag, y - a[1]*mag);
-		penUp = false;
-	    } else {
-		ctx.lineTo( x + a[0]*mag, y - a[1]*mag);
-	    }
-	}
-	ctx.stroke();
-	x += c.width*mag;
-    }
-    ctx.restore();
-    return total;
-}
-
-CanvasTextFunctions.enable = function( ctx)
-{
-    ctx.drawText = function(font,size,x,y,text) { return CanvasTextFunctions.draw( ctx, font,size,x,y,text); };
-    ctx.measureText = function(font,size,text) { return CanvasTextFunctions.measure( font,size,text); };
-    ctx.fontAscent = function(font,size) { return CanvasTextFunctions.ascent(font,size); }
-    ctx.fontDescent = function(font,size) { return CanvasTextFunctions.descent(font,size); }
-    
-    ctx.drawTextRight = function(font,size,x,y,text) { 
-	var w = CanvasTextFunctions.measure(font,size,text);
-	return CanvasTextFunctions.draw( ctx, font,size,x-w,y,text); 
-    };
-    ctx.drawTextCenter = function(font,size,x,y,text) { 
-	var w = CanvasTextFunctions.measure(font,size,text);
-	return CanvasTextFunctions.draw( ctx, font,size,x-w/2,y,text); 
-    };
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Ext.namespace('Gemma');
-
-
-Gemma.GemmaMetaVizConfig = {};
-Gemma.GemmaMetaVizConfig._cellWidth = 10;
-Gemma.GemmaMetaVizConfig._cellHeight = 10;
-Gemma.GemmaMetaVizConfig._groupSeparatorHeight = 4;
-
-
-Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
-		
-	initComponent: function() {
-		Ext.apply(this, {			
-			autoWidth: 'auto',
-			autoHeight: 'auto',
-			autoEl: { tag: 'canvas',
-					  width: 12,
-					  height: 10*this.visualizationSubColumnData.length,					  
-					},
-			margins: {top:0, right:0, bottom:5, left:0},
-			_rowGroup: this.rowGroup,
-			_columnIndex: this.columnIndex,
-			_datasetGroupIndex: this.datasetGroupIndex,
-			_cellHeight: 10,
-			_cellWidth: 10,
-			_visualizationValues: this.visualizationSubColumnData,
-			_contrastsVisualizationValues: this.visualizationContrastsSubColumnData,
-            _discreteColorRange : new org.systemsbiology.visualization.DiscreteColorRange(
-            										20,
-            										{min: -1, max: 1},            										
-            										{ maxColor: {r:255, g:215, b:0, a:1},
-            										  minColor: {r:255, g:255, b:0, a:1} ,
-            										  emptyDataColor: {r:100, g:100, b:100, a:0.8},
-            										  passThroughBlack: true
-            										}),
-            _discreteColorRangeContrasts : new org.systemsbiology.visualization.DiscreteColorRange(
-                									20,
-                  									{min: -1, max: 1},
-                    								{ maxColor: {r:0, g:200, b:255, a:1},
-                  									  minColor: {r:255, g:255, b:0, a:1} ,
-                   									  emptyDataColor: {r:100, g:100, b:100, a:0.8},
-                   									  passThroughBlack: true
-                   									}),                    										            										
-		});		 
-		Gemma.MetaHeatmapColumn.superclass.initComponent.apply(this, arguments);	
-	},
-		
-	_drawStuff : function() {
-		// Draw collapse/expand icon. 
-		var ctx = this.el.dom.getContext("2d");
-		ctx.canvas.width = 10;
-    	this.syncSize();
-	    this.ownerCt.doLayout();
-    	this.ownerCt.ownerCt.doLayout();
-
-		ctx.clearRect(0, 0, this.el.dom.width, this.el.dom.height);
-		for (var i=0; i < this._visualizationValues.length; i++) {
-			this._drawHeatmapCell(this._visualizationValues[i], i);
-		}
-	},
-	_drawHeatmapCell: function(value, index) {
-		var ctx = this.el.dom.getContext("2d");
-        ctx.fillStyle = this._discreteColorRange.getCellColorString(value);
-        ctx.fillRect( 1, index*10, 10, 10);
-    },
-    _drawContrasts: function() {
-		var ctx = this.el.dom.getContext("2d");   		
-		ctx.canvas.width = 10*this._contrastsVisualizationValues.length;
-    	this.syncSize();
-    	this.ownerCt.doLayout();
-    	this.ownerCt.ownerCt.doLayout();
-    	
-		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-		for (var geneIndex=0; geneIndex < this._contrastsVisualizationValues.length; geneIndex++) {
-			for (var columnIndex=0; columnIndex < this._contrastsVisualizationValues[geneIndex].length; columnIndex++) {
-				ctx.fillStyle = this._discreteColorRangeContrasts.getCellColorString(this._contrastsVisualizationValues[geneIndex][columnIndex]);
-				ctx.fillRect( columnIndex*10, geneIndex*10, 10, 10);
-			}
-		}
-    },
-    	
-    __calculateIndexFromXY: function(x,y) {
-    	var row = Math.floor(y/this._cellHeight);
-    	var column = Math.floor(x/this._cellWidth);
-    	return {'row': row, 'column': column};
-    },
-    
-	onRender:function() {
-		Gemma.MetaHeatmapColumn.superclass.onRender.apply(this, arguments);
-		this._drawStuff();
-		
-		this.el.on('click', function(e,t) { 			
-			
-			var index =  this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY() - Ext.get(t).getY());
-			alert ("r: "+index.row+"c: "+index.column);
-			
-		}, this);
-		this.el.on('mousemove', function(e) { 						
-			//var ctx = this.el.dom.getContext("2d");
-	        //ctx.strokeRect( 1, (e.getPageY() - this.el.getY()), 10, 10);
-		
-		}, this);				
-	}					
-});
-
-Ext.reg('metaVizColumn', Gemma.MetaHeatmapColumn);
-
-
-// COLUMN ( visualization for each row group
-
-Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
-	
-	initComponent: function() {
-		Ext.apply(this, {		
-			border: false,
-			bodyBorder: false,
-			//_contrastsView : false,
-			height: 200,
-			_dataColumn: this.dataColumn,				
-			_numberOfRowGroups: this.dataColumn.geneNames.length,
-			_columnIndex: this.columnIndex,
-			_datasetGroupIndex: this.datasetGroupIndex,
-			_factorName: this.dataColumn.factorName,
-			_factorValueNames: this.dataColumn.contrastsFactorValues,
-			
-			_visualizationColumns :[],
-			layout: 'vbox',
-			items: [{ xtype: 'button',
-					  ref: '_expandButton',
-					  enableToggle: true,
-					  width: 5,
-					  height: 5,
-					  listeners: { 
-				           toggle : function(target, checked) { 			
-								if (checked) {
-									for (var t=0; t < this._visualizationColumns.length; t++) {										
-										this._visualizationColumns[t]._drawContrasts();
-									}
-								} else {
-									for (var t=0; t < this._visualizationColumns.length; t++) {
-										this._visualizationColumns[t]._drawStuff();
-									}
-								}
-								this.ownerCt.ownerCt._topLabelsBox._redrawRed();
-							}, scope: this
-					  }
-				    },]
-		});
-		
-		
-		Gemma.MetaHeatmapExpandableColumn.superclass.initComponent.apply(this, arguments);
-}, 
-	
-	onRender: function() {
-		Gemma.MetaHeatmapExpandableColumn.superclass.onRender.apply(this, arguments);
-		
-		for (var i=0; i < this._numberOfRowGroups; i++) {
-			var t = new Gemma.MetaHeatmapColumn({visualizationSubColumnData: this._dataColumn.visualizationValues[i],
-												 visualizationContrastsSubColumnData: this._dataColumn.contrastsVisualizationValues[i],
-												 rowGroup: i,
-												 columnIndex: this._columnIndex,
-												 datasetGroupIndex: this._datasetGroupIndex });
-			this._visualizationColumns.push(t);
-			this.add(t);			
-		}		
-	}
-
-});
-
-Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Ext.Panel, {	
-	initComponent: function() {
-		Ext.apply(this, {
-			width: 150,
-			height: 400,
-			_datasetGroupIndex : this.datasetGroupIndex,
-			layout: 'hbox',
-			layoutConfig: {
-				defaultMargins: {top:0, right:0, bottom:4, left:0}
-			},
-			_dataFactorColumns : this.dataFactorColumns,			
-		});
-
-		Gemma.MetaHeatmapDatasetGroupPanel.superclass.initComponent.apply(this, arguments);		
-	},
-	
-	onRender: function() {
-		Gemma.MetaHeatmapDatasetGroupPanel.superclass.onRender.apply(this, arguments);
-		for (var i=0; i < this._dataFactorColumns.length; i++) {			
-			this.add(new Gemma.MetaHeatmapExpandableColumn({dataColumn : this._dataFactorColumns[i], columnIndex: i, datasetGroupIndex: this._datasetGroupIndex}));		
-		}
-	}
-	
-});
 
 Gemma.MetaHeatmapScrollableArea = Ext.extend(Ext.Panel, {	
 	initComponent: function() {
 		Ext.apply(this, {
-			width: 400,
-			height: 400,
+			border: false,
+			bodyBorder: false,
 			layout: 'hbox',
 			layoutConfig: {
-				defaultMargins: {top:0, right:10, bottom:0, left:0}
+				defaultMargins: {top:0, right:Gemma.MetaVisualizationConfig.groupSeparatorWidth, bottom:0, left:0}
 			},
-			_dataDatasetGroups : this.dataDatasetGroups,
+			dataDatasetGroups : this.dataDatasetGroups,
+			geneNames: this.geneNames,
+			geneIds: this.geneIds,
+			
+			applicationRoot: this.applicationRoot,
+			
 			_setTopLabelsBox : function (l) {
 				this._topLabelsBox=l;			
-			}
+			},
+
+			filterColumns: function (filteringFn) {
+				this.items.each( function() { this.filterColumns(filteringFn); });				
+			},			
+			_filterRows: function (filteringFn) {
+				
+			},			
 			
+			_sortColumns: function (asc_desc, sortingFn) {
+				this.items.each(function() {this.items.sort(asc_desc, sortingFn);} );
+			},
 			
 		});
-
+		
 		Gemma.MetaHeatmapScrollableArea.superclass.initComponent.apply(this, arguments);		
 	},
 	
-	onRender: function() {
+	onRender: function() {				
 		Gemma.MetaHeatmapScrollableArea.superclass.onRender.apply(this, arguments);
-		for (var i=0; i < this._dataDatasetGroups.length; i++) {			
-			this.add(new Gemma.MetaHeatmapDatasetGroupPanel({dataFactorColumns : this._dataDatasetGroups[i], datasetGroupIndex: i}));
+		for ( var i = 0; i < this.dataDatasetGroups.length; i++ ) {			
+			this.add(new Gemma.MetaHeatmapDatasetGroupPanel(
+								{ applicationRoot: this.applicationRoot,
+								  height: this.height,
+								  dataFactorColumns : this.dataDatasetGroups[i],
+								  datasetGroupIndex: i,
+								  geneNames: this.geneNames[i],
+								  geneIds: this.geneIds[i]}));
 		}
+		
 	}
 	
 });
 Ext.reg('metaVizScrollableArea', Gemma.MetaHeatmapScrollableArea);
 
-
 //ANALYSIS LABELS
 Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {	
 	initComponent: function() {
 		Ext.apply(this, {
-			autoWidth: 'auto',
-			autoHeight: 'auto',
 			autoEl: { tag: 'canvas',
-			  		  width: 500,
-			  		  height: 120 ,
+			  		  width: 1200,
+			  		  height: 260 ,
 			},			
 			_data: this.visualizationData,			
+			_datasetGroupNames: this.datasetGroupNames,
 			_angle: 310.0,
-			_fontSize: 8,
+			_fontSize: 7,
 			_fontColor: 'black',
 			_heatmapContainer: null,
-			
 			_setHeatmapContainer: function(c) {
 				this._heatmapContainer = c;
 				
 			},
-			
-			_drawAnalysisLabels: function() {
-				//traverse column objects from container and display labels accordingly
+									
+			_drawTopLabels : function(hiDatasetGroup, hiColumnGroup, hiColumn, hiFactorValue) {			
+				var ctx = this.el.dom.getContext("2d");
+				CanvasTextFunctions.enable(ctx);
+				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 				
+				var xPosition = Gemma.MetaVisualizationConfig.cellWidth;
 				
-			},			
+				for ( var currentDatasetGroupIndex = 0; currentDatasetGroupIndex < this._heatmapContainer.items.getCount(); currentDatasetGroupIndex++ ) {
+					var dsPanel = this._heatmapContainer.items.get(currentDatasetGroupIndex);
+					ctx.drawText('', this._fontSize, xPosition, 10, this._datasetGroupNames[currentDatasetGroupIndex]);
+
+					var alternateColors = 0;					
+					for ( var currentDatasetColumnGroupIndex = 0; currentDatasetColumnGroupIndex < dsPanel.items.getCount(); currentDatasetColumnGroupIndex++ ) {
+						var datasetColumnGroupPanel = dsPanel.items.get( currentDatasetColumnGroupIndex ); 						
+						
+						if (datasetColumnGroupPanel._hidden == false) {
+							if (alternateColors == 1 ) {
+								MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth, 10,
+																datasetColumnGroupPanel.getWidth(), 238, 'rgba(10,100,10, 0.1)');		                     
+		                        alternateColors = 0;
+		                    } else {
+		                    	MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth, 10,
+		                    									datasetColumnGroupPanel.getWidth(), 238, 'rgba(10,100,10, 0.05)');
+		                        alternateColors = 1;                        
+		                    }            							
+							if ( hiDatasetGroup == currentDatasetGroupIndex 
+									&& hiColumnGroup == datasetColumnGroupPanel._columnGroupIndex ) {
+								ctx.drawRotatedText( xPosition, 149, 270.0, this._fontSize,
+													 Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
+													 datasetColumnGroupPanel.datasetName);
+							} else {
+								ctx.drawRotatedText( xPosition, 149, 270.0, this._fontSize,
+													 this._fontColor,
+													 datasetColumnGroupPanel.datasetName);
+							}
+						}
+						
+						var alternateColorsAnalysis = 0;
+						for ( var currentAnalysisColumnGroupIndex = 0; currentAnalysisColumnGroupIndex < datasetColumnGroupPanel.items.getCount(); currentAnalysisColumnGroupIndex++ ) {
+							var analysisColumnGroupPanel = datasetColumnGroupPanel.items.get( currentAnalysisColumnGroupIndex ); 						
+
+							if (alternateColorsAnalysis == 1 ) {
+								MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth, 150,
+																analysisColumnGroupPanel.getWidth(), 15, 'rgba(10,100,10, 0.6)');		                     
+								alternateColorsAnalysis = 0;
+		                    } else {
+		                    	MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth, 150,
+		                    									analysisColumnGroupPanel.getWidth(), 15, 'rgba(10,100,10, 0.3)');
+		                    	alternateColorsAnalysis = 1;                        
+		                    }            							
+							
+							for (var currentColumn = 0; currentColumn < analysisColumnGroupPanel.items.getCount(); currentColumn++) {
+								var dColumn = analysisColumnGroupPanel.items.get( currentColumn );
+								if ( dColumn._expandButton.pressed ) {
+									for (var i = 0; i < dColumn._factorValueNames.length; i++) {
+										if (i == 0) MiniPieLib.drawMiniPie( ctx, xPosition-4, 255, 9,
+																			Gemma.MetaVisualizationConfig.miniPieColor,
+																			dColumn.miniPieValue );
+										if ( hiDatasetGroup == currentDatasetGroupIndex 
+											 && hiColumnGroup == datasetColumnGroupPanel._columnGroupIndex											 
+											 && i == hiFactorValue 
+											 && currentColumn == hiColumn )
+										{
+											ctx.drawRotatedText( xPosition, 248, this._angle, this._fontSize,
+																 Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
+																 dColumn._factorValueNames[i]);																			
+										} else if ( dColumn._factorValueNames[i] == dColumn._baselineFactorValue ) {
+											ctx.drawRotatedText( xPosition, 248, this._angle, this._fontSize,
+																 'rgb(128, 0, 0)',
+																 dColumn._factorValueNames[i] );									
+										} else {
+											ctx.drawRotatedText( xPosition, 248, this._angle, this._fontSize,
+																 'rgb(46,139,87)',
+																 dColumn._factorValueNames[i]);
+										}
+										xPosition += Gemma.MetaVisualizationConfig.cellWidth;
+									}
+									xPosition += Gemma.MetaVisualizationConfig.columnSeparatorWidth;
+								}
+								else {
+									if (! dColumn.hidden) {
+										MiniPieLib.drawMiniPie( ctx, xPosition-4, 255, 9,
+																Gemma.MetaVisualizationConfig.miniPieColor,
+																dColumn.miniPieValue);
+										if (hiDatasetGroup == currentDatasetGroupIndex 
+												&& hiColumnGroup == columnGroup._columnGroupIndex
+												&& hiColumn == currentColumn )
+										{
+											ctx.drawRotatedText( xPosition, 248, this._angle, this._fontSize,
+																 Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
+																 dColumn._factorName );										
+										} else {									
+											ctx.drawRotatedText( xPosition, 248, this._angle, this._fontSize,
+																 this._fontColor,
+																 dColumn._factorName );
+										}
+										xPosition += Gemma.MetaVisualizationConfig.cellWidth;
+										xPosition += Gemma.MetaVisualizationConfig.columnSeparatorWidth;
+									}
+								}												
+							}
+							
+						}	
+					}
+					xPosition += Gemma.MetaVisualizationConfig.groupSeparatorWidth;
+				}
+			},
 			
-			_drawMiniPie: function(ctx, x, y, size, color, value) {
-		        if (!color) {
-		            color = 'black';
-		        }
-		        ctx.save();
-		        // relocate to draw spot
-		        ctx.fillStyle = color;
-		        ctx.strokeStyle = color;
-		        ctx.moveTo(x, y);        
-		        ctx.beginPath();
-		        ctx.arc(x,y,size/2, Math.PI*3/2 , Math.PI*3/2+(Math.PI*2),false);
-		        ctx.stroke();
-		        ctx.beginPath();
-		        ctx.moveTo(x, y);        
-		        ctx.arc(x,y,size/2, Math.PI*3/2 , Math.PI*3/2+(Math.PI/180)*value,false);
-		        ctx.lineTo(x,y);
-		        ctx.fill();              
-		        ctx.restore();
-		    },
+		});
+		
+		//this.syncSize();//setWidth(900);	
+		Gemma.MetaHeatmapRotatedLabels.superclass.initComponent.apply(this, arguments);		
+	},
+	
+	onRender: function() {		
+		Gemma.MetaHeatmapRotatedLabels.superclass.onRender.apply(this, arguments);
+		this.syncSize();
+		
+		this.el.on('click', function(e,t) {
 			
-			_drawRotatedText : function(ctx, x, y, ang, fontSize, fontColor, text) {
-				//var ang = 270;
+
+			var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(datasetName, datasetId);
+			popup.show();
+		}, this);		
+
+		
+	}
+				
+});
+
+Ext.reg('metaVizRotatedLabels', Gemma.MetaHeatmapRotatedLabels);
+
+
+// Gene group
+Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {	
+	initComponent: function() {
+		Ext.apply(this, {
+			applicationRoot: this.applicationRoot,
+			geneNames: this.labels,
+			autoEl: { tag: 'canvas',
+			  		  width: 80,
+			  		  height: this.labels.length*10,
+			},
+			
+			geneGroupName: this.geneGroupName,
+			geneGroupId: this.geneGroupId,
+			
+			_drawRotatedText : function(ctx, x, y, ang, fontSize, fontColor, text) {				
 			    if (!fontColor) {
 			        fontColor = 'black';
 			    }
@@ -483,93 +229,73 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 			    ctx.strokeStyle = fontColor;
 			    ctx.drawText('', fontSize, 0, 0, text);
 			    ctx.restore();
-			},			
-
-			_redraw : function() {			
+			},
+			getIndexFromY : function (y) {
+		    	return Math.floor(y/Gemma.MetaVisualizationConfig.cellHeight);
+			},
+			_drawLabels : function (highlightRow) {
 				var ctx = this.el.dom.getContext("2d");
+				ctx.clearRect(0, 0, this.el.dom.width, this.el.dom.height);		
 				CanvasTextFunctions.enable(ctx);
-				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+				ctx.drawRotatedText(10, this.getHeight() - 10, 270.0, 9, 'black', this.geneGroupName);
 				
-				//traverse the tree
-				// dataset groups
-				
-				var xPosition = 10;
-				//for (var j=0; j < this._heatmapContainer.items.length; j++) {
-					var dsPanel = this._heatmapContainer.items.first();
-					for (var c=0; c < dsPanel.items.getCount(); c++) {
-						var dColumn = dsPanel.items.get(c);
-						if (dColumn._expandButton.pressed) {
-							for (var i=0; i < dColumn._factorValueNames.length; i++) {
-								this._drawRotatedText(ctx, xPosition, 108, this._angle, this._fontSize, this._fontColor, dColumn._factorValueNames[i]);
-								xPosition +=10;
-							}		
-						}
-						else {
-							this._drawMiniPie(ctx, xPosition-2, 115, 9, 'blue', 0.4)
-							this._drawRotatedText(ctx, xPosition, 108, this._angle, this._fontSize, this._fontColor, dColumn._factorName);
-							xPosition += 10;
-						}												
-					}									
-				//}
-				
+				// Some genes can be hidden. Genes can be sorted in different ways.
+				// Gene ordering is mapping that capture order and number of shown genes.
+				for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupId].length; i++) {
+					var geneName = this.geneNames[this.applicationRoot.geneOrdering[this.geneGroupId][i]];
+					if (highlightRow == i) {
+						ctx.save();
+						ctx.strokeStyle = Gemma.MetaVisualizationConfig.geneLabelHighlightColor;
+						ctx.drawTextRight( '', Gemma.MetaVisualizationConfig.geneLabelFontSize, 77,
+										   (i+1)*Gemma.MetaVisualizationConfig.cellHeight,
+										   geneName);
+						ctx.restore();
+					} else {
+						ctx.drawTextRight(  '', Gemma.MetaVisualizationConfig.geneLabelFontSize, 77,
+											(i+1)*Gemma.MetaVisualizationConfig.cellHeight,
+											geneName);						
+					}					
+				}									
 			},
-			
-			
-			_redrawRed : function() {					
-					this._redraw();
-			}		
-			
-			
-		});	
-		
-		Gemma.MetaHeatmapRotatedLabels.superclass.initComponent.apply(this, arguments);		
-	},
-	
-	onRender: function() {		
-		Gemma.MetaHeatmapRotatedLabels.superclass.onRender.apply(this, arguments);
-		//this._redraw();
-	}
-				
-});
-
-Ext.reg('metaVizRotatedLabels', Gemma.MetaHeatmapRotatedLabels);
-
-
-// GENE LABELS GROUP
-Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {	
-	initComponent: function() {
-		Ext.apply(this, {
-			_labels: this.labels,
-			autoEl: { tag: 'canvas',
-			  		  width: 80,
-			  		  height: this.labels.length*10,
-			},
-			
 		});
-		Gemma.MetaHeatmapLabelGroup.superclass.initComponent.apply(this, arguments);		
-	},
+		Gemma.MetaHeatmapLabelGroup.superclass.initComponent.apply ( this, arguments );		
+		
+},
 	
 	onRender: function() {
-		Gemma.MetaHeatmapLabelGroup.superclass.onRender.apply(this, arguments);
-		var ctx = this.el.dom.getContext("2d");
-		CanvasTextFunctions.enable(ctx);
-		for (var i=0; i < this._labels.length; i++) {
-			ctx.drawTextRight('',9,77,10*i+10, this._labels[i] );		
-		}		
+		Gemma.MetaHeatmapLabelGroup.superclass.onRender.apply ( this, arguments );
+		this._drawLabels();
+		
+		this.el.on('mousemove', function(e,t) { 						
+			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
+			this._drawLabels(index);
+		}, this );		
+		
+		this.el.on('click', function(e,t) {
+			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
+			var geneId = this.applicationRoot.geneOrdering[this.geneGroupId][index];
+			var geneName = this.geneNames[geneId];
+			var popup = Gemma.MetaVisualizationPopups.makeGeneInfoWindow(geneName, geneId);
+			popup.show();
+		}, this);		
 	}
 });
 
 
-// GENE LABELS COLUMN
-
+// Gene Labels
 Gemma.MetaHeatmapLabelsColumn = Ext.extend(Ext.Panel, {	
 	initComponent: function() {
 		Ext.apply(this, {
+			applicationRoot: this.applicationRoot,
  			layout: 'vbox',
  			layoutConfig: {
 				defaultMargins: {top:0, right:0, bottom:4, left:0}
 			},
-			_labels: this.labels,
+			labels: this.labels,
+			geneGroupNames: this.geneGroupNames,
+			highlightGene: function (geneGroup, row) {
+				this.items.get(geneGroup)._drawLabels(row);
+			},			
 		});
 						
 		Gemma.MetaHeatmapLabelsColumn.superclass.initComponent.apply(this, arguments);		
@@ -578,8 +304,12 @@ Gemma.MetaHeatmapLabelsColumn = Ext.extend(Ext.Panel, {
 	onRender: function() {		
 		Gemma.MetaHeatmapLabelsColumn.superclass.onRender.apply(this, arguments);
 		
-		for (var groupIndex = 0; groupIndex < this._labels.length; groupIndex++) {
-			this.add( new Gemma.MetaHeatmapLabelGroup({labels: this._labels[groupIndex] }) );
+		for (var groupIndex = 0; groupIndex < this.labels.length; groupIndex++) {
+			this.add( new Gemma.MetaHeatmapLabelGroup(
+								{ applicationRoot: this.applicationRoot,
+								  labels: this.labels[groupIndex],
+								  geneGroupName: this.geneGroupNames[groupIndex],
+								  geneGroupId: groupIndex }) );
 		}
 	}
 				
@@ -587,51 +317,352 @@ Gemma.MetaHeatmapLabelsColumn = Ext.extend(Ext.Panel, {
 
 Ext.reg('metaVizGeneLabels', Gemma.MetaHeatmapLabelsColumn);
 
+Ext.reg('taxonCombo', Gemma.TaxonCombo);
 
-// MAIN APP
+Gemma.MetaHeatmapControlWindow = Ext.extend(Ext.Window, {	
+	initComponent: function() {
+		Ext.apply(this, {
+			title: 'Visualization settings',
+			layout: 'accordion',
+			layoutConfig: {
+		        titleCollapse: false,
+		        animate: true,
+		        activeOnTop: true
+		    },
+		    items: [{title: 'Data selection', xtype: 'metaVizDataSelection', ref:'selectionPanel'},
+		            {title: 'Filter/Sort', xtype: 'metaVizSortFilter', ref:'sortPanel'},],
+		});
+
+		Gemma.MetaHeatmapControlWindow.superclass.initComponent.apply(this, arguments);
+},
+onRender: function() {
+	Gemma.MetaHeatmapControlWindow.superclass.onRender.apply(this, arguments);	
+}
+});
+
+
+Gemma.MetaHeatmapSortFilter = Ext.extend(Ext.Panel, {	
+	initComponent: function() {
+		Ext.apply(this, {
+				
+		});
+					    		
+		Gemma.MetaHeatmapSortFilter.superclass.initComponent.apply(this, arguments);
+	},
+	onRender: function() {
+		Gemma.MetaHeatmapSortFilter.superclass.onRender.apply(this, arguments);
+		
+	}
+});
+
+
+Ext.reg('metaVizSortFilter', Gemma.MetaHeatmapSortFilter);
+
+
+Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {	
+	initComponent: function() {
+		Ext.apply(this, {
+			_selectedGeneGroups: [],
+			_selectedDatasetGroups: [],
+			_metaVizApp: null,
+			_sortPanel: null,
+			height: 450,
+			layout: 'fit',
+			items: [
+			{
+				xtype: 'taxonCombo',
+				width: 200,
+				ref: '_taxonCombo'
+			},
+			{
+				xtype: 'panel',
+				width: 200,
+				height: 100,			
+				ref: 'genePickerPanel',
+				items: [{
+					xtype: 'button',
+					text: 'Add gene group',
+					width: 200,
+					ref: 'addNewGeneGroupButton',					
+					listeners: {
+						click: {fn: function(target) {
+				  				 var genePicker = new Gemma.GeneGroupCombo({width : 200});
+				  				 genePicker.setTaxon(this._taxonCombo.getTaxon());					
+				  				 this._selectedGeneGroups.push(genePicker);
+				  				 this.genePickerPanel.add(genePicker);
+				  				 this.genePickerPanel.doLayout();
+								 }, scope: this
+						}
+					}
+				}]
+				
+			},{
+				xtype: 'panel',
+				width: 200,
+				height: 100,			
+				ref: 'datasetPickerPanel',
+				items: [{
+					xtype: 'button',
+					text: 'Add dataset group',
+					width: 200,
+					ref: 'addNewDatasetGroupButton',					
+					listeners: {
+						click : {fn : function(target) {
+				  			var datasetPicker = new Gemma.DatasetGroupCombo({width : 200});
+				  			this._selectedDatasetGroups.push(datasetPicker);
+				  			this.datasetPickerPanel.add(datasetPicker);
+				  			this.datasetPickerPanel.doLayout();
+						}, scope : this }
+					}
+				}]
+			},
+			{
+				xtype: 'button',
+				text: 'Visualize!',
+				ref: 'goButton',
+				width: 50,
+				height: 30,			
+				listeners: {
+					click: function(target) {
+		  				var geneGroups =[];
+		  				var geneGroupNames=[];
+		  				for (var i = 0; i < this._selectedGeneGroups.length; i++) {
+		  					geneGroups.push(this._selectedGeneGroups[i].getGeneGroup().id);
+		  					geneGroupNames.push(this._selectedGeneGroups[i].getGeneGroup().name);
+		  				}
+		    	
+		  				var datasetGroups = [];
+		  				var datasetGroupNames = [];
+		  				for (var i = 0; i < this._selectedDatasetGroups.length; i++) {
+		  					datasetGroups.push(this._selectedDatasetGroups[i].getSelected().id);
+		  					datasetGroupNames.push(this._selectedDatasetGroups[i].getSelected().get("name"))
+		  				}		  			
+		  				DifferentialExpressionSearchController.getVisualizationTestData(this._taxonCombo.getSelected().id, datasetGroups, geneGroups, function(data) {
+		  					data.geneGroupNames = geneGroupNames;
+		  					data.datasetGroupNames = datasetGroupNames;		  					
+		  							  							  					
+		  					_metaVizApp = new Gemma.MetaHeatmapApp({visualizationData: data, applyTo:'meta-heatmap-div'});
+		  					_metaVizApp.doLayout();		  						  				
+		  					
+		  					_sortPanel.add({xtype:'checkbox',
+		  									boxLabel:'Sort by gene score.',
+		  									listeners: { 
+		  										check : function(target, checked) {
+													if (checked) {
+														//Sort genes : changes gene order
+														for (var i = 0; i < this.geneScores[0].length; i++) {
+															this.geneScores[0][i].sort( function ( o1, o2 ) { return o1.score - o2.score; } );																	
+														}
+														for (var geneGroupIndex = 0; geneGroupIndex < this._heatmapArea.geneNames.length; geneGroupIndex++) {			
+															this.geneOrdering[geneGroupIndex] = [];
+															for (var i = 0; i < this._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+																if ( this.geneScores[0][geneGroupIndex][i].score != 0 ) {
+																	this.geneOrdering[geneGroupIndex].push( this.geneScores[0][geneGroupIndex][i].index );
+																}
+															}
+														}														
+													} else {														
+														//Default geneOrdering
+														for (var geneGroupIndex = 0; geneGroupIndex < this._heatmapArea.geneNames.length; geneGroupIndex++) {			
+															this.geneOrdering[geneGroupIndex] = [];														
+															for (var i = 0; i < this._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+																this.geneOrdering[geneGroupIndex].push(i);
+															}
+														}
+													}
+												}, scope: _metaVizApp
+		  									}		  					
+		  					});
+		  					_sortPanel.add({xtype:'checkbox', 
+		  									boxLabel:'Hide columns with no results.',
+		  									listeners: { 
+		  										check : function(target, checked) {
+		  											if (checked) {
+		  												var filteringFn = function(o) {return (o.overallDifferentialExpressionScore == 0);};
+		  												this.filterColumns(filteringFn);
+		  												this.doLayout();
+		  											} else {
+//		  												this._unfilterColumns();
+//		  												this.doLayout();		  												
+		  											}
+		  										}, scope: _metaVizApp
+		  									},
+		  					});
+		  					_sortPanel.add({xtype:'radiogroup',
+		  									columns: 1,
+		  									items: [
+		  						  					{xtype:'radio',
+		  						  						name:'bbb',
+		  												boxLabel:'Sort columns using sum of pValues.',
+		  												listeners: { 
+		  													check : function(target, checked) {
+		  														if (checked) {
+		  															this._sortColumns('ASC', function(o1, o2){return o1.overallDifferentialExpressionScore - o2.overallDifferentialExpressionScore;});
+		  															this.doLayout();
+		  														}
+		  													}, scope: _metaVizApp
+		  												},
+		  						  					},		  						  					
+		  						  					{xtype:'radio',
+		  						  					name:'bbb',
+		  												boxLabel:'Sort columns by specificity.',
+		  												listeners: { 
+		  													check : function(target, checked) {
+		  														if (checked) {											
+		  															this._sortColumns('DESC', function(o1, o2){return o1.specificityScore - o2.specificityScore;});
+		  															this.doLayout();
+		  														}
+		  													}, scope: _metaVizApp
+		  												},
+		  						  					}]
+
+		  					
+		  					}); 
+
+		  				});
+					}, scope: this
+				}
+			}]			
+		});
+					    		
+		Gemma.MetaHeatmapDataSelection.superclass.initComponent.apply(this, arguments);
+	},
+	onRender: function() {
+		Gemma.MetaHeatmapDataSelection.superclass.onRender.apply(this, arguments);
+		
+		_sortPanel = this.ownerCt.sortPanel;
+	}
+});
+
+
+Ext.reg('metaVizDataSelection', Gemma.MetaHeatmapDataSelection);
+
+// MetaHeatmap Application
+// Consist of 3 main panels:
+// - gene labels
+// - anlaysis labels
+// - main visualization area
+// It is controlled by window that allows sorting/filtering and choosing data.
 Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {	
 	initComponent: function() {
 	
 		Ext.apply(this, {
-			height: 750,
+			width: 1700,
+			height: 850,
 			_visualizationData : this.visualizationData,
+			geneScores: this.visualizationData.geneScores,
+			geneOrdering: null,
+			
 			layout: 'absolute',
+			filterColumns: function(filteringFn) {
+				this._heatmapArea.filterColumns(filteringFn);
+			},			
+			_sortColumns: function (asc_desc, sortingFn) {
+				this._heatmapArea._sortColumns(asc_desc, sortingFn);
+			},
 			items: [
-			    { xtype: 'metaVizGeneLabels',
-					  height: 600,
+			{
+				xtype: 'button',
+				x:5,
+				y:5,
+				text: 'Settings'
+			},
+			{
+				xtype: 'button',
+				x:5,				
+				y:25,
+				ref: 'miniWindowButton',					
+				text: 'tool #1',
+				enableToggle: true,
+				listeners: { 
+					toggle : function ( target, checked ) { 			
+						if (checked) {
+							this.MiniWindowTool.show();
+						} else {
+							this.MiniWindowTool.hide();
+						}
+					}, scope: this
+				}					
+			},							
+			{ xtype: 'metaVizGeneLabels',
+					  height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
 					  width: 80,
 					  x: 0,
-					  y: 152,
+					  y: 272,
 					  labels: this.visualizationData.geneNames,
+					  geneGroupNames: this.visualizationData.geneGroupNames,
 					  border: false,
-					  bodyBorder: false						
+					  bodyBorder: false,
+					  applicationRoot: this,
+					  ref: '_geneLabels',
 			},			
 	        {			        
 	              xtype: 'metaVizRotatedLabels',
-	        	  width: 600,
-		  		  height: 130,
+	        	  width: 2300,
+		  		  height: 260,
 				  x: 80,
 				  y: 0,
-				  visualizationData: this.visualizationData.resultSetValueObjects[0],
-				  ref: '_rotatedLabelsBox'
+				  applicationRoot: this,
+				  visualizationData: this.visualizationData.resultSetValueObjects,
+				  datasetGroupNames: this.visualizationData.datasetGroupNames,
+				  ref: 'topLabelsPanel'
 	        },    			        			      
-
 			{
 				xtype: 'metaVizScrollableArea',
-				  height: 500,
-				  width: 500,
+				  height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
+				  width: 2500,
 				  x: 80,
-				  y: 128,
+				  y: 262,
 				  dataDatasetGroups: this.visualizationData.resultSetValueObjects,
+				  geneNames: this.visualizationData.geneNames,
+				  geneIds: this.visualizationData.geneIds,
+				  applicationRoot: this,
 				  ref: '_heatmapArea'
 			}],			
 		});
-		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);			
-		this._rotatedLabelsBox._setHeatmapContainer(this._heatmapArea);
-		this._heatmapArea._setTopLabelsBox(this._rotatedLabelsBox);		
+		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
+		
+		this.topLabelsPanel._setHeatmapContainer ( this._heatmapArea );
+		this._heatmapArea._setTopLabelsBox ( this._rotatedLabelsBox );	
+
+		//Default geneOrdering
+		this.geneOrdering = new Array(this.visualizationData.geneNames.length);
+		for (var geneGroupIndex = 0; geneGroupIndex < this.visualizationData.geneNames.length; geneGroupIndex++) {			
+			this.geneOrdering[geneGroupIndex] = [];
+			for (var i = 0; i < this.visualizationData.geneNames[geneGroupIndex].length; i++) {
+				this.geneOrdering[geneGroupIndex].push(i);
+			}
+		}
+		
+		this.MiniWindowTool = new Ext.Window(
+					{ width: 200,
+			      	  height: 100,
+			      	  border: false,
+			      	  resizable: false,
+			      	  draggable: false,
+			      	  closable: false,
+			      	  
+			      	  title:"",
+			      	  layout:"vbox",
+			      	  items:[{xtype:'label', ref:'specificity', text:"Specificity: "},
+			      	         {xtype:'label', ref:'pValue', text:"pValue: "},
+			      	         {xtype:'label', ref:'foldChange', text:"Fold change: "},			      	         
+					  ],			      			                                                                     												      	  
+		});
+		
 	},
 	onRender: function() {
 		Gemma.MetaHeatmapApp.superclass.onRender.apply(this, arguments);	
+
+		//this.MiniWindowTool.show();
+		this.el.on('mousemove', function(event,target) {
+			if (this.miniWindowButton.pressed == true) {
+				var x = event.getPageX()+10;
+				var y = event.getPageY()+15;
+				this.MiniWindowTool.setPosition(x,y);
+			}
+		}, this );
+
 	}
 
 });
