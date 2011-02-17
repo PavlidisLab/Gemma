@@ -3,7 +3,8 @@
 <head>
 	<title>Widget tests</title>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-
+	
+	<jwr:script src='/scripts/app/AnalysisResultsSearch.js' />
 
 	<script>
 	Ext.namespace('Gemma');
@@ -238,6 +239,13 @@
 	ProgressWidget
 </h2>
 <div class="widget" id="progressWidget"></div>
+
+
+<h2>
+	AnalysisResultsSearch
+</h2>
+<div class="widget" id="analysis-results-search-form"></div>
+
 
 <h2>
 	Widget

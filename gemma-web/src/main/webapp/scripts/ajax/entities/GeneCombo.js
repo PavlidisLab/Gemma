@@ -74,7 +74,10 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 		Gemma.GeneCombo.superclass.onSelect.call(this, record, index);
 		if (!this.selectedGene || record.data.id != this.selectedGene.id) {
 			this.setGene(record.data);
-			this.fireEvent('select', this, this.selectedGene);
+			// 'select' event is also fired by superclass.onSelect.call
+			this.fireEvent('select', this, this.selectedGene); 
+			// use event 'selectSingle' to get event as fired by super
+			this.fireEvent('selectSingle', this, record); 
 		}
 	},
 
