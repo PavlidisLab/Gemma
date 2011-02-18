@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -91,32 +92,10 @@ public class BatchInfoParser {
         return result;
     }
 
-    // /**
-    // * @param arrayDesignUsed
-    // * @return
-    // */
-    // private boolean isSupported( ArrayDesign arrayDesignUsed ) {
-    //
-    // String providerName = arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed.getDesignProvider()
-    // .getName();
-    //
-    // String name = arrayDesignUsed.getName();
-    //
-    // if ( name.toLowerCase().contains( "affymetrix" ) ) return true;
-    //
-    // if ( name.toLowerCase().contains( "agilent" ) ) return true;
-    //
-    // if ( providerName.equalsIgnoreCase( "affymetrix" ) ) return true;
-    //
-    // if ( providerName.equalsIgnoreCase( "agilent" ) ) return true;
-    //
-    // if ( providerName.equalsIgnoreCase( "illumina" ) || name.toLowerCase().contains( "illumina" )
-    // || name.toLowerCase().contains( "sentrix" ) ) return false;
-    //
-    // return true; // generic
-    //
-    // }
-
+    /**
+     * @return the extractor used. The class of the value can tell you what type of file was detected, or if it was
+     *         generic.
+     */
     public ScanDateExtractor getScanDateExtractor() {
         return scanDateExtractor;
     }
@@ -146,7 +125,11 @@ public class BatchInfoParser {
     }
 
     /**
-     * Now we can parse the file to get the batch information
+     * Now we can parse the file to get the batch information.
+     * <p>
+     * We allow ourselves to add dates to _some_ of the bioassays. It turns out to be common for there to be a single
+     * corrupted date in CEL files, for example. However, downstream code has to be careful, and the batch factor could
+     * be a problem too.
      * 
      * @param bioAssays2Files
      * @return
@@ -154,6 +137,7 @@ public class BatchInfoParser {
     private Map<BioMaterial, Date> getBatchInformationFromFiles( Map<BioAssay, File> bioAssays2Files ) {
 
         Map<BioMaterial, Date> result = new HashMap<BioMaterial, Date>();
+        Collection<File> missingDate = new HashSet<File>();
         for ( BioAssay ba : bioAssays2Files.keySet() ) {
             File f = bioAssays2Files.get( ba );
 
@@ -186,16 +170,29 @@ public class BatchInfoParser {
                     result.put( bm, d );
                 }
             } catch ( FileNotFoundException e ) {
-                log.error( "Failure while parsing: " + f + ": " + e.getMessage() );
-                throw new RuntimeException( e );
+                log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
+                missingDate.add( f );
             } catch ( IOException e ) {
-                log.error( "Failure while parsing: " + f + ": " + e.getMessage() );
-                throw new RuntimeException( e );
+                log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
+                missingDate.add( f );
             } catch ( RuntimeException e ) {
-                log.error( "Failure while parsing: " + f + ": " + e.getMessage() );
-                throw e;
+                log.warn( "Failure while parsing: " + f + ": " + e.getMessage() );
+                missingDate.add( f );
+            }
+
+        }
+
+        if ( missingDate.size() == bioAssays2Files.size() ) {
+            throw new IllegalStateException( "Dates were not found for any of the files." );
+        }
+
+        if ( missingDate.size() > 0 ) {
+            log.warn( "Dates were not obtained for " + missingDate + " files: " );
+            for ( File f : missingDate ) {
+                log.info( "Missing date for: " + f );
             }
         }
+
         return result;
     }
 
