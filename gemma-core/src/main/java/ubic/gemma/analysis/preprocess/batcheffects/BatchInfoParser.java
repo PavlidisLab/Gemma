@@ -230,8 +230,9 @@ public class BatchInfoParser {
                 continue;
             }
 
-            if ( n.toUpperCase().contains( "CHP" ) || n.toUpperCase().contains( "DAT" )
-                    || n.toUpperCase().contains( "EXP" ) || n.toUpperCase().contains( "RPT" ) ) {
+            if ( n.toUpperCase().contains( ".CHP" ) || n.toUpperCase().contains( ".DAT" )
+                    || n.toUpperCase().contains( ".EXP" ) || n.toUpperCase().contains( ".RPT" )
+                    || n.toUpperCase().contains( ".TIF" ) ) {
                 continue;
             }
 
