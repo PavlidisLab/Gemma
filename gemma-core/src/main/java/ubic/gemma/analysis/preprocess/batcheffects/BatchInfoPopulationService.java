@@ -241,7 +241,7 @@ public class BatchInfoPopulationService {
         }
 
         /*
-         * Associate dates with bioassays and any new factors with the biomaterials
+         * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
          */
         for ( BioMaterial bm : dates.keySet() ) {
             bioMaterialService.thaw( bm );

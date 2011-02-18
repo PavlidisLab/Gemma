@@ -15,7 +15,7 @@
 package ubic.gemma.analysis.preprocess.svd;
 
 import static org.junit.Assert.assertNotNull;
-
+import static org.junit.Assert.assertEquals;
 import java.util.Collection;
 
 import org.junit.After;
@@ -61,6 +61,7 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
         SVDValueObject svd = svdService.svd( ee );
 
         assertNotNull( svd.getvMatrix() );
+        assertEquals( 5, svd.getFactorCorrelations().size() );
     }
 
     @Before
