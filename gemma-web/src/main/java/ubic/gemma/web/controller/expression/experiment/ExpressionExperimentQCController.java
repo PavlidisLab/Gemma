@@ -560,6 +560,8 @@ public class ExpressionExperimentQCController extends BaseController {
         Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
         Map<Integer, Double> dateCorrelations = svdo.getDateCorrelations();
 
+        assert ee.getId().equals( svdo.getId() );
+
         /*
          * TEST
          */
@@ -591,15 +593,22 @@ public class ExpressionExperimentQCController extends BaseController {
         for ( Integer component : factorCorrelations.keySet() ) {
             if ( component >= MAX_COMP ) break;
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
-                Double corr = Math.abs( factorCorrelations.get( component ).get( efId ) );
-                series.addValue( corr, "PC" + ( component + 1 ), efs.get( efId ) );
+                Double a = factorCorrelations.get( component ).get( efId );
+                String facname = efs.get( efId ) == null ? "?" : efs.get( efId );
+                if ( a != null && !Double.isNaN( a ) ) {
+                    Double corr = Math.abs( a );
+                    series.addValue( corr, "PC" + ( component + 1 ), facname );
+                }
             }
         }
 
         for ( Integer component : dateCorrelations.keySet() ) {
             if ( component >= MAX_COMP ) break;
-            Double corr = Math.abs( dateCorrelations.get( component ) );
-            series.addValue( corr, "PC" + ( component + 1 ), "Date run" );
+            Double a = dateCorrelations.get( component );
+            if ( a != null && !Double.isNaN( a ) ) {
+                Double corr = Math.abs( a );
+                series.addValue( corr, "PC" + ( component + 1 ), "Date run" );
+            }
         }
 
         /*
@@ -610,7 +619,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
             for ( Long efId : factorPvalues.get( component ).keySet() ) {
                 Double pval = factorPvalues.get( component ).get( efId );
-                if ( pval == null ) continue;
+                if ( pval == null || Double.isNaN( pval ) ) continue;
                 pval = -Math.log10( Math.min( 10e-4, pval ) ) / 4.0; // FIXME weak attempt to scale pvalues.
                 series.addValue( pval, "PC" + ( component + 1 ), efs.get( efId ) );
 
