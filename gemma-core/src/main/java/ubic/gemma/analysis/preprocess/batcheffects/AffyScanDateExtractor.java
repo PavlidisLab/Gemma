@@ -121,8 +121,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                     if ( line.contains( "affymetrix-scan-date" ) ) {
                         date = parseISO8601( line );
                     }
-                    if ( ++count > 100 ) {
-                        // give up.
+                    if ( date != null || ++count > 100 ) {
                         reader.close();
                         break;
                     }
@@ -143,8 +142,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                     if ( line.startsWith( "DatHeader" ) ) {
                         date = parseDatHeader( line );
                     }
-                    if ( ++count > 100 ) {
-                        // give up.
+                    if ( date != null || ++count > 100 ) {
                         reader.close();
                         break;
                     }
