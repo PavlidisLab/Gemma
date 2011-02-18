@@ -46,7 +46,7 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
             int count = 0;
             while ( ( line = reader.readLine() ) != null ) {
 
-                if ( line.startsWith( GENEPIX_DATETIME_HEADER_START ) ) {
+                if ( line.startsWith( GENEPIX_DATETIME_HEADER ) ) {
                     date = parseGenePixDateTime( line );
                 }
                 if ( date == null ) date = parseISO8601( line );
@@ -58,9 +58,9 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
                 if ( date != null || ++count > MAX_HEADER_LINES ) {
                     reader.close();
 
-                    // sanity check.
                     if ( date != null && date.after( new Date() ) ) {
-                        throw new RuntimeException( "Did not get a valid date (Line was:" + line + ")" );
+                        throw new RuntimeException( "Did not get a valid date (Line was:" + line
+                                + ", extracted date was " + date + ")" );
                     }
 
                     break;

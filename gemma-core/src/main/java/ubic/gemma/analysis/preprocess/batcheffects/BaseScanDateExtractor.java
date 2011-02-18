@@ -36,7 +36,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
     // TODO set up regexes statically.
 
-    protected static final String GENEPIX_DATETIME_HEADER_START = "\"DateTime";
+    protected static final String GENEPIX_DATETIME_HEADER = "\"?DateTime";
 
     /**
      * @param string
@@ -135,7 +135,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         Date d = null;
         while ( ( line = reader.readLine() ) != null ) {
 
-            if ( line.startsWith( GENEPIX_DATETIME_HEADER_START ) ) {
+            if ( line.startsWith( GENEPIX_DATETIME_HEADER ) ) {
                 d = parseGenePixDateTime( line );
                 break;
             }
@@ -149,14 +149,13 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     }
 
     /**
-     * @param line
+     * @param line like "DateTime=2005/11/09 11:36:27" (with the quotes) possibly with trailing whitespace.
      * @return
      */
     protected Date parseGenePixDateTime( String line ) {
         try {
             String dateString = line.trim().replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
-            DateFormat f = new SimpleDateFormat( "yyyy/mm/dd hh:mm:ss" ); // 2005/11/09 11:36:27
-            f.setLenient( true );
+            DateFormat f = new SimpleDateFormat( "yyyy/MM/dd hh:mm:ss" ); // 2005/11/09 11:36:27, 2006/04/07 14:18:18
             return f.parse( dateString );
         } catch ( ParseException e ) {
             throw new RuntimeException( e );
