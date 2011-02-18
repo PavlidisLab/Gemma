@@ -175,6 +175,10 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlations of PCs with experimental factors' src=\"pcaFactors.html?id="
                             + this.eeid + "\" /></td>" );
         } else {
+            /*
+             * Two panels for PCA, so two placeholders.
+             */
+            buf.append( placeHolder );
             buf.append( placeHolder );
         }
 
