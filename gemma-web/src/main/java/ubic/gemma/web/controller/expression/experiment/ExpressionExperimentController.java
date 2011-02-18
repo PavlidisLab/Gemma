@@ -44,6 +44,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.ontology.model.OntologyResource;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
@@ -463,7 +464,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( ee == null ) return null;
 
         ee = expressionExperimentService.thawLite( ee );
-        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee );
+        return DesignMatrixRowValueObject.Factory.getDesignMatrix( ee, true ); // ignore "batch"
     }
 
     /**
@@ -888,7 +889,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             } catch ( NumberFormatException e ) {
                 throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
             }
-            expressionExperiment = expressionExperimentService.load( id );
+            expressionExperiment = expressionExperimentService.thawLite( expressionExperimentService.load( id ) );
         }
 
         if ( expressionExperiment == null ) {
@@ -916,6 +917,16 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         mav.addObject( "eeId", id );
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
+
+        boolean hasBatchInformation = false;
+        for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+
+        mav.addObject( "hasBatchInformation", hasBatchInformation );
 
         addQCInfo( expressionExperiment, mav );
 
