@@ -38,7 +38,7 @@ public class AffyScanDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
         Date expected = formatter.parse( "09/09/05 12:14:40" );
 
         assertEquals( expected, actual );
@@ -52,7 +52,7 @@ public class AffyScanDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
         Date expected = formatter.parse( "03/15/01 12:16:30" );
 
         assertEquals( expected, actual );
