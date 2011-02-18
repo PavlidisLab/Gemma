@@ -149,8 +149,9 @@ public class BatchInfoPopulationService {
         }
 
         ExperimentalFactor factor;
+        Collection<LocalFile> files = null;
         try {
-            Collection<LocalFile> files = fetchRawDataFiles( tee );
+            files = fetchRawDataFiles( tee );
 
             if ( files == null || files.isEmpty() ) {
                 this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationMissingEvent.class,
@@ -158,15 +159,8 @@ public class BatchInfoPopulationService {
                 return null;
             }
 
-            factor = getBatchDataFromRawFiles( tee, files );
+            factor = getBatchDataFromRawFiles( tee, files ); // does audit as well.
 
-            if ( CLEAN_UP ) {
-                for ( LocalFile localFile : files ) {
-                    localFile.asFile().delete();
-                }
-            }
-
-            this.auditTrailService.addUpdateEvent( tee, BatchInformationFetchingEvent.class, "", "" );
         } catch ( Exception e ) {
 
             log.info( e, e );
@@ -178,6 +172,12 @@ public class BatchInfoPopulationService {
                     ExceptionUtils.getFullStackTrace( e ) );
             // }
             return null;
+        } finally {
+            if ( CLEAN_UP && files != null ) {
+                for ( LocalFile localFile : files ) {
+                    localFile.asFile().delete();
+                }
+            }
         }
 
         if ( factor != null )
@@ -284,7 +284,7 @@ public class BatchInfoPopulationService {
 
     /**
      * @param ee
-     * @param files Local copies of raw data files obtained from the data provider (e.g. GEO)
+     * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
      * @return
      */
     private ExperimentalFactor getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
@@ -294,6 +294,12 @@ public class BatchInfoPopulationService {
         removeExistingBatchFactor( ee );
 
         ExperimentalFactor factor = convertToFactor( ee, dates );
+
+        if ( factor != null ) {
+            this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, batchInfoParser
+                    .getScanDateExtractor().getClass().getSimpleName(), "" );
+        }
+
         return factor;
     }
 

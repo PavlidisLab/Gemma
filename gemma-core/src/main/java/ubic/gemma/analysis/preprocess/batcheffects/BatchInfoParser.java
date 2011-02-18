@@ -47,6 +47,8 @@ public class BatchInfoParser {
 
     private static Log log = LogFactory.getLog( BatchInfoParser.class );
 
+    private ScanDateExtractor scanDateExtractor = null;
+
     /**
      * @param ee
      * @param files
@@ -89,31 +91,6 @@ public class BatchInfoParser {
         return result;
     }
 
-    /**
-     * Bookkeeping
-     * 
-     * @param ee
-     * @return
-     */
-    private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
-        Map<String, BioAssay> assayAccessions = new HashMap<String, BioAssay>();
-        for ( BioAssay ba : ee.getBioAssays() ) {
-            DatabaseEntry accession = ba.getAccession();
-            ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
-
-            // accession.getExternalDatabase(); // check for GEO
-
-            if ( StringUtils.isBlank( accession.getAccession() ) ) {
-                throw new IllegalStateException(
-                        "Must have accession for each bioassay to get batch information from source for "
-                                + ee.getShortName() );
-            }
-
-            assayAccessions.put( accession.getAccession(), ba );
-        }
-        return assayAccessions;
-    }
-
     // /**
     // * @param arrayDesignUsed
     // * @return
@@ -140,6 +117,34 @@ public class BatchInfoParser {
     //
     // }
 
+    public ScanDateExtractor getScanDateExtractor() {
+        return scanDateExtractor;
+    }
+
+    /**
+     * Bookkeeping
+     * 
+     * @param ee
+     * @return
+     */
+    private Map<String, BioAssay> getAccessionToBioAssayMap( ExpressionExperiment ee ) {
+        Map<String, BioAssay> assayAccessions = new HashMap<String, BioAssay>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            DatabaseEntry accession = ba.getAccession();
+            // ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
+            // accession.getExternalDatabase(); // check for GEO
+
+            if ( StringUtils.isBlank( accession.getAccession() ) ) {
+                throw new IllegalStateException(
+                        "Must have accession for each bioassay to get batch information from source for "
+                                + ee.getShortName() );
+            }
+
+            assayAccessions.put( accession.getAccession(), ba );
+        }
+        return assayAccessions;
+    }
+
     /**
      * Now we can parse the file to get the batch information
      * 
@@ -156,16 +161,14 @@ public class BatchInfoParser {
 
             try {
 
-                ScanDateExtractor ex = null;
-
                 String providerName = arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed
                         .getDesignProvider().getName();
                 if ( providerName.equalsIgnoreCase( "affymetrix" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) {
-                    ex = new AffyScanDateExtractor();
+                    scanDateExtractor = new AffyScanDateExtractor();
                 } else if ( providerName.equalsIgnoreCase( "agilent" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) {
-                    ex = new AgilentScanDateExtractor();
+                    scanDateExtractor = new AgilentScanDateExtractor();
                 } else if ( providerName.equalsIgnoreCase( "illumina" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "illumina" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "sentrix" ) ) {
@@ -174,11 +177,11 @@ public class BatchInfoParser {
                             + "(Illumina files do not contain dates)" );
                 } else {
                     log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
-                    ex = new GenericScanFileDateExtractor();
+                    scanDateExtractor = new GenericScanFileDateExtractor();
                 }
 
                 InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
-                Date d = ex.extract( is );
+                Date d = scanDateExtractor.extract( is );
                 for ( BioMaterial bm : ba.getSamplesUsed() ) {
                     result.put( bm, d );
                 }
