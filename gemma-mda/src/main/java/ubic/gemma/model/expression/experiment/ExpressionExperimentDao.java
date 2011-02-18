@@ -369,4 +369,6 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
 
     public Collection<ExpressionExperiment> loadLackingTags();
 
+    public Collection<ExpressionExperiment> findByAccession( String accession );
+
 }

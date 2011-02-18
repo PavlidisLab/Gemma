@@ -65,6 +65,11 @@ public class ExpressionExperimentServiceImpl extends
 
     private Log log = LogFactory.getLog( this.getClass() );
 
+    @Override
+    public Collection<ExpressionExperiment> findByAccession( String accession ) {
+        return this.getExpressionExperimentDao().findByAccession( accession );
+    }
+
     public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
         return this.getExpressionExperimentDao().findByQuantitationType( type );
     }

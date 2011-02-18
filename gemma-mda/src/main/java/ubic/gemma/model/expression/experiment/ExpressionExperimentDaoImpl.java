@@ -1686,4 +1686,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 "select e from ExpressionExperimentImpl e where e.characteristics.size = 0" );
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<ExpressionExperiment> findByAccession( String accession ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select e from ExpressionExperimentImpl e inner join e.accession a where a.accession = :accession",
+                "accession", accession );
+    }
+
 }

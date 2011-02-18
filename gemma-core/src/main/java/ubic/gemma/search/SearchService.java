@@ -1265,12 +1265,20 @@ public class SearchService implements InitializingBean {
             if ( ee != null ) {
                 results.put( ee, ee.getShortName() );
             } else {
-                try {
-                    // maybe user put in a primary key value.
-                    ee = expressionExperimentService.load( new Long( query ) );
-                    if ( ee != null ) results.put( ee, ee.getId().toString() );
-                } catch ( NumberFormatException e ) {
-                    // no-op - it's not an ID.
+
+                Collection<ExpressionExperiment> ees = expressionExperimentService.findByAccession( query );
+                for ( ExpressionExperiment e : ees ) {
+                    results.put( e, e.getId().toString() );
+                }
+
+                if ( results.isEmpty() ) {
+                    try {
+                        // maybe user put in a primary key value.
+                        ee = expressionExperimentService.load( new Long( query ) );
+                        if ( ee != null ) results.put( ee, ee.getId().toString() );
+                    } catch ( NumberFormatException e ) {
+                        // no-op - it's not an ID.
+                    }
                 }
             }
         }

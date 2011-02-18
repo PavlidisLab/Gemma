@@ -73,6 +73,13 @@ public interface ExpressionExperimentService {
     public ExpressionExperiment findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
+     * @param accession
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByAccession( String accession );
+
+    /**
      * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
