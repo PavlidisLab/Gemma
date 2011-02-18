@@ -45,25 +45,33 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
             String line = null;
             int count = 0;
             while ( ( line = reader.readLine() ) != null ) {
-                date = parseISO8601( line );
 
-                if ( date == null ) {
-                    date = parseStandardFormat( line );
+                if ( line.startsWith( GENEPIX_DATETIME_HEADER_START ) ) {
+                    date = parseGenePixDateTime( line );
                 }
-                if ( date == null ) {
-                    date = parseLongFormat( line );
-                }
+                if ( date == null ) date = parseISO8601( line );
+
+                if ( date == null ) date = parseStandardFormat( line );
+
+                if ( date == null ) date = parseLongFormat( line );
+
                 if ( date != null || ++count > MAX_HEADER_LINES ) {
                     reader.close();
+
+                    // sanity check.
+                    if ( date != null && date.after( new Date() ) ) {
+                        throw new RuntimeException( "Did not get a valid date (Line was:" + line + ")" );
+                    }
+
                     break;
                 }
             }
         } catch ( IOException e ) {
             throw new RuntimeException();
         }
+
         return date;
     }
-
 
     @Override
     public Date extract( String fileName ) {

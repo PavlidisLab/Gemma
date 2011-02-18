@@ -36,6 +36,8 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
     // TODO set up regexes statically.
 
+    protected static final String GENEPIX_DATETIME_HEADER_START = "\"DateTime";
+
     /**
      * @param string
      * @return
@@ -45,7 +47,6 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         // 2008-08-15T14:15:36
         try {
             DateFormat f = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
-            f.setLenient( true );
 
             Pattern regex = Pattern.compile( ".+?([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}).+" );
 
@@ -72,7 +73,6 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         // 
         try {
             DateFormat f = new SimpleDateFormat( "EEE MMM dd HH:mm:ss zzz yyyy" );
-            f.setLenient( true );
 
             Pattern regex = Pattern.compile( "\\s*Date\\s*(.+)" );
 
@@ -100,7 +100,6 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
         try {
             DateFormat f = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
-            f.setLenient( true );
 
             Pattern regex = Pattern
                     .compile( ".+?([0-9]{2}[\\/-][0-9]{2}[\\/-][0-9]{2}\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+" );
@@ -136,11 +135,8 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         Date d = null;
         while ( ( line = reader.readLine() ) != null ) {
 
-            if ( line.startsWith( "\"DateTime" ) ) {
-                String dateString = line.replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
-                DateFormat f = new SimpleDateFormat( "yyyy/mm/dd hh:mm:ss" ); // 2005/11/09 11:36:27
-                f.setLenient( true );
-                d = f.parse( dateString );
+            if ( line.startsWith( GENEPIX_DATETIME_HEADER_START ) ) {
+                d = parseGenePixDateTime( line );
                 break;
             }
         }
@@ -150,6 +146,21 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         }
         reader.close();
         return d;
+    }
+
+    /**
+     * @param line
+     * @return
+     */
+    protected Date parseGenePixDateTime( String line ) {
+        try {
+            String dateString = line.replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
+            DateFormat f = new SimpleDateFormat( "yyyy/mm/dd hh:mm:ss" ); // 2005/11/09 11:36:27
+            f.setLenient( true );
+            return f.parse( dateString );
+        } catch ( ParseException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
 }
