@@ -66,4 +66,30 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         assertNotNull( batchFactor );
     }
 
+    /**
+     * Another Affymetrix format - GCOS
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testLoadCommandConsoleFormat() throws Exception {
+
+        String path = getTestFileBasePath();
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT ) );
+        ExpressionExperiment newee;
+        try {
+            Collection<?> results = geoService.fetchAndLoad( "GSE20219", false, true, false, false );
+            newee = ( ExpressionExperiment ) results.iterator().next();
+
+        } catch ( AlreadyExistsInSystemException e ) {
+            newee = ( ExpressionExperiment ) e.getData();
+        }
+
+        assertNotNull( newee );
+        newee = eeService.thawLite( newee );
+
+        ExperimentalFactor batchFactor = batchInfoPopulationService.fillBatchInformation( newee, true );
+        assertNotNull( batchFactor );
+    }
+
 }

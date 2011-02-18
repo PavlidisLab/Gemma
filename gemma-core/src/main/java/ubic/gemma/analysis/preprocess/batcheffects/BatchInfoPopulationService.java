@@ -43,6 +43,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchi
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -273,7 +274,12 @@ public class BatchInfoPopulationService {
      */
     private Collection<LocalFile> fetchRawDataFiles( ExpressionExperiment ee ) {
         RawDataFetcher fetcher = new RawDataFetcher();
-        return fetcher.fetch( ee.getAccession().getAccession() );
+        DatabaseEntry accession = ee.getAccession();
+        if ( accession == null ) {
+            log.warn( "No accession for " + ee.getShortName() );
+            return new HashSet<LocalFile>();
+        }
+        return fetcher.fetch( accession.getAccession() );
     }
 
     /**

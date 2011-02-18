@@ -36,7 +36,8 @@ import ubic.basecode.util.FileTools;
 /**
  * Extract the scan date from Affymetrix CEL files. Handles both version 3 (ASCII) and 4 (binary) files.
  * <p />
- * {@link http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/cel.html}
+ * {@link http://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/cel.html} and {@link http
+ * ://www.affymetrix.com/support/developer/powertools/changelog/gcos-agcc/generic.html}
  * <p/>
  * Note that the Affymetrix documentation does not mention a date, explicitly, but it's in the "DatHeader"
  * 
@@ -59,7 +60,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
         Date date = null;
 
         try {
-            int magic = readIntLittleEndian( str );
+            int magic = readByteLittleEndian( str );
             if ( magic == 64 ) {
 
                 int version = readIntLittleEndian( str );
@@ -69,11 +70,11 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                     throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
                 }
 
-                log.debug( readIntLittleEndian( str ) ); // numrows
-                log.debug( readIntLittleEndian( str ) ); // numcols
+                log.debug( readShortLittleEndian( str ) ); // numrows
+                log.debug( readShortLittleEndian( str ) ); // numcols
                 log.debug( readIntLittleEndian( str ) ); // numcells
 
-                int headerLen = readIntLittleEndian( str );
+                int headerLen = readShortLittleEndian( str );
 
                 if ( headerLen == 0 ) {
                     throw new IllegalStateException( "Zero header length read" );
@@ -84,7 +85,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                 StringBuilder buf = new StringBuilder();
 
                 for ( int i = 0; i < headerLen; i++ ) {
-                    buf.append( ( char ) str.readByte() );
+                    buf.append( new String( new byte[] { str.readByte() }, "US-ASCII" ) );
                 }
 
                 String[] headerLines = StringUtils.split( buf.toString(), "\n" );
@@ -92,8 +93,43 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                 for ( String string : headerLines ) {
                     if ( string.startsWith( "DatHeader" ) ) {
                         date = parseDatHeader( string );
+                        break;
                     }
                 }
+            } else if ( magic == 59 ) {
+
+                // Command Console format
+                int version = readUnsignedByteLittleEndian( str );
+                if ( version != 1 ) {
+                    throw new IllegalStateException( "Affymetrix CEL format not recognized: " + version );
+                }
+                log.debug( readIntLittleEndian( str ) ); // number of data groups
+                log.debug( readIntLittleEndian( str ) ); // file position of first group
+                String datatypeIdentifier = readGCOSString( str );
+
+                log.debug( datatypeIdentifier );
+
+                String guid = readGCOSString( str );
+
+                log.debug( guid );
+
+                reader = new BufferedReader( new InputStreamReader( is, "UTF-16BE" ) );
+                String line = null;
+                int count = 0;
+                while ( ( line = reader.readLine() ) != null ) {
+                    log.debug( line );
+                    if ( line.contains( "affymetrix-scan-date" ) ) {
+                        date = parseISO8601( line );
+                    }
+                    if ( ++count > 100 ) {
+                        // give up.
+                        reader.close();
+                        break;
+                    }
+                }
+
+                log.debug( date );
+
             } else {
 
                 /*
@@ -139,6 +175,32 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
 
     }
 
+    /**
+     * @param string
+     * @return
+     */
+    private Date parseISO8601( String string ) {
+
+        // 2008-08-15T14:15:36Z
+        try {
+            DateFormat f = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+            f.setLenient( true );
+
+            Pattern regex = Pattern.compile( ".+?([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})Z.+" );
+
+            Matcher matcher = regex.matcher( string );
+            if ( matcher.matches() ) {
+                String tok = matcher.group( 1 );
+                log.debug( tok );
+                return f.parse( tok );
+            }
+
+            return null;
+        } catch ( ParseException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -178,12 +240,36 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
         return null;
     }
 
+    private String readGCOSString( DataInputStream str ) throws IOException {
+        int fieldLength = readIntLittleEndian( str );
+        StringBuilder buf = new StringBuilder();
+        for ( int i = 0; i < fieldLength; i++ ) {
+            if ( str.available() == 0 ) throw new IOException( "Reached end of file without string end" );
+            buf.append( new String( new byte[] { str.readByte() }, "US-ASCII" ) );
+        }
+        String field = buf.toString();
+        return field;
+    }
+
     /**
      * @param dis
      * @return
      * @throws IOException
      */
     private int readIntLittleEndian( DataInputStream dis ) throws IOException {
-        return Integer.reverseBytes( dis.readInt() );
+        return dis.readInt();
     }
+
+    private int readByteLittleEndian( DataInputStream dis ) throws IOException {
+        return dis.readByte();
+    }
+
+    private int readUnsignedByteLittleEndian( DataInputStream dis ) throws IOException {
+        return dis.readUnsignedByte();
+    }
+
+    private int readShortLittleEndian( DataInputStream dis ) throws IOException {
+        return dis.readShort();
+    }
+
 }
