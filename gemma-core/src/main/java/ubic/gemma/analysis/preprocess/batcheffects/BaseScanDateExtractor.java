@@ -36,7 +36,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
     // TODO set up regexes statically.
 
-    protected static final String GENEPIX_DATETIME_HEADER = "\"?DateTime";
+    protected static final String GENEPIX_DATETIME_HEADER = "\"DateTime";
 
     /**
      * @param string
