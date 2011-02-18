@@ -36,7 +36,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
     // TODO set up regexes statically.
 
-    protected static final String GENEPIX_DATETIME_HEADER = "\"DateTime";
+    protected static final String GENEPIX_DATETIME_HEADER_REGEXP = "\"?DateTime=.*";
 
     /**
      * @param string
@@ -135,7 +135,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
         Date d = null;
         while ( ( line = reader.readLine() ) != null ) {
 
-            if ( line.startsWith( GENEPIX_DATETIME_HEADER ) ) {
+            if ( line.matches( GENEPIX_DATETIME_HEADER_REGEXP ) ) {
                 d = parseGenePixDateTime( line );
                 break;
             }

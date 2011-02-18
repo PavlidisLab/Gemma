@@ -84,4 +84,13 @@ public class GenericScanFileDateExtractorTest {
 
         assertEquals( expected, actual );
     }
+
+    public void testExtractGenePixB() throws Exception {
+        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+        Date actual = extractor.parseGenePixDateTime( "DateTime=2006/04/07 14:18:18\t" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        Date expected = formatter.parse( "2006-04-07T14:18:18" );
+
+        assertEquals( expected, actual );
+    }
 }

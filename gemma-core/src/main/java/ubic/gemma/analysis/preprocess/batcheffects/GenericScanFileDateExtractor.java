@@ -46,7 +46,7 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
             int count = 0;
             while ( ( line = reader.readLine() ) != null ) {
 
-                if ( line.startsWith( GENEPIX_DATETIME_HEADER ) ) {
+                if ( line.matches( GENEPIX_DATETIME_HEADER_REGEXP ) ) {
                     date = parseGenePixDateTime( line );
                 }
                 if ( date == null ) date = parseISO8601( line );
