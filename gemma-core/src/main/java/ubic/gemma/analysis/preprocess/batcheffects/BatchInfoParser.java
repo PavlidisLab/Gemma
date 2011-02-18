@@ -172,9 +172,14 @@ public class BatchInfoParser {
                     result.put( bm, d );
                 }
             } catch ( FileNotFoundException e ) {
+                log.error( "Failure while parsing: " + f + ": " + e.getMessage() );
                 throw new RuntimeException( e );
             } catch ( IOException e ) {
+                log.error( "Failure while parsing: " + f + ": " + e.getMessage() );
                 throw new RuntimeException( e );
+            } catch ( RuntimeException e ) {
+                log.error( "Failure while parsing: " + f + ": " + e.getMessage() );
+                throw e;
             }
         }
         return result;
