@@ -300,7 +300,7 @@ public class BatchInfoPopulationService {
             log.info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches + " batches." );
             this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, batchInfoParser
                     .getScanDateExtractor().getClass().getSimpleName()
-                    + "; " + numberOfBatches + " batches.", "Dates of sample runs (rounded to day): " + datesString );
+                    + "; " + numberOfBatches + " batches.", "Dates of sample runs: " + datesString );
             return true;
         }
 
