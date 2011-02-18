@@ -101,11 +101,6 @@ public class BatchInfoParser {
             DatabaseEntry accession = ba.getAccession();
             ArrayDesign arrayDesignUsed = ba.getArrayDesignUsed();
 
-            if ( !isSupported( arrayDesignUsed ) ) {
-                log.warn( "Can't get batch information for:" + arrayDesignUsed );
-                continue;
-            }
-
             // accession.getExternalDatabase(); // check for GEO
 
             if ( StringUtils.isBlank( accession.getAccession() ) ) {
@@ -119,22 +114,31 @@ public class BatchInfoParser {
         return assayAccessions;
     }
 
-    private boolean isSupported( ArrayDesign arrayDesignUsed ) {
-
-        if ( arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) return true;
-
-        if ( arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) return true;
-
-        if ( arrayDesignUsed.getDesignProvider() == null
-                || StringUtils.isBlank( arrayDesignUsed.getDesignProvider().getName() ) ) return false;
-
-        if ( arrayDesignUsed.getDesignProvider().getName().equalsIgnoreCase( "affymetrix" ) ) return true;
-
-        if ( arrayDesignUsed.getDesignProvider().getName().equalsIgnoreCase( "agilent" ) ) return true;
-
-        return false;
-
-    }
+    // /**
+    // * @param arrayDesignUsed
+    // * @return
+    // */
+    // private boolean isSupported( ArrayDesign arrayDesignUsed ) {
+    //
+    // String providerName = arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed.getDesignProvider()
+    // .getName();
+    //
+    // String name = arrayDesignUsed.getName();
+    //
+    // if ( name.toLowerCase().contains( "affymetrix" ) ) return true;
+    //
+    // if ( name.toLowerCase().contains( "agilent" ) ) return true;
+    //
+    // if ( providerName.equalsIgnoreCase( "affymetrix" ) ) return true;
+    //
+    // if ( providerName.equalsIgnoreCase( "agilent" ) ) return true;
+    //
+    // if ( providerName.equalsIgnoreCase( "illumina" ) || name.toLowerCase().contains( "illumina" )
+    // || name.toLowerCase().contains( "sentrix" ) ) return false;
+    //
+    // return true; // generic
+    //
+    // }
 
     /**
      * Now we can parse the file to get the batch information
@@ -154,7 +158,8 @@ public class BatchInfoParser {
 
                 ScanDateExtractor ex = null;
 
-                String providerName = arrayDesignUsed.getDesignProvider().getName();
+                String providerName = arrayDesignUsed.getDesignProvider() == null ? "" : arrayDesignUsed
+                        .getDesignProvider().getName();
                 if ( providerName.equalsIgnoreCase( "affymetrix" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "affymetrix" ) ) {
                     ex = new AffyScanDateExtractor();
