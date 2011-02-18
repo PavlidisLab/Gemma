@@ -59,6 +59,20 @@ public class AffyScanDateExtractorTest {
     }
 
     @Test
+    public void testExtractInputStreamVx() throws Exception {
+        InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSM239803.CEL.gz" ) );
+        AffyScanDateExtractor extractor = new AffyScanDateExtractor();
+
+        Date actual = extractor.extract( is );
+
+        DateFormat formatter = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+        Date expected = formatter.parse( "01/20/05 11:04:38" );
+
+        assertEquals( expected, actual );
+    }
+
+    @Test
     public void testExtractInputStreamGCOS() throws Exception {
         InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
                 "/data/loader/expression/geo/GSM506974.part.CEL.gz" ) );

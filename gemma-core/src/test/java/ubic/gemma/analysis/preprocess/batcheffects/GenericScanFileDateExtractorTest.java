@@ -53,6 +53,19 @@ public class GenericScanFileDateExtractorTest {
     }
 
     @Test
+    public void testExtractImagene() throws Exception {
+        InputStream is = getClass().getResourceAsStream( "/data/loader/expression/geo/GSM542196.imagene.part.txt" );
+        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+
+        Date actual = extractor.extract( is );
+
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        Date expected = formatter.parse( "2002-06-17T20:26:36" );
+
+        assertEquals( expected, actual );
+    }
+
+    @Test
     public void testExtractLongDate() throws Exception {
         GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
         Date actual = extractor.parseLongFormat( "        Date    Wed Jun 19 14:53:29 PST 2002" );

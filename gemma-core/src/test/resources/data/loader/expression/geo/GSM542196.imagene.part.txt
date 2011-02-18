@@ -1,0 +1,40 @@
+Begin Header
+        version 5.1
+        Date    Mon Jun 17 21:26:36 CST 2002
+        Image File      E:\ÃÂ¾ÃÂ¬ÃÃ½Â¾Ã
+        Page    0
+        Page Name
+        Inverted        false
+        Begin Field Dimensions
+                Field   Metarows        Metacols        Rows    Cols
+                13699486        12      4       16      16
+        End Field Dimensions
+        Begin Measurement parameters
+                Segmentation Method     auto
+                Signal Low      0.0
+                Signal High     0.0
+                Background Low  0.0
+                Background High 0.0
+                Background Buffer       3.0
+                Background Width        5.0
+        End Measurement parameters
+        Begin Alerts
+                Control Type    Minimum threshold       If tested       Percentage allowed      If failed       Maximum threshold       If tested       Percentage allowed\
+      If failed       CV threshold    If tested       If failed
+        End Alerts
+        Begin Quality settings
+                Empty Spots     true    Threshold:      1.0
+                Poor Spots      false
+                Negative Spots  false
+
+        End Quality settings
+End Header
+Begin Raw Data
+        Field   Meta Row        Meta Column     Row     Column  Gene ID Flag    Signal Mean     Background Mean Signal Median   Background Median       Signal Mode     Ba\
+ckground Mode Signal Area     Background Area Signal Total    Background Total        Signal Stdev    Background Stdev        XCoord  YCoord  Diameter        CM-X    CM-Y\
+    Min Diam        Max Diam        Control Failed Control  Background contamination present        Signal contamination present    Ignored % failed        Open perimeter\
+ failed   Shape regularity failed Perim-to-area failed    Offset failed   Empty spot      Negative spot
+        13699486        1       1       1       1       Sr01Sc01R01C01  0       16667.091954022988      179.03595505617977      19589.5 134.0   21479.77358490566       13\
+9.14148681055156      174.0   445.0   2900074.0       79671.0 9194.403043421456       212.50718123870647      90.33333333333333       121.33333333333333      14.892410878\
+448274      89.58620689655173       120.71264367816092      14.752987537645128      15.125189027717344              0       0       0       0       0       0       0     \
+  0       0       0

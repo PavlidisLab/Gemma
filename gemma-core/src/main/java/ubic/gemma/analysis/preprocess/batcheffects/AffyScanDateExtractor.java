@@ -72,7 +72,8 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
                 int headerLen = readShortLittleEndian( str );
 
                 if ( headerLen == 0 ) {
-                    throw new IllegalStateException( "Zero header length read" );
+                    // throw new IllegalStateException( "Zero header length read" );
+                    headerLen = 800;
                 }
 
                 log.debug( headerLen );
