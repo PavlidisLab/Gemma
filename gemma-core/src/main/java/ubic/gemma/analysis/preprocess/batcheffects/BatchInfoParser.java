@@ -255,6 +255,13 @@ public class BatchInfoParser {
                 continue;
             }
             if ( bioAssays2Files.containsKey( ba ) ) {
+                /*
+                 * Don't clobber a valid file. For affymetrix, CEL is what we want. Other cases harder to predict, but
+                 * .txt files can be either good or bad.
+                 */
+                if ( bioAssays2Files.get( ba ).getName().toUpperCase().contains( ".CEL" ) ) {
+                    continue;
+                }
                 log.warn( "Multiple files matching " + ba + ": " + bioAssays2Files.get( ba ) + "; " + f );
             }
             bioAssays2Files.put( ba, f );
