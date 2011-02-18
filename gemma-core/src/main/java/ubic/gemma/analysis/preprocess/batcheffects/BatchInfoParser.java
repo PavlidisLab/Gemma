@@ -167,6 +167,13 @@ public class BatchInfoParser {
 
                 InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );
                 Date d = scanDateExtractor.extract( is );
+
+                // sanity check. Strictly speaking, due to time zone differences it is theoretically possible for this
+                // to be okay, but let's assume we're not getting data the same day it was generated!
+                if ( d != null && d.after( new Date() ) ) {
+                    throw new RuntimeException( "Date was in the future for: " + ba + " from " + f.getName() );
+                }
+
                 for ( BioMaterial bm : ba.getSamplesUsed() ) {
                     result.put( bm, d );
                 }
