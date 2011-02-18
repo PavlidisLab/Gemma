@@ -17,7 +17,6 @@ package ubic.gemma.analysis.preprocess.batcheffects;
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -63,11 +62,12 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
                 }
 
                 try {
-                    ExperimentalFactor ef = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
-                    if ( ef == null ) {
-                        this.errorObjects.add( bas.toString() + ": Null factor returned" );
-                    } else {
+                    boolean success = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
+                    if ( success ) {
                         this.successObjects.add( bas.toString() );
+                    } else {
+                        this.errorObjects.add( bas.toString() + ": No dates found" );
+
                     }
 
                 } catch ( Exception e ) {

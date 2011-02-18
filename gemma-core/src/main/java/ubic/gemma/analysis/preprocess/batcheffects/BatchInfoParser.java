@@ -132,7 +132,8 @@ public class BatchInfoParser {
      * be a problem too.
      * 
      * @param bioAssays2Files
-     * @return
+     * @return map of biomaterials to dates. Biomaterials which did not have associated dates are not included in the
+     *         map.
      */
     private Map<BioMaterial, Date> getBatchInformationFromFiles( Map<BioAssay, File> bioAssays2Files ) {
 
@@ -189,7 +190,7 @@ public class BatchInfoParser {
         if ( missingDate.size() > 0 ) {
             log.warn( "Dates were not obtained for " + missingDate + " files: " );
             for ( File f : missingDate ) {
-                log.info( "Missing date for: " + f );
+                log.info( "Missing date for: " + f.getName() );
             }
         }
 

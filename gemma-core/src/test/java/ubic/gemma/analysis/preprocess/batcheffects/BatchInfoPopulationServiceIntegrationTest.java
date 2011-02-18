@@ -15,6 +15,7 @@
 package ubic.gemma.analysis.preprocess.batcheffects;
 
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
@@ -25,7 +26,6 @@ import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -62,8 +62,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         assertNotNull( newee );
         newee = eeService.thawLite( newee );
 
-        ExperimentalFactor batchFactor = batchInfoPopulationService.fillBatchInformation( newee, true );
-        assertNotNull( batchFactor );
+        assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
     }
 
     /**
@@ -88,8 +87,7 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         assertNotNull( newee );
         newee = eeService.thawLite( newee );
 
-        ExperimentalFactor batchFactor = batchInfoPopulationService.fillBatchInformation( newee, true );
-        assertNotNull( batchFactor );
+        assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
     }
 
 }

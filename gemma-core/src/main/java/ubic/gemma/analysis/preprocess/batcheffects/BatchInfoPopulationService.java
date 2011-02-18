@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -123,9 +124,9 @@ public class BatchInfoPopulationService {
      * is not implemented for every possible type of raw data file.
      * 
      * @param ee
-     * @return
+     * @return true if information was successfully obtained
      */
-    public ExperimentalFactor fillBatchInformation( ExpressionExperiment ee ) {
+    public boolean fillBatchInformation( ExpressionExperiment ee ) {
         return this.fillBatchInformation( ee, false );
     }
 
@@ -136,19 +137,18 @@ public class BatchInfoPopulationService {
      * 
      * @param ee
      * @param force
-     * @return a persistent factor representing the batch factor.
+     * @return true if information was successfully obtained
      */
-    public ExperimentalFactor fillBatchInformation( ExpressionExperiment ee, boolean force ) {
+    public boolean fillBatchInformation( ExpressionExperiment ee, boolean force ) {
         ExpressionExperiment tee = expressionExperimentService.thawLite( ee );
 
         boolean needed = force || needToRun( tee );
 
         if ( !needed ) {
             log.info( "Study already has batch information, or it is known to be unavailable; use 'force' to override" );
-            return null;
+            return false;
         }
 
-        ExperimentalFactor factor;
         Collection<LocalFile> files = null;
         try {
             files = fetchRawDataFiles( tee );
@@ -156,22 +156,21 @@ public class BatchInfoPopulationService {
             if ( files == null || files.isEmpty() ) {
                 this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationMissingEvent.class,
                         "No files were found", "" );
-                return null;
+                return false;
             }
 
-            factor = getBatchDataFromRawFiles( tee, files ); // does audit as well.
+            boolean success = getBatchDataFromRawFiles( tee, files ); // does audit as well.
+
+            return success;
 
         } catch ( Exception e ) {
 
             log.info( e, e );
-            // if ( !( e instanceof UnsupportedRawdataFileFormatException ) ) {
-            /*
-             * If it is an unsupported format, don't add this event, because we might add support.
-             */
+
             this.auditTrailService.addUpdateEvent( tee, FailedBatchInformationFetchingEvent.class, e.getMessage(),
                     ExceptionUtils.getFullStackTrace( e ) );
-            // }
-            return null;
+
+            return false;
         } finally {
             if ( CLEAN_UP && files != null ) {
                 for ( LocalFile localFile : files ) {
@@ -179,12 +178,6 @@ public class BatchInfoPopulationService {
                 }
             }
         }
-
-        if ( factor != null )
-            log.info( "Got batch information for: " + ee.getShortName() + ", with " + factor.getFactorValues().size()
-                    + " batches." );
-
-        return factor;
     }
 
     /**
@@ -193,7 +186,6 @@ public class BatchInfoPopulationService {
      * @return
      */
     private ExperimentalFactor convertToFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
-        ExperimentalFactor ef = makeFactorForBatch( ee );
 
         /*
          * Go through the dates and convert to factor values.
@@ -204,11 +196,12 @@ public class BatchInfoPopulationService {
         Map<String, Collection<Date>> datesToBatch = convertDatesToBatches( allDates );
 
         Map<Date, FactorValue> d2fv = new HashMap<Date, FactorValue>();
-
+        ExperimentalFactor ef = null;
         if ( datesToBatch.size() < 2 ) {
             log.info( "There is only one batch" );
             // we still put the processing dates in, below.
         } else {
+            ef = makeFactorForBatch( ee );
             for ( String batchId : datesToBatch.keySet() ) {
                 FactorValue fv = FactorValue.Factory.newInstance();
                 fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
@@ -287,7 +280,7 @@ public class BatchInfoPopulationService {
      * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
      * @return
      */
-    private ExperimentalFactor getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
+    private boolean getBatchDataFromRawFiles( ExpressionExperiment ee, Collection<LocalFile> files ) {
         BatchInfoParser batchInfoParser = new BatchInfoParser();
         Map<BioMaterial, Date> dates = batchInfoParser.getBatchInfo( ee, files );
 
@@ -295,12 +288,23 @@ public class BatchInfoPopulationService {
 
         ExperimentalFactor factor = convertToFactor( ee, dates );
 
-        if ( factor != null ) {
+        if ( !dates.isEmpty() ) {
+            int numberOfBatches = factor == null || factor.getFactorValues().size() == 0 ? 0 : factor.getFactorValues()
+                    .size();
+
+            List<Date> allDates = new ArrayList<Date>();
+            allDates.addAll( dates.values() );
+            Collections.sort( allDates );
+            String datesString = StringUtils.join( allDates, "\n" );
+
+            log.info( "Got batch information for: " + ee.getShortName() + ", with " + numberOfBatches + " batches." );
             this.auditTrailService.addUpdateEvent( ee, BatchInformationFetchingEvent.class, batchInfoParser
-                    .getScanDateExtractor().getClass().getSimpleName(), "" );
+                    .getScanDateExtractor().getClass().getSimpleName()
+                    + "; " + numberOfBatches + " batches.", "Dates of sample runs (rounded to day): " + datesString );
+            return true;
         }
 
-        return factor;
+        return false;
     }
 
     /**
