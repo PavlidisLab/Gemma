@@ -62,6 +62,33 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     }
 
     /**
+     * E.g. "Mon Jun 17 21:26:34 CST 2002", but line has to have Date at start (possibly white-space padded) Shows up in
+     * Imagene files.
+     * 
+     * @param string
+     * @return
+     */
+    protected Date parseLongFormat( String string ) {
+        // 
+        try {
+            DateFormat f = new SimpleDateFormat( "EEE MMM dd HH:mm:ss zzz yyyy" );
+            f.setLenient( true );
+
+            Pattern regex = Pattern.compile( "\\s*Date\\s*(.+)" );
+
+            Matcher matcher = regex.matcher( string );
+            if ( matcher.matches() ) {
+                String tok = matcher.group( 1 );
+                return f.parse( tok );
+            }
+
+            return null;
+        } catch ( ParseException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
      * Parse a common format, "MM[/-]dd[/-]yy hh:mm:ss", found for example in the "DatHeader" line from a CEL file and
      * extract the date found there.
      * 

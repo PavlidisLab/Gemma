@@ -52,4 +52,14 @@ public class GenericScanFileDateExtractorTest {
         assertEquals( expected, actual );
     }
 
+    @Test
+    public void testExtractLongDate() throws Exception {
+        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+        Date actual = extractor.parseLongFormat( "        Date    Wed Jun 19 14:53:29 PST 2002" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        Date expected = formatter.parse( "2002-06-19T15:53:29" );
+
+        assertEquals( expected, actual );
+    }
+
 }

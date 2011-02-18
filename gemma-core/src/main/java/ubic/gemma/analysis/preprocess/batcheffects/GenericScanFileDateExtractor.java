@@ -50,7 +50,9 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
                 if ( date == null ) {
                     date = parseStandardFormat( line );
                 }
-
+                if ( date == null ) {
+                    date = parseLongFormat( line );
+                }
                 if ( date != null || ++count > MAX_HEADER_LINES ) {
                     reader.close();
                     break;
@@ -61,6 +63,7 @@ public class GenericScanFileDateExtractor extends BaseScanDateExtractor {
         }
         return date;
     }
+
 
     @Override
     public Date extract( String fileName ) {
