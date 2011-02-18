@@ -211,7 +211,8 @@ public class BatchInfoParser {
                 continue;
             }
 
-            if ( n.toUpperCase().contains( "CHP" ) || n.contains( "DAT" ) || n.contains( "EXP" ) ) {
+            if ( n.toUpperCase().contains( "CHP" ) || n.toUpperCase().contains( "DAT" )
+                    || n.toUpperCase().contains( "EXP" ) ) {
                 continue;
             }
 
