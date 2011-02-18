@@ -154,7 +154,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
      */
     protected Date parseGenePixDateTime( String line ) {
         try {
-            String dateString = line.replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
+            String dateString = line.trim().replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
             DateFormat f = new SimpleDateFormat( "yyyy/mm/dd hh:mm:ss" ); // 2005/11/09 11:36:27
             f.setLenient( true );
             return f.parse( dateString );
