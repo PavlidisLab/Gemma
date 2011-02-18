@@ -138,6 +138,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 							var record = this.getStore().getAt(row).data;
 							var note = record.note;
 							var detail = record.detail;
+							detail = detail.replace("\n", "<br />\n");
 							var content = "Date: " + record.date + "<br />Performer: " + record.performer +
 									"<br />Note: " + note + "<br />Details: " + detail;
 

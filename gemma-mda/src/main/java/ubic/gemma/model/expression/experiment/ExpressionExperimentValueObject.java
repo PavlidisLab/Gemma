@@ -77,6 +77,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private Date dateLastUpdated;
 
+    private Date datePcaAnalysis;
+
+    private Date dateBatchFetch;
+
     private Date dateLinkAnalysis;
 
     private Date dateMissingValueAnalysis;
@@ -149,6 +153,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private AuditEventValueObject validatedFlag;
 
+    private String pcaAnalysisEventType;
+
+    private String batchFetchEventType;
+
     public ExpressionExperimentValueObject() {
     }
 
@@ -181,7 +189,9 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                         .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
                 otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
                 otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(), otherBean.getAutoTagDate(),
-                otherBean.getValidatedAnnotations(), otherBean.getDifferentialExpressionAnalyses() );
+                otherBean.getValidatedAnnotations(), otherBean.getDifferentialExpressionAnalyses(), otherBean
+                        .getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
+                otherBean.getBatchFetchEventType() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
@@ -198,7 +208,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
             Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
             Long experimentalDesign, Date autoTagDate, AuditEventValueObject validatedAnnotations,
-            Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses ) {
+            Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses, Date batchAnalysisDate,
+            Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -247,6 +258,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.validatedAnnotations = validatedAnnotations;
         this.autoTagDate = autoTagDate;
         this.differentialExpressionAnalyses = diffAnalyses;
+        this.dateBatchFetch = batchAnalysisDate;
+        this.datePcaAnalysis = pcaAnalysisDate;
+        this.pcaAnalysisEventType = pcaAnalysisEventType;
+        this.batchFetchEventType = batchFetchEventType;
     }
 
     /**
@@ -308,7 +323,27 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             this.setDateCached( otherBean.getDateCached() );
             this.setHasProbeSpecificForQueryGene( otherBean.getHasProbeSpecificForQueryGene() );
             this.setMinPvalue( otherBean.getMinPvalue() );
+            this.setDateBatchFetch( otherBean.getDateBatchFetch() );
+            this.setDatePcaAnalysis( otherBean.getDatePcaAnalysis() );
+            this.setPcaAnalysisEventType( otherBean.getPcaAnalysisEventType() );
+            this.setBatchFetchEventType( otherBean.getBatchFetchEventType() );
         }
+    }
+
+    public String getPcaAnalysisEventType() {
+        return pcaAnalysisEventType;
+    }
+
+    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
+        this.pcaAnalysisEventType = pcaAnalysisEventType;
+    }
+
+    public String getBatchFetchEventType() {
+        return batchFetchEventType;
+    }
+
+    public void setBatchFetchEventType( String batchFetchEventType ) {
+        this.batchFetchEventType = batchFetchEventType;
     }
 
     /**
@@ -377,6 +412,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.dateArrayDesignLastUpdated;
     }
 
+    public Date getDateBatchFetch() {
+        return dateBatchFetch;
+    }
+
     /**
      * <p>
      * The date this object was generated.
@@ -419,6 +458,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public Date getDateMissingValueAnalysis() {
         return this.dateMissingValueAnalysis;
+    }
+
+    public Date getDatePcaAnalysis() {
+        return datePcaAnalysis;
     }
 
     /**
@@ -740,6 +783,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
     }
 
+    public void setDateBatchFetch( Date dateBatchFetch ) {
+        this.dateBatchFetch = dateBatchFetch;
+    }
+
     public void setDateCached( Date dateCached ) {
         this.dateCached = dateCached;
     }
@@ -762,6 +809,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     public void setDateMissingValueAnalysis( Date dateMissingValueAnalysis ) {
         this.dateMissingValueAnalysis = dateMissingValueAnalysis;
+    }
+
+    public void setDatePcaAnalysis( Date datePcaAnalysis ) {
+        this.datePcaAnalysis = datePcaAnalysis;
     }
 
     public void setDateProcessedDataVectorComputation( Date dateProcessedDataVectorComputation ) {

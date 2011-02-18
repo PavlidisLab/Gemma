@@ -63,9 +63,11 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEve
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
@@ -127,10 +129,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     @SuppressWarnings("unchecked")
     private Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
             MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class, ValidatedAnnotations.class,
-            DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class, ValidatedFlagEvent.class /*
-                                                                                                                 * keep
-                                                                                                                 * last
-                                                                                                                 */};
+            DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class,
+            BatchInformationFetchingEvent.class, PCAAnalysisEvent.class, ValidatedFlagEvent.class /*
+                                                                                                   * keep last
+                                                                                                   */};
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -223,6 +225,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> validatedAnnotationEvents = events.get( ValidatedAnnotations.class );
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
         Map<Auditable, AuditEvent> autotaggerEvents = events.get( AutomatedAnnotationEvent.class );
+        Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
+        Map<Auditable, AuditEvent> pcaAnalysisEvents = events.get( PCAAnalysisEvent.class );
 
         Map<Long, Collection<AuditEvent>> sampleRemovalEvents = getSampleRemovalEvents( ees );
 
@@ -291,6 +295,32 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateDifferentialAnalysis( date );
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
+                    // eeVo.setLastDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                }
+            }
+
+            if ( pcaAnalysisEvents.containsKey( ee ) ) {
+                AuditEvent event = pcaAnalysisEvents.get( ee );
+                if ( event != null ) {
+                    Date date = event.getDate();
+                    eeVo.setDatePcaAnalysis( date );
+
+                    if ( date.after( mostRecentDate ) ) {
+                        mostRecentDate = date;
+                    }
+                    // eeVo.setLastDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                }
+            }
+
+            if ( batchFetchEvents.containsKey( ee ) ) {
+                AuditEvent event = batchFetchEvents.get( ee );
+                if ( event != null ) {
+                    Date date = event.getDate();
+                    eeVo.setDateBatchFetch( date );
 
                     if ( date.after( mostRecentDate ) ) {
                         mostRecentDate = date;

@@ -867,59 +867,32 @@ public class ExpressionExperimentController extends AbstractTaskService {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        ExpressionExperiment expressionExperiment;
-        List<Long> ids = new ArrayList<Long>();
-        Long id = null;
+        ExpressionExperiment expExp = getExpressionExperimentFromRequest( request );
 
-        if ( request.getParameter( "id" ) == null ) {
-
-            String shortName = request.getParameter( "shortName" );
-
-            if ( StringUtils.isNotBlank( shortName ) ) {
-                expressionExperiment = expressionExperimentService.findByShortName( shortName );
-
-            } else {
-                return redirectHome( request );
-            }
-
-        } else {
-
-            try {
-                id = Long.parseLong( request.getParameter( "id" ) );
-            } catch ( NumberFormatException e ) {
-                throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
-            }
-            expressionExperiment = expressionExperimentService.thawLite( expressionExperimentService.load( id ) );
-        }
-
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
-        }
-
-        id = expressionExperiment.getId();
-        ids.add( id );
+        /*
+         * This is only _really_ needed to get hasBatchInformation; we can get quantitation types by a service method.
+         * So if this is slow, we can supply a query for the batch information.
+         */
+        expExp = expressionExperimentService.thawLite( expExp );
 
         ModelAndView mav = new ModelAndView( "expressionExperiment.detail" );
 
-        mav.addObject( "expressionExperiment", expressionExperiment );
+        mav.addObject( "expressionExperiment", expExp );
 
-        Collection<Characteristic> characteristics = expressionExperiment.getCharacteristics();
-        mav.addObject( "characteristics", characteristics );
+        mav.addObject( "characteristics", expExp.getCharacteristics() );
 
-        Collection<QuantitationType> quantitationTypes = expressionExperimentService
-                .getQuantitationTypes( expressionExperiment );
+        Collection<QuantitationType> quantitationTypes = expExp.getQuantitationTypes();
         mav.addObject( "quantitationTypes", quantitationTypes );
         mav.addObject( "qtCount", quantitationTypes.size() );
 
-        AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expressionExperiment,
-                null );
+        AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expExp, null );
         mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
 
-        mav.addObject( "eeId", id );
+        mav.addObject( "eeId", expExp.getId() );
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
 
         boolean hasBatchInformation = false;
-        for ( ExperimentalFactor ef : expressionExperiment.getExperimentalDesign().getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : expExp.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
                 hasBatchInformation = true;
                 break;
@@ -928,13 +901,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         mav.addObject( "hasBatchInformation", hasBatchInformation );
 
-        addQCInfo( expressionExperiment, mav );
+        addQCInfo( expExp, mav );
 
-        boolean isPrivate = securityService.isPrivate( expressionExperiment );
+        boolean isPrivate = securityService.isPrivate( expExp );
         mav.addObject( "isPrivate", isPrivate );
 
         if ( timer.getTime() > 200 ) {
-            log.info( "Show Experiment was slow: id=" + id + " " + timer.getTime() + "ms" );
+            log.info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
         }
 
         return mav;
@@ -1280,6 +1253,43 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         return eeValObjectCol;
+    }
+
+    /**
+     * @param request
+     * @return
+     * @throws IllegalArgumentException if a matching EE can't be loaded
+     */
+    private ExpressionExperiment getExpressionExperimentFromRequest( HttpServletRequest request ) {
+
+        ExpressionExperiment expressionExperiment = null;
+        Long id = null;
+
+        if ( request.getParameter( "id" ) == null ) {
+
+            String shortName = request.getParameter( "shortName" );
+
+            if ( StringUtils.isNotBlank( shortName ) ) {
+                expressionExperiment = expressionExperimentService.findByShortName( shortName );
+            }
+
+            if ( expressionExperiment == null ) {
+                throw new IllegalArgumentException( "Unable to access experiment with shortName=" + shortName );
+            }
+
+        } else {
+            try {
+                id = Long.parseLong( request.getParameter( "id" ) );
+            } catch ( NumberFormatException e ) {
+                throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
+            }
+            expressionExperiment = expressionExperimentService.load( id );
+
+            if ( expressionExperiment == null ) {
+                throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
+            }
+        }
+        return expressionExperiment;
     }
 
     /**
