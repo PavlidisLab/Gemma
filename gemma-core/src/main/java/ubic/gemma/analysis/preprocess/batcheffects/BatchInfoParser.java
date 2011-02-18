@@ -161,9 +161,15 @@ public class BatchInfoParser {
                 } else if ( providerName.equalsIgnoreCase( "agilent" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "agilent" ) ) {
                     ex = new AgilentScanDateExtractor();
-                } else {
+                } else if ( providerName.equalsIgnoreCase( "illumina" )
+                        || arrayDesignUsed.getName().toLowerCase().contains( "illumina" )
+                        || arrayDesignUsed.getName().toLowerCase().contains( "sentrix" ) ) {
                     throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
-                            + " not matched to a supported platform type for scan date extraction for " + ba );
+                            + " not matched to a supported platform type for scan date extraction for " + ba
+                            + "(Illumina files do not contain dates)" );
+                } else {
+                    log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
+                    ex = new GenericScanFileDateExtractor();
                 }
 
                 InputStream is = FileTools.getInputStreamFromPlainOrCompressedFile( f.getAbsolutePath() );

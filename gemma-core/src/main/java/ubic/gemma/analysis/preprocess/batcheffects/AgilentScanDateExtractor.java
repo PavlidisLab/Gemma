@@ -49,7 +49,7 @@ import ubic.basecode.util.FileTools;
  * @author paul
  * @version $Id$
  */
-public class AgilentScanDateExtractor implements ScanDateExtractor {
+public class AgilentScanDateExtractor extends BaseScanDateExtractor {
 
     private static Log log = LogFactory.getLog( AgilentScanDateExtractor.class );
 
@@ -137,42 +137,6 @@ public class AgilentScanDateExtractor implements ScanDateExtractor {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    /**
-     * This method should be generic for GenePix/GPR/ATR file formats. Has DateType at the top formatted with quotes:
-     * "DateTime=2005/11/09 11:36:27". Example GSE15739
-     * <p>
-     * For more information see {@link http ://mdc.custhelp.com/app/answers/detail/a_id/18886}.
-     * <p>
-     * TODO move this to a more generic location, it's not Agilent-specific.
-     * 
-     * @param reader
-     * @return
-     * @throws IOException
-     * @throws ParseException
-     */
-    protected Date extractGenePix( BufferedReader reader ) throws IOException, ParseException {
-        String line;
-        // GPR/ATF file. Read a few lines to find the datetime (the header tells us how long the header is, but
-        // this is probably okay)
-        Date d = null;
-        while ( ( line = reader.readLine() ) != null ) {
-
-            if ( line.startsWith( "\"DateTime" ) ) {
-                String dateString = line.replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
-                DateFormat f = new SimpleDateFormat( "yyyy/mm/dd hh:mm:ss" ); // 2005/11/09 11:36:27
-                f.setLenient( true );
-                d = f.parse( dateString );
-                break;
-            }
-        }
-
-        if ( d == null ) {
-            throw new IllegalStateException( "Failed to find the 'DateTime' line" );
-        }
-        reader.close();
-        return d;
     }
 
 }

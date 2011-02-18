@@ -20,12 +20,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -44,7 +39,7 @@ import ubic.basecode.util.FileTools;
  * @author paul
  * @version $Id$
  */
-public class AffyScanDateExtractor implements ScanDateExtractor {
+public class AffyScanDateExtractor extends BaseScanDateExtractor {
 
     private static Log log = LogFactory.getLog( AffyScanDateExtractor.class );
 
@@ -92,7 +87,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
 
                 for ( String string : headerLines ) {
                     if ( string.startsWith( "DatHeader" ) ) {
-                        date = parseDatHeader( string );
+                        date = parseStandardFormat( string );
                         break;
                     }
                 }
@@ -140,7 +135,7 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
                 while ( ( line = reader.readLine() ) != null ) {
                     // log.info( line );
                     if ( line.startsWith( "DatHeader" ) ) {
-                        date = parseDatHeader( line );
+                        date = parseStandardFormat( line );
                     }
                     if ( date != null || ++count > 100 ) {
                         reader.close();
@@ -158,8 +153,6 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
-        } catch ( ParseException e ) {
-            throw new RuntimeException( e );
         } finally {
             try {
                 str.close();
@@ -171,32 +164,6 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
             }
         }
 
-    }
-
-    /**
-     * @param string
-     * @return
-     */
-    private Date parseISO8601( String string ) {
-
-        // 2008-08-15T14:15:36Z
-        try {
-            DateFormat f = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
-            f.setLenient( true );
-
-            Pattern regex = Pattern.compile( ".+?([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})Z.+" );
-
-            Matcher matcher = regex.matcher( string );
-            if ( matcher.matches() ) {
-                String tok = matcher.group( 1 );
-                log.debug( tok );
-                return f.parse( tok );
-            }
-
-            return null;
-        } catch ( ParseException e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     /*
@@ -212,30 +179,6 @@ public class AffyScanDateExtractor implements ScanDateExtractor {
         } catch ( IOException e ) {
             throw new RuntimeException( e );
         }
-    }
-
-    /**
-     * Parse the "DatHeader" line from a CEL file and extract the date found there.
-     * 
-     * @param string
-     * @return
-     * @throws ParseException
-     */
-    private Date parseDatHeader( String string ) throws ParseException {
-
-        DateFormat f = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
-        f.setLenient( true );
-
-        Pattern regex = Pattern.compile( ".+?([0-9]{2}\\/[0-9]{2}\\/[0-9]{2}\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+" );
-
-        Matcher matcher = regex.matcher( string );
-        if ( matcher.matches() ) {
-            String tok = matcher.group( 1 );
-            log.debug( tok );
-            return f.parse( tok );
-        }
-
-        return null;
     }
 
     private String readGCOSString( DataInputStream str ) throws IOException {
