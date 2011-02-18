@@ -540,7 +540,9 @@ public class GeoConverter implements Converter<Object, Object> {
         initGeoExternalDatabase();
 
         result.setExternalDatabase( this.geoDatabase );
-        result.setAccession( geoData.getGeoAccession() );
+
+        // remove trailing ".1" etc. in case it was split.
+        result.setAccession( geoData.getGeoAccession().replaceAll( "\\.[0-9]+$", "" ) );
 
         return result;
     }
