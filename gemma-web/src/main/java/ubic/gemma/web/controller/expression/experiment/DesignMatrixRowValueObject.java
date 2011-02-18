@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.basecode.dataStructure.CountingMap;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -54,12 +55,21 @@ public class DesignMatrixRowValueObject implements Serializable {
 
         /**
          * @param expressionExperiment
+         * @param removeBatchFactor if true, any factor(s) that look like "batch information" will be ignored.
          * @return
          */
-        public static Collection<DesignMatrixRowValueObject> getDesignMatrix( ExpressionExperiment expressionExperiment ) {
+        public static Collection<DesignMatrixRowValueObject> getDesignMatrix(
+                ExpressionExperiment expressionExperiment, boolean removeBatchFactor ) {
 
             Collection<ExperimentalFactor> factors = expressionExperiment.getExperimentalDesign()
                     .getExperimentalFactors();
+
+            for ( Iterator<ExperimentalFactor> iterator = factors.iterator(); iterator.hasNext(); ) {
+                ExperimentalFactor experimentalFactor = iterator.next();
+                if ( BatchInfoPopulationService.isBatchFactor( experimentalFactor ) ) {
+                    iterator.remove();
+                }
+            }
 
             CountingMap<FactorValueVector> assayCount = new CountingMap<FactorValueVector>();
             for ( BioAssay assay : expressionExperiment.getBioAssays() ) {

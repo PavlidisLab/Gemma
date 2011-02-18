@@ -80,7 +80,7 @@ public class FactorValueVector {
         }
 
         for ( FactorValue value : values ) {
-            if ( value.getExperimentalFactor() != null ) {
+            if ( value.getExperimentalFactor() != null && factors.contains( value.getExperimentalFactor() ) ) {
                 getValuesForFactor( value.getExperimentalFactor() ).add( value );
             }
         }
