@@ -28,6 +28,9 @@ import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author paul
  * @version $Id$
@@ -35,6 +38,8 @@ import java.util.regex.Pattern;
 public abstract class BaseScanDateExtractor implements ScanDateExtractor {
 
     // TODO set up regexes statically.
+
+    private static Log log = LogFactory.getLog( BaseScanDateExtractor.class );
 
     protected static final String GENEPIX_DATETIME_HEADER_REGEXP = "\"?DateTime=.*";
 
@@ -99,7 +104,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     protected Date parseStandardFormat( String string ) {
 
         try {
-            DateFormat f = new SimpleDateFormat( "MM/dd/yy hh:mm:ss" );
+            DateFormat f = new SimpleDateFormat( "MM/dd/yy HH:mm:ss" );
 
             Pattern regex = Pattern
                     .compile( ".+?([0-9]{2}[\\/-][0-9]{2}[\\/-][0-9]{2}\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+" );
@@ -109,6 +114,22 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
                 String tok = matcher.group( 1 );
                 return f.parse( tok );
             }
+
+            /*
+             * For some reason, it is common to get things like "08/26/ 3 12:30:45" - I infer that is supposed to be a
+             * 03.
+             */
+            Pattern regex2 = Pattern
+                    .compile( ".+?([0-9]{2}[\\/-][0-9]{2}[\\/-]\\s[0-9]\\s[0-9]{2}:[0-9]{2}:[0-9]{2}).+" );
+            matcher = regex2.matcher( string );
+            if ( matcher.matches() ) {
+                String tok = matcher.group( 1 );
+                tok = tok.replaceFirst( "\\s", "0" );
+                Date d = f.parse( tok );
+                log.warn( "Year was partly missing from date line: " + string + ", inferred " + d );
+                return d;
+            }
+
             return null;
         } catch ( ParseException e ) {
             throw new RuntimeException( e );
@@ -155,7 +176,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
     protected Date parseGenePixDateTime( String line ) {
         try {
             String dateString = line.trim().replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
-            DateFormat f = new SimpleDateFormat( "yyyy/MM/dd hh:mm:ss" ); // 2005/11/09 11:36:27, 2006/04/07 14:18:18
+            DateFormat f = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" ); // 2005/11/09 11:36:27, 2006/04/07 14:18:18
             return f.parse( dateString );
         } catch ( ParseException e ) {
             throw new RuntimeException( e );

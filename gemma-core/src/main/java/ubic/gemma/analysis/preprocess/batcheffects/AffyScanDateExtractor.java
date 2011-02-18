@@ -128,7 +128,7 @@ public class AffyScanDateExtractor extends BaseScanDateExtractor {
             } else {
 
                 /*
-                 * Must not be a version 4 file, assume version 3 plain text.
+                 * assume version 3 plain text.
                  */
                 reader = new BufferedReader( new InputStreamReader( is ) );
                 String line = null;

@@ -52,6 +52,35 @@ public class GenericScanFileDateExtractorTest {
         assertEquals( expected, actual );
     }
 
+    /**
+     * Test of tolerance of missing 0 in date.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testParseStandardDateWithGap() throws Exception {
+        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+        Date actual = extractor
+                .parseStandardFormat( "DatHeader=[7..40002]  caf130_E_1:CLS=2367 RWS=2367 XIN=6  YIN=6  VE=17        2.0 08/26/ 3 12:30:45    ^T GridVerify=None ^T YG_S98.1sq ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T 6" );
+
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        Date expected = formatter.parse( "2003-08-26T12:30:45" );
+
+        assertEquals( expected, actual );
+    }
+
+    @Test
+    public void testParseStandardDate() throws Exception {
+        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+        Date actual = extractor
+                .parseStandardFormat( "DatHeader=[7..40002]  caf130_E_1:CLS=2367 RWS=2367 XIN=6  YIN=6  VE=17        2.0 08/26/03 12:30:45    ^T GridVerify=None ^T YG_S98.1sq ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T  ^T 6" );
+
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        Date expected = formatter.parse( "2003-08-26T12:30:45" );
+
+        assertEquals( expected, actual );
+    }
+
     @Test
     public void testExtractImagene() throws Exception {
         InputStream is = getClass().getResourceAsStream( "/data/loader/expression/geo/GSM542196.imagene.part.txt" );
@@ -85,6 +114,7 @@ public class GenericScanFileDateExtractorTest {
         assertEquals( expected, actual );
     }
 
+    @Test
     public void testExtractGenePixB() throws Exception {
         GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
         Date actual = extractor.parseGenePixDateTime( "DateTime=2006/04/07 14:18:18\t" );
