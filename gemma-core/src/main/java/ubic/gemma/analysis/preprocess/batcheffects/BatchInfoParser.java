@@ -223,7 +223,7 @@ public class BatchInfoParser {
             }
 
             if ( n.toUpperCase().contains( "CHP" ) || n.toUpperCase().contains( "DAT" )
-                    || n.toUpperCase().contains( "EXP" ) ) {
+                    || n.toUpperCase().contains( "EXP" ) || n.toUpperCase().contains( "RPT" ) ) {
                 continue;
             }
 
