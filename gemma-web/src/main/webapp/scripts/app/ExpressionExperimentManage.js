@@ -227,9 +227,8 @@ Ext
 				if (record.get("currentUserHasWritePermission")) {
 					runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchFetch(' + id + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run batch info fetch"  alt="Fetch batch information" /></span>';
 				}
-
 				if (record.get('dateBatchFetch')) {
-					var type = record.get('batchFetchAnalysisEventType');
+					var type = record.get('batchFetchEventType');
 					var color = "#000";
 					var suggestRun = true;
 					var qtip = 'ext:qtip="OK"';
