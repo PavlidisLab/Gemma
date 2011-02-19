@@ -1440,14 +1440,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return eventDates;
     }
 
-    /**
-     * @param request
-     * @return
-     */
-    private ModelAndView redirectHome( HttpServletRequest request ) {
-        return new ModelAndView( "mainMenu.html" ).addObject( "message", "Not found" );
-    }
-
     @Override
     protected BackgroundJob<?> getInProcessRunner( TaskCommand command ) {
         return null;

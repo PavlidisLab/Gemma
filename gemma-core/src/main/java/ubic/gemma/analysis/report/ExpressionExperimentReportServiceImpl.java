@@ -312,7 +312,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     if ( date.after( mostRecentDate ) ) {
                         mostRecentDate = date;
                     }
-                    // eeVo.setLastDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    eeVo.setPcaAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
@@ -325,7 +325,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     if ( date.after( mostRecentDate ) ) {
                         mostRecentDate = date;
                     }
-                    // eeVo.setLastDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
+                    eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
