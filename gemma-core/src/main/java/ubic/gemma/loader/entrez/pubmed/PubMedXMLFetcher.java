@@ -59,7 +59,7 @@ public class PubMedXMLFetcher {
     public BibliographicReference retrieveByHTTP( int pubMedId ) {
         try {
             URL toBeGotten = new URL( uri + pubMedId );
-            log.info( "Fetching " + toBeGotten );
+            log.debug( "Fetching " + toBeGotten );
             PubMedXMLParser pmxp = new PubMedXMLParser();
             Collection<BibliographicReference> results = pmxp.parse( toBeGotten.openStream() );
             if ( results == null || results.size() == 0 ) {
@@ -87,7 +87,7 @@ public class PubMedXMLFetcher {
             buf.append( integer + "," );
         }
         URL toBeGotten = new URL( uri + StringUtils.chomp( buf.toString() ) );
-        log.info( "Fetching " + toBeGotten );
+        log.debug( "Fetching " + toBeGotten );
         PubMedXMLParser pmxp = new PubMedXMLParser();
         return pmxp.parse( toBeGotten.openStream() );
     }
