@@ -254,6 +254,7 @@ public class BatchInfoParser {
                  */
                 continue;
             }
+
             if ( bioAssays2Files.containsKey( ba ) ) {
                 /*
                  * Don't clobber a valid file. For affymetrix, CEL is what we want. Other cases harder to predict, but
