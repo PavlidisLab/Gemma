@@ -40,6 +40,7 @@ public class ExpressionExperimentBibRefFinderTest {
 
     private static Log log = LogFactory.getLog( ExpressionExperimentBibRefFinderTest.class.getName() );
 
+    @SuppressWarnings("null")
     @Test
     public void testLocatePrimaryReference() throws Exception {
         ExpressionExperimentBibRefFinder finder = new ExpressionExperimentBibRefFinder();
@@ -51,7 +52,12 @@ public class ExpressionExperimentBibRefFinderTest {
         de.setExternalDatabase( ed );
         ee.setAccession( de );
         try {
-            BibliographicReference bibref = finder.locatePrimaryReference( ee );
+            BibliographicReference bibref = null;
+            for ( int i = 0; i < 3; i++ ) {
+                bibref = finder.locatePrimaryReference( ee );
+                if ( bibref != null ) break;
+                Thread.sleep( 1000 );
+            }
             assertNotNull( bibref );
             assertEquals( "Differential gene expression in anatomical compartments of the human eye.", bibref
                     .getTitle() );
