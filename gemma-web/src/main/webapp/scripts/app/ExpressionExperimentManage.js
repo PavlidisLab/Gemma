@@ -202,7 +202,7 @@ Ext
 					runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca(' + id + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run PCA analysis"  alt="PCA analysis" /></span>';
 				}
 
-				if (record.get('dateLinkAnalysis')) {
+				if (record.get('datePcaAnalysis')) {
 					var type = record.get('pcaAnalysisEventType');
 					var color = "#000";
 					var suggestRun = true;
