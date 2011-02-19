@@ -140,7 +140,10 @@ public class SVDServiceImpl implements SVDService {
                 .getProcessedDataVectors( ee );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
 
+        log.info( "Starting SVD" );
         ExpressionDataSVD svd = new ExpressionDataSVD( mat );
+
+        log.info( "SVD done, postprocessing and storing results." );
 
         /*
          * Save the results
