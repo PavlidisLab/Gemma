@@ -194,16 +194,12 @@ Ext
 				}
 			};
 
-			var pcaDateRenderer = function(value, metadata, record,
-					rowIndex, colIndex, store) {
+			var pcaDateRenderer = function(value, metadata, record, rowIndex,
+					colIndex, store) {
 				var id = record.get('id');
 				var runurl = "";
 				if (record.get("currentUserHasWritePermission")) {
 					runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doPca(' + id + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run PCA analysis"  alt="PCA analysis" /></span>';
-				}
-
-				if (record.get('bioAssayCount') < BIG_ENOUGH_FOR_LINKS) {
-					return '<span style="color:#CCC;">Too small</span>&nbsp;';
 				}
 
 				if (record.get('dateLinkAnalysis')) {
@@ -224,16 +220,12 @@ Ext
 				}
 			};
 
-			var batchDateRenderer = function(value, metadata, record,
-					rowIndex, colIndex, store) {
+			var batchDateRenderer = function(value, metadata, record, rowIndex,
+					colIndex, store) {
 				var id = record.get('id');
 				var runurl = "";
 				if (record.get("currentUserHasWritePermission")) {
 					runurl = '<span class="link" onClick="return Ext.getCmp(\'eemanager\').doBatchFetch(' + id + ')"><img src="/Gemma/images/icons/control_play_blue.png" ext:qtip="Run batch info fetch"  alt="Fetch batch information" /></span>';
-				}
-
-				if (record.get('bioAssayCount') < BIG_ENOUGH_FOR_LINKS) {
-					return '<span style="color:#CCC;">Too small</span>&nbsp;';
 				}
 
 				if (record.get('dateBatchFetch')) {
@@ -241,10 +233,10 @@ Ext
 					var color = "#000";
 					var suggestRun = true;
 					var qtip = 'ext:qtip="OK"';
-					if (type == 'FailedBatchInformationFetchingEvent') {
+					if (type == 'FailedBatchInformationFetchingEventImpl') {
 						color = 'red';
 						qtip = 'ext:qtip="Failed"';
-					} else if (type == 'FailedBatchInformationMissingEvent') {
+					} else if (type == 'FailedBatchInformationMissingEventImpl') {
 						color = '#CCC';
 						qtip = 'ext:qtip="Raw data files not available from source"';
 						suggestRun = false;
@@ -764,28 +756,39 @@ Gemma.EEReportPanel = Ext
 							}
 						});
 
-						this.filterCombo = new Ext.form.ComboBox( {
-							typeAhead : true,
-							triggerAction : 'all',
-							lazyRender : true,
-							mode : 'local',
-							store : new Ext.data.ArrayStore( {
-								id : 0,
-								fields : [ 'filterType', 'displayText' ],
-								data : [ [ 0, 'No filter' ],
-										[ 1, 'Need diff' ], [ 2, 'Need coex' ],
-										[ 3, 'Has diff' ], [ 4, 'Has coex' ],
-										[ 5, 'Troubled' ], [ 6, 'No factors' ],
-										[ 7, 'No tags' ] ]
-							}),
-							valueField : 'filterType',
-							displayField : 'displayText',
-							listeners : {
-								scope : this,
-								'select' : this.filterByNeed
-							}
+						this.filterCombo = new Ext.form.ComboBox(
+								{
+									typeAhead : true,
+									triggerAction : 'all',
+									lazyRender : true,
+									mode : 'local',
+									store : new Ext.data.ArrayStore(
+											{
+												id : 0,
+												fields : [ 'filterType',
+														'displayText' ],
+												data : [
+														[ 0, 'No filter' ],
+														[ 1, 'Need diff' ],
+														[ 2, 'Need coex' ],
+														[ 3, 'Has diff' ],
+														[ 4, 'Has coex' ],
+														[ 5, 'Troubled' ],
+														[ 6, 'No factors' ],
+														[ 7, 'No tags' ],
+														[ 8, 'Needs batch info' ],
+														[ 9, 'Has batch info' ],
+														[ 10, 'Needs PCA' ],
+														[ 11, 'Has PCA' ] ]
+											}),
+									valueField : 'filterType',
+									displayField : 'displayText',
+									listeners : {
+										scope : this,
+										'select' : this.filterByNeed
+									}
 
-						});
+								});
 
 						this.taxonCombo = new Gemma.TaxonCombo( {
 							isDisplayTaxonWithDatasets : true,

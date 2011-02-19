@@ -57,8 +57,11 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.LinkAnalysisEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.description.AnnotationValueObject;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
@@ -1103,7 +1106,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Collection<ExpressionExperiment> eesToKeep = null;
 
         /*
-         * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint.
+         * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint, and/or have a
+         * limit.
          */
         switch ( filter ) {
             case 1:
@@ -1128,8 +1132,23 @@ public class ExpressionExperimentController extends AbstractTaskService {
             case 7:
                 eesToKeep = expressionExperimentService.loadLackingTags();
                 break;
+            case 8:
+                eesToKeep = expressionExperimentService.loadLackingEvent( BatchInformationFetchingEvent.class );
+                eesToKeep.removeAll( expressionExperimentService
+                        .loadWithEvent( FailedBatchInformationMissingEvent.class ) );
+                break;
+            case 9:
+                eesToKeep = expressionExperimentService.loadWithEvent( BatchInformationFetchingEvent.class );
+                break;
+            case 10:
+                eesToKeep = expressionExperimentService.loadLackingEvent( PCAAnalysisEvent.class );
+                break;
+            case 11:
+                eesToKeep = expressionExperimentService.loadWithEvent( PCAAnalysisEvent.class );
+                break;
             default:
                 throw new IllegalArgumentException( "Unknown filter: " + filter );
+
         }
 
         /*

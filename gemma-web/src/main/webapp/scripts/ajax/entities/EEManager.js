@@ -108,7 +108,11 @@ Gemma.EEManager = Ext
 						name : "missingValueAnalysisEventType"
 					}, {
 						name : "differentialAnalysisEventType"
-					} ]),
+					}, {
+						name : "batchFetchEventType"
+					}, {
+						name : "pcaAnalysisEventType"
+					}]),
 
 					/**
 					 * 
@@ -557,7 +561,7 @@ Gemma.EEManager = Ext
 						//													});
 						//										}.createDelegate(this),
 						//										errorHandler : function(error) {
-						//											Ext.Msg.alert("Link analysis failed", error);
+						//											Ext.Msg.alert("PCA failed", error);
 						//											Ext.getBody().unmask();
 						//										}.createDelegate(this)
 						//									});
