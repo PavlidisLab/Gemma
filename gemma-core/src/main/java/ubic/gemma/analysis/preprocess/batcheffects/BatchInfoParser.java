@@ -261,10 +261,14 @@ public class BatchInfoParser {
                  * .txt files can be either good or bad. (We could do this check earlier)
                  */
                 if ( bioAssays2Files.get( ba ).getName().toUpperCase().contains( ".CEL" ) ) {
-                    log.info( "Retaining CEL file, ignoring " + f.getName() );
+                    log.debug( "Retaining CEL file, ignoring " + f.getName() );
                     continue;
+                } else if ( f.getName().toUpperCase().contains( ".CEL" ) ) {
+                    // we displace the old file with this CEL file, but there is no need to warn.
+                } else {
+                    log.warn( "Multiple files matching " + ba + ": " + bioAssays2Files.get( ba ) + "; using new file: "
+                            + f );
                 }
-                log.warn( "Multiple files matching " + ba + ": " + bioAssays2Files.get( ba ) + "; new file: " + f );
             }
             bioAssays2Files.put( ba, f );
         }
