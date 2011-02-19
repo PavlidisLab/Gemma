@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
 import ubic.basecode.util.FileTools;
@@ -345,7 +346,32 @@ public class SVDServiceImpl implements SVDService {
                     } else {
                         // one-way ANOVA on ranks.
                         double kwpval = KruskalWallis.test( eigenGeneWithoutMissing, groupings );
-                        svo.setPCFactorPvalue( componentNumber, ef, kwpval );
+
+                        double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList(
+                                fvs ) );
+                        double corrPvalue = CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing
+                                .size() );
+
+                        /*
+                         * Avoid storing a pvalue, as it's hard to compare. If the regular linear correlation is strong,
+                         * then we should just use that -- basically, it means the order we have the groups happens to
+                         * be a good one. Of course we could just store pvalues, but that's not easy to use either.
+                         */
+                        if ( corrPvalue <= kwpval ) {
+                            svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                        } else {
+                            svo.setPCFactorPvalue( componentNumber, ef, kwpval );
+
+                            /*
+                             * OK, an alternative is to try to find a grouping order that maximizes the correlation
+                             * (there must be one). Of course, there are Ngroups! ways of doing this, so it's only
+                             * feasible for small numbers of groups.
+                             */
+                            if ( groups.size() <= 5 ) { // 120 combinations...
+                                // not yet implemented.
+                            }
+
+                        }
                     }
 
                 }

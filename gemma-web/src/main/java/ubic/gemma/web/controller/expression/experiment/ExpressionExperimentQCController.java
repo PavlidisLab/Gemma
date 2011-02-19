@@ -620,7 +620,7 @@ public class ExpressionExperimentQCController extends BaseController {
             for ( Long efId : factorPvalues.get( component ).keySet() ) {
                 Double pval = factorPvalues.get( component ).get( efId );
                 if ( pval == null || Double.isNaN( pval ) ) continue;
-                pval = -Math.log10( Math.min( 10e-4, pval ) ) / 4.0; // FIXME weak attempt to scale pvalues.
+                pval = -Math.log10( Math.max( 10e-4, pval ) ) / 4.0; // FIXME weak attempt to scale pvalues between 0 and 1.
                 series.addValue( pval, "PC" + ( component + 1 ), efs.get( efId ) );
 
             }

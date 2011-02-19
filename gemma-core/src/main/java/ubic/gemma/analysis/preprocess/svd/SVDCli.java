@@ -19,6 +19,9 @@
 
 package ubic.gemma.analysis.preprocess.svd;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionBuilder;
+
 import ubic.gemma.apps.ExpressionExperimentManipulatingCLI;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -30,10 +33,26 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public class SVDCli extends ExpressionExperimentManipulatingCLI {
 
+    private boolean postAnalysisOnly = false;
+
+    @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
         super.addForceOption();
+
+        Option postanalyzeOnlyOpt = OptionBuilder.withLongOpt( "post" ).withDescription(
+                "Don't perform SVD, just update the statistics of comparisons with factors etc. Implies -force" )
+                .create();
+        super.addOption( postanalyzeOnlyOpt );
+    }
+
+    @Override
+    protected void processOptions() {
+        super.processOptions();
+        if ( hasOption( "post" ) ) {
+            this.postAnalysisOnly = true;
+        }
     }
 
     /*
@@ -43,25 +62,35 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
      */
     @Override
     protected Exception doWork( String[] args ) {
-        Exception ee = super.processCommandLine( "SVD", args );
+        Exception err = super.processCommandLine( "SVD", args );
 
-        if ( ee != null ) return ee;
+        if ( err != null ) return err;
 
         SVDService svdser = ( SVDService ) this.getBean( "sVDService" );
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
 
-            if ( !force && !needToRun( bas, PCAAnalysisEvent.class ) ) {
+            if ( !postAnalysisOnly && !force && !needToRun( bas, PCAAnalysisEvent.class ) ) {
+                this.errorObjects.add( bas + ": Already has PCA; use -force to override" );
                 continue;
             }
 
             try {
                 log.info( "Processing: " + bas );
-                svdser.svd( ( ExpressionExperiment ) bas );
-                this.successObjects.add( bas.toString() );
+                if ( postAnalysisOnly ) {
+                    SVDValueObject svdo = svdser.retrieveSvd( bas.getId() );
+                    if ( svdo == null ) {
+                        this.errorObjects.add( bas + ": Did not have an existing PCA; don't use the -post option." );
+                    } else {
+                        svdser.svdFactorAnalysis( ( ExpressionExperiment ) bas, svdo );
+                    }
+                } else {
+                    svdser.svd( ( ExpressionExperiment ) bas );
+                    this.successObjects.add( bas.toString() );
+                }
             } catch ( Exception e ) {
                 log.error( e, e );
-                this.errorObjects.add( ee + ": " + e.getMessage() );
+                this.errorObjects.add( bas + ": " + e.getMessage() );
             }
         }
         summarizeProcessing();
