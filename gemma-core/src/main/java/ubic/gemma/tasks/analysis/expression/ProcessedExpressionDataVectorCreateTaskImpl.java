@@ -31,6 +31,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -48,6 +49,9 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
 
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
     /*
      * (non-Javadoc)
      * 
@@ -59,9 +63,15 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
     public TaskResult execute( ProcessedExpressionDataVectorCreateTaskCommand command ) {
 
         ExpressionExperiment ee = command.getExpressionExperiment();
-
-        Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
+        Collection<ProcessedExpressionDataVector> processedVectors = null;
+        if ( command.isCorrelationMatrixOnly() ) {
+            processedVectors = processedExpressionDataVectorService.getProcessedDataVectors( ee );
+            if ( processedVectors.isEmpty() ) {
+                processedVectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+            }
+        } else {
+            processedVectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+        }
 
         /*
          * Update the correlation heatmaps.
@@ -74,7 +84,6 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
         ExpressionDataSampleCorrelation.process( datamatrix, ee );
 
         TaskResult result = new TaskResult( command, processedVectors.size() );
-
         return result;
     }
 

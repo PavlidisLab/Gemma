@@ -22,7 +22,7 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * Command object for processing data vectors. Used by spaces.
+ * Command object for processing data vectors. Has dual purpose for updating the correlation matrices.
  * 
  * @author keshav
  * @version $Id$
@@ -33,12 +33,18 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
 
     private ExpressionExperiment expressionExperiment = null;
 
-    public ExpressionExperiment getExpressionExperiment() {
-        return expressionExperiment;
+    private boolean correlationMatrixOnly = false;
+
+    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment ee ) {
+        super();
+        this.expressionExperiment = ee;
     }
 
-    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment expressionExperiment,
+            boolean correlationMatrixOnly ) {
+        super();
         this.expressionExperiment = expressionExperiment;
+        this.correlationMatrixOnly = correlationMatrixOnly;
     }
 
     /**
@@ -50,9 +56,25 @@ public class ProcessedExpressionDataVectorCreateTaskCommand extends TaskCommand 
         this.expressionExperiment = expressionExperiment;
     }
 
-    public ProcessedExpressionDataVectorCreateTaskCommand( ExpressionExperiment ee ) {
-        super();
-        this.expressionExperiment = ee;
+    public ExpressionExperiment getExpressionExperiment() {
+        return expressionExperiment;
+    }
+
+    public boolean isCorrelationMatrixOnly() {
+        return correlationMatrixOnly;
+    }
+
+    /**
+     * If true, we'll try to just update the correlation matrix, without creating vectors unless they don't exist yet.
+     * 
+     * @param correlationMatrixOnly
+     */
+    public void setCorrelationMatrixOnly( boolean correlationMatrixOnly ) {
+        this.correlationMatrixOnly = correlationMatrixOnly;
+    }
+
+    public void setExpressionExperiment( ExpressionExperiment expressionExperiment ) {
+        this.expressionExperiment = expressionExperiment;
     }
 
 }

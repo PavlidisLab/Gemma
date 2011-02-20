@@ -44,6 +44,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.ontology.model.OntologyResource;
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
@@ -291,6 +292,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+
+    @Autowired
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     /**
      * Exposed for AJAX calls.
@@ -1036,7 +1040,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @RequestMapping("/refreshCorrMatrix.html")
     public ModelAndView updateCorrelationMatrix( HttpServletRequest request, HttpServletResponse response ) {
-        ExpressionExperiment expressionExperiment;
 
         /*
          * TODO make this an ajax call.
@@ -1052,17 +1055,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         } catch ( NumberFormatException e ) {
             throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
         }
-        expressionExperiment = expressionExperimentService.load( id );
-        if ( expressionExperiment == null ) {
-            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
-        }
-
-        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
-                .getProcessedDataVectors( expressionExperiment );
-
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( expressionExperiment,
-                new FilterConfig(), vectors );
-        ExpressionDataSampleCorrelation.process( datamatrix, expressionExperiment );
+        updateCorrelationMatrixFile( id );
 
         return showExpressionExperiment( request, response );
 
@@ -1438,6 +1431,33 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
         return eventDates;
+    }
+
+    /**
+     * Update the file used for the sample correlation heatmaps FIXME make this a background task, use the
+     * ProcessedExpressionDataVectorCreateTask
+     * 
+     * @param id
+     */
+    private void updateCorrelationMatrixFile( Long id ) {
+        ExpressionExperiment expressionExperiment;
+        expressionExperiment = expressionExperimentService.load( id );
+        if ( expressionExperiment == null ) {
+            throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
+        }
+
+        // FIXME Duplicates code in ProcessedExpressionDataVectorCreateTask
+        Collection<ProcessedExpressionDataVector> vectors = processedExpressionDataVectorService
+                .getProcessedDataVectors( expressionExperiment );
+        if ( vectors.isEmpty() ) {
+            vectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( expressionExperiment );
+        }
+        FilterConfig fconfig = new FilterConfig();
+        fconfig.setIgnoreMinimumRowsThreshold( true );
+        fconfig.setIgnoreMinimumSampleThreshold( true );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( expressionExperiment,
+                fconfig, vectors );
+        ExpressionDataSampleCorrelation.process( datamatrix, expressionExperiment );
     }
 
     @Override

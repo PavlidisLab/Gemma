@@ -41,10 +41,12 @@ import ubic.gemma.web.view.TextView;
  * This controller allows images to be created in a web environment. Specifically, the image is written to the
  * {@link OutputStream} as a Portable Network Graphic (PNG).
  * 
+ * @deprecatd in favour of client-side rendering, though this could see use if revamped
  * @author keshav
  * @version $Id$
  */
-@Controller 
+@Controller
+@Deprecated
 public class ExpressionExperimentVisualizationController extends BaseController {
     private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 

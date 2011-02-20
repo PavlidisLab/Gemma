@@ -21,7 +21,10 @@ package ubic.gemma.web.taglib.expression.experiment;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 
 /**
  * @author paul
@@ -116,8 +119,7 @@ public class ExperimentQCTag extends TagSupport {
         buf.append( "<div class=\"eeqc\" id=\"eeqc\">" );
         buf.append( "<table border=\"0\" cellspacing=\"4\" style=\"background-color:#DDDDDD\" >" );
 
-        buf.append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation (black &le; "
-                + ExpressionDataSampleCorrelation.HI_CONTRAST_COR_THRESH + ")</strong></th>"
+        buf.append( "<tr><th valign=\"top\" align=\"center\"><strong>Sample correlation</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>PCA Scree</strong></th>"
                 + "<th valign=\"top\" align=\"center\"><strong>PCA+Factors</strong></th>"
                 // + "<th valign=\"top\" align=\"center\"><strong>Node degree</strong></th>"
@@ -130,27 +132,27 @@ public class ExperimentQCTag extends TagSupport {
 
         if ( hasCorrMatFile ) {
 
+            /*
+             * showBigCorrelationImage is defined in ExpressinExperimentDetails.js
+             */
+            String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&nocache="
+                    + RandomStringUtils.randomAlphanumeric( 8 ) + "&size=4&showLabels=1";
             buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a target=\"_blank\" title=\"Click for larger version (new page)\" href=\"visualizeCorrMat.html?id="
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
+                            + "onClick=\"showBigCorrelationImage('"
+                            + bigImageUrl
+                            + "')"
+                            + ";return 1\"; "
+                            + "title=\"Click for larger version\" >"
+                            + "<img src=\"visualizeCorrMat.html?id="
                             + this.eeid
-                            + "&nocache="
-                            + ( int ) Math.rint( Math.random() * 1000 )
-                            + "&size=large\"><img src=\"visualizeCorrMat.html?id="
-                            + this.eeid
-                            + "&size="
-                            + this.size
-                            + "&nocache="
-                            + ( int ) Math.rint( Math.random() * 1000 )
-                            + "\" alt='Image unavailable'/></a>" );
+                            + "&size=1&nocache="
+                            + RandomStringUtils.randomAlphanumeric( 8 )
+                            + "\" alt='Image unavailable' width='"
+                            + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX
+                            + "' height='"
+                            + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
 
-            // link to lower contrast version
-            buf
-                    .append( "<ul><li><a class=\"newpage\" target=\"_blank\" title=\"Click for larger lower contrast version\" href=\"visualizeCorrMat.html?id="
-                            + this.eeid
-                            + "&nocache="
-                            + ( int ) Math.rint( Math.random() * 1000 )
-                            + "&size=large&contr=lo\">View low contrast version (black &le;"
-                            + ExpressionDataSampleCorrelation.LO_CONTRAST_COR_THRESH + ")</a></li>" );
             buf
                     .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"visualizeCorrMat.html?id="
                             + this.eeid + "&text=1\">Get data</a></li>" );

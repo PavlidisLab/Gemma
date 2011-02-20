@@ -831,3 +831,25 @@ Ext.onReady(function() {
 			
 
 		});
+
+
+/**
+ * Used to make the correlation heatmap clickable. See ExperimentQCTag.java
+ * @param {Object} bigImageUrl
+ */
+var showBigCorrelationImage = function(bigImageUrl) {
+	var b = new Ext.Window( {
+		modal : true,
+		modal : true,
+		stateful : false,
+		resizable : false,
+		autoHeight : true,
+		//		width : 460,
+		//plain : true,
+		//border : false,
+		//title : "Differential analysis settings",
+		padding : 10,
+		html : '<img src=\"' + bigImageUrl + '"\" />'
+	});
+	b.show();
+}

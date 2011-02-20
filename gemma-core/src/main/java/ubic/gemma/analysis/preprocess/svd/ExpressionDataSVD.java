@@ -92,7 +92,8 @@ public class ExpressionDataSVD {
          */
         RowLevelFilter rlf = new RowLevelFilter();
         rlf.setMethod( Method.VAR );
-        rlf.setLowCut( 0.0 + Constants.SMALL );
+        rlf.setLowCut( 0.01, false ); // the colt SVD method fails to converge? I tried removing just Constant.SMALL but
+                                    // it wasn't enough?
         this.expressionData = rlf.filter( this.expressionData );
 
         if ( this.expressionData.rows() == 0 ) {

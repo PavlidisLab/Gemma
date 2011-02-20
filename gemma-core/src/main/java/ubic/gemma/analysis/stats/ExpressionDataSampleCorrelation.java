@@ -26,11 +26,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import javax.print.attribute.HashAttributeSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory; 
+import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
@@ -218,6 +222,15 @@ public class ExpressionDataSampleCorrelation {
 
         o = new FileOutputStream( f );
         MatrixWriter<BioAssay, BioAssay> writer = new MatrixWriter<BioAssay, BioAssay>( o );
+
+        Map<BioAssay, String> labels = new HashMap<BioAssay, String>();
+        for ( BioAssay ba : matrix.getRowNames() ) {
+            labels.put( ba, ba.getName() + " ID=" + ba.getId() );
+        }
+
+        writer.setColNameMap( labels );
+        writer.setRowNameMap( labels );
+
         writer.writeMatrix( matrix, true );
         o.flush();
         o.close();
