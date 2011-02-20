@@ -26,8 +26,10 @@ import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Test fetching and loading the batch information from raw files.
@@ -88,6 +90,14 @@ public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServic
         newee = eeService.thawLite( newee );
 
         assertTrue( batchInfoPopulationService.fillBatchInformation( newee, true ) );
-    }
 
+        newee = eeService.thawLite( newee );
+
+        for ( ExperimentalFactor ef : newee.getExperimentalDesign().getExperimentalFactors() ) {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                assertTrue( fv.getValue().startsWith( "Batch_0" ) ); // Batch_01, Batch_02 etc.
+            }
+        }
+
+    }
 }

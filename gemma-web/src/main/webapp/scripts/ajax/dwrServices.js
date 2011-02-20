@@ -84,6 +84,15 @@ AuditController.getAuditable = function(p0, callback) {
 AuditController.getEvents = function(p0, callback) {
 	dwr.engine._execute(AuditController._path, 'AuditController', 'getEvents', p0, callback);
 }
+
+// ====================================================================================
+if (BatchInfoFetchController == null)
+	var BatchInfoFetchController = {};
+BatchInfoFetchController._path = '/Gemma/dwr';
+BatchInfoFetchController.run = function(p0, callback) {
+	dwr.engine
+			._execute(BatchInfoFetchController._path, 'BatchInfoFetchController', 'run', p0, callback);
+}
 // ====================================================================================
 if (BibliographicReferenceController == null)
 	var BibliographicReferenceController = {};
@@ -670,22 +679,6 @@ ProcessedExpressionDataVectorCreateController.run = function(p0, callback) {
 	dwr.engine._execute(ProcessedExpressionDataVectorCreateController._path,
 			'ProcessedExpressionDataVectorCreateController', 'run', p0, callback);
 }
-ProcessedExpressionDataVectorCreateController.run = function(p0, callback) {
-	dwr.engine._execute(ProcessedExpressionDataVectorCreateController._path,
-			'ProcessedExpressionDataVectorCreateController', 'run', p0, callback);
-}
-// ====================================================================================
-if (TwoChannelMissingValueController == null)
-	var TwoChannelMissingValueController = {};
-TwoChannelMissingValueController._path = '/Gemma/dwr';
-TwoChannelMissingValueController.run = function(p0, callback) {
-	dwr.engine
-			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
-}
-TwoChannelMissingValueController.run = function(p0, callback) {
-	dwr.engine
-			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
-}
 // ====================================================================================
 if (ProgressStatusService == null)
 	var ProgressStatusService = {};
@@ -711,6 +704,28 @@ ProgressStatusService.getCancelledTasks = function(p0, callback) {
 ProgressStatusService.getFinishedTasks = function(p0, callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getFinishedTasks', callback);
 }
+// ====================================================================================
+
+if (TwoChannelMissingValueController == null)
+	var TwoChannelMissingValueController = {};
+TwoChannelMissingValueController._path = '/Gemma/dwr';
+TwoChannelMissingValueController.run = function(p0, callback) {
+	dwr.engine
+			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
+}
+TwoChannelMissingValueController.run = function(p0, callback) {
+	dwr.engine
+			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
+}
+// ====================================================================================
+if (SvdController == null)
+	var SvdController = {};
+SvdController._path = '/Gemma/dwr';
+SvdController.run = function(p0, p1, callback) {
+	dwr.engine
+			._execute(SvdController._path, 'SvdController', 'run', p0, p1, callback);
+}
+
 // ====================================================================================
 if (SearchService == null)
 	var SearchService = {};

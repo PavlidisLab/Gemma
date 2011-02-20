@@ -761,6 +761,34 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
+				<entry key="SvdController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="svdController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="BatchInfoFetchController">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="batchInfoFetchController" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>run</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
 				<entry key="LinkAnalysisController">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">

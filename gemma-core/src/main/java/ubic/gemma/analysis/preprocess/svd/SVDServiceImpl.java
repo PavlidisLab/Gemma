@@ -83,6 +83,17 @@ public class SVDServiceImpl implements SVDService {
 
     private static String EE_SVD_DIR = "SVD";
 
+    /**
+     * Get the expected location of the SVD file for a given Experiment id. The file might not exist.
+     * 
+     * @param id
+     * @return
+     */
+    public static String getReportPath( long id ) {
+        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_SVD_DIR + File.separatorChar
+                + EE_SVD_SUMMARY + "." + id;
+    }
+
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
@@ -92,8 +103,9 @@ public class SVDServiceImpl implements SVDService {
      * @param id
      * @return
      */
-    public SVDValueObject retrieveSvd( Long id ) {
+    public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
 
+        Long id = ee.getId();
         File f = new File( getReportPath( id ) );
 
         if ( !f.exists() ) {
@@ -161,11 +173,31 @@ public class SVDServiceImpl implements SVDService {
         saveValueObject( svo );
 
         /*
+         * TODO save the U matrix, at least the first three components. This we should do in the database, as if it was
+         * a differential expression analysis. These are loadings of the genes in the eigengenes.
+         */
+
+        /*
          * Add an audit event.
          */
         auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, null, null );
 
         return svdFactorAnalysis( ee, svo );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.analysis.preprocess.svd.SVDService#svdFactorAnalysis(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment)
+     */
+    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
+        SVDValueObject svo = this.retrieveSvd( ee );
+        if ( svo == null ) {
+            throw new IllegalArgumentException( "SVD results are not available for " + ee.getShortName()
+                    + "; run SVD first" );
+        }
+        return this.svdFactorAnalysis( ee, svo );
     }
 
     /*
@@ -192,6 +224,221 @@ public class SVDServiceImpl implements SVDService {
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
         Map<ExperimentalFactor, Boolean> isContinuous = new HashMap<ExperimentalFactor, Boolean>();
 
+        prepareForFactorComparisons( svo, bioAssays, bioMaterialDates, bioMaterialFactorMap, isContinuous );
+
+        if ( bioMaterialDates.isEmpty() && bioMaterialFactorMap.isEmpty() ) {
+            log.warn( "No factor or date information to compare to the eigengenes" );
+            return svo;
+        }
+
+        Long[] svdBioMaterials = svo.getBioMaterialIds();
+
+        if ( svdBioMaterials == null || svdBioMaterials.length == 0 ) {
+            throw new IllegalStateException( "SVD did not have biomaterial information" );
+        }
+
+        fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
+
+        svo.getDateCorrelations().clear();
+        svo.getFactorCorrelations().clear();
+        svo.getFactorPvalues().clear();
+
+        for ( int componentNumber = 0; componentNumber < Math.min( vMatrix.columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
+            analyzeComponent( svo, componentNumber, vMatrix, bioMaterialDates, bioMaterialFactorMap, isContinuous,
+                    svdBioMaterials );
+        }
+        saveValueObject( svo );
+        return svo;
+    }
+
+    /**
+     * Do the factor comparisons for one component.
+     * 
+     * @param svo
+     * @param componentNumber
+     * @param vMatrix
+     * @param bioMaterialDates
+     * @param bioMaterialFactorMap
+     * @param isContinuous
+     * @param svdBioMaterials
+     */
+    private void analyzeComponent( SVDValueObject svo, int componentNumber, DoubleMatrix<Integer, Integer> vMatrix,
+            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
+            Map<ExperimentalFactor, Boolean> isContinuous, Long[] svdBioMaterials ) {
+        DoubleArrayList eigenGene = new DoubleArrayList( vMatrix.getColumn( componentNumber ) );
+        // since we use rank correlation/anova, we just use the casted ids (two-groups) or dates as the covariate
+
+        int numWithDates = 0;
+        for ( Long id : bioMaterialDates.keySet() ) {
+            if ( bioMaterialDates.get( id ) != null ) {
+                numWithDates++;
+            }
+        }
+
+        if ( numWithDates > 2 ) {
+            /*
+             * Get the dates in order, rounded to the nearest hour.
+             */
+            double[] dates = new double[svdBioMaterials.length];
+            for ( int j = 0; j < svdBioMaterials.length; j++ ) {
+
+                if ( bioMaterialDates.get( svdBioMaterials[j] ) == null ) {
+                    log.warn( "Incomplete date information" );
+                    dates[j] = Double.NaN;
+                } else {
+                    dates[j] = 1.0 * DateUtils.round( bioMaterialDates.get( svdBioMaterials[j] ), Calendar.HOUR )
+                            .getTime(); // make int, cast to double
+                }
+            }
+
+            double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
+
+            svo.setPCDateCorrelation( componentNumber, dateCorrelation );
+        } else {
+            log.warn( "Insufficient date information to compare to eigengenes" );
+        }
+
+        /*
+         * Compare each factor (including batch information that is somewhat redundant with the dates) to the
+         * eigengenes. Using rank statistics.
+         */
+        for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
+            Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
+
+            double[] fvs = new double[svdBioMaterials.length];
+            assert fvs.length > 0;
+
+            int numNotMissing = 0;
+            for ( int j = 0; j < svdBioMaterials.length; j++ ) {
+                fvs[j] = bmToFv.get( svdBioMaterials[j] ).doubleValue();
+                if ( !Double.isNaN( fvs[j] ) ) {
+                    numNotMissing++;
+                }
+            }
+
+            if ( numNotMissing < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
+                log.warn( "Insufficient values to compare " + ef + " to eigengenes" );
+                continue;
+            }
+
+            if ( isContinuous.get( ef ) ) {
+                double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
+                svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+            } else {
+
+                Collection<Integer> groups = new HashSet<Integer>();
+                IntArrayList groupings = new IntArrayList( fvs.length );
+                int k = 0;
+                DoubleArrayList eigenGeneWithoutMissing = new DoubleArrayList();
+                for ( double d : fvs ) {
+                    if ( Double.isNaN( d ) ) {
+                        k++;
+                        continue;
+                    }
+                    groupings.add( ( int ) d );
+                    groups.add( ( int ) d );
+                    eigenGeneWithoutMissing.add( eigenGene.get( k ) );
+                    k++;
+                }
+
+                if ( groups.size() < 2 ) {
+                    log.warn( "Factor had less than two groups: " + ef + ", SVD comparison can't be done." );
+                    continue;
+                }
+
+                if ( eigenGeneWithoutMissing.size() < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
+                    log.warn( "Too few non-missing values for factor to compare to eigengenes: " + ef );
+                    continue;
+                }
+
+                if ( groups.size() == 2 ) {
+                    // use the one that still has missing values.
+                    double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
+                    svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                } else {
+                    // one-way ANOVA on ranks.
+                    double kwpval = KruskalWallis.test( eigenGeneWithoutMissing, groupings );
+
+                    double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
+                    double corrPvalue = CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing
+                            .size() );
+
+                    /*
+                     * Avoid storing a pvalue, as it's hard to compare. If the regular linear correlation is strong,
+                     * then we should just use that -- basically, it means the order we have the groups happens to be a
+                     * good one. Of course we could just store pvalues, but that's not easy to use either.
+                     */
+                    if ( corrPvalue <= kwpval ) {
+                        svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                    } else {
+                        // FIXME this is a total hack. A bit like turning pvalues into probit
+                        double approxCorr = CorrelationStats.correlationForPvalue( kwpval, eigenGeneWithoutMissing
+                                .size() );
+                        svo.setPCFactorCorrelation( componentNumber, ef, approxCorr );
+
+                        // svo.setPCFactorPvalue( componentNumber, ef, kwpval );
+                    }
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Fill in NaN for any missing biomaterial factorvalues (dates were already done)
+     */
+    private void fillInMissingValues( Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
+            Long[] svdBioMaterials ) {
+
+        for ( Long id : svdBioMaterials ) {
+            for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
+                if ( !bioMaterialFactorMap.get( ef ).containsKey( id ) ) {
+                    log.warn( "Incomplete factorvalue information for " + ef + " (biomaterial id=" + id
+                            + " missing a value)" );
+                    bioMaterialFactorMap.get( ef ).put( id, Double.NaN );
+                }
+            }
+        }
+    }
+
+    /**
+     * Check to see if the top level SVD storage directory exists. If it doesn't, create it, Check to see if the SVD
+     * directory exists. If it doesn't, create it.
+     * 
+     * @param deleteFiles
+     */
+    private void initDirectories( boolean deleteFiles ) {
+
+        /*
+         * See ExpressionExperimentReportServiceImpl; possibly consolidate EE_REPORT_DIR
+         */
+        FileTools.createDir( HOME_DIR );
+        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
+        File fsvd = FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar
+                + EE_SVD_DIR );
+
+        if ( deleteFiles ) {
+            Collection<File> files = new ArrayList<File>();
+            File[] fileArray = fsvd.listFiles();
+            for ( File file : fileArray ) {
+                files.add( file );
+            }
+            FileTools.deleteFiles( files );
+        }
+    }
+
+    /**
+     * Gather the information we need for comparing PCs to factors.
+     * 
+     * @param svo
+     * @param bioAssays
+     * @param bioMaterialDates
+     * @param bioMaterialFactorMap
+     * @param isContinuous
+     */
+    private void prepareForFactorComparisons( SVDValueObject svo, Collection<BioAssay> bioAssays,
+            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
+            Map<ExperimentalFactor, Boolean> isContinuous ) {
         /*
          * Note that dates or batch information can be missing for some bioassays.
          */
@@ -229,196 +476,14 @@ public class SVDServiceImpl implements SVDService {
 
             }
         }
-
-        if ( bioMaterialDates.isEmpty() && bioMaterialFactorMap.isEmpty() ) {
-            log.warn( "No factor or date information to compare to the eigengenes" );
-            return svo;
-        }
-
         Long[] svdBioMaterials = svo.getBioMaterialIds();
 
         if ( svdBioMaterials == null || svdBioMaterials.length == 0 ) {
             throw new IllegalStateException( "SVD did not have biomaterial information" );
         }
 
-        /*
-         * Fill in NaN for any missing biomaterial factorvalues (dates were already done above)
-         */
-        for ( Long id : svdBioMaterials ) {
-            for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-                if ( !bioMaterialFactorMap.get( ef ).containsKey( id ) ) {
-                    log.warn( "Incomplete factorvalue information for " + ef + " (biomaterial id=" + id
-                            + " missing a value)" );
-                    bioMaterialFactorMap.get( ef ).put( id, Double.NaN );
-                }
-            }
-        }
+        fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
 
-        // since we use rank correlation/anova, we just use the casted ids or dates as the covariate
-        for ( int componentNumber = 0; componentNumber < Math.min( vMatrix.columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
-
-            DoubleArrayList eigenGene = new DoubleArrayList( vMatrix.getColumn( componentNumber ) );
-
-            int numWithDates = 0;
-            for ( Long id : bioMaterialDates.keySet() ) {
-                if ( bioMaterialDates.get( id ) != null ) {
-                    numWithDates++;
-                }
-            }
-
-            if ( numWithDates > 2 ) {
-                /*
-                 * Get the dates in order, rounded to the nearest hour.
-                 */
-                double[] dates = new double[svdBioMaterials.length];
-                for ( int j = 0; j < svdBioMaterials.length; j++ ) {
-
-                    if ( bioMaterialDates.get( svdBioMaterials[j] ) == null ) {
-                        log.warn( "Incomplete date information" );
-                        dates[j] = Double.NaN;
-                    } else {
-                        dates[j] = 1.0 * DateUtils.round( bioMaterialDates.get( svdBioMaterials[j] ), Calendar.HOUR )
-                                .getTime(); // make int, cast to double
-                    }
-                }
-
-                double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
-
-                svo.setPCDateCorrelation( componentNumber, dateCorrelation );
-            } else {
-                log.warn( "Insufficient date information to compare to eigengenes" );
-            }
-
-            /*
-             * Compare each factor to the eigengenes. Using rank statistics.
-             */
-            for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
-                Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
-
-                double[] fvs = new double[svdBioMaterials.length];
-                assert fvs.length > 0;
-
-                int numNotMissing = 0;
-                for ( int j = 0; j < svdBioMaterials.length; j++ ) {
-                    fvs[j] = bmToFv.get( svdBioMaterials[j] ).doubleValue();
-                    if ( !Double.isNaN( fvs[j] ) ) {
-                        numNotMissing++;
-                    }
-                }
-
-                if ( numNotMissing < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
-                    log.warn( "Insufficient data to compare " + ef + " to eigengenes" );
-                    continue;
-                }
-
-                if ( isContinuous.get( ef ) ) {
-                    double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
-                    svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
-                } else {
-
-                    Collection<Integer> groups = new HashSet<Integer>();
-                    IntArrayList groupings = new IntArrayList( fvs.length );
-                    int k = 0;
-                    DoubleArrayList eigenGeneWithoutMissing = new DoubleArrayList();
-                    for ( double d : fvs ) {
-                        if ( Double.isNaN( d ) ) {
-                            k++;
-                            continue;
-                        }
-                        groupings.add( ( int ) d );
-                        groups.add( ( int ) d );
-                        eigenGeneWithoutMissing.add( eigenGene.get( k ) );
-                        k++;
-                    }
-
-                    if ( groups.size() < 2 ) {
-                        log.warn( "Factor had less than two groups: " + ef + ", SVD comparison can't be done." );
-                        continue;
-                    }
-
-                    if ( eigenGeneWithoutMissing.size() < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
-                        log.warn( "Too few non-missing values for factor to compare to eigengenes: " + ef );
-                        continue;
-                    }
-
-                    if ( groups.size() == 2 ) {
-                        // use the one that still has missing values.
-                        double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList(
-                                fvs ) );
-                        svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
-                    } else {
-                        // one-way ANOVA on ranks.
-                        double kwpval = KruskalWallis.test( eigenGeneWithoutMissing, groupings );
-
-                        double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList(
-                                fvs ) );
-                        double corrPvalue = CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing
-                                .size() );
-
-                        /*
-                         * Avoid storing a pvalue, as it's hard to compare. If the regular linear correlation is strong,
-                         * then we should just use that -- basically, it means the order we have the groups happens to
-                         * be a good one. Of course we could just store pvalues, but that's not easy to use either.
-                         */
-                        if ( corrPvalue <= kwpval ) {
-                            svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
-                        } else {
-                            svo.setPCFactorPvalue( componentNumber, ef, kwpval );
-
-                            /*
-                             * OK, an alternative is to try to find a grouping order that maximizes the correlation
-                             * (there must be one). Of course, there are Ngroups! ways of doing this, so it's only
-                             * feasible for small numbers of groups.
-                             */
-                            if ( groups.size() <= 5 ) { // 120 combinations...
-                                // not yet implemented.
-                            }
-
-                        }
-                    }
-
-                }
-            }
-        }
-        saveValueObject( svo );
-        return svo;
-    }
-
-    /**
-     * Get the expected location of the SVD file for a given Experiment id. The file might not exist.
-     * 
-     * @param id
-     * @return
-     */
-    public static String getReportPath( long id ) {
-        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_SVD_DIR + File.separatorChar
-                + EE_SVD_SUMMARY + "." + id;
-    }
-
-    /**
-     * Check to see if the top level SVD storage directory exists. If it doesn't, create it, Check to see if the SVD
-     * directory exists. If it doesn't, create it.
-     * 
-     * @param deleteFiles
-     */
-    private void initDirectories( boolean deleteFiles ) {
-
-        /*
-         * See ExpressionExperimentReportServiceImpl; possibly consolidate EE_REPORT_DIR
-         */
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        File fsvd = FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar
-                + EE_SVD_DIR );
-
-        if ( deleteFiles ) {
-            Collection<File> files = new ArrayList<File>();
-            File[] fileArray = fsvd.listFiles();
-            for ( File file : fileArray ) {
-                files.add( file );
-            }
-            FileTools.deleteFiles( files );
-        }
     }
 
     private void saveValueObject( SVDValueObject eeVo ) {

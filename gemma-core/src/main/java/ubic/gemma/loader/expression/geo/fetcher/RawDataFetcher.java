@@ -86,6 +86,11 @@ public class RawDataFetcher extends FtpArchiveFetcher {
             long expectedSize = this.getExpectedSize( seekFile );
             FutureTask<Boolean> future = defineTask( outputFileName, seekFile );
             Collection<LocalFile> result = doTask( future, expectedSize, seekFile, outputFileName );
+
+            if ( result == null || result.isEmpty() ) {
+                throw new IOException( "Files were not obtained, or download was cancelled." );
+            }
+
             return result;
         } catch ( SocketException e ) {
             throw new RuntimeException( e );

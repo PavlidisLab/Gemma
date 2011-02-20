@@ -67,7 +67,12 @@ public abstract class FtpFetcher extends AbstractFetcher {
     protected FutureTask<Boolean> defineTask( final String outputFileName, final String seekFile ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             public Boolean call() throws FileNotFoundException, IOException {
-                log.info( "Fetching " + seekFile + " to " + outputFileName );
+                File existing = new File( outputFileName );
+                if ( existing.exists() ) {
+                    log.info( "Checking validity of existing local file: " + outputFileName );
+                } else {
+                    log.info( "Fetching " + seekFile + " to " + outputFileName );
+                }
                 boolean status = NetUtils.ftpDownloadFile( ftpClient, seekFile, outputFileName, force );
                 ftpClient.disconnect();
                 return new Boolean( status );
@@ -123,15 +128,14 @@ public abstract class FtpFetcher extends AbstractFetcher {
              */
 
             if ( force || !allowUseExisting || existingFile == null ) {
-            	/*Printing to log here because runtime error does not deliver message when passed through
-            	 * java.util.concurrent.FutureTask (only throws InterruptedException and ExecutionException)*/
-            	log.error( "Runtime exception thrown: "+ e.getMessage() +
-                		". \n Stack trace follows:", e );
+                /*
+                 * Printing to log here because runtime error does not deliver message when passed through
+                 * java.util.concurrent.FutureTask (only throws InterruptedException and ExecutionException)
+                 */
+                log.error( "Runtime exception thrown: " + e.getMessage() + ". \n Stack trace follows:", e );
                 throw new RuntimeException( "Cancelled, or couldn't fetch " + seekFile
                         + ", make sure the file exists on the remote server and permissions are granted.", e );
-            
 
-            
             }
 
             if ( Thread.currentThread().isInterrupted() ) {

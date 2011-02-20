@@ -48,11 +48,12 @@ import ubic.gemma.model.common.description.LocalFile;
 public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFetcher {
 
     private String excludePattern;
-   public Expand expander;
+    public Expand expander;
     protected boolean doDelete = false;
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.ArchiveFetcher#deleteAfterUnpack(boolean)
      */
     public void setDeleteAfterUnpack( boolean doDelete ) {
@@ -61,6 +62,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.Fetcher#setForce(boolean)
      */
     @Override
@@ -174,7 +176,6 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             @SuppressWarnings("synthetic-access")
             public Boolean call() {
-                log.info( "Unpacking " + outputFile );
                 if ( expander != null ) {
                     expander.setSrc( outputFile );
                     expander.setDest( outputFile.getParentFile() );
@@ -209,7 +210,6 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             } catch ( InterruptedException ie ) {
                 return;
             }
-            // log.info( FileTools.listDirectoryFiles( newDir ).size() - 1 + " files unpacked " );
             log.info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
         }
     }

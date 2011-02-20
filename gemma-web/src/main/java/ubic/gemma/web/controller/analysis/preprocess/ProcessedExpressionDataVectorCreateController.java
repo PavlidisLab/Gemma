@@ -48,7 +48,7 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
     ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     /**
-     * @author keshav
+     *  
      */
     private class ProcessedExpressionDataVectorCreateJob extends
             BackgroundJob<ProcessedExpressionDataVectorCreateTaskCommand> {
@@ -70,9 +70,6 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
 
     /**
      * Job that loads in a javaspace.
-     * 
-     * @author keshav
-     * @version $Id$
      */
     private class ProcessedExpressionDataVectorCreateSpaceJob extends ProcessedExpressionDataVectorCreateJob {
 
@@ -100,8 +97,11 @@ public class ProcessedExpressionDataVectorCreateController extends AbstractTaskS
      * @throws Exception
      */
     public String run( Long id ) throws Exception {
+        if ( id == null ) throw new IllegalArgumentException( "ID cannot be null" );
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
+
         ee = expressionExperimentService.thawLite( ee );
         ProcessedExpressionDataVectorCreateTaskCommand cmd = new ProcessedExpressionDataVectorCreateTaskCommand( ee );
 

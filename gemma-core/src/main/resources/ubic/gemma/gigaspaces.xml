@@ -102,7 +102,10 @@
 					ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
 				</value>
 				<value>
-					ubic.gemma.tasks.analysis.SVDTask
+					ubic.gemma.tasks.analysis.SvdTask
+				</value>
+				<value>
+					ubic.gemma.tasks.analysis.BatchInfoFetchTask
 				</value>
 			</list>
 		</property>
@@ -154,7 +157,7 @@
 		</property>
 		<property name="businessInterface">
 			<value>
-				ubic.gemma.tasks.maintenance.SVDTask
+	ubic.gemma.tasks.expression.SvdTask
 			</value>
 		</property>
 	</bean>
@@ -265,6 +268,18 @@
 		<property name="businessInterface">
 			<value>
 				ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
+			</value>
+		</property>
+	</bean>
+	
+	<bean id="batchInfoFetchWorker" class="ubic.gemma.job.grid.worker.CustomDelegatingWorker" scope="prototype">
+		<property name="javaSpaceTemplate" ref="gigaspacesTemplate" />
+		<property name="delegate">
+			<ref bean="batchInfoFetchTask" />
+		</property>
+		<property name="businessInterface">
+			<value>
+				ubic.gemma.tasks.expression.BatchInfoFetchTask
 			</value>
 		</property>
 	</bean>

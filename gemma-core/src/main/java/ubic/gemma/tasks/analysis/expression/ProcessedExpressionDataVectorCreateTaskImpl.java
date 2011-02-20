@@ -66,7 +66,10 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
         /*
          * Update the correlation heatmaps.
          */
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
+        FilterConfig fconfig = new FilterConfig();
+        fconfig.setIgnoreMinimumRowsThreshold( true );
+        fconfig.setIgnoreMinimumSampleThreshold( true );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, fconfig,
                 processedVectors );
         ExpressionDataSampleCorrelation.process( datamatrix, ee );
 

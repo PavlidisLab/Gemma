@@ -19,23 +19,22 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
-import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskImpl;
 
 /**
  * @author paul
  * @version $Id$
  */
 @Service
-public class SVDTaskImpl implements SVDTask {
+public class BatchInfoFetchTaskImpl implements BatchInfoFetchTask {
 
-    private Log log = LogFactory.getLog( ExpressionExperimentReportTaskImpl.class.getName() );
+    private Log log = LogFactory.getLog( BatchInfoFetchTaskImpl.class.getName() );
 
     @Autowired
-    private SVDService svdService;
+    private BatchInfoPopulationService ser;
 
     /*
      * (non-Javadoc)
@@ -48,9 +47,10 @@ public class SVDTaskImpl implements SVDTask {
         TaskResult result = new TaskResult( command, null );
 
         if ( command.doAll() ) {
-            throw new UnsupportedOperationException( "Doing all SVDs in task not implemented, sorry" );
+            throw new UnsupportedOperationException(
+                    "Doing all Batch fetches in task not implemented, sorry, you must configure one" );
         } else if ( command.getExpressionExperiment() != null ) {
-            svdService.svd( command.getExpressionExperiment() );
+            ser.fillBatchInformation( command.getExpressionExperiment(), true );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

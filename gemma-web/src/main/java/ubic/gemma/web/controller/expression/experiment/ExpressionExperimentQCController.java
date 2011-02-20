@@ -19,6 +19,7 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -43,6 +44,7 @@ import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYSeries;
@@ -51,6 +53,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
+
+import cern.jet.stat.Probability;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -91,7 +95,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        SVDValueObject svdo = svdService.retrieveSvd( idl );
+        SVDValueObject svdo = svdService.retrieveSvd( ee );
 
         if ( svdo != null ) {
             this.writePCAFactors( response, ee, svdo );
@@ -112,7 +116,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        SVDValueObject svdo = svdService.retrieveSvd( idl );
+        SVDValueObject svdo = svdService.retrieveSvd( ee );
 
         if ( svdo != null ) {
             this.writePCAScree( response, svdo );
@@ -349,7 +353,8 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( variances == null || variances.length == 0 ) {
             return series;
         }
-        for ( int i = 0; i < variances.length; i++ ) {
+        int MAX_COMPONENTS_FOR_SCREE = 10; // make constant
+        for ( int i = 0; i < Math.min( MAX_COMPONENTS_FOR_SCREE, variances.length ); i++ ) {
             series.addValue( variances[i], new Integer( 1 ), new Integer( i + 1 ) );
         }
         return series;
@@ -508,6 +513,31 @@ public class ExpressionExperimentQCController extends BaseController {
         return files;
     }
 
+    /**
+     * @param response
+     * @param chart
+     */
+    private void writeChartToClient( HttpServletResponse response, JFreeChart chart, int width, int height ) {
+        OutputStream out = null;
+        try {
+            response.setContentType( DEFAULT_CONTENT_TYPE );
+            out = response.getOutputStream();
+            ChartRenderingInfo info = new ChartRenderingInfo();
+            chart.setBackgroundPaint( Color.white );
+            ChartUtilities.writeChartAsPNG( out, chart, width, height, info );
+        } catch ( IOException e ) {
+            log.error( "While writing image", e );
+        } finally {
+            if ( out != null ) {
+                try {
+                    out.close();
+                } catch ( IOException e ) {
+                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
+                }
+            }
+        }
+    }
+
     private boolean writeCorrData( HttpServletResponse response, ExpressionExperiment ee ) {
         File f = locateCorrMatDataFile( ee );
         return writeFile( response, f );
@@ -551,9 +581,11 @@ public class ExpressionExperimentQCController extends BaseController {
     }
 
     /**
+     * Visualization of the correlation of principal components with factors or the date samples were run.
+     * 
      * @param response
      * @param ee
-     * @param svdo
+     * @param svdo SVD value object
      */
     private void writePCAFactors( HttpServletResponse response, ExpressionExperiment ee, SVDValueObject svdo ) {
         Map<Integer, Map<Long, Double>> factorCorrelations = svdo.getFactorCorrelations();
@@ -571,8 +603,14 @@ public class ExpressionExperimentQCController extends BaseController {
 
         if ( factorCorrelations.isEmpty() && factorPvalues.isEmpty() && dateCorrelations.isEmpty() ) {
             /*
-             * Perhaps put in some kind of placeholder image.
+             * Placeholder image.
              */
+            DefaultCategoryDataset series = new DefaultCategoryDataset();
+            series.addValue( 0, "PC" + 1, "No data" );
+            JFreeChart chart = ChartFactory.createBarChart( "", "Factors", "Component assoc.", series,
+                    PlotOrientation.VERTICAL, true, false, false );
+
+            writeChartToClient( response, chart, HISTOGRAM_IMAGE_SIZE, HISTOGRAM_IMAGE_SIZE );
             return;
         }
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
@@ -611,44 +649,41 @@ public class ExpressionExperimentQCController extends BaseController {
             }
         }
 
-        /*
-         * When there are more than two groups we get pvalues from the Kruskal-Wallis test.
-         */
-        for ( Integer component : factorPvalues.keySet() ) {
-            if ( component >= MAX_COMP ) break;
-
-            for ( Long efId : factorPvalues.get( component ).keySet() ) {
-                Double pval = factorPvalues.get( component ).get( efId );
-                if ( pval == null || Double.isNaN( pval ) ) continue;
-                pval = -Math.log10( Math.max( 10e-4, pval ) ) / 4.0; // FIXME weak attempt to scale pvalues between 0 and 1.
-                series.addValue( pval, "PC" + ( component + 1 ), efs.get( efId ) );
-
-            }
-        }
+        // /*
+        // * When there are more than two groups we get pvalues from the Kruskal-Wallis test. FIXME not used.
+        // */
+        // for ( Integer component : factorPvalues.keySet() ) {
+        // if ( component >= MAX_COMP ) break;
+        //
+        // for ( Long efId : factorPvalues.get( component ).keySet() ) {
+        // Double pval = factorPvalues.get( component ).get( efId );
+        // if ( pval == null || Double.isNaN( pval ) ) continue;
+        // // pval = -Math.log10( Math.max( 10e-4, pval ) ) / 4.0; // FIXME weak attempt to scale pvalues between 0
+        // double probit = -Probability.normalInverse( pval );
+        // // and 1.
+        // series.addValue( probit, "PC" + ( component + 1 ), efs.get( efId ) );
+        //
+        // }
+        // }
 
         JFreeChart chart = ChartFactory.createBarChart( "", "Factors", "Component assoc.", series,
                 PlotOrientation.VERTICAL, true, false, false );
 
-        OutputStream out = null;
-        try {
-            response.setContentType( DEFAULT_CONTENT_TYPE );
-            out = response.getOutputStream();
-            ChartRenderingInfo info = new ChartRenderingInfo();
-            chart.setBackgroundPaint( Color.white );
-            ChartUtilities.writeChartAsPNG( out, chart, HISTOGRAM_IMAGE_SIZE, HISTOGRAM_IMAGE_SIZE, info );
-        } catch ( IOException e ) {
-            log.error( "While writing image", e );
-        } finally {
-            if ( out != null ) {
-                try {
-                    out.close();
-                } catch ( IOException e ) {
-                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
-                }
-            }
+        CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
+
+        for ( int i = 0; i < MAX_COMP; i++ ) {
+            renderer.setSeriesPaint( i, Color.getHSBColor( 0.0f, 1.0f - ( ( 3 * ( i + 1.0f ) ) / ( 3 * MAX_COMP ) ),
+                    0.7f ) );
         }
+
+        writeChartToClient( response, chart, HISTOGRAM_IMAGE_SIZE, HISTOGRAM_IMAGE_SIZE );
     }
 
+    /**
+     * @param response
+     * @param svdo
+     * @return
+     */
     private boolean writePCAScree( HttpServletResponse response, SVDValueObject svdo ) {
         /*
          * Make a scree plot.
@@ -658,28 +693,11 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( series.getColumnCount() == 0 ) {
             return false;
         }
+        int MAX_COMPONENTS_FOR_SCREE = 10;
+        JFreeChart chart = ChartFactory.createBarChart( "", "Component (up to" + MAX_COMPONENTS_FOR_SCREE + ")",
+                "Fraction of var.", series, PlotOrientation.VERTICAL, false, false, false );
 
-        JFreeChart chart = ChartFactory.createBarChart( "", "Component", "Fraction of var.", series,
-                PlotOrientation.VERTICAL, false, false, false );
-
-        OutputStream out = null;
-        try {
-            response.setContentType( DEFAULT_CONTENT_TYPE );
-            out = response.getOutputStream();
-            ChartRenderingInfo info = new ChartRenderingInfo();
-            chart.setBackgroundPaint( Color.white );
-            ChartUtilities.writeChartAsPNG( out, chart, HISTOGRAM_IMAGE_SIZE, HISTOGRAM_IMAGE_SIZE, info );
-        } catch ( IOException e ) {
-            log.error( "While writing image", e );
-        } finally {
-            if ( out != null ) {
-                try {
-                    out.close();
-                } catch ( IOException e ) {
-                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
-                }
-            }
-        }
+        writeChartToClient( response, chart, HISTOGRAM_IMAGE_SIZE, HISTOGRAM_IMAGE_SIZE );
         return true;
     }
 
@@ -699,25 +717,8 @@ public class ExpressionExperimentQCController extends BaseController {
         JFreeChart chart = ChartFactory.createXYLineChart( "", "Correlation", "Frequency", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
 
-        OutputStream out = null;
-        try {
-            response.setContentType( DEFAULT_CONTENT_TYPE );
-            out = response.getOutputStream();
-            ChartRenderingInfo info = new ChartRenderingInfo();
-            chart.setBackgroundPaint( Color.white );
-            ChartUtilities.writeChartAsPNG( out, chart, ( int ) ( HISTOGRAM_IMAGE_SIZE * 1.4 ), HISTOGRAM_IMAGE_SIZE,
-                    info );
-        } catch ( IOException e ) {
-            log.error( "While writing image", e );
-        } finally {
-            if ( out != null ) {
-                try {
-                    out.close();
-                } catch ( IOException e ) {
-                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
-                }
-            }
-        }
+        writeChartToClient( response, chart, ( int ) ( HISTOGRAM_IMAGE_SIZE * 1.4 ), HISTOGRAM_IMAGE_SIZE );
+
         return true;
     }
 
@@ -741,26 +742,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
         JFreeChart chart = ChartFactory.createXYLineChart( "", "P-value", "Frequency", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
-
-        OutputStream out = null;
-        try {
-            response.setContentType( DEFAULT_CONTENT_TYPE );
-            out = response.getOutputStream();
-            ChartRenderingInfo info = new ChartRenderingInfo();
-            chart.setBackgroundPaint( Color.white );
-            ChartUtilities.writeChartAsPNG( out, chart, ( int ) ( HISTOGRAM_IMAGE_SIZE * 1.4 ), HISTOGRAM_IMAGE_SIZE,
-                    info );
-        } catch ( IOException e ) {
-            log.error( "While writing image", e );
-        } finally {
-            if ( out != null ) {
-                try {
-                    out.close();
-                } catch ( IOException e ) {
-                    log.warn( "Problems closing output stream.  Issues were: " + e.toString() );
-                }
-            }
-        }
+        writeChartToClient( response, chart, ( int ) ( HISTOGRAM_IMAGE_SIZE * 1.4 ), HISTOGRAM_IMAGE_SIZE );
         return true;
     }
 
@@ -785,7 +767,7 @@ public class ExpressionExperimentQCController extends BaseController {
             }
             in.close();
         } catch ( IOException e ) {
-            log.error( "While writing image", e );
+            log.error( "While writing content", e );
         } finally {
             if ( out != null ) {
                 try {

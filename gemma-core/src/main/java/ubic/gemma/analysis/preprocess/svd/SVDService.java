@@ -21,7 +21,8 @@ import org.springframework.security.access.annotation.Secured;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * TODO Document Me
+ * Performs Singular value decomposition on experiment data to get eigengenes, and does comparison of those PCs to
+ * factors recorded in the experimental design.
  * 
  * @author paul
  * @version $Id$
@@ -37,7 +38,29 @@ public interface SVDService {
     @Secured( { "GROUP_AGENT" })
     public SVDValueObject svd( ExpressionExperiment ee );
 
-    public SVDValueObject retrieveSvd( Long id );
-    
+    /**
+     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
+     * 
+     * @param ee
+     * @return
+     */
+    @Secured( { "GROUP_AGENT" })
+    SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );
+
+    /**
+     * @param id
+     * @return
+     */
+    @Secured( { "GROUP_AGENT" })
+    public SVDValueObject retrieveSvd( ExpressionExperiment ee );
+
+    /**
+     * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
+     * 
+     * @param ee
+     * @param svo
+     * @return
+     */
+    @Secured( { "GROUP_AGENT" })
     public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee, SVDValueObject svo );
 }

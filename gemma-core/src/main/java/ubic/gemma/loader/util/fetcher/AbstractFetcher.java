@@ -39,6 +39,7 @@ import ubic.gemma.model.common.description.LocalFile;
  */
 public abstract class AbstractFetcher implements Fetcher {
 
+    private static final int NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY = 5;
     protected static final int INFO_UPDATE_INTERVAL = 5000;
     protected static Log log = LogFactory.getLog( AbstractFetcher.class.getName() );
     /**
@@ -245,6 +246,7 @@ public abstract class AbstractFetcher implements Fetcher {
      * @return true if it finished normally, false if it was cancelled.
      */
     protected boolean waitForDownload( FutureTask<Boolean> future, long expectedSize, File outputFile ) {
+        int iters = 0;
         while ( !future.isDone() && !future.isCancelled() ) {
             try {
                 Thread.sleep( INFO_UPDATE_INTERVAL );
@@ -252,7 +254,6 @@ public abstract class AbstractFetcher implements Fetcher {
                 log.info( "Cancelling download" );
                 boolean cancelled = future.cancel( true );
                 if ( cancelled ) {
-                    log.info( "Download stopped successfully." );
                     return false;
                 }
 
@@ -267,11 +268,27 @@ public abstract class AbstractFetcher implements Fetcher {
 
             }
 
-            if ( log.isInfoEnabled() ) {
-                log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read" ) );
+            /*
+             * Avoid logging too much. If we're waiting for a long download, reduce frequency of updates.
+             */
+            if ( outputFile.length() < expectedSize
+                    && ( iters < NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY || iters
+                            % NUMBER_OF_TIMES_TO_LOG_WAITING_BEFORE_REDUCING_VERBOSITY == 0 ) ) {
+
+                double percent = 100.00 * outputFile.length() / expectedSize;
+
+                log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read ("
+                        + String.format( "%.1f", percent ) + "%)" ) );
             }
+
+            if ( outputFile.length() >= expectedSize ) {
+                log.warn( "File downloaded but task isn't done?" );
+                return true;
+            }
+
+            iters++;
         }
-        log.info( "Done with download, " + outputFile.length() + " bytes read" );
+        if ( iters == 0 ) log.info( "File with size " + outputFile.length() + " bytes." );
         return true;
     }
 

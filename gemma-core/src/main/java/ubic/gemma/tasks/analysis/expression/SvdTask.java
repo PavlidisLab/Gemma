@@ -15,14 +15,18 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import ubic.gemma.job.TaskResult;
-import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
+import ubic.gemma.tasks.maintenance.SvdTaskCommand;
 
 /**
  * @author paul
  * @version $Id$
  */
-public interface SVDTask {
+public interface SvdTask {
 
-    TaskResult execute( ExpressionExperimentReportTaskCommand jsCommand );
+    /**
+     * @param jsCommand
+     * @return
+     */
+    TaskResult execute( SvdTaskCommand jsCommand );
 
 }

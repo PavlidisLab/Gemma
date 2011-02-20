@@ -80,9 +80,11 @@ public class BatchInfoPopulationService {
      * How many hours do we allow to pass between samples, before we consider them to be a separate batch (if they are
      * not run on the same day). This 'slack' is necessary to allow for the possibility that all the hybridizations were
      * run together, but the scanning took a while to complete. Of course we are still always recording the actual
-     * dates, this is only used for the creation of ExperimentalFactors.
+     * dates, this is only used for the creation of ExperimentalFactors. Making this value too small causes the data to
+     * be broken into many batches. I experimented with a value of 2, but this seemed too low. Anything greater than 24
+     * doesn't make much sense.
      */
-    protected static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 2;
+    protected static final int MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH = 8;
 
     /**
      * Delete unpacked raw data files when done? The zipped/tarred archived will be left alone anyway.
@@ -90,6 +92,30 @@ public class BatchInfoPopulationService {
     private static final boolean CLEAN_UP = true;
 
     private static Log log = LogFactory.getLog( BatchInfoPopulationService.class );
+
+    /**
+     * @param ef
+     * @return true if the factor seems to be a 'batch' factor.
+     */
+    public static boolean isBatchFactor( ExperimentalFactor ef ) {
+        Characteristic c = ef.getCategory();
+
+        boolean isBatchFactor = false;
+
+        boolean looksLikeBatch = ef.getName().equals( BATCH_FACTOR_NAME );
+
+        if ( c != null && c instanceof VocabCharacteristic ) {
+            VocabCharacteristic v = ( VocabCharacteristic ) c;
+            if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) ) {
+                isBatchFactor = true;
+
+            }
+        } else if ( looksLikeBatch ) {
+            isBatchFactor = true;
+        }
+
+        return isBatchFactor;
+    }
 
     @Autowired
     ExperimentalDesignService experimentalDesignService;
@@ -276,6 +302,19 @@ public class BatchInfoPopulationService {
     }
 
     /**
+     * @param batchNum
+     * @param df
+     * @param d
+     * @return
+     */
+    private String formatBatchName( int batchNum, DateFormat df, Date d ) {
+        String batchDateString;
+        batchDateString = "Batch_" + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
+                + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
+        return batchDateString;
+    }
+
+    /**
      * @param ee
      * @param files Local copies of raw data files obtained from the data provider (e.g. GEO), adds audit event.
      * @return
@@ -449,30 +488,6 @@ public class BatchInfoPopulationService {
     }
 
     /**
-     * @param ef
-     * @return true if the factor seems to be a 'batch' factor.
-     */
-    public static boolean isBatchFactor( ExperimentalFactor ef ) {
-        Characteristic c = ef.getCategory();
-
-        boolean isBatchFactor = false;
-
-        boolean looksLikeBatch = ef.getName().equals( BATCH_FACTOR_NAME );
-
-        if ( c != null && c instanceof VocabCharacteristic ) {
-            VocabCharacteristic v = ( VocabCharacteristic ) c;
-            if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) ) {
-                isBatchFactor = true;
-
-            }
-        } else if ( looksLikeBatch ) {
-            isBatchFactor = true;
-        }
-
-        return isBatchFactor;
-    }
-
-    /**
      * Apply some heuristics to condense the dates down to batches. For example, we might assume dates very close
      * together (same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH) are to be treated as the same batch (see
      * implementation for details).
@@ -490,11 +505,15 @@ public class BatchInfoPopulationService {
 
         String batchDateString = "";
 
+        if ( lDates.size() > 99 ) {
+            throw new IllegalStateException( "There are too many batches: " + lDates.size() );
+        }
+
         Date lastDate = null;
         for ( Date d : lDates ) {
 
             if ( lastDate == null ) {
-                batchDateString = "Batch_" + batchNum + "_" + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
+                batchDateString = formatBatchName( batchNum, df, d );
                 result.put( batchDateString, new HashSet<Date>() );
 
                 lastDate = d;
@@ -514,7 +533,7 @@ public class BatchInfoPopulationService {
                 if ( !DateUtils.isSameDay( d, lastDate )
                         && DateUtils.addHours( lastDate, MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH ).before( d ) ) {
                     batchNum++;
-                    batchDateString = "Batch_" + batchNum + "_" + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
+                    batchDateString = formatBatchName( batchNum, df, d );
                     result.put( batchDateString, new HashSet<Date>() );
                 }
             }

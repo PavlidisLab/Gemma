@@ -306,7 +306,7 @@ public class ExpressionExperimentFilter {
                     && eeDoubleMatrix.rows() < FilterConfig.MINIMUM_ROWS_TO_BOTHER ) {
                 throw new InsufficientProbesException( "To few rows in (" + eeDoubleMatrix.rows()
                         + ") prior to filtering, data sets are not analyzed unless they have at least "
-                        + FilterConfig.MINIMUM_SAMPLE + " to be eligble for link analysis." );
+                        + FilterConfig.MINIMUM_ROWS_TO_BOTHER + " to be eligble for analysis." );
             }
         }
 

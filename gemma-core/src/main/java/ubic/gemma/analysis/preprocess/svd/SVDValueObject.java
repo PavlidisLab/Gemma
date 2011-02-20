@@ -102,7 +102,7 @@ public class SVDValueObject implements Serializable {
     /**
      * @return map of component to a map of ExperimentalFactors to pvalues for association of that factor with the
      *         component. This is only used if the ExperimentalFactor has more than two levels so we used the
-     *         Kruskal-Wallis test.
+     *         Kruskal-Wallis test. FIXME not used now.
      */
     public Map<Integer, Map<Long, Double>> getFactorPvalues() {
         return factorPvalues;

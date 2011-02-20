@@ -78,12 +78,9 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
             try {
                 log.info( "Processing: " + bas );
                 if ( postAnalysisOnly ) {
-                    SVDValueObject svdo = svdser.retrieveSvd( bas.getId() );
-                    if ( svdo == null ) {
-                        this.errorObjects.add( bas + ": Did not have an existing PCA; don't use the -post option." );
-                    } else {
-                        svdser.svdFactorAnalysis( ( ExpressionExperiment ) bas, svdo );
-                    }
+
+                    svdser.svdFactorAnalysis( ( ExpressionExperiment ) bas );
+
                 } else {
                     svdser.svd( ( ExpressionExperiment ) bas );
                     this.successObjects.add( bas.toString() );

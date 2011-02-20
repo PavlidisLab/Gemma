@@ -30,7 +30,6 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.datafilter.RowMissingFilter;
 import ubic.basecode.math.Constants;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.SingularValueDecomposition;
@@ -47,7 +46,8 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  * convention of Alter et al. 2000 (PNAS). Thus the U matrix columns are the <em>eigensamples</em> (eigenarrays) and the
  * V matrix columns are the <em>eigengenes</em>. See also http://genome-www.stanford.edu/SVD/.
  * <p>
- * Because SVD can't be done on a matrix with missing values, values are imputed.
+ * Because SVD can't be done on a matrix with missing values, values are imputed. Rows with no variance are removed, and
+ * rows with too many missing values are also removed (MIN_PRESENT_FRACTION_FOR_ROW)
  * <p>
  * FIXME this also includes SVD-based normalization algorithms which might best be refactored out.
  * 
@@ -94,6 +94,15 @@ public class ExpressionDataSVD {
         rlf.setMethod( Method.VAR );
         rlf.setLowCut( 0.0 + Constants.SMALL );
         this.expressionData = rlf.filter( this.expressionData );
+
+        if ( this.expressionData.rows() == 0 ) {
+            throw new IllegalStateException( "After filtering, matrix has no rows, SVD cannot be computed" );
+        }
+
+        if ( this.expressionData.rows() < this.expressionData.columns() ) {
+            throw new IllegalStateException(
+                    "After filtering, this data set has more samples than rows; SVD not supported." );
+        }
 
         this.normalized = normalizeMatrix;
         DoubleMatrix<DesignElement, Integer> matrix = this.expressionData.getMatrix();
@@ -386,10 +395,9 @@ public class ExpressionDataSVD {
     }
 
     /**
-     * FIXME: improve the imputation method. Generally (but not always), missing values correspond to "low expression".
-     * Therefore imputed values of zero are defensible. However, because at this point the matrix has probably already
-     * been filtered, the row mean is better. Using kmeans or SVD imputation is overkill for now, but SVD would probably
-     * be the way to go (possibly quicker!)
+     * Simple imputation method. Generally (but not always), missing values correspond to "low expression". Therefore
+     * imputed values of zero are defensible. However, because at this point the matrix has probably already been
+     * filtered, the row mean is better.
      * 
      * @param matrix
      */
