@@ -597,13 +597,14 @@ public class ExpressionExperimentQCController extends BaseController {
          * With two groups, or a continuous factor, we get rank correlations
          */
         int MAX_COMP = 3;
+        double STUB = 0.05; // always plot a little thing so we know its there.
         for ( Integer component : factorCorrelations.keySet() ) {
             if ( component >= MAX_COMP ) break;
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
                 Double a = factorCorrelations.get( component ).get( efId );
                 String facname = efs.get( efId ) == null ? "?" : efs.get( efId );
                 if ( a != null && !Double.isNaN( a ) ) {
-                    Double corr = Math.abs( a );
+                    Double corr = Math.max( STUB, Math.abs( a ) );
                     series.addValue( corr, "PC" + ( component + 1 ), facname );
                 }
             }
@@ -613,37 +614,24 @@ public class ExpressionExperimentQCController extends BaseController {
             if ( component >= MAX_COMP ) break;
             Double a = dateCorrelations.get( component );
             if ( a != null && !Double.isNaN( a ) ) {
-                Double corr = Math.abs( a );
+                Double corr = Math.max( STUB, Math.abs( a ) );
                 series.addValue( corr, "PC" + ( component + 1 ), "Date run" );
             }
         }
 
-        // /*
-        // * When there are more than two groups we get pvalues from the Kruskal-Wallis test. FIXME not used.
-        // */
-        // for ( Integer component : factorPvalues.keySet() ) {
-        // if ( component >= MAX_COMP ) break;
-        //
-        // for ( Long efId : factorPvalues.get( component ).keySet() ) {
-        // Double pval = factorPvalues.get( component ).get( efId );
-        // if ( pval == null || Double.isNaN( pval ) ) continue;
-        // // pval = -Math.log10( Math.max( 10e-4, pval ) ) / 4.0; // FIXME weak attempt to scale pvalues between 0
-        // double probit = -Probability.normalInverse( pval );
-        // // and 1.
-        // series.addValue( probit, "PC" + ( component + 1 ), efs.get( efId ) );
-        //
-        // }
-        // }
-
         JFreeChart chart = ChartFactory.createBarChart( "", "Factors", "Component assoc.", series,
                 PlotOrientation.VERTICAL, true, false, false );
 
+        chart.getCategoryPlot().getRangeAxis().setRange( 0, 1 );
         CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
         CategoryAxis domainAxis = chart.getCategoryPlot().getDomainAxis();
         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
         for ( int i = 0; i < MAX_COMP; i++ ) {
-            renderer.setSeriesPaint( i, Color.getHSBColor( 0.0f, 1.0f - ( ( 3 * ( i + 1.0f ) ) / ( 3 * MAX_COMP ) ),
-                    0.7f ) );
+            /*
+             * Hue is straightforward; brightness is set medium to make it muted; saturation we vary from high to low.
+             */
+            float saturationDrop = ( float ) Math.max( 1.0, i * 0.8f / MAX_COMP );
+            renderer.setSeriesPaint( i, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
 
         }
 
@@ -681,15 +669,20 @@ public class ExpressionExperimentQCController extends BaseController {
         return true;
     }
 
+    /**
+     * Write a blank image so user doesn't see the broken icon.
+     * 
+     * @param os
+     * @throws IOException
+     */
     private void writePlaceholderImage( OutputStream os ) throws IOException {
-        // put in a placeholder image.
-        BufferedImage buffer = new BufferedImage( DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX,
-                BufferedImage.TYPE_INT_RGB );
+        int placeholderSize = ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 0.75 );
+        BufferedImage buffer = new BufferedImage( placeholderSize, placeholderSize, BufferedImage.TYPE_INT_RGB );
         Graphics g = buffer.createGraphics();
         g.setColor( Color.lightGray );
-        g.fillRect( 0, 0, DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX );
+        g.fillRect( 0, 0, placeholderSize, placeholderSize );
         g.setColor( Color.black );
-        g.drawString( "Not available", DEFAULT_QC_IMAGE_SIZE_PX / 4, DEFAULT_QC_IMAGE_SIZE_PX / 4 );
+        g.drawString( "Not available", placeholderSize / 4, placeholderSize / 4 );
         ImageIO.write( buffer, "png", os );
     }
 
@@ -708,9 +701,8 @@ public class ExpressionExperimentQCController extends BaseController {
         xySeriesCollection.addSeries( series );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "Correlation", "Frequency", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
-
-        ChartUtilities
-                .writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ), DEFAULT_QC_IMAGE_SIZE_PX );
+        int size = ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 0.8 );
+        ChartUtilities.writeChartAsPNG( os, chart, size, size );
 
         return true;
     }

@@ -19,18 +19,22 @@
 package ubic.gemma.web.taglib.common.auditAndSecurity;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Tag to show 'what's new in Gemma' on home page.
@@ -48,6 +52,8 @@ public class WhatsNewBoxTag extends TagSupport {
     private static final long serialVersionUID = 4743861628500226664L;
 
     transient private WhatsNew whatsNew;
+
+    private static final int MAX_NEW_ITEMS = 50;
 
     /**
      * @jsp.attribute description="WhatsNew report" required="true" rtexprvalue="true"
@@ -101,26 +107,55 @@ public class WhatsNewBoxTag extends TagSupport {
             int updatedEEs = updatedExpressionExperiments.size();
 
             if ( numEEs > 0 ) {
-                buf.append( "<a href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
+                int count = 0;
+                boolean tooMany = false;
+                List<Long> ids = new ArrayList<Long>();
                 for ( ExpressionExperiment ee : newExpressionExperiments ) {
-                    buf.append( ee.getId() + "," );
+                    ids.add( ee.getId() );
+                    if ( ++count > MAX_NEW_ITEMS ) {
+                        tooMany = true;
+                        break;
+                    }
                 }
+                buf.append( "<a " + ( tooMany ? "title='View the first " + MAX_NEW_ITEMS + "'" : "" )
+                        + " href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
+                buf.append( StringUtils.join( ids, "," ) );
                 buf.append( "\">" + numEEs + " new data set" + ( numEEs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
             if ( numADs > 0 ) {
-                buf.append( "<a href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
+
+                int count = 0;
+                boolean tooMany = false;
+                List<Long> ids = new ArrayList<Long>();
                 for ( ArrayDesign ad : newArrayDesigns ) {
-                    buf.append( ad.getId() + "," );
+                    // buf.append( ad.getId() + "," );
+                    ids.add( ad.getId() );
+                    if ( ++count > MAX_NEW_ITEMS ) {
+                        tooMany = true;
+                        break;
+                    }
                 }
+                buf.append( "<a " + ( tooMany ? "title='View the first " + MAX_NEW_ITEMS + "'" : "" )
+                        + " href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
+                buf.append( StringUtils.join( ids, "," ) );
                 buf.append( "\">" + numADs + " new array design" + ( numADs > 1 ? "s" : "" ) + "</a>.<br />" );
             }
 
             if ( updatedEEs > 0 ) {
-
-                buf.append( "<a href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
+                boolean tooMany = false;
+                List<Long> ids = new ArrayList<Long>();
+                int count = 0;
                 for ( ExpressionExperiment ee : updatedExpressionExperiments ) {
-                    buf.append( ee.getId() + "," );
+                    ids.add( ee.getId() );
+
+                    if ( ++count > MAX_NEW_ITEMS ) {
+                        tooMany = true;
+                        break;
+                    }
                 }
+                buf.append( "<a " + ( tooMany ? "title='View the first " + MAX_NEW_ITEMS + "'" : "" )
+                        + " href=\"/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=" );
+                buf.append( StringUtils.join( ids, "," ) );
                 buf.append( "\">" + updatedEEs + " updated data set" + ( updatedEEs > 1 ? "s" : "" ) + "</a>.<br />" );
 
             }
@@ -128,9 +163,19 @@ public class WhatsNewBoxTag extends TagSupport {
             if ( updatedAds > 0 ) {
 
                 buf.append( "<a href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
+                int count = 0;
+                boolean tooMany = false;
+                List<Long> ids = new ArrayList<Long>();
                 for ( ArrayDesign ad : updatedArrayDesigns ) {
-                    buf.append( ad.getId() + "," );
+                    ids.add( ad.getId() );
+                    if ( ++count > MAX_NEW_ITEMS ) {
+                        tooMany = true;
+                        break;
+                    }
                 }
+                buf.append( "<a " + ( tooMany ? "title='View the first " + MAX_NEW_ITEMS + "'" : "" )
+                        + " href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
+                buf.append( StringUtils.join( ids, "," ) );
                 buf.append( "\">" + updatedAds + " updated array design" + ( updatedAds > 1 ? "s" : "" )
                         + "</a>.<br />" );
 
