@@ -31,8 +31,14 @@ import cern.colt.matrix.linalg.Algebra;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.datafilter.RowMissingFilter;
+import ubic.basecode.math.Constants;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.SingularValueDecomposition;
+import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter;
+import ubic.gemma.analysis.preprocess.filter.RowLevelFilter;
+import ubic.gemma.analysis.preprocess.filter.RowMissingValueFilter;
+import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
+import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.DesignElement;
 
@@ -73,19 +79,27 @@ public class ExpressionDataSVD {
      */
     public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix ) {
         this.expressionData = expressionData;
+
+        AffyProbeNameFilter affyProbeNameFilter = new AffyProbeNameFilter( new Pattern[] { Pattern.AFFX } );
+        this.expressionData = affyProbeNameFilter.filter( this.expressionData );
+
+        RowMissingValueFilter rowMissingFilter = new RowMissingValueFilter();
+        rowMissingFilter.setMinPresentFraction( MIN_PRESENT_FRACTION_FOR_ROW );
+        this.expressionData = rowMissingFilter.filter( this.expressionData );
+
+        /*
+         * Remove rows with no variance
+         */
+        RowLevelFilter rlf = new RowLevelFilter();
+        rlf.setMethod( Method.VAR );
+        rlf.setLowCut( 0.0 + Constants.SMALL );
+        this.expressionData = rlf.filter( this.expressionData );
+
         this.normalized = normalizeMatrix;
-        DoubleMatrix<DesignElement, Integer> matrix = expressionData.getMatrix();
+        DoubleMatrix<DesignElement, Integer> matrix = this.expressionData.getMatrix();
 
         assert matrix.getRowNames().size() > 0;
         assert matrix.getColNames().size() > 0;
-
-        /*
-         * filter the data to remove rows that have too many missing values. This probably should be done outside of
-         * this method? Maybe it's okay.
-         */
-        RowMissingFilter<DoubleMatrix<DesignElement, Integer>, DesignElement, Integer, Double> fi = new RowMissingFilter<DoubleMatrix<DesignElement, Integer>, DesignElement, Integer, Double>();
-        fi.setMinPresentFraction( MIN_PRESENT_FRACTION_FOR_ROW );
-        matrix = fi.filter( matrix );
 
         missingValueInfo = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
         imputeMissing( matrix );
