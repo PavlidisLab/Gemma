@@ -737,6 +737,8 @@ public class DEDVController {
         Collections.sort( dedvs, new Comparator<DoubleVectorValueObject>() {
             @Override
             public int compare( DoubleVectorValueObject o1, DoubleVectorValueObject o2 ) {
+                if ( o1.getPvalue() == null ) return -1;
+                if ( o2.getPvalue() == null ) return 1;
                 return o1.getPvalue().compareTo( o2.getPvalue() );
             }
         } );
