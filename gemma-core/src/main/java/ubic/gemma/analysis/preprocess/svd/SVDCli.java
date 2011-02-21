@@ -42,7 +42,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
         super.addForceOption();
 
         Option postanalyzeOnlyOpt = OptionBuilder.withLongOpt( "post" ).withDescription(
-                "Don't perform SVD, just update the statistics of comparisons with factors etc. Implies -force" )
+                "Don't perform SVD if possible, just update the statistics of comparisons with factors etc. Implies -force" )
                 .create();
         super.addOption( postanalyzeOnlyOpt );
     }
@@ -78,13 +78,12 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
             try {
                 log.info( "Processing: " + bas );
                 if ( postAnalysisOnly ) {
-
                     svdser.svdFactorAnalysis( ( ExpressionExperiment ) bas );
-
                 } else {
                     svdser.svd( ( ExpressionExperiment ) bas );
-                    this.successObjects.add( bas.toString() );
                 }
+                this.successObjects.add( bas.toString() );
+
             } catch ( Exception e ) {
                 log.error( e, e );
                 this.errorObjects.add( bas + ": " + e.getMessage() );
