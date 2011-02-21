@@ -176,6 +176,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
 
                 int count = 0;
                 Class<? extends DesignElementDataVector> vectorClass = null;
+                Collection<DesignElementDataVector> unMatched = new HashSet<DesignElementDataVector>();
                 for ( DesignElementDataVector vector : vectorsForQt ) {
 
                     if ( vectorClass == null ) {
@@ -186,16 +187,32 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                         throw new IllegalStateException( "Two types of vector for one quantitationtype: " + type );
                     }
 
+                    CompositeSequence oldDe = ( CompositeSequence ) vector.getDesignElement();
+
                     // we're doing this by array design; nice to have a method to fetch those only, oh well.
-                    if ( !vector.getDesignElement().getArrayDesign().equals( oldAd ) ) {
+                    if ( !oldDe.getArrayDesign().equals( oldAd ) ) {
                         continue;
                     }
 
-                    processVector( designElementMap, usedDesignElements, vector );
+                    boolean ok = processVector( designElementMap, usedDesignElements, vector );
+
+                    if ( !ok ) {
+                        log.warn( "No new design element available to match " + oldDe + " (seq="
+                                + oldDe.getBiologicalCharacteristic() + "; array=" + oldDe.getArrayDesign() );
+                        unMatched.add( vector );
+                    }
 
                     if ( ++count % 20000 == 0 ) {
                         log.info( "Found matches for " + count + " vectors for " + type );
                     }
+                }
+
+                /*
+                 * This is bad.
+                 */
+                if ( unMatched.size() > 0 ) {
+                    throw new IllegalStateException( "There were " + unMatched.size()
+                            + " vectors that couldn't be matched to the new design for: " + type );
                 }
 
                 log.info( "Updating " + count + " vectors for " + type );
@@ -331,8 +348,9 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         }
 
         if ( !found ) {
-            throw new IllegalStateException( "No new design element available to match " + oldDe + " (seq=" + seq
-                    + "; array=" + oldDe.getArrayDesign() + ")" );
+            // throw new IllegalStateException( "No new design element available to match " + oldDe + " (seq=" + seq
+            // + "; array=" + oldDe.getArrayDesign() + ")" );
+            return false;
         }
 
         return true;
