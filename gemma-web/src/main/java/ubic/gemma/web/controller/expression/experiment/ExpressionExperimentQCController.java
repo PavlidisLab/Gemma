@@ -23,6 +23,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.geom.Arc2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -607,6 +608,7 @@ public class ExpressionExperimentQCController extends BaseController {
         /*
          * Make plots of the dates vs. PCs, factors vs. PCs.
          */
+        Arc2D.Float circle = new Arc2D.Float( new Rectangle2D.Double( -3.0, -3.0, 6.0, 6.0 ), 0, 360, Arc2D.OPEN );
 
         int MAX_COMP = 3;
 
@@ -645,14 +647,15 @@ public class ExpressionExperimentQCController extends BaseController {
                     plot.getXYPlot().addAnnotation( new XYTextAnnotation( corr.toString(), 10, 10 ) );
                     plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
                     XYDotRenderer renderer = new XYDotRenderer();
-                    renderer.setDotWidth( 2 );
-                    renderer.setDotHeight( 2 );
+                  //  renderer.setSeriesShape( 0, circle );
+                    renderer.setDotWidth( 3 );
+                    renderer.setDotHeight(3 );
 
                     float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
                     renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
                     // renderer.setSeriesShape( 0, Area );
-                    renderer.setDotWidth( 4 );
-                    renderer.setDotHeight( 4 );
+              //      renderer.setDotWidth( 4 );
+             //       renderer.setDotHeight( 4 );
                     plot.getXYPlot().setRenderer( renderer );
                     charts.get( efId ).add( plot );
                 }
@@ -689,14 +692,15 @@ public class ExpressionExperimentQCController extends BaseController {
 
                 plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
                 XYDotRenderer renderer = new XYDotRenderer();
-                renderer.setDotWidth( 2 );
-                renderer.setDotHeight( 2 );
+            //    renderer.setSeriesShape( 0, circle );
+                renderer.setDotWidth( 3 );
+                renderer.setDotHeight( 3 );
                 float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
                 renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
 
                 // renderer.setSeriesShape( 0, Area );
-                renderer.setDotWidth( 4 );
-                renderer.setDotHeight( 4 );
+             //   renderer.setDotWidth( 4 );
+              //  renderer.setDotHeight( 4 );
                 plot.getXYPlot().setRenderer( renderer );
                 charts.get( -1L ).add( plot );
 
