@@ -148,8 +148,12 @@
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/dumbster/dumbster/1.6/dumbster-1.6.jar"/>
 	<classpathentry kind="var" path="M2_REPO/velocity-tools/velocity-tools-view/1.0/velocity-tools-view-1.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/jfree/jfreechart/1.0.2/jfreechart-1.0.2.jar"/>
-	<classpathentry kind="var" path="M2_REPO/jfree/jcommon/1.0.5/jcommon-1.0.5.jar"/>
+	<classpathentry kind="var" path="M2_REPO/jfree/jfreechart/1.0.13/jfreechart-1.0.13.jar" sourcepath="/M2_REPO/jfree/jfreechart/1.0.2/jfreechart-1.0.13/source">
+		<attributes>
+			<attribute name="javadoc_location" value="http://www.jfree.org/jfreechart/api/javadoc"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="var" path="M2_REPO/jfree/jcommon/1.0.16/jcommon-1.0.16.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/sdicons/jsontools/jsontools-core/1.4/jsontools-core-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/prefuse/prefuse/beta/prefuse-beta.jar"/>
 	<classpathentry kind="var" path="M2_REPO/mtj/mtj/0.9.8/mtj-0.9.8.jar">
@@ -330,10 +334,11 @@
 	<classpathentry kind="var" path="M2_REPO/umls/mmtx/2.4C/mmtx-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/kss-api-strip/5.0/kss-api-strip-5.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mmtxProject/2.4C/mmtxProject-2.4C.jar"/>
-	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.0-SNAPSHOT/GEOMMTx-1.0-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.0/GEOMMTx-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRIEngine/0.5-0/JRIEngine-0.5-0.jar" sourcepath="/JAR_SRC/JRI/java/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.rforge.net/org/docs/"/>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/paul/Documents/R/win-library/2.12/rJava/jri"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="var" path="M2_REPO/org/apache/commons/commons-math/2.0/commons-math-2.0.jar">

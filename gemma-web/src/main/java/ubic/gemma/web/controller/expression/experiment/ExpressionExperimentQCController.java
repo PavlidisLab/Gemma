@@ -46,20 +46,35 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.chart.renderer.category.LineAndShapeRenderer;
+import org.jfree.chart.renderer.category.ScatterRenderer;
 import org.jfree.chart.renderer.xy.XYDotRenderer;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.statistics.DefaultMultiValueCategoryDataset;
+import org.jfree.data.time.Day;
+import org.jfree.data.time.Hour;
+import org.jfree.data.time.Minute;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.data.time.TimeSeriesDataItem;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -77,13 +92,16 @@ import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
 
 /**
@@ -604,21 +622,47 @@ public class ExpressionExperimentQCController extends BaseController {
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
+        Map<Long, Object> efIdMap = EntityUtils.getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
+        Collection<Long> continuousFactors = new HashSet<Long>();
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            boolean isContinous = SVDServiceImpl.isContinuous( ef );
+            if ( isContinous ) {
+                continuousFactors.add( ef.getId() );
+            }
+        }
 
         /*
          * Make plots of the dates vs. PCs, factors vs. PCs.
          */
-        Arc2D.Float circle = new Arc2D.Float( new Rectangle2D.Double( -3.0, -3.0, 6.0, 6.0 ), 0, 360, Arc2D.OPEN );
-
         int MAX_COMP = 3;
 
         Map<Long, List<JFreeChart>> charts = new LinkedHashMap<Long, List<JFreeChart>>();
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        /*
+         * FACTORS
+         */
         for ( Integer component : factorCorrelations.keySet() ) {
             if ( component >= MAX_COMP ) break;
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
 
                 if ( !svdo.getFactors().containsKey( efId ) ) {
                     continue;
+                }
+
+                Map<Long, String> categories = new HashMap<Long, String>();
+                boolean isCategorical = !continuousFactors.contains( efId );
+                if ( isCategorical ) {
+                    ExperimentalFactor ef = ( ExperimentalFactor ) efIdMap.get( efId );
+                    for ( FactorValue fv : ef.getFactorValues() ) {
+                        String value = fv.getValue();
+                        if ( StringUtils.isBlank( value ) ) {
+                            for ( Characteristic c : fv.getCharacteristics() ) {
+                                value = c.getValue();
+                            }
+                        }
+                        value = value.replaceFirst( "Batch_", "" );
+                        categories.put( fv.getId(), value );
+                    }
                 }
 
                 if ( !charts.containsKey( efId ) ) {
@@ -637,31 +681,78 @@ public class ExpressionExperimentQCController extends BaseController {
                     /*
                      * Plot eigengene vs values, add correlation to the plot
                      */
+                    JFreeChart plot = null;
+                    if ( isCategorical ) {
+                        // DefaultCategoryDataset dataset = new DefaultCategoryDataset();
 
-                    DefaultXYDataset series = new DefaultXYDataset();
-                    series.addSeries( plotname, new double[][] { ArrayUtils.toPrimitive( eigenGene ),
-                            ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
+                        DefaultMultiValueCategoryDataset dataset = new DefaultMultiValueCategoryDataset();
 
-                    JFreeChart plot = ChartFactory.createScatterPlot( title, "eigen" + ( component + 1 ), efs
-                            .get( efId ), series, PlotOrientation.HORIZONTAL, false, false, false );
-                    plot.getXYPlot().addAnnotation( new XYTextAnnotation( corr.toString(), 10, 10 ) );
+                        Map<String, List<Double>> groupedValues = new HashMap<String, List<Double>>();
+                        for ( int i = 0; i < values.size(); i++ ) {
+                            Long fvId = values.get( i ).longValue();
+                            String fvValue = categories.get( fvId );
+                            if ( !groupedValues.containsKey( fvValue ) ) {
+                                groupedValues.put( fvValue, new ArrayList<Double>() );
+                            }
+
+                            groupedValues.get( fvValue ).add( eigenGene[i] );
+
+                            if ( log.isDebugEnabled() ) log.debug( fvValue + " " + values.get( i ) );
+                        }
+                        for ( String key : groupedValues.keySet() ) {
+                            dataset.add( groupedValues.get( key ), plotname, key );
+                        }
+
+                        CategoryPlot p = new CategoryPlot( dataset, new CategoryAxis( efs.get( efId ) ),
+                                new NumberAxis( "eigen" + ( component + 1 ) ), new ScatterRenderer() );
+
+                        plot = new JFreeChart( title, new Font( "SansSerif", Font.BOLD, 12 ), p, false );
+                        ScatterRenderer renderer = ( ScatterRenderer ) p.getRenderer();
+                        renderer.setSeriesFillPaint( 0, Color.black );
+                        renderer.setUseOutlinePaint( false );
+                        renderer.setSeriesOutlinePaint( 0, Color.white );
+
+                        renderer.setBaseFillPaint( Color.white );
+                        CategoryAxis domainAxis = p.getDomainAxis();
+                        domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
+                        // FIXME get rid of the lines.
+                    } else {
+
+                        DefaultXYDataset series = new DefaultXYDataset();
+                        series.addSeries( plotname, new double[][] { ArrayUtils.toPrimitive( eigenGene ),
+                                ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
+
+                        plot = ChartFactory.createScatterPlot( title, "eigen" + ( component + 1 ), efs.get( efId ),
+                                series, PlotOrientation.HORIZONTAL, false, false, false );
+                        plot.getXYPlot().addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) ); // FIXME
+                        XYDotRenderer renderer = new XYDotRenderer();
+                        renderer.setDotWidth( 3 );
+                        renderer.setDotHeight( 3 );
+                        renderer.setBaseFillPaint( Color.white );
+                        float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
+                        renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
+                        plot.getXYPlot().setRenderer( renderer );
+                    }
+
+                    // need
+                    // to
+                    // get
+                    // axis information
                     plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
-                    XYDotRenderer renderer = new XYDotRenderer();
-                  //  renderer.setSeriesShape( 0, circle );
-                    renderer.setDotWidth( 3 );
-                    renderer.setDotHeight(3 );
 
-                    float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
-                    renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
-                    // renderer.setSeriesShape( 0, Area );
-              //      renderer.setDotWidth( 4 );
-             //       renderer.setDotHeight( 4 );
-                    plot.getXYPlot().setRenderer( renderer );
                     charts.get( efId ).add( plot );
+
+                    /*
+                     * FIXME: Use a SymbolAxis for categorical variables;
+                     */
+
                 }
             }
         }
 
+        /*
+         * DATES
+         */
         charts.put( -1L, new ArrayList<JFreeChart>() );
         for ( Integer component : dateCorrelations.keySet() ) {
             List<Date> dates = svdo.getDates();
@@ -677,36 +768,40 @@ public class ExpressionExperimentQCController extends BaseController {
                 /*
                  * Plot eigengene vs values, add correlation to the plot
                  */
-                DefaultXYDataset series = new DefaultXYDataset();
-                List<Double> datesL = new ArrayList<Double>();
+                TimeSeries series = new TimeSeries( "Dates vs. eigen" + ( component + 1 ) );
+                int i = 0;
                 for ( Date d : dates ) {
-                    datesL.add( DateUtils.round( d, Calendar.HOUR ).getTime() / 1e12 );
+                    series.addOrUpdate( new Hour( d ), eigenGene[i++] );
                 }
-                series.addSeries( "Dates", new double[][] { ArrayUtils.toPrimitive( eigenGene ),
-                        ArrayUtils.toPrimitive( datesL.toArray( new Double[] {} ) ) } );
+                TimeSeriesCollection dataset = new TimeSeriesCollection();
+                dataset.addSeries( series );
+                JFreeChart plot = ChartFactory.createTimeSeriesChart( "Dates" + " eigen" + ( component + 1 ) + " "
+                        + String.format( "%.2f", corr ), "eigen" + ( component + 1 ), "Date", dataset, false, false,
+                        false );
 
-                JFreeChart plot = ChartFactory.createScatterPlot( "Dates" + " eigen" + ( component + 1 ) + " "
-                        + String.format( "%.2f", corr ), "eigen" + ( component + 1 ), "Date", series,
-                        PlotOrientation.HORIZONTAL, false, false, false );
-                plot.getXYPlot().addAnnotation( new XYTextAnnotation( corr.toString(), 10, 10 ) );
+                plot.getXYPlot().addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) );
+                // FIXME
+                // need
+                // to get
+                // axis information
 
                 plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
                 XYDotRenderer renderer = new XYDotRenderer();
-            //    renderer.setSeriesShape( 0, circle );
+                renderer.setBaseFillPaint( Color.white );
                 renderer.setDotWidth( 3 );
                 renderer.setDotHeight( 3 );
                 float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
                 renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
 
-                // renderer.setSeriesShape( 0, Area );
-             //   renderer.setDotWidth( 4 );
-              //  renderer.setDotHeight( 4 );
                 plot.getXYPlot().setRenderer( renderer );
                 charts.get( -1L ).add( plot );
 
             }
         }
 
+        /*
+         * Plot in a grid, with each factor as a column. FIXME What if we have too many factors to fit on the screen?
+         */
         int rows = MAX_COMP;
         int columns = ( int ) Math.ceil( charts.size() );
         int perChartSize = DEFAULT_QC_IMAGE_SIZE_PX;
@@ -724,12 +819,6 @@ public class ExpressionExperimentQCController extends BaseController {
                     currentY = 0;
                     currentX += perChartSize;
                 }
-                // if ( currentX + perChartSize < columns * perChartSize ) {
-                // currentX += perChartSize;
-                // } else {
-                // currentX = 0;
-                // currentY += perChartSize;
-                // }
             }
         }
 
@@ -792,12 +881,19 @@ public class ExpressionExperimentQCController extends BaseController {
                 series.addValue( corr, "PC" + ( component + 1 ), "Date run" );
             }
         }
-
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createBarChart( "", "Factors", "Component assoc.", series,
                 PlotOrientation.VERTICAL, true, false, false );
 
         chart.getCategoryPlot().getRangeAxis().setRange( 0, 1 );
-        CategoryItemRenderer renderer = chart.getCategoryPlot().getRenderer();
+        BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
+        renderer.setBasePaint( Color.white );
+        renderer.setShadowVisible( false );
+        chart.getCategoryPlot().setRangeGridlinesVisible( false );
+        chart.getCategoryPlot().setDomainGridlinesVisible( false );
+        ChartUtilities.applyCurrentTheme( chart );
+        // TODO get rid of shadows
+
         CategoryAxis domainAxis = chart.getCategoryPlot().getDomainAxis();
         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
         for ( int i = 0; i < MAX_COMP; i++ ) {
@@ -846,9 +942,13 @@ public class ExpressionExperimentQCController extends BaseController {
             return false;
         }
         int MAX_COMPONENTS_FOR_SCREE = 10;
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createBarChart( "", "Component (up to" + MAX_COMPONENTS_FOR_SCREE + ")",
                 "Fraction of var.", series, PlotOrientation.VERTICAL, false, false, false );
 
+        BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
+        renderer.setBasePaint( Color.white );
+        renderer.setShadowVisible( false );
         ChartUtilities.writeChartAsPNG( os, chart, DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }
@@ -880,11 +980,16 @@ public class ExpressionExperimentQCController extends BaseController {
         if ( series.getItemCount() == 0 ) {
             return false;
         }
-
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
         xySeriesCollection.addSeries( series );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "Correlation", "Frequency", xySeriesCollection,
                 PlotOrientation.VERTICAL, false, false, false );
+        chart.getXYPlot().setRangeGridlinesVisible( false );
+        chart.getXYPlot().setDomainGridlinesVisible( false );
+        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
+        renderer.setBasePaint( Color.white );
+
         int size = ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 0.8 );
         ChartUtilities.writeChartAsPNG( os, chart, size, size );
 
@@ -909,10 +1014,13 @@ public class ExpressionExperimentQCController extends BaseController {
                 return false;
             }
         }
+        ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
         JFreeChart chart = ChartFactory.createXYLineChart( "", "P-value", "Frequency", xySeriesCollection,
                 PlotOrientation.VERTICAL, true, false, false );
         chart.getXYPlot().setRangeGridlinesVisible( false );
         chart.getXYPlot().setDomainGridlinesVisible( false );
+        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
+        renderer.setBasePaint( Color.white );
 
         ChartUtilities
                 .writeChartAsPNG( os, chart, ( int ) ( DEFAULT_QC_IMAGE_SIZE_PX * 1.4 ), DEFAULT_QC_IMAGE_SIZE_PX );

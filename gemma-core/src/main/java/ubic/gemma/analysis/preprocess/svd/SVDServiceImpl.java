@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
 
@@ -252,6 +253,19 @@ public class SVDServiceImpl implements SVDService {
             analyzeComponent( svo, componentNumber, vMatrix, bioMaterialDates, bioMaterialFactorMap, isContinuous,
                     svdBioMaterials );
         }
+
+        // /*
+        // * Sanity checks. not right.
+        // */
+        // Map<Long, Object> eeIdMap = EntityUtils.getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
+        // Map<Long, List<Double>> factors = svo.getFactors();
+        // for ( Long id : factors.keySet() ) {
+        // int numFactorValues = ( ( ExperimentalFactor ) eeIdMap.get( id ) ).getFactorValues().size();
+        // int numFactorValuesInSVDO = factors.get( id ).size();
+        // assert numFactorValuesInSVDO == numFactorValues : " Sanity failed for factor " + eeIdMap.get( id )
+        // + ", expected " + numFactorValues + " factor values but found " + numFactorValuesInSVDO;
+        // }
+
         saveValueObject( svo );
         return svo;
     }
@@ -298,6 +312,7 @@ public class SVDServiceImpl implements SVDService {
                 }
                 if ( initializingDates ) svo.getDates().add( date );
             }
+            initializingDates = false;
 
             double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
 
@@ -330,9 +345,13 @@ public class SVDServiceImpl implements SVDService {
                     numNotMissing++;
                 }
                 // note that this is a double. In the case of categorical factors, it's the Doubleified ID of the factor
-                // value. Not great.
-                if ( initializing ) svo.getFactors().get( ef.getId() ).add( bmToFv.get( svdBioMaterials[j] ) );
+                // value.
+                if ( initializing ) {
+                    log.info( "EF:" + ef.getId() + " fv=" + bmToFv.get( svdBioMaterials[j] ) );
+                    svo.getFactors().get( ef.getId() ).add( bmToFv.get( svdBioMaterials[j] ) );
+                }
             }
+            initializing = false;
 
             if ( numNotMissing < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
                 log.warn( "Insufficient values to compare " + ef + " to eigengenes" );
@@ -459,6 +478,7 @@ public class SVDServiceImpl implements SVDService {
         /*
          * Note that dates or batch information can be missing for some bioassays.
          */
+
         for ( BioAssay bioAssay : bioAssays ) {
             Date processingDate = bioAssay.getProcessingDate();
             for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
@@ -467,6 +487,9 @@ public class SVDServiceImpl implements SVDService {
                 for ( FactorValue fv : bm.getFactorValues() ) {
 
                     ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
+
+                    isContinuous.put( experimentalFactor, isContinuous( experimentalFactor ) );
+
                     if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
                         bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
                     }
@@ -479,13 +502,15 @@ public class SVDServiceImpl implements SVDService {
                             log.warn( "Measurement wasn't a number for " + fv );
                             valueToStore = Double.NaN;
                         }
-                        isContinuous.put( experimentalFactor, true );
+
                     } else {
+                        /*
+                         * This is a hack. We're storing the ID but as a double.
+                         */
                         valueToStore = fv.getId().doubleValue();
                         assert !isContinuous.containsKey( experimentalFactor )
                                 || !isContinuous.get( experimentalFactor ) : experimentalFactor
                                 + " shouldn't be considered continuous?";
-                        isContinuous.put( experimentalFactor, false );
                     }
                     bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
                 }
@@ -500,6 +525,21 @@ public class SVDServiceImpl implements SVDService {
 
         fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
 
+    }
+
+    /**
+     * @param experimentalFactor
+     * @return true if the factor is continuous; false if it looks to be categorical.
+     */
+    public static boolean isContinuous( ExperimentalFactor experimentalFactor ) {
+        boolean hasMeasurements = false;
+        for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
+            if ( fv.getMeasurement() != null && fv.getCharacteristics() == null ) {
+                hasMeasurements = true;
+                // don't break, in case some are missing values.
+            }
+        }
+        return hasMeasurements;
     }
 
     private void saveValueObject( SVDValueObject eeVo ) {
