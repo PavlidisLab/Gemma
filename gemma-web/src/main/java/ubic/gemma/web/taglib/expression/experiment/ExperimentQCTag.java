@@ -133,13 +133,13 @@ public class ExperimentQCTag extends TagSupport {
         if ( hasCorrMatFile ) {
 
             /*
-             * showBigCorrelationImage is defined in ExpressinExperimentDetails.js
+             * popupImage is defined in ExpressinExperimentDetails.js
              */
             String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&nocache="
                     + RandomStringUtils.randomAlphanumeric( 8 ) + "&size=4&showLabels=1";
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
-                            + "onClick=\"showBigCorrelationImage('"
+                            + "onClick=\"popupImage('"
                             + bigImageUrl
                             + "')"
                             + ";return 1\"; "
@@ -173,9 +173,18 @@ public class ExperimentQCTag extends TagSupport {
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"pcaScree.html?id="
                             + this.eeid + "\" /></td>" );
-            buf
-                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlations of PCs with experimental factors' src=\"pcaFactors.html?id="
-                            + this.eeid + "\" /></td>" );
+
+            /*
+             * popupImage is defined in ExpressinExperimentDetails.js
+             */
+            String detailsUrl = "detailedFactorAnalysis.html?id=" + this.eeid + "&nocache="
+                    + RandomStringUtils.randomAlphanumeric( 8 );
+
+            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
+                    + "<a style='cursor:pointer' " + "onClick=\"popupImage('" + detailsUrl + "')"
+                    + ";return 1\";"
+                    + "<img title='Correlations of PCs with experimental factors' src=\"pcaFactors.html?id="
+                    + this.eeid + "\" /></a></td>" );
         } else {
             /*
              * Two panels for PCA, so two placeholders.

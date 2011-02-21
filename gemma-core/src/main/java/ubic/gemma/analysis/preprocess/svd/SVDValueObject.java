@@ -20,6 +20,8 @@
 package ubic.gemma.analysis.preprocess.svd;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +61,10 @@ public class SVDValueObject implements Serializable {
 
     Map<Integer, Double> dateCorrelations = new HashMap<Integer, Double>();
 
+    private List<Date> dates = new ArrayList<Date>();
+
+    private Map<Long, List<Double>> factors = new HashMap<Long, List<Double>>();
+
     private Map<Integer, Map<Long, Double>> factorCorrelations = new HashMap<Integer, Map<Long, Double>>();
 
     private Map<Integer, Map<Long, Double>> factorPvalues = new HashMap<Integer, Map<Long, Double>>();
@@ -91,6 +97,11 @@ public class SVDValueObject implements Serializable {
         return dateCorrelations;
     }
 
+    public List<Date> getDates() {
+        if ( this.dates == null ) this.dates = new ArrayList<Date>();
+        return dates;
+    }
+
     /**
      * @return map of component to a map of ExperimentalFactors to correlations of that factor with the component. Only
      *         used for factors which are continuous or which have only two categorical levels.
@@ -106,6 +117,14 @@ public class SVDValueObject implements Serializable {
      */
     public Map<Integer, Map<Long, Double>> getFactorPvalues() {
         return factorPvalues;
+    }
+
+    /**
+     * @return
+     */
+    public Map<Long, List<Double>> getFactors() {
+        if ( this.factors == null ) this.factors = new HashMap<Long, List<Double>>();
+        return factors;
     }
 
     public Long getId() {

@@ -20,7 +20,10 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,24 +34,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
+import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,6 +271,25 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         return null; // nothing to return;
+    }
+
+    /**
+     * @param id
+     * @param os
+     * @throws Exception
+     */
+    @RequestMapping("/expressionExperiment/detailedFactorAnalysis.html")
+    public void detailedFactorAnalysis( Long id, OutputStream os ) throws Exception {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + id );
+            return;
+        }
+
+        boolean ok = writeDetailedFactorAnalysis( ee, os );
+        if ( !ok ) {
+            writePlaceholderImage( os );
+        }
     }
 
     /**
@@ -557,6 +587,157 @@ public class ExpressionExperimentQCController extends BaseController {
         return true;
     }
 
+    private boolean writeDetailedFactorAnalysis( ExpressionExperiment ee, OutputStream os ) throws Exception {
+        SVDValueObject svdo = svdService.retrieveSvd( ee );
+        if ( svdo == null ) return false;
+
+        if ( svdo.getFactors().isEmpty() && svdo.getDates().isEmpty() ) {
+            return false;
+        }
+        Map<Integer, Map<Long, Double>> factorCorrelations = svdo.getFactorCorrelations();
+        // Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
+        Map<Integer, Double> dateCorrelations = svdo.getDateCorrelations();
+
+        assert ee.getId().equals( svdo.getId() );
+
+        ee = expressionExperimentService.thawLite( ee ); // need the experimental design
+        int maxWidth = 30;
+        Map<Long, String> efs = getFactorNames( ee, maxWidth );
+
+        /*
+         * Make plots of the dates vs. PCs, factors vs. PCs.
+         */
+
+        int MAX_COMP = 3;
+
+        Map<Long, List<JFreeChart>> charts = new LinkedHashMap<Long, List<JFreeChart>>();
+        for ( Integer component : factorCorrelations.keySet() ) {
+            if ( component >= MAX_COMP ) break;
+            for ( Long efId : factorCorrelations.get( component ).keySet() ) {
+
+                if ( !svdo.getFactors().containsKey( efId ) ) {
+                    continue;
+                }
+
+                if ( !charts.containsKey( efId ) ) {
+                    charts.put( efId, new ArrayList<JFreeChart>() );
+                }
+
+                Double a = factorCorrelations.get( component ).get( efId );
+                String plotname = ( efs.get( efId ) == null ? "?" : efs.get( efId ) ) + " eigen" + ( component + 1 ); // unique?
+
+                if ( a != null && !Double.isNaN( a ) ) {
+                    Double corr = a;
+                    String title = plotname + " " + String.format( "%.2f", corr );
+                    List<Double> values = svdo.getFactors().get( efId );
+                    Double[] eigenGene = svdo.getvMatrix().getColObj( component );
+                    assert values.size() == eigenGene.length;
+                    /*
+                     * Plot eigengene vs values, add correlation to the plot
+                     */
+
+                    DefaultXYDataset series = new DefaultXYDataset();
+                    series.addSeries( plotname, new double[][] { ArrayUtils.toPrimitive( eigenGene ),
+                            ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
+
+                    JFreeChart plot = ChartFactory.createScatterPlot( title, "eigen" + ( component + 1 ), efs
+                            .get( efId ), series, PlotOrientation.HORIZONTAL, false, false, false );
+                    plot.getXYPlot().addAnnotation( new XYTextAnnotation( corr.toString(), 10, 10 ) );
+                    plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
+                    XYDotRenderer renderer = new XYDotRenderer();
+                    renderer.setDotWidth( 2 );
+                    renderer.setDotHeight( 2 );
+
+                    float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
+                    renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
+                    // renderer.setSeriesShape( 0, Area );
+                    renderer.setDotWidth( 4 );
+                    renderer.setDotHeight( 4 );
+                    plot.getXYPlot().setRenderer( renderer );
+                    charts.get( efId ).add( plot );
+                }
+            }
+        }
+
+        charts.put( -1L, new ArrayList<JFreeChart>() );
+        for ( Integer component : dateCorrelations.keySet() ) {
+            List<Date> dates = svdo.getDates();
+            if ( dates.isEmpty() ) break;
+
+            if ( component >= MAX_COMP ) break;
+            Double a = dateCorrelations.get( component );
+
+            if ( a != null && !Double.isNaN( a ) ) {
+                Double corr = a;
+                Double[] eigenGene = svdo.getvMatrix().getColObj( component );
+
+                /*
+                 * Plot eigengene vs values, add correlation to the plot
+                 */
+                DefaultXYDataset series = new DefaultXYDataset();
+                List<Double> datesL = new ArrayList<Double>();
+                for ( Date d : dates ) {
+                    datesL.add( DateUtils.round( d, Calendar.HOUR ).getTime() / 1e12 );
+                }
+                series.addSeries( "Dates", new double[][] { ArrayUtils.toPrimitive( eigenGene ),
+                        ArrayUtils.toPrimitive( datesL.toArray( new Double[] {} ) ) } );
+
+                JFreeChart plot = ChartFactory.createScatterPlot( "Dates" + " eigen" + ( component + 1 ) + " "
+                        + String.format( "%.2f", corr ), "eigen" + ( component + 1 ), "Date", series,
+                        PlotOrientation.HORIZONTAL, false, false, false );
+                plot.getXYPlot().addAnnotation( new XYTextAnnotation( corr.toString(), 10, 10 ) );
+
+                plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
+                XYDotRenderer renderer = new XYDotRenderer();
+                renderer.setDotWidth( 2 );
+                renderer.setDotHeight( 2 );
+                float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
+                renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
+
+                // renderer.setSeriesShape( 0, Area );
+                renderer.setDotWidth( 4 );
+                renderer.setDotHeight( 4 );
+                plot.getXYPlot().setRenderer( renderer );
+                charts.get( -1L ).add( plot );
+
+            }
+        }
+
+        int rows = MAX_COMP;
+        int columns = ( int ) Math.ceil( charts.size() );
+        int perChartSize = DEFAULT_QC_IMAGE_SIZE_PX;
+        BufferedImage image = new BufferedImage( columns * perChartSize, rows * perChartSize,
+                BufferedImage.TYPE_INT_ARGB );
+        Graphics2D g2 = image.createGraphics();
+        int currentX = 0;
+        int currentY = 0;
+        for ( Long id : charts.keySet() ) {
+            for ( JFreeChart chart : charts.get( id ) ) {
+                addChartToGraphics( chart, g2, currentX, currentY, perChartSize, perChartSize );
+                if ( currentY + perChartSize < rows * perChartSize ) {
+                    currentY += perChartSize;
+                } else {
+                    currentY = 0;
+                    currentX += perChartSize;
+                }
+                // if ( currentX + perChartSize < columns * perChartSize ) {
+                // currentX += perChartSize;
+                // } else {
+                // currentX = 0;
+                // currentY += perChartSize;
+                // }
+            }
+        }
+
+        os.write( ChartUtilities.encodeAsPNG( image ) );
+        return true;
+    }
+
+    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
+
+        chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
+    }
+
     /**
      * Visualization of the correlation of principal components with factors or the date samples were run.
      * 
@@ -566,30 +747,19 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private void writePCAFactors( OutputStream os, ExpressionExperiment ee, SVDValueObject svdo ) throws Exception {
         Map<Integer, Map<Long, Double>> factorCorrelations = svdo.getFactorCorrelations();
-        Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
+        // Map<Integer, Map<Long, Double>> factorPvalues = svdo.getFactorPvalues();
         Map<Integer, Double> dateCorrelations = svdo.getDateCorrelations();
 
         assert ee.getId().equals( svdo.getId() );
 
-        /*
-         * TEST
-         */
-        // dateCorrelations.put( 0, 0.2 );
-        // dateCorrelations.put( 1, 0.22 );
-        // dateCorrelations.put( 2, -0.7 );
-
-        if ( factorCorrelations.isEmpty() && factorPvalues.isEmpty() && dateCorrelations.isEmpty() ) {
+        if ( factorCorrelations.isEmpty() && dateCorrelations.isEmpty() ) {
             writePlaceholderImage( os );
             return;
         }
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
+        int maxWidth = 10;
 
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-
-        Map<Long, String> efs = new HashMap<Long, String>();
-        for ( ExperimentalFactor ef : factors ) {
-            efs.put( ef.getId(), StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), 10 ) );
-        }
+        Map<Long, String> efs = getFactorNames( ee, maxWidth );
 
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
@@ -645,6 +815,16 @@ public class ExpressionExperimentQCController extends BaseController {
         int MAX_QC_IMAGE_SIZE_PX = 500;
         width = Math.min( width, MAX_QC_IMAGE_SIZE_PX );
         ChartUtilities.writeChartAsPNG( os, chart, width, DEFAULT_QC_IMAGE_SIZE_PX );
+    }
+
+    private Map<Long, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+
+        Map<Long, String> efs = new HashMap<Long, String>();
+        for ( ExperimentalFactor ef : factors ) {
+            efs.put( ef.getId(), StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), maxWidth ) );
+        }
+        return efs;
     }
 
     /**

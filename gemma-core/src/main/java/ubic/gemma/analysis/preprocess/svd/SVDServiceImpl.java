@@ -56,6 +56,9 @@ import cern.colt.list.IntArrayList;
 
 /**
  * Perform SVD on expression data and store the results.
+ * <p>
+ * TODO: store the factors so we can plot comparisions. Perhaps add audit event if batch or run date is strongly
+ * associated with a PC?
  * 
  * @author paul
  * @version $Id$
@@ -242,6 +245,8 @@ public class SVDServiceImpl implements SVDService {
         svo.getDateCorrelations().clear();
         svo.getFactorCorrelations().clear();
         svo.getFactorPvalues().clear();
+        svo.getDates().clear();
+        svo.getFactors().clear();
 
         for ( int componentNumber = 0; componentNumber < Math.min( vMatrix.columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
             analyzeComponent( svo, componentNumber, vMatrix, bioMaterialDates, bioMaterialFactorMap, isContinuous,
@@ -258,7 +263,8 @@ public class SVDServiceImpl implements SVDService {
      * @param componentNumber
      * @param vMatrix
      * @param bioMaterialDates
-     * @param bioMaterialFactorMap
+     * @param bioMaterialFactorMap Map of factors to biomaterials to the value we're going to use. Even for
+     *        non-continuous factors the value is a double.
      * @param isContinuous
      * @param svdBioMaterials
      */
@@ -279,16 +285,18 @@ public class SVDServiceImpl implements SVDService {
             /*
              * Get the dates in order, rounded to the nearest hour.
              */
+            boolean initializingDates = svo.getDates().isEmpty();
             double[] dates = new double[svdBioMaterials.length];
             for ( int j = 0; j < svdBioMaterials.length; j++ ) {
 
-                if ( bioMaterialDates.get( svdBioMaterials[j] ) == null ) {
+                Date date = bioMaterialDates.get( svdBioMaterials[j] );
+                if ( date == null ) {
                     log.warn( "Incomplete date information" );
                     dates[j] = Double.NaN;
                 } else {
-                    dates[j] = 1.0 * DateUtils.round( bioMaterialDates.get( svdBioMaterials[j] ), Calendar.HOUR )
-                            .getTime(); // make int, cast to double
+                    dates[j] = 1.0 * DateUtils.round( date, Calendar.HOUR ).getTime(); // make int, cast to double
                 }
+                if ( initializingDates ) svo.getDates().add( date );
             }
 
             double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
@@ -309,11 +317,21 @@ public class SVDServiceImpl implements SVDService {
             assert fvs.length > 0;
 
             int numNotMissing = 0;
+
+            boolean initializing = false;
+            if ( !svo.getFactors().containsKey( ef.getId() ) ) {
+                svo.getFactors().put( ef.getId(), new ArrayList<Double>() );
+                initializing = true;
+            }
+
             for ( int j = 0; j < svdBioMaterials.length; j++ ) {
                 fvs[j] = bmToFv.get( svdBioMaterials[j] ).doubleValue();
                 if ( !Double.isNaN( fvs[j] ) ) {
                     numNotMissing++;
                 }
+                // note that this is a double. In the case of categorical factors, it's the Doubleified ID of the factor
+                // value. Not great.
+                if ( initializing ) svo.getFactors().get( ef.getId() ).add( bmToFv.get( svdBioMaterials[j] ) );
             }
 
             if ( numNotMissing < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
@@ -325,7 +343,6 @@ public class SVDServiceImpl implements SVDService {
                 double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                 svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
             } else {
-
                 Collection<Integer> groups = new HashSet<Integer>();
                 IntArrayList groupings = new IntArrayList( fvs.length );
                 int k = 0;
@@ -467,8 +484,7 @@ public class SVDServiceImpl implements SVDService {
                         valueToStore = fv.getId().doubleValue();
                         assert !isContinuous.containsKey( experimentalFactor )
                                 || !isContinuous.get( experimentalFactor ) : experimentalFactor
-
-                        + " shouldn't be considered continuous?";
+                                + " shouldn't be considered continuous?";
                         isContinuous.put( experimentalFactor, false );
                     }
                     bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
