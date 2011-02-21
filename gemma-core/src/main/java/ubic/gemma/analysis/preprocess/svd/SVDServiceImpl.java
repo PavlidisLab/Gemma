@@ -197,8 +197,8 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
         SVDValueObject svo = this.retrieveSvd( ee );
         if ( svo == null ) {
-            throw new IllegalArgumentException( "SVD results are not available for " + ee.getShortName()
-                    + "; run SVD first" );
+            log.info( "SVD object not found for " + ee.getShortName() + ", running..." );
+            return svd( ee );
         }
         return this.svdFactorAnalysis( ee, svo );
     }
