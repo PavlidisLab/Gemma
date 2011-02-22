@@ -347,7 +347,8 @@ public class SVDServiceImpl implements SVDService {
                 // note that this is a double. In the case of categorical factors, it's the Doubleified ID of the factor
                 // value.
                 if ( initializing ) {
-                    log.info( "EF:" + ef.getId() + " fv=" + bmToFv.get( svdBioMaterials[j] ) );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "EF:" + ef.getId() + " fv=" + bmToFv.get( svdBioMaterials[j] ) );
                     svo.getFactors().get( ef.getId() ).add( bmToFv.get( svdBioMaterials[j] ) );
                 }
             }
