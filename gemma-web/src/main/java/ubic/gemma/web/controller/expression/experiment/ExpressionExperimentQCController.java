@@ -642,6 +642,12 @@ public class ExpressionExperimentQCController extends BaseController {
         return files;
     }
 
+    /**
+     * @param ee
+     * @param os
+     * @return
+     * @throws Exception
+     */
     private boolean writeDetailedFactorAnalysis( ExpressionExperiment ee, OutputStream os ) throws Exception {
         SVDValueObject svdo = svdService.retrieveSvd( ee );
         if ( svdo == null ) return false;
@@ -826,7 +832,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 TimeSeriesCollection dataset = new TimeSeriesCollection();
                 dataset.addSeries( series );
                 JFreeChart chart = ChartFactory.createTimeSeriesChart( "Dates" + " eigen" + ( component + 1 ) + " "
-                        + String.format( "%.2f", corr ), "eigen" + ( component + 1 ), "Date", dataset, false, false,
+                        + String.format( "%.2f", corr ), "Date", "eigen" + ( component + 1 ), dataset, false, false,
                         false );
 
                 XYPlot xyPlot = chart.getXYPlot();
