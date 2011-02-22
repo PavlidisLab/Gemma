@@ -282,8 +282,7 @@ public abstract class AbstractFetcher implements Fetcher {
             }
 
             if ( outputFile.length() >= expectedSize ) {
-                log.warn( "File downloaded but task isn't done?" );
-                return true;
+                // no special action, it will finish soon enough.
             }
 
             iters++;
