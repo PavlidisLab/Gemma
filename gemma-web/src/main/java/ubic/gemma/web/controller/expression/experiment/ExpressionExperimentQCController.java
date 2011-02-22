@@ -52,9 +52,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
-import org.jfree.chart.annotations.CategoryAnnotation;
-import org.jfree.chart.annotations.CategoryTextAnnotation;
-import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
@@ -149,13 +146,14 @@ public class ExpressionExperimentQCController extends BaseController {
      * @return
      * @throws Exception
      */
-    @RequestMapping("expressionExperiment/pcaFactors.html")
+    @RequestMapping("/expressionExperiment/pcaFactors.html")
     public ModelAndView pcaFactors( Long id, OutputStream os ) throws Exception {
         if ( id == null ) return null;
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id ); // or access deined.
+            writePlaceholderImage( os );
             return null;
         }
 
@@ -179,6 +177,7 @@ public class ExpressionExperimentQCController extends BaseController {
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id ); // or access deined.
+            writePlaceholderImage( os );
             return null;
         }
 
@@ -190,10 +189,6 @@ public class ExpressionExperimentQCController extends BaseController {
             writePlaceholderImage( os );
         }
         return null;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService ees ) {
-        expressionExperimentService = ees;
     }
 
     /**
@@ -341,7 +336,7 @@ public class ExpressionExperimentQCController extends BaseController {
             }
 
             while ( categories.values().contains( value ) ) {
-                value = value + "+";// make unique
+                value = value + "+";// make unique, kludge, will end up with string of ++++
             }
 
             categories.put( fv.getId(), value );
@@ -722,6 +717,9 @@ public class ExpressionExperimentQCController extends BaseController {
                          * Categorical factor
                          */
 
+                        // use the absolute value of the correlation, since direction is arbitrary.
+                        title = plotname + " " + String.format( "%.2f", Math.abs( corr ) );
+
                         DefaultMultiValueCategoryDataset dataset = new DefaultMultiValueCategoryDataset();
 
                         Map<String, List<Double>> groupedValues = new TreeMap<String, List<Double>>();
@@ -741,21 +739,13 @@ public class ExpressionExperimentQCController extends BaseController {
                             dataset.add( groupedValues.get( key ), plotname, key );
                         }
 
-                        CategoryPlot plot = new CategoryPlot( dataset, new CategoryAxis( StringUtils.abbreviate( efs
-                                .get( efId ), 20 ) ), new NumberAxis( "eigen" + ( component + 1 ) ),
-                                new ScatterRenderer() );
+                        // don't show the name of the X axis: it's redundant with the title.
+                        CategoryPlot plot = new CategoryPlot( dataset, new CategoryAxis( null ), new NumberAxis(
+                                "eigen" + ( component + 1 ) ), new ScatterRenderer() );
                         plot.setRangeGridlinesVisible( false );
                         plot.setDomainGridlinesVisible( false );
 
                         chart = new JFreeChart( title, new Font( "SansSerif", Font.BOLD, 12 ), plot, false );
-
-                        NumberAxis yaxis = ( NumberAxis ) plot.getRangeAxis();
-                        CategoryAxis xaxis = plot.getDomainAxis();
-                        double ysize = yaxis.getUpperBound() - yaxis.getLowerBound();
-
-                        CategoryTextAnnotation annotation = new CategoryTextAnnotation( "R2="
-                                + String.format( "%.2f", Math.pow( corr, 2 ) ), 3, ysize / 2.0 );
-                        annotation.setFont( new Font( "SansSerif", Font.PLAIN, 9 ) );
 
                         ScatterRenderer renderer = ( ScatterRenderer ) plot.getRenderer();
                         float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
@@ -776,21 +766,22 @@ public class ExpressionExperimentQCController extends BaseController {
                         series.addSeries( plotname, new double[][] { ArrayUtils.toPrimitive( eigenGene ),
                                 ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
 
-                        chart = ChartFactory.createScatterPlot( title, "eigen" + ( component + 1 ), efs.get( efId ),
-                                series, PlotOrientation.HORIZONTAL, false, false, false );
+                        // don't show x-axis label, which would otherwise be efs.get( efId )
+                        chart = ChartFactory.createScatterPlot( title, null, "eigen" + ( component + 1 ), series,
+                                PlotOrientation.HORIZONTAL, false, false, false );
                         XYPlot plot = chart.getXYPlot();
                         plot.setRangeGridlinesVisible( false );
                         plot.setDomainGridlinesVisible( false );
-                        NumberAxis yaxis = ( NumberAxis ) plot.getRangeAxis();
-                        ValueAxis xaxis = plot.getDomainAxis();
-                        double ysize = yaxis.getUpperBound() - yaxis.getLowerBound();
-                        double xsize = xaxis.getUpperBound() - xaxis.getLowerBound();
+                        // NumberAxis yaxis = ( NumberAxis ) plot.getRangeAxis();
+                        // ValueAxis xaxis = plot.getDomainAxis();
+                        // double ysize = yaxis.getUpperBound() - yaxis.getLowerBound();
+                        // double xsize = xaxis.getUpperBound() - xaxis.getLowerBound();
 
-                        XYTextAnnotation annotation = new XYTextAnnotation( "R2="
-                                + String.format( "%.2f", Math.pow( corr, 2 ) ), xsize / 2.0, ysize / 2.0 );
-                        annotation.setFont( new Font( "SansSerif", Font.PLAIN, 9 ) );
+                        // XYTextAnnotation annotation = new XYTextAnnotation( "R2="
+                        // + String.format( "%.2f", Math.pow( corr, 2 ) ), xsize / 2.0, ysize / 2.0 );
+                        // annotation.setFont( new Font( "SansSerif", Font.PLAIN, 9 ) );
                         // annotation.setTextAnchor( TextAnchor.HALF_ASCENT_LEFT );
-                        plot.addAnnotation( annotation );
+                        // plot.addAnnotation( annotation );
                         XYItemRenderer renderer = plot.getRenderer();
                         renderer.setBasePaint( Color.white );
                         renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
@@ -832,11 +823,11 @@ public class ExpressionExperimentQCController extends BaseController {
                 TimeSeriesCollection dataset = new TimeSeriesCollection();
                 dataset.addSeries( series );
                 JFreeChart chart = ChartFactory.createTimeSeriesChart( "Dates" + " eigen" + ( component + 1 ) + " "
-                        + String.format( "%.2f", corr ), "Date", "eigen" + ( component + 1 ), dataset, false, false,
+                        + String.format( "%.2f", corr ), null, "eigen" + ( component + 1 ), dataset, false, false,
                         false );
 
                 XYPlot xyPlot = chart.getXYPlot();
-                xyPlot.addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) );
+                // xyPlot.addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) );
                 // FIXME
                 // need
                 // to get
