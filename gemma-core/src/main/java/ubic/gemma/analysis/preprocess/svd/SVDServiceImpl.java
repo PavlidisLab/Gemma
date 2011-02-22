@@ -51,15 +51,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.ConfigUtils;
-import ubic.gemma.util.EntityUtils;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
 
 /**
  * Perform SVD on expression data and store the results.
  * <p>
- * TODO: store the factors so we can plot comparisions. Perhaps add audit event if batch or run date is strongly
- * associated with a PC?
+ * TODO: Perhaps add audit event if batch or run date is strongly associated with a PC?
  * 
  * @author paul
  * @version $Id$
@@ -184,7 +182,7 @@ public class SVDServiceImpl implements SVDService {
         /*
          * Add an audit event.
          */
-        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, null, null );
+        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
 
         return svdFactorAnalysis( ee, svo );
     }
@@ -254,19 +252,10 @@ public class SVDServiceImpl implements SVDService {
                     svdBioMaterials );
         }
 
-        // /*
-        // * Sanity checks. not right.
-        // */
-        // Map<Long, Object> eeIdMap = EntityUtils.getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
-        // Map<Long, List<Double>> factors = svo.getFactors();
-        // for ( Long id : factors.keySet() ) {
-        // int numFactorValues = ( ( ExperimentalFactor ) eeIdMap.get( id ) ).getFactorValues().size();
-        // int numFactorValuesInSVDO = factors.get( id ).size();
-        // assert numFactorValuesInSVDO == numFactorValues : " Sanity failed for factor " + eeIdMap.get( id )
-        // + ", expected " + numFactorValues + " factor values but found " + numFactorValuesInSVDO;
-        // }
-
         saveValueObject( svo );
+
+        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "Factor analysis", null );
+
         return svo;
     }
 
