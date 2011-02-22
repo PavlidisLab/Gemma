@@ -50,8 +50,7 @@ public class SVDValueObject implements Serializable {
 
     /*
      * Need to store the correlations of eigengenes with dates of assays, and also with factors. Statistics are
-     * rank-based correlations EXCEPT for categorical factors with more than two groups in which case we are using the
-     * KW test.
+     * rank-based correlations
      */
 
     /**

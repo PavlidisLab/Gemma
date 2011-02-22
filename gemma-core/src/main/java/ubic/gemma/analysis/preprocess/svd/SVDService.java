@@ -29,13 +29,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public interface SVDService {
 
-    @Secured( { "GROUP_AGENT" })
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void svd( Collection<ExpressionExperiment> ees );
 
     /**
      * @param ee
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public SVDValueObject svd( ExpressionExperiment ee );
 
     /**
@@ -44,14 +44,14 @@ public interface SVDService {
      * @param ee
      * @return
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );
 
     /**
      * @param id
      * @return
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public SVDValueObject retrieveSvd( ExpressionExperiment ee );
 
     /**
@@ -61,6 +61,6 @@ public interface SVDService {
      * @param svo
      * @return
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee, SVDValueObject svo );
 }
