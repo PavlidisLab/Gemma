@@ -23,7 +23,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.geom.Arc2D;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,38 +42,36 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.time.DateUtils;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.StandardChartTheme;
+import org.jfree.chart.annotations.CategoryAnnotation;
+import org.jfree.chart.annotations.CategoryTextAnnotation;
 import org.jfree.chart.annotations.XYTextAnnotation;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.renderer.category.CategoryItemRenderer;
-import org.jfree.chart.renderer.category.LineAndShapeRenderer;
 import org.jfree.chart.renderer.category.ScatterRenderer;
 import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.DefaultMultiValueCategoryDataset;
-import org.jfree.data.time.Day;
 import org.jfree.data.time.Hour;
-import org.jfree.data.time.Minute;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
-import org.jfree.data.time.TimeSeriesDataItem;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -88,6 +85,7 @@ import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
@@ -122,6 +120,28 @@ public class ExpressionExperimentQCController extends BaseController {
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
+
+    /**
+     * @param id
+     * @param os
+     * @throws Exception
+     */
+    @RequestMapping("/expressionExperiment/detailedFactorAnalysis.html")
+    public void detailedFactorAnalysis( Long id, OutputStream os ) throws Exception {
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + id );
+            return;
+        }
+
+        boolean ok = writeDetailedFactorAnalysis( ee, os );
+        if ( !ok ) {
+            writePlaceholderImage( os );
+        }
+    }
 
     /**
      * @param id
@@ -175,9 +195,6 @@ public class ExpressionExperimentQCController extends BaseController {
     public void setExpressionExperimentService( ExpressionExperimentService ees ) {
         expressionExperimentService = ees;
     }
-
-    @Autowired
-    ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
 
     /**
      * @param id of experiment
@@ -292,22 +309,43 @@ public class ExpressionExperimentQCController extends BaseController {
         return null; // nothing to return;
     }
 
-    /**
-     * @param id
-     * @param os
-     * @throws Exception
-     */
-    @RequestMapping("/expressionExperiment/detailedFactorAnalysis.html")
-    public void detailedFactorAnalysis( Long id, OutputStream os ) throws Exception {
-        ExpressionExperiment ee = expressionExperimentService.load( id );
-        if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id );
-            return;
-        }
+    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
 
-        boolean ok = writeDetailedFactorAnalysis( ee, os );
-        if ( !ok ) {
-            writePlaceholderImage( os );
+        chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
+    }
+
+    /**
+     * Support method for writeDetailedFactorAnalysis
+     * 
+     * @param efIdMap
+     * @param efId
+     * @param categories map of factor ID to text value. Strings will be unique, but possibly abbreviated and/or munged.
+     */
+    private void getCategories( Map<Long, Object> efIdMap, Long efId, Map<Long, String> categories ) {
+        ExperimentalFactor ef = ( ExperimentalFactor ) efIdMap.get( efId );
+
+        int maxCategoryLabelLength = 10;
+
+        for ( FactorValue fv : ef.getFactorValues() ) {
+            String value = fv.getValue();
+            if ( StringUtils.isBlank( value ) ) {
+                for ( Characteristic c : fv.getCharacteristics() ) {
+                    value = c.getValue();
+                }
+            }
+            if ( value.startsWith( BatchInfoPopulationService.BATCH_FACTOR_NAME_PREFIX ) ) {
+                value = value.replaceFirst( BatchInfoPopulationService.BATCH_FACTOR_NAME_PREFIX, "" );
+            } else {
+
+                value = StringUtils.abbreviate( value, maxCategoryLabelLength );
+            }
+
+            while ( categories.values().contains( value ) ) {
+                value = value + "+";// make unique
+            }
+
+            categories.put( fv.getId(), value );
+
         }
     }
 
@@ -425,6 +463,16 @@ public class ExpressionExperimentQCController extends BaseController {
             }
         }
         return results;
+    }
+
+    private Map<Long, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
+        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
+
+        Map<Long, String> efs = new HashMap<Long, String>();
+        for ( ExperimentalFactor ef : factors ) {
+            efs.put( ef.getId(), StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), maxWidth ) );
+        }
+        return efs;
     }
 
     private CategoryDataset getPCAScree( SVDValueObject svdo ) {
@@ -594,18 +642,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return files;
     }
 
-    /**
-     * @param response
-     * @param f
-     */
-    private boolean writeFile( OutputStream os, File f ) {
-        if ( !f.canRead() ) {
-            return false;
-        }
-        writeToClient( os, f, "text/plain" );
-        return true;
-    }
-
     private boolean writeDetailedFactorAnalysis( ExpressionExperiment ee, OutputStream os ) throws Exception {
         SVDValueObject svdo = svdService.retrieveSvd( ee );
         if ( svdo == null ) return false;
@@ -649,20 +685,12 @@ public class ExpressionExperimentQCController extends BaseController {
                     continue;
                 }
 
-                Map<Long, String> categories = new HashMap<Long, String>();
                 boolean isCategorical = !continuousFactors.contains( efId );
+
+                Map<Long, String> categories = new HashMap<Long, String>();
+
                 if ( isCategorical ) {
-                    ExperimentalFactor ef = ( ExperimentalFactor ) efIdMap.get( efId );
-                    for ( FactorValue fv : ef.getFactorValues() ) {
-                        String value = fv.getValue();
-                        if ( StringUtils.isBlank( value ) ) {
-                            for ( Characteristic c : fv.getCharacteristics() ) {
-                                value = c.getValue();
-                            }
-                        }
-                        value = value.replaceFirst( "Batch_", "" );
-                        categories.put( fv.getId(), value );
-                    }
+                    getCategories( efIdMap, efId, categories );
                 }
 
                 if ( !charts.containsKey( efId ) ) {
@@ -681,13 +709,16 @@ public class ExpressionExperimentQCController extends BaseController {
                     /*
                      * Plot eigengene vs values, add correlation to the plot
                      */
-                    JFreeChart plot = null;
+                    JFreeChart chart = null;
                     if ( isCategorical ) {
-                        // DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+
+                        /*
+                         * Categorical factor
+                         */
 
                         DefaultMultiValueCategoryDataset dataset = new DefaultMultiValueCategoryDataset();
 
-                        Map<String, List<Double>> groupedValues = new HashMap<String, List<Double>>();
+                        Map<String, List<Double>> groupedValues = new TreeMap<String, List<Double>>();
                         for ( int i = 0; i < values.size(); i++ ) {
                             Long fvId = values.get( i ).longValue();
                             String fvValue = categories.get( fvId );
@@ -699,53 +730,72 @@ public class ExpressionExperimentQCController extends BaseController {
 
                             if ( log.isDebugEnabled() ) log.debug( fvValue + " " + values.get( i ) );
                         }
+
                         for ( String key : groupedValues.keySet() ) {
                             dataset.add( groupedValues.get( key ), plotname, key );
                         }
 
-                        CategoryPlot p = new CategoryPlot( dataset, new CategoryAxis( efs.get( efId ) ),
-                                new NumberAxis( "eigen" + ( component + 1 ) ), new ScatterRenderer() );
+                        CategoryPlot plot = new CategoryPlot( dataset, new CategoryAxis( StringUtils.abbreviate( efs
+                                .get( efId ), 20 ) ), new NumberAxis( "eigen" + ( component + 1 ) ),
+                                new ScatterRenderer() );
+                        plot.setRangeGridlinesVisible( false );
+                        plot.setDomainGridlinesVisible( false );
 
-                        plot = new JFreeChart( title, new Font( "SansSerif", Font.BOLD, 12 ), p, false );
-                        ScatterRenderer renderer = ( ScatterRenderer ) p.getRenderer();
-                        renderer.setSeriesFillPaint( 0, Color.black );
+                        chart = new JFreeChart( title, new Font( "SansSerif", Font.BOLD, 12 ), plot, false );
+
+                        NumberAxis yaxis = ( NumberAxis ) plot.getRangeAxis();
+                        CategoryAxis xaxis = plot.getDomainAxis();
+                        double ysize = yaxis.getUpperBound() - yaxis.getLowerBound();
+
+                        CategoryTextAnnotation annotation = new CategoryTextAnnotation( "R2="
+                                + String.format( "%.2f", Math.pow( corr, 2 ) ), 3, ysize / 2.0 );
+                        annotation.setFont( new Font( "SansSerif", Font.PLAIN, 9 ) );
+
+                        ScatterRenderer renderer = ( ScatterRenderer ) plot.getRenderer();
+                        float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
+                        renderer.setSeriesFillPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
+                        renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
                         renderer.setUseOutlinePaint( false );
-                        renderer.setSeriesOutlinePaint( 0, Color.white );
-
+                        renderer.setUseFillPaint( true );
                         renderer.setBaseFillPaint( Color.white );
-                        CategoryAxis domainAxis = p.getDomainAxis();
+                        CategoryAxis domainAxis = plot.getDomainAxis();
                         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );
-                        // FIXME get rid of the lines.
                     } else {
+
+                        /*
+                         * Continous value factor
+                         */
 
                         DefaultXYDataset series = new DefaultXYDataset();
                         series.addSeries( plotname, new double[][] { ArrayUtils.toPrimitive( eigenGene ),
                                 ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
 
-                        plot = ChartFactory.createScatterPlot( title, "eigen" + ( component + 1 ), efs.get( efId ),
+                        chart = ChartFactory.createScatterPlot( title, "eigen" + ( component + 1 ), efs.get( efId ),
                                 series, PlotOrientation.HORIZONTAL, false, false, false );
-                        plot.getXYPlot().addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) ); // FIXME
-                        XYDotRenderer renderer = new XYDotRenderer();
-                        renderer.setDotWidth( 3 );
-                        renderer.setDotHeight( 3 );
-                        renderer.setBaseFillPaint( Color.white );
+                        XYPlot plot = chart.getXYPlot();
+                        plot.setRangeGridlinesVisible( false );
+                        plot.setDomainGridlinesVisible( false );
+                        NumberAxis yaxis = ( NumberAxis ) plot.getRangeAxis();
+                        ValueAxis xaxis = plot.getDomainAxis();
+                        double ysize = yaxis.getUpperBound() - yaxis.getLowerBound();
+                        double xsize = xaxis.getUpperBound() - xaxis.getLowerBound();
+
+                        XYTextAnnotation annotation = new XYTextAnnotation( "R2="
+                                + String.format( "%.2f", Math.pow( corr, 2 ) ), xsize / 2.0, ysize / 2.0 );
+                        annotation.setFont( new Font( "SansSerif", Font.PLAIN, 9 ) );
+                        // annotation.setTextAnchor( TextAnchor.HALF_ASCENT_LEFT );
+                        plot.addAnnotation( annotation );
+                        XYItemRenderer renderer = plot.getRenderer();
+                        renderer.setBasePaint( Color.white );
+                        renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) );
                         float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
                         renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
-                        plot.getXYPlot().setRenderer( renderer );
+                        plot.setRenderer( renderer );
                     }
 
-                    // need
-                    // to
-                    // get
-                    // axis information
-                    plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
+                    chart.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
 
-                    charts.get( efId ).add( plot );
-
-                    /*
-                     * FIXME: Use a SymbolAxis for categorical variables;
-                     */
-
+                    charts.get( efId ).add( chart );
                 }
             }
         }
@@ -775,26 +825,33 @@ public class ExpressionExperimentQCController extends BaseController {
                 }
                 TimeSeriesCollection dataset = new TimeSeriesCollection();
                 dataset.addSeries( series );
-                JFreeChart plot = ChartFactory.createTimeSeriesChart( "Dates" + " eigen" + ( component + 1 ) + " "
+                JFreeChart chart = ChartFactory.createTimeSeriesChart( "Dates" + " eigen" + ( component + 1 ) + " "
                         + String.format( "%.2f", corr ), "eigen" + ( component + 1 ), "Date", dataset, false, false,
                         false );
 
-                plot.getXYPlot().addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) );
+                XYPlot xyPlot = chart.getXYPlot();
+                xyPlot.addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) );
                 // FIXME
                 // need
                 // to get
                 // axis information
 
-                plot.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
+                chart.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
+
+                // standard renderer makes lines.
                 XYDotRenderer renderer = new XYDotRenderer();
                 renderer.setBaseFillPaint( Color.white );
-                renderer.setDotWidth( 3 );
                 renderer.setDotHeight( 3 );
+                renderer.setDotWidth( 3 );
+                renderer.setSeriesShape( 0, new Ellipse2D.Double( 0, 0, 3, 3 ) ); // has no effect, need dotheight.
                 float saturationDrop = ( float ) Math.min( 1.0, component * 0.8f / MAX_COMP );
                 renderer.setSeriesPaint( 0, Color.getHSBColor( 0.0f, 1.0f - saturationDrop, 0.7f ) );
-
-                plot.getXYPlot().setRenderer( renderer );
-                charts.get( -1L ).add( plot );
+                ValueAxis domainAxis = xyPlot.getDomainAxis();
+                domainAxis.setVerticalTickLabels( true );
+                xyPlot.setRenderer( renderer );
+                xyPlot.setRangeGridlinesVisible( false );
+                xyPlot.setDomainGridlinesVisible( false );
+                charts.get( -1L ).add( chart );
 
             }
         }
@@ -826,9 +883,16 @@ public class ExpressionExperimentQCController extends BaseController {
         return true;
     }
 
-    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
-
-        chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
+    /**
+     * @param response
+     * @param f
+     */
+    private boolean writeFile( OutputStream os, File f ) {
+        if ( !f.canRead() ) {
+            return false;
+        }
+        writeToClient( os, f, "text/plain" );
+        return true;
     }
 
     /**
@@ -917,16 +981,6 @@ public class ExpressionExperimentQCController extends BaseController {
         ChartUtilities.writeChartAsPNG( os, chart, width, DEFAULT_QC_IMAGE_SIZE_PX );
     }
 
-    private Map<Long, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
-        Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
-
-        Map<Long, String> efs = new HashMap<Long, String>();
-        for ( ExperimentalFactor ef : factors ) {
-            efs.put( ef.getId(), StringUtils.abbreviate( StringUtils.capitalize( ef.getName() ), maxWidth ) );
-        }
-        return efs;
-    }
-
     /**
      * @param response
      * @param svdo
@@ -949,6 +1003,8 @@ public class ExpressionExperimentQCController extends BaseController {
         BarRenderer renderer = ( BarRenderer ) chart.getCategoryPlot().getRenderer();
         renderer.setBasePaint( Color.white );
         renderer.setShadowVisible( false );
+        chart.getCategoryPlot().setRangeGridlinesVisible( false );
+        chart.getCategoryPlot().setDomainGridlinesVisible( false );
         ChartUtilities.writeChartAsPNG( os, chart, DEFAULT_QC_IMAGE_SIZE_PX, DEFAULT_QC_IMAGE_SIZE_PX );
         return true;
     }

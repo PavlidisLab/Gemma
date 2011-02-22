@@ -70,6 +70,8 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 @Service
 public class BatchInfoPopulationService {
 
+    public static final String BATCH_FACTOR_NAME_PREFIX = "Batch_";
+
     public static final String BATCH_FACTOR_CATEGORY_URI = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction";
 
     public static final String BATCH_FACTOR_CATEGORY_NAME = "ComplexAction";
@@ -309,7 +311,7 @@ public class BatchInfoPopulationService {
      */
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
         String batchDateString;
-        batchDateString = "Batch_" + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
+        batchDateString = BATCH_FACTOR_NAME_PREFIX + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
                 + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
