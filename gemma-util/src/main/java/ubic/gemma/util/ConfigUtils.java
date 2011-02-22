@@ -131,8 +131,7 @@ public class ConfigUtils {
         try {
             config.addConfiguration( new PropertiesConfiguration( "version.properties" ) );
         } catch ( ConfigurationException e ) {
-            // that's okay too.
-            log.warn( "version.properties not found" );
+            log.debug( "version.properties not found" );
         }
 
         try {

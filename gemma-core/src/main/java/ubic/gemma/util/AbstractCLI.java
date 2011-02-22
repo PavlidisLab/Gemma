@@ -598,6 +598,7 @@ public abstract class AbstractCLI {
     protected final Exception processCommandLine( String commandName, String[] args ) {
         /* COMMAND LINE PARSER STAGE */
         BasicParser parser = new BasicParser();
+        System.err.println( "Gemma version " + ConfigUtils.getAppVersion() );
 
         if ( args == null ) {
             printHelp( commandName );
@@ -608,13 +609,13 @@ public abstract class AbstractCLI {
             commandLine = parser.parse( options, args );
         } catch ( ParseException e ) {
             if ( e instanceof MissingOptionException ) {
-                System.out.println( "Required option(s) were not supplied: " + e.getMessage() );
+                System.err.println( "Required option(s) were not supplied: " + e.getMessage() );
             } else if ( e instanceof AlreadySelectedException ) {
-                System.out.println( "The option(s) " + e.getMessage() + " were already selected" );
+                System.err.println( "The option(s) " + e.getMessage() + " were already selected" );
             } else if ( e instanceof MissingArgumentException ) {
-                System.out.println( "Missing argument: " + e.getMessage() );
+                System.err.println( "Missing argument: " + e.getMessage() );
             } else if ( e instanceof UnrecognizedOptionException ) {
-                System.out.println( "Unrecognized option: " + e.getMessage() );
+                System.err.println( "Unrecognized option: " + e.getMessage() );
             } else {
                 e.printStackTrace();
             }
