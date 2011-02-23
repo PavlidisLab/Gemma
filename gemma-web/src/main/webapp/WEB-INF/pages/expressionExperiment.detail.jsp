@@ -42,8 +42,8 @@
 	</h3>
 	<div id="eeDesignMatrix"></div>
 	<c:if test="${ hasBatchInformation}">
-		<span style="font-size:smaller">This experimental design also has
-			information on batches, not shown.</span>
+		<span style="font-size: smaller">This experimental design also
+			has information on batches, not shown.</span>
 	</c:if>
 </div>
 
@@ -58,12 +58,20 @@
 <div id="qc" style="padding: 5px;">
 	<h3>
 		Diagnostic plots
+		<security:accesscontrollist hasPermission="ADMINISTRATION,WRITE"
+			domainObject="${expressionExperiment}">
+			<span> <a
+				href="refreshCorrMatrix.html?id=${expressionExperiment.id}"><img
+						src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh"
+						alt="refresh" /> </a> </span>
+		</security:accesscontrollist>
 	</h3>
 	<Gemma:expressionQC ee="${expressionExperiment.id}"
 		hasCorrDistFile="${hasCorrDistFile}"
 		hasCorrMatFile="${hasCorrMatFile}" hasPCAFile="${hasPCAFile}"
 		hasNodeDegreeDistFile="${hasNodeDegreeDistFile}"
 		hasPvalueDistFiles="${hasPvalueDistFiles}" />
+
 </div>
 
 <div style="padding-bottom: 12px;" id="qts">

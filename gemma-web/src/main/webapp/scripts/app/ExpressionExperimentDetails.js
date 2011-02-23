@@ -2,7 +2,8 @@ Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
 /**
- * This is not a visual component but we want to use it with the componentmanager.
+ * This is not a visual component but we want to use it with the
+ * componentmanager.
  * 
  * @class Gemma.EEPanel
  * @extends Ext.Component
@@ -81,7 +82,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 						k.on('done', function(e) {
 									// var html = this.getPubMedHtml(e);
 									// Ext.getCmp('pubmed-region-wrap').remove(Ext.getCmp('pubmed-region'));
-									// Ext.DomHelper.append('pubmed-region-wrap', html);
+									// Ext.DomHelper.append('pubmed-region-wrap',
+									// html);
 									window.location.reload();
 								}, this)
 						k.handleWait(data, false);
@@ -286,7 +288,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					+ ee.id
 					+ '"><img ext:qtip="View the details of the samples" src="/Gemma/images/icons/magnifier.png"/></a>';
 		}
-		return '' + result; // hack for possible problem with extjs 3.1 - bare number not displayed, coerce to string.
+		return '' + result; // hack for possible problem with extjs 3.1 - bare
+		// number not displayed, coerce to string.
 	},
 
 	renderStatus : function(ee) {
@@ -345,7 +348,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 				+ ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
 
 		/*
-		 * Offer missing value analysis if it's possible (this might need tweaking).
+		 * Offer missing value analysis if it's possible (this might need
+		 * tweaking).
 		 */
 
 		if (ee.technologyType != 'ONECOLOR' && ee.hasEitherIntensity) {
@@ -740,10 +744,9 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					}, {
 						html : 'Differential Expr.<br>Analyses'
 					}, {
-						id: 'DiffExpressedProbes-region',
-						items: new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
-					}
-					, {
+						id : 'DiffExpressedProbes-region',
+						items : new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
+					}, {
 						html : 'Publication:'
 					}, {
 						xtype : 'panel',
@@ -771,7 +774,6 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 			 */
 			]
 		});
-		
 
 		if (this.editable) {
 			Ext.DomHelper.append('admin-links', {
@@ -806,7 +808,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		}
 
 		this.fireEvent("ready");
-		
+
 	}
 
 });
@@ -819,34 +821,34 @@ Ext.onReady(function() {
 			var eePanel = new Gemma.EEPanel(Ext.get("eeId").getValue());
 
 			eePanel.on("ready", function(panel) {
-						setTimeout(function() {
-									Ext.get('loading').remove();
-									Ext.get('loading-mask').fadeOut({
-												remove : true
-											});
-								}, 250);
-								//new Gemma.DifferentialExpressionAnalysesSummaryTree(Ext.get("eeId").getValue());
-					});
-			
-			
+				setTimeout(function() {
+							Ext.get('loading').remove();
+							Ext.get('loading-mask').fadeOut({
+										remove : true
+									});
+						}, 250);
+					// new
+					// Gemma.DifferentialExpressionAnalysesSummaryTree(Ext.get("eeId").getValue());
+				});
 
 		});
 
-
 /**
  * Used to make the correlation heatmap clickable. See ExperimentQCTag.java
- * @param {Object} bigImageUrl
+ * 
+ * @param {Object}
+ *            bigImageUrl
  */
 var popupImage = function(url) {
-	var b = new Ext.Window( {
-		modal : true,
-		modal : true,
-		stateful : false,
-		resizable : false,
-		autoHeight : true,
-		padding : 10,
-		html : '<img src=\"' + url + '"\" />'
-	});
+	url = url + "&nocache=" + Math.floor(Math.random() * 1000);
+	var b = new Ext.Window({
+				modal : true,
+				modal : true,
+				stateful : false,
+				resizable : false,
+				autoHeight : true,
+				padding : 10,
+				html : '<img src=\"' + url + '"\" />'
+			});
 	b.show();
 }
-

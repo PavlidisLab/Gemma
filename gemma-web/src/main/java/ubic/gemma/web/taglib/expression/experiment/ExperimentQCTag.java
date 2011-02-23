@@ -135,8 +135,7 @@ public class ExperimentQCTag extends TagSupport {
             /*
              * popupImage is defined in ExpressinExperimentDetails.js
              */
-            String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&nocache="
-                    + RandomStringUtils.randomAlphanumeric( 8 ) + "&size=4&showLabels=1";
+            String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&size=4&showLabels=1";
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
                             + "onClick=\"popupImage('"
@@ -146,9 +145,7 @@ public class ExperimentQCTag extends TagSupport {
                             + "title=\"Click for larger version\" >"
                             + "<img src=\"visualizeCorrMat.html?id="
                             + this.eeid
-                            + "&size=1&nocache="
-                            + RandomStringUtils.randomAlphanumeric( 8 )
-                            + "\" alt='Image unavailable' width='"
+                            + "&size=1\" alt='Image unavailable' width='"
                             + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX
                             + "' height='"
                             + ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX + "' /></a>" );
@@ -157,13 +154,6 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<li><a title=\"Download a file containing the raw correlation matrix data\" class=\"newpage\"  target=\"_blank\"  href=\"visualizeCorrMat.html?id="
                             + this.eeid + "&text=1\">Get data</a></li>" );
 
-            /* Need to have a security check before showing this. */
-            // buf
-            // .append( "<li><a  href=\"/Gemma/expressionExperiment/refreshCorrMatrix.html?id="
-            // + this.eeid
-            // +
-            // "\" ><img src=\"/Gemma/images/icons/arrow_refresh_small.png\"  title=\"refresh\" alt=\"refresh\" /></span>"
-            // );
             buf.append( "</ul></td>" );
         } else {
             buf.append( placeHolder );
@@ -177,12 +167,10 @@ public class ExperimentQCTag extends TagSupport {
             /*
              * popupImage is defined in ExpressinExperimentDetails.js
              */
-            String detailsUrl = "detailedFactorAnalysis.html?id=" + this.eeid + "&nocache="
-                    + RandomStringUtils.randomAlphanumeric( 8 );
+            String detailsUrl = "detailedFactorAnalysis.html?id=" + this.eeid;
 
             buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
-                    + "<a style='cursor:pointer' " + "onClick=\"popupImage('" + detailsUrl + "')"
-                    + ";return 1\";"
+                    + "<a style='cursor:pointer' " + "onClick=\"popupImage('" + detailsUrl + "')" + ";return 1\";"
                     + "<img title='Correlations of PCs with experimental factors' src=\"pcaFactors.html?id="
                     + this.eeid + "\" /></a></td>" );
         } else {

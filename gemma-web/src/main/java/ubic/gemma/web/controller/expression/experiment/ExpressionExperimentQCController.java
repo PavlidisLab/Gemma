@@ -43,6 +43,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.imageio.ImageIO;
 
@@ -77,10 +79,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import cern.colt.list.DoubleArrayList;
-
-import com.j_spaces.core.Constants.Statistics;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
@@ -103,6 +101,7 @@ import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateT
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
+import cern.colt.list.DoubleArrayList;
 
 /**
  * @author paul
@@ -235,7 +234,7 @@ public class ExpressionExperimentQCController extends BaseController {
             }
 
             /*
-             * We try to generate it. This _could_ be slow. Should do in a task.
+             * We try to generate it. This _could_ be slow. Should do in background.
              */
             processedExpressionDataVectorCreateTask.execute( new ProcessedExpressionDataVectorCreateTaskCommand( ee,
                     true ) );
@@ -253,6 +252,8 @@ public class ExpressionExperimentQCController extends BaseController {
             DoubleMatrix<String, String> matrix = r.read( f.getAbsolutePath() );
             ColorMatrix<String, String> cm = new ColorMatrix<String, String>( matrix );
 
+            cleanNames( matrix );
+
             int row = matrix.rows();
             int cellsize = ( int ) Math
                     .min( MAX_HEATMAP_CELLSIZE, Math.max( 1, size * DEFAULT_QC_IMAGE_SIZE_PX / row ) );
@@ -260,10 +261,7 @@ public class ExpressionExperimentQCController extends BaseController {
             MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( cm );
 
             showLabels = showLabels == null ? false : showLabels && cellsize > 8;
-
-            // writer.setLabelsVisible( showLabels == null ? false : showLabels ); // shouldn't need to do this.
             writer.setCellSize( new Dimension( cellsize, cellsize ) );
-
             writer.writeToPng( cm, os, showLabels /* minimum size for text to show up */);
         }
         return null; // nothing to return;
@@ -312,6 +310,44 @@ public class ExpressionExperimentQCController extends BaseController {
     private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
 
         chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
+    }
+
+    /**
+     * clean up the names of the correlation matrix rows and columns, so they are not to long and also contain the
+     * bioassay id for reference purposes. Note that newly created coexpression matrices already give shorter names, so
+     * this is partly for backwards compatibility with the old format.
+     * 
+     * @param matrix
+     */
+    private void cleanNames( DoubleMatrix<String, String> matrix ) {
+        List<String> rawRowNames = matrix.getRowNames();
+        List<String> rowNames = new ArrayList<String>();
+        int i = 0;
+        Pattern p = Pattern.compile( "^.*?ID=([0-9]+).*$", Pattern.CASE_INSENSITIVE );
+        Pattern bipattern = Pattern.compile( "BioAssayImpl Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
+        int MAX_BIO_ASSAY_NAME_LEN = 20;
+
+        for ( String rn : rawRowNames ) {
+            Matcher matcher = p.matcher( rn );
+            Matcher bppat = bipattern.matcher( rn );
+            String bioassayid = null;
+            if ( matcher.matches() ) {
+                bioassayid = matcher.group( 1 );
+            }
+
+            String cleanRn = StringUtils.abbreviate( bppat.replaceFirst( "" ), MAX_BIO_ASSAY_NAME_LEN );
+
+            if ( bioassayid != null ) {
+                if ( !cleanRn.contains( bioassayid ) )
+                    rowNames.add( cleanRn + " ID=" + bioassayid ); // ensure the rows are unique
+                else
+                    rowNames.add( cleanRn + " " + ++i );
+            } else {
+                rowNames.add( cleanRn );
+            }
+        }
+        matrix.setRowNames( rowNames );
+        matrix.setColumnNames( rowNames );
     }
 
     /**
@@ -463,6 +499,23 @@ public class ExpressionExperimentQCController extends BaseController {
             }
         }
         return results;
+    }
+
+    /**
+     * Get the eigengene for the given component.
+     * <p>
+     * The values are rescaled so that jfreechart can cope. Small numbers give it fits.
+     * 
+     * @param svdo
+     * @param component
+     * @return
+     */
+    private Double[] getEigenGene( SVDValueObject svdo, Integer component ) {
+        DoubleArrayList eigenGeneL = new DoubleArrayList( ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj(
+                component ) ) );
+        DescriptiveWithMissing.standardize( eigenGeneL );
+        Double[] eigenGene = ArrayUtils.toObject( eigenGeneL.elements() );
+        return eigenGene;
     }
 
     /**
@@ -765,8 +818,14 @@ public class ExpressionExperimentQCController extends BaseController {
                         }
 
                         // don't show the name of the X axis: it's redundant with the title.
-                        CategoryPlot plot = new CategoryPlot( dataset, new CategoryAxis( null ), new NumberAxis(
-                                "eigen" + ( component + 1 ) ), new ScatterRenderer() );
+                        NumberAxis rangeAxis = new NumberAxis( "eigen" + ( component + 1 ) );
+                        rangeAxis.setAutoRangeIncludesZero( false );
+                        // rangeAxis.setAutoRange( false );
+                        rangeAxis.setAutoRangeMinimumSize( 4.0 );
+                        // rangeAxis.setRange( new Range( -2, 2 ) );
+
+                        CategoryPlot plot = new CategoryPlot( dataset, new CategoryAxis( null ), rangeAxis,
+                                new ScatterRenderer() );
                         plot.setRangeGridlinesVisible( false );
                         plot.setDomainGridlinesVisible( false );
 
@@ -903,23 +962,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
         os.write( ChartUtilities.encodeAsPNG( image ) );
         return true;
-    }
-
-    /**
-     * Get the eigengene for the given component.
-     * <p>
-     * The values are rescaled so that jfreechart can cope. Small numbers give it fits.
-     * 
-     * @param svdo
-     * @param component
-     * @return
-     */
-    private Double[] getEigenGene( SVDValueObject svdo, Integer component ) {
-        DoubleArrayList eigenGeneL = new DoubleArrayList( ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj(
-                component ) ) );
-        DescriptiveWithMissing.standardize( eigenGeneL );
-        Double[] eigenGene = ArrayUtils.toObject( eigenGeneL.elements() );
-        return eigenGene;
     }
 
     /**
