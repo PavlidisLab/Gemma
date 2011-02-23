@@ -43,11 +43,11 @@ import ubic.gemma.persistence.PersisterHelper;
  * Class to provide functionality to load genes from a tab delimited file. Typical usage is for non model organisms that
  * do not have genes in NCBI. Supports loading genes against a non species taxon such as a family e.g Salmonids. File
  * format is : Optional header which should be appended with a # to indicate not to process this line Then a line
- * containing 3 fields which should be 'Gene Symbol' 'Gene Name' 'UniProt id' separated by tabs. The Class reads the
- * file and looping through each line creates a gene (NCBI id is null) and one associated gene product. The gene is
- * populated with gene symbol, gene name, gene official name (gene symbol) and a description indicating that this gene
- * has been loaded from a text file. Then gene is associated with a gene product bearing the same name as the gene
- * symbol and persisted.
+ * containing 3 fields which should be 'Gene Symbol' 'Gene Name' 'UniProt id' (last is optional) separated by tabs. The
+ * Class reads the file and looping through each line creates a gene (NCBI id is null) and one associated gene product.
+ * The gene is populated with gene symbol, gene name, gene official name (gene symbol) and a description indicating that
+ * this gene has been loaded from a text file. Then gene is associated with a gene product bearing the same name as the
+ * gene symbol and persisted.
  * 
  * @author ldonnison
  * @version $Id$
@@ -78,7 +78,8 @@ public class ExternalFileGeneLoaderService {
     public Gene createGene( String[] fields, Taxon taxon ) {
         String geneSymbol = fields[0];
         String geneName = fields[1];
-        String uniProt = fields[2];
+        String uniProt = "";
+        if ( fields.length > 2 ) uniProt = fields[2];
         Gene gene = null;
         // need at least the gene symbol and gene name
         if ( !StringUtils.isBlank( geneSymbol ) && !StringUtils.isBlank( geneName ) ) {
