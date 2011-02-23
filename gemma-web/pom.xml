@@ -79,7 +79,7 @@
 						<configuration>
 							<tasks>
 								<echo append="false" file="${project.build.directory}/classes/version.properties">
-									gemma.version=${project.version} </echo>
+									gemma.version=${project.version} built ${maven.build.timestamp}</echo>
 							</tasks>
 						</configuration>
 					</execution>
