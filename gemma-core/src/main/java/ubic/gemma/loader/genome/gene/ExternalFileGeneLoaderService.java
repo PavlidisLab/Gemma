@@ -36,6 +36,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
@@ -55,12 +56,15 @@ import ubic.gemma.persistence.PersisterHelper;
 public class ExternalFileGeneLoaderService {
     private static Log log = LogFactory.getLog( ExternalFileGeneLoaderService.class.getName() );
     private int loadedGeneCount = 0;
-    
+
     @Autowired
     private PersisterHelper persisterHelper;
 
     @Autowired
     private TaxonService taxonService;
+
+    @Autowired
+    private GeneService geneService;
 
     /**
      * Creates a gene, where gene name and official gene symbol is set to gene symbol(from file) and official name is
@@ -79,11 +83,13 @@ public class ExternalFileGeneLoaderService {
         // need at least the gene symbol and gene name
         if ( !StringUtils.isBlank( geneSymbol ) && !StringUtils.isBlank( geneName ) ) {
             log.debug( "Creating gene " + geneSymbol );
+            gene = geneService.findByOfficialSymbol( geneSymbol, taxon );
+            if ( gene != null ) return null; // no need to create it.
             gene = Gene.Factory.newInstance();
             gene.setName( geneSymbol );
             gene.setOfficialSymbol( geneSymbol );
             gene.setOfficialName( StringUtils.lowerCase( geneName ) );
-            gene.setDescription( "Imported from external gene file with uniprot id of " + uniProt );
+            gene.setDescription( "Imported from external annotation file" );
             gene.setTaxon( taxon );
             gene.setProducts( createGeneProducts( gene ) );
         } else {
