@@ -33,8 +33,8 @@ import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Tests the parsing of a BioMart file. Tests one line can be parsed and whole files. Some error conditions are
- * tested for too.
+ * Tests the parsing of a BioMart file. Tests one line can be parsed and whole files. Some error conditions are tested
+ * for too.
  * 
  * @author ldonnison
  * @version $Id$
@@ -73,24 +73,6 @@ public class BioMartEnsemblNcbiParserTest {
         Collection<String> genes = bioMartEnsembleNcbi.getEntrezgenes();
         assertTrue( genes.contains( "100134091" ) );
         assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsembl_peptide_id() );
-
-    }
-
-    /**
-     * Test method for {@link ubic.gemma.loader.protein.string.BiomartEnsembleNcbiParser#parseOneLine(java.lang.String)}
-     * . Tests that a standard taxon line with an extra field throws an error
-     */
-    @Test
-    public void testParseOneInValidLineNonHuman() {
-
-        try {
-            String line = "ENSG00000220023" + "\t" + "ENST00000418749" + "\t" + "100134091" + "\t" + "ENST00000418749"
-                    + "\tasasas";
-            parser.parseOneLine( line );
-            fail();
-        } catch ( Exception e ) {
-            assertTrue( e.getMessage().contains( "Line" ) );
-        }
 
     }
 
@@ -152,11 +134,11 @@ public class BioMartEnsemblNcbiParserTest {
 
             for ( BioMartEnsembleNcbi item : items ) {
                 if ( item.getEnsembl_gene_id().equals( "ENSMUSG00000064341" ) ) {
-                    assertEquals(2,  ( item.getEntrezgenes().size() )  );
+                    assertEquals( 2, ( item.getEntrezgenes().size() ) );
                     isItemThereOne = true;
                 }
                 if ( item.getEnsembl_gene_id().equals( "ENSMUSG00000057782" ) ) {
-                    assertEquals(  item.getEntrezgenes().size(),  1 );
+                    assertEquals( item.getEntrezgenes().size(), 1 );
                     isItemThereTwo = true;
                 }
 
