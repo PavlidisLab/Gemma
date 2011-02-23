@@ -257,8 +257,8 @@ public class ExternalFileGeneLoaderService {
         }
 
         String[] fields = StringUtils.splitPreserveAllTokens( line, '\t' );
-        if ( fields.length != 3 ) {
-            throw new IOException( "Illegal format, expected three columns, got " + fields.length );
+        if ( fields.length < 2 ) {
+            throw new IOException( "Illegal format, expected at least 2 columns, got " + fields.length );
         }
         return fields;
 
