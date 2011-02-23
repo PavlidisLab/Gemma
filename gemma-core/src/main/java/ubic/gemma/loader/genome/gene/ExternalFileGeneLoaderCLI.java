@@ -111,9 +111,7 @@ public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
      */
     public void processGeneList(){
       
-        loader = new ExternalFileGeneLoaderService();
-        loader.setTaxonService((TaxonService) this.getBean("taxonService"));
-        loader.setPersisterHelper(this.getPersisterHelper());
+        loader = ( ExternalFileGeneLoaderService ) this.getBean( "externalFileGeneLoaderService" );
         
         try {
             loader.load(directGeneInputFileName, taxonName);
