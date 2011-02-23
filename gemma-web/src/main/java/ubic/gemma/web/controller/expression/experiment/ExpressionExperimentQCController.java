@@ -77,10 +77,15 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import cern.colt.list.DoubleArrayList;
+
+import com.j_spaces.core.Constants.Statistics;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -318,7 +323,7 @@ public class ExpressionExperimentQCController extends BaseController {
      */
     private void getCategories( Map<Long, Object> efIdMap, Long efId, Map<Long, String> categories ) {
         ExperimentalFactor ef = ( ExperimentalFactor ) efIdMap.get( efId );
-
+        if ( ef == null ) return;
         int maxCategoryLabelLength = 10;
 
         for ( FactorValue fv : ef.getFactorValues() ) {
@@ -460,6 +465,11 @@ public class ExpressionExperimentQCController extends BaseController {
         return results;
     }
 
+    /**
+     * @param ee
+     * @param maxWidth
+     * @return
+     */
     private Map<Long, String> getFactorNames( ExpressionExperiment ee, int maxWidth ) {
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
 
@@ -470,6 +480,10 @@ public class ExpressionExperimentQCController extends BaseController {
         return efs;
     }
 
+    /**
+     * @param svdo
+     * @return
+     */
     private CategoryDataset getPCAScree( SVDValueObject svdo ) {
         DefaultCategoryDataset series = new DefaultCategoryDataset();
 
@@ -682,7 +696,17 @@ public class ExpressionExperimentQCController extends BaseController {
             if ( component >= MAX_COMP ) break;
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
 
+                /*
+                 * this happens if the serialized SVD report is out of synch with the experiment.
+                 */
+                if ( !efs.containsKey( efId ) ) {
+                    log.warn( "No experimental factor with id " + efId
+                            + ", expected one from the SVD results: is the report up to date?" );
+                    continue;
+                }
+
                 if ( !svdo.getFactors().containsKey( efId ) ) {
+                    // this should not happen.
                     continue;
                 }
 
@@ -705,8 +729,9 @@ public class ExpressionExperimentQCController extends BaseController {
                     Double corr = a;
                     String title = plotname + " " + String.format( "%.2f", corr );
                     List<Double> values = svdo.getFactors().get( efId );
-                    Double[] eigenGene = svdo.getvMatrix().getColObj( component );
+                    Double[] eigenGene = getEigenGene( svdo, component );
                     assert values.size() == eigenGene.length;
+
                     /*
                      * Plot eigengene vs values, add correlation to the plot
                      */
@@ -878,6 +903,23 @@ public class ExpressionExperimentQCController extends BaseController {
 
         os.write( ChartUtilities.encodeAsPNG( image ) );
         return true;
+    }
+
+    /**
+     * Get the eigengene for the given component.
+     * <p>
+     * The values are rescaled so that jfreechart can cope. Small numbers give it fits.
+     * 
+     * @param svdo
+     * @param component
+     * @return
+     */
+    private Double[] getEigenGene( SVDValueObject svdo, Integer component ) {
+        DoubleArrayList eigenGeneL = new DoubleArrayList( ArrayUtils.toPrimitive( svdo.getvMatrix().getColObj(
+                component ) ) );
+        DescriptiveWithMissing.standardize( eigenGeneL );
+        Double[] eigenGene = ArrayUtils.toObject( eigenGeneL.elements() );
+        return eigenGene;
     }
 
     /**
