@@ -81,7 +81,6 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
         assertEquals( TAXON_NAME, gene.getTaxon().getCommonName() );
         assertEquals( "ZYX", gene.getName() );
         assertEquals( "ZYX", gene.getOfficialSymbol() );
-        assertEquals( "Imported from external gene file with uniprot id of Q15942", gene.getDescription() );
 
         assertEquals( 1, geneProducts.size() );
         GeneProduct prod = geneProducts.iterator().next();
