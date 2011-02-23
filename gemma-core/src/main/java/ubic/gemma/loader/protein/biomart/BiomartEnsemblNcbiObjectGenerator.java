@@ -75,8 +75,9 @@ public class BiomartEnsemblNcbiObjectGenerator {
      * 
      * @param valid taxa Taxa to retrieve biomart files for.
      * @return Map of BioMartEnsembleNcbi value objects keyed on ensemble peptide id.
+     * @throws IOException
      */
-    public Map<String, BioMartEnsembleNcbi> generate( Collection<Taxon> validTaxa ) {
+    public Map<String, BioMartEnsembleNcbi> generate( Collection<Taxon> validTaxa ) throws IOException {
         // fetch the biomart files to process keyed on taxon
         if ( bioMartFileName == null ) {
             log.info( "No file name set fetching files from biomart " );
@@ -91,8 +92,9 @@ public class BiomartEnsemblNcbiObjectGenerator {
      * Generates file from remote biomart location
      * 
      * @return
+     * @throws IOException
      */
-    public Map<String, BioMartEnsembleNcbi> generateRemote( Collection<Taxon> validTaxa ) {
+    public Map<String, BioMartEnsembleNcbi> generateRemote( Collection<Taxon> validTaxa ) throws IOException {
         Map<String, BioMartEnsembleNcbi> bioMartEnsemblNcbiIdsForValidAllGemmaTaxa = new HashMap<String, BioMartEnsembleNcbi>();
         Map<Taxon, File> taxaBiomartFiles = this.biomartEnsemblNcbiFetcher.fetch( validTaxa );
 

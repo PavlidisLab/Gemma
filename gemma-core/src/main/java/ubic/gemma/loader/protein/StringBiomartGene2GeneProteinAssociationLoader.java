@@ -19,6 +19,7 @@
 package ubic.gemma.loader.protein;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -94,37 +95,33 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
      *        proves to be too variable)
      * @param stringBiomartFile The name of the local biomart file
      * @param taxa taxa to load data for. List of taxon to process
+     * @throws IOException
      */
     public void load( File stringProteinFileNameLocal, String stringProteinFileNameRemote, File stringBiomartFile,
-            Collection<Taxon> taxa ) {
+            Collection<Taxon> taxa ) throws IOException {
 
-        try {
-            log.info( "Starting to load protein protein interaction data from SRING and Biomart from string file " );
+        log.info( "Starting to load protein protein interaction data from SRING and Biomart from string file " );
 
-            // very basic validation before any processing done
-            validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote, stringBiomartFile, taxa );
+        // very basic validation before any processing done
+        validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote, stringBiomartFile, taxa );
 
-            // retrieve a map of string protein protein interactions keyed on taxon
-            StringProteinProteinInteractionObjectGenerator stringProteinProteinInteractionObjectGenerator = new StringProteinProteinInteractionObjectGenerator(
-                    stringProteinFileNameLocal, stringProteinFileNameRemote );
+        // retrieve a map of string protein protein interactions keyed on taxon
+        StringProteinProteinInteractionObjectGenerator stringProteinProteinInteractionObjectGenerator = new StringProteinProteinInteractionObjectGenerator(
+                stringProteinFileNameLocal, stringProteinFileNameRemote );
 
-            Map<Taxon, Collection<StringProteinProteinInteraction>> map = stringProteinProteinInteractionObjectGenerator
-                    .generate( taxa );
+        Map<Taxon, Collection<StringProteinProteinInteraction>> map = stringProteinProteinInteractionObjectGenerator
+                .generate( taxa );
 
-            Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = getIdMappings( stringBiomartFile, taxa );
+        Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = getIdMappings( stringBiomartFile, taxa );
 
-            // we do not do all taxons in one big go as there were gc errors as there were too many objects around this
-            // is a bit slower but no memory errors
-            for ( Taxon key : map.keySet() ) {
-                log.debug( "Loading for taxon " + key );
-                Collection<StringProteinProteinInteraction> proteinInteractions = map.get( key );
-                log.info( "Found in string file this number of protein interactions " + proteinInteractions.size()
-                        + " for taxon" + key );
-                loadOneTaxonAtATime( bioMartStringEntreGeneMapping, proteinInteractions );
-            }
-
-        } catch ( Exception e ) {
-            throw new RuntimeException( e );
+        // we do not do all taxons in one big go as there were gc errors as there were too many objects around this
+        // is a bit slower but no memory errors
+        for ( Taxon key : map.keySet() ) {
+            log.debug( "Loading for taxon " + key );
+            Collection<StringProteinProteinInteraction> proteinInteractions = map.get( key );
+            log.info( "Found in string file this number of protein interactions " + proteinInteractions.size()
+                    + " for taxon" + key );
+            loadOneTaxonAtATime( bioMartStringEntreGeneMapping, proteinInteractions );
         }
 
     }
@@ -133,8 +130,10 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
      * @param stringBiomartFile
      * @param taxa
      * @return map between Ensembl peptide IDs and NCBI gene ids understood by Gemma.
+     * @throws IOException
      */
-    private Map<String, BioMartEnsembleNcbi> getIdMappings( File stringBiomartFile, Collection<Taxon> taxa ) {
+    private Map<String, BioMartEnsembleNcbi> getIdMappings( File stringBiomartFile, Collection<Taxon> taxa )
+            throws IOException {
         // retrieve a map of biomart objects keyed on ensembl peptide id to use as map between entrez gene ids and
         // ensemble ids
         BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();

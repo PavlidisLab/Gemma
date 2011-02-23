@@ -79,8 +79,10 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
         String[] fields = StringUtils.splitPreserveAllTokens( line, FIELD_DELIM );
         // validate that correct format
         if ( fields.length != bioMartFieldsPerRow ) {
-            throw new FileFormatException( "Line is not in the right format: has " + fields.length
-                    + " fields, expected " + bioMartFieldsPerRow + ": " );
+            /*
+             * I think we should just continue on. Previous behaviour was to throw an exception.
+             */
+            return null;
         }
         // create the object
         try {

@@ -20,6 +20,7 @@
 package ubic.gemma.apps;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -103,7 +104,11 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
         Exception err = processCommandLine( "Import of proteins from STRING", args );
         if ( err != null ) return err;
         // call the loader
-        this.loadProteinProteinInteractions();
+        try {
+            this.loadProteinProteinInteractions();
+        } catch ( IOException e ) {
+            return err;
+        }
 
         return null;
 
@@ -116,8 +121,10 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
 
     /**
      * Method to wrap call to loader. Ensures that all spring beans are configured.
+     * 
+     * @throws IOException
      */
-    public void loadProteinProteinInteractions() {
+    public void loadProteinProteinInteractions() throws IOException {
         StringBiomartGene2GeneProteinAssociationLoader loader = new StringBiomartGene2GeneProteinAssociationLoader();
 
         geneService = ( GeneService ) getBean( "geneService" );
