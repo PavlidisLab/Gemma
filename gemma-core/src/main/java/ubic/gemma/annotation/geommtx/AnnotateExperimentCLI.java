@@ -86,16 +86,17 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
                 .getBean( "expressionExperimentAnnotator" );
 
         expressionExperimentAnnotator.init();
-        
+        log.info( "Initializing MMTx..." );
+
         while ( !ExpressionExperimentAnnotator.ready() || !PredictedCharacteristicFactory.ready() ) {
             try {
-                Thread.sleep( 1000 );
+                Thread.sleep( 10000 );
             } catch ( InterruptedException e ) {
             }
             log.info( "Waiting for MMTx..." );
         }
 
-        log.info( " **** READY ***" );
+        log.info( " **** MMTx ready ***" );
     }
 
 }
