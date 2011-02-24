@@ -41,8 +41,10 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
         super.buildOptions();
         super.addForceOption();
 
-        Option postanalyzeOnlyOpt = OptionBuilder.withLongOpt( "post" ).withDescription(
-                "Don't perform SVD if possible, just update the statistics of comparisons with factors etc. Implies -force" )
+        Option postanalyzeOnlyOpt = OptionBuilder
+                .withLongOpt( "post" )
+                .withDescription(
+                        "Don't perform SVD if possible, just update the statistics of comparisons with factors etc. Implies -force" )
                 .create();
         super.addOption( postanalyzeOnlyOpt );
     }
@@ -103,6 +105,7 @@ public class SVDCli extends ExpressionExperimentManipulatingCLI {
         if ( e != null ) {
             log.error( e, e );
         }
+        System.exit( 0 ); // dangling threads?
 
     }
 
