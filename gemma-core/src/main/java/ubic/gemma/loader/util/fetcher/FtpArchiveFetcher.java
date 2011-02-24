@@ -156,15 +156,19 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
                 return listFiles( seekFileName, outputFile.getParentFile(), null );
             }
         } catch ( ExecutionException e ) {
+            future.cancel( true );
             throw new RuntimeException( "Couldn't fetch " + seekFileName + " from "
                     + this.getNetDataSourceUtil().getHost(), e );
         } catch ( InterruptedException e ) {
+            future.cancel( true );
             throw new RuntimeException( "Interrupted: Couldn't fetch " + seekFileName + " from "
                     + this.getNetDataSourceUtil().getHost(), e );
         } catch ( IOException e ) {
+            future.cancel( true );
             throw new RuntimeException( "IOException: Couldn't fetch " + seekFileName + " from "
                     + this.getNetDataSourceUtil().getHost(), e );
         }
+        future.cancel( true );
         throw new RuntimeException( "Couldn't fetch " + seekFileName + " from " + this.getNetDataSourceUtil().getHost() );
     }
 
@@ -208,6 +212,7 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
             try {
                 Thread.sleep( INFO_UPDATE_INTERVAL );
             } catch ( InterruptedException ie ) {
+                future.cancel( true );
                 return;
             }
             log.info( "Unpacking archive ... " + Math.floor( s.getTime() / 1000.0 ) + " seconds elapsed" );
