@@ -843,10 +843,10 @@ var popupImage = function(url) {
 	url = url + "&nocache=" + Math.floor(Math.random() * 1000);
 	var b = new Ext.Window({
 				modal : true,
-				modal : true,
 				stateful : false,
 				resizable : false,
 				autoHeight : true,
+				x : 50,
 				padding : 10,
 				html : '<img src=\"' + url + '"\" />'
 			});

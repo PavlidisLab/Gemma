@@ -1056,8 +1056,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
         }
         updateCorrelationMatrixFile( id );
-
-        return showExpressionExperiment( request, response );
+        return new ModelAndView(
+                new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
 
     }
 
