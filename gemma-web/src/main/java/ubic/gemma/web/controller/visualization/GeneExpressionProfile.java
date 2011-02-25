@@ -21,7 +21,7 @@ package ubic.gemma.web.controller.visualization;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
@@ -56,7 +56,7 @@ public class GeneExpressionProfile {
      * This is a collection because probes are not specific.
      */
     private Collection<GeneValueObject> genes;
-    private DesignElement probe;
+    private CompositeSequence probe;
     private Double pValue = null;
 
     /**
@@ -117,7 +117,7 @@ public class GeneExpressionProfile {
         return genes;
     }
 
-    public DesignElement getProbe() {
+    public CompositeSequence getProbe() {
         return probe;
     }
 
@@ -158,7 +158,7 @@ public class GeneExpressionProfile {
         this.genes = genes;
     }
 
-    public void setProbe( DesignElement probe ) {
+    public void setProbe( CompositeSequence probe ) {
         this.probe = probe;
     }
 

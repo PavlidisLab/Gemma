@@ -16,7 +16,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * Warning, not fully tested.
@@ -30,7 +30,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     private static Log log = LogFactory.getLog( ExpressionDataIntegerMatrix.class.getName() );
 
-    private IntegerMatrix<DesignElement, Integer> matrix;
+    private IntegerMatrix<CompositeSequence, Integer> matrix;
 
     public ExpressionDataIntegerMatrix( Collection<? extends DesignElementDataVector> vectors ) {
         init();
@@ -47,22 +47,24 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
      * ubic.gemma.model.expression.biomaterial.BioMaterial)
      */
-    public Integer get( DesignElement designElement, BioMaterial bioMaterial ) {
+    public Integer get( CompositeSequence designElement, BioMaterial bioMaterial ) {
         return this.matrix.get( matrix.getRowIndexByName( designElement ), matrix
                 .getColIndexByName( this.columnBioMaterialMap.get( bioMaterial ) ) );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
      * ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    public Integer get( DesignElement designElement, BioAssay bioAssay ) {
+    public Integer get( CompositeSequence designElement, BioAssay bioAssay ) {
         int i = this.rowElementMap.get( designElement );
         int j = this.columnAssayMap.get( bioAssay );
         return this.matrix.get( i, j );
@@ -70,14 +72,16 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
-    public Integer[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays ) {
+    public Integer[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException();
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
@@ -88,6 +92,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumn(java.lang.Integer)
      */
     public Integer[] getColumn( Integer index ) {
@@ -96,6 +101,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getColumns(java.util.List)
      */
     public Integer[][] getColumns( List<BioAssay> bioAssays ) {
@@ -108,6 +114,7 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getMatrix()
      */
     public Integer[][] getRawMatrix() {
@@ -120,19 +127,21 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
      * )
      */
-    public Integer[] getRow( DesignElement designElement ) {
+    public Integer[] getRow( CompositeSequence designElement ) {
         return this.matrix.getRow( this.getRowIndex( designElement ) );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
-    public Integer[][] getRows( List<DesignElement> designElements ) {
+    public Integer[][] getRows( List<CompositeSequence> designElements ) {
         Integer[][] res = new Integer[rows()][];
         for ( int i = 0; i < designElements.size(); i++ ) {
             res[i] = this.matrix.getRow( this.getRowIndex( designElements.get( i ) ) );
@@ -142,9 +151,10 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowMap()
      */
-    public Collection<DesignElement> getRowMap() {
+    public Collection<CompositeSequence> getRowMap() {
         return this.rowElementMap.keySet();
     }
 
@@ -186,12 +196,12 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private IntegerMatrix<DesignElement, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
-            int maxSize ) {
+    private IntegerMatrix<CompositeSequence, Integer> createMatrix(
+            Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        IntegerMatrix<DesignElement, Integer> mat = new IntegerMatrix<DesignElement, Integer>( numRows, maxSize );
+        IntegerMatrix<CompositeSequence, Integer> mat = new IntegerMatrix<CompositeSequence, Integer>( numRows, maxSize );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
             mat.addColumnName( j );
@@ -205,10 +215,10 @@ public class ExpressionDataIntegerMatrix extends BaseExpressionDataMatrix<Intege
         }
 
         ByteArrayConverter bac = new ByteArrayConverter();
-        Map<Integer, DesignElement> rowNames = new TreeMap<Integer, DesignElement>();
+        Map<Integer, CompositeSequence> rowNames = new TreeMap<Integer, CompositeSequence>();
         for ( DesignElementDataVector vector : vectors ) {
 
-            DesignElement designElement = vector.getDesignElement();
+            CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No designelement for " + vector;
 
             Integer rowIndex = this.rowElementMap.get( designElement );

@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
@@ -137,14 +136,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         /*
          * Create the vectors. Do a sanity check that we don't have more than we should
          */
-        Collection<DesignElement> seenDes = new HashSet<DesignElement>();
+        Collection<CompositeSequence> seenDes = new HashSet<CompositeSequence>();
         QuantitationType preferredMaskedDataQuantitationType = getPreferredMaskedDataQuantitationType( preferredDataVectors
                 .iterator().next().getQuantitationType() );
 
         Collection<ProcessedExpressionDataVector> result = new ArrayList<ProcessedExpressionDataVector>();
         for ( DoubleVectorValueObject dvvo : maskedVectorObjects ) {
 
-            DesignElement designElement = dvvo.getDesignElement();
+            CompositeSequence designElement = dvvo.getDesignElement();
 
             if ( seenDes.contains( designElement ) ) {
                 // defensive programming, this happens.
@@ -173,6 +172,41 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         return expressionExperiment.getProcessedExpressionDataVectors();
 
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
+            QuantitationType quantitationType ) {
+        final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
+                + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
+                + "and dev.quantitationType = :quantitationType ";
+        try {
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            queryObject.setParameter( "quantitationType", quantitationType );
+
+            Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
+            Collection<RawExpressionDataVector> result = new HashSet<RawExpressionDataVector>();
+            int batchSize = 2000;
+            for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
+                batch.add( cs );
+
+                if ( batch.size() >= batchSize ) {
+                    queryObject.setParameterList( "desEls", batch );
+                    result.addAll( queryObject.list() );
+                    batch.clear();
+                }
+            }
+
+            if ( batch.size() > 0 ) {
+                queryObject.setParameterList( "desEls", batch );
+                result.addAll( queryObject.list() );
+            }
+
+            return result;
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -222,7 +256,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Collection<CompositeSequence> probes = new ArrayList<CompositeSequence>();
         for ( ProcessedExpressionDataVector pedv : pedvs ) {
-            probes.add( ( CompositeSequence ) pedv.getDesignElement() );
+            probes.add( pedv.getDesignElement() );
         }
 
         if ( probes.isEmpty() ) {
@@ -382,7 +416,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
             ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
-            DesignElement d = ( DesignElement ) oa[1];
+            CompositeSequence d = ( CompositeSequence ) oa[1];
             Double rMean = ( Double ) oa[2];
             Double rMax = ( Double ) oa[3];
 
@@ -441,7 +475,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Map<Gene, Collection<Double>> result = new HashMap<Gene, Collection<Double>>();
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
-            DesignElement d = ( DesignElement ) oa[0];
+            CompositeSequence d = ( CompositeSequence ) oa[0];
             Double rMean = ( Double ) oa[1];
             Double rMax = ( Double ) oa[2];
 
@@ -476,13 +510,13 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
     @SuppressWarnings("unchecked")
-    public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
+    public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
         List qr = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-        Map<DesignElement, Double> result = new HashMap<DesignElement, Double>();
+        Map<CompositeSequence, Double> result = new HashMap<CompositeSequence, Double>();
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
-            DesignElement d = ( DesignElement ) oa[0];
+            CompositeSequence d = ( CompositeSequence ) oa[0];
             Double rMean = ( Double ) oa[1];
             Double rMax = ( Double ) oa[2];
             switch ( method ) {
@@ -501,12 +535,12 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
     }
 
     @SuppressWarnings("unchecked")
-    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+    public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
         if ( cs2gene.keySet().size() == 0 ) {
             log.warn( "No composite sequences found for genes" );
-            return new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
+            return new HashMap<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>>();
         }
 
         final String queryString = "select distinct dedv.expressionExperiment, dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv "
@@ -517,25 +551,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         List qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
                 new Object[] { cs2gene.keySet(), expressionExperiments } );
 
-        Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> resultnew = new HashMap<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>>();
+        Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> resultnew = new HashMap<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>>();
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
             ExpressionExperiment e = ( ExpressionExperiment ) oa[0];
-            DesignElement d = ( DesignElement ) oa[1];
+            CompositeSequence d = ( CompositeSequence ) oa[1];
             Double rMean = ( Double ) oa[2];
             Double rMax = ( Double ) oa[3];
 
             if ( !resultnew.containsKey( e ) ) {
-                resultnew.put( e, new HashMap<Gene, Map<DesignElement, Double[]>>() );
+                resultnew.put( e, new HashMap<Gene, Map<CompositeSequence, Double[]>>() );
             }
 
-            Map<Gene, Map<DesignElement, Double[]>> rmapnew = resultnew.get( e );
+            Map<Gene, Map<CompositeSequence, Double[]>> rmapnew = resultnew.get( e );
 
             Collection<Gene> genes4probe = cs2gene.get( d );
 
             for ( Gene gene : genes4probe ) {
                 if ( !rmapnew.containsKey( gene ) ) {
-                    rmapnew.put( gene, new HashMap<DesignElement, Double[]>() );
+                    rmapnew.put( gene, new HashMap<CompositeSequence, Double[]>() );
                 }
 
                 // return BOTH mean and max
@@ -832,7 +866,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
 
         Collection<BooleanVectorValueObject> unpackedMissingValueData = unpackBooleans( missingValueData );
-        Map<DesignElement, BooleanVectorValueObject> missingValueMap = new HashMap<DesignElement, BooleanVectorValueObject>();
+        Map<CompositeSequence, BooleanVectorValueObject> missingValueMap = new HashMap<CompositeSequence, BooleanVectorValueObject>();
         for ( BooleanVectorValueObject bv : unpackedMissingValueData ) {
             missingValueMap.put( bv.getDesignElement(), bv );
         }
@@ -840,7 +874,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         boolean warned = false;
         for ( DoubleVectorValueObject rv : unpackedData ) {
             double[] data = rv.getData();
-            DesignElement de = rv.getDesignElement();
+            CompositeSequence de = rv.getDesignElement();
             BooleanVectorValueObject mv = missingValueMap.get( de );
             if ( mv == null ) {
                 if ( !warned && log.isWarnEnabled() )

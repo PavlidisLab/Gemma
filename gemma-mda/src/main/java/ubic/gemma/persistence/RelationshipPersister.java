@@ -150,8 +150,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
-        entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
-                .getExpressionExperimentSetAnalyzed() ) );
+        if ( isTransient( entity.getExperimentAnalyzed() ) ) {
+            throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
+        }
         return differentialExpressionAnalysisService.create( entity );
     }
 
@@ -222,9 +223,9 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( entity == null ) return null;
         if ( !isTransient( entity ) ) return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
-
-        entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
-                .getExpressionExperimentSetAnalyzed() ) );
+        if ( isTransient( entity.getExperimentAnalyzed() ) ) {
+            throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
+        }
 
         return probeCoexpressionAnalysisService.create( entity );
     }

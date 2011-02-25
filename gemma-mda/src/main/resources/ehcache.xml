@@ -77,9 +77,6 @@
 	<cache name="ubic.gemma.model.genome.gene.GeneProductImpl.exons" maxElementsInMemory="50000" eternal="true"
 		overflowToDisk="false" />
 
-
-
-
 	<cache name="ubic.gemma.model.genome.gene.GeneSetMemberImpl" maxElementsInMemory="50000" eternal="true"
 		overflowToDisk="false" />
 
@@ -149,7 +146,7 @@
 	<cache name="ubic.gemma.model.genome.GeneImpl" maxElementsInMemory="50000" eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.genome.GeneImpl.products" maxElementsInMemory="50000" eternal="true"
-		overflowToDisk="false" />
+		overflowToDisk="false" />o
 
 	<cache name="ubic.gemma.model.genome.GeneImpl.aliases" maxElementsInMemory="50000" eternal="true" overflowToDisk="false" />
 
@@ -432,18 +429,6 @@
 		eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.protocol.ProtocolImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.protocol.SoftwareImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.protocol.HardwareImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.protocol.SoftwareApplicationImpl" maxElementsInMemory="10000" eternal="false"
-		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
-
-	<cache name="ubic.gemma.model.common.protocol.HardwareApplicationImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl" maxElementsInMemory="10000" eternal="false"

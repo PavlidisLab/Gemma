@@ -60,23 +60,12 @@
 				</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneAlias.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/genome/gene/CandidateGene.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/genome/gene/MappingCandidateGene.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/genome/gene/BibReferenceCandidateGene.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/genome/gene/CandidateGeneList.hbm.xml
-				</value>
 				<value>classpath:ubic/gemma/model/genome/CytogeneticLocation.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/genome/GeneticLocation.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/genome/PhysicalLocation.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/genome/ChromosomeFeature.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/genome/Qtl.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/genome/Chromosome.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/genome/Taxon.hbm.xml</value>
@@ -91,10 +80,6 @@
 				<value>classpath:ubic/gemma/model/common/description/BibliographicReference.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/common/description/Characteristic.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/description/NotedReference.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/description/NotedReferenceList.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/common/description/BibRefAnnotation.hbm.xml
 				</value>
@@ -124,23 +109,9 @@
 				</value>
 				<value>classpath:ubic/gemma/model/common/protocol/Parameterizable.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Parameter.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/protocol/ParameterizableApplication.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/protocol/ParameterValue.hbm.xml
-				</value>
 				<value>classpath:ubic/gemma/model/common/protocol/ProtocolApplication.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/common/protocol/Protocol.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Software.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/protocol/Hardware.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/protocol/SoftwareApplication.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/common/protocol/HardwareApplication.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml
 				</value>
@@ -148,9 +119,15 @@
 				</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml
 				</value>
+				<value>classpath:ubic/gemma/model/analysis/Eigenvalue.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/analysis/Eigenvector.hbm.xml
+				</value>
+				<value>classpath:ubic/gemma/model/analysis/HitListSize.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/expression/designElement/DesignElement.hbm.xml
+				<value>classpath:ubic/gemma/model/expression/designElement/CompositeSequence.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/arrayDesign/ArrayDesign.hbm.xml
 				</value>
@@ -158,25 +135,17 @@
 				</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssay/BioAssay.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDataVector.hbm.xml
-				</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/RawExpressionDataVector.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/ProcessedExpressionDataVector.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/bioAssayData/BioAssayDimension.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/expression/bioAssayData/DesignElementDimension.hbm.xml
-				</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterial.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/Treatment.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/biomaterial/Compound.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/expression/biomaterial/CompoundMeasurement.hbm.xml
-				</value>
-				<value>classpath:ubic/gemma/model/expression/biomaterial/BioMaterialMeasurement.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/association/Gene2GOAssociation.hbm.xml
 				</value>
@@ -220,8 +189,8 @@
 				</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml   </value> 
-				
+				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml   </value>
+
 				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
 
 			</list>

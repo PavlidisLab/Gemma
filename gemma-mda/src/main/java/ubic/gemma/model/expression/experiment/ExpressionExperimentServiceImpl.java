@@ -48,7 +48,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.monitor.Monitored;
@@ -454,7 +454,7 @@ public class ExpressionExperimentServiceImpl extends
 
     @Override
     protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            Collection<? extends DesignElement> designElements, QuantitationType quantitationType ) throws Exception {
+            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) throws Exception {
         return this.getExpressionExperimentDao().getDesignElementDataVectors( designElements, quantitationType );
     }
 

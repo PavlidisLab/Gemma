@@ -20,14 +20,14 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 
+import ubic.gemma.model.analysis.AnalysisDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
  * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis
  */
-public interface ProbeCoexpressionAnalysisDao extends
-        ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao<ProbeCoexpressionAnalysis> {
+public interface ProbeCoexpressionAnalysisDao extends AnalysisDao<ProbeCoexpressionAnalysis> {
 
     /**
      * Retrieve the list of probes used in the probe-level coexpression analysis for the given experiment. This assumes

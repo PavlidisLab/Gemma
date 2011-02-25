@@ -39,7 +39,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -125,7 +124,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         timer.start();
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
-        Collection<DesignElement> cs = new HashSet<DesignElement>();
+        Collection<CompositeSequence> cs = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector vector : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
             session.lock( vector, LockMode.NONE );
             Hibernate.initialize( vector );
@@ -204,14 +203,14 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         // thaw the designelements we saw.
         long lastTime = 0;
-        for ( DesignElement de : cs ) {
-            BioSequence seq = ( ( CompositeSequence ) de ).getBiologicalCharacteristic();
+        for ( CompositeSequence de : cs ) {
+            BioSequence seq = de.getBiologicalCharacteristic();
             if ( seq == null ) continue;
             session.lock( seq, LockMode.NONE );
             // Note that these steps are not done in arrayDesign.thawLite; we're assuming this information is
             // needed if you are thawing dedvs. That might not be true in all cases.
             Hibernate.initialize( seq );
-            ArrayDesign arrayDesign = ( ( CompositeSequence ) de ).getArrayDesign();
+            ArrayDesign arrayDesign = de.getArrayDesign();
             Hibernate.initialize( arrayDesign );
 
             if ( ++count % 10000 == 0 ) {
@@ -245,14 +244,14 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      */
     void thaw( org.hibernate.Session session, T designElementDataVector ) {
         // thaw the design element.
-        BioSequence seq = ( ( CompositeSequence ) designElementDataVector.getDesignElement() )
+        BioSequence seq = designElementDataVector.getDesignElement()
                 .getBiologicalCharacteristic();
         if ( seq != null ) {
             session.lock( seq, LockMode.NONE );
             Hibernate.initialize( seq );
         }
 
-        ArrayDesign arrayDesign = ( ( CompositeSequence ) designElementDataVector.getDesignElement() ).getArrayDesign();
+        ArrayDesign arrayDesign = designElementDataVector.getDesignElement().getArrayDesign();
         Hibernate.initialize( arrayDesign );
         arrayDesign.hashCode();
 

@@ -29,8 +29,8 @@ import java.util.Collection;
  * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis
  */
 public abstract class ProbeCoexpressionAnalysisDaoBase extends
-        ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDaoImpl<ProbeCoexpressionAnalysis>
-        implements ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao {
+        ubic.gemma.model.analysis.AnalysisDaoImpl<ProbeCoexpressionAnalysis> implements
+        ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao {
 
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao#create(int,

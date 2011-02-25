@@ -308,6 +308,8 @@ public class TaskRunningService implements InitializingBean {
      */
     public synchronized void submitTask( BackgroundJob<? extends TaskCommand> job ) throws ConflictingTaskException {
 
+        if ( job == null ) throw new IllegalArgumentException( "Must provide a job" );
+
         checkEligibility( job );
 
         final TaskCommand taskCommand = job.getCommand();
@@ -394,6 +396,11 @@ public class TaskRunningService implements InitializingBean {
      * @throws ConflictingTaskException
      */
     private void checkEligibility( BackgroundJob<? extends TaskCommand> job ) throws ConflictingTaskException {
+
+        if ( job == null ) {
+            throw new IllegalArgumentException( "Must provide a job" );
+        }
+
         TaskCommand command = job.getCommand();
         String user = command.getSubmitter();
 
@@ -494,7 +501,7 @@ public class TaskRunningService implements InitializingBean {
                 /*
                  * Something might be wrong.
                  */
-                
+
                 if ( command.isMayHaveFailed() ) {
                     log.error( "Job seems to have failed due to a problem with the grid: " + taskId
                             + " -- space monitor reports bad status " );

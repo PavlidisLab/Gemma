@@ -33,7 +33,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -368,7 +368,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
      *      ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
-            final Collection<? extends DesignElement> designElements,
+            final Collection<CompositeSequence> designElements,
             final ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) {
         try {
             return this.handleGetDesignElementDataVectors( designElements, quantitationType );
@@ -965,7 +965,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
      * {@link #getDesignElementDataVectors(Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)}
      */
     protected abstract Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
-            Collection<? extends DesignElement> designElements,
+            Collection<CompositeSequence> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType ) throws java.lang.Exception;
 
     /**

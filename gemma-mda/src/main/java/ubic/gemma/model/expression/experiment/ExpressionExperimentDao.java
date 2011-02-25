@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -201,7 +201,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * 
      */
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
-            Collection<? extends DesignElement> designElements,
+            Collection<CompositeSequence> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**

@@ -85,35 +85,6 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
         return this.getProbeCoexpressionAnalysisDao().findByTaxon( taxon );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected ProbeCoexpressionAnalysis handleFindByUniqueInvestigations( Collection investigations ) throws Exception {
-
-        Map<Investigation, Collection<ProbeCoexpressionAnalysis>> anas = this.getProbeCoexpressionAnalysisDao()
-                .findByInvestigations( investigations );
-
-        /*
-         * Find an analysis that uses all the investigations.
-         */
-
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
-
-            if ( !anas.containsKey( ee ) ) {
-                return null; // then there can be none meeting the criterion.
-            }
-
-            Collection<ProbeCoexpressionAnalysis> analyses = anas.get( ee );
-            for ( ProbeCoexpressionAnalysis a : analyses ) {
-                if ( a.getExpressionExperimentSetAnalyzed().getExperiments().size() == investigations.size()
-                        && a.getExpressionExperimentSetAnalyzed().getExperiments().containsAll( investigations ) ) {
-                    return a;
-                }
-            }
-        }
-
-        return null;
-    }
-
     @Override
     protected ProbeCoexpressionAnalysis handleLoad( Long id ) throws Exception {
         return this.getProbeCoexpressionAnalysisDao().load( id );
@@ -136,4 +107,16 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     public Collection<ProbeCoexpressionAnalysis> loadMySharedAnalyses() {
         return loadAll();
     }
+
+    @Override
+    protected ProbeCoexpressionAnalysis handleFindByUniqueInvestigations( Collection<Investigation> investigations )
+            throws Exception {
+        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
+            return null;
+        }
+        Collection found = this.findByInvestigation( investigations.iterator().next() );
+        if ( found.isEmpty() ) return null;
+        return ( ProbeCoexpressionAnalysis ) found.iterator().next();
+    }
+
 }

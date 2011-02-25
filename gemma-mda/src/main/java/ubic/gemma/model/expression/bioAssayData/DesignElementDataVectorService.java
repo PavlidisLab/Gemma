@@ -49,16 +49,16 @@ public interface DesignElementDataVectorService {
             java.util.Collection<QuantitationType> quantitationTypes );
 
     /**
-     * 
+     * Load all vectors meeting the criteria
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public java.util.Collection<? extends DesignElementDataVector> find(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
 
     /**
-     * 
+     * Load all vectors meeting the criteria
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public java.util.Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType );
 
@@ -66,11 +66,13 @@ public interface DesignElementDataVectorService {
      * @param bioAssayDimension
      * @return any vectors that reference the given bioAssayDimensin
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public java.util.Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension );
 
     /**
      * 
      */
+    @Secured( { "GROUP_ADMIN" })
     public DesignElementDataVector load( java.lang.Long id );
 
     /**

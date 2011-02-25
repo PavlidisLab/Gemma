@@ -60,7 +60,7 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
@@ -373,7 +373,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         session.lock( toDelete, LockMode.NONE );
 
-        Hibernate.initialize( toDelete.getBioAssayDataVectors() );
         Hibernate.initialize( toDelete.getAuditTrail() );
 
         Set<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
@@ -1067,7 +1066,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetDesignElementDataVectors( Collection<? extends DesignElement> designElements,
+    protected Collection handleGetDesignElementDataVectors( Collection<CompositeSequence> designElements,
             QuantitationType quantitationType ) throws Exception {
         if ( designElements == null || designElements.size() == 0 ) return new HashSet();
 
@@ -1650,14 +1649,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             Hibernate.initialize( expressionExperiment.getPrimaryPublication() );
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession() );
             Hibernate.initialize( expressionExperiment.getPrimaryPublication().getPubAccession().getExternalDatabase() );
-            expressionExperiment.getPrimaryPublication().getAuthors().size();
         }
         if ( expressionExperiment.getOtherRelevantPublications() != null ) {
             Hibernate.initialize( expressionExperiment.getOtherRelevantPublications() );
             for ( BibliographicReference bf : expressionExperiment.getOtherRelevantPublications() ) {
                 Hibernate.initialize( bf.getPubAccession() );
                 Hibernate.initialize( bf.getPubAccession().getExternalDatabase() );
-                Hibernate.initialize( bf.getAuthors() );
             }
         }
     }

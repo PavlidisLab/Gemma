@@ -267,12 +267,7 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         /* Create the expression analysis and pack the results. */
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
         DifferentialExpressionAnalysis expressionAnalysis = config.toAnalysis();
-
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( bioAssaySet );
-        eeSet.setExperiments( experimentsAnalyzed );
-        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+        expressionAnalysis.setExperimentAnalyzed( bioAssaySet );
         return expressionAnalysis;
     }
 

@@ -183,7 +183,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * Performs the core logic for {@link #findByUniqueInvestigations(java.util.Collection)}
      */
-    protected abstract T handleFindByUniqueInvestigations( java.util.Collection investigations )
+    protected abstract T handleFindByUniqueInvestigations( Collection<Investigation> investigations )
             throws java.lang.Exception;
 
     /**

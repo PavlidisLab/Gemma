@@ -18,6 +18,10 @@
  */
 package ubic.gemma.loader.expression.arrayDesign;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,7 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
@@ -93,13 +96,46 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * @author pavlidis
  * @version $Id$
  */
-public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequence> {
+public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Collection<Reporter>> {
 
     protected static final Log log = LogFactory.getLog( AffyProbeReader.class );
 
     private int sequenceField = 4;
 
-    private Map<String, CompositeSequence> results = new HashMap<String, CompositeSequence>();
+    private Map<CompositeSequence, Collection<Reporter>> reporterMap = new HashMap<CompositeSequence, Collection<Reporter>>();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.parser.BasicLineMapParser#parse(java.io.InputStream) I had to override this because
+     * we need to build up a collection for each key, since compositesequences don't have reporters any more.
+     */
+    @Override
+    public void parse( InputStream is ) throws IOException {
+        if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
+        BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
+
+        int nullLines = 0;
+        String line = null;
+        int linesParsed = 0;
+        while ( ( line = br.readLine() ) != null ) {
+
+            if ( line.startsWith( COMMENTMARK ) ) {
+                continue;
+            }
+            parseOneLine( line );
+
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+                String message = "Parsed " + linesParsed + " lines...  ";
+                log.info( message );
+            }
+
+        }
+        log.info( "Parsed " + linesParsed + " lines. "
+                + ( nullLines > 0 ? nullLines + " yielded no parse result (they may have been filtered)." : "" ) );
+
+        br.close();
+    }
 
     /*
      * (non-Javadoc)
@@ -108,7 +144,7 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
      */
     @Override
     @SuppressWarnings("unchecked")
-    public CompositeSequence parseOneLine( String line ) {
+    public Collection<Reporter> parseOneLine( String line ) {
 
         if ( StringUtils.isEmpty( line ) ) {
             return null;
@@ -212,20 +248,16 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
 
         reporter.setImmobilizedCharacteristic( immobChar );
 
-        CompositeSequence probeSet = get( probeSetId );
-
-        if ( probeSet == null ) {
-            probeSet = CompositeSequence.Factory.newInstance();
-        }
+        CompositeSequence probeSet = CompositeSequence.Factory.newInstance();
         probeSet.setName( probeSetId );
 
-        if ( probeSet.getComponentReporters() == null ) {
-            probeSet.setComponentReporters( new HashSet() );
+        if ( !reporterMap.containsKey( probeSet ) ) {
+            reporterMap.put( probeSet, new HashSet() );
         }
 
         reporter.setCompositeSequence( probeSet );
-        probeSet.getComponentReporters().add( reporter );
-        return probeSet;
+        reporterMap.get( probeSet ).add( reporter );
+        return reporterMap.get( probeSet );
 
     }
 
@@ -235,8 +267,8 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override
-    protected String getKey( CompositeSequence newItem ) {
-        return newItem.getName();
+    protected CompositeSequence getKey( Collection<Reporter> newItem ) {
+        return newItem.iterator().next().getCompositeSequence();
     }
 
     /**
@@ -250,28 +282,28 @@ public class AffyProbeReader extends BasicLineMapParser<String, CompositeSequenc
     }
 
     @Override
-    public CompositeSequence get( String key ) {
-        return results.get( key );
+    public Collection<Reporter> get( CompositeSequence key ) {
+        return reporterMap.get( key );
     }
 
     @Override
-    public Collection<CompositeSequence> getResults() {
-        return new HashSet<CompositeSequence>( results.values() ); // make sure we don't get a HashMap$values
+    public Collection<Collection<Reporter>> getResults() {
+        return reporterMap.values(); // make sure we don't get a HashMap$values
     }
 
     @Override
-    protected void put( String key, CompositeSequence value ) {
-        results.put( key, value );
+    protected void put( CompositeSequence key, Collection<Reporter> value ) {
+        reporterMap.put( key, value );
     }
 
     @Override
-    public boolean containsKey( String key ) {
-        return results.containsKey( key );
+    public boolean containsKey( CompositeSequence key ) {
+        return reporterMap.containsKey( key );
     }
 
     @Override
-    public Collection<String> getKeySet() {
-        return results.keySet();
+    public Collection<CompositeSequence> getKeySet() {
+        return reporterMap.keySet();
     }
 
 }

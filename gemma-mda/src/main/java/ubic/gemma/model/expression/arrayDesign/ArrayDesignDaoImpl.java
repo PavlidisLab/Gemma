@@ -1138,19 +1138,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return ( Long ) getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign ).iterator().next();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumReporters(java.lang.Long)
-     */
-    @Override
-    protected Integer handleNumReporters( Long id ) throws Exception {
-        final String queryString = "select count (*) from ArrayDesignImpl as ar inner join"
-                + " ar.compositeSequences as cs inner join cs.componentReporters as rep where ar.id = :id";
-        return ( ( Long ) getHibernateTemplate().findByNamedParam( queryString, "id", id ).iterator().next() )
-                .intValue();
-    }
-
     @Override
     protected void handleRemoveBiologicalCharacteristics( final ArrayDesign arrayDesign ) throws Exception {
         if ( arrayDesign == null ) {

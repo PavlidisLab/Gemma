@@ -45,7 +45,7 @@ public class DifferentialExpressionAnalysisValueObject implements Serializable {
      */
     public DifferentialExpressionAnalysisValueObject( DifferentialExpressionAnalysis analysis ) {
         this.id = analysis.getId();
-        this.bioAssaySetId = analysis.getExpressionExperimentSetAnalyzed().getExperiments().iterator().next().getId();
+        this.bioAssaySetId = analysis.getExperimentAnalyzed().getId();
         if ( analysis.getSubsetFactorValue() != null ) {
             this.subsetFactorValue = new FactorValueValueObject( analysis.getSubsetFactorValue() );
         }

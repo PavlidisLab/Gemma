@@ -25,7 +25,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -68,7 +68,7 @@ public interface ExpressionDataMatrix<T> {
      * @param designElement
      * @return
      */
-    public T[] getRow( DesignElement designElement );
+    public T[] getRow( CompositeSequence designElement );
 
     /**
      * Access a single row of the matrix, by index. A complete row is returned.
@@ -88,7 +88,7 @@ public interface ExpressionDataMatrix<T> {
 
     public int getColumnIndex( BioMaterial bioMaterial );
 
-    public int getRowIndex( DesignElement designElement );
+    public int getRowIndex( CompositeSequence designElement );
 
     /**
      * Access a single column of the matrix.
@@ -107,7 +107,7 @@ public interface ExpressionDataMatrix<T> {
      * @param bioAssay
      * @return T
      */
-    public T get( DesignElement designElement, BioAssay bioAssay );
+    public T get( CompositeSequence designElement, BioAssay bioAssay );
 
     /**
      * Access a single value of the matrix. This is generally the easiest way to do it.
@@ -134,7 +134,7 @@ public interface ExpressionDataMatrix<T> {
      * @param bioAssays
      * @return T[][]
      */
-    public T[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays );
+    public T[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays );
 
     /**
      * Access a submatrix
@@ -142,7 +142,7 @@ public interface ExpressionDataMatrix<T> {
      * @param designElements
      * @return T[][]
      */
-    public T[][] getRows( List<DesignElement> designElements );
+    public T[][] getRows( List<CompositeSequence> designElements );
 
     /**
      * Access a submatrix slice by columns
@@ -174,7 +174,7 @@ public interface ExpressionDataMatrix<T> {
      * @param index
      * @return
      */
-    public DesignElement getDesignElementForRow( int index );
+    public CompositeSequence getDesignElementForRow( int index );
 
     /**
      * @param index
@@ -191,7 +191,14 @@ public interface ExpressionDataMatrix<T> {
      * @param designElement
      * @return
      */
-    public BioAssayDimension getBioAssayDimension( DesignElement designElement );
+    public BioAssayDimension getBioAssayDimension( CompositeSequence designElement );
+
+    /**
+     * Get all the bioassaydimensions used by this
+     * 
+     * @return
+     */
+    public Collection<BioAssayDimension> getBioAssayDimensions();
 
     /**
      * Total number of columns.
@@ -207,7 +214,7 @@ public interface ExpressionDataMatrix<T> {
      * @param el
      * @return
      */
-    public int columns( DesignElement el );
+    public int columns( CompositeSequence el );
 
     /**
      * @return int

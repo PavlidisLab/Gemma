@@ -38,8 +38,7 @@ import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence; 
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
@@ -89,8 +88,8 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         CompositeSequenceParser parser = new CompositeSequenceParser();
         parser.parse( designElementStream );
         designElements = parser.getResults();
-        for ( DesignElement de : designElements ) {
-            assertTrue( ( ( CompositeSequence ) de ).getBiologicalCharacteristic() != null );
+        for ( CompositeSequence de : designElements ) {
+            assertTrue( de.getBiologicalCharacteristic() != null );
         }
     }
 
@@ -111,17 +110,17 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         boolean found = false;
         assertEquals( 34, designElements.size() ); // 33 from file plus one fake.
 
-        for ( DesignElement de : designElements ) {
+        for ( CompositeSequence de : designElements ) {
 
             if ( de.getName().equals( fakeName ) ) {
                 found = true;
-                if ( ( ( CompositeSequence ) de ).getBiologicalCharacteristic() != null ) {
+                if ( de.getBiologicalCharacteristic() != null ) {
                     fail( "Shouldn't have found a biological characteristic for this sequence" );
 
                     continue;
                 }
             } else {
-                assertTrue( de.getName() + " biological sequence not found", ( ( CompositeSequence ) de )
+                assertTrue( de.getName() + " biological sequence not found", de
                         .getBiologicalCharacteristic() != null );
             }
 

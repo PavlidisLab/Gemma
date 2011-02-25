@@ -65,10 +65,10 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     ExpressionExperiment e2;
     ExpressionExperiment e3;
     ExpressionExperiment e4;
-    
+
     String dea1_name;
-    String dea2_name;    
-    
+    String dea2_name;
+
     private String testEESetName;
 
     private String testAnalysisName;
@@ -91,14 +91,10 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         e4 = ExpressionExperiment.Factory.newInstance();
         e4.setShortName( RandomStringUtils.randomAlphabetic( 6 ) );
         e4 = expressionExperimentService.create( e4 );
-        
-        ExpressionExperimentSet eeSet = initSet();
-        eeSet.getExperiments().add( e1 );
-        expressionExperimentSetService.update( eeSet );
 
         // //////////////////
         eAnalysis1 = DifferentialExpressionAnalysis.Factory.newInstance();
-        eAnalysis1.setExpressionExperimentSetAnalyzed( eeSet );
+        eAnalysis1.setExperimentAnalyzed( e1 );
         dea1_name = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis1.setName( dea1_name );
         eAnalysis1.setDescription( "An analysis Test 1" );
@@ -106,11 +102,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         // ///////////////
         eAnalysis2 = DifferentialExpressionAnalysis.Factory.newInstance();
-        eeSet = initSet();
-        eeSet.getExperiments().add( e2 );
-        expressionExperimentSetService.update( eeSet );
 
-        eAnalysis2.setExpressionExperimentSetAnalyzed( eeSet );
+        eAnalysis2.setExperimentAnalyzed( e2 );
         dea2_name = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis2.setName( dea2_name );
         eAnalysis2.setDescription( "An analysis Test 2" );
@@ -118,11 +111,8 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         // /////////////
         eAnalysis3 = DifferentialExpressionAnalysis.Factory.newInstance();
-        eeSet = initSet();
-        eeSet.getExperiments().add( e3 );
-        expressionExperimentSetService.update( eeSet );
 
-        eAnalysis3.setExpressionExperimentSetAnalyzed( eeSet );
+        eAnalysis3.setExperimentAnalyzed( e3 );
         this.testAnalysisName = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis3.setName( testAnalysisName );
         eAnalysis3.setDescription( "An analysis Test 3" );
@@ -130,26 +120,12 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
 
         // ////
         eAnalysis4 = DifferentialExpressionAnalysis.Factory.newInstance();
-        eeSet = initSet();
-        eeSet.getExperiments().add( e3 );
-        expressionExperimentSetService.update( eeSet );
-
-        eAnalysis4.setExpressionExperimentSetAnalyzed( eeSet );
+        eAnalysis4.setExperimentAnalyzed( e3 );
         testEESetName = RandomStringUtils.randomAlphabetic( 6 );
         eAnalysis4.setName( testEESetName );
         eAnalysis4.setDescription( "An analysis Test 4" );
         eAnalysis4 = analysisService.create( eAnalysis4 );
 
-    }
-
-    private ExpressionExperimentSet initSet() {
-        Taxon mouse = this.getTaxon( "mouse" );
-
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.setTaxon( mouse );
-        eeSet.setName( RandomStringUtils.randomAlphabetic( 6 ) );
-        eeSet = expressionExperimentSetService.create( eeSet );
-        return eeSet;
     }
 
     /**
@@ -166,7 +142,7 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
         results = analysisService.findByInvestigation( e2 );
         assertEquals( 1, results.size() );
         dea = results.iterator().next();
-        assertEquals( dea2_name, dea.getName());
+        assertEquals( dea2_name, dea.getName() );
 
         results = analysisService.findByInvestigation( e3 );
         assertEquals( 2, results.size() );
@@ -208,16 +184,16 @@ public class DifferentialExpressionAnalysisServiceTest extends BaseSpringContext
     /**
      *  
      */
-//    @Test
-//    public void testFindByUniqueInvestigations() {
-//        Collection<Investigation> investigations = new ArrayList<Investigation>();
-//        investigations.add( e1 );
-//        investigations.add( e2 );
-//
-//        DifferentialExpressionAnalysis results = analysisService.findByUniqueInvestigations( investigations );
-//        assertNotNull( results );
-//        assertEquals( eAnalysis2.getId(), results.getId() );
-//
-//    }
+    // @Test
+    // public void testFindByUniqueInvestigations() {
+    // Collection<Investigation> investigations = new ArrayList<Investigation>();
+    // investigations.add( e1 );
+    // investigations.add( e2 );
+    //
+    // DifferentialExpressionAnalysis results = analysisService.findByUniqueInvestigations( investigations );
+    // assertNotNull( results );
+    // assertEquals( eAnalysis2.getId(), results.getId() );
+    //
+    // }
 
 }

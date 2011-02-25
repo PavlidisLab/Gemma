@@ -49,15 +49,9 @@ import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementService;
 import ubic.gemma.model.common.measurement.Unit;
 import ubic.gemma.model.common.measurement.UnitService;
-import ubic.gemma.model.common.protocol.Hardware;
-import ubic.gemma.model.common.protocol.HardwareApplication;
-import ubic.gemma.model.common.protocol.HardwareService;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
 import ubic.gemma.model.common.protocol.ProtocolService;
-import ubic.gemma.model.common.protocol.Software;
-import ubic.gemma.model.common.protocol.SoftwareApplication;
-import ubic.gemma.model.common.protocol.SoftwareService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 
@@ -87,9 +81,6 @@ abstract public class CommonPersister extends AbstractPersister {
     protected ExternalDatabaseService externalDatabaseService;
 
     @Autowired
-    protected HardwareService hardwareService;
-
-    @Autowired
     protected LocalFileService localFileService;
 
     @Autowired
@@ -108,9 +99,6 @@ abstract public class CommonPersister extends AbstractPersister {
     protected Map<Object, ExternalDatabase> seenDatabases = new HashMap<Object, ExternalDatabase>();
 
     @Autowired
-    protected SoftwareService softwareService;
-
-    @Autowired
     protected UnitService unitService;
 
     Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
@@ -123,6 +111,7 @@ abstract public class CommonPersister extends AbstractPersister {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
     @SuppressWarnings("unchecked")
@@ -136,8 +125,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return persistPerson( ( Person ) entity );
         } else if ( entity instanceof Contact ) {
             return persistContact( ( Contact ) entity );
-        } else if ( entity instanceof Hardware ) {
-            return persistHardware( ( Hardware ) entity );
         } else if ( entity instanceof Unit ) {
             return persistUnit( ( Unit ) entity );
         } else if ( entity instanceof QuantitationType ) {
@@ -146,8 +133,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return persistExternalDatabase( ( ExternalDatabase ) entity );
         } else if ( entity instanceof LocalFile ) {
             return persistLocalFile( ( LocalFile ) entity );
-        } else if ( entity instanceof Software ) {
-            return persistSoftware( ( Software ) entity );
         } else if ( entity instanceof Protocol ) {
             return persistProtocol( ( Protocol ) entity );
         } else if ( entity instanceof VocabCharacteristic ) {
@@ -210,13 +195,6 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param hardwareService The hardwareService to set.
-     */
-    public void setHardwareService( HardwareService hardwareService ) {
-        this.hardwareService = hardwareService;
-    }
-
-    /**
      * @param localFileService The localFileService to set.
      */
     public void setLocalFileService( LocalFileService localFileService ) {
@@ -249,13 +227,6 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
         this.quantitationTypeService = quantitationTypeService;
-    }
-
-    /**
-     * @param softwareService The softwareService to set.
-     */
-    public void setSoftwareService( SoftwareService softwareService ) {
-        this.softwareService = softwareService;
     }
 
     /**
@@ -296,13 +267,6 @@ abstract public class CommonPersister extends AbstractPersister {
             return;
         }
 
-        for ( Software software : protocol.getSoftwareUsed() ) {
-            software = persistSoftware( software );
-        }
-
-        for ( Hardware hardware : protocol.getHardwares() ) {
-            hardware = persistHardware( hardware );
-        }
     }
 
     /**
@@ -327,22 +291,6 @@ abstract public class CommonPersister extends AbstractPersister {
             performer = personService.findOrCreate( performer );
         }
 
-        for ( SoftwareApplication softwareApplication : protocolApplication.getSoftwareApplications() ) {
-            Software software = softwareApplication.getSoftware();
-            if ( software == null )
-                throw new IllegalStateException( "Must have software associated with SoftwareApplication" );
-
-            softwareApplication.setSoftware( softwareService.findOrCreate( software ) );
-
-        }
-
-        for ( HardwareApplication HardwareApplication : protocolApplication.getHardwareApplications() ) {
-            Hardware hardware = HardwareApplication.getHardware();
-            if ( hardware == null )
-                throw new IllegalStateException( "Must have hardware associated with HardwareApplication" );
-
-            HardwareApplication.setHardware( hardwareService.findOrCreate( hardware ) );
-        }
     }
 
     /**
@@ -387,7 +335,6 @@ abstract public class CommonPersister extends AbstractPersister {
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.update( perReference );
-                perReference.getAuthors().size();
                 return null;
             }
         } );
@@ -423,30 +370,6 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param hardware
-     * @return
-     */
-    protected Hardware persistHardware( Hardware hardware ) {
-
-        if ( hardware == null ) return null;
-        if ( !isTransient( hardware ) ) return hardware;
-
-        if ( hardware.getSoftwares() != null && hardware.getSoftwares().size() > 0 ) {
-            for ( Software software : hardware.getSoftwares() ) {
-                software = persistSoftware( software );
-            }
-        }
-
-        if ( hardware.getHardwareManufacturers() != null && hardware.getHardwareManufacturers().size() > 0 ) {
-            for ( Contact manufacturer : hardware.getHardwareManufacturers() ) {
-                manufacturer = persistContact( manufacturer );
-            }
-        }
-
-        return hardwareService.findOrCreate( hardware );
-    }
-
-    /**
      * @param file
      */
     protected LocalFile persistLocalFile( LocalFile file ) {
@@ -475,9 +398,6 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected Person persistPerson( Person person ) {
         if ( person == null ) return null;
-        for ( Organization affiliation : person.getAffiliations() ) {
-            affiliation = persistOrganization( affiliation );
-        }
         return this.personService.findOrCreate( person );
     }
 
@@ -510,34 +430,6 @@ abstract public class CommonPersister extends AbstractPersister {
         QuantitationType qt = quantitationTypeService.create( qType );
         quantitationTypeCache.put( key, qt );
         return qt;
-    }
-
-    /**
-     * @param software
-     * @return
-     */
-    protected Software persistSoftware( Software software ) {
-        if ( software == null ) return null;
-        if ( !isTransient( software ) ) return software;
-
-        Collection<Software> components = software.getSoftwareComponents();
-
-        if ( components != null && components.size() > 0 ) {
-            for ( Software component : components ) {
-                component = persistSoftware( component );
-            }
-        }
-
-        if ( software.getSoftwareManufacturers() != null && software.getSoftwareManufacturers().size() > 0 ) {
-            for ( Contact manufacturer : software.getSoftwareManufacturers() ) {
-                manufacturer = persistContact( manufacturer );
-            }
-        }
-
-        software.setHardware( persistHardware( software.getHardware() ) );
-
-        return softwareService.findOrCreate( software );
-
     }
 
     protected Unit persistUnit( Unit unit ) {

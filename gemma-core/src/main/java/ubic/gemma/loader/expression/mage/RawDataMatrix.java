@@ -35,7 +35,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.list.ByteArrayList;
 
@@ -82,7 +82,7 @@ class RawDataMatrix {
      * @param de
      * @param data
      */
-    public void addDataToRow( DesignElement de, QuantitationType qt, ExpressionExperiment exp, Object data ) {
+    public void addDataToRow( CompositeSequence de, QuantitationType qt, ExpressionExperiment exp, Object data ) {
         if ( de == null || data == null ) throw new IllegalArgumentException( "Null" );
 
         addRow( de, qt, exp );
@@ -104,7 +104,7 @@ class RawDataMatrix {
      * @param de
      * @param qt
      */
-    public void addRow( DesignElement de, QuantitationType qt, ExpressionExperiment expressionExperiment ) {
+    public void addRow( CompositeSequence de, QuantitationType qt, ExpressionExperiment expressionExperiment ) {
         if ( rows.containsKey( de.getName() ) ) return;
         RawExpressionDataVector tobeAdded = RawExpressionDataVector.Factory.newInstance();
         tobeAdded.setExpressionExperiment( expressionExperiment );
@@ -123,7 +123,7 @@ class RawDataMatrix {
      * @param qt
      * @param data
      */
-    public void addRow( DesignElement de, QuantitationType qt, ExpressionExperiment expressionExperiment,
+    public void addRow( CompositeSequence de, QuantitationType qt, ExpressionExperiment expressionExperiment,
             List<Object> data ) {
         DesignElementDataVector tobeAdded = RawExpressionDataVector.Factory.newInstance();
         tobeAdded.setDesignElement( de );
@@ -171,7 +171,7 @@ class RawDataMatrix {
      * @param de
      * @return
      */
-    public DesignElementDataVector getRow( DesignElement de ) {
+    public DesignElementDataVector getRow( CompositeSequence de ) {
         String name = de.getName();
         ByteArrayList bytes = this.rowTemp.get( name );
         this.rows.get( name ).setData( bytes.elements() );

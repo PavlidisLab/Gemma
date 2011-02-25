@@ -41,7 +41,7 @@ import ubic.gemma.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.loader.expression.geo.GeoParseResult;
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -55,6 +55,7 @@ public class ExpressionDataSVDTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see junit.framework.TestCase#setUp()
      */
     @Before
@@ -82,7 +83,7 @@ public class ExpressionDataSVDTest {
      */
     @Test
     public void testGetU() {
-        DoubleMatrix<DesignElement, Integer> u = svd.getU();
+        DoubleMatrix<CompositeSequence, Integer> u = svd.getU();
         assertNotNull( u );
     }
 

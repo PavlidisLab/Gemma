@@ -260,9 +260,12 @@ public class ExpressionExperimentQCController extends BaseController {
 
             MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( cm );
 
-            showLabels = showLabels == null ? false : showLabels && cellsize > 8;
+            boolean reallyShowLabels = showLabels == null ? false : showLabels && cellsize > 8 /*
+                                                                                                * minimum size for text
+                                                                                                * to show up
+                                                                                                */;
             writer.setCellSize( new Dimension( cellsize, cellsize ) );
-            writer.writeToPng( cm, os, showLabels /* minimum size for text to show up */);
+            writer.writeToPng( cm, os, reallyShowLabels, reallyShowLabels /* show scale if we show labels */);
         }
         return null; // nothing to return;
     }

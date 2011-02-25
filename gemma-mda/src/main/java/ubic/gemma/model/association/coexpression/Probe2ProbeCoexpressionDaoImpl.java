@@ -299,7 +299,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         for ( String p2pClassName : p2pClassNames ) {
 
             final String findLinkAnalysisObject = "select p from ProbeCoexpressionAnalysisImpl p inner join"
-                    + " p.expressionExperimentSetAnalyzed eas inner join eas.experiments e where e = :ee";
+                    + " p.experimentAnalyzed e where e = :ee";
             List o = this.getHibernateTemplate().findByNamedParam( findLinkAnalysisObject, "ee", ee );
             if ( o.size() > 0 ) {
                 analysis = ( ProbeCoexpressionAnalysis ) o.iterator().next();
@@ -363,8 +363,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
 
         // Locate analyses which use these probes, return the expression experiments
         String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join"
-                + " pca.expressionExperimentSetAnalyzed eesa inner join eesa.experiments ees"
-                + " inner join pca.probesUsed pu inner join pu.probe p where ees in (:ees) and p in (:probes)";
+                + " pca.experimentAnalyzed e"
+                + " inner join pca.probesUsed pu inner join pu.probe p where e in (:ees) and p in (:probes)";
         List result = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
 
@@ -419,8 +419,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
 
-        String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.expressionExperimentSetAnalyzed eesa"
-                + " inner join eesa.experiments ees inner join pca.probesUsed pu inner join fetch pu.probe where pu.id in (:probes) and ees in (:ees)";
+        String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentAnalyzed e"
+                + " inner join pca.probesUsed pu inner join fetch pu.probe where pu.id in (:probes) and e in (:ees)";
 
         Map<Long, Collection<BioAssaySet>> result = new HashMap<Long, Collection<BioAssaySet>>();
 

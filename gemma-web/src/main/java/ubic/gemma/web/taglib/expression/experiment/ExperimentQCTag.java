@@ -21,9 +21,6 @@ package ubic.gemma.web.taglib.expression.experiment;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.tagext.TagSupport;
 
-import org.apache.commons.lang.RandomStringUtils;
-
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCController;
 
 /**
@@ -142,7 +139,7 @@ public class ExperimentQCTag extends TagSupport {
                             + bigImageUrl
                             + "')"
                             + ";return 1\"; "
-                            + "title=\"Click for larger version\" >"
+                            + "title=\"Assay correlations (bright=higher); click for larger version\" >"
                             + "<img src=\"visualizeCorrMat.html?id="
                             + this.eeid
                             + "&size=1\" alt='Image unavailable' width='"
@@ -169,10 +166,13 @@ public class ExperimentQCTag extends TagSupport {
              */
             String detailsUrl = "detailedFactorAnalysis.html?id=" + this.eeid;
 
-            buf.append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
-                    + "<a style='cursor:pointer' " + "onClick=\"popupImage('" + detailsUrl + "')" + ";return 1\";"
-                    + "<img title='Correlations of PCs with experimental factors' src=\"pcaFactors.html?id="
-                    + this.eeid + "\" /></a></td>" );
+            buf
+                    .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
+                            + "<a style='cursor:pointer' onClick=\"popupImage('"
+                            + detailsUrl
+                            + "');return 1\" >"
+                            + "<img title='Correlations of PCs with experimental factors, click for details' src=\"pcaFactors.html?id="
+                            + this.eeid + "\" /></a></td>" );
         } else {
             /*
              * Two panels for PCA, so two placeholders.

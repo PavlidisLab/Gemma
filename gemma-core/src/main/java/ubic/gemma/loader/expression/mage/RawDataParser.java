@@ -38,8 +38,7 @@ import ubic.gemma.loader.util.parser.FileCombiningParser;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.designElement.Reporter;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -246,8 +245,8 @@ public class RawDataParser implements FileCombiningParser {
      * @param hasDesignElements
      * @param designElements
      */
-    private DesignElement getDesignElement( boolean hasDesignElements, List<DesignElement> designElements ) {
-        DesignElement de;
+    private CompositeSequence getDesignElement( boolean hasDesignElements, List<CompositeSequence> designElements ) {
+        CompositeSequence de;
         if ( hasDesignElements ) {
             if ( designElements.size() < linesParsed )
                 throw new IllegalArgumentException(
@@ -255,9 +254,7 @@ public class RawDataParser implements FileCombiningParser {
             de = designElements.get( linesParsed );
             if ( de == null ) throw new NullPointerException( "DesignElement cannot be null" );
         } else {
-            de = Reporter.Factory.newInstance();
-            // de.setArrayDesign( currentBioAssay.getArrayDesignUsed() );
-            de.setName( "R_" + Integer.toString( linesParsed ) );
+            throw new UnsupportedOperationException( "Cannot handle reporter-level data" );
         }
         return de;
     }
@@ -301,7 +298,7 @@ public class RawDataParser implements FileCombiningParser {
 
         log.info( "Parsing 'raw' data for bioAssay: " + currentBioAssay );
 
-        List<DesignElement> designElements = dimensions.getDesignElementDimension( currentBioAssay );
+        List<CompositeSequence> designElements = dimensions.getDesignElementDimension( currentBioAssay );
         List<QuantitationType> quantitationTypes = dimensions.getQuantitationTypeDimension( currentBioAssay );
 
         if ( quantitationTypes == null )
@@ -314,7 +311,7 @@ public class RawDataParser implements FileCombiningParser {
         while ( ( line = br.readLine() ) != null ) {
             String[] fields = ( String[] ) parseOneLine( line );
 
-            DesignElement de = getDesignElement( hasDesignElements, designElements );
+            CompositeSequence de = getDesignElement( hasDesignElements, designElements );
 
             if ( selector >= 0 ) {
                 if ( selector >= fields.length ) throw new NoMoreQuantitationTypesException();
@@ -347,7 +344,7 @@ public class RawDataParser implements FileCombiningParser {
 
         // we specify LinkedHashMaps so things come out in predictable orders.
         LinkedHashMap<String, RawDataMatrix> dataMatrices = new LinkedHashMap<String, RawDataMatrix>();
-        LinkedHashMap<String, DesignElement> designElementsForNames = new LinkedHashMap<String, DesignElement>();
+        LinkedHashMap<String, CompositeSequence> designElementsForNames = new LinkedHashMap<String, CompositeSequence>();
         LinkedHashMap<String, QuantitationType> quantitationTypesForNames = new LinkedHashMap<String, QuantitationType>();
 
         /**
@@ -357,7 +354,7 @@ public class RawDataParser implements FileCombiningParser {
             // must call set up.
         }
 
-        public QuantitationTypeData( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
+        public QuantitationTypeData( List<QuantitationType> quantitationTypes, List<CompositeSequence> designElements ) {
             setUp( quantitationTypes, designElements );
         }
 
@@ -368,7 +365,7 @@ public class RawDataParser implements FileCombiningParser {
          * @param de
          * @param data
          */
-        public void addData( QuantitationType qt, DesignElement de, ExpressionExperiment exp, String data ) {
+        public void addData( QuantitationType qt, CompositeSequence de, ExpressionExperiment exp, String data ) {
 
             String qtName = qt.getName();
 
@@ -415,11 +412,11 @@ public class RawDataParser implements FileCombiningParser {
          * @param qt
          * @return
          */
-        public List<DesignElement> getDesignElementsForQuantitationType( QuantitationType qt ) {
-            List<DesignElement> result = new ArrayList<DesignElement>();
+        public List<CompositeSequence> getDesignElementsForQuantitationType( QuantitationType qt ) {
+            List<CompositeSequence> result = new ArrayList<CompositeSequence>();
 
             for ( String deName : dataMatrices.get( qt.getName() ).rows.keySet() ) {
-                DesignElement de = designElementsForNames.get( deName );
+                CompositeSequence de = designElementsForNames.get( deName );
                 if ( de == null ) {
                     throw new IllegalStateException( "Null design element for " + deName );
                 }
@@ -450,7 +447,7 @@ public class RawDataParser implements FileCombiningParser {
         /**
          * @param quantitationTypes
          */
-        void setUp( List<QuantitationType> quantitationTypes, List<DesignElement> designElements ) {
+        void setUp( List<QuantitationType> quantitationTypes, List<CompositeSequence> designElements ) {
             for ( QuantitationType type : quantitationTypes ) {
                 String qtName = type.getName();
                 if ( !dataMatrices.containsKey( qtName ) ) {
@@ -462,7 +459,7 @@ public class RawDataParser implements FileCombiningParser {
                 }
             }
 
-            for ( DesignElement de : designElements ) {
+            for ( CompositeSequence de : designElements ) {
                 designElementsForNames.put( de.getName(), de );
             }
 

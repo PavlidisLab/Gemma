@@ -344,19 +344,6 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
-     */
-    public java.lang.Integer getReporterCount( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
-        try {
-            return this.handleGetReporterCount( arrayDesign );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#getTaxa(java.lang.Long)
      */
     public java.util.Collection<ubic.gemma.model.genome.Taxon> getTaxa( final java.lang.Long id ) {
@@ -976,12 +963,6 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      */
     protected abstract java.util.Map<Long, AuditEvent> handleGetLastValidationEvent( java.util.Collection<Long> ids )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getReporterCount(ubic.gemma.model.expression.arrayDesign.ArrayDesign)}
-     */
-    protected abstract java.lang.Integer handleGetReporterCount(
-            ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getTaxa(java.lang.Long)} Lmd 29/07/09 Fishmanomics provide support multi

@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -59,7 +59,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     // protected LinkedHashSet<DesignElement> rowElements;
 
-    protected Map<DesignElement, BioAssayDimension> bioAssayDimensions;
+    protected Map<CompositeSequence, BioAssayDimension> bioAssayDimensions;
 
     protected ExpressionExperiment expressionExperiment;
 
@@ -70,23 +70,31 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     protected Map<Integer, BioMaterial> columnBioMaterialMapByInteger;
 
     // maps for designelements/sequences/rows
-    protected Map<DesignElement, Integer> rowElementMap;
-    protected Map<Integer, DesignElement> rowDesignElementMapByInteger;
+    protected Map<CompositeSequence, Integer> rowElementMap;
+    protected Map<Integer, CompositeSequence> rowDesignElementMapByInteger;
 
     private Collection<QuantitationType> quantitationTypes;
 
     protected void init() {
         quantitationTypes = new HashSet<QuantitationType>();
-        bioAssayDimensions = new HashMap<DesignElement, BioAssayDimension>();
+        bioAssayDimensions = new HashMap<CompositeSequence, BioAssayDimension>();
 
-        rowElementMap = new LinkedHashMap<DesignElement, Integer>();
-        rowDesignElementMapByInteger = new LinkedHashMap<Integer, DesignElement>();
+        rowElementMap = new LinkedHashMap<CompositeSequence, Integer>();
+        rowDesignElementMapByInteger = new LinkedHashMap<Integer, CompositeSequence>();
 
         columnAssayMap = new LinkedHashMap<BioAssay, Integer>();
         columnBioMaterialMap = new LinkedHashMap<BioMaterial, Integer>();
         columnBioMaterialMapByInteger = new LinkedHashMap<Integer, BioMaterial>();
         columnBioAssayMapByInteger = new LinkedHashMap<Integer, Collection<BioAssay>>();
 
+    }
+
+    
+    /* (non-Javadoc)
+     * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayDimensions()
+     */
+    public Collection<BioAssayDimension> getBioAssayDimensions() {
+        return new HashSet<BioAssayDimension>( this.bioAssayDimensions.values() );
     }
 
     /*
@@ -114,7 +122,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#columns(ubic.gemma.model.expression.designElement.DesignElement
      * )
      */
-    public int columns( DesignElement el ) {
+    public int columns( CompositeSequence el ) {
         int j = 0;
         ArrayDesign ad = el.getArrayDesign();
         for ( int i = 0; i < columns(); i++ ) {
@@ -160,7 +168,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getDesignElementForRow(int)
      */
-    public DesignElement getDesignElementForRow( int index ) {
+    public CompositeSequence getDesignElementForRow( int index ) {
         return this.rowDesignElementMapByInteger.get( index );
     }
 
@@ -188,7 +196,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @seeubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRowIndex(ubic.gemma.model.expression.designElement.
      * DesignElement)
      */
-    public int getRowIndex( DesignElement designElement ) {
+    public int getRowIndex( CompositeSequence designElement ) {
         Integer index = rowElementMap.get( designElement );
         if ( index == null ) return -1;
         return index;
@@ -237,7 +245,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
             if ( vectorQuantitationType.equals( quantitationType ) ) {
                 vectorsOfInterest.add( vector );
-                DesignElement designElement = vector.getDesignElement();
+                CompositeSequence designElement = vector.getDesignElement();
                 this.getQuantitationTypes().add( vectorQuantitationType );
                 this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
@@ -292,7 +300,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                         this.expressionExperiment = vector.getExpressionExperiment();
                     vectorsOfInterest.add( vector );
                     this.getQuantitationTypes().add( vectorQuantitationType );
-                    DesignElement designElement = vector.getDesignElement();
+                    CompositeSequence designElement = vector.getDesignElement();
                     this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                     addToRowMaps( rowIndex, designElement );
                     rowIndex++;
@@ -309,7 +317,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * @param rwo The row number to be used by this design element.
      * @param designElement
      */
-    protected void addToRowMaps( Integer row, DesignElement designElement ) {
+    protected void addToRowMaps( Integer row, CompositeSequence designElement ) {
         rowDesignElementMapByInteger.put( row, designElement );
         rowElementMap.put( designElement, row );
     }
@@ -333,7 +341,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
                 if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
                 this.getQuantitationTypes().add( vectorQuantitationType );
-                DesignElement designElement = vector.getDesignElement();
+                CompositeSequence designElement = vector.getDesignElement();
                 bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
                 i++;
@@ -355,7 +363,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
             if ( qTypes.contains( vectorQuantitationType ) ) {
                 if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
                 vectorsOfInterest.add( vector );
-                DesignElement designElement = vector.getDesignElement();
+                CompositeSequence designElement = vector.getDesignElement();
                 bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
                 addToRowMaps( i, designElement );
                 this.getQuantitationTypes().add( vectorQuantitationType );
@@ -378,7 +386,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
         for ( DesignElementDataVector vector : sorted ) {
             if ( this.expressionExperiment == null ) this.expressionExperiment = vector.getExpressionExperiment();
             QuantitationType vectorQuantitationType = vector.getQuantitationType();
-            DesignElement designElement = vector.getDesignElement();
+            CompositeSequence designElement = vector.getDesignElement();
             this.bioAssayDimensions.put( designElement, vector.getBioAssayDimension() );
             if ( quantitationType == null ) {
                 quantitationType = vectorQuantitationType;
@@ -581,7 +589,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayDimension()
      */
-    public BioAssayDimension getBioAssayDimension( DesignElement designElement ) {
+    public BioAssayDimension getBioAssayDimension( CompositeSequence designElement ) {
 
         return this.bioAssayDimensions.get( designElement );
 

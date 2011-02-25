@@ -25,7 +25,6 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
  * Used to make a 'dummy matrix' that has the column information populated. This is useful for processing where we want
@@ -53,7 +52,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
     public EmptyExpressionMatrix( BioAssayDimension ba ) {
         super();
         super.init();
-        DesignElement dummy = CompositeSequence.Factory.newInstance();
+        CompositeSequence dummy = CompositeSequence.Factory.newInstance();
         this.bioAssayDimensions.put( dummy, ba );
         this.numCols = this.setUpColumnElements();
 
@@ -63,7 +62,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         return numCols;
     }
 
-    public Object get( DesignElement designElement, BioAssay bioAssay ) {
+    public Object get( CompositeSequence designElement, BioAssay bioAssay ) {
         throw new UnsupportedOperationException();
     }
 
@@ -71,7 +70,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         throw new UnsupportedOperationException();
     }
 
-    public Object[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays ) {
+    public Object[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException();
     }
 
@@ -91,7 +90,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         throw new UnsupportedOperationException();
     }
 
-    public Object[] getRow( DesignElement designElement ) {
+    public Object[] getRow( CompositeSequence designElement ) {
         throw new UnsupportedOperationException();
     }
 
@@ -99,7 +98,7 @@ public class EmptyExpressionMatrix extends BaseExpressionDataMatrix<Object> {
         throw new UnsupportedOperationException();
     }
 
-    public Object[][] getRows( List<DesignElement> designElements ) {
+    public Object[][] getRows( List<CompositeSequence> designElements ) {
         throw new UnsupportedOperationException();
     }
 

@@ -29,6 +29,10 @@ public abstract class DifferentialExpressionAnalysisResultImpl extends
      */
     private static final long serialVersionUID = 8952834115689524169L;
 
+    private static int getBin( Double value ) {
+        return ( int ) Math.min( 5, Math.floor( -Math.log10( value ) ) );
+    }
+
     @Override
     public void setCorrectedPvalue( Double correctedPvalue ) {
 
@@ -41,7 +45,7 @@ public abstract class DifferentialExpressionAnalysisResultImpl extends
          * than 10e-5. 0.1-1 -> 0; 0.01-0.099 -> 1; 0.001-0.00999 -> 2; 0.0001- 0.000999 -> 3 etc. Thus "p<0.01" is
          * equivalent to "bin >=2"
          */
-        this.setCorrectedPValueBin( ( int ) Math.min( 5, Math.floor( -Math.log10( correctedPvalue ) ) ) );
+        this.setCorrectedPValueBin( getBin( correctedPvalue ) );
     }
 
 }

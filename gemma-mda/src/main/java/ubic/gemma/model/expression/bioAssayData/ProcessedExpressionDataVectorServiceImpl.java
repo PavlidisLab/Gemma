@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -114,11 +113,11 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return processedExpressionDataVectorDao.getRanks( expressionExperiment, genes, method );
     }
 
-    public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
+    public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         return processedExpressionDataVectorDao.getRanks( expressionExperiment, method );
     }
 
-    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+    public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> genes ) {
         return this.getProcessedExpressionDataVectorDao().getRanksByProbe( eeCol, genes );
     }

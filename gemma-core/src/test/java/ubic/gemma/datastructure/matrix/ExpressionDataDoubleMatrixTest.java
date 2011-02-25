@@ -55,7 +55,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
@@ -150,9 +149,9 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         quantitationType.setIsNormalized( true );
 
         Collection<RawExpressionDataVector> designElementDataVectors = ee.getRawExpressionDataVectors();
-        Collection<DesignElement> designElements = new HashSet<DesignElement>();
+        Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector designElementDataVector : designElementDataVectors ) {
-            DesignElement de = designElementDataVector.getDesignElement();
+            CompositeSequence de = designElementDataVector.getDesignElement();
             designElements.add( de );
         }
 
@@ -161,7 +160,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
                 designElementDataVectors );
 
         /* Assertions */
-        DesignElement deToQuery = designElements.iterator().next();
+        CompositeSequence deToQuery = designElements.iterator().next();
 
         Double[] row = expressionDataDoubleMatrix.getRow( deToQuery );
         assertNotNull( row );
@@ -253,7 +252,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
         vector2.setBioAssayDimension( bioAssayDimension );
         vectors2.add( vector2 );
 
-        Collection<DesignElement> designElements = new LinkedHashSet<DesignElement>();
+        Collection<CompositeSequence> designElements = new LinkedHashSet<CompositeSequence>();
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( "test ar" );

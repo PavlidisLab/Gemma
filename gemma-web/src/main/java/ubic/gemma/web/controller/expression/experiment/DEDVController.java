@@ -706,8 +706,7 @@ public class DEDVController {
 
         differentialExpressionResultService.thawLite( ar );
 
-        BioAssaySet analyzedSet = ar.getAnalysis().getExpressionExperimentSetAnalyzed().getExperiments().iterator()
-                .next();
+        BioAssaySet analyzedSet = ar.getAnalysis().getExperimentAnalyzed();
 
         Collection<BioAssaySet> ees = new ArrayList<BioAssaySet>();
         ees.add( analyzedSet );

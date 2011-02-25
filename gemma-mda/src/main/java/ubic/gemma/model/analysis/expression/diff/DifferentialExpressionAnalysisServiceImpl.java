@@ -161,36 +161,6 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return this.getDifferentialExpressionAnalysisDao().findByTaxon( taxon );
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected DifferentialExpressionAnalysis handleFindByUniqueInvestigations( Collection investigations )
-            throws Exception {
-
-        Map<Investigation, Collection<DifferentialExpressionAnalysis>> anas = this
-                .getDifferentialExpressionAnalysisDao().findByInvestigations( investigations );
-
-        /*
-         * Find an analysis that uses all the investigations.
-         */
-
-        for ( ExpressionExperiment ee : ( Collection<ExpressionExperiment> ) investigations ) {
-
-            if ( !anas.containsKey( ee ) ) {
-                return null; // then there can be none meeting the criterion.
-            }
-
-            Collection<DifferentialExpressionAnalysis> analyses = anas.get( ee );
-            for ( DifferentialExpressionAnalysis a : analyses ) {
-                if ( a.getExpressionExperimentSetAnalyzed().getExperiments().size() == investigations.size()
-                        && a.getExpressionExperimentSetAnalyzed().getExperiments().containsAll( investigations ) ) {
-                    return a;
-                }
-            }
-        }
-
-        return null;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -250,6 +220,17 @@ public class DifferentialExpressionAnalysisServiceImpl extends
     public Integer countUpregulated( ExpressionAnalysisResultSet par, double threshold ) {
         return this.getDifferentialExpressionAnalysisDao().countUpregulated( par, threshold );
 
+    }
+
+    @Override
+    protected DifferentialExpressionAnalysis handleFindByUniqueInvestigations( Collection<Investigation> investigations )
+            throws Exception {
+        if ( investigations == null || investigations.isEmpty() || investigations.size() > 1 ) {
+            return null;
+        }
+        Collection found = this.findByInvestigation( investigations.iterator().next() );
+        if ( found.isEmpty() ) return null;
+        return ( DifferentialExpressionAnalysis ) found.iterator().next();
     }
 
 }

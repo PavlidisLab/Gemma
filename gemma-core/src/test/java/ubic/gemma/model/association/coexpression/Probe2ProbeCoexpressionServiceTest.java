@@ -81,12 +81,7 @@ public class Probe2ProbeCoexpressionServiceTest extends BaseSpringContextTest {
 
         ProbeCoexpressionAnalysis analysis = ProbeCoexpressionAnalysis.Factory.newInstance();
         analysis.setName( randomName() );
-        Taxon mouse = this.getTaxon( "mouse" );
-        ExpressionExperimentSet se = ExpressionExperimentSet.Factory.newInstance();
-        se.getExperiments().add( ee );
-        se.setTaxon( mouse );
-        se.setName( randomName() );
-        analysis.setExpressionExperimentSetAnalyzed( se );
+        analysis.setExperimentAnalyzed( ee );
 
         analysis = ( ProbeCoexpressionAnalysis ) this.persisterHelper.persist( analysis );
 

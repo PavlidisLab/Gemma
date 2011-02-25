@@ -376,18 +376,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetReporterCount(ubic.gemma.model.expression
-     * .arrayDesign.ArrayDesign)
-     */
-    @Override
-    protected Integer handleGetReporterCount( ArrayDesign arrayDesign ) throws Exception {
-        return this.getArrayDesignDao().numReporters( arrayDesign.getId() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.expression.arrayDesign.handleGetTaxa(long)
      */
     @Override

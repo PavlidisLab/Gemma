@@ -62,7 +62,6 @@ import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -383,7 +382,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             modelFormula = buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
         }
 
-        DoubleMatrix<DesignElement, Integer> namedMatrix = dmatrix.getMatrix();
+        DoubleMatrix<CompositeSequence, Integer> namedMatrix = dmatrix.getMatrix();
 
         /*
          * Log transform, if necessary
@@ -428,7 +427,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          * Create result objects for each model fit. Keeping things in order is important.
          */
         boolean warned = false;
-        for ( DesignElement el : namedMatrix.getRowNames() ) {
+        for ( CompositeSequence el : namedMatrix.getRowNames() ) {
 
             CompositeSequence cs = ( CompositeSequence ) el;
 
@@ -805,7 +804,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             }
 
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( baselineGroup,
-                    expressionAnalysis, resultLists.get( fName ), factorsUsed );
+                    expressionAnalysis, resultLists.get( fName ), null, factorsUsed );
             resultSets.add( resultSet );
 
         }
@@ -864,7 +863,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @return
      * @see ExpressionExperimentFilter for a related implementation.
      */
-    private boolean onLogScale( QuantitationType quantitationType, DoubleMatrix<DesignElement, Integer> namedMatrix ) {
+    private boolean onLogScale( QuantitationType quantitationType, DoubleMatrix<CompositeSequence, Integer> namedMatrix ) {
         if ( quantitationType.getScale() != null ) {
             if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
                 return true;
@@ -901,7 +900,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param rowNameExtractor
      * @return results
      */
-    private Map<String, LinearModelSummary> runAnalysis( final DoubleMatrix<DesignElement, Integer> namedMatrix,
+    private Map<String, LinearModelSummary> runAnalysis( final DoubleMatrix<CompositeSequence, Integer> namedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
             final Transformer rowNameExtractor ) {
 

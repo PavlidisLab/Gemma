@@ -18,7 +18,7 @@
  */
 package ubic.gemma.datastructure.matrix;
 
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * Encapsulates information about the row 'label' for a ExpressionDataMatrix. Normal applications do not need to deal
@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  */
 public class ExpressionDataMatrixRowElement implements Comparable<ExpressionDataMatrixRowElement> {
 
-    private DesignElement designElement;
+    private CompositeSequence designElement;
 
     private Integer index;
 
@@ -38,8 +38,8 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
         this.index = i;
         this.designElement = matrix.getDesignElementForRow( i );
     }
-    
-    public ExpressionDataMatrixRowElement(ExpressionDataMatrixRowElement toCopy) {
+
+    public ExpressionDataMatrixRowElement( ExpressionDataMatrixRowElement toCopy ) {
         this.index = toCopy.getIndex();
         this.designElement = toCopy.getDesignElement();
     }
@@ -60,11 +60,11 @@ public class ExpressionDataMatrixRowElement implements Comparable<ExpressionData
         return designElement.getName() + " " + designElement.getId();
     }
 
-    public DesignElement getDesignElement() {
+    public CompositeSequence getDesignElement() {
         return designElement;
     }
 
-    public void setDesignElement( DesignElement designElement ) {
+    public void setDesignElement( CompositeSequence designElement ) {
         this.designElement = designElement;
     }
 

@@ -25,7 +25,6 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -137,7 +136,7 @@ public interface ProcessedExpressionDataVectorService {
      * @return
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
+    public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
 
     /**
      * Retrieve expression level information for genes in experiments.
@@ -147,7 +146,7 @@ public interface ProcessedExpressionDataVectorService {
      * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+    public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> eeCol, Collection<Gene> pars );
 
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })

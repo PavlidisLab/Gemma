@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -243,11 +243,11 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     private void testMatrixValue( ExpressionExperiment exp, ExpressionDataMatrix<Double> matrix, String probeToTest,
             String sampleToTest, double expectedValue ) {
 
-        DesignElement soughtDesignElement = null;
+        CompositeSequence soughtDesignElement = null;
         BioAssay soughtBioAssay = null;
         Collection<RawExpressionDataVector> vectors = exp.getRawExpressionDataVectors();
         for ( DesignElementDataVector vector : vectors ) {
-            DesignElement de = vector.getDesignElement();
+            CompositeSequence de = vector.getDesignElement();
             if ( de.getName().equals( probeToTest ) ) {
                 soughtDesignElement = de;
             }

@@ -54,7 +54,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -223,7 +222,7 @@ public class PersistentDummyObjectHelper {
             ef.setExperimentalDesign( ed );
             ef.setName( "Experimental Factor " + RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
             ef.setDescription( i + ": A test experimental factor" );
-            ef.setType(FactorType.CATEGORICAL);
+            ef.setType( FactorType.CATEGORICAL );
             log.debug( "experimental factor => factor values" );
             ef.setFactorValues( getFactorValues( ef ) );
             efCol.add( ef );
@@ -376,14 +375,8 @@ public class PersistentDummyObjectHelper {
         ProbeCoexpressionAnalysis pca = ProbeCoexpressionAnalysis.Factory.newInstance();
         pca.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) );
 
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.setName( ee.getShortName() );
-        eeSet.setTaxon( this.testTaxon );
+        pca.setExperimentAnalyzed( ee );
 
-        pca.setExpressionExperimentSetAnalyzed( eeSet );
-        pca.getExpressionExperimentSetAnalyzed().getExperiments().add( ee );
-
-        persisterHelper.persist( pca.getExpressionExperimentSetAnalyzed() );
         persisterHelper.persist( pca );
 
         /*
@@ -394,14 +387,8 @@ public class PersistentDummyObjectHelper {
         protocol.setName( "Differential expression analysis settings" );
         protocol.setDescription( "qvalue: " + true );
         expressionAnalysis.setProtocol( protocol );
+        expressionAnalysis.setExperimentAnalyzed( ee );
 
-        ExpressionExperimentSet diffeeset = ExpressionExperimentSet.Factory.newInstance();
-        diffeeset.setTaxon( this.testTaxon );
-        diffeeset.getExperiments().add( ee );
-        expressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
-        expressionAnalysis.setName( "testDiff" );
-
-        persisterHelper.persist( expressionAnalysis.getExpressionExperimentSetAnalyzed() );
         persisterHelper.persist( expressionAnalysis );
     }
 
@@ -441,16 +428,16 @@ public class PersistentDummyObjectHelper {
 
         for ( int i = 0; i < numCompositeSequences; i++ ) {
 
-            Reporter reporter = Reporter.Factory.newInstance();
+            // Reporter reporter = Reporter.Factory.newInstance();
             CompositeSequence compositeSequence = CompositeSequence.Factory.newInstance();
 
-            if ( randomNames ) {
-                reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testreporter" );
-            } else {
-                reporter.setName( i + "_probe_at" );
-            }
-
-            reporter.setCompositeSequence( compositeSequence );
+            // if ( randomNames ) {
+            // reporter.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testreporter" );
+            // } else {
+            // reporter.setName( i + "_probe_at" );
+            // }
+            //
+            // reporter.setCompositeSequence( compositeSequence );
 
             if ( randomNames ) {
                 compositeSequence.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testcs" );
@@ -458,7 +445,7 @@ public class PersistentDummyObjectHelper {
                 compositeSequence.setName( "probeset_" + i );
             }
 
-            compositeSequence.getComponentReporters().add( reporter );
+            // compositeSequence.getComponentReporters().add( reporter );
             compositeSequence.setArrayDesign( ad );
             ad.getCompositeSequences().add( compositeSequence );
 

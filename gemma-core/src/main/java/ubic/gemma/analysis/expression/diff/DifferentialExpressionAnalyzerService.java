@@ -672,8 +672,7 @@ public class DifferentialExpressionAnalyzerService {
                     + expressionExperiment.getName() + " \n" );
 
             for ( ExpressionAnalysisResultSet resultSet : resultSetList ) {
-                BioAssaySet analyzedSet = resultSet.getAnalysis().getExpressionExperimentSetAnalyzed().getExperiments()
-                        .iterator().next();
+                BioAssaySet analyzedSet = resultSet.getAnalysis().getExperimentAnalyzed();
 
                 if ( analyzedSet instanceof ExpressionExperimentSubSet ) {
                     out.write( "# SubSet id=" + analyzedSet.getId() + " " + analyzedSet.getName() + " "

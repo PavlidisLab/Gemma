@@ -39,7 +39,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -145,7 +145,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     @Test
     public final void testgetRawExpressionDataVectors() throws Exception {
         ExpressionExperiment eel = this.getTestPersistentCompleteExpressionExperiment( false );
-        Collection<DesignElement> designElements = new HashSet<DesignElement>();
+        Collection<CompositeSequence> designElements = new HashSet<CompositeSequence>();
         QuantitationType quantitationType = eel.getRawExpressionDataVectors().iterator().next().getQuantitationType();
         Collection<RawExpressionDataVector> allv = eel.getRawExpressionDataVectors();
 
@@ -154,7 +154,7 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         assertTrue( allv.size() > 1 );
 
         for ( Iterator<RawExpressionDataVector> it = allv.iterator(); it.hasNext(); ) {
-            DesignElement designElement = it.next().getDesignElement();
+            CompositeSequence designElement = it.next().getDesignElement();
             assertNotNull( designElement );
 
             designElements.add( designElement );

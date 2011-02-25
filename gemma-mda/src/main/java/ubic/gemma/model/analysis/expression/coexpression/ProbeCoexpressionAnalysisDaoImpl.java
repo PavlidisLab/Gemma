@@ -65,7 +65,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
 
     @Override
     protected Collection handleFindByInvestigation( Investigation investigation ) throws Exception {
-        final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed s where :e in elements (s.experiments)";
+        final String queryString = "select distinct a from ProbeCoexpressionAnalysisImpl a where :e = a.experimentAnalyzed";
         return this.getHibernateTemplate().findByNamedParam( queryString, "e", investigation );
     }
 
@@ -83,8 +83,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     @Override
     protected Collection handleFindByParentTaxon( Taxon taxon ) {
         final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
-                + " poa inner join poa.expressionExperimentSetAnalyzed s inner join s.experiments  as ee "
-                + "inner join ee.bioAssays as ba "
+                + " p  inner join as.experimentAnalyzed  as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
@@ -92,8 +91,7 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
     @Override
     protected Collection handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct poa from ProbeCoexpressionAnalysisImpl as"
-                + " poa inner join poa.expressionExperimentSetAnalyzed s inner join s.experiments  as ee "
-                + "inner join ee.bioAssays as ba "
+                + " inner join as.experimentAnalyzed  as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }

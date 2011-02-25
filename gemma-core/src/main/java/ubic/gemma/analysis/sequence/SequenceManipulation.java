@@ -25,8 +25,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.gemma.loader.expression.arrayDesign.Reporter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
@@ -88,6 +88,9 @@ public class SequenceManipulation {
     }
 
     /**
+     * Convert a CompositeSequence's immobilizedCharacteristics into a single sequence, using a simple merge-join
+     * strategy.
+     * 
      * @param sequences
      * @return BioSequence. Not all fields are filled in and must be set by the caller.
      */
@@ -111,16 +114,6 @@ public class SequenceManipulation {
         collapsed.setLength( new Long( collapsed.getSequence().length() ) );
         collapsed.setDescription( "Collapsed from " + sequences.size() + " reporter sequences" );
         return collapsed;
-    }
-
-    /**
-     * Convert a CompositeSequence's immobilizedCharacteristics into a single sequence, using a simple merge-join
-     * strategy.
-     * 
-     * @return
-     */
-    public static BioSequence collapse( CompositeSequence compositeSequence ) {
-        return collapse( compositeSequence.getComponentReporters() );
     }
 
     /**

@@ -56,7 +56,6 @@ import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -254,9 +253,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private BioMaterialService bioMaterialService;
-
-    @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     @Autowired
     private ExperimentalFactorService experimentalFactorService;

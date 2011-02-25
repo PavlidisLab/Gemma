@@ -20,6 +20,8 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 
+import ubic.gemma.model.analysis.AnalysisDaoImpl;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -28,9 +30,8 @@ import java.util.Collection;
  * 
  * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis
  */
-public abstract class GeneCoexpressionAnalysisDaoBase extends
-        ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDaoImpl<GeneCoexpressionAnalysis>
-        implements ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao {
+public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<GeneCoexpressionAnalysis> implements
+        ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao {
 
     /**
      * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao#create(int,

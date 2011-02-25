@@ -145,29 +145,22 @@ public class AclAdviceTest extends BaseSpringContextTest {
          * update on the Analysis.
          */
         ExpressionExperiment ee = getTestPersistentCompleteExpressionExperiment( false );
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        Collection<BioAssaySet> experimentsAnalyzed = new HashSet<BioAssaySet>();
-        experimentsAnalyzed.add( ee );
 
         ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance();
         resultSet.setAnalysis( diffExpressionAnalysis );
         resultSet.setExperimentalFactors( ee.getExperimentalDesign().getExperimentalFactors() );
 
-        diffExpressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
         diffExpressionAnalysis.getResultSets().add( resultSet );
 
-        eeSet.setExperiments( experimentsAnalyzed );
-        diffExpressionAnalysis.setExpressionExperimentSetAnalyzed( eeSet );
+        diffExpressionAnalysis.setExperimentAnalyzed( ee );
 
         diffExpressionAnalysis = ( DifferentialExpressionAnalysis ) persisterHelper.persist( diffExpressionAnalysis );
 
         aclTestUtils.checkHasAcl( ee );
         aclTestUtils.checkHasAcl( diffExpressionAnalysis );
-        aclTestUtils.checkHasAcl( eeSet );
         aclTestUtils.checkHasAcl( resultSet );
 
         aclTestUtils.checkHasAces( ee );
-        aclTestUtils.checkHasAces( eeSet );
         aclTestUtils.checkHasAces( diffExpressionAnalysis );
         aclTestUtils.checkLacksAces( resultSet );
 
@@ -191,7 +184,7 @@ public class AclAdviceTest extends BaseSpringContextTest {
         ExperimentalDesign ed = ee.getExperimentalDesign();
 
         ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
-        ef.setType(FactorType.CATEGORICAL);
+        ef.setType( FactorType.CATEGORICAL );
         ef.setExperimentalDesign( ed );
         String efName = "acladdtest_" + randomName();
         ef.setName( efName );

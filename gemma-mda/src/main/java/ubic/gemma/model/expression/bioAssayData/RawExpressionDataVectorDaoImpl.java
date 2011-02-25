@@ -25,7 +25,6 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.BusinessKey;
@@ -61,7 +60,7 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setParameter( "quantitationType", quantitationType );
 
-            Collection<DesignElement> batch = new HashSet<DesignElement>();
+            Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
             Collection<RawExpressionDataVector> result = new HashSet<RawExpressionDataVector>();
             int batchSize = 2000;
             for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
@@ -248,10 +247,9 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
     public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
         Collection<? extends DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
 
-        results
-                .addAll( this.getHibernateTemplate().findByNamedParam(
-                        "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
-                        bioAssayDimension ) );
+        results.addAll( this.getHibernateTemplate().findByNamedParam(
+                "select d from RawExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
+                bioAssayDimension ) );
         results.addAll( this.getHibernateTemplate().findByNamedParam(
                 "select d from ProcessedExpressionDataVectorImpl d where d.bioAssayDimension = :bad", "bad",
                 bioAssayDimension ) );

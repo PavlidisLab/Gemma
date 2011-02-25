@@ -36,7 +36,6 @@ import ubic.gemma.Constants;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -167,7 +166,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
         openColumnTableData( buf );
         for ( int i = 0; i < rowElements.size(); i++ ) {
             buf.append( "<span " + alternateRowStyle( i, 125 ) + ">" );
-            DesignElement designElement = rowElements.get( i ).getDesignElement();
+            CompositeSequence designElement = rowElements.get( i ).getDesignElement();
             buf.append( "<a href=\"/" + Constants.APP_NAME + PROBE_VIEW_URL + designElement.getId() + "\">"
                     + designElement.getName() + "</a></span><br />\n" );
         }
@@ -183,7 +182,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private void addGeneSymbolColumn( StringBuilder buf, List<ExpressionDataMatrixRowElement> rowElements ) {
         openColumnTableData( buf );
         for ( int i = 0; i < rowElements.size(); i++ ) {
-            CompositeSequence compositeSequence = ( CompositeSequence ) rowElements.get( i ).getDesignElement();
+            CompositeSequence compositeSequence = rowElements.get( i ).getDesignElement();
             buf.append( "<span " + alternateRowStyle( i, 125 ) + ">" );
             if ( genes == null || !genes.containsKey( compositeSequence ) ) {
                 buf.append( "</span><br />" );
@@ -242,7 +241,7 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
     private void addGeneNameColumn( StringBuilder buf, List<ExpressionDataMatrixRowElement> rowElements ) {
         openColumnTableData( buf );
         for ( int i = 0; i < rowElements.size(); i++ ) {
-            CompositeSequence compositeSequence = ( CompositeSequence ) rowElements.get( i ).getDesignElement();
+            CompositeSequence compositeSequence = rowElements.get( i ).getDesignElement();
             buf.append( "<span " + alternateRowStyle( i, 200 ) + ">" );
             if ( genes == null || !genes.containsKey( compositeSequence ) ) {
                 buf.append( "</span><br />" );

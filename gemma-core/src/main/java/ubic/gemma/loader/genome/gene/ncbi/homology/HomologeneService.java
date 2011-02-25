@@ -279,8 +279,15 @@ public class HomologeneService {
             String[] fields = StringUtils.splitPreserveAllTokens( line, DELIMITING_CHARACTER );
 
             Integer taxonId = Integer.parseInt( fields[1] );
-            Long groupId = Long.parseLong( fields[0] );
-            Long geneId = Long.parseLong( fields[2] );
+            Long groupId;
+            Long geneId;
+            try {
+                groupId = Long.parseLong( fields[0] );
+                geneId = Long.parseLong( fields[2] );
+            } catch ( NumberFormatException e ) {
+                log.warn( "Unparseable line from homologene: " + line );
+                continue;
+            }
             String geneSymbol = fields[3];
 
             if ( !group2Gene.containsKey( groupId ) ) {

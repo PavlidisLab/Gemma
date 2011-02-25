@@ -39,6 +39,29 @@ public class DesignElementDataVectorServiceImpl extends
         ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorServiceBase {
 
     @Override
+    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
+        return this.getRawExpressionDataVectorDao().find( bioAssayDimension );
+    }
+
+    /**
+     * @param vectors
+     * @return
+     */
+    private Class<? extends DesignElementDataVector> getVectorClass(
+            Collection<? extends DesignElementDataVector> vectors ) {
+        Class<? extends DesignElementDataVector> vectorClass = null;
+        for ( DesignElementDataVector designElementDataVector : vectors ) {
+            if ( vectorClass == null ) {
+                vectorClass = designElementDataVector.getClass();
+            }
+            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
+                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
+            }
+        }
+        return vectorClass;
+    }
+
+    @Override
     protected Integer handleCountAll() throws Exception {
         return this.getRawExpressionDataVectorDao().countAll();
     }
@@ -65,7 +88,10 @@ public class DesignElementDataVectorServiceImpl extends
     @Override
     protected Collection<? extends DesignElementDataVector> handleFind( ArrayDesign arrayDesign,
             QuantitationType quantitationType ) throws Exception {
-        return this.getRawExpressionDataVectorDao().find( arrayDesign, quantitationType );
+        Collection<DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
+        results.addAll( this.getRawExpressionDataVectorDao().find( arrayDesign, quantitationType ) );
+        results.addAll( this.getProcessedExpressionDataVectorDao().find( arrayDesign, quantitationType ) );
+        return results;
     }
 
     @Override
@@ -193,29 +219,6 @@ public class DesignElementDataVectorServiceImpl extends
         } else {
             throw new UnsupportedOperationException( "Don't know how to process a " + dedv.getClass().getName() );
         }
-    }
-
-    /**
-     * @param vectors
-     * @return
-     */
-    private Class<? extends DesignElementDataVector> getVectorClass(
-            Collection<? extends DesignElementDataVector> vectors ) {
-        Class<? extends DesignElementDataVector> vectorClass = null;
-        for ( DesignElementDataVector designElementDataVector : vectors ) {
-            if ( vectorClass == null ) {
-                vectorClass = designElementDataVector.getClass();
-            }
-            if ( !vectorClass.equals( designElementDataVector.getClass() ) ) {
-                throw new IllegalArgumentException( "Two types of vector in one collection, not supported" );
-            }
-        }
-        return vectorClass;
-    }
-
-    @Override
-    public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
-        return this.getRawExpressionDataVectorDao().find( bioAssayDimension );
     }
 
 }

@@ -20,6 +20,8 @@ package ubic.gemma.model.common.protocol;
 
 import java.util.Collection;
 
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -28,8 +30,7 @@ import java.util.Collection;
  * 
  * @see ubic.gemma.model.common.protocol.ProtocolApplication
  */
-public abstract class ProtocolApplicationDaoBase extends
-        ubic.gemma.model.common.protocol.ParameterizableApplicationDaoImpl<ProtocolApplication> implements
+public abstract class ProtocolApplicationDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.common.protocol.ProtocolApplicationDao {
 
     /**
@@ -53,10 +54,10 @@ public abstract class ProtocolApplicationDaoBase extends
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends ProtocolApplication > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from ProtocolApplicationImpl where id in (:ids)", "ids", ids );
+
+    public Collection<? extends ProtocolApplication> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from ProtocolApplicationImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -76,7 +77,6 @@ public abstract class ProtocolApplicationDaoBase extends
      * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#create(java.util.Collection)
      */
 
-    
     public java.util.Collection create( final java.util.Collection entities ) {
         return create( TRANSFORM_NONE, entities );
     }
@@ -115,7 +115,6 @@ public abstract class ProtocolApplicationDaoBase extends
      * @see ubic.gemma.model.common.protocol.ProtocolApplicationDao#loadAll()
      */
 
-    
     public java.util.Collection loadAll() {
         return this.loadAll( TRANSFORM_NONE );
     }

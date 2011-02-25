@@ -304,11 +304,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
     public long numGenes( ArrayDesign arrayDesign );
 
     /**
-     * 
-     */
-    public Integer numReporters( Long id );
-
-    /**
      * <p>
      * Remove all associations that this array design has with BioSequences. This is needed for cases where the original
      * import has associated the probes with the wrong sequences. A common case is for GEO data sets where the actual

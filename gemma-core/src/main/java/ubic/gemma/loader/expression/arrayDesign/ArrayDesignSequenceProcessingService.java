@@ -52,8 +52,6 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
@@ -121,7 +119,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param sequences, for Affymetrix these should be the Collapsed probe sequences.
      * @throws IOException
      */
-    public void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements,
+    public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements,
             Collection<BioSequence> sequences ) {
 
         Map<String, BioSequence> nameMap = new HashMap<String, BioSequence>();
@@ -130,22 +128,15 @@ public class ArrayDesignSequenceProcessingService {
         }
 
         int numNotFound = 0;
-        for ( DesignElement designElement : designElements ) {
+        for ( CompositeSequence designElement : designElements ) {
             if ( !nameMap.containsKey( designElement.getName() ) ) {
                 log.debug( "No sequence matches " + designElement.getName() );
                 numNotFound++;
                 continue;
             }
 
-            if ( designElement instanceof CompositeSequence ) {
-                ( ( CompositeSequence ) designElement ).setBiologicalCharacteristic( nameMap.get( designElement
-                        .getName() ) );
-            } else if ( designElement instanceof Reporter ) {
-                // ( ( Reporter ) designElement ).setImmobilizedCharacteristic( nameMap.get( designElement.getName() )
-                // );
-            } else {
-                throw new IllegalStateException( "DesignElement was not of a known class" );
-            }
+            designElement.setBiologicalCharacteristic( nameMap.get( designElement.getName() ) );
+
         }
 
         log.info( sequences.size() + " sequences processed for " + designElements.size() + " design elements" );
@@ -162,7 +153,7 @@ public class ArrayDesignSequenceProcessingService {
      * @param fastaFile
      * @throws IOException
      */
-    public void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements, File fastaFile )
+    public void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, File fastaFile )
             throws IOException {
 
         FastaParser fp = new FastaParser();
@@ -181,8 +172,8 @@ public class ArrayDesignSequenceProcessingService {
      * @param fastaFile
      * @throws IOException
      */
-    protected void assignSequencesToDesignElements( Collection<? extends DesignElement> designElements,
-            InputStream fastaFile ) throws IOException {
+    protected void assignSequencesToDesignElements( Collection<CompositeSequence> designElements, InputStream fastaFile )
+            throws IOException {
 
         FastaParser fp = new FastaParser();
         fp.parse( fastaFile );
@@ -190,25 +181,6 @@ public class ArrayDesignSequenceProcessingService {
         log.debug( "Parsed " + sequences.size() + " sequences" );
 
         assignSequencesToDesignElements( designElements, sequences );
-    }
-
-    /**
-     * Collapse probe sequences down into biosequences.
-     * 
-     * @param arrayName
-     * @param probeSequences
-     * @return
-     * @throws IOException
-     */
-    public Collection<BioSequence> collapse( Collection<CompositeSequence> probeSequences ) {
-        Collection<BioSequence> results = new HashSet<BioSequence>();
-        for ( CompositeSequence sequence : probeSequences ) {
-            BioSequence m = SequenceManipulation.collapse( sequence );
-            m.setDescription( "Collapsed from probes for " + sequence.getName() + " ["
-                    + sequence.getArrayDesign().getName() + "]" );
-            results.add( m );
-        }
-        return results;
     }
 
     /**
@@ -391,7 +363,7 @@ public class ArrayDesignSequenceProcessingService {
 
         AffyProbeReader apr = new AffyProbeReader();
         apr.parse( probeSequenceFile );
-        Collection<CompositeSequence> compositeSequencesFromProbes = apr.getResults();
+        Collection<CompositeSequence> compositeSequencesFromProbes = apr.getKeySet();
 
         int total = compositeSequencesFromProbes.size();
 
@@ -402,7 +374,7 @@ public class ArrayDesignSequenceProcessingService {
 
             // these composite sequences are just use
             newCompositeSequence.setArrayDesign( arrayDesign );
-            BioSequence collapsed = SequenceManipulation.collapse( newCompositeSequence );
+            BioSequence collapsed = SequenceManipulation.collapse( apr.get( newCompositeSequence ) );
             String sequenceName = newCompositeSequence.getName() + "_collapsed";
             collapsed.setName( sequenceName );
             collapsed.setType( SequenceType.AFFY_COLLAPSED );

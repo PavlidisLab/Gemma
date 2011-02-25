@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
@@ -84,7 +84,7 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method );
 
-    public Map<DesignElement, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
+    public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method );
 
     /**
      * Retrieve expression level information for genes in experiments.
@@ -93,9 +93,12 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * @param genes
      * @return A map of experiment -> gene -> probe -> array of doubles holding the 1) mean and 2) max expression rank.
      */
-    public Map<ExpressionExperiment, Map<Gene, Map<DesignElement, Double[]>>> getRanksByProbe(
+    public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );
 
     public void removeProcessedDataVectors( final ExpressionExperiment expressionExperiment );
+
+    public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
+            QuantitationType quantitationType );
 
 }

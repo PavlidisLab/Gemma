@@ -40,7 +40,7 @@ public class BioAssayDimensions {
 
     private Map<BioAssay, List<ubic.gemma.model.common.quantitationtype.QuantitationType>> quantitationTypeDimensions = new HashMap<BioAssay, List<ubic.gemma.model.common.quantitationtype.QuantitationType>>();
 
-    private Map<BioAssay, List<ubic.gemma.model.expression.designElement.DesignElement>> designElementDimensions = new HashMap<BioAssay, List<ubic.gemma.model.expression.designElement.DesignElement>>();
+    private Map<BioAssay, List<ubic.gemma.model.expression.designElement.CompositeSequence>> designElementDimensions = new HashMap<BioAssay, List<ubic.gemma.model.expression.designElement.CompositeSequence>>();
 
     public Collection<BioAssay> getQuantitationTypeBioAssays() {
         return quantitationTypeDimensions.keySet();
@@ -73,7 +73,7 @@ public class BioAssayDimensions {
      * @param designElements
      */
     public void addDesignElementDimension( ubic.gemma.model.expression.bioAssay.BioAssay bioAssay,
-            List<ubic.gemma.model.expression.designElement.DesignElement> designElements ) {
+            List<ubic.gemma.model.expression.designElement.CompositeSequence> designElements ) {
         designElementDimensions.put( bioAssay, designElements );
 
     }
@@ -82,9 +82,9 @@ public class BioAssayDimensions {
      * @param ba
      * @return
      */
-    public List<ubic.gemma.model.expression.designElement.DesignElement> getDesignElementDimension(
+    public List<ubic.gemma.model.expression.designElement.CompositeSequence> getDesignElementDimension(
             ubic.gemma.model.expression.bioAssay.BioAssay ba ) {
-        List<ubic.gemma.model.expression.designElement.DesignElement> dts = designElementDimensions.get( ba );
+        List<ubic.gemma.model.expression.designElement.CompositeSequence> dts = designElementDimensions.get( ba );
 
         if ( dts == null ) {
             throw new RuntimeException( ba.getName() + " was not found in designElementDimensions ("

@@ -123,7 +123,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> getAnalyses( Investigation investigation ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
-        final String query = "select distinct a from DifferentialExpressionAnalysisImpl a join a.expressionExperimentSetAnalyzed eeset join eeset.experiments ee where ee=:expressionExperiment ";
+        final String query = "select distinct a from DifferentialExpressionAnalysisImpl a where a.experimentAnalyzed=:expressionExperiment ";
         results.addAll( this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", investigation ) );
 
         /*
@@ -134,7 +134,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                         .getHibernateTemplate()
                         .findByNamedParam(
                                 "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a join eess.sourceExperiment see "
-                                        + " join a.expressionExperimentSetAnalyzed eeset join eeset.experiments ee where see=:expressionExperiment and eess=ee",
+                                        + " join a.experimentAnalyzed ee where see=:expressionExperiment and eess=ee",
                                 "expressionExperiment", investigation ) );
 
         return results;
@@ -168,12 +168,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 session.lock( differentialExpressionAnalysis, LockMode.NONE );
                 Hibernate.initialize( differentialExpressionAnalysis );
 
-                Hibernate.initialize( differentialExpressionAnalysis.getExpressionExperimentSetAnalyzed() );
-
-                for ( BioAssaySet baSet : differentialExpressionAnalysis.getExpressionExperimentSetAnalyzed()
-                        .getExperiments() ) {
-                    Hibernate.initialize( baSet );
-                }
+                Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
 
                 if ( differentialExpressionAnalysis.getSubsetFactorValue() != null ) {
                     Hibernate.initialize( differentialExpressionAnalysis.getSubsetFactorValue() );
@@ -219,7 +214,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     protected Collection<DifferentialExpressionAnalysis> handleFind( Gene gene, ExpressionAnalysisResultSet resultSet,
             double threshold ) throws Exception {
         final String findByResultSet = "select distinct r from DifferentialExpressionAnalysisImpl a"
-                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
+                + "   inner join a.experimentAnalyzed e inner join e.bioAssays ba inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs inner join cs.biologicalCharacteristic bs inner join "
                 + "bs.bioSequence2GeneProduct bs2gp inner join bs2gp.geneProduct gp inner join gp.gene g"
                 + " inner join a.resultSets rs inner join rs.results r where r.probe=cs and g=:gene and rs=:resultSet and r.correctedPvalue < :threshold";
@@ -257,7 +252,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
          */
         Map<Long, DifferentialExpressionAnalysis> results = new HashMap<Long, DifferentialExpressionAnalysis>();
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
-                + " inner join a.expressionExperimentSetAnalyzed eeSet inner join eeSet.experiments e where e.id in (:eeIds)";
+                + "   inner join a.experimentAnalyzed e where e.id in (:eeIds)";
         List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
         for ( Object o : qresult ) {
             Object[] oa = ( Object[] ) o;
@@ -294,7 +289,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
-        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
+        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.experimentAnalyzed as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample "
                 + "inner join sample.sourceTaxon as childtaxon where childtaxon.parentTaxon  = :taxon ";
@@ -309,7 +304,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
-        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.expressionExperimentSetAnalyzed eesa inner join eesa.experiments as ee "
+        final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.experimentAnalyzed as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon ";
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
@@ -347,13 +342,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
          * the gene.
          */
         final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
-                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba"
+                + " join a.experimentAnalyzed e inner join e.bioAssays ba"
                 + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon = :taxon";
 
         // if parent taxon make sure get children - the conditional logic for species should be moved to calling class
         final String queryStringParentTaxon = "select distinct e from DifferentialExpressionAnalysisImpl a "
-                + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e inner join e.bioAssays ba"
+                + " join a.experimentAnalyzed e inner join e.bioAssays ba"
                 + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
                 + " inner join ad.compositeSequences cs"
                 + " inner join sa.sourceTaxon childtaxon where cs in (:probes) and childtaxon.parentTaxon in (:parentTaxon) ";
@@ -425,7 +420,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
          * FIXME this has to be changed to handle the case of EESubSets.
          */
         final String query = "select distinct r from ExpressionAnalysisResultSetImpl r inner join r.analysis a"
-                + " inner join a.expressionExperimentSetAnalyzed eeset inner join eeset.experiments ee where ee=:expressionExperiment ";
+                + " join a.experimentAnalyzed ee where ee=:expressionExperiment ";
         return this.getHibernateTemplate().findByNamedParam( query, "expressionExperiment", expressionExperiment );
     }
 

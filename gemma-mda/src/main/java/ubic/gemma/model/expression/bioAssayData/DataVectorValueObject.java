@@ -23,7 +23,7 @@ import java.util.Collection;
 
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
@@ -43,7 +43,7 @@ public abstract class DataVectorValueObject implements Serializable {
 
     protected Long id;
 
-    protected DesignElement designElement;
+    protected CompositeSequence designElement;
     protected BioAssayDimension bioAssayDimension;
     protected QuantitationType quantitationType;
     protected ExpressionExperiment expressionExperiment;
@@ -81,7 +81,7 @@ public abstract class DataVectorValueObject implements Serializable {
         return bioAssayDimension;
     }
 
-    public DesignElement getDesignElement() {
+    public CompositeSequence getDesignElement() {
         return designElement;
     }
 
@@ -116,7 +116,7 @@ public abstract class DataVectorValueObject implements Serializable {
         this.bioAssayDimension = bioAssayDimension;
     }
 
-    public void setDesignElement( DesignElement designElement ) {
+    public void setDesignElement( CompositeSequence designElement ) {
         this.designElement = designElement;
     }
 

@@ -24,7 +24,6 @@ import java.util.Map;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
@@ -80,7 +79,7 @@ public interface MatrixRowPairAnalysis {
 
     public double getScoreInBin( int i );
 
-    public DesignElement getProbeForRow( ExpressionDataMatrixRowElement rowEl );
+    public CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl );
 
     public void setMinNumpresent( int minSamplesToKeepCorrelation );
 

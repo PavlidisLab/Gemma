@@ -35,7 +35,6 @@ import ubic.basecode.dataStructure.matrix.Matrix2D;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import cern.colt.bitvector.BitMatrix;
 import cern.colt.list.DoubleArrayList;
@@ -85,7 +84,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
     protected CompressedSparseDoubleMatrix<ExpressionDataMatrixRowElement, ExpressionDataMatrixRowElement> results = null;
 
-    protected Map<ExpressionDataMatrixRowElement, DesignElement> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, DesignElement>();
+    protected Map<ExpressionDataMatrixRowElement, CompositeSequence> rowMapCache = new HashMap<ExpressionDataMatrixRowElement, CompositeSequence>();
 
     protected double storageThresholdValue;
 
@@ -139,7 +138,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * @param rowEl
      * @return
      */
-    public DesignElement getProbeForRow( ExpressionDataMatrixRowElement rowEl ) {
+    public CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl ) {
         return this.rowMapCache.get( rowEl );
     }
 
@@ -359,7 +358,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
 
         for ( ExpressionDataMatrixRowElement element : rowElements ) {
 
-            DesignElement de = element.getDesignElement();
+            CompositeSequence de = element.getDesignElement();
             rowMapCache.put( element, de );
 
             Collection<Collection<Gene>> geneIdSet = this.probeToGeneMap.get( de );

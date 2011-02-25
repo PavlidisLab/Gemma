@@ -303,7 +303,6 @@ abstract public class GenomePersister extends CommonPersister {
 
         fillChromosomeLocationAssociations( gene.getPhysicalLocation() );
         fillChromosomeLocationAssociations( gene.getCytogenicLocation() );
-        fillChromosomeLocationAssociations( gene.getGeneticLocation() );
 
         Gene newGene = geneService.create( gene );
 
@@ -442,11 +441,9 @@ abstract public class GenomePersister extends CommonPersister {
 
         existingGene.setPhysicalLocation( gene.getPhysicalLocation() );
         existingGene.setCytogenicLocation( gene.getCytogenicLocation() );
-        existingGene.setGeneticLocation( gene.getGeneticLocation() );
 
         fillChromosomeLocationAssociations( existingGene.getPhysicalLocation() );
         fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
-        fillChromosomeLocationAssociations( existingGene.getGeneticLocation() );
 
         existingGene.getAliases().clear();
         existingGene.getAliases().addAll( gene.getAliases() );

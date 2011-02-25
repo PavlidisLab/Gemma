@@ -40,7 +40,6 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -72,6 +71,7 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.test.AbstractTransactionalSpringContextTests#onSetUpInTransaction()
      */
     @Before
@@ -145,14 +145,14 @@ public class ExpressionDataMatrixVisualizationServiceTest extends BaseSpringCont
         vectors2.add( vector2 );
 
         /* set up the design elements */
-        Collection<DesignElement> designElements = new LinkedHashSet<DesignElement>();
+        Collection<CompositeSequence> designElements = new LinkedHashSet<CompositeSequence>();
 
-        DesignElement de1 = CompositeSequence.Factory.newInstance();
+        CompositeSequence de1 = CompositeSequence.Factory.newInstance();
         de1.setName( "218120_s_at" );
         vector1.setDesignElement( de1 ); // set this de on the vector
         // de1.setRawExpressionDataVectors( vectors1 );
 
-        DesignElement de2 = CompositeSequence.Factory.newInstance();
+        CompositeSequence de2 = CompositeSequence.Factory.newInstance();
         de2.setName( "121_at" );
         vector2.setDesignElement( de2 ); // set this de on the vector
         // de2.setRawExpressionDataVectors( vectors2 );

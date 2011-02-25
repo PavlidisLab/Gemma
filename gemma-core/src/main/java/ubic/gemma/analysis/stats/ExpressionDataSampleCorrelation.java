@@ -199,11 +199,11 @@ public class ExpressionDataSampleCorrelation {
         if ( numRows > 50 ) smallSize = 1;
         if ( numRows < 10 ) smallSize = 4;
 
-        writeImage( hard, location, fileBaseName + SMALL_HIGHCONTRAST, smallSize, false );
-        writeImage( soft, location, fileBaseName + SMALL_LOWCONTRAST, smallSize, false );
+        writeImage( hard, location, fileBaseName + SMALL_HIGHCONTRAST, smallSize, false, false );
+        writeImage( soft, location, fileBaseName + SMALL_LOWCONTRAST, smallSize, false, false );
 
-        writeImage( hard, location, fileBaseName + LARGE_HIGHCONTRAST, LARGE_CELL_SIZE, true );
-        writeImage( soft, location, fileBaseName + LARGE_LOWCONTRAST, LARGE_CELL_SIZE, true );
+        writeImage( hard, location, fileBaseName + LARGE_HIGHCONTRAST, LARGE_CELL_SIZE, true, true );
+        writeImage( soft, location, fileBaseName + LARGE_LOWCONTRAST, LARGE_CELL_SIZE, true, true );
 
     }
 
@@ -243,14 +243,15 @@ public class ExpressionDataSampleCorrelation {
      * @param fileName
      * @param size
      * @param addlabels
+     * @param addscalebar
      * @throws IOException
      */
     private static void writeImage( ColorMatrix<BioAssay, BioAssay> matrix, File location, String fileName, int size,
-            boolean addlabels ) throws IOException {
+            boolean addlabels, boolean addscalebar ) throws IOException {
         MatrixDisplay<BioAssay, BioAssay> writer = new MatrixDisplay<BioAssay, BioAssay>( matrix );
         writer.setCellSize( new Dimension( size, size ) );
         File f = new File( location, fileName );
-        writer.saveImage( matrix, f.getAbsolutePath(), addlabels, false );
+        writer.saveImage( matrix, f.getAbsolutePath(), addlabels, addscalebar, false );
     }
 
     /**

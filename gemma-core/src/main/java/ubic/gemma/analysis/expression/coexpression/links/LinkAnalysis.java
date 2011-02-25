@@ -40,7 +40,6 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
@@ -152,7 +151,7 @@ public class LinkAnalysis {
             out.write( "ProbeID\tProbeName\tNumLinks\n" );
 
             for ( Integer i : probeDegreeMap.keySet() ) {
-                DesignElement probe = this.getProbe( i );
+                CompositeSequence probe = this.getProbe( i );
                 out.write( probe.getId() + "\t" + probe.getName() + "\t" + probeDegreeMap.get( i ) + "\n" );
             }
 
@@ -446,7 +445,7 @@ public class LinkAnalysis {
         }
     }
 
-    public DesignElement getProbe( int index ) {
+    public CompositeSequence getProbe( int index ) {
         return getMetricMatrix().getProbeForRow( getDataMatrix().getRowElement( index ) );
     }
 

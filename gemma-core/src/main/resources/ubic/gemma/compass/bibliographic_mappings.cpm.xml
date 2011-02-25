@@ -18,13 +18,12 @@
 			<meta-data>name</meta-data>
 			<meta-data>bibliographic reference name</meta-data>
 		</property>
+		<property name="authorList">
+			<meta-data>author list</meta-data>
+		</property>
 		<property name="description">
 			<meta-data>description</meta-data>
 			<meta-data>bibliographic reference description</meta-data>
-		</property>
-		<property name="authorList">
-			<meta-data>authorList</meta-data>
-			<meta-data>bibliographic reference author list</meta-data>
 		</property>
 		<property name="title">
 			<meta-data>title</meta-data>
@@ -75,7 +74,6 @@
 			<meta-data>bibliographic reference annotated abstract</meta-data>
 		</property>
 		<component name="pubAccession" ref-alias="pubAccession" />
-		<component name="authors" ref-alias="authors" />
 		<component name="keywords" ref-alias="keywords" />
 		<component name="meshTerms" ref-alias="meshTerms" />
 		<component name="chemicals" ref-alias="chemicals" />
@@ -84,21 +82,6 @@
 		<id name="id" />
 		<property name="accession">
 			<meta-data>accession</meta-data>
-		</property>
-	</class>
-	<class name="common.auditAndSecurity.PersonImpl" alias="authors" root="false">
-		<id name="id" />
-		<property name="name">
-			<meta-data>name</meta-data>
-		</property>
-		<property name="lastName">
-			<meta-data>last name</meta-data>
-		</property>
-		<property name="phone">
-			<meta-data>phone number</meta-data>
-		</property>
-		<property name="email">
-			<meta-data>email</meta-data>
 		</property>
 	</class>
 	<class name="common.description.KeywordImpl" alias="keywords" root="false">

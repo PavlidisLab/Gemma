@@ -76,7 +76,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -278,15 +277,10 @@ public class LinkAnalysisService {
          */
         ProbeCoexpressionAnalysis analysis = linkAnalysisConfig.toAnalysis();
 
-        ExpressionExperimentSet eeSet = ExpressionExperimentSet.Factory.newInstance();
-        eeSet.setName( ee.getShortName() );
-        analysis.setExpressionExperimentSetAnalyzed( eeSet );
-
+        analysis.setExperimentAnalyzed( ee );
         analysis.setName( ee.getShortName() + " link analysis" );
         analysis.getProtocol().setDescription(
                 analysis.getProtocol().getDescription() + "# FilterConfig:\n" + filterConfig.toString() );
-
-        analysis.getExpressionExperimentSetAnalyzed().getExperiments().add( ee );
 
         /*
          * Add probes used. Note that this includes probes that were not ......
@@ -295,7 +289,7 @@ public class LinkAnalysisService {
         Collection<CoexpressionProbe> probesUsed = new HashSet<CoexpressionProbe>();
         for ( ExpressionDataMatrixRowElement el : rowElements ) {
             CoexpressionProbe p = CoexpressionProbe.Factory.newInstance();
-            p.setProbe( ( CompositeSequence ) el.getDesignElement() );
+            p.setProbe( el.getDesignElement() );
             /*
              * later we set node degree.
              */
@@ -737,8 +731,8 @@ public class LinkAnalysisService {
                 continue;
             }
 
-            DesignElement p1 = la.getProbe( x );
-            DesignElement p2 = la.getProbe( y );
+            CompositeSequence p1 = la.getProbe( x );
+            CompositeSequence p2 = la.getProbe( y );
 
             ProcessedExpressionDataVector v1 = p2v.get( p1 );
             ProcessedExpressionDataVector v2 = p2v.get( p2 );
@@ -857,8 +851,8 @@ public class LinkAnalysisService {
                 continue;
             }
 
-            DesignElement p1 = la.getProbe( x );
-            DesignElement p2 = la.getProbe( y );
+            CompositeSequence p1 = la.getProbe( x );
+            CompositeSequence p2 = la.getProbe( y );
 
             Collection<Collection<Gene>> g1 = probeToGeneMap.get( p1 );
             Collection<Collection<Gene>> g2 = probeToGeneMap.get( p2 );

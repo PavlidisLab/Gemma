@@ -41,7 +41,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * A data structure that holds a reference to the data for a given expression experiment. The data can be queried by row
@@ -57,9 +57,9 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     private static final long serialVersionUID = 1L;
     private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
-    private DoubleMatrix<DesignElement, Integer> matrix;
+    private DoubleMatrix<CompositeSequence, Integer> matrix;
 
-    private Map<DesignElement, Double> ranks = new HashMap<DesignElement, Double>();
+    private Map<CompositeSequence, Double> ranks = new HashMap<CompositeSequence, Double>();
 
     /**
      * To comply with bean specifications. Not to be instantiated.
@@ -129,7 +129,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(ubic.gemma.model.expression.designElement.DesignElement,
      * ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    public Double get( DesignElement designElement, BioAssay bioAssay ) {
+    public Double get( CompositeSequence designElement, BioAssay bioAssay ) {
         Integer i = this.rowElementMap.get( designElement );
         Integer j = this.columnAssayMap.get( bioAssay );
         if ( i == null || j == null ) {
@@ -148,7 +148,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
-    public Double[][] get( List<DesignElement> designElements, List<BioAssay> bioAssays ) {
+    public Double[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         throw new UnsupportedOperationException( "Sorry, not implemented yet" );
     }
 
@@ -211,7 +211,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRow(ubic.gemma.model.expression.designElement.DesignElement
      * )
      */
-    public Double[] getRow( DesignElement designElement ) {
+    public Double[] getRow( CompositeSequence designElement ) {
         Integer row = this.rowElementMap.get( designElement );
         if ( row == null ) return null;
         return getRow( row );
@@ -232,15 +232,15 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getRows(java.util.List)
      */
-    public Double[][] getRows( List<DesignElement> designElements ) {
+    public Double[][] getRows( List<CompositeSequence> designElements ) {
         if ( designElements == null ) {
             return null;
         }
 
-        List<DesignElement> elements = designElements;
+        List<CompositeSequence> elements = designElements;
         Double[][] result = new Double[elements.size()][];
         int i = 0;
-        for ( DesignElement element : elements ) {
+        for ( CompositeSequence element : elements ) {
             Double[] rowResult = getRow( element );
             result[i] = rowResult;
             i++;
@@ -262,7 +262,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param bioAssay
      * @param value
      */
-    public void set( DesignElement designElement, BioAssay bioAssay, Double value ) {
+    public void set( CompositeSequence designElement, BioAssay bioAssay, Double value ) {
         int row = this.getRowIndex( designElement );
         int column = this.getColumnIndex( bioAssay );
         matrix.set( row, column, value );
@@ -353,12 +353,13 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private DoubleMatrix<DesignElement, Integer> createMatrix( Collection<? extends DesignElementDataVector> vectors,
-            int maxSize ) {
+    private DoubleMatrix<CompositeSequence, Integer> createMatrix(
+            Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        DoubleMatrix<DesignElement, Integer> mat = new DenseDoubleMatrix<DesignElement, Integer>( numRows, maxSize );
+        DoubleMatrix<CompositeSequence, Integer> mat = new DenseDoubleMatrix<CompositeSequence, Integer>( numRows,
+                maxSize );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
             mat.addColumnName( j );
@@ -373,10 +374,10 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         ByteArrayConverter bac = new ByteArrayConverter();
 
-        Map<Integer, DesignElement> rowNames = new TreeMap<Integer, DesignElement>();
+        Map<Integer, CompositeSequence> rowNames = new TreeMap<Integer, CompositeSequence>();
         for ( DesignElementDataVector vector : vectors ) {
 
-            DesignElement designElement = vector.getDesignElement();
+            CompositeSequence designElement = vector.getDesignElement();
             assert designElement != null : "No designelement for " + vector;
 
             Integer rowIndex = this.rowElementMap.get( designElement );
@@ -466,7 +467,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param sourceMatrix
      * @param rowsToUse
      */
-    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<DesignElement> rowsToUse ) {
+    public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix, List<CompositeSequence> rowsToUse ) {
         init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
@@ -475,13 +476,13 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
 
-        this.matrix = new DenseDoubleMatrix<DesignElement, Integer>( rowsToUse.size(), sourceMatrix.columns() );
+        this.matrix = new DenseDoubleMatrix<CompositeSequence, Integer>( rowsToUse.size(), sourceMatrix.columns() );
         this.matrix.setColumnNames( sourceMatrix.getMatrix().getColNames() );
 
         log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
 
         int i = 0;
-        for ( DesignElement element : rowsToUse ) {
+        for ( CompositeSequence element : rowsToUse ) {
             super.addToRowMaps( i, element );
             Double[] rowVals = sourceMatrix.getRow( element );
             assert rowVals != null : "Source matrix does not have row for " + element;
@@ -507,7 +508,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
 
-        this.matrix = new DenseDoubleMatrix<DesignElement, Integer>( sourceMatrix.rows(), columnsToUse.size() );
+        this.matrix = new DenseDoubleMatrix<CompositeSequence, Integer>( sourceMatrix.rows(), columnsToUse.size() );
         this.matrix.setRowNames( sourceMatrix.getMatrix().getRowNames() );
 
         this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
@@ -543,7 +544,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
 
         int i = 0;
         for ( ExpressionDataMatrixRowElement element : sourceMatrix.getRowElements() ) {
-            DesignElement designElement = element.getDesignElement();
+            CompositeSequence designElement = element.getDesignElement();
             super.addToRowMaps( i, designElement );
 
             Double[] sourceRow = sourceMatrix.getRow( designElement );
@@ -571,7 +572,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param dataMatrix - The rows can be different than the original matrix, but the columns must be the same.
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
-            DoubleMatrix<DesignElement, Integer> dataMatrix ) {
+            DoubleMatrix<CompositeSequence, Integer> dataMatrix ) {
         init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
@@ -590,7 +591,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * @return
      */
-    public DoubleMatrix<DesignElement, Integer> getMatrix() {
+    public DoubleMatrix<CompositeSequence, Integer> getMatrix() {
         return matrix;
     }
 
@@ -598,7 +599,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @return The expression level ranks (based on mean signal intensity in the vectors); this will be empty if the
      *         vectors used to construct the matrix were not ProcessedExpressionDataVectors.
      */
-    public Map<DesignElement, Double> getRanks() {
+    public Map<CompositeSequence, Double> getRanks() {
         return this.ranks;
     }
 

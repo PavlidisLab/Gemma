@@ -54,10 +54,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
                 }
 
                 Hibernate.initialize( resultSet.getAnalysis() );
-                Hibernate.initialize( resultSet.getAnalysis().getExpressionExperimentSetAnalyzed() );
-                Hibernate.initialize( resultSet.getAnalysis().getExpressionExperimentSetAnalyzed().getExperiments() );
-                Hibernate.initialize( resultSet.getAnalysis().getExpressionExperimentSetAnalyzed().getExperiments()
-                        .iterator().next() );
+                Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
 
                 return null;
             }
@@ -79,11 +76,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
                 }
 
                 Hibernate.initialize( resultSet.getAnalysis() );
-                Hibernate.initialize( resultSet.getAnalysis().getExpressionExperimentSetAnalyzed() );
-                Hibernate.initialize( resultSet.getAnalysis().getExpressionExperimentSetAnalyzed().getExperiments() );
-
-                Hibernate.initialize( resultSet.getAnalysis().getExpressionExperimentSetAnalyzed().getExperiments()
-                        .iterator().next() );
+                Hibernate.initialize( resultSet.getAnalysis().getExperimentAnalyzed() );
 
                 for ( DifferentialExpressionAnalysisResult result : resultSet.getResults() ) {
                     Hibernate.initialize( result );
@@ -96,5 +89,4 @@ public class ExpressionAnalysisResultSetDaoImpl extends
         } );
 
     }
-
 }

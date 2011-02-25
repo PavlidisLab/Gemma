@@ -15,6 +15,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
@@ -53,10 +54,9 @@ public class SubsettedAnalysisTest extends BaseAnalyzerConfigurationTest {
 
         for ( DifferentialExpressionAnalysis expressionAnalysis : expressionAnalyses ) {
 
-            assertEquals( 1, expressionAnalysis.getExpressionExperimentSetAnalyzed().getExperiments().size() );
+            assertNotNull( expressionAnalysis.getExperimentAnalyzed() );
 
-            assertEquals( 4, expressionAnalysis.getExpressionExperimentSetAnalyzed().getExperiments().iterator().next()
-                    .getBioAssays().size() );
+            assertEquals( 4, expressionAnalysis.getExperimentAnalyzed().getBioAssays().size() );
 
             Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 

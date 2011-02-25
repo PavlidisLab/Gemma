@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2007 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,16 +16,21 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.common.protocol;
-
-import org.springframework.stereotype.Repository;
-
-import ubic.gemma.persistence.BaseDao;
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
+package ubic.gemma.model.analysis;
 
 /**
- * @see ubic.gemma.model.common.protocol.ParameterValue
+ * @see ubic.gemma.model.analysis.SingleExperimentAnalysis
  */
-@Repository
-public interface ParameterValueDao extends BaseDao<ParameterValue> {
+public class SingleExperimentAnalysisImpl
+    extends ubic.gemma.model.analysis.SingleExperimentAnalysis
+{
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -7828207320627014990L;
 
 }

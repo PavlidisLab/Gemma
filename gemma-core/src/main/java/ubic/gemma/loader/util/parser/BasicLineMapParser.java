@@ -44,7 +44,7 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
     /**
      * Lines starting with this will be ignored.
      */
-    static final String COMMENTMARK = "#";
+    protected static final String COMMENTMARK = "#";
 
     protected Log log = LogFactory.getLog( getClass() );
 

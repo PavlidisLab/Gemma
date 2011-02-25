@@ -25,7 +25,6 @@ import junit.framework.TestCase;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -52,7 +51,7 @@ public class IlluminaProbeReaderTest extends TestCase {
 
         assertTrue( apr.containsKey( "GI_42655756-S" ) );
 
-        Reporter r =  apr.get( "GI_42655756-S" );
+        Reporter r = apr.get( "GI_42655756-S" );
 
         assertNotNull( "Reporter GI_42655756-S not found", r );
 

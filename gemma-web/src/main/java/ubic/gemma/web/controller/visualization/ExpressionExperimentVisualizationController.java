@@ -91,7 +91,7 @@ public class ExpressionExperimentVisualizationController extends BaseController 
                 MatrixDisplay display = expressionDataMatrixVisualizationService.createHeatMap( expressionDataMatrix );
                 if ( display != null ) {
                     response.setContentType( DEFAULT_CONTENT_TYPE );
-                    display.saveImageToPng( display.getColorMatrix(), out, true, true );
+                    display.saveImageToPng( display.getColorMatrix(), out, true, false, true );
                 }
 
             } catch ( Exception e ) {

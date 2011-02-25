@@ -186,11 +186,6 @@ public interface ArrayDesignService {
     public Map<Taxon, Integer> getPerTaxonCount();
 
     /**
-     * 
-     */
-    public Integer getReporterCount( ArrayDesign arrayDesign );
-
-    /**
      * Return the taxa for the array design. This can be multiple, or zero if the array is not processed.
      * 
      * @param id The id of the array design

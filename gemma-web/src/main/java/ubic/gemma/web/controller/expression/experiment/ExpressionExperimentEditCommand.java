@@ -89,7 +89,6 @@ public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
         expressionExperiment.setId( this.getId() ); // maybe not...
         expressionExperiment.setAccession( this.getAccession() );
         expressionExperiment.setOwner( this.getOwner() );
-        expressionExperiment.setBioAssayDataVectors( this.getBioAssayDataVectors() );
         expressionExperiment.setRawExpressionDataVectors( this.getRawExpressionDataVectors() );
         expressionExperiment.setRawDataFile( this.getRawDataFile() );
         return expressionExperiment;

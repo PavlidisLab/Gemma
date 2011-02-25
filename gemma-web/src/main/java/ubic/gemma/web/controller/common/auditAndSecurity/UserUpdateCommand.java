@@ -26,7 +26,6 @@ import ubic.gemma.model.common.auditAndSecurity.Organization;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.NotedReferenceList;
 
 /**
  * Just like a regular user; but has 'new password' and 'confirm password' fields. It can be constructed from a user. To
@@ -88,14 +87,6 @@ public class UserUpdateCommand {
 
     public Boolean getAdminUser() {
         return this.adminUser;
-    }
-
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#getAffiliations()
-     */
-    public Collection<Organization> getAffiliations() {
-        return this.user.getAffiliations();
     }
 
     /**
@@ -217,26 +208,10 @@ public class UserUpdateCommand {
 
     /**
      * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#getPersonPublications()
-     */
-    public Collection<BibliographicReference> getPersonPublications() {
-        return this.user.getPersonPublications();
-    }
-
-    /**
-     * @return
      * @see ubic.gemma.model.common.auditAndSecurity.Contact#getPhone()
      */
     public String getPhone() {
         return this.user.getPhone();
-    }
-
-    /**
-     * @return
-     * @see ubic.gemma.model.common.auditAndSecurity.User#getReferenceLists()
-     */
-    public Collection<NotedReferenceList> getReferenceLists() {
-        return this.user.getReferenceLists();
     }
 
     /**
@@ -295,14 +270,6 @@ public class UserUpdateCommand {
 
     public void setAdminUser( Boolean adminUser ) {
         this.adminUser = adminUser;
-    }
-
-    /**
-     * @param affiliations
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#setAffiliations(java.util.Collection)
-     */
-    public void setAffiliations( Collection<Organization> affiliations ) {
-        this.user.setAffiliations( affiliations );
     }
 
     /**
@@ -415,27 +382,11 @@ public class UserUpdateCommand {
     }
 
     /**
-     * @param personPublications
-     * @see ubic.gemma.model.common.auditAndSecurity.Person#setPersonPublications(java.util.Collection)
-     */
-    public void setPersonPublications( Collection<BibliographicReference> personPublications ) {
-        this.user.setPersonPublications( personPublications );
-    }
-
-    /**
      * @param phone
      * @see ubic.gemma.model.common.auditAndSecurity.Contact#setPhone(java.lang.String)
      */
     public void setPhone( String phone ) {
         this.user.setPhone( phone );
-    }
-
-    /**
-     * @param referenceLists
-     * @see ubic.gemma.model.common.auditAndSecurity.User#setReferenceLists(java.util.Collection)
-     */
-    public void setReferenceLists( Collection<NotedReferenceList> referenceLists ) {
-        this.user.setReferenceLists( referenceLists );
     }
 
     /**
@@ -500,11 +451,8 @@ public class UserUpdateCommand {
         this.setFax( user.getFax() );
         this.setName( user.getName() );
         this.setDescription( user.getDescription() );
-        this.setReferenceLists( user.getReferenceLists() );
         this.setRoles( user.getRoles() );
         this.setJobs( user.getJobs() );
-        this.setAffiliations( user.getAffiliations() );
-        this.setPersonPublications( user.getPersonPublications() );
         this.setAuditTrail( user.getAuditTrail() );
 
         this.setId( user.getId() );

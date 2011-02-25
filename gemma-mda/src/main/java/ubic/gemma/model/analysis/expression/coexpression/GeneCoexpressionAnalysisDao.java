@@ -18,11 +18,12 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import ubic.gemma.model.analysis.AnalysisDao;
+
 /**
  * @see ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis
  */
-public interface GeneCoexpressionAnalysisDao extends
-        ubic.gemma.model.analysis.expression.coexpression.CoexpressionAnalysisDao<GeneCoexpressionAnalysis> {
+public interface GeneCoexpressionAnalysisDao extends AnalysisDao<GeneCoexpressionAnalysis> {
     /**
      * <p>
      * This is needed to allow security filtering of the EE collection

@@ -376,6 +376,6 @@ public class ExperimentalDesignVisualizationService {
         log.info( outputfile );
         MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( matrix );
         writer.setCellSize( new Dimension( 18, 18 ) );
-        writer.saveImage( matrix, outputfile.getAbsolutePath(), true, true );
+        writer.saveImage( matrix, outputfile.getAbsolutePath(), true, false, true );
     }
 }

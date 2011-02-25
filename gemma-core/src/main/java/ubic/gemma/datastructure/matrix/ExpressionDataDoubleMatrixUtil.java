@@ -22,7 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * Perform various compuations on ExpressionDataMatrices (usually in-place).
@@ -56,7 +56,7 @@ public class ExpressionDataDoubleMatrixUtil {
         int columns = a.columns();
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
             int rowNum = el.getIndex();
-            DesignElement del = el.getDesignElement();
+            CompositeSequence del = el.getDesignElement();
 
             if ( b.getRow( del ) == null ) {
                 log.warn( "Matrix 'b' is missing a row for " + del + ", it will not be subtracted" );
@@ -82,7 +82,7 @@ public class ExpressionDataDoubleMatrixUtil {
         int columns = matrix.columns();
         double log2 = Math.log( LOGARITHM_BASE );
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            DesignElement del = el.getDesignElement();
+            CompositeSequence del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 double valA = matrix.get( del, bm );
@@ -114,7 +114,7 @@ public class ExpressionDataDoubleMatrixUtil {
             throw new IllegalArgumentException( "Unequal column counts: " + a.columns() + " != " + b.columns() );
         int columns = a.columns();
         for ( ExpressionDataMatrixRowElement el : a.getRowElements() ) {
-            DesignElement del = el.getDesignElement();
+            CompositeSequence del = el.getDesignElement();
 
             if ( b.getRow( del ) == null ) {
                 log.warn( "Matrix 'b' is missing a row for " + del + ", this row will not be added" );
@@ -140,7 +140,7 @@ public class ExpressionDataDoubleMatrixUtil {
         if ( dividend == 0 ) throw new IllegalArgumentException( "Can't divide by zero" );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            DesignElement del = el.getDesignElement();
+            CompositeSequence del = el.getDesignElement();
             for ( int i = 0; i < columns; i++ ) {
                 BioAssay bm = matrix.getBioAssaysForColumn( i ).iterator().next();
                 double valA = matrix.get( del, bm );
@@ -166,7 +166,7 @@ public class ExpressionDataDoubleMatrixUtil {
             throw new IllegalArgumentException( "Unequal column counts: " + matrix.columns() + " != " + mask.columns() );
         int columns = matrix.columns();
         for ( ExpressionDataMatrixRowElement el : matrix.getRowElements() ) {
-            DesignElement del = el.getDesignElement();
+            CompositeSequence del = el.getDesignElement();
             if ( mask.getRow( del ) == null ) {
                 log.warn( "Mask Matrix is missing a row for " + del );
                 continue;

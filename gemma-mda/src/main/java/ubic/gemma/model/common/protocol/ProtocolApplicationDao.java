@@ -18,11 +18,11 @@
  */
 package ubic.gemma.model.common.protocol;
 
+import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.common.protocol.ProtocolApplication
  */
-public interface ProtocolApplicationDao extends
-        ubic.gemma.model.common.protocol.ParameterizableApplicationDao<ProtocolApplication> {
+public interface ProtocolApplicationDao extends BaseDao<ProtocolApplication> {
 
 }

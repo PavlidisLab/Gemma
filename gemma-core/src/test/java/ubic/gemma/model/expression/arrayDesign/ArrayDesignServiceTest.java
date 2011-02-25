@@ -40,7 +40,6 @@ import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -89,23 +88,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         c1.setArrayDesign( ad );
         c2.setArrayDesign( ad );
         c3.setArrayDesign( ad );
-
-        // Create the Reporters
-        Reporter r1 = Reporter.Factory.newInstance();
-        r1.setName( "rfoo" );
-        Reporter r2 = Reporter.Factory.newInstance();
-        r2.setName( "rbar" );
-        Reporter r3 = Reporter.Factory.newInstance();
-        r3.setName( "rfar" );
-
-        // Fill in associations between reporters and CompositeSequences
-        r1.setCompositeSequence( c1 );
-        r2.setCompositeSequence( c2 );
-        r3.setCompositeSequence( c3 );
-
-        c1.getComponentReporters().add( r1 );
-        c2.getComponentReporters().add( r2 );
-        c3.getComponentReporters().add( r3 );
 
         Taxon tax = this.getTaxon( "mouse" );
 
@@ -376,17 +358,6 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
         ad = ( ArrayDesign ) persisterHelper.persist( ad );
         long num = arrayDesignService.numGenes( ad );
         assertNotNull( num );
-    }
-
-    /*
-     * Test method for 'ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceImpl.numReporters(ArrayDesign)'
-     */
-    @Test
-    public void testNumReportersArrayDesign() {
-        ad = ( ArrayDesign ) persisterHelper.persist( ad );
-        Integer actualValue = arrayDesignService.getReporterCount( ad );
-        Integer expectedValue = 3;
-        assertEquals( expectedValue, actualValue );
     }
 
     /**

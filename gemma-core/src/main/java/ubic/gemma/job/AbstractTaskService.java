@@ -152,6 +152,9 @@ public abstract class AbstractTaskService {
      * @param job
      */
     protected final String startTask( BackgroundJob<?> job ) {
+
+        if ( job == null ) throw new IllegalArgumentException( "Job cannot be null" );
+
         try {
             taskRunningService.submitTask( job );
         } catch ( ConflictingTaskException e ) {

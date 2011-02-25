@@ -744,19 +744,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#numReporters(java.lang.Long)
-     */
-    public java.lang.Integer numReporters( final java.lang.Long id ) {
-        try {
-            return this.handleNumReporters( id );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.numReporters(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
@@ -1090,11 +1077,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      */
     protected abstract long handleNumGenes( ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #numReporters(java.lang.Long)}
-     */
-    protected abstract java.lang.Integer handleNumReporters( java.lang.Long id ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for

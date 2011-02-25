@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2007 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,21 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.expression.biomaterial;
-
-import ubic.gemma.persistence.BaseDao;
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
+package ubic.gemma.model.analysis;
 
 /**
- * @see ubic.gemma.model.expression.biomaterial.BioMaterialMeasurement
+ * @see ubic.gemma.model.analysis.MultiExperimentAnalysis
  */
-public interface BioMaterialMeasurementDao extends BaseDao<BioMaterialMeasurement> {
+public class MultiExperimentAnalysisImpl
+    extends ubic.gemma.model.analysis.MultiExperimentAnalysis
+{
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = 3685073398229124310L;
 
 }

@@ -60,7 +60,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
     private static final String fetchResultsByGeneAndExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
+            + " inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and g=:gene and e in (:experimentsAnalyzed)"; // no order by clause, we add
@@ -68,14 +68,14 @@ public class DifferentialExpressionResultDaoImpl extends
 
     private static final String fetchResultsByGene = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
+            + " inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe  p "
             + "inner join p.biologicalCharacteristic bs inner join bs2gp.geneProduct gp inner join gp.gene g"
             + " where bs2gp.bioSequence=bs and g=:gene"; // no order by clause, we add it later
 
     private static final String fetchResultsByExperimentsQuery = "select distinct e, r"
             + " from DifferentialExpressionAnalysisImpl a, BioSequence2GeneProductImpl bs2gp"
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join   eesa.experiments e  "
+            + " inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner join rs.results r inner join fetch r.probe p "
             + "left join p.biologicalCharacteristic bs left join bs2gp.geneProduct gp left join gp.gene g"
             + " where bs2gp.bioSequence=bs and e in (:experimentsAnalyzed) and r.correctedPvalue < :threshold order by r.correctedPvalue";
@@ -84,10 +84,9 @@ public class DifferentialExpressionResultDaoImpl extends
      * No constraint on gene
      */
     private static final String fetchResultsByResultSetQuery = "select distinct rs, r "
-            + " from DifferentialExpressionAnalysisImpl a "
-            + " inner join a.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e  "
+            + " from DifferentialExpressionAnalysisImpl a " + " inner join a.experimentAnalyzed e  "
             + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
-            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later
+            + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private static final String fetchResultsByResultSetAndGeneQuery = "select distinct dear.ID "
             + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s, PROBE_ANALYSIS_RESULT par "
@@ -366,6 +365,8 @@ public class DifferentialExpressionResultDaoImpl extends
         if ( resultsAnalyzed.size() == 0 ) {
             return results;
         }
+
+        // Integer bin = Math.log10(threshold);
 
         StopWatch timer = new StopWatch();
         timer.start();

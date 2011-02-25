@@ -20,6 +20,7 @@
 package ubic.gemma.loader.expression.arrayDesign;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Iterator;
 
 import junit.framework.TestCase;
@@ -29,7 +30,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -44,7 +44,6 @@ public class AffyProbeReaderTest extends TestCase {
     /*
      * Test of human exon array
      */
-    @SuppressWarnings("null")
     public final void testReadExonArray() throws Exception {
 
         InputStream ist = AffyProbeReaderTest.class
@@ -57,12 +56,12 @@ public class AffyProbeReaderTest extends TestCase {
         // reverse complement of "CGGTGCTGGGTCAGGGATCGACTGA";
         String expectedValue = "TCAGTCGATCCCTGACCCAGCACCG";
 
-        CompositeSequence cs = apr.get( "2315108" );
+        CompositeSequence cs = getProbeMatchingName( "2315108" );
 
-        assertTrue( "CompositeSequence was null", cs != null );
+        assertNotNull( cs );
 
         boolean foundIt = false;
-        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+        for ( Iterator<Reporter> iter = apr.get( cs ).iterator(); iter.hasNext(); ) {
             Reporter element = iter.next();
             if ( element.getName().equals( "2315108:814:817" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
@@ -73,8 +72,8 @@ public class AffyProbeReaderTest extends TestCase {
         }
         assertTrue( "Didn't find the probe ", foundIt );
 
-        for ( CompositeSequence c : apr.getResults() ) {
-            BioSequence collapsed = SequenceManipulation.collapse( c );
+        for ( CompositeSequence c : apr.getKeySet() ) {
+            BioSequence collapsed = SequenceManipulation.collapse( apr.get( c ) );
 
             if ( c.getName().equals( "2315357" ) ) {
 
@@ -103,10 +102,22 @@ public class AffyProbeReaderTest extends TestCase {
 
     }
 
+    private CompositeSequence getProbeMatchingName( String name ) {
+        Collection<CompositeSequence> keySet = apr.getKeySet();
+
+        CompositeSequence cs = null;
+        for ( CompositeSequence compositeSequence : keySet ) {
+            if ( compositeSequence.getName().equals( name ) ) {
+                cs = compositeSequence;
+                break;
+            }
+        }
+        return cs;
+    }
+
     /*
      * Test of mouse gene exon array
      */
-    @SuppressWarnings("null")
     public final void testReadExonArray2() throws Exception {
 
         InputStream ist = AffyProbeReaderTest.class
@@ -118,13 +129,12 @@ public class AffyProbeReaderTest extends TestCase {
 
         // reverse complement of "CGTTCAAAATTTAGTGTATGTGTTG";
         String expectedValue = "CAACACATACACTAAATTTTGAACG";
-
-        CompositeSequence cs = apr.get( "10344616" );
+        CompositeSequence cs = getProbeMatchingName( "10344616" );
 
         assertTrue( "CompositeSequence was null", cs != null );
 
         boolean foundIt = false;
-        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+        for ( Iterator<Reporter> iter = apr.get( cs ).iterator(); iter.hasNext(); ) {
             Reporter element = iter.next();
             if ( element.getName().equals( "10344616:975:165" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
@@ -136,8 +146,8 @@ public class AffyProbeReaderTest extends TestCase {
         assertTrue( "Didn't find the probe ", foundIt );
 
         boolean found = false;
-        for ( CompositeSequence c : apr.getResults() ) {
-            BioSequence collapsed = SequenceManipulation.collapse( c );
+        for ( CompositeSequence c : apr.getKeySet() ) {
+            BioSequence collapsed = SequenceManipulation.collapse( apr.get( c ) );
 
             if ( c.getName().equals( "10344614" ) ) {
                 // on + strand
@@ -175,12 +185,12 @@ public class AffyProbeReaderTest extends TestCase {
         apr.parse( is );
 
         String expectedValue = "GCCCCCGTGAGGATGTCACTCAGAT"; // 10
-        CompositeSequence cs = apr.get( "1004_at" );
+        CompositeSequence cs = getProbeMatchingName( "1004_at" );
 
         assertNotNull( "CompositeSequence was null", cs );
 
         boolean foundIt = false;
-        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+        for ( Iterator<Reporter> iter = apr.get( cs ).iterator(); iter.hasNext(); ) {
             Reporter element = iter.next();
             if ( element.getName().equals( "1004_at#2:557:275" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();
@@ -199,11 +209,11 @@ public class AffyProbeReaderTest extends TestCase {
         apr.parse( is );
 
         String expectedValue = "AGCTCAGGTGGCCCCAGTTCAATCT"; // 4
-        CompositeSequence cs = apr.get( "1000_at" );
+        CompositeSequence cs = getProbeMatchingName( "1000_at" );
         assertNotNull( "CompositeSequence was null", cs );
 
         boolean foundIt = false;
-        for ( Iterator<Reporter> iter = cs.getComponentReporters().iterator(); iter.hasNext(); ) {
+        for ( Iterator<Reporter> iter = apr.get( cs ).iterator(); iter.hasNext(); ) {
             Reporter element = iter.next();
             if ( element.getName().equals( "1000_at:617:349" ) ) {
                 String actualValue = element.getImmobilizedCharacteristic().getSequence();

@@ -108,6 +108,7 @@ import org.biomage.QuantitationType.Ratio;
 import org.biomage.QuantitationType.SpecializedQuantitationType;
 import org.biomage.tools.ontology.OntologyHelper;
 
+import ubic.gemma.loader.expression.arrayDesign.Reporter;
 import ubic.gemma.loader.expression.geo.QuantitationTypeParameterGuesser;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
@@ -118,9 +119,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.common.measurement.MeasurementKind;
 import ubic.gemma.model.common.measurement.MeasurementType;
-import ubic.gemma.model.common.protocol.Parameter;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
-import ubic.gemma.model.common.protocol.Software;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -129,8 +128,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
-import ubic.gemma.model.expression.designElement.Reporter;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -622,9 +619,9 @@ public class MageMLConverterHelper {
                 throw new UnsupportedOperationException( "Unrecognized class: " + ded.getClass() );
             }
 
-            List<DesignElement> convertedDesignElements = new ArrayList<DesignElement>();
+            List<CompositeSequence> convertedDesignElements = new ArrayList<CompositeSequence>();
             for ( org.biomage.DesignElement.DesignElement designElement : designElements ) {
-                DesignElement de = convertDesignElement( designElement );
+                CompositeSequence de = convertDesignElement( designElement );
                 if ( de == null ) continue;
                 convertedDesignElements.add( de );
             }
@@ -1025,7 +1022,9 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "ReporterCompositeMaps" ) ) {
             // special case. This is complicated, because the mage model has compositeSequence ->
             // reportercompositemap(s) -> reporterposition(s) -> reporter(1)
-            gemmaObj.setComponentReporters( specialConvertReporterCompositeMaps( gemmaObj, ( List ) associatedObject ) );
+            // gemmaObj.setComponentReporters( specialConvertReporterCompositeMaps( gemmaObj, ( List ) associatedObject
+            // ) );
+            // throw new UnsupportedOperationException( "Reporters not supported." );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -1067,38 +1066,39 @@ public class MageMLConverterHelper {
         }
     }
 
-    /**
-     * @param mageObj
-     * @param gemmaObj
-     */
-    public ubic.gemma.model.expression.biomaterial.CompoundMeasurement convertCompoundMeasurement(
-            CompoundMeasurement mageObj ) {
-        ubic.gemma.model.expression.biomaterial.CompoundMeasurement result = ubic.gemma.model.expression.biomaterial.CompoundMeasurement.Factory
-                .newInstance();
-        convertAssociations( result, mageObj );
-        return result;
-    }
-
-    /**
-     * @param mageObj
-     * @param gemmaObj
-     * @param getter
-     */
-    public void convertCompoundMeasurementAssociations( CompoundMeasurement mageObj,
-            ubic.gemma.model.expression.biomaterial.CompoundMeasurement gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, getter );
-        String associationName = getterToPropertyName( getter );
-
-        if ( associatedObject == null ) return;
-
-        if ( associationName.equals( "Compound" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else if ( associationName.equals( "Measurement" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else {
-            log.debug( "Unsupported or unknown association: " + associationName );
-        }
-    }
+    // /**
+    // * @param mageObj
+    // * @param gemmaObj
+    // */
+    // public ubic.gemma.model.expression.biomaterial.CompoundMeasurement convertCompoundMeasurement(
+    // CompoundMeasurement mageObj ) {
+    // ubic.gemma.model.expression.biomaterial.CompoundMeasurement result =
+    // ubic.gemma.model.expression.biomaterial.CompoundMeasurement.Factory
+    // .newInstance();
+    // convertAssociations( result, mageObj );
+    // return result;
+    // }
+    //
+    // /**
+    // * @param mageObj
+    // * @param gemmaObj
+    // * @param getter
+    // */
+    // public void convertCompoundMeasurementAssociations( CompoundMeasurement mageObj,
+    // ubic.gemma.model.expression.biomaterial.CompoundMeasurement gemmaObj, Method getter ) {
+    // Object associatedObject = intializeConversion( mageObj, getter );
+    // String associationName = getterToPropertyName( getter );
+    //
+    // if ( associatedObject == null ) return;
+    //
+    // if ( associationName.equals( "Compound" ) ) {
+    // simpleFillIn( associatedObject, gemmaObj, getter );
+    // } else if ( associationName.equals( "Measurement" ) ) {
+    // simpleFillIn( associatedObject, gemmaObj, getter );
+    // } else {
+    // log.debug( "Unsupported or unknown association: " + associationName );
+    // }
+    // }
 
     /**
      * @param mageObj
@@ -1473,9 +1473,10 @@ public class MageMLConverterHelper {
      * @param designElement
      * @return
      */
-    public DesignElement convertDesignElement( org.biomage.DesignElement.DesignElement designElement ) {
+    public CompositeSequence convertDesignElement( org.biomage.DesignElement.DesignElement designElement ) {
         if ( designElement instanceof org.biomage.DesignElement.Reporter ) {
-            return convertReporter( ( org.biomage.DesignElement.Reporter ) designElement );
+            // return convertReporter( ( org.biomage.DesignElement.Reporter ) designElement );
+            throw new UnsupportedOperationException( "Reporters no longer supported." );
         } else if ( designElement instanceof org.biomage.DesignElement.CompositeSequence ) {
             return convertCompositeSequence( ( org.biomage.DesignElement.CompositeSequence ) designElement );
         } else if ( designElement instanceof Feature ) {
@@ -1752,7 +1753,7 @@ public class MageMLConverterHelper {
      * @param feature
      * @return
      */
-    public DesignElement convertFeature( Feature feature ) {
+    public CompositeSequence convertFeature( Feature feature ) {
         // I think we just have to ignore this.
         return null;
     }
@@ -1767,78 +1768,6 @@ public class MageMLConverterHelper {
     public Object convertFeatureReporterMap( FeatureReporterMap mageObj ) {
         if ( mageObj == null ) return null;
         return null;
-    }
-
-    /**
-     * @param mageObj
-     * @return
-     */
-    public ubic.gemma.model.common.protocol.Hardware convertHardware( org.biomage.Protocol.Hardware mageObj ) {
-        if ( mageObj == null ) return null;
-        ubic.gemma.model.common.protocol.Hardware result = ubic.gemma.model.common.protocol.Hardware.Factory
-                .newInstance();
-        result.setModel( mageObj.getModel() );
-        result.setMake( mageObj.getMake() );
-        convertIdentifiable( mageObj, result );
-        convertAssociations( mageObj, result );
-
-        return result;
-    }
-
-    /**
-     * @param mageObj
-     * @return
-     */
-    public ubic.gemma.model.common.protocol.HardwareApplication convertHardwareApplication(
-            org.biomage.Protocol.HardwareApplication mageObj ) {
-        ubic.gemma.model.common.protocol.HardwareApplication result = ubic.gemma.model.common.protocol.HardwareApplication.Factory
-                .newInstance();
-
-        result.setSerialNumber( mageObj.getSerialNumber() );
-        convertDescribable( mageObj, result );
-        convertAssociations( mageObj, result );
-        return result;
-    }
-
-    /**
-     * @param mageObj
-     * @param gemmaObj
-     * @param getter
-     */
-    public void convertHardwareApplicationAssociations( org.biomage.Protocol.HardwareApplication mageObj,
-            ubic.gemma.model.common.protocol.HardwareApplication gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, getter );
-        String associationName = getterToPropertyName( getter );
-        if ( associatedObject == null ) return;
-        if ( associationName.equals( "Hardware" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else {
-            log.debug( "Unsupported or unknown association: " + associationName );
-        }
-
-    }
-
-    /**
-     * @param mageObj
-     * @param gemmaObj
-     * @param getter
-     */
-    public void convertHardwareAssociations( Hardware mageObj, ubic.gemma.model.common.protocol.Hardware gemmaObj,
-            Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, getter );
-        String associationName = getterToPropertyName( getter );
-        if ( associatedObject == null ) return;
-        if ( associationName.equals( "Hardware" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else if ( associationName.equals( "HardwareManufacturers" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
-        } else if ( associationName.equals( "Softwares" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
-        } else if ( associationName.equals( "Type" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter, "Type", Characteristic.class );
-        } else {
-            log.debug( "Unsupported or unknown association: " + associationName );
-        }
     }
 
     /**
@@ -1874,7 +1803,7 @@ public class MageMLConverterHelper {
         /* Use the identifier as a name if there isn't a name. */
         if ( gemmaObj.getName() == null ) {
             String identifier = mageObj.getIdentifier();
-            if ( gemmaObj instanceof DesignElement ) {
+            if ( gemmaObj instanceof CompositeSequence ) {
                 /*
                  * our lives are much easier if we ust use the end of the identifier.
                  */
@@ -2283,35 +2212,6 @@ public class MageMLConverterHelper {
         return null;
     }
 
-    /**
-     * @param mageObj
-     * @return
-     */
-    public Parameter convertParameter( org.biomage.Protocol.Parameter mageObj ) {
-        Parameter result = Parameter.Factory.newInstance();
-        convertIdentifiable( mageObj, result );
-        convertAssociations( mageObj, result );
-        return result;
-    }
-
-    /**
-     * @param mageObj
-     * @param gemmaObj
-     * @param getter
-     */
-    public void convertParameterAssociations( org.biomage.Protocol.Parameter mageObj, Parameter gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, getter );
-        String associationName = getterToPropertyName( getter );
-        if ( associatedObject == null ) return;
-        if ( associationName.equals( "DataType" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else if ( associationName.equals( "DefaultValue" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else {
-            log.debug( "Unsupported or unknown association: " + associationName );
-        }
-    }
-
     // /**
     // * @param list
     // * @param gemmaObj
@@ -2492,7 +2392,6 @@ public class MageMLConverterHelper {
             Date date = convertDateString( dateString );
             result.setActivityDate( date );
         }
-        convertDescribable( mageObj, result );
         convertAssociations( mageObj, result );
         return result;
     }
@@ -2508,11 +2407,9 @@ public class MageMLConverterHelper {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "SoftwareApplications" ) ) {
-            assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            // no-op
         } else if ( associationName.equals( "HardwareApplications" ) ) {
-            assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            // no-op
         } else if ( associationName.equals( "Protocol" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "Performers" ) ) {
@@ -2535,13 +2432,13 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "Hardwares" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            // no-op
         } else if ( associationName.equals( "Softwares" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL, "SoftwareUsed" );
+            // no-op
         } else if ( associationName.equals( "Type" ) ) {
             simpleFillIn( associatedObject, gemmaObj, getter, "Type", Characteristic.class );
         } else if ( associationName.equals( "ParameterTypes" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            // no-op
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -2699,8 +2596,7 @@ public class MageMLConverterHelper {
      * @return ubic.gemma.model.expression.designElement.Reporter
      * @see convertReporterAssociations
      */
-    public ubic.gemma.model.expression.designElement.Reporter convertReporter(
-            org.biomage.DesignElement.Reporter mageObj ) {
+    public Reporter convertReporter( org.biomage.DesignElement.Reporter mageObj ) {
         if ( mageObj == null ) return null;
         Reporter result = Reporter.Factory.newInstance();
         specialGetReporterFeatureLocations( mageObj, result );
@@ -2724,7 +2620,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "FeatureReporterMaps" ) ) {
             // we don't support
         } else if ( associationName.equals( "ImmobilizedCharacteristics" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "ImmobilizedCharacteristic" );
+            // no-op
         } else if ( associationName.equals( "WarningType" ) ) {
             specialConvertFeatureReporterMaps( ( List ) associatedObject, gemmaObj );
         } else {
@@ -2802,66 +2698,6 @@ public class MageMLConverterHelper {
     /**
      * @param mageObj
      * @return
-     */
-    public Software convertSoftware( org.biomage.Protocol.Software mageObj ) {
-        if ( mageObj == null ) return null;
-        Software result = Software.Factory.newInstance();
-        convertIdentifiable( mageObj, result );
-        convertAssociations( mageObj, result );
-
-        return result;
-    }
-
-    public ubic.gemma.model.common.protocol.SoftwareApplication convertSoftwareApplication(
-            org.biomage.Protocol.SoftwareApplication mageObj ) {
-        ubic.gemma.model.common.protocol.SoftwareApplication result = ubic.gemma.model.common.protocol.SoftwareApplication.Factory
-                .newInstance();
-
-        result.setReleaseDate( mageObj.getReleaseDate() );
-        result.setVersion( mageObj.getVersion() );
-        convertDescribable( mageObj, result );
-        convertAssociations( mageObj, result );
-        return result;
-    }
-
-    public void convertSoftwareApplicationAssociations( org.biomage.Protocol.SoftwareApplication mageObj,
-            ubic.gemma.model.common.protocol.SoftwareApplication gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, getter );
-        String associationName = getterToPropertyName( getter );
-        if ( associatedObject == null ) return;
-        if ( associationName.equals( "Software" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else {
-            log.debug( "Unsupported or unknown association: " + associationName );
-        }
-
-    }
-
-    /**
-     * @param mageObj
-     * @param gemmaObj
-     * @param getter
-     */
-    public void convertSoftwareAssociations( org.biomage.Protocol.Software mageObj, Software gemmaObj, Method getter ) {
-        Object associatedObject = intializeConversion( mageObj, getter );
-        String associationName = getterToPropertyName( getter );
-        if ( associatedObject == null ) return;
-        if ( associationName.equals( "Hardware" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
-        } else if ( associationName.equals( "SoftwareManufacturers" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
-        } else if ( associationName.equals( "Softwares" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
-        } else if ( associationName.equals( "Type" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter, "Type", Characteristic.class );
-        } else {
-            log.debug( "Unsupported or unknown association: " + associationName );
-        }
-    }
-
-    /**
-     * @param mageObj
-     * @return
      * @see convertQuantitationType
      */
     public ubic.gemma.model.common.quantitationtype.QuantitationType convertSpecializedQuantitationType(
@@ -2929,11 +2765,11 @@ public class MageMLConverterHelper {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Action" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter, "Action", Characteristic.class );
+            // no-op
         } else if ( associationName.equals( "ActionMeasurement" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            // no-op
         } else if ( associationName.equals( "CompoundMeasurement" ) ) {
-            simpleFillIn( associatedObject, gemmaObj, getter );
+            // no-op
         } else if ( associationName.equals( "ProtocolApplications" ) ) {
             assert associatedObject instanceof List;
             simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
@@ -3083,6 +2919,7 @@ public class MageMLConverterHelper {
      * 
      * @param reporterCompositeMaps
      * @return Collection of Gemma Reporters.
+     * @deprecated as we don't support reporters (just compositesequences)
      */
     public Collection specialConvertReporterCompositeMaps( CompositeSequence owner, List reporterCompositeMaps ) {
 
@@ -3330,6 +3167,7 @@ public class MageMLConverterHelper {
      */
     private Object findAndInvokeGetter( Object getterObject, String propertyName ) {
         Method gemmaGetter = findGetter( getterObject, propertyName );
+        if ( gemmaGetter == null ) return null;
         try {
             return gemmaGetter.invoke( getterObject, new Object[] {} );
         } catch ( IllegalArgumentException e ) {
