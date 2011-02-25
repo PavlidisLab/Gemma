@@ -250,8 +250,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		
 		// save number of up regulated probes for drawing as chart after tree has been rendered
 		// if there are no up or down regulated probes, draw an empty circle
-		if((resultSet.downregulatedCount== 0 && resultSet.upregulatedCount == 0)
-				|| resultSet.numberOfDiffExpressedProbes==0){
+		if(resultSet.numberOfDiffExpressedProbes==0){
 			this.contrastPercents[nodeId]=null;	
 		}else{
 			this.contrastPercents[nodeId]={'up':resultSet.upregulatedCount/this.totalProbes,
