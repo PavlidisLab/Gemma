@@ -39,6 +39,7 @@ import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
 import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
 /**
  * Persist objects like Gene2GOAssociation.
@@ -151,7 +152,11 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( !isTransient( entity ) ) return entity;
         entity.setProtocol( persistProtocol( entity.getProtocol() ) );
         if ( isTransient( entity.getExperimentAnalyzed() ) ) {
-            throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
+            if ( entity.getExperimentAnalyzed() instanceof ExpressionExperimentSubSet ) {
+                entity.setExperimentAnalyzed( ( BioAssaySet ) persist( entity.getExperimentAnalyzed() ) );
+            } else {
+                throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
+            }
         }
         return differentialExpressionAnalysisService.create( entity );
     }
