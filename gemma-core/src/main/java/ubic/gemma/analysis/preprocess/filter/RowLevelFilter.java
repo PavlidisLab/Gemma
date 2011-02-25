@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.Stats;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 
@@ -48,12 +48,12 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
     protected boolean useLowAsFraction = false;
 
     protected boolean useHighAsFraction = false;
-    private Map<DesignElement, Double> ranks = null;
+    private Map<CompositeSequence, Double> ranks = null;
 
     /**
      * @param ranks Map of rank values in range 0...1
      */
-    public RowLevelFilter( Map<DesignElement, Double> ranks ) {
+    public RowLevelFilter( Map<CompositeSequence, Double> ranks ) {
         this.ranks = ranks;
         this.setUseLowCutAsFraction( true );
         this.setUseHighCutAsFraction( true );
@@ -103,7 +103,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
             throw new RuntimeException( "High cut " + realHighCut + " is lower or same as low cut " + realLowCut );
         }
 
-        List<DesignElement> kept = new ArrayList<DesignElement>();
+        List<CompositeSequence> kept = new ArrayList<CompositeSequence>();
 
         for ( int i = 0; i < numRows; i++ ) {
             // greater than but not equal to realLowCut to account for case when realLowCut = 0 with many ties in
@@ -218,7 +218,8 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      * @param designElement
      * @param i
      */
-    private void addCriterion( DoubleArrayList criteria, DoubleArrayList rowAsList, DesignElement designElement, int i ) {
+    private void addCriterion( DoubleArrayList criteria, DoubleArrayList rowAsList, CompositeSequence designElement,
+            int i ) {
         switch ( method ) {
             case RANK: {
                 assert ranks != null;
@@ -351,7 +352,7 @@ public class RowLevelFilter implements Filter<ExpressionDataDoubleMatrix> {
      * @param numRows
      * @param kept
      */
-    private void logInfo( int numRows, List<DesignElement> kept ) {
+    private void logInfo( int numRows, List<CompositeSequence> kept ) {
         if ( kept.size() == 0 ) {
             log.warn( "All rows filtered out!" );
             return;

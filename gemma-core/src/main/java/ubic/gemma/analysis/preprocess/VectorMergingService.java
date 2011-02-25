@@ -48,7 +48,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -166,12 +166,12 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
             log.info( "Processing " + vecs.size() + " vectors  for " + type );
 
-            Map<DesignElement, Collection<DesignElementDataVector>> deVMap = getDevMap( vecs );
+            Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = getDevMap( vecs );
 
             Collection<DesignElementDataVector> newVectors = new HashSet<DesignElementDataVector>();
             int numAllMissing = 0;
             int missingValuesForQt = 0;
-            for ( DesignElement de : deVMap.keySet() ) {
+            for ( CompositeSequence de : deVMap.keySet() ) {
 
                 DesignElementDataVector vector = initializeNewVector( expExp, newBioAd, type, de );
                 Collection<DesignElementDataVector> dedvs = deVMap.get( de );
@@ -311,7 +311,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
      * @param representation
      * @return The number of missing values which were added.
      */
-    private int fillMissingValues( DesignElement de, List<Object> data, BioAssayDimension oldDim,
+    private int fillMissingValues( CompositeSequence de, List<Object> data, BioAssayDimension oldDim,
             PrimitiveType representation ) {
         int nullsNeeded = oldDim.getBioAssays().size();
         for ( int i = 0; i < nullsNeeded; i++ ) {
@@ -336,9 +336,9 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
      * @param oldVectors
      * @return map of design element to vectors.
      */
-    private Map<DesignElement, Collection<DesignElementDataVector>> getDevMap(
+    private Map<CompositeSequence, Collection<DesignElementDataVector>> getDevMap(
             Collection<? extends DesignElementDataVector> oldVectors ) {
-        Map<DesignElement, Collection<DesignElementDataVector>> deVMap = new HashMap<DesignElement, Collection<DesignElementDataVector>>();
+        Map<CompositeSequence, Collection<DesignElementDataVector>> deVMap = new HashMap<CompositeSequence, Collection<DesignElementDataVector>>();
         boolean atLeastOneMatch = false;
         for ( DesignElementDataVector vector : oldVectors ) {
             if ( !deVMap.containsKey( vector.getDesignElement() ) ) {
@@ -425,7 +425,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
      * @return
      */
     private DesignElementDataVector initializeNewVector( ExpressionExperiment expExp, BioAssayDimension newBioAd,
-            QuantitationType type, DesignElement de ) {
+            QuantitationType type, CompositeSequence de ) {
         DesignElementDataVector vector = RawExpressionDataVector.Factory.newInstance();
         vector.setBioAssayDimension( newBioAd );
         vector.setDesignElement( de );
@@ -445,7 +445,8 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
      * @return
      */
     private int makeMergedData( List<BioAssayDimension> sortedOldDims, BioAssayDimension newBioAd,
-            QuantitationType type, DesignElement de, Collection<DesignElementDataVector> dedvs, List<Object> mergedData ) {
+            QuantitationType type, CompositeSequence de, Collection<DesignElementDataVector> dedvs,
+            List<Object> mergedData ) {
         int totalMissingInVector = 0;
         PrimitiveType representation = type.getRepresentation();
 

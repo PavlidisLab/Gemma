@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 
 /**
  * Remove rows that have no BioSequence associated with the row.
@@ -45,10 +44,10 @@ public class RowsWithSequencesFilter implements Filter<ExpressionDataDoubleMatri
      */
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix dataMatrix ) {
 
-        List<DesignElement> kept = new ArrayList<DesignElement>();
+        List<CompositeSequence> kept = new ArrayList<CompositeSequence>();
         int numRows = dataMatrix.rows();
         for ( int i = 0; i < numRows; i++ ) {
-            CompositeSequence cs = ( CompositeSequence ) dataMatrix.getDesignElementForRow( i );
+            CompositeSequence cs = dataMatrix.getDesignElementForRow( i );
             if ( cs.getBiologicalCharacteristic() != null ) {
                 kept.add( cs );
             }

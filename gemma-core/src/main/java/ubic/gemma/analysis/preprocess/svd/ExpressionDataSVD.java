@@ -30,7 +30,6 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.basecode.math.Constants;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.SingularValueDecomposition;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter;
@@ -39,7 +38,7 @@ import ubic.gemma.analysis.preprocess.filter.RowMissingValueFilter;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * Perform SVD on an expression data matrix, E = U S V'. The rows of the input matrix are probes (genes), following the
@@ -57,11 +56,11 @@ import ubic.gemma.model.expression.designElement.DesignElement;
 public class ExpressionDataSVD {
 
     private static final double MIN_PRESENT_FRACTION_FOR_ROW = 0.75;
-    SingularValueDecomposition<DesignElement, Integer> svd;
     private ExpressionDataDoubleMatrix expressionData;
-    private boolean normalized = false;
     private double norm1;
+    private boolean normalized = false;
     DenseDoubleMatrix2D missingValueInfo; // fixme use booleans
+    SingularValueDecomposition<CompositeSequence, Integer> svd;
 
     /**
      * Does normalization.
@@ -93,7 +92,7 @@ public class ExpressionDataSVD {
         RowLevelFilter rlf = new RowLevelFilter();
         rlf.setMethod( Method.VAR );
         rlf.setLowCut( 0.01, false ); // the colt SVD method fails to converge? I tried removing just Constant.SMALL but
-                                    // it wasn't enough?
+        // it wasn't enough?
         this.expressionData = rlf.filter( this.expressionData );
 
         if ( this.expressionData.rows() == 0 ) {
@@ -106,7 +105,7 @@ public class ExpressionDataSVD {
         }
 
         this.normalized = normalizeMatrix;
-        DoubleMatrix<DesignElement, Integer> matrix = this.expressionData.getMatrix();
+        DoubleMatrix<CompositeSequence, Integer> matrix = this.expressionData.getMatrix();
 
         assert matrix.getRowNames().size() > 0;
         assert matrix.getColNames().size() > 0;
@@ -125,7 +124,7 @@ public class ExpressionDataSVD {
             }
         }
 
-        this.svd = new SingularValueDecomposition<DesignElement, Integer>( matrix );
+        this.svd = new SingularValueDecomposition<CompositeSequence, Integer>( matrix );
     }
 
     /**
@@ -150,8 +149,8 @@ public class ExpressionDataSVD {
         DoubleMatrix2D v = new DenseDoubleMatrix2D( rawV );
 
         Algebra a = new Algebra();
-        DoubleMatrix<DesignElement, Integer> reconstructed = new DenseDoubleMatrix<DesignElement, Integer>( a.mult(
-                a.mult( u, s ), a.transpose( v ) ).toArray() );
+        DoubleMatrix<CompositeSequence, Integer> reconstructed = new DenseDoubleMatrix<CompositeSequence, Integer>( a
+                .mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
 
         reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
         reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
@@ -185,6 +184,19 @@ public class ExpressionDataSVD {
     }
 
     /**
+     * @return the square roots of the singular values.
+     */
+    public double[] getEigenvalues() {
+        double[] singularValues = this.getSingularValues();
+        double[] eigenvalues = new double[singularValues.length];
+        for ( int i = 0; i < singularValues.length; i++ ) {
+            double d = Math.sqrt( singularValues[i] );
+            eigenvalues[i] = d;
+        }
+        return eigenvalues;
+    }
+
+    /**
      * @return the matrix of singular values, indexed by the eigenarray (row) and eigengene (column) numbers (starting
      *         from 0).
      */
@@ -202,7 +214,7 @@ public class ExpressionDataSVD {
     /**
      * @return the left singular vectors. The column indices are of the eigenarrays (starting from 0).
      */
-    public DoubleMatrix<DesignElement, Integer> getU() {
+    public DoubleMatrix<CompositeSequence, Integer> getU() {
         return svd.getU();
     }
 
@@ -257,8 +269,8 @@ public class ExpressionDataSVD {
         DoubleMatrix2D v = new DenseDoubleMatrix2D( rawV );
 
         Algebra a = new Algebra();
-        DoubleMatrix<DesignElement, Integer> reconstructed = new DenseDoubleMatrix<DesignElement, Integer>( a.mult(
-                a.mult( u, s ), a.transpose( v ) ).toArray() );
+        DoubleMatrix<CompositeSequence, Integer> reconstructed = new DenseDoubleMatrix<CompositeSequence, Integer>( a
+                .mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
 
         reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
         reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
@@ -292,7 +304,7 @@ public class ExpressionDataSVD {
             throw new IllegalStateException( "You must do SVD on the normalized matrix" );
         }
 
-        DoubleMatrix<DesignElement, Integer> rawUMatrix = svd.getU();
+        DoubleMatrix<CompositeSequence, Integer> rawUMatrix = svd.getU();
 
         // take the absolute value of the U matrix.
         for ( int i = 0; i < rawUMatrix.rows(); i++ ) {
@@ -319,8 +331,8 @@ public class ExpressionDataSVD {
         }
 
         class NormCmp implements Comparable<NormCmp> {
-            int rowIndex;
             Double norm;
+            int rowIndex;
 
             public NormCmp( int rowIndex, Double norm ) {
                 super();
@@ -383,10 +395,10 @@ public class ExpressionDataSVD {
         int quantileLimit = ( int ) Math.floor( this.expressionData.rows() * thresholdQuantile );
         quantileLimit = Math.max( 0, quantileLimit );
 
-        List<DesignElement> keepers = new ArrayList<DesignElement>();
+        List<CompositeSequence> keepers = new ArrayList<CompositeSequence>();
         for ( int i = 0; i < quantileLimit; i++ ) {
             NormCmp x = os.get( i );
-            DesignElement d = this.expressionData.getDesignElementForRow( x.getRowIndex() );
+            CompositeSequence d = this.expressionData.getDesignElementForRow( x.getRowIndex() );
             keepers.add( d );
         }
 
@@ -402,7 +414,7 @@ public class ExpressionDataSVD {
      * 
      * @param matrix
      */
-    private void imputeMissing( DoubleMatrix<DesignElement, Integer> matrix ) {
+    private void imputeMissing( DoubleMatrix<CompositeSequence, Integer> matrix ) {
         /*
          * keep track of the missing values so they can be re-masked later.
          */

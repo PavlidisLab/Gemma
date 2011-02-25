@@ -21,12 +21,18 @@ package ubic.gemma.analysis.preprocess.svd;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.model.analysis.Eigenvalue;
+import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
@@ -82,6 +88,35 @@ public class SVDValueObject implements Serializable {
         this.vMatrix = vMatrix;
         this.bioMaterialIds = new Long[bioMaterialIds.size()];
         bioMaterialIds.toArray( this.bioMaterialIds );
+    }
+
+    /**
+     * @param pca
+     */
+    @SuppressWarnings("unchecked")
+    public SVDValueObject( PrincipalComponentAnalysis pca ) {
+        this.id = pca.getExperimentAnalyzed().getId();
+
+        this.variances = pca.getVarianceFractions();
+        List<Double[]> eigenvectorArrays = pca.getEigenvectorArrays();
+
+        List<Long> bmids = new ArrayList<Long>();
+        for ( BioAssay ba : pca.getBioAssayDimension().getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                bmids.add( bm.getId() );
+                break;
+            }
+        }
+        this.bioMaterialIds = bmids.toArray( new Long[] {} );
+        this.vMatrix = new DenseDoubleMatrix<Integer, Integer>( bioMaterialIds.length, eigenvectorArrays.size() );
+
+        int j = 0;
+        for ( Double[] vec : eigenvectorArrays ) {
+            for ( int i = 0; i < vec.length; i++ ) {
+                vMatrix.set( i, j, vec[i] ); // fill columns
+            }
+            j++;
+        }
     }
 
     public Long[] getBioMaterialIds() {

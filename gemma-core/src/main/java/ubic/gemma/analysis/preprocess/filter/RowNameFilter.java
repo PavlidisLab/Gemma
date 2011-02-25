@@ -23,7 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
  * Filter to remove rows from an experiment matrix based on the probes.
@@ -33,13 +33,13 @@ import ubic.gemma.model.expression.designElement.DesignElement;
  */
 public class RowNameFilter implements Filter<ExpressionDataDoubleMatrix> {
 
-    private List<DesignElement> keepers;
+    private List<CompositeSequence> keepers;
 
     /**
      * @param keepers list of probes that will be retained.
      */
-    public RowNameFilter( Collection<DesignElement> keepers ) {
-        this.keepers = new ArrayList<DesignElement>( keepers );
+    public RowNameFilter( Collection<CompositeSequence> keepers ) {
+        this.keepers = new ArrayList<CompositeSequence>( keepers );
     }
 
     /*

@@ -40,12 +40,19 @@ import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.analysis.Eigenvector;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
+import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
+import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -61,9 +68,12 @@ import cern.colt.list.IntArrayList;
  * 
  * @author paul
  * @version $Id$
+ * @see PrincipalComponentAnalysisService
  */
 @Service
 public class SVDServiceImpl implements SVDService {
+
+    private static final int MAX_NUM_COMPONENTS_TO_PERSIST = 10;
 
     private static final int MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE = 3;
 
@@ -76,6 +86,15 @@ public class SVDServiceImpl implements SVDService {
 
     @Autowired
     private AuditTrailService auditTrailService;
+
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
+
+    @Autowired
+    private PrincipalComponentAnalysisService principalComponentAnalysisService;
 
     private static String EE_SVD_SUMMARY = "SVDSummary";
 
@@ -170,14 +189,25 @@ public class SVDServiceImpl implements SVDService {
             bioMaterialIds.add( mat.getBioMaterialForColumn( i ).getId() );
         }
 
+        principalComponentAnalysisService.removeForExperiment( ee );
+
+        Collection<BioAssayDimension> bioAssayDimensions = mat.getBioAssayDimensions();
+        if ( bioAssayDimensions.size() > 1 ) {
+            log.warn( "Multiple bioassaydimensions" );
+        }
+        BioAssayDimension bad = bioAssayDimensions.iterator().next();
+
+        DoubleMatrix<CompositeSequence, Integer> u = svd.getU().getColRange( 0,
+                Math.min( bad.getBioAssays().size() - 1, MAX_NUM_COMPONENTS_TO_PERSIST ) );// fixme check there are enuf
+
+        DoubleMatrix<Integer, Integer> vToStore = v.getColRange( 0, Math.min( bad.getBioAssays().size(),
+                MAX_NUM_COMPONENTS_TO_PERSIST ) );
+        // assert u.columns() == 3;
+
+        principalComponentAnalysisService.create( ee, u, svd.getEigenvalues(), vToStore, bad, 1000 );
+
         SVDValueObject svo = new SVDValueObject( ee.getId(), bioMaterialIds, vars, v );
-
         saveValueObject( svo );
-
-        /*
-         * TODO save the U matrix, at least the first three components. This we should do in the database, as if it was
-         * a differential expression analysis. These are loadings of the genes in the eigengenes.
-         */
 
         /*
          * Add an audit event.
@@ -220,7 +250,14 @@ public class SVDServiceImpl implements SVDService {
          */
         ExpressionExperiment tee = this.expressionExperimentService.thawLite( ee );
 
-        Collection<BioAssay> bioAssays = tee.getBioAssays();
+        PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
+
+        BioAssayDimension bad = pca.getBioAssayDimension();
+
+        bioAssayDimensionService.thaw( bad );
+        List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
+
+        svo = new SVDValueObject( pca );
 
         Map<Long, Date> bioMaterialDates = new HashMap<Long, Date>();
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
@@ -533,6 +570,7 @@ public class SVDServiceImpl implements SVDService {
     }
 
     private void saveValueObject( SVDValueObject eeVo ) {
+
         initDirectories( false );
         try {
             // remove old file first

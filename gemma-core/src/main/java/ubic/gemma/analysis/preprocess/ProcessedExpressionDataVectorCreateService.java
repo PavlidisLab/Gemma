@@ -56,7 +56,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import cern.colt.list.DoubleArrayList;
@@ -302,7 +302,7 @@ public class ProcessedExpressionDataVectorCreateService {
         DoubleArrayList ranksByMax = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.max );
 
         for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
-            DesignElement de = vector.getDesignElement();
+            CompositeSequence de = vector.getDesignElement();
             if ( intensities.getRow( de ) == null ) {
                 log.warn( "No intensity value for " + de + ", rank for vector will be null" );
                 vector.setRankByMean( null );

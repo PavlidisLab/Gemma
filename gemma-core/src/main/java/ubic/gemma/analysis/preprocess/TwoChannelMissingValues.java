@@ -49,7 +49,7 @@ import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -271,7 +271,7 @@ public class TwoChannelMissingValues {
 
         for ( ExpressionDataMatrixRowElement element : baseChannel.getRowElements() ) {
 
-            DesignElement designElement = element.getDesignElement();
+            CompositeSequence designElement = element.getDesignElement();
 
             RawExpressionDataVector vect = RawExpressionDataVector.Factory.newInstance();
             vect.setQuantitationType( present );

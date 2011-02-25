@@ -26,7 +26,6 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
 /**
@@ -86,18 +85,19 @@ public class AffyProbeNameFilter implements Filter<ExpressionDataDoubleMatrix> {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.filter.Filter#filter(ubic.gemma.datastructure.matrix.ExpressionDataMatrix)
      */
     public ExpressionDataDoubleMatrix filter( ExpressionDataDoubleMatrix data ) {
         int numRows = data.rows();
 
-        List<DesignElement> kept = new ArrayList<DesignElement>();
+        List<CompositeSequence> kept = new ArrayList<CompositeSequence>();
         for ( int i = 0; i < numRows; i++ ) {
 
-            DesignElement d = data.getDesignElementForRow( i );
+            CompositeSequence d = data.getDesignElementForRow( i );
             assert d != null;
 
-            BioSequence sequence = ( ( CompositeSequence ) d ).getBiologicalCharacteristic();
+            BioSequence sequence = d.getBiologicalCharacteristic();
 
             String name = null;
             if ( sequence != null ) {

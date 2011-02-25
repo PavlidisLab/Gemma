@@ -27,7 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.datastructure.matrix.ExpressionDataBooleanMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import cern.colt.list.IntArrayList;
 
 /**
@@ -95,7 +95,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
         int numCols = data.columns();
         IntArrayList present = new IntArrayList( numRows );
 
-        List<DesignElement> kept = new ArrayList<DesignElement>();
+        List<CompositeSequence> kept = new ArrayList<CompositeSequence>();
 
         /*
          * Do not allow minpresentfraction to override minpresent if minpresent is higher.
@@ -128,7 +128,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
 
         /* first pass - determine how many missing values there are per row */
         for ( int i = 0; i < numRows; i++ ) {
-            DesignElement designElementForRow = data.getDesignElementForRow( i );
+            CompositeSequence designElementForRow = data.getDesignElementForRow( i );
 
             /* allow for the possibility that the absent/present matrix is not in the same order, etc. */
             int absentPresentRow = absentPresentCalls == null ? -1 : absentPresentCalls
@@ -166,7 +166,7 @@ public class RowMissingValueFilter implements Filter<ExpressionDataDoubleMatrix>
             // Do another pass to add rows we missed before.
             for ( int i = 0; i < numRows; i++ ) {
                 if ( present.get( i ) >= minPresentCount && present.get( i ) >= ABSOLUTEMINPRESENT ) {
-                    DesignElement designElementForRow = data.getDesignElementForRow( i );
+                    CompositeSequence designElementForRow = data.getDesignElementForRow( i );
                     if ( kept.contains( designElementForRow ) ) continue; // FIXME SLOW because it is a
                     // list.
                     kept.add( designElementForRow );

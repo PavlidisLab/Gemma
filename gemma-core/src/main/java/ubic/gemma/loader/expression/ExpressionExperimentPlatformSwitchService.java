@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -125,15 +124,15 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         assert arrayDesign != null;
 
         // get relation between sequence and designelements.
-        Map<BioSequence, Collection<DesignElement>> designElementMap = new HashMap<BioSequence, Collection<DesignElement>>();
-        Collection<DesignElement> elsWithNoSeq = new HashSet<DesignElement>();
+        Map<BioSequence, Collection<CompositeSequence>> designElementMap = new HashMap<BioSequence, Collection<CompositeSequence>>();
+        Collection<CompositeSequence> elsWithNoSeq = new HashSet<CompositeSequence>();
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
             BioSequence bs = cs.getBiologicalCharacteristic();
             if ( bs == null ) {
                 elsWithNoSeq.add( cs );
             } else {
                 if ( !designElementMap.containsKey( bs ) ) {
-                    designElementMap.put( bs, new HashSet<DesignElement>() );
+                    designElementMap.put( bs, new HashSet<CompositeSequence>() );
                 }
                 designElementMap.get( bs ).add( cs );
             }
@@ -144,7 +143,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         designElementMap.put( NULL_BIOSEQUENCE, elsWithNoSeq );
 
         Collection<ArrayDesign> oldArrayDesigns = expressionExperimentService.getArrayDesignsUsed( expExp );
-        Map<DesignElement, Collection<BioAssayDimension>> usedDesignElements = new HashMap<DesignElement, Collection<BioAssayDimension>>();
+        Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements = new HashMap<CompositeSequence, Collection<BioAssayDimension>>();
         for ( ArrayDesign oldAd : oldArrayDesigns ) {
             if ( oldAd.equals( arrayDesign ) ) continue; // no need to switch
 
@@ -287,11 +286,11 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
      * @param vector
      * @throw IllegalStateException if there is no (unused) design element matching the vector's biosequence
      */
-    private boolean processVector( Map<BioSequence, Collection<DesignElement>> designElementMap,
-            Map<DesignElement, Collection<BioAssayDimension>> usedDesignElements, DesignElementDataVector vector ) {
-        CompositeSequence oldDe = ( CompositeSequence ) vector.getDesignElement();
+    private boolean processVector( Map<BioSequence, Collection<CompositeSequence>> designElementMap,
+            Map<CompositeSequence, Collection<BioAssayDimension>> usedDesignElements, DesignElementDataVector vector ) {
+        CompositeSequence oldDe = vector.getDesignElement();
 
-        Collection<DesignElement> newElCandidates = null;
+        Collection<CompositeSequence> newElCandidates = null;
         BioSequence seq = oldDe.getBiologicalCharacteristic();
         if ( seq == null ) {
             newElCandidates = designElementMap.get( NULL_BIOSEQUENCE );
@@ -302,7 +301,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         boolean found = false;
 
         if ( newElCandidates != null && !newElCandidates.isEmpty() ) {
-            for ( DesignElement newEl : newElCandidates ) {
+            for ( CompositeSequence newEl : newElCandidates ) {
                 if ( !usedDesignElements.containsKey( newEl ) ) {
                     vector.setDesignElement( newEl );
                     usedDesignElements.put( newEl, new HashSet<BioAssayDimension>() );

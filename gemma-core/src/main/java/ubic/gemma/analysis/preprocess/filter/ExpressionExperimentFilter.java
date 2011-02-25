@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.DesignElement;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
@@ -65,9 +64,9 @@ public class ExpressionExperimentFilter {
      * @param probesToGenesMap Map of "clusters"
      * @return
      */
-    public static Collection<DesignElement> getProbesForKnownGenes(
+    public static Collection<CompositeSequence> getProbesForKnownGenes(
             Map<CompositeSequence, Collection<Collection<Gene>>> probesToGenesMap ) {
-        Collection<DesignElement> keepers = new HashSet<DesignElement>();
+        Collection<CompositeSequence> keepers = new HashSet<CompositeSequence>();
         for ( CompositeSequence cs : probesToGenesMap.keySet() ) {
             cluster: for ( Collection<Gene> cluster : probesToGenesMap.get( cs ) ) {
                 for ( Gene g : cluster ) {
@@ -148,7 +147,7 @@ public class ExpressionExperimentFilter {
      */
     public ExpressionDataDoubleMatrix knownGenesOnlyFilter( ExpressionDataDoubleMatrix matrix,
             Map<CompositeSequence, Collection<Collection<Gene>>> probesToGenesMap ) {
-        Collection<DesignElement> keepers = getProbesForKnownGenes( probesToGenesMap );
+        Collection<CompositeSequence> keepers = getProbesForKnownGenes( probesToGenesMap );
         RowNameFilter rowNameFilter = new RowNameFilter( keepers );
         return rowNameFilter.filter( matrix );
     }
@@ -248,7 +247,7 @@ public class ExpressionExperimentFilter {
 
         if ( config.isLowExpressionCutIsSet() ) {
             log.info( "Filtering for low or too high expression" );
-            Map<DesignElement, Double> ranks = eeDoubleMatrix.getRanks();
+            Map<CompositeSequence, Double> ranks = eeDoubleMatrix.getRanks();
             filteredMatrix = lowExpressionFilter( filteredMatrix, ranks );
             afterLowExpressionCut = filteredMatrix.rows();
             config.setAfterLowExpressionCut( afterLowExpressionCut );
@@ -408,7 +407,7 @@ public class ExpressionExperimentFilter {
      * @return
      */
     private ExpressionDataDoubleMatrix lowExpressionFilter( ExpressionDataDoubleMatrix matrix,
-            Map<DesignElement, Double> ranks ) {
+            Map<CompositeSequence, Double> ranks ) {
         // check for null ranks, in which case we can't use this.
         for ( Double d : ranks.values() ) {
             if ( d == null ) {

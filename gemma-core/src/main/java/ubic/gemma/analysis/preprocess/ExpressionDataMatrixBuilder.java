@@ -44,7 +44,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.designElement.DesignElement;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ChannelUtils;
 
@@ -481,9 +481,9 @@ public class ExpressionDataMatrixBuilder {
     /**
      * @return
      */
-    public Map<DesignElement, Double> getRanksByMean() {
+    public Map<CompositeSequence, Double> getRanksByMean() {
         Collection<QuantitationType> qtypes = this.getPreferredQTypes();
-        Map<DesignElement, Double> ranks = new HashMap<DesignElement, Double>();
+        Map<CompositeSequence, Double> ranks = new HashMap<CompositeSequence, Double>();
 
         for ( DesignElementDataVector v : this.vectors ) {
             if ( qtypes.contains( v.getQuantitationType() ) && v instanceof ProcessedExpressionDataVector ) {
@@ -821,7 +821,7 @@ public class ExpressionDataMatrixBuilder {
      */
     private boolean isTwoColor() {
         for ( DesignElementDataVector v : vectors ) {
-            DesignElement d = v.getDesignElement();
+            CompositeSequence d = v.getDesignElement();
             TechnologyType technologyType = d.getArrayDesign().getTechnologyType();
 
             if ( technologyType.equals( TechnologyType.ONECOLOR ) ) {
