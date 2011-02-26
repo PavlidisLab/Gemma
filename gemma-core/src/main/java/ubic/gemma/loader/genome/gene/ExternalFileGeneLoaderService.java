@@ -55,7 +55,6 @@ import ubic.gemma.persistence.PersisterHelper;
 @Service
 public class ExternalFileGeneLoaderService {
     private static Log log = LogFactory.getLog( ExternalFileGeneLoaderService.class.getName() );
-    private int loadedGeneCount = 0;
 
     @Autowired
     private PersisterHelper persisterHelper;
@@ -119,15 +118,6 @@ public class ExternalFileGeneLoaderService {
     }
 
     /**
-     * Number of genes successfully loaded.
-     * 
-     * @return the loadedGeneCount
-     */
-    public int getLoadedGeneCount() {
-        return loadedGeneCount;
-    }
-
-    /**
      * Work flow is: The file is first checked to see if readable, and the taxon checked to see it is in Gemma. If
      * validation passes the file is read line by line. Each line equates to a gene and its gene product, which is
      * created from the file details. The gene is then persisted. If successfully loaded taxon flag isGenesLoaded is set
@@ -135,15 +125,17 @@ public class ExternalFileGeneLoaderService {
      * 
      * @param geneFile Full path to file containing genes details
      * @param taxon taxonName to be associated to this gene, does not have to be a species.
+     * @return number of genes loaded
      * @exception Thrown with a file format error or problem in persisting gene to database.
      */
-    public void load( String geneFile, String taxonName ) throws Exception {
+    public int load( String geneFile, String taxonName ) throws Exception {
         String line = null;
         int linesSkipped = 0;
         log.info( "Starting loading gene file " + geneFile + " for taxon " + taxonName );
         BufferedReader bufferedReaderGene = readFile( geneFile );
         Taxon taxon = validateTaxon( taxonName );
         log.info( "Taxon and file validation passed for " + geneFile + " for taxon " + taxonName );
+        int loadedGeneCount = 0;
         while ( ( line = bufferedReaderGene.readLine() ) != null ) {
             String[] lineContents = readLine( line );
             if ( lineContents != null ) {
@@ -159,6 +151,7 @@ public class ExternalFileGeneLoaderService {
         updateTaxonWithGenesLoaded( taxon );
         log.info( "Finished loading gene file " + geneFile + " for taxon " + taxon + ". " + " Genes loaded: "
                 + loadedGeneCount + " ,Lines skipped: " + linesSkipped );
+        return loadedGeneCount;
     }
 
     /**

@@ -111,8 +111,8 @@ public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
         loader = ( ExternalFileGeneLoaderService ) this.getBean( "externalFileGeneLoaderService" );
 
         try {
-            loader.load( directGeneInputFileName, taxonName );
-            System.out.println( loader.getLoadedGeneCount() + " Lines loaded successfully " );
+            int count = loader.load( directGeneInputFileName, taxonName );
+            System.out.println( count + " genes loaded successfully " );
         } catch ( IOException e ) {
             System.out.println( "File could not be read: " + e.getMessage() );
             throw new RuntimeException( e );

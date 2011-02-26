@@ -32,6 +32,8 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
      * This doesn't matter for test so long as it's in the system. Actual examples are fish genes
      */
     private static final String TAXON_NAME = "mouse";
+    @Autowired
+    GeneService geneService;
 
     @Autowired
     ExternalFileGeneLoaderService externalFileGeneLoaderService = null;
@@ -42,6 +44,7 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
     public void setup() throws Exception {
         geneFile = ( ConfigUtils.getString( "gemma.home" ) )
                 .concat( "/gemma-core/src/test/resources/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
+        geneService.remove( geneService.loadAll() );
     }
 
     /**
@@ -67,9 +70,8 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testLoad() throws Exception {
-        GeneService geneService = ( GeneService ) getBean( "geneService" );
-        externalFileGeneLoaderService.load( geneFile, TAXON_NAME );
-        int numbersGeneLoaded = externalFileGeneLoaderService.getLoadedGeneCount();
+
+        int numbersGeneLoaded = externalFileGeneLoaderService.load( geneFile, TAXON_NAME );
         assertEquals( 2, numbersGeneLoaded );
         Collection<Gene> geneCollection = geneService.findByOfficialName( "ZYXIN" );
         Gene gene = geneCollection.iterator().next();
