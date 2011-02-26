@@ -596,37 +596,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * @param ee
-     * @param size 'large' or 'small'.
-     * @param contrast
-     * @return
-     */
-    private File locateCorrMatImageFile( ExpressionExperiment ee, String size, String contrast ) {
-        // locate the image.
-        String shortName = ee.getShortName();
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
-
-        String suffix;
-        if ( contrast.equalsIgnoreCase( "hi" ) ) {
-            suffix = ExpressionDataSampleCorrelation.SMALL_HIGHCONTRAST;
-        } else {
-            suffix = ExpressionDataSampleCorrelation.SMALL_LOWCONTRAST;
-        }
-
-        if ( size != null && size.equals( "large" ) ) {
-            if ( contrast.equalsIgnoreCase( "hi" ) ) {
-                suffix = ExpressionDataSampleCorrelation.LARGE_HIGHCONTRAST;
-            } else {
-                suffix = ExpressionDataSampleCorrelation.LARGE_LOWCONTRAST;
-            }
-        }
-
-        File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + suffix );
-        return f;
-    }
-
-    /**
-     * @param ee
      * @return
      */
     private Collection<File> locateEffectSizeDistFiles( ExpressionExperiment ee ) {
@@ -648,15 +617,6 @@ public class ExpressionExperimentQCController extends BaseController {
             files.add( f );
         }
 
-        return files;
-    }
-
-    private Collection<File> locatePCAFiles( ExpressionExperiment ee ) {
-        Long id = ee.getId();
-        Collection<File> files = new HashSet<File>();
-        if ( ExpressionExperimentQCUtils.hasPCAFile( ee ) ) {
-            files.add( new File( SVDServiceImpl.getReportPath( id ) ) );
-        }
         return files;
     }
 

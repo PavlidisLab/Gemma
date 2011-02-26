@@ -105,7 +105,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
 
             int rows = dataMatrix.rows();
             for ( int j = 0; j < rows; j++ ) {
-                CompositeSequence probeForRow = ( CompositeSequence ) dataMatrix.getDesignElementForRow( j );
+                CompositeSequence probeForRow = dataMatrix.getDesignElementForRow( j );
                 Collection<Gene> genes = css.getGenes( probeForRow );
                 genesByProbeId.put( probeForRow.getId(), genes );
             }

@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -256,7 +258,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             if ( results == null || results.isEmpty() ) return null;
 
             AuditEvent result = results.iterator().next();
-            result.getPerformer();  // Hit performer to make hibernate initialize it.
+            result.getPerformer(); // Hit performer to make hibernate initialize it.
             return result;
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -602,6 +604,33 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @Override
     protected AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable.getAuditTrail(), type );
+    }
+
+    @Override
+    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
+        return this.getLastEvent( a, type ) != null;
+    }
+
+    @Override
+    public void retainHavingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
+
+        CollectionUtils.filter( a, new Predicate() {
+            @Override
+            public boolean evaluate( Object arg0 ) {
+                return hasEvent( ( Auditable ) arg0, type );
+            }
+        } );
+
+    }
+
+    @Override
+    public void retainLackingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
+        CollectionUtils.filter( a, new Predicate() {
+            @Override
+            public boolean evaluate( Object arg0 ) {
+                return !hasEvent( ( Auditable ) arg0, type );
+            }
+        } );
     }
 
 }

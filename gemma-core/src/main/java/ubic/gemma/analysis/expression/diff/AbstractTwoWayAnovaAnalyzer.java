@@ -161,7 +161,7 @@ public abstract class AbstractTwoWayAnovaAnalyzer extends AbstractDifferentialEx
 
         for ( int i = 0; i < dmatrix.rows(); i++ ) {
 
-            CompositeSequence cs = ( CompositeSequence ) dmatrix.getDesignElementForRow( i );
+            CompositeSequence cs = dmatrix.getDesignElementForRow( i );
 
             // TwoWayAnovaResult twoWayAnovaResult = anovaResults.get( cs.getId() + "" );
 

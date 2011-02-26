@@ -585,6 +585,7 @@ public abstract class GeneCoexpressionAnalysisDaoBase extends AnalysisDaoImpl<Ge
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
+    @Override
     protected GeneCoexpressionAnalysis transformEntity( final int transform,
             final ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis entity ) {
         GeneCoexpressionAnalysis target = null;

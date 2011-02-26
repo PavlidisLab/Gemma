@@ -429,8 +429,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         boolean warned = false;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
 
-            CompositeSequence cs = ( CompositeSequence ) el;
-
             LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
 
             if ( log.isDebugEnabled() ) log.debug( el.getName() + "\n" + lm );
@@ -443,7 +441,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 continue;
             }
 
-            if ( cs.getName().equals( "probe_10" ) ) {
+            if ( el.getName().equals( "probe_10" ) ) {
                 log.info( lm );
             }
 
@@ -454,7 +452,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 Double overallPValue = null;
                 ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
-                probeAnalysisResult.setProbe( cs );
+                probeAnalysisResult.setProbe( el );
                 probeAnalysisResult.setQuantitationType( quantitationType );
 
                 Collection<ExperimentalFactor> factorsForName = label2Factors.get( factorName );

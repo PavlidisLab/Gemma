@@ -33,15 +33,15 @@ public class ExperimentQCTag extends TagSupport {
     Long eeid;
     Size size = Size.small;
 
-    private boolean hasCorrMatFile = false;
+    private boolean hasCorrMat = false;
 
-    private boolean hasCorrDistFile = false;
+    private boolean hasCorrDist = false;
 
-    private boolean hasPCAFile = false;
+    private boolean hasPCA = false;
 
-    private boolean hasPvalueDistFiles = false;
+    private boolean hasPvalueDist = false;
 
-    private boolean hasNodeDegreeDistFile = false;
+    private boolean hasNodeDegreeDist = false;
 
     enum Size {
         small, large
@@ -59,33 +59,33 @@ public class ExperimentQCTag extends TagSupport {
     /**
      * @param value
      */
-    public void setHasCorrMatFile( boolean value ) {
-        this.hasCorrMatFile = value;
+    public void setHasCorrMat( boolean value ) {
+        this.hasCorrMat = value;
     }
 
     /**
      * @param value
      */
-    public void setHasCorrDistFile( boolean value ) {
-        this.hasCorrDistFile = value;
+    public void setHasCorrDist( boolean value ) {
+        this.hasCorrDist = value;
     }
 
     /**
      * @param value
      */
-    public void setHasPCAFile( boolean value ) {
-        this.hasPCAFile = value;
+    public void setHasPCA( boolean value ) {
+        this.hasPCA = value;
     }
 
     /**
      * @param value
      */
-    public void setHasPvalueDistFiles( boolean value ) {
-        this.hasPvalueDistFiles = value;
+    public void setHasPvalueDist( boolean value ) {
+        this.hasPvalueDist = value;
     }
 
-    public void setHasNodeDegreeDistFile( boolean value ) {
-        this.hasNodeDegreeDistFile = value;
+    public void setHasNodeDegreeDist( boolean value ) {
+        this.hasNodeDegreeDist = value;
     }
 
     /**
@@ -127,7 +127,7 @@ public class ExperimentQCTag extends TagSupport {
 
         String placeHolder = "<td  style=\"margin:3px;padding:8px;background-color:#EEEEEE\" valign='top'>Not available</td>";
 
-        if ( hasCorrMatFile ) {
+        if ( hasCorrMat ) {
 
             /*
              * popupImage is defined in ExpressinExperimentDetails.js
@@ -156,7 +156,7 @@ public class ExperimentQCTag extends TagSupport {
             buf.append( placeHolder );
         }
 
-        if ( hasPCAFile ) {
+        if ( hasPCA ) {
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"pcaScree.html?id="
                             + this.eeid + "\" />" );
@@ -204,7 +204,7 @@ public class ExperimentQCTag extends TagSupport {
         // buf.append( placeHolder );
         // }
 
-        if ( hasCorrDistFile ) {
+        if ( hasCorrDist ) {
             buf
                     .append( " <td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Correlation distribution' src=\"visualizeProbeCorrDist.html?id="
                             + this.eeid + "\" /></td>" );
@@ -212,7 +212,7 @@ public class ExperimentQCTag extends TagSupport {
             buf.append( placeHolder );
         }
 
-        if ( hasPvalueDistFiles ) {
+        if ( hasPvalueDist ) {
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='Differential expression value distribution' src=\"visualizePvalueDist.html?id="
                             + this.eeid + "\" /></td>" );

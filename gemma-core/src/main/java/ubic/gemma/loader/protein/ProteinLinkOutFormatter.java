@@ -160,9 +160,9 @@ public class ProteinLinkOutFormatter {
                     }
                 }
                 return evidenceString.substring( 0, ( evidenceString.lastIndexOf( EVIDENCESPACER ) ) );
-            } else {
-                log.warn( "The byte array provided was not the correct size for the protein protein interaction" );
             }
+            log.warn( "The byte array provided was not the correct size for the protein protein interaction" );
+
         } catch ( Exception e ) {
             // should really be a more specific exception
             throw new RuntimeException( "Bit Vector representing evidence codes for proteins was at error " + e );

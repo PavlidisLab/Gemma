@@ -439,98 +439,41 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 	doPca : function(id, hasPca) {
 
-		var prompt = 'Please confirm.';
-		if (hasPca) {
-			prompt = prompt
-					+ ' Previous PCA results will be deleted. Indicate if you want to re-run the full PCA or just update the factor correlations with the PCs';
-		}
+		Ext.Msg.show({
+					title : 'PCA analysis',
+					msg : 'Please confirm. Previous PCA results will be deleted',
+					buttons : Ext.Msg.YESNO,
+					fn : function(btn, text) {
+						var callParams = [];
+						callParams.push(id);
+						// var postprocessOnly = true;
+						// callParams.push(postprocessOnly);
+						Ext.getBody().mask();
+						callParams.push({
+									callback : function(data) {
+										var k = new Gemma.WaitHandler();
+										k.handleWait(data, true);
+										this.relayEvents(k, ['done', 'fail']);
+										Ext.getBody().unmask();
+										k.on('done', function(payload) {
+													this.fireEvent('pca', payload);
+												});
+									}.createDelegate(this),
+									errorHandler : function(error) {
+										Ext.Msg.alert("PCA analysis failed", error);
+										Ext.getBody().unmask();
+									}.createDelegate(this)
+								});
 
-		// ask for confirmation.
-		var w = new Ext.Window({
-					name : 'pca-dialog',
-					autoCreate : true,
-					resizable : false,
-					constrain : true,
-					constrainHeader : true,
-					minimizable : false,
-					maximizable : false,
-					stateful : false,
-					modal : true,
-					shim : true,
-					buttonAlign : "center",
-					width : 400,
-					height : 130,
-					minHeight : 80,
-					plain : true,
-					footer : true,
-					closable : true,
-					title : 'Principal component anslysis',
-					html : prompt,
-					buttons : [{
-								text : 'Full PCA',
-								handler : function(btn, text) {
-									var callParams = [];
-									callParams.push(id);
-									var postprocessOnly = false;
-									callParams.push(postprocessOnly);
-									Ext.getBody().mask();
-									callParams.push({
-												callback : function(data) {
-													var k = new Gemma.WaitHandler();
-													k.handleWait(data, true);
-													this.relayEvents(k, ['done', 'fail']);
-													Ext.getBody().unmask();
-													k.on('done', function(payload) {
-																this.fireEvent('pca', payload);
-															});
-												}.createDelegate(this),
-												errorHandler : function(error) {
-													Ext.Msg.alert("PCA analysis failed", error);
-													Ext.getBody().unmask();
-												}.createDelegate(this)
-											});
+						SvdController.run.apply(this, callParams);
+						w.close();
+					},
 
-									SvdController.run.apply(this, callParams);
-									w.close();
-								}
-							}, {
-								text : 'Factors only',
-								hidden : !hasPca,
-								handler : function(btn, text) {
-									var callParams = [];
-									callParams.push(id);
-									var postprocessOnly = true;
-									callParams.push(postprocessOnly);
-									Ext.getBody().mask();
-									callParams.push({
-												callback : function(data) {
-													var k = new Gemma.WaitHandler();
-													k.handleWait(data, true);
-													this.relayEvents(k, ['done', 'fail']);
-													Ext.getBody().unmask();
-													k.on('done', function(payload) {
-																this.fireEvent('pca', payload);
-															});
-												}.createDelegate(this),
-												errorHandler : function(error) {
-													Ext.Msg.alert("PCA analysis failed", error);
-													Ext.getBody().unmask();
-												}.createDelegate(this)
-											});
-
-									SvdController.run.apply(this, callParams);
-									w.close();
-								}
-							}, {
-								text : 'Cancel',
-								handler : function() {
-									w.close();
-								}
-							}],
-					iconCls : Ext.MessageBox.QUESTION
+					scope : this,
+					animEl : 'elId',
+					icon : Ext.MessageBox.WARNING
 				});
 
-		w.show();
 	},
 
 	doBatchInfoFetch : function(id) {

@@ -186,7 +186,7 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                         throw new IllegalStateException( "Two types of vector for one quantitationtype: " + type );
                     }
 
-                    CompositeSequence oldDe = ( CompositeSequence ) vector.getDesignElement();
+                    CompositeSequence oldDe = vector.getDesignElement();
 
                     // we're doing this by array design; nice to have a method to fetch those only, oh well.
                     if ( !oldDe.getArrayDesign().equals( oldAd ) ) {

@@ -89,8 +89,9 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
 
     }
 
-    
-    /* (non-Javadoc)
+    /*
+     * (non-Javadoc)
+     * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#getBioAssayDimensions()
      */
     public Collection<BioAssayDimension> getBioAssayDimensions() {
@@ -563,7 +564,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
      */
     private boolean alreadySeenGroup( Collection<Collection<BioMaterial>> bioMaterialGroups,
             Collection<BioMaterial> candidateGroup ) {
-        assert candidateGroup.size() > 0;
+        // assert candidateGroup.size() > 0;
         for ( Collection<BioMaterial> existingGroup : bioMaterialGroups ) {
             boolean alreadyIn = true;
             for ( BioMaterial candidateMember : candidateGroup ) {

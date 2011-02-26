@@ -105,16 +105,6 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().getProcessedDataVectors( ee );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadLackingEvent(java.lang.Class)
-     */
-    @Override
-    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType ) {
-        return this.getExpressionExperimentDao().loadLackingEvent( eventType );
-    }
-
     @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
         return this.getExpressionExperimentDao().loadLackingFactors();
@@ -148,16 +138,6 @@ public class ExpressionExperimentServiceImpl extends
     public Collection<ExpressionExperiment> loadTroubled() {
         Map<Long, AuditEvent> lastTroubleEvents = this.getLastTroubleEvents();
         return this.loadMultiple( lastTroubleEvents.keySet() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#loadWithEvent(java.lang.Class)
-     */
-    @Override
-    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType ) {
-        return this.getExpressionExperimentDao().loadWithEvent( eventType );
     }
 
     /**

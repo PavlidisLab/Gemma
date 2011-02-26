@@ -58,6 +58,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     }
 
     
+    @SuppressWarnings("unchecked")
     public Collection<? extends AuditEvent> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
     }
@@ -150,6 +151,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#loadAll(int)
      */
     
+    @SuppressWarnings("unchecked")
     public java.util.Collection<? extends AuditEvent> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.common.auditAndSecurity.AuditEventImpl.class );

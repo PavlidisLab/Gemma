@@ -40,6 +40,7 @@
 				<property name="maxSqlNameLength">60</property>
 				<property name="hibernateVersion">3</property>
 				<property name="enableTemplating">true</property>
+				<property name="enableAnnotations">true</property>
 			</properties>
 		</namespace>
 		<namespace name="java">
@@ -48,6 +49,9 @@
 				<property name="exceptions">${maven.andromda.core.generated.dir}</property>
 				<property name="value-objects">${maven.andromda.core.generated.dir}</property>
 				<property name="enableTemplating">true</property>
+				<property name="enableAnnotations">true</property>
+				<property name="mergeLocation">${project.basedir}/src/main/custom/java
+				</property>
 			</properties>
 		</namespace>
 		<namespace name="hibernate">
@@ -56,7 +60,6 @@
 				<property name="hibernateTypeMappingsUri">
 					file:${project.basedir}/src/main/conf/HibernateTypeMappings.xml
 				</property>
-				<property name="enableTemplating">true</property>
 				<property name="hibernateQueryCacheFactory">org.hibernate.cache.StandardQueryCacheFactory
 				</property>
 				<property name="hibernateInheritanceStrategy">${hibernate.inheritance.strategy}</property>
@@ -80,7 +83,7 @@
 				<property name="associationEndCollectionIndexName">orderedCollectionIndex</property>
 				<property name="configuration">${maven.andromda.hibernate.configuration.dir}
 				</property>
-
+				<property name="enableTemplating">true</property>
 				<property name="hibernateEnableCache">true</property>
 				<!--  NOTE: the ehcache.xml file gets generated whether we include the following or not. -->
 				<property name="cache">${maven.andromda.hibernate.configuration.dir}

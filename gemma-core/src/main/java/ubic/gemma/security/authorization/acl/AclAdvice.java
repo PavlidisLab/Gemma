@@ -19,7 +19,6 @@
 package ubic.gemma.security.authorization.acl;
 
 import java.beans.PropertyDescriptor;
-
 import java.util.Collection;
 
 import org.apache.commons.logging.Log;
@@ -60,7 +59,6 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;

@@ -366,24 +366,6 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> loadAll();
 
     /**
-     * Return data sets that don't have the given event type.
-     * 
-     * @param eventType
-     * @return
-     */
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> loadLackingEvent( Class<? extends AuditEventType> eventType );
-
-    /**
-     * Return data sets that do have the given event type.
-     * 
-     * @param eventType
-     * @return
-     */
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> loadWithEvent( Class<? extends AuditEventType> eventType );
-
-    /**
      * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * 
      * @return

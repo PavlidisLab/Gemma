@@ -46,15 +46,18 @@ public class ExpressionDataStringMatrix extends BaseExpressionDataMatrix<String>
 
     private StringMatrix matrix;
 
+    @SuppressWarnings("unused")
     public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment, QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unused")
     public ExpressionDataStringMatrix( ExpressionExperiment expressionExperiment,
             Collection<CompositeSequence> designElements, QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();
     }
 
+    @SuppressWarnings("unused")
     public ExpressionDataStringMatrix( Collection<? extends DesignElementDataVector> dataVectors,
             QuantitationType quantitationType ) {
         throw new UnsupportedOperationException();

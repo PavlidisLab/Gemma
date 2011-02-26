@@ -97,7 +97,7 @@ public class MatrixWriter<T> {
         }
 
         for ( int j = 0; j < rows; j++ ) {
-            CompositeSequence probeForRow = ( CompositeSequence ) matrix.getDesignElementForRow( j );
+            CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
             buf.append( probeForRow.getName() + "\t" );
             if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
@@ -153,7 +153,7 @@ public class MatrixWriter<T> {
         }
 
         for ( int j = 0; j < rows; j++ ) {
-            CompositeSequence probeForRow = ( CompositeSequence ) matrix.getDesignElementForRow( j );
+            CompositeSequence probeForRow = matrix.getDesignElementForRow( j );
             buf.append( probeForRow.getName() + "\t" );
             if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
@@ -314,8 +314,7 @@ public class MatrixWriter<T> {
             if ( j > 0 ) buf.append( "," );
             buf.append( "{" );
             buf.append( "'id' : \"" + matrix.getDesignElementForRow( j ).getName() + "\"" );
-            BioSequence biologicalCharacteristic = ( ( CompositeSequence ) matrix.getDesignElementForRow( j ) )
-                    .getBiologicalCharacteristic();
+            BioSequence biologicalCharacteristic = matrix.getDesignElementForRow( j ).getBiologicalCharacteristic();
             if ( biologicalCharacteristic != null )
                 buf.append( ", 'sequence' : \"" + biologicalCharacteristic.getName() + "\"" );
 

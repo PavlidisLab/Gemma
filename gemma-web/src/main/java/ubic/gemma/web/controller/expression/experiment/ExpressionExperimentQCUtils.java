@@ -21,7 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import java.io.File;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
-import ubic.gemma.analysis.preprocess.svd.SVDServiceImpl;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.ConfigUtils;
@@ -76,17 +75,6 @@ public class ExpressionExperimentQCUtils {
         // File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
         // return f.exists() && f.canRead();
         return false;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    public static boolean hasPCAFile( ExpressionExperiment ee ) {
-        if ( ee == null || ee.getId() == null ) return false;
-        Long id = ee.getId();
-        File f = new File( SVDServiceImpl.getReportPath( id ) );
-        return f.exists() && f.canRead();
     }
 
     public static boolean hasPvalueDistFiles( ExpressionExperiment ee ) {

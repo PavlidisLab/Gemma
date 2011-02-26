@@ -70,8 +70,8 @@ public class FileUploadController extends AbstractController {
         HttpServletRequest req = WebContextFactory.get().getHttpServletRequest();
         if ( req.getSession().getAttribute( "uploadInfo" ) != null )
             return ( UploadInfo ) req.getSession().getAttribute( "uploadInfo" );
-        else
-            return new UploadInfo();
+
+        return new UploadInfo();
     }
 
     /*

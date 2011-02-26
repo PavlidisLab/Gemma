@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -110,15 +111,17 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
      * 
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#thaw(java.util.Collection)
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays ) {
         if ( bioAssays.isEmpty() ) return bioAssays;
-        return this.getHibernateTemplate().findByNamedParam(
+        List<?> thawedBioassays = this.getHibernateTemplate().findByNamedParam(
                 "select distinct b from BioAssayImpl b left join fetch b.arrayDesignUsed"
                         + " left join fetch b.derivedDataFiles left join fetch b.samplesUsed bm"
                         + " left join bm.factorValues left join bm.bioAssaysUsedIn left join fetch "
                         + " b.auditTrail at left join fetch at.events where b.id in (:ids) ", "ids",
                 EntityUtils.getIds( bioAssays ) );
+        return ( Collection<BioAssay> ) thawedBioassays;
     }
 
     @Override

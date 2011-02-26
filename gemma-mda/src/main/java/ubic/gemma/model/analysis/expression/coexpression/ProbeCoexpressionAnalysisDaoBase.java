@@ -289,6 +289,7 @@ public abstract class ProbeCoexpressionAnalysisDaoBase extends
      * @return the transformed entity (i.e. new value object, etc)
      * @see #transformEntities(int,java.util.Collection)
      */
+    @Override
     protected Object transformEntity( final int transform,
             final ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis entity ) {
         Object target = null;

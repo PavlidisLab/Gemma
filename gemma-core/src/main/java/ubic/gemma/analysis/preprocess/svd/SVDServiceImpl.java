@@ -14,11 +14,6 @@
  */
 package ubic.gemma.analysis.preprocess.svd;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -38,7 +33,6 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
-import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.ProbeLoading;
 import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
@@ -53,11 +47,9 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.util.ConfigUtils;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
 
@@ -99,25 +91,6 @@ public class SVDServiceImpl implements SVDService {
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
 
-    private static String EE_SVD_SUMMARY = "SVDSummary";
-
-    private static String HOME_DIR = ConfigUtils.getString( "gemma.appdata.home" );
-
-    private static String EE_REPORT_DIR = "ExpressionExperimentReports";
-
-    private static String EE_SVD_DIR = "SVD";
-
-    /**
-     * Get the expected location of the SVD file for a given Experiment id. The file might not exist.
-     * 
-     * @param id
-     * @return
-     */
-    public static String getReportPath( long id ) {
-        return HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar + EE_SVD_DIR + File.separatorChar
-                + EE_SVD_SUMMARY + "." + id;
-    }
-
     /**
      * @param experimentalFactor
      * @return true if the factor is continuous; false if it looks to be categorical.
@@ -134,39 +107,24 @@ public class SVDServiceImpl implements SVDService {
     }
 
     /**
+     * @param ee
+     * @return
+     */
+    public boolean hasPca( ExpressionExperiment ee ) {
+        return retrieveSvd( ee ) != null;
+    }
+
+    /**
      * Get the SVD information for experiment with id given.
      * 
      * @param id
-     * @return
+     * @return value or null if there isn't one.
      */
     public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
-        BioAssayDimension bad = pca.getBioAssayDimension();
-        bioAssayDimensionService.thaw( bad );
+        if ( pca == null ) return null;
+        bioAssayDimensionService.thaw( pca.getBioAssayDimension() );
         return new SVDValueObject( pca );
-        // Long id = ee.getId();
-        // File f = new File( getReportPath( id ) );
-        //
-        // if ( !f.exists() ) {
-        // return null;
-        // }
-        //
-        // try {
-        //
-        // FileInputStream fis = new FileInputStream( getReportPath( id ) );
-        // ObjectInputStream ois = new ObjectInputStream( fis );
-        //
-        // SVDValueObject valueObject = ( SVDValueObject ) ois.readObject();
-        //
-        // ois.close();
-        // fis.close();
-        //
-        // return valueObject;
-        // } catch ( Exception e ) {
-        // log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
-        // return null;
-        // }
-
     }
 
     /*
@@ -510,32 +468,6 @@ public class SVDServiceImpl implements SVDService {
     }
 
     /**
-     * Check to see if the top level SVD storage directory exists. If it doesn't, create it, Check to see if the SVD
-     * directory exists. If it doesn't, create it.
-     * 
-     * @param deleteFiles
-     */
-    private void initDirectories( boolean deleteFiles ) {
-
-        /*
-         * See ExpressionExperimentReportServiceImpl; possibly consolidate EE_REPORT_DIR
-         */
-        FileTools.createDir( HOME_DIR );
-        FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR );
-        File fsvd = FileTools.createDir( HOME_DIR + File.separatorChar + EE_REPORT_DIR + File.separatorChar
-                + EE_SVD_DIR );
-
-        if ( deleteFiles ) {
-            Collection<File> files = new ArrayList<File>();
-            File[] fileArray = fsvd.listFiles();
-            for ( File file : fileArray ) {
-                files.add( file );
-            }
-            FileTools.deleteFiles( files );
-        }
-    }
-
-    /**
      * Gather the information we need for comparing PCs to factors.
      * 
      * @param svo
@@ -597,25 +529,6 @@ public class SVDServiceImpl implements SVDService {
 
         fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
 
-    }
-
-    private void saveValueObject( SVDValueObject eeVo ) {
-
-        initDirectories( false );
-        try {
-            // remove old file first
-            File f = new File( getReportPath( eeVo.getId() ) );
-            if ( f.exists() ) {
-                f.delete();
-            }
-            FileOutputStream fos = new FileOutputStream( getReportPath( eeVo.getId() ) );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
-            oos.writeObject( eeVo );
-            oos.flush();
-            oos.close();
-        } catch ( Throwable e ) {
-            log.warn( e );
-        }
     }
 
 }

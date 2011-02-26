@@ -100,7 +100,6 @@ public class DEDVController {
     @Autowired
     private DifferentialExpressionResultService differentialExpressionResultService;
 
-    @SuppressWarnings("unused")
     @Autowired
     private ExperimentalDesignVisualizationService experimentalDesignVisualizationService;
 
@@ -142,8 +141,8 @@ public class DEDVController {
             dedvMap = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes );
         }
 
-        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
-        // experimentalDesignVisualizationService.sortVectorDataByDesign( dedvMap );
+        // Could be performance problem, and factor info not displayed on front end yet anyway.
+        experimentalDesignVisualizationService.sortVectorDataByDesign( dedvMap );
 
         watch.stop();
         Long time = watch.getTime();
@@ -254,8 +253,9 @@ public class DEDVController {
                 genes, false );
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
-        // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+
+        // Could be performance problem, and factor info not displayed on front end yet anyway.
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
         Long time = watch.getTime();
@@ -316,8 +316,8 @@ public class DEDVController {
         dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
-        // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        // Could be performance problem, and factor info not displayed on front end yet anyway.
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
         Long time = watch.getTime();
@@ -370,11 +370,11 @@ public class DEDVController {
 
         List<DoubleVectorValueObject> dedvs = getDiffExVectors( resultSetId, threshold );
 
-        // Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
-        // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        // Could be performance problem, and factor info not displayed on front end yet anyway.
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
-        return makeVisCollection( dedvs, null, null, null );
+        return makeVisCollection( dedvs, null, null, layouts );
 
     }
 
@@ -453,9 +453,9 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, probes, false );
 
-        // Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
-        // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        // Could be performance problem, and factor info not displayed on front end yet anyway.
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
         Long time = watch.getTime();
@@ -463,7 +463,7 @@ public class DEDVController {
         log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs and " + probeIds.size()
                 + " genes in " + time + " ms." );
 
-        return makeVisCollection( dedvs, null, null, null );
+        return makeVisCollection( dedvs, null, null, layouts );
 
     }
 

@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +46,7 @@ import ubic.gemma.datastructure.matrix.EmptyExpressionMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -67,8 +67,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 public class ExperimentalDesignVisualizationService {
 
     protected Log log = LogFactory.getLog( getClass().getName() );
+
     @Autowired
     ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    BioAssayService bioAssayService;
 
     /**
      * Cache. TODO: use ehcache so we can manage this.
@@ -256,7 +260,7 @@ public class ExperimentalDesignVisualizationService {
             Collection<DoubleVectorValueObject> dedvs ) {
 
         layouts.clear(); // FIXEM TEMPORARY FOR DEBUGGING. If performance is okay, move this cache into this scope
-                         // entirely
+        // entirely
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>>();
 
@@ -369,22 +373,34 @@ public class ExperimentalDesignVisualizationService {
 
             if ( bioAssayDimension == null ) continue;
 
-            ExpressionExperiment ee = vec.getExpressionExperiment();
-
-            if ( thawedBads.containsKey( bioAssayDimension.getId() ) ) {
-                bioAssayDimension = thawedBads.get( bioAssayDimension.getId() );
-                vec.setBioAssayDimension( bioAssayDimension );
+            if ( bioAssayDimension.getId() == null ) {
+                /*
+                 * Happens if vectors are associated with a temporary bioassaydimension -- subsets, and it will always
+                 * be thawed already. See ProcessedExpressionDataVectorDaoImpl.sliceSubSet. We should do this a better
+                 * way, like allowing the BAD to have a reference to the original source and a "isSubset" flag.
+                 */
             } else {
-                bioAssayDimensionService.thaw( bioAssayDimension );
-                thawedBads.put( bioAssayDimension.getId(), bioAssayDimension );
+                if ( thawedBads.containsKey( bioAssayDimension.getId() ) ) {
+
+                    log.info( "Already got" );
+                    bioAssayDimension = thawedBads.get( bioAssayDimension.getId() );
+                    vec.setBioAssayDimension( bioAssayDimension );
+                } else {
+                    log.info( "Thawing" );
+                    bioAssayDimensionService.thaw( bioAssayDimension );
+                    thawedBads.put( bioAssayDimension.getId(), bioAssayDimension );
+                }
             }
+
+            ExpressionExperiment ee = vec.getExpressionExperiment();
 
             /*
              * The following is the really slow part if we don't use a cache.
              */
             if ( !layouts.containsKey( ee ) ) {
                 ee = expressionExperimentService.thawLite( ee );
-                // plotExperimentalDesign( ee );
+                bioAssayDimensionService.thaw( bioAssayDimension );
+                // plotExperimentalDesign( ee ); // debugging/testing
                 LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
                         ee, bioAssayDimension );
                 layouts.put( ee, experimentalDesignLayout );

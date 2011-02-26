@@ -448,7 +448,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
     private Map<CompositeSequence, Collection<Gene>> getGenes( ExpressionDataDoubleMatrix expressionDataMatrix ) {
         Collection<CompositeSequence> css = new HashSet<CompositeSequence>();
         for ( ExpressionDataMatrixRowElement el : expressionDataMatrix.getRowElements() ) {
-            CompositeSequence cs = ( CompositeSequence ) el.getDesignElement();
+            CompositeSequence cs = el.getDesignElement();
             css.add( cs );
         }
         return compositeSequenceService.getGenes( css );

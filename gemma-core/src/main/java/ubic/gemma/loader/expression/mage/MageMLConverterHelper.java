@@ -78,7 +78,6 @@ import org.biomage.BioAssayData.Transformation;
 import org.biomage.BioMaterial.BioMaterialMeasurement;
 import org.biomage.BioMaterial.BioSample;
 import org.biomage.BioMaterial.BioSource;
-import org.biomage.BioMaterial.CompoundMeasurement;
 import org.biomage.BioMaterial.LabeledExtract;
 import org.biomage.Common.Describable;
 import org.biomage.Common.Extendable;
@@ -89,13 +88,11 @@ import org.biomage.DesignElement.Feature;
 import org.biomage.DesignElement.FeatureInformation;
 import org.biomage.DesignElement.FeatureReporterMap;
 import org.biomage.DesignElement.ReporterCompositeMap;
-import org.biomage.DesignElement.ReporterPosition;
 import org.biomage.Experiment.Experiment;
 import org.biomage.Experiment.ExperimentDesign;
 import org.biomage.Measurement.Unit;
 import org.biomage.Measurement.Measurement.KindCV;
 import org.biomage.Measurement.Measurement.Type;
-import org.biomage.Protocol.Hardware;
 import org.biomage.Protocol.Protocol;
 import org.biomage.QuantitationType.ConfidenceIndicator;
 import org.biomage.QuantitationType.DerivedSignal;
@@ -2912,52 +2909,6 @@ public class MageMLConverterHelper {
             }
             break; // only take the first one
         }
-    }
-
-    /**
-     * Special case: Convert a ReporterCompositeMaps (list) to a Collection of Reporters.
-     * 
-     * @param reporterCompositeMaps
-     * @return Collection of Gemma Reporters.
-     * @deprecated as we don't support reporters (just compositesequences)
-     */
-    public Collection specialConvertReporterCompositeMaps( CompositeSequence owner, List reporterCompositeMaps ) {
-
-        if ( reporterCompositeMaps.size() > 1 ) log.warn( "**** More than one ReporterCompositeMaps for a Reporter!" );
-
-        Collection result = new HashSet();
-        for ( Iterator iter = reporterCompositeMaps.iterator(); iter.hasNext(); ) {
-            ReporterCompositeMap rcp = ( ReporterCompositeMap ) iter.next();
-            List rcpps = rcp.getReporterPositionSources();
-            log.debug( "Found reporters for composite sequence" );
-            for ( Iterator iterator = rcpps.iterator(); iterator.hasNext(); ) {
-                ReporterPosition rps = ( ReporterPosition ) iterator.next();
-
-                if ( rps == null ) continue;
-
-                org.biomage.DesignElement.Reporter repr = rps.getReporter();
-
-                if ( repr == null ) continue;
-
-                Reporter convertedReporter = convertReporter( repr );
-
-                if ( convertedReporter == null ) {
-                    log.error( "Null converted reporter!" );
-                    continue;
-                }
-
-                convertedReporter.setCompositeSequence( owner );
-
-                result.add( convertedReporter );
-
-                Integer m = rps.getStart();
-                if ( m == null ) continue;
-
-                convertedReporter.setStartInBioChar( m.longValue() );
-            }
-            break; // only take the first one;
-        }
-        return result;
     }
 
     /**

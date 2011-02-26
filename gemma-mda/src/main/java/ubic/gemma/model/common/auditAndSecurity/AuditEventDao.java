@@ -31,6 +31,26 @@ import ubic.gemma.persistence.BaseDao;
  * @see AuditEvent
  */
 public interface AuditEventDao extends BaseDao<AuditEvent> {
+    /**
+     * @param a
+     * @param type
+     * @return
+     */
+    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+
+    /**
+     * @param a
+     * @param type
+     * @return
+     */
+    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type );
+
+    /**
+     * @param a
+     * @param type
+     * @return
+     */
+    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type );
 
     /**
      * Get auditables that have been Created since the given date

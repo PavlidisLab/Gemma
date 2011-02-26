@@ -128,8 +128,12 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         return this.principalComponentAnalysisDao.create( pca );
     }
 
-    /* (non-Javadoc)
-     * @see ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisService#getTopLoadedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment, int, int)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisService#getTopLoadedProbes(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, int, int)
      */
     @Override
     public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count ) {
@@ -164,7 +168,9 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
 
     @Override
     public void removeForExperiment( ExpressionExperiment ee ) {
-        this.principalComponentAnalysisDao.remove( this.loadForExperiment( ee ) );
+        while ( this.loadForExperiment( ee ) != null ) {
+            this.principalComponentAnalysisDao.remove( this.loadForExperiment( ee ) );
+        }
     }
 
 }

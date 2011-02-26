@@ -21,6 +21,7 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -137,6 +138,17 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      * BioAssayDimension)
      */
     public void thaw( final BioAssayDimension bioAssayDimension ) {
+
+        if ( bioAssayDimension.getId() == null ) return;
+
+        // List thawed = this
+        // .getHibernateTemplate()
+        // .findByNamedParam(
+        // "seled bad from BioAssayDimensionImpl bad inner join bad.bioAssays bas inner "
+        // + "join fetch bas.samplesUsed su inner join fetch su.bioAssaysedUsedIn inner join fetch su.factorValues ",
+        // "id", bioAssayDimension.getId() );
+        // log.info( thawed );
+
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( bioAssayDimension, LockMode.NONE );
@@ -152,7 +164,6 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
                         Hibernate.initialize( bm.getFactorValues() );
                     }
                 }
-                session.clear();
                 return null;
             }
         } );

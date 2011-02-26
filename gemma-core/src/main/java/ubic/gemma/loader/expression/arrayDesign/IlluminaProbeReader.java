@@ -34,7 +34,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @author pavlidis
  * @version $Id$
  */
-public class IlluminaProbeReader extends BasicLineMapParser {
+public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
 
     protected static final Log log = LogFactory.getLog( IlluminaProbeReader.class );
 
@@ -77,12 +77,12 @@ public class IlluminaProbeReader extends BasicLineMapParser {
      * @see baseCode.io.reader.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override
-    protected Object getKey( Object newItem ) {
-        return ( ( Reporter ) newItem ).getName();
+    protected String getKey( Reporter newItem ) {
+        return newItem.getName();
     }
 
     @Override
-    public Reporter get( Object key ) {
+    public Reporter get( String key ) {
         return results.get( key );
     }
 
@@ -92,17 +92,17 @@ public class IlluminaProbeReader extends BasicLineMapParser {
     }
 
     @Override
-    protected void put( Object key, Object value ) {
-        results.put( ( String ) key, ( Reporter ) value );
+    protected void put( String key, Reporter value ) {
+        results.put( key, value );
     }
 
     @Override
-    public boolean containsKey( Object key ) {
+    public boolean containsKey( String key ) {
         return results.containsKey( key );
     }
 
     @Override
-    public Collection getKeySet() {
+    public Collection<String> getKeySet() {
         return results.keySet();
     }
 }

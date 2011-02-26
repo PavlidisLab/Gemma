@@ -100,18 +100,16 @@ public class AclAfterInvocationMapFilteringProvider extends AbstractAclProvider 
                         continue;
                     }
 
-                    if ( !Securable.class.isAssignableFrom( domainObject.getClass() ) ) {
-                        throw new IllegalArgumentException( "Expected a map with keys as Securables, got "
-                                + domainObject.getClass() );
-                    }
-
-                    hasPermission = hasPermission( authentication, domainObject );
-
-                    Object value = map.get( domainObject );
+                    /*
+                     * If the key is not a securable, it's okay; if it is we need explicit permission
+                     */
+                    hasPermission = Securable.class.isAssignableFrom( domainObject.getClass() )
+                            || hasPermission( authentication, domainObject );
 
                     /*
                      * Check the VALUE as well.
                      */
+                    Object value = map.get( domainObject );
                     if ( value != null && Securable.class.isAssignableFrom( value.getClass() ) ) {
                         hasPermission = hasPermission( authentication, value ) && hasPermission;
                     }

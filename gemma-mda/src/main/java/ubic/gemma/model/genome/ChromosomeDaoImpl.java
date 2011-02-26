@@ -65,9 +65,9 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
             c.setTaxon( taxon );
 
             return create( c );
-        } else {
-            return hits.iterator().next();
         }
+        return hits.iterator().next();
+
     }
 
 }

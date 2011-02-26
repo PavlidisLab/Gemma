@@ -47,6 +47,7 @@ import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
@@ -57,6 +58,7 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.FailedBatchInformationMissingEvent;
@@ -246,6 +248,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private AuditableUtil auditableUtil;
 
     @Autowired
+    private AuditEventService auditEventService;
+
+    @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
 
     @Autowired
@@ -291,6 +296,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
+    @Autowired
+    private SVDService svdService;
 
     /**
      * Exposed for AJAX calls.
@@ -1034,27 +1042,16 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return eeDetails;
     }
 
+    /**
+     * @param id
+     * @return
+     */
     @RequestMapping("/refreshCorrMatrix.html")
-    public ModelAndView updateCorrelationMatrix( HttpServletRequest request, HttpServletResponse response ) {
-
-        /*
-         * TODO make this an ajax call.
-         */
-        Long id = null;
-
-        if ( request.getParameter( "id" ) == null ) {
-            throw new IllegalArgumentException( "Must provide an id" );
-
-        }
-        try {
-            id = Long.parseLong( request.getParameter( "id" ) );
-        } catch ( NumberFormatException e ) {
-            throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
-        }
+    public ModelAndView updateCorrelationMatrix( Long id ) {
+        // TODO: make this an ajax background job
         updateCorrelationMatrixFile( id );
         return new ModelAndView(
                 new RedirectView( "/Gemma/expressionExperiment/showExpressionExperiment.html?id=" + id ) );
-
     }
 
     /**
@@ -1074,12 +1071,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     private void addQCInfo( ExpressionExperiment expressionExperiment, ModelAndView mav ) {
-        mav.addObject( "hasCorrDistFile", ExpressionExperimentQCUtils.hasCorrDistFile( expressionExperiment ) );
-        mav.addObject( "hasCorrMatFile", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
-        mav.addObject( "hasPvalueDistFiles", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
-        mav.addObject( "hasPCAFile", ExpressionExperimentQCUtils.hasPCAFile( expressionExperiment ) );
-        mav.addObject( "hasNodeDegreeDistFile", ExpressionExperimentQCUtils
-                .hasNodeDegreeDistFile( expressionExperiment ) );
+        mav.addObject( "hasCorrDist", ExpressionExperimentQCUtils.hasCorrDistFile( expressionExperiment ) );
+        mav.addObject( "hasCorrMat", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
+        mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
+        mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment ) );
+        mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
     }
 
     /**
@@ -1094,23 +1090,21 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Collection<ExpressionExperimentValueObject> filtered = new HashSet<ExpressionExperimentValueObject>();
         Collection<ExpressionExperiment> eesToKeep = null;
 
-        /*
-         * FIXME it might be faster to include the EEs as an argument to these methods, as a constraint, and/or have a
-         * limit.
-         */
+        eesToKeep = expressionExperimentService.loadMultiple( EntityUtils.getIds( eeValObjectCol ) );
+
         switch ( filter ) {
-            case 1:
-                eesToKeep = expressionExperimentService.loadLackingEvent( DifferentialExpressionAnalysisEvent.class );
+            case 1: // eligible for diff and don't have it.
+                auditEventService.retainLackingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 eesToKeep.removeAll( expressionExperimentService.loadLackingFactors() );
                 break;
-            case 2:
-                eesToKeep = expressionExperimentService.loadLackingEvent( LinkAnalysisEvent.class );
+            case 2: // need coexp
+                auditEventService.retainLackingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 3:
-                eesToKeep = expressionExperimentService.loadWithEvent( DifferentialExpressionAnalysisEvent.class );
+                auditEventService.retainHavingEvent( eesToKeep, DifferentialExpressionAnalysisEvent.class );
                 break;
             case 4:
-                eesToKeep = expressionExperimentService.loadWithEvent( LinkAnalysisEvent.class );
+                auditEventService.retainHavingEvent( eesToKeep, LinkAnalysisEvent.class );
                 break;
             case 5:
                 eesToKeep = expressionExperimentService.loadTroubled();
@@ -1121,19 +1115,18 @@ public class ExpressionExperimentController extends AbstractTaskService {
             case 7:
                 eesToKeep = expressionExperimentService.loadLackingTags();
                 break;
-            case 8:
-                eesToKeep = expressionExperimentService.loadLackingEvent( BatchInformationFetchingEvent.class );
-                eesToKeep.removeAll( expressionExperimentService
-                        .loadWithEvent( FailedBatchInformationMissingEvent.class ) );
+            case 8: // needs batch info
+                auditEventService.retainLackingEvent( eesToKeep, BatchInformationFetchingEvent.class );
+                auditEventService.retainLackingEvent( eesToKeep, FailedBatchInformationMissingEvent.class );
                 break;
             case 9:
-                eesToKeep = expressionExperimentService.loadWithEvent( BatchInformationFetchingEvent.class );
+                auditEventService.retainHavingEvent( eesToKeep, BatchInformationFetchingEvent.class );
                 break;
             case 10:
-                eesToKeep = expressionExperimentService.loadLackingEvent( PCAAnalysisEvent.class );
+                auditEventService.retainLackingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             case 11:
-                eesToKeep = expressionExperimentService.loadWithEvent( PCAAnalysisEvent.class );
+                auditEventService.retainHavingEvent( eesToKeep, PCAAnalysisEvent.class );
                 break;
             default:
                 throw new IllegalArgumentException( "Unknown filter: " + filter );

@@ -133,7 +133,7 @@ public class ExperimentDEDVEndpoint extends AbstractGemmaEndpoint {
                 String elementString1 = encode( dmatrix.getRow( rowNum ) ); // data vector string for output
                 String elementString2 = "";
 
-                CompositeSequence de = ( CompositeSequence ) dmatrix.getDesignElementForRow( rowNum );
+                CompositeSequence de = dmatrix.getDesignElementForRow( rowNum );
                 Collection<Gene> geneCol = compositeSequenceService.getGenes( de );
                 for ( Gene gene : geneCol ) {
                     if ( elementString2.equals( "" ) )

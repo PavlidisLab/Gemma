@@ -88,18 +88,17 @@ public class SvdController extends AbstractTaskService {
     /**
      * AJAX entry point.
      * 
-     * @param id
-     * @param postprocessOnly if we should not run the SVD, just the comparison to factors
+     * @param id 
      * @return
      * @throws Exception
      */
-    public String run( Long id, boolean postprocessOnly ) throws Exception {
+    public String run( Long id  ) throws Exception {
         if ( id == null ) throw new IllegalArgumentException( "ID cannot be null" );
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) throw new IllegalArgumentException( "Could not load experiment with id=" + id );
 
         ee = expressionExperimentService.thawLite( ee );
-        SvdTaskCommand cmd = new SvdTaskCommand( ee, postprocessOnly );
+        SvdTaskCommand cmd = new SvdTaskCommand( ee  );
 
         return super.run( cmd );
     }

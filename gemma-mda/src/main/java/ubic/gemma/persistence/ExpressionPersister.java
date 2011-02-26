@@ -327,7 +327,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
      * @param vect
      */
     private BioAssayDimension fillInDesignElementDataVectorAssociations( DesignElementDataVector vect ) {
-        CompositeSequence designElement = ( CompositeSequence ) vect.getDesignElement();
+        CompositeSequence designElement = vect.getDesignElement();
 
         assert designElement != null;
 

@@ -35,27 +35,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 @Service
 public class AuditEventServiceImpl extends AuditEventServiceBase {
 
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getNewSinceDate(java.util.Date)
-     */
-    @Override
-    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception {
-        return this.getAuditEventDao().getNewSinceDate( date );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getUpdatedSinceDate(java.util.Date)
-     */
-    @Override
-    protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception {
-        return this.getAuditEventDao().getUpdatedSinceDate( date );
-    }
-
-    @Override
-    protected void handleThaw( AuditEvent auditEvent ) throws Exception {
-        this.getAuditEventDao().thaw( auditEvent );
-    }
-
     public List<AuditEvent> getEvents( Auditable auditable ) {
         return this.getAuditEventDao().getEvents( auditable );
     }
@@ -76,6 +55,47 @@ public class AuditEventServiceImpl extends AuditEventServiceBase {
 
     public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
         return this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
+    }
+
+    @Override
+    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
+        return this.getAuditEventDao().hasEvent( a, type );
+    }
+
+    @Override
+    public boolean lacksEvent( Auditable a, Class<? extends AuditEventType> type ) {
+        return !this.hasEvent( a, type );
+    }
+
+    @Override
+    public void retainHavingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
+        this.getAuditEventDao().retainHavingEvent( a, type );
+    }
+
+    @Override
+    public void retainLackingEvent( Collection<? extends Auditable> a, Class<? extends AuditEventType> type ) {
+        this.getAuditEventDao().retainLackingEvent( a, type );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getNewSinceDate(java.util.Date)
+     */
+    @Override
+    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) throws java.lang.Exception {
+        return this.getAuditEventDao().getNewSinceDate( date );
+    }
+
+    /**
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventService#getUpdatedSinceDate(java.util.Date)
+     */
+    @Override
+    protected Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) throws java.lang.Exception {
+        return this.getAuditEventDao().getUpdatedSinceDate( date );
+    }
+
+    @Override
+    protected void handleThaw( AuditEvent auditEvent ) throws Exception {
+        this.getAuditEventDao().thaw( auditEvent );
     }
 
 }

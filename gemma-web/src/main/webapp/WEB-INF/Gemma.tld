@@ -259,36 +259,36 @@
 			<description>ID of the experiment</description>
 			<name>ee</name>
 			<required>true</required>
-			<rtexprvalue>true</rtexprvalue> 
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<name>size</name>
-			<rtexprvalue>true</rtexprvalue> 
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description>default=false</description>
-			<name>hasCorrMatFile</name>
-			<rtexprvalue>true</rtexprvalue> 
+			<name>hasCorrMat</name>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description>default=false</description>
-			<name>hasCorrDistFile</name>
-			<rtexprvalue>true</rtexprvalue> 
+			<name>hasCorrDist</name>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description>default=false</description>
-			<name>hasPCAFile</name>
-			<rtexprvalue>true</rtexprvalue> 
+			<name>hasPCA</name>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description>default=false</description>
-			<name>hasPvalueDistFiles</name>
-			<rtexprvalue>true</rtexprvalue> 
+			<name>hasPvalueDist</name>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 		<attribute>
 			<description>default=false</description>
-			<name>hasNodeDegreeDistFile</name>
-			<rtexprvalue>true</rtexprvalue> 
+			<name>hasNodeDegreeDist</name>
+			<rtexprvalue>true</rtexprvalue>
 		</attribute>
 	</tag>
 	<tag>

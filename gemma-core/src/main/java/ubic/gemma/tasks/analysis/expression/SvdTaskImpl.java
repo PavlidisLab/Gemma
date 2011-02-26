@@ -46,9 +46,7 @@ public class SvdTaskImpl implements SvdTask {
 
         TaskResult result = new TaskResult( command, null );
 
-        if ( command.isPostprocessOnly() ) {
-            svdService.svdFactorAnalysis( command.getExpressionExperiment() );
-        } else if ( command.getExpressionExperiment() != null ) {
+        if ( command.getExpressionExperiment() != null ) {
             svdService.svd( command.getExpressionExperiment() );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );

@@ -18,10 +18,11 @@
  */
 package ubic.gemma.loader.genome;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import junit.framework.TestCase; 
+import junit.framework.TestCase;
 
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.util.ConfigUtils;
@@ -35,6 +36,7 @@ public class SimpleFastaCmdTest extends TestCase {
     private static final String TEST_RESOURCE_PATH = ConfigUtils.getString( "gemma.home" )
             + "/gemma-core/src/test/resources/data/loader/genome/blast";
     private static final String TESTBLASTDB = "testblastdb";
+
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
     public void testGetMultiple() throws Exception {
         if ( !fastaCmdExecutableExists() ) {
@@ -48,7 +50,7 @@ public class SimpleFastaCmdTest extends TestCase {
 
         Collection<BioSequence> bs = fastaCmd.getBatchIdentifiers( input, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
-        // assertEquals( 2, bs.size() );
+        assertEquals( 2, bs.size() );
     }
 
     // Test may need to be disabled because it fails in continuum, sometimes (unpredictable)
@@ -64,7 +66,7 @@ public class SimpleFastaCmdTest extends TestCase {
 
         Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
-        // assertEquals( 2, bs.size() );
+        assertEquals( 2, bs.size() );
     }
 
     public void testGetMultipleAccSomeNotFound() throws Exception {
@@ -81,7 +83,7 @@ public class SimpleFastaCmdTest extends TestCase {
 
         Collection<BioSequence> bs = fastaCmd.getBatchAccessions( input, TESTBLASTDB, TEST_RESOURCE_PATH );
         assertNotNull( bs );
-        // assertEquals( 2, bs.size() );
+        assertEquals( 2, bs.size() );
     }
 
     public void testGetSingle() throws Exception {
@@ -97,7 +99,7 @@ public class SimpleFastaCmdTest extends TestCase {
                 + "GCCCAGCAGGACACTGCAGCACCCAAAGGGCTTCCCAGGAGTAGGGTTGCCCTCAAGAGGCTCTTGGGTCTGATGGCCAC"
                 + "ATCCTGGAATTGTTTTCAAGTTGATGGTCACAGCCCTGAGGCATGTAGGGGCGTGGGGATGCGCTCTGCTCTGCTCTCCT"
                 + "CTCCTGAACCCCTGAACCCTCTGGCTACCCCAGAGCACTTAGAGCCAG";
-        // assertEquals( expected, bs.getSequence() );
+        assertEquals( expected, bs.getSequence() );
     }
 
     public void testGetSingleAcc() throws Exception {
@@ -114,7 +116,7 @@ public class SimpleFastaCmdTest extends TestCase {
                 + "GCCCAGCAGGACACTGCAGCACCCAAAGGGCTTCCCAGGAGTAGGGTTGCCCTCAAGAGGCTCTTGGGTCTGATGGCCAC"
                 + "ATCCTGGAATTGTTTTCAAGTTGATGGTCACAGCCCTGAGGCATGTAGGGGCGTGGGGATGCGCTCTGCTCTGCTCTCCT"
                 + "CTCCTGAACCCCTGAACCCTCTGGCTACCCCAGAGCACTTAGAGCCAG";
-        // assertEquals( expected, bs.getSequence() );
+        assertEquals( expected, bs.getSequence() );
     }
 
     public void testGetSingleAccNotFound() throws Exception {
@@ -126,41 +128,17 @@ public class SimpleFastaCmdTest extends TestCase {
         assertNull( bs );
     }
 
-    /*
-     * (non-Javadoc)
-     * @see junit.framework.TestCase#setUp()
-     */
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-    }
-
     private boolean fastaCmdExecutableExists() {
 
-        // completely disable this suite. There is something fundamentally problematic about it running in continuum,
-        // though it works fine otherwise.
-        return false;
+        String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
+        if ( fastacmdExe == null ) {
+            return false;
+        }
 
-        // String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
-        // if ( fastacmdExe == null ) {
-        // log.warn( "No fastacmd executable is configured, skipping test" );
-        // return false;
-        // }
-        //
-        // File fi = new File( fastacmdExe );
-        // if ( !fi.canRead() ) {
-        // log.warn( fastacmdExe + " not found, skipping test" );
-        // return false;
-        // }
-        // return true;
+        File fi = new File( fastacmdExe );
+        if ( !fi.canRead() ) {
+            return false;
+        }
+        return true;
     }
 }

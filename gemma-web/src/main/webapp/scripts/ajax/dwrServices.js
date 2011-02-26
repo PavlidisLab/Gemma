@@ -725,9 +725,9 @@ TwoChannelMissingValueController.run = function(p0, callback) {
 if (SvdController == null)
 	var SvdController = {};
 SvdController._path = '/Gemma/dwr';
-SvdController.run = function(p0, p1, callback) {
+SvdController.run = function(p0, callback) {
 	dwr.engine
-			._execute(SvdController._path, 'SvdController', 'run', p0, p1, callback);
+			._execute(SvdController._path, 'SvdController', 'run', p0, callback);
 }
 
 // ====================================================================================

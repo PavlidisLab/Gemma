@@ -15,12 +15,9 @@
 package ubic.gemma.analysis.preprocess.svd;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
-
-import cern.colt.list.DoubleArrayList;
 
 import ubic.gemma.model.analysis.ProbeLoading;
 import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
@@ -51,6 +48,9 @@ public interface SVDService {
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
             int count );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public boolean hasPca( ExpressionExperiment ee );
 
     /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.

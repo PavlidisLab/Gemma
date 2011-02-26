@@ -57,7 +57,6 @@ import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.analysis.CoexpressionProbe;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.association.coexpression.HumanProbeCoExpression;
@@ -380,7 +379,7 @@ public class LinkAnalysisService {
         // This excludes probes that were filtered out
         Collection<CompositeSequence> probesForVectors = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector v : dataVectors ) {
-            CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
+            CompositeSequence cs = v.getDesignElement();
             if ( eeDoubleMatrix.getRow( cs ) != null ) probesForVectors.add( cs );
         }
 
@@ -419,7 +418,7 @@ public class LinkAnalysisService {
             Collection<ProcessedExpressionDataVector> dataVectors ) {
         Map<CompositeSequence, ProcessedExpressionDataVector> p2v = new HashMap<CompositeSequence, ProcessedExpressionDataVector>();
         for ( ProcessedExpressionDataVector v : dataVectors ) {
-            CompositeSequence cs = ( CompositeSequence ) v.getDesignElement();
+            CompositeSequence cs = v.getDesignElement();
             p2v.put( cs, v );
         }
         return p2v;

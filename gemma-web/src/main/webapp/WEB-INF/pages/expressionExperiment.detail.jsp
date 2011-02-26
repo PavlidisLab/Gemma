@@ -67,10 +67,10 @@
 			</security:accesscontrollist>
 	</h3>
 	<Gemma:expressionQC ee="${expressionExperiment.id}"
-		hasCorrDistFile="${hasCorrDistFile}"
-		hasCorrMatFile="${hasCorrMatFile}" hasPCAFile="${hasPCAFile}"
-		hasNodeDegreeDistFile="${hasNodeDegreeDistFile}"
-		hasPvalueDistFiles="${hasPvalueDistFiles}" />
+		hasCorrDist="${hasCorrDist}"
+		hasCorrMat="${hasCorrMat}" hasPCA="${hasPCA}"
+		hasNodeDegreeDist="${hasNodeDegreeDist}"
+		hasPvalueDist="${hasPvalueDist}" />
 
 </div>
 

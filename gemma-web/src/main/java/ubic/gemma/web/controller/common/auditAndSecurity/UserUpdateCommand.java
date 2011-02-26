@@ -22,10 +22,8 @@ import java.util.Collection;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.JobInfo;
-import ubic.gemma.model.common.auditAndSecurity.Organization;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserRole;
-import ubic.gemma.model.common.description.BibliographicReference;
 
 /**
  * Just like a regular user; but has 'new password' and 'confirm password' fields. It can be constructed from a user. To
@@ -40,7 +38,7 @@ public class UserUpdateCommand {
     private String newPassword = null;
     private String confirmNewPassword = null;
     private Boolean adminUser = false;
-    private Collection roles = null;
+    private Collection<UserRole> roles = null;
 
     // stored so this can be used to modify a persistent instance.
     private User user;

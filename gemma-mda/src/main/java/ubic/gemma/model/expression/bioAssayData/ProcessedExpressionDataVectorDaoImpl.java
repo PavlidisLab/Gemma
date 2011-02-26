@@ -41,6 +41,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -332,9 +333,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * FIXME noGeneProbes are never cached.
          */
         if ( !noGeneProbes.isEmpty() || needToSearch.size() != 0 ) {
-            /*
-             * FIXME this doesn't resolve ExpressionExperimentSubSets. Actually I think it might.
-             */
             Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
                     needToSearch, cs2gene );
 
@@ -916,18 +914,32 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         Collection<DoubleVectorValueObject> sliced = new HashSet<DoubleVectorValueObject>();
         if ( obs == null || obs.isEmpty() ) return sliced;
 
-        Collection<BioAssay> sliceBioAssays = ee.getBioAssays();
-        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
-        bad.setBioAssays( sliceBioAssays );
-        bad.setId( null );
-
         this.getHibernateTemplate().lock( ee, LockMode.NONE );
         Hibernate.initialize( ee.getBioAssays() );
-        this.getHibernateTemplate().lock( obs.iterator().next().getBioAssayDimension(), LockMode.NONE );
-        Hibernate.initialize( obs.iterator().next().getBioAssayDimension() );
-        Hibernate.initialize( obs.iterator().next().getBioAssayDimension().getBioAssays() );
+        List<BioAssay> sliceBioAssays = new ArrayList<BioAssay>();
 
-        bad.setName( "Subset of " + obs.iterator().next().getBioAssayDimension() );
+        BioAssayDimension bad = BioAssayDimension.Factory.newInstance();
+        bad.setId( null ); // because it isn't a real bioassaydimension
+
+        BioAssayDimension bioAssayDimension = obs.iterator().next().getBioAssayDimension();
+        this.getHibernateTemplate().lock( bioAssayDimension, LockMode.NONE );
+        Hibernate.initialize( bioAssayDimension );
+        sliceBioAssays.clear();
+        Hibernate.initialize( bioAssayDimension.getBioAssays() );
+        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+            if ( !ee.getBioAssays().contains( ba ) ) {
+                continue;
+            }
+            Hibernate.initialize( ba.getSamplesUsed() );
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                Hibernate.initialize( bm.getFactorValues() );
+            }
+            sliceBioAssays.add( ba );
+        }
+        bad.setBioAssays( sliceBioAssays );
+
+        bad.setName( "Subset of " + bioAssayDimension );
 
         for ( DoubleVectorValueObject vec : obs ) {
             DoubleVectorValueObject s = new DoubleVectorValueObject( vec, bad );
