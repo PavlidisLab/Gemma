@@ -25,6 +25,8 @@ package ubic.gemma.model.analysis.expression;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
@@ -49,12 +51,19 @@ public class PrincipalComponentAnalysisImpl extends ubic.gemma.model.analysis.ex
     public List<Double[]> getEigenvectorArrays() {
         ByteArrayConverter bac = new ByteArrayConverter();
         List<Double[]> result = new ArrayList<Double[]>( this.getNumComponentsStored() );
-        for ( int i = 0; i < this.getNumComponentsStored(); i++ ) {
+
+        for ( int i = 0; i < this.getBioAssayDimension().getBioAssays().size(); i++ ) {
             result.add( null );
         }
         for ( Eigenvector ev : this.getEigenVectors() ) {
             result.set( ev.getComponentNumber() - 1, ArrayUtils.toObject( bac.byteArrayToDoubles( ev.getVector() ) ) );
         }
+        CollectionUtils.filter( result, new Predicate() {
+            @Override
+            public boolean evaluate( Object object ) {
+                return object != null;
+            }
+        } );
         return result;
     }
 

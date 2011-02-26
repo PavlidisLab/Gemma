@@ -15,9 +15,16 @@
 package ubic.gemma.analysis.preprocess.svd;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
+import cern.colt.list.DoubleArrayList;
+
+import ubic.gemma.model.analysis.ProbeLoading;
+import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -29,6 +36,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  */
 public interface SVDService {
 
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public SVDValueObject retrieveSvd( ExpressionExperiment ee );
+
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void svd( Collection<ExpressionExperiment> ees );
 
@@ -38,29 +48,25 @@ public interface SVDService {
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public SVDValueObject svd( ExpressionExperiment ee );
 
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
+            int count );
+
     /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
      * 
      * @param ee
-     * @return
-     */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );
-
-    /**
-     * @param id
      * @return
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public SVDValueObject retrieveSvd( ExpressionExperiment ee );
+    public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca );
 
     /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.
      * 
      * @param ee
-     * @param svo
      * @return
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
-    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee, SVDValueObject svo );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    SVDValueObject svdFactorAnalysis( ExpressionExperiment ee );
 }

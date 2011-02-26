@@ -45,7 +45,9 @@ import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
+import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.model.analysis.ProbeLoading;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
@@ -104,6 +106,9 @@ public class DEDVController {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private SVDService svdService;
 
     @Autowired
     private GeneDifferentialExpressionService geneDifferentialExpressionService;
@@ -200,6 +205,26 @@ public class DEDVController {
 
         return makeVisCollection( dedvs, genes, validatedProbes, layouts );
 
+    }
+
+    /**
+     * @param eeId
+     * @param component
+     * @param count
+     * @return
+     */
+    public VisualizationValueObject[] getDEDVForPcaVisualization( Long eeId, int component, int count ) {
+        StopWatch watch = new StopWatch();
+        watch.start();
+
+        ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        if ( ee == null ) return null;
+
+        Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( ee,
+                component, count );
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
+                .sortVectorDataByDesign( topLoadedVectors.values() );
+        return makeVisCollection( topLoadedVectors.values(), null, null, layouts );
     }
 
     /**
@@ -473,54 +498,6 @@ public class DEDVController {
     public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
 
         this.bioAssayDimensionService = bioAssayDimensionService;
-    }
-
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    public void setDifferentialExpressionResultService(
-            DifferentialExpressionResultService differentialExpressionResultService ) {
-        this.differentialExpressionResultService = differentialExpressionResultService;
-    }
-
-    /**
-     * @param experimentalDesignVisualizationService the experimentalDesignVisualizationService to set
-     */
-    public void setExperimentalDesignVisualizationService(
-            ExperimentalDesignVisualizationService experimentalDesignVisualizationService ) {
-        this.experimentalDesignVisualizationService = experimentalDesignVisualizationService;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setGeneDifferentialExpressionService(
-            GeneDifferentialExpressionService geneDifferentialExpressionService ) {
-        this.geneDifferentialExpressionService = geneDifferentialExpressionService;
-    }
-
-    // --------------------------------
-    // Dependency injection setters
-    public void setGeneService( GeneService geneService ) {
-        this.geneService = geneService;
-    }
-
-    public void setProbe2ProbeCoexpressionService( Probe2ProbeCoexpressionService probe2ProbeCoexpressionService ) {
-        this.probe2ProbeCoexpressionService = probe2ProbeCoexpressionService;
-    }
-
-    /**
-     * @param processedExpressionDataVectorService the processedExpressionDataVectorService to set
-     */
-    public void setProcessedExpressionDataVectorService(
-            ProcessedExpressionDataVectorService processedExpressionDataVectorService ) {
-        this.processedExpressionDataVectorService = processedExpressionDataVectorService;
     }
 
     /**
@@ -871,20 +848,45 @@ public class DEDVController {
     }
 
     /**
+     * Get the names we'll use for the columns of the vectors.
+     * 
      * @param vectors
      * @param vvo
+     * @param layouts
      */
-    private void getSampleNames( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo ) {
+    private void getSampleNames( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
+            Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
         DoubleVectorValueObject vec = vectors.iterator().next();
-        List<String> sampleNames = getSampleNames( vec );
-        if ( sampleNames.size() > 0 ) {
-            log.debug( sampleNames.size() + " sample names!" );
-            vvo.setSampleNames( sampleNames );
+
+        List<String> sampleNames = new ArrayList<String>();
+        if ( layouts != null && layouts.get( vec.getExpressionExperiment() ) != null ) {
+            for ( BioAssay ba : layouts.get( vec.getExpressionExperiment() ).keySet() ) {
+                sampleNames.add( ba.getName() ); // fIXME
+            }
+            if ( sampleNames.size() > 0 ) {
+                log.debug( sampleNames.size() + " sample names!" );
+                vvo.setSampleNames( sampleNames );
+            }
+        } else if ( vec.getBioAssayDimension() == null ) {
+            sampleNames = getSampleNames( vec );
+            if ( sampleNames.size() > 0 ) {
+                log.debug( sampleNames.size() + " sample names!" );
+                vvo.setSampleNames( sampleNames );
+            }
+        } else {
+            // sorry.
         }
     }
 
+    /**
+     * @param dedv
+     * @return
+     */
     private List<String> getSampleNames( DoubleVectorValueObject dedv ) {
         List<String> result = new ArrayList<String>();
+        if ( dedv.getBioAssayDimension() == null ) {
+            return result;
+        }
         if ( dedv.getBioAssayDimension().getId() != null )
             bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
         for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
@@ -985,7 +987,7 @@ public class DEDVController {
             VisualizationValueObject vvo = new VisualizationValueObject( vvoMap.get( ee2P.getEEId() ), genes, ee2P
                     .getPValue(), validatedProbes.get( ee2P.getEEId() ) );
 
-            getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo );
+            getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
 
             /*
              * Set up the experimental designinfo so we can show it above the graph.
@@ -1102,7 +1104,7 @@ public class DEDVController {
             VisualizationValueObject vvo = new VisualizationValueObject( vectors, geneList, validatedProbeList );
 
             if ( vectors.size() > 0 ) {
-                getSampleNames( vectors, vvo );
+                getSampleNames( vectors, vvo, layouts );
             }
 
             /*

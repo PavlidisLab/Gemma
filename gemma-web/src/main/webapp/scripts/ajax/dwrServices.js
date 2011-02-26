@@ -202,6 +202,10 @@ DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1, p2, c
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1, p2,
 			callback);
 }
+DEDVController.getDEDVForPcaVisualization = function(p0, p1, p2, callback) {
+	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForPcaVisualization', p0, p1, p2,
+			callback);
+}
 DEDVController.getDEDVForDiffExVisualizationByExperiment = function(p0, p1, p2, callback) {
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByExperiment', p0, p1,
 			p2, callback);

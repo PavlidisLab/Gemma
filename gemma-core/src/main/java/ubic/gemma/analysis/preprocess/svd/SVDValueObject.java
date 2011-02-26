@@ -21,7 +21,6 @@ package ubic.gemma.analysis.preprocess.svd;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +28,6 @@ import java.util.Map;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.model.analysis.Eigenvalue;
 import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -71,8 +69,6 @@ public class SVDValueObject implements Serializable {
     private Map<Long, List<Double>> factors = new HashMap<Long, List<Double>>();
 
     private Map<Integer, Map<Long, Double>> factorCorrelations = new HashMap<Integer, Map<Long, Double>>();
-
-    private Map<Integer, Map<Long, Double>> factorPvalues = new HashMap<Integer, Map<Long, Double>>();
 
     /**
      * @param id
@@ -145,15 +141,6 @@ public class SVDValueObject implements Serializable {
     }
 
     /**
-     * @return map of component to a map of ExperimentalFactors to pvalues for association of that factor with the
-     *         component. This is only used if the ExperimentalFactor has more than two levels so we used the
-     *         Kruskal-Wallis test. FIXME not used now.
-     */
-    public Map<Integer, Map<Long, Double>> getFactorPvalues() {
-        return factorPvalues;
-    }
-
-    /**
      * @return
      */
     public Map<Long, List<Double>> getFactors() {
@@ -185,10 +172,6 @@ public class SVDValueObject implements Serializable {
         this.factorCorrelations = factorCorrelations;
     }
 
-    public void setFactorPvalues( Map<Integer, Map<Long, Double>> factorPvalues ) {
-        this.factorPvalues = factorPvalues;
-    }
-
     public void setId( Long id ) {
         this.id = id;
     }
@@ -202,16 +185,6 @@ public class SVDValueObject implements Serializable {
             this.factorCorrelations.put( componentNumber, new HashMap<Long, Double>() );
         }
         this.factorCorrelations.get( componentNumber ).put( ef.getId(), factorCorrelation );
-    }
-
-    /*
-     * 
-     */
-    public void setPCFactorPvalue( int componentNumber, ExperimentalFactor ef, double pval ) {
-        if ( !this.factorPvalues.containsKey( componentNumber ) ) {
-            this.factorPvalues.put( componentNumber, new HashMap<Long, Double>() );
-        }
-        this.factorPvalues.get( componentNumber ).put( ef.getId(), pval );
     }
 
     public void setVariances( Double[] variances ) {

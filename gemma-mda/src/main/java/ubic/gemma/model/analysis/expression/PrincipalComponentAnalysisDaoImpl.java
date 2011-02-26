@@ -14,15 +14,18 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.analysis.ProbeLoading;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -82,6 +85,29 @@ public class PrincipalComponentAnalysisDaoImpl extends HibernateDaoSupport imple
         return ( PrincipalComponentAnalysis ) fetched.get( 0 );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisDao#getTopLoadedProbes(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment, int, int)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count ) {
+        if ( ee == null || ee.getId() == null ) return new ArrayList<ProbeLoading>();
+        HibernateTemplate t = new HibernateTemplate( getSessionFactory() );
+        t.setMaxResults( count );
+        return t.findByNamedParam( "select pr from PrincipalComponentAnalysisImpl p join p.probeLoadings pr"
+                + " where p.experimentAnalyzed = :ee and pr.componentNumber = :cmp order by pr.loadingRank ", new String[] {
+                "ee", "cmp" }, new Object[] { ee, component } );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
+     */
     @Override
     public Collection<? extends PrincipalComponentAnalysis> load( Collection<Long> ids ) {
         Collection<PrincipalComponentAnalysis> result = new HashSet<PrincipalComponentAnalysis>();

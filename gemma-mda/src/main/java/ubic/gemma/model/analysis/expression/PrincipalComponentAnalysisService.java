@@ -14,9 +14,12 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.util.List;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.gemma.model.analysis.ProbeLoading;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -36,7 +39,11 @@ public interface PrincipalComponentAnalysisService {
      */
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
-            double[] ds, DoubleMatrix<Integer, Integer> vToStore, BioAssayDimension bad, int numLoadingsToStore );
+            double[] eigenvalues, DoubleMatrix<Integer, Integer> v, BioAssayDimension bad, int numComponentsToStore,
+            int numLoadingsToStore );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
 
     /**
      * @param ee

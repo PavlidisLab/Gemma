@@ -159,8 +159,21 @@ public class ExperimentQCTag extends TagSupport {
         if ( hasPCAFile ) {
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"pcaScree.html?id="
-                            + this.eeid + "\" /></td>" );
-
+                            + this.eeid + "\" />" );
+            buf.append( "<br/>" );
+            for ( int i = 0; i < 3; i++ ) {
+                String linkText = "<span style='cursor:pointer' onClick=\"Ext.getCmp('ee-details-panel').visualizePcaHandler("
+                        + this.eeid
+                        + ","
+                        + ( i + 1 )
+                        + ","
+                        + 100
+                        + ")\" ext:qtip=\"Click to visualize top loaded probes for component "
+                        + ( i + 1 )
+                        + "\"><img src=\"/Gemma/images/icons/chart_curve.png\"></span>";
+                buf.append( linkText + "&nbsp;" );
+            }
+            buf.append( "</td>" );
             /*
              * popupImage is defined in ExpressinExperimentDetails.js
              */
@@ -173,6 +186,7 @@ public class ExperimentQCTag extends TagSupport {
                             + "');return 1\" >"
                             + "<img title='Correlations of PCs with experimental factors, click for details' src=\"pcaFactors.html?id="
                             + this.eeid + "\" /></a></td>" );
+
         } else {
             /*
              * Two panels for PCA, so two placeholders.

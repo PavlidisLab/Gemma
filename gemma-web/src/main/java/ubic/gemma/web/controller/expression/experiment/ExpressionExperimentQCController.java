@@ -161,7 +161,13 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        SVDValueObject svdo = svdService.retrieveSvd( ee );
+        SVDValueObject svdo = null;
+        try {
+            svdo = svdService.svdFactorAnalysis( ee );
+        } catch ( Exception e ) {
+            // if there is no pca
+            // log.error( e, e );
+        }
 
         if ( svdo != null ) {
             this.writePCAFactors( os, ee, svdo );
@@ -714,7 +720,7 @@ public class ExpressionExperimentQCController extends BaseController {
      * @throws Exception
      */
     private boolean writeDetailedFactorAnalysis( ExpressionExperiment ee, OutputStream os ) throws Exception {
-        SVDValueObject svdo = svdService.retrieveSvd( ee );
+        SVDValueObject svdo = svdService.svdFactorAnalysis( ee );
         if ( svdo == null ) return false;
 
         if ( svdo.getFactors().isEmpty() && svdo.getDates().isEmpty() ) {

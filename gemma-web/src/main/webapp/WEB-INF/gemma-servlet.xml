@@ -985,6 +985,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getDEDVForCoexpressionVisualization</value>
 								<value>getDEDVForDiffExVisualization</value>
 								<value>getVectorData</value>
+								<value>getDEDVForPcaVisualization</value>
 								<value>getDEDVForVisualizationByProbe</value>
 								<value>getDEDVForDiffExVisualizationByThreshold</value>
 								<value>getDEDVForDiffExVisualizationByExperiment</value>

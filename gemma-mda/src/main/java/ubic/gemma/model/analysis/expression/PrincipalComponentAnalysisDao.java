@@ -14,6 +14,9 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.util.List;
+
+import ubic.gemma.model.analysis.ProbeLoading;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.BaseDao;
 
@@ -28,5 +31,13 @@ public interface PrincipalComponentAnalysisDao extends BaseDao<PrincipalComponen
      * @return
      */
     PrincipalComponentAnalysis findByExperiment( ExpressionExperiment ee );
+
+    /**
+     * @param ee
+     * @param component
+     * @param count
+     * @return
+     */
+    List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count );
 
 }

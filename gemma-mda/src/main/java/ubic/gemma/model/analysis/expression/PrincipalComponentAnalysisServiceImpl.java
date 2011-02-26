@@ -15,9 +15,10 @@
 package ubic.gemma.model.analysis.expression;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,19 +38,15 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * TODO Document Me
- * 
  * @author paul
  * @version $Id$
  */
 @Service
 public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponentAnalysisService {
+    private static Log log = LogFactory.getLog( PrincipalComponentAnalysisServiceImpl.class );
 
     @Autowired
     private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
-
-    @Autowired
-    private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     @Autowired
     public QuantitationTypeDao quantitationTypeDao;
@@ -68,10 +65,12 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
      */
     @Override
     public PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
-            double[] eigenvalues, DoubleMatrix<Integer, Integer> vToStore, BioAssayDimension bad, int numLoadingsToStore ) {
+            double[] eigenvalues, DoubleMatrix<Integer, Integer> v, BioAssayDimension bad, int numComponentsToStore,
+            int numLoadingsToStore ) {
 
         PrincipalComponentAnalysis pca = PrincipalComponentAnalysis.Factory.newInstance();
-        pca.setNumComponentsStored( vToStore.columns() );
+        int actualNumberOfComponentsStored = Math.min( numComponentsToStore, v.columns() );
+        pca.setNumComponentsStored( actualNumberOfComponentsStored );
         pca.setBioAssayDimension( bad );
         pca.setMaxNumProbesPerComponent( numLoadingsToStore );
         pca.setExperimentAnalyzed( ee );
@@ -79,9 +78,9 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         QuantitationType loadingQt = getLoadingQt();
 
         /*
-         * deal with U
+         * deal with U. We keep only the first N components for the first M genes.
          */
-        for ( int i = 0; i < u.columns(); i++ ) {
+        for ( int i = 0; i < actualNumberOfComponentsStored; i++ ) {
             List<CompositeSequence> inOrder = u.sortByColumnAbsoluteValues( i, true );
 
             for ( int j = 0; j < Math.min( u.rows(), numLoadingsToStore ) - 1; j++ ) {
@@ -94,18 +93,20 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         }
 
         /*
-         * deal with V
+         * deal with V. note we store all of it.
          */
         ByteArrayConverter bac = new ByteArrayConverter();
-        for ( int i = 0; i < vToStore.columns(); i++ ) {
-            double[] column = vToStore.getColumn( i );
+        for ( int i = 0; i < v.columns(); i++ ) {
+            double[] column = v.getColumn( i );
             byte[] eigenVectorBytes = bac.doubleArrayToBytes( column );
-            Eigenvector evec = Eigenvector.Factory.newInstance( i + 1, eigenVectorBytes );
+            int componentNumber = i + 1;
+            log.debug( componentNumber );
+            Eigenvector evec = Eigenvector.Factory.newInstance( componentNumber, eigenVectorBytes );
             pca.getEigenVectors().add( evec );
         }
 
         /*
-         * deal with eigenvalues; note we store all of them.
+         * Deal with eigenvalues; note we store all of them.
          */
         double sum = 0.0;
         List<Eigenvalue> eigv = new ArrayList<Eigenvalue>();
@@ -125,6 +126,23 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         }
 
         return this.principalComponentAnalysisDao.create( pca );
+    }
+
+    /* (non-Javadoc)
+     * @see ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisService#getTopLoadedProbes(ubic.gemma.model.expression.experiment.ExpressionExperiment, int, int)
+     */
+    @Override
+    public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count ) {
+        PrincipalComponentAnalysis pca = loadForExperiment( ee );
+        if ( pca == null ) {
+            return new ArrayList<ProbeLoading>();
+        }
+        if ( component < 1 ) {
+            throw new IllegalArgumentException( "Component must be greater than zero" );
+        }
+
+        return this.getPrincipalComponentAnalysisDao().getTopLoadedProbes( ee, component, count );
+
     }
 
     /**

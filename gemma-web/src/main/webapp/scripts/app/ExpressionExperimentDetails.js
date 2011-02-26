@@ -250,6 +250,25 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	/**
 	 * 
 	 */
+	visualizePcaHandler : function(eeid, component, count) {
+
+		var params = {}
+		this.vispcaWindow = new Gemma.VisualizationWithThumbsWindow({
+					thumbnails : false,
+					readMethod : DEDVController.getDEDVForPcaVisualization,
+					title : "Top loaded probes for PC" + component,
+					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid,
+							component, count)
+				});
+		this.vispcaWindow.show({
+					params : [eeid, component, count]
+				});
+
+	},
+
+	/**
+	 * 
+	 */
 	renderSourceDatabaseEntry : function(ee) {
 		var result = '';
 
@@ -844,8 +863,9 @@ var popupImage = function(url) {
 	var b = new Ext.Window({
 				modal : true,
 				stateful : false,
-				resizable : false,
-				autoHeight : true,
+				resizable : true,
+				autoHeight : false,
+				width : 200,
 				x : 50,
 				padding : 10,
 				html : '<img src=\"' + url + '"\" />'

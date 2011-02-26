@@ -40,8 +40,7 @@ import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
-import ubic.gemma.model.analysis.Eigenvector;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
+import ubic.gemma.model.analysis.ProbeLoading;
 import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
 import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
@@ -49,13 +48,14 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.util.ConfigUtils;
 import cern.colt.list.DoubleArrayList;
@@ -63,8 +63,6 @@ import cern.colt.list.IntArrayList;
 
 /**
  * Perform SVD on expression data and store the results.
- * <p>
- * TODO: Perhaps add audit event if batch or run date is strongly associated with a PC?
  * 
  * @author paul
  * @version $Id$
@@ -73,7 +71,15 @@ import cern.colt.list.IntArrayList;
 @Service
 public class SVDServiceImpl implements SVDService {
 
-    private static final int MAX_NUM_COMPONENTS_TO_PERSIST = 10;
+    /**
+     * How many probe (gene) loadings to store, at most.
+     */
+    private static final int MAX_LOADINGS_TO_PERSIST = 1000;
+
+    /**
+     * How many components we should store probe (gene) loadings for.
+     */
+    private static final int MAX_NUM_COMPONENTS_TO_PERSIST = 5;
 
     private static final int MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE = 3;
 
@@ -89,9 +95,6 @@ public class SVDServiceImpl implements SVDService {
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
-
-    @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
@@ -115,8 +118,20 @@ public class SVDServiceImpl implements SVDService {
                 + EE_SVD_SUMMARY + "." + id;
     }
 
-    @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    /**
+     * @param experimentalFactor
+     * @return true if the factor is continuous; false if it looks to be categorical.
+     */
+    public static boolean isContinuous( ExperimentalFactor experimentalFactor ) {
+        boolean hasMeasurements = false;
+        for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
+            if ( fv.getMeasurement() != null && fv.getCharacteristics() == null ) {
+                hasMeasurements = true;
+                // don't break, in case some are missing values.
+            }
+        }
+        return hasMeasurements;
+    }
 
     /**
      * Get the SVD information for experiment with id given.
@@ -125,29 +140,88 @@ public class SVDServiceImpl implements SVDService {
      * @return
      */
     public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
+        PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
+        BioAssayDimension bad = pca.getBioAssayDimension();
+        bioAssayDimensionService.thaw( bad );
+        return new SVDValueObject( pca );
+        // Long id = ee.getId();
+        // File f = new File( getReportPath( id ) );
+        //
+        // if ( !f.exists() ) {
+        // return null;
+        // }
+        //
+        // try {
+        //
+        // FileInputStream fis = new FileInputStream( getReportPath( id ) );
+        // ObjectInputStream ois = new ObjectInputStream( fis );
+        //
+        // SVDValueObject valueObject = ( SVDValueObject ) ois.readObject();
+        //
+        // ois.close();
+        // fis.close();
+        //
+        // return valueObject;
+        // } catch ( Exception e ) {
+        // log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
+        // return null;
+        // }
 
-        Long id = ee.getId();
-        File f = new File( getReportPath( id ) );
+    }
 
-        if ( !f.exists() ) {
-            return null;
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.analysis.preprocess.svd.SVDService#getTopLoadedVectors(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, int, int)
+     */
+    public Map<ProbeLoading, DoubleVectorValueObject> getTopLoadedVectors( ExpressionExperiment ee, int component,
+            int count ) {
+        PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
+        Map<ProbeLoading, DoubleVectorValueObject> result = new HashMap<ProbeLoading, DoubleVectorValueObject>();
+        if ( pca == null ) {
+            return result;
         }
 
-        try {
+        List<ProbeLoading> topLoadedProbes = principalComponentAnalysisService
+                .getTopLoadedProbes( ee, component, count );
 
-            FileInputStream fis = new FileInputStream( getReportPath( id ) );
-            ObjectInputStream ois = new ObjectInputStream( fis );
-
-            SVDValueObject valueObject = ( SVDValueObject ) ois.readObject();
-
-            ois.close();
-            fis.close();
-
-            return valueObject;
-        } catch ( Exception e ) {
-            log.warn( "Unable to read report object for id =" + id + ": " + e.getMessage() );
-            return null;
+        if ( topLoadedProbes == null ) {
+            log.warn( "No probes?" );
+            return result;
         }
+
+        Map<CompositeSequence, ProbeLoading> probes = new HashMap<CompositeSequence, ProbeLoading>();
+        for ( ProbeLoading probeLoading : topLoadedProbes ) {
+            if ( probeLoading.getLoading() < 0 ) {
+                /*
+                 * FIXME this is temporary as a test.
+                 */
+                continue;
+            }
+            CompositeSequence probe = probeLoading.getProbe();
+            probes.put( probe, probeLoading );
+        }
+
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        ees.add( ee );
+        Collection<DoubleVectorValueObject> vect = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
+                ees, probes.keySet(), true );
+
+        this.bioAssayDimensionService.thaw( pca.getBioAssayDimension() );
+
+        for ( DoubleVectorValueObject vct : vect ) {
+            ProbeLoading probeLoading = probes.get( vct.getDesignElement() );
+
+            // FIXME this is to make sure smaller values
+            // are better, they are not pvalues
+            vct.setPvalue( 1.0 / Math.abs( probeLoading.getLoading() ) );
+            vct.setBioAssayDimension( pca.getBioAssayDimension() );
+            vct.setExpressionExperiment( ee );
+            result.put( probeLoading, vct );
+        }
+
+        return result;
 
     }
 
@@ -182,7 +256,6 @@ public class SVDServiceImpl implements SVDService {
          * Save the results
          */
         DoubleMatrix<Integer, Integer> v = svd.getV();
-        Double[] vars = svd.getVarianceFractions();
 
         List<Long> bioMaterialIds = new ArrayList<Long>();
         for ( int i = 0; i < mat.columns(); i++ ) {
@@ -197,39 +270,15 @@ public class SVDServiceImpl implements SVDService {
         }
         BioAssayDimension bad = bioAssayDimensions.iterator().next();
 
-        DoubleMatrix<CompositeSequence, Integer> u = svd.getU().getColRange( 0,
-                Math.min( bad.getBioAssays().size() - 1, MAX_NUM_COMPONENTS_TO_PERSIST ) );// fixme check there are enuf
-
-        DoubleMatrix<Integer, Integer> vToStore = v.getColRange( 0, Math.min( bad.getBioAssays().size(),
-                MAX_NUM_COMPONENTS_TO_PERSIST ) );
-        // assert u.columns() == 3;
-
-        principalComponentAnalysisService.create( ee, u, svd.getEigenvalues(), vToStore, bad, 1000 );
-
-        SVDValueObject svo = new SVDValueObject( ee.getId(), bioMaterialIds, vars, v );
-        saveValueObject( svo );
+        PrincipalComponentAnalysis pca = principalComponentAnalysisService.create( ee, svd.getU(),
+                svd.getEigenvalues(), v, bad, MAX_NUM_COMPONENTS_TO_PERSIST, MAX_LOADINGS_TO_PERSIST );
 
         /*
          * Add an audit event.
          */
         auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "SVD computation", null );
 
-        return svdFactorAnalysis( ee, svo );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.analysis.preprocess.svd.SVDService#svdFactorAnalysis(ubic.gemma.model.expression.experiment.
-     * ExpressionExperiment)
-     */
-    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
-        SVDValueObject svo = this.retrieveSvd( ee );
-        if ( svo == null ) {
-            log.info( "SVD object not found for " + ee.getShortName() + ", running..." );
-            return svd( ee );
-        }
-        return this.svdFactorAnalysis( ee, svo );
+        return svdFactorAnalysis( pca );
     }
 
     /*
@@ -238,26 +287,27 @@ public class SVDServiceImpl implements SVDService {
      * @seeubic.gemma.analysis.preprocess.svd.SVDService#svdFactorAnalysis(ubic.gemma.model.expression.experiment.
      * ExpressionExperiment, ubic.gemma.analysis.preprocess.svd.SVDValueObject)
      */
-    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee, SVDValueObject svo ) {
-        DoubleMatrix<Integer, Integer> vMatrix = svo.getvMatrix();
-
-        if ( vMatrix == null || vMatrix.columns() == 0 ) {
+    public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
+        PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
+        if ( pca == null ) {
             throw new IllegalArgumentException( "SVD must already be run" );
         }
+        return svdFactorAnalysis( pca );
+    }
 
-        /*
-         * Get bioassay/biomaterial dates and factor mappings
-         */
-        ExpressionExperiment tee = this.expressionExperimentService.thawLite( ee );
-
-        PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.analysis.preprocess.svd.SVDService#svdFactorAnalysis(ubic.gemma.model.analysis.expression.
+     * PrincipalComponentAnalysis)
+     */
+    public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();
-
         bioAssayDimensionService.thaw( bad );
         List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
 
-        svo = new SVDValueObject( pca );
+        SVDValueObject svo = new SVDValueObject( pca );
 
         Map<Long, Date> bioMaterialDates = new HashMap<Long, Date>();
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
@@ -280,18 +330,15 @@ public class SVDServiceImpl implements SVDService {
 
         svo.getDateCorrelations().clear();
         svo.getFactorCorrelations().clear();
-        svo.getFactorPvalues().clear();
         svo.getDates().clear();
         svo.getFactors().clear();
 
-        for ( int componentNumber = 0; componentNumber < Math.min( vMatrix.columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
-            analyzeComponent( svo, componentNumber, vMatrix, bioMaterialDates, bioMaterialFactorMap, isContinuous,
-                    svdBioMaterials );
+        for ( int componentNumber = 0; componentNumber < Math.min( svo.getvMatrix().columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
+            analyzeComponent( svo, componentNumber, svo.getvMatrix(), bioMaterialDates, bioMaterialFactorMap,
+                    isContinuous, svdBioMaterials );
         }
 
-        saveValueObject( svo );
-
-        auditTrailService.addUpdateEvent( ee, PCAAnalysisEvent.class, "Factor analysis", null );
+        // saveValueObject( svo );
 
         return svo;
     }
@@ -331,10 +378,10 @@ public class SVDServiceImpl implements SVDService {
 
                 Date date = bioMaterialDates.get( svdBioMaterials[j] );
                 if ( date == null ) {
-                    log.warn( "Incomplete date information" );
+                    log.warn( "Incomplete date information, missing for biomaterial " + svdBioMaterials[j] );
                     dates[j] = Double.NaN;
                 } else {
-                    dates[j] = 1.0 * DateUtils.round( date, Calendar.HOUR ).getTime(); // make int, cast to double
+                    dates[j] = DateUtils.round( date, Calendar.MINUTE ).getTime(); // make int, cast to double
                 }
                 if ( initializingDates ) svo.getDates().add( date );
             }
@@ -343,8 +390,6 @@ public class SVDServiceImpl implements SVDService {
             double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
 
             svo.setPCDateCorrelation( componentNumber, dateCorrelation );
-        } else {
-            log.warn( "Insufficient date information to compare to eigengenes" );
         }
 
         /*
@@ -552,21 +597,6 @@ public class SVDServiceImpl implements SVDService {
 
         fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
 
-    }
-
-    /**
-     * @param experimentalFactor
-     * @return true if the factor is continuous; false if it looks to be categorical.
-     */
-    public static boolean isContinuous( ExperimentalFactor experimentalFactor ) {
-        boolean hasMeasurements = false;
-        for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
-            if ( fv.getMeasurement() != null && fv.getCharacteristics() == null ) {
-                hasMeasurements = true;
-                // don't break, in case some are missing values.
-            }
-        }
-        return hasMeasurements;
     }
 
     private void saveValueObject( SVDValueObject eeVo ) {
