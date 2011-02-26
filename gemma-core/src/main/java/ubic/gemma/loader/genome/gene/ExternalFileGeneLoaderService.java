@@ -155,25 +155,6 @@ public class ExternalFileGeneLoaderService {
     }
 
     /**
-     * PersisterHelper bean.
-     * 
-     * @param persisterHelper the persisterHelper to set
-     */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
-        this.persisterHelper = persisterHelper;
-    }
-
-    /**
-     * Taxon bean
-     * 
-     * @param bean
-     */
-    public void setTaxonService( TaxonService bean ) {
-        this.taxonService = bean;
-
-    }
-
-    /**
      * Method to update taxon to indicate that genes have been loaded for that taxon. If the taxon has children taxa
      * then those child genes should not be used and the flag for those child taxon set to false.
      * 

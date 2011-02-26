@@ -44,7 +44,9 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
     public void setup() throws Exception {
         geneFile = ( ConfigUtils.getString( "gemma.home" ) )
                 .concat( "/gemma-core/src/test/resources/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
-        geneService.remove( geneService.loadAll() );
+
+        Collection<Gene> genes = geneService.loadAll();
+        if ( !genes.isEmpty() ) geneService.remove( genes );
     }
 
     /**
