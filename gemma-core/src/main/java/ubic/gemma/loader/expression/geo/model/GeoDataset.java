@@ -476,13 +476,13 @@ public class GeoDataset extends GeoData {
     /**
      * This is used when we break a series up into two, along organism lines.
      * 
-     * @param series
+     * @param s
      */
-    public void dissociateFromSeries( GeoSeries series ) {
-        if ( !this.series.contains( series ) ) {
-            throw new IllegalArgumentException( this + " does not have a reference to " + series );
+    public void dissociateFromSeries( GeoSeries s ) {
+        if ( !this.series.contains( s ) ) {
+            throw new IllegalArgumentException( this + " does not have a reference to " + s );
         }
-        this.series.remove( series );
+        this.series.remove( s );
     }
 
 }

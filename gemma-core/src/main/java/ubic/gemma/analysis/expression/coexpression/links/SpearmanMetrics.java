@@ -47,6 +47,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
      * correlation is rejected. This helps keep the correlation distribution reasonable. (FIXME we might want to set
      * this even higher!)
      */
+    @SuppressWarnings("hiding")
     protected int minNumUsed = 8;
 
     /**

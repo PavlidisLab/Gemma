@@ -26,7 +26,6 @@ import java.util.Collection;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.analysis.ContrastResult;
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -83,11 +82,11 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
             Double pvalue = probeAnalysisResult.getPvalue();
             Double qvalue = probeAnalysisResult.getCorrectedPvalue();
             // Double stat = probeAnalysisResult.getEffectSize();
-            Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-            Double stat = null;
-            if ( !contrasts.isEmpty() ) {
-                stat = contrasts.iterator().next().getTstat();
-            }
+            // Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+            // Double stat = null;
+            // if ( !contrasts.isEmpty() ) {
+            // stat = contrasts.iterator().next().getTstat();
+            // }
 
             // if ( pvalue != null ) assertNotNull( stat );
             assertNotNull( probe );

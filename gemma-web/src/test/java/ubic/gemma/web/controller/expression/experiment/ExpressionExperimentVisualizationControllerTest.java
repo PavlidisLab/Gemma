@@ -37,6 +37,7 @@ import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualization
 /**
  * @author keshav
  * @version $Id$
+ * @deprecated
  */
 public class ExpressionExperimentVisualizationControllerTest extends BaseSpringWebTest {
 

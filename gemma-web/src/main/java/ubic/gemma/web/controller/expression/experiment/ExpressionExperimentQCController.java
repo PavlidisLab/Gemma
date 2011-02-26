@@ -560,31 +560,32 @@ public class ExpressionExperimentQCController extends BaseController {
         return series;
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    private Collection<File> locateCorrectedPvalueDistFiles( ExpressionExperiment ee ) {
-        String shortName = ee.getShortName();
-
-        Collection<File> files = new HashSet<File>();
-        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
-        if ( !directory.exists() ) {
-            return files;
-        }
-
-        String[] fileNames = directory.list();
-        String suffix = ".qvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        for ( String fileName : fileNames ) {
-            if ( !fileName.endsWith( suffix ) ) {
-                continue;
-            }
-            File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
-            files.add( f );
-        }
-
-        return files;
-    }
+    //
+    // /**
+    // * @param ee
+    // * @return
+    // */
+    // private Collection<File> locateCorrectedPvalueDistFiles( ExpressionExperiment ee ) {
+    // String shortName = ee.getShortName();
+    //
+    // Collection<File> files = new HashSet<File>();
+    // File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
+    // if ( !directory.exists() ) {
+    // return files;
+    // }
+    //
+    // String[] fileNames = directory.list();
+    // String suffix = ".qvalues" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+    // for ( String fileName : fileNames ) {
+    // if ( !fileName.endsWith( suffix ) ) {
+    // continue;
+    // }
+    // File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
+    // files.add( f );
+    // }
+    //
+    // return files;
+    // }
 
     private File locateCorrMatDataFile( ExpressionExperiment ee ) {
         String shortName = ee.getShortName();
@@ -594,31 +595,32 @@ public class ExpressionExperimentQCController extends BaseController {
         return f;
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    private Collection<File> locateEffectSizeDistFiles( ExpressionExperiment ee ) {
-        String shortName = ee.getShortName();
-
-        Collection<File> files = new HashSet<File>();
-        File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
-        if ( !directory.exists() ) {
-            return files;
-        }
-
-        String[] fileNames = directory.list();
-        String suffix = ".scores" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
-        for ( String fileName : fileNames ) {
-            if ( !fileName.endsWith( suffix ) ) {
-                continue;
-            }
-            File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
-            files.add( f );
-        }
-
-        return files;
-    }
+    //
+    // /**
+    // * @param ee
+    // * @return
+    // */
+    // private Collection<File> locateEffectSizeDistFiles( ExpressionExperiment ee ) {
+    // String shortName = ee.getShortName();
+    //
+    // Collection<File> files = new HashSet<File>();
+    // File directory = DifferentialExpressionFileUtils.getBaseDifferentialDirectory( shortName );
+    // if ( !directory.exists() ) {
+    // return files;
+    // }
+    //
+    // String[] fileNames = directory.list();
+    // String suffix = ".scores" + DifferentialExpressionFileUtils.PVALUE_DIST_SUFFIX;
+    // for ( String fileName : fileNames ) {
+    // if ( !fileName.endsWith( suffix ) ) {
+    // continue;
+    // }
+    // File f = new File( directory.getAbsolutePath() + File.separatorChar + fileName );
+    // files.add( f );
+    // }
+    //
+    // return files;
+    // }
 
     /**
      * @param ee
@@ -880,11 +882,6 @@ public class ExpressionExperimentQCController extends BaseController {
                         false );
 
                 XYPlot xyPlot = chart.getXYPlot();
-                // xyPlot.addAnnotation( new XYTextAnnotation( "R2=" + Math.pow( corr, 2 ), 10, 10 ) );
-                // FIXME
-                // need
-                // to get
-                // axis information
 
                 chart.getTitle().setFont( new Font( "SansSerif", Font.BOLD, 12 ) );
 
@@ -1006,7 +1003,6 @@ public class ExpressionExperimentQCController extends BaseController {
         chart.getCategoryPlot().setRangeGridlinesVisible( false );
         chart.getCategoryPlot().setDomainGridlinesVisible( false );
         ChartUtilities.applyCurrentTheme( chart );
-        // TODO get rid of shadows
 
         CategoryAxis domainAxis = chart.getCategoryPlot().getDomainAxis();
         domainAxis.setCategoryLabelPositions( CategoryLabelPositions.UP_45 );

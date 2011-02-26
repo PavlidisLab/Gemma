@@ -34,7 +34,6 @@ import org.apache.commons.lang.time.DateUtils;
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * Tag to show 'what's new in Gemma' on home page.

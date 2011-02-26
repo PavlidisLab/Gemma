@@ -34,8 +34,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -106,7 +104,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
 
     private static final String SEARCH_CRITERIA = "searchCriteria";
 
-    private static Log log = LogFactory.getLog( ExpressionExperimentVisualizationFormController.class.getName() );
     public static final String SEARCH_BY_PROBE = "probe set id";
     public static final String SEARCH_BY_GENE = "gene symbol";
     private static final String COOKIE_NAME = "expressionExperimentVisualizationCookie";
@@ -400,7 +397,7 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @return Map
      */
     @Override
-    protected Map referenceData( HttpServletRequest request ) {
+    protected Map<String, List<? extends Object>> referenceData( HttpServletRequest request ) {
 
         Map<String, List<? extends Object>> searchByMap = new HashMap<String, List<? extends Object>>();
         List<String> searchCategories = new ArrayList<String>();

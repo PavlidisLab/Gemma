@@ -28,6 +28,7 @@ import org.xml.sax.SAXException;
 /**
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
 public class PublicationMetaTest extends TestCase {
     InputStream testStream;

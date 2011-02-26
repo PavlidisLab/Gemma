@@ -140,19 +140,19 @@ public class MgedOntologyHelper {
         if ( retName == null ) {
             if ( classExists( referingClassName ) ) {
                 // NB: Only gets props inherited from superclasses one level up
-                Map props = this.getPropertiesInfo( referingClassName, true );
+                Map<String, String> props = this.getPropertiesInfo( referingClassName, true );
 
-                Iterator it = props.keySet().iterator();
+                Iterator<String> it = props.keySet().iterator();
                 while ( it.hasNext() ) {
-                    String propName = ( String ) it.next();
+                    String propName = it.next();
                     // Compare ontEntryName directly with end of propName
                     if ( propName.toLowerCase().endsWith( ontEntryName.toLowerCase() ) ) {
-                        retName = ( String ) props.get( propName );
+                        retName = props.get( propName );
                     }
                     // Remove last 's' in case of plural 's' before comparing
                     if ( retName == null && withoutPluralS != null ) {
                         if ( propName.toLowerCase().endsWith( withoutPluralS.toLowerCase() ) ) {
-                            retName = ( String ) props.get( propName );
+                            retName = props.get( propName );
                         }
                     }
                 }
@@ -161,11 +161,11 @@ public class MgedOntologyHelper {
                 if ( retName == null ) {
                     ClassInformation classInfo = classIndex.get( referingClassName );
 
-                    Collection parents = classInfo.getParents();
+                    Collection<ClassInformation> parents = classInfo.getParents();
                     if ( parents != null && parents.size() > 0 ) {
-                        it = parents.iterator();
+                        Iterator<ClassInformation> cit = parents.iterator();
                         while ( it.hasNext() && retName == null ) {
-                            String parentName = ( ( ClassInformation ) it.next() ).getName();
+                            String parentName = cit.next().getName();
                             retName = checkEntryName( parentName, ontEntryName );
                         }
                     }
@@ -191,11 +191,11 @@ public class MgedOntologyHelper {
      * @return
      */
     public Collection<String> getEnumValues( String mgedPropertyName ) {
-        Iterator it = propertyIndex.iterator();
+        Iterator<PropertyInformation> it = propertyIndex.iterator();
 
         PropertyInformation propInfo = null;
         while ( it.hasNext() && propInfo == null ) {
-            propInfo = ( PropertyInformation ) it.next();
+            propInfo = it.next();
             if ( !propInfo.name.equals( mgedPropertyName ) ) {
                 propInfo = null;
             }
@@ -257,7 +257,7 @@ public class MgedOntologyHelper {
      * @param propertyName
      * @return
      */
-    public Collection getPossibleNames( ClassInformation classInfo, String propertyName ) {
+    public Collection<String> getPossibleNames( ClassInformation classInfo, String propertyName ) {
         if ( classInfo.hasProperty( propertyName ) ) {
             PropertyInformation property = classInfo.getProperty( propertyName );
             if ( property.isPrimitive ) {
@@ -271,10 +271,10 @@ public class MgedOntologyHelper {
 
         }
         // it does not have the property, we have to look at its parents
-        Iterator it = classInfo.getParents().iterator();
+        Iterator<ClassInformation> it = classInfo.getParents().iterator();
         while ( it.hasNext() ) {
-            ClassInformation parent = ( ClassInformation ) it.next();
-            Collection results = getPossibleNames( parent, propertyName );
+            ClassInformation parent = it.next();
+            Collection<String> results = getPossibleNames( parent, propertyName );
             if ( results != null ) {
                 return results;
             }
@@ -288,7 +288,7 @@ public class MgedOntologyHelper {
      * @param propertyName
      * @return
      */
-    public Collection getPossibleNames( Extendable object, String propertyName ) {
+    public Collection<String> getPossibleNames( Extendable object, String propertyName ) {
         String className = object.getClass().getName();
         className = className.substring( 12 ); // get rid of "org.biomage."
         String packageName = className.substring( 0, className.indexOf( "." ) );
@@ -312,7 +312,7 @@ public class MgedOntologyHelper {
      * @param mgedClassName
      * @return
      */
-    public Map getPropertiesInfo( String mgedClassName ) {
+    public Map<String, String> getPropertiesInfo( String mgedClassName ) {
         return getPropertiesInfo( mgedClassName, false );
     }
 
@@ -324,7 +324,7 @@ public class MgedOntologyHelper {
      * @param lookInParentsAlso
      * @return
      */
-    public Map getPropertiesInfo( String mgedClassName, boolean lookInParentsAlso ) {
+    public Map<String, String> getPropertiesInfo( String mgedClassName, boolean lookInParentsAlso ) {
         ClassInformation classInfo = classIndex.get( mgedClassName );
 
         if ( classInfo != null ) {
@@ -339,12 +339,12 @@ public class MgedOntologyHelper {
 
             while ( !classInfosStack.empty() ) {
                 classInfo = classInfosStack.pop();
-                HashMap propInfos = ( HashMap ) classInfo.getProperties();
+                Map<Object, PropertyInformation> propInfos = classInfo.getProperties();
 
-                Iterator it = propInfos.keySet().iterator();
+                Iterator<Object> it = propInfos.keySet().iterator();
                 while ( it.hasNext() ) {
                     String propName = ( String ) it.next();
-                    String propType = ( ( PropertyInformation ) propInfos.get( propName ) ).typeName;
+                    String propType = propInfos.get( propName ).typeName;
 
                     // Check that property doesn't allready exist
                     // i.e. the case of subclass overriding parent.
@@ -356,9 +356,9 @@ public class MgedOntologyHelper {
                 // Look for properties of parent classes
                 if ( lookInParentsAlso ) {
                     List<ClassInformation> parentsClassInfos = classInfo.getParents();
-                    it = parentsClassInfos.iterator();
-                    while ( it.hasNext() ) {
-                        classInfosStack.push( ( ClassInformation ) it.next() );
+                    Iterator<ClassInformation> mit = parentsClassInfos.iterator();
+                    while ( mit.hasNext() ) {
+                        classInfosStack.push( mit.next() );
                     }
                     lookInParentsAlso = false; // To not proceed recursively up the hierarchy
                 }
@@ -375,15 +375,15 @@ public class MgedOntologyHelper {
      * @param ontClass
      * @return
      */
-    public Collection getSubClassNames( String ontClass ) {
+    public Collection<String> getSubClassNames( String ontClass ) {
         ClassInformation classInfo = classIndex.get( ontClass );
-        Collection subClasses = classInfo.getSubClasses();
+        Collection<ClassInformation> subClasses = classInfo.getSubClasses();
 
         Collection<String> subClassNames = new HashSet<String>( subClasses.size() );
 
-        Iterator it = subClasses.iterator();
+        Iterator<ClassInformation> it = subClasses.iterator();
         while ( it.hasNext() ) {
-            ClassInformation subClassInfo = ( ClassInformation ) it.next();
+            ClassInformation subClassInfo = it.next();
             subClassNames.add( subClassInfo.getName() );
         }
 
@@ -480,10 +480,10 @@ public class MgedOntologyHelper {
     private void buildClassTree() {
 
         // assign parents and subclasses
-        Iterator it = classIndex.keySet().iterator();
+        Iterator<String> it = classIndex.keySet().iterator();
         while ( it.hasNext() ) {
             ClassInformation currentClass = classIndex.get( it.next() );
-            Iterator it2 = currentClass.getParentNames().iterator();
+            Iterator<String> it2 = currentClass.getParentNames().iterator();
             while ( it2.hasNext() ) {
                 ClassInformation parent = classIndex.get( it2.next() );
                 if ( !currentClass.getParents().contains( parent ) ) {
@@ -498,10 +498,9 @@ public class MgedOntologyHelper {
 
         // assign instances
         // it = instanceIndex.keySet().iterator();
-        it = instanceIndex.iterator();
+        Iterator<InstanceInformation> iit = instanceIndex.iterator();
         while ( it.hasNext() ) {
-            // InstanceInformation instance = (InstanceInformation) instanceIndex.get(it.next());
-            InstanceInformation instance = ( InstanceInformation ) it.next();
+            InstanceInformation instance = iit.next();
             if ( classIndex.get( instance.className ) != null ) {
                 instance.classInfo = classIndex.get( instance.className );
                 instance.classInfo.addToInstances( instance );
@@ -510,9 +509,9 @@ public class MgedOntologyHelper {
         }
 
         // assign properties
-        it = propertyIndex.iterator();
-        while ( it.hasNext() ) {
-            PropertyInformation property = ( PropertyInformation ) it.next();
+        Iterator<PropertyInformation> pit = propertyIndex.iterator();
+        while ( pit.hasNext() ) {
+            PropertyInformation property = pit.next();
             if ( property.typeName == null ) {
                 System.out.println( "property " + property.name + " has no typeName" );
                 continue;
@@ -522,9 +521,9 @@ public class MgedOntologyHelper {
                 enumID++;
                 ClassInformation enumClass = new ClassInformation( enumClassName );
                 classIndex.put( enumClassName, enumClass );
-                Iterator it2 = property.enumValues.iterator();
+                Iterator<String> it2 = property.enumValues.iterator();
                 while ( it2.hasNext() ) {
-                    InstanceInformation instance = new InstanceInformation( ( String ) it2.next() );
+                    InstanceInformation instance = new InstanceInformation( it2.next() );
                     enumClass.addToInstances( instance );
                     instance.classInfo = enumClass;
                 }
@@ -648,9 +647,9 @@ public class MgedOntologyHelper {
             }
             printProperties( depth + 1 );
             printInstances( depth + 1 );
-            Iterator it = subClasses.iterator();
+            Iterator<ClassInformation> it = subClasses.iterator();
             while ( it.hasNext() ) {
-                ClassInformation subClass = ( ClassInformation ) it.next();
+                ClassInformation subClass = it.next();
                 // System.out.println(makeIndent(depth)+ subClass.getName());
                 subClass.print( depth + 1 );
             }
@@ -660,9 +659,9 @@ public class MgedOntologyHelper {
          * @param depth
          */
         public void printInstances( int depth ) {
-            Iterator it = instances.iterator();
+            Iterator<InstanceInformation> it = instances.iterator();
             while ( it.hasNext() ) {
-                InstanceInformation instance = ( InstanceInformation ) it.next();
+                InstanceInformation instance = it.next();
                 System.out.println( makeIndent( depth ) + "[" + instance.name + "]" );
             }
         }
@@ -671,9 +670,9 @@ public class MgedOntologyHelper {
          * @param depth
          */
         public void printProperties( int depth ) {
-            Iterator it = properties.values().iterator();
+            Iterator<PropertyInformation> it = properties.values().iterator();
             while ( it.hasNext() ) {
-                PropertyInformation property = ( PropertyInformation ) it.next();
+                PropertyInformation property = it.next();
                 System.out.print( makeIndent( depth ) + "." + property.name );
                 if ( property.typeName == null ) {
                     System.out.print( " of NO TYPE!" );

@@ -595,6 +595,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         printStats();
     }
 
+    @SuppressWarnings("unused")
     private void filterForOneSource() {
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
@@ -607,6 +608,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         }
     }
 
+    @SuppressWarnings("unused")
     private void filterForTwoOrMoreSources() {
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
@@ -725,6 +727,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         cleanURLs();
     }
 
+    @SuppressWarnings("unused")
     private void printComparisonsCSV() {
         System.out.println( "ID, machineURLs.size()" + "," + "humanURLs.size()" + "," + "intersect.size()" );
         for ( String dataset : originalMMTxIDs ) {
@@ -735,6 +738,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         }
     }
 
+    @SuppressWarnings("unused")
     private void printMissedURLs() {
         Map<String, Integer> missed = new HashMap<String, Integer>();
         for ( Set<String> missedURLs : getMissedURLS().values() ) {
@@ -753,7 +757,8 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    private void printROCCurveValues( String filename ) throws IOException {
+    @SuppressWarnings("unused")
+    private void printROCCurveValues( String f ) throws IOException {
         // table that has scores mapped to how many predictions were made at the score, and how many were correct
         Map<Integer, Integer> intersections = new HashMap<Integer, Integer>();
         Map<Integer, Integer> predictions = new HashMap<Integer, Integer>();
@@ -770,7 +775,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
                 + "    ?mention gemmaAnn:hasScore ?score .\n                                                            "
                 + "    ?mention rdf:label ?label .\n" + "}";
 
-        Model model = ProjectRDFModelTools.loadModel( filename );
+        Model model = ProjectRDFModelTools.loadModel( f );
 
         Query q = QueryFactory.create( queryString );
         // go through them all and put in excel file
@@ -838,6 +843,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         }
     }
 
+    @SuppressWarnings("unused")
     private void printSourceStats() {
         List<String> allSources = new LinkedList<String>();
         List<String> intersectSources = new LinkedList<String>();
@@ -893,6 +899,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         System.out.println( "F-measure:" + 2 * precision * recall / ( precision + recall ) );
     }
 
+    @SuppressWarnings("unused")
     private void removeAbstractSource() {
         for ( String dataset : originalMMTxIDs ) {
             Set<String> machineURLs = mmtxURLs.get( dataset );
@@ -944,7 +951,8 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    private void writeExperimentTitles( String filename ) {
+    @SuppressWarnings("unused")
+    private void writeExperimentTitles( String f ) {
         ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         Collection<ExpressionExperiment> experiments = ees.loadAll();
         Model model = ModelFactory.createDefaultModel();
@@ -964,7 +972,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
             expNode.addProperty( DC.title, experiment.getName() );
         }
         try {
-            model.write( new FileWriter( filename ) );
+            model.write( new FileWriter( f ) );
         } catch ( Exception e ) {
             e.printStackTrace();
         }

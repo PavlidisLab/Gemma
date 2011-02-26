@@ -19,35 +19,32 @@
 
 package ubic.gemma.loader.genome.gene;
 
-
 import java.io.IOException;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * CLI for loading genes from a non NCBI files.
- * A taxon and gene file should be supplied as command line arguments.
- * File should be in tab delimited format containing gene symbol, gene name, uniprot id in that order.
+ * CLI for loading genes from a non NCBI files. A taxon and gene file should be supplied as command line arguments. File
+ * should be in tab delimited format containing gene symbol, gene name, uniprot id in that order.
  * 
  * @author ldonnison
  * @version $Id$
  */
 public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
-    
-    
+
     private ExternalFileGeneLoaderService loader;
     private String directGeneInputFileName = null;
     private String taxonName;
+
     public ExternalFileGeneLoaderCLI() {
         super();
     }
 
     public static void main( String[] args ) {
-        //super constructor calls build options
+        // super constructor calls build options
         ExternalFileGeneLoaderCLI p = new ExternalFileGeneLoaderCLI();
         try {
             p.doWork( args );
@@ -57,35 +54,34 @@ public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
     }
 
     @Override
-    protected Exception doWork(String[] args) {
-        Exception err = processCommandLine("ExternalFileGeneLoader", args);
-        if (err != null)
-            return err;
-        processGeneList();  
+    protected Exception doWork( String[] args ) {
+        Exception err = processCommandLine( "ExternalFileGeneLoader", args );
+        if ( err != null ) return err;
+        processGeneList();
         return null;
     }
 
-    
-
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option directGene = OptionBuilder.withDescription(
-        "Import genes from a file rather than NCBI. You must provide the taxon option and gene file name including full path details" )
-        .hasArg().withArgName( "file" ).create( "f" );
+        Option directGene = OptionBuilder
+                .withDescription(
+                        "Import genes from a file rather than NCBI. You must provide the taxon option and gene file name including full path details" )
+                .hasArg().withArgName( "file" ).create( "f" );
         addOption( directGene );
-        
+
         Option taxonNameOption = OptionBuilder.hasArg().withDescription(
-                "Taxon common name e.g. 'salmonoid' does not have to be a species ")                        
-                .create( "t" );
-        addOption( taxonNameOption );    
-        
+                "Taxon common name e.g. 'salmonoid' does not have to be a species " ).create( "t" );
+        addOption( taxonNameOption );
+
         requireLogin();
     }
+
     /**
      * This method is called at the end of processCommandLine
      */
@@ -101,35 +97,35 @@ public class ExternalFileGeneLoaderCLI extends AbstractSpringAwareCLI {
         if ( hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
             if ( taxonName == null ) {
-                throw new IllegalArgumentException( "No taxon name supplied ");
+                throw new IllegalArgumentException( "No taxon name supplied " );
             }
         }
 
     }
+
     /**
      * Main entry point to service class which reads a gene file and persists the genes in that file.
      */
-    public void processGeneList(){
-      
+    public void processGeneList() {
+
         loader = ( ExternalFileGeneLoaderService ) this.getBean( "externalFileGeneLoaderService" );
-        
+
         try {
-            loader.load(directGeneInputFileName, taxonName);
-            System.out.println(loader.getLoadedGeneCount() + " Lines loaded successfully ");
-        } 
-        catch (IOException e ) {         
+            loader.load( directGeneInputFileName, taxonName );
+            System.out.println( loader.getLoadedGeneCount() + " Lines loaded successfully " );
+        } catch ( IOException e ) {
             System.out.println( "File could not be read: " + e.getMessage() );
             throw new RuntimeException( e );
-        }   
-        catch (IllegalArgumentException e ) {         
-            System.out.println( "One of the programme arguments were incorrect check gene file is in specified location and taxon is in system." + e.getMessage() );
-            throw new RuntimeException (e) ;
-        }  
-        catch ( Exception e ) {
+        } catch ( IllegalArgumentException e ) {
+            System.out
+                    .println( "One of the programme arguments were incorrect check gene file is in specified location and taxon is in system."
+                            + e.getMessage() );
+            throw new RuntimeException( e );
+        } catch ( Exception e ) {
             System.out.println( "Gene file persisting error: " + e.getMessage() );
             throw new RuntimeException( e );
-        }     
-        
-    }        
+        }
+
+    }
 
 }

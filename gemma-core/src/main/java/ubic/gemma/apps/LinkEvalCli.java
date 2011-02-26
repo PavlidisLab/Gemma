@@ -199,9 +199,8 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             // if gene pairs are equal in the same order or equal in alternate order, they are equal
             if ( eqOrdered || eqAlternate ) {
                 return true;
-            } else {
-                return false;
             }
+            return false;
 
         }
 
@@ -210,13 +209,6 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
          */
         public List<Gene> getFirstGenes() {
             return this.get( 0 );
-        }
-
-        public Set<Gene> getGenes() {
-            Set<Gene> result = new HashSet<Gene>();
-            result.addAll( getFirstGenes() );
-            result.addAll( getSecondGenes() );
-            return result;
         }
 
         /**
@@ -255,20 +247,6 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 result4 = PRIME * result4 + ( ( g == null ) ? 0 : g.hashCode() );
             }
             return result1 * result2 * result3 * result4;
-        }
-
-        /**
-         * @param firstGenes the firstGenes to set
-         */
-        public void setFirstGenes( List<Gene> firstGenes ) {
-            this.set( 0, firstGenes );
-        }
-
-        /**
-         * @param secondGenes the secondGenes to set
-         */
-        public void setSecondGenes( List<Gene> secondGenes ) {
-            this.set( 1, secondGenes );
         }
 
         @Override
@@ -344,11 +322,6 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     private ArrayDesignService arrayDesignService;
 
     private String termsOutPath = null;
-
-    /*
-     * FIXME this seems to get overused - should not be class-scoped?
-     */
-    private StringBuilder buf = null;
 
     private int cCount = 0;
 
@@ -461,7 +434,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * @param toSave
      * @param filename
      */
-    public void saveCacheToDisk( Serializable toSave, String filename ) {
+    public void saveCacheToDisk( Object toSave, String filename ) {
 
         log.info( "Generating file ... " );
 
@@ -572,7 +545,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         Exception err = processCommandLine( "Compute Go Overlap ", args );
         if ( err != null ) return err;
 
-        buf = new StringBuilder();
+        StringBuilder buf = new StringBuilder();
         buf.append( "" );
 
         this.arrayDesign = arrayDesignService.findByShortName( adShortName );
@@ -609,7 +582,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                 int[][] results = new int[numberOfRandomRuns][];
 
                 for ( int i = 0; i < numberOfRandomRuns; i++ ) {
-                    Collection<GenePair> randomPairs = getRandomPairsFromProbes( SET_SIZE, probemap );
+                    Collection<GenePair> randomPairs = getRandomPairsFromProbes( SET_SIZE );
                     Map<GenePair, Double> scoreMap = scorePairs( randomPairs );
                     addResults( i, results, scoreMap );
                 }
@@ -620,7 +593,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                     outputRandomLinks();
                 }
             } else {// if only 1 run, no need to generate histogram data, produce regular format for GO scores
-                Collection<GenePair> randomPairs = getRandomPairsFromProbes( SET_SIZE, probemap );
+                Collection<GenePair> randomPairs = getRandomPairsFromProbes( SET_SIZE );
                 Map<GenePair, Double> scoreMap = scorePairs( randomPairs );
                 writeGoSimilarityResults( scoreMap );
 
@@ -630,7 +603,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             }
 
         } else {
-            Collection<GenePair> genePairs = getLinks( probemap );
+            Collection<GenePair> genePairs = getLinks();
 
             Map<GenePair, Double> scoreMap = scorePairs( genePairs );
 
@@ -693,7 +666,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         for ( int j = 0; j < numberOfRandomRuns; j++ ) {
             writer.write( "\tRun_" + ( j + 1 ) );
         }
-        writer.write( buf.toString() );
+        // writer.write( buf.toString() );
         writer.write( "\tMean\tSDev\tMeanF\tStdevF\n" );
 
         return writer;
@@ -726,7 +699,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             f.createNewFile();
             writer = new FileWriter( f );
         }
-        writer.write( buf.toString() );
+        // writer.write( buf.toString() );
         if ( this.subsetUsed ) {
             writer.write( "# scoresGenerated:" + subsetLinks + "\n" );
         }
@@ -845,16 +818,16 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             }
         }
         if ( hasOption( 'x' ) ) {
-            String max = getOptionValue( 'x' );
-            if ( max.equalsIgnoreCase( "MAX" ) )
+            String maxs = getOptionValue( 'x' );
+            if ( maxs.equalsIgnoreCase( "MAX" ) )
                 this.max = true;
             else
                 this.max = false;
         }
 
         if ( hasOption( 'w' ) ) {
-            String weight = getOptionValue( 'w' );
-            if ( weight.equalsIgnoreCase( "weight" ) )
+            String weights = getOptionValue( 'w' );
+            if ( weights.equalsIgnoreCase( "weight" ) )
                 this.weight = true;
             else
                 this.weight = false;
@@ -1021,6 +994,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     /**
      * 
      */
+    @SuppressWarnings("unchecked")
     private void computeTermProbabilities() {
         File f2 = new File( HOME_DIR + File.separatorChar + GO_PROB_MAP );
         if ( f2.exists() ) {
@@ -1033,12 +1007,13 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
             GOcountMap = goMetric.getTermOccurrence( geneGoMap );
             makeRootMap( GOcountMap.keySet() );
-            GOProbMap = makeProbMap( GOcountMap );
+            GOProbMap = makeProbMap();
 
-            this.saveCacheToDisk( ( HashMap ) GOProbMap, GO_PROB_MAP );
+            this.saveCacheToDisk( GOProbMap, GO_PROB_MAP );
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void createGene2TermMatrix() {
 
         File f3 = new File( HOME_DIR + File.separatorChar + VECTOR_MATRIX );
@@ -1069,19 +1044,18 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * @param probemap
      * @return
      */
-    private Collection<GenePair> getLinks( Map<CompositeSequence, Collection<Gene>> probemap ) {
+    private Collection<GenePair> getLinks() {
         Collection<GenePair> genePairs = new HashSet<GenePair>();
 
         if ( randomFromTaxon ) {
-            genePairs = loadRandomPairs( probemap );
+            genePairs = loadRandomPairs();
         } else if ( StringUtils.isNotBlank( file_path ) ) {
             try {
                 File linkFile = new File( file_path );
-                genePairs = loadLinks( linkFile, probemap );
+                genePairs = loadLinks( linkFile );
                 log.info( "Done loading data..." );
             } catch ( IOException e ) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                throw new RuntimeException( e );
             }
 
         } else {
@@ -1150,6 +1124,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * @param take a collection of genes and size of susbset
      * @return a collection of random gene pairs that have GO annotations
      */
+    @SuppressWarnings("unused")
     private Collection<GenePair> getRandomPairs( int size, Collection<Gene> genes ) {
 
         Collection<GenePair> subsetPairs = new HashSet<GenePair>();
@@ -1197,7 +1172,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
      * @param take a collection of probes and size of susbset
      * @return a collection of random gene pairs that may or may not have GO annotations
      */
-    private Collection<GenePair> getRandomPairsFromProbes( int size, Map<CompositeSequence, Collection<Gene>> probemap ) {
+    private Collection<GenePair> getRandomPairsFromProbes( int size ) {
 
         Collection<GenePair> subsetPairs = new HashSet<GenePair>();
 
@@ -1293,8 +1268,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         }
     }
 
-    private Collection<GenePair> loadLinks( File f, Map<CompositeSequence, Collection<Gene>> probemap )
-            throws IOException {
+    private Collection<GenePair> loadLinks( File f ) throws IOException {
 
         log.info( "Loading data from " + f );
         BufferedReader in = new BufferedReader( new FileReader( f ) );
@@ -1310,7 +1284,6 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         while ( ( line = in.readLine() ) != null ) {
             line = line.trim();
             if ( line.startsWith( "#" ) ) {
-                buf.append( line + "\n" );
                 if ( line.contains( "printedLinks" ) ) {
                     int ind = line.indexOf( ':' );
                     printedLinks = Double.parseDouble( line.substring( ind + 1 ) );
@@ -1373,20 +1346,20 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
         }
         log.info( "Loaded " + geneMap.size() + " links" );
-        saveCacheToDisk( ( HashMap ) geneCache, GENE_CACHE );
+        saveCacheToDisk( geneCache, GENE_CACHE );
         return geneMap;
     }
 
     /**
      * @return
      */
-    private Collection<GenePair> loadRandomPairs( Map<CompositeSequence, Collection<Gene>> probemap ) {
+    private Collection<GenePair> loadRandomPairs() {
         Collection<GenePair> randomPairs = null;
 
         try {
             File f3 = new File( HOME_DIR + File.separatorChar + RANDOM_SUBSET );
             if ( f3.exists() ) {
-                randomPairs = loadLinks( f3, probemap );
+                randomPairs = loadLinks( f3 );
                 log.info( "Found cached subset file!" );
             }
 
@@ -1395,10 +1368,10 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
                 assert !this.goMappedGenes.isEmpty();
 
-                randomPairs = getRandomPairs( SET_SIZE, this.goMappedGenes );
+                // randomPairs = getRandomPairs( SET_SIZE, this.goMappedGenes );
 
-                Writer w = new FileWriter( f3 );
-                this.writeLinks( randomPairs, w );
+                // Writer w = new FileWriter( f3 );
+                // this.writeLinks( randomPairs, w );
             }
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -1454,7 +1427,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         return genePair;
     }
 
-    private Map<String, Double> makeProbMap( Map<String, Integer> GOcountMap ) {
+    private Map<String, Double> makeProbMap() {
 
         for ( String uri : GOcountMap.keySet() ) {
             int total = 0;
@@ -1584,6 +1557,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     /**
      * 
      */
+    @SuppressWarnings("unchecked")
     private void populateGeneGoMapForTaxon() {
 
         File f = new File( HOME_DIR + File.separatorChar + getGeneGOMapFileName() );
@@ -1611,7 +1585,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
     private void rebuildTaxonGeneGOMap() {
         Collection<Gene> genes = geneService.loadKnownGenes( this.taxon );
         populateGeneGoMap( genes );
-        saveCacheToDisk( ( HashMap ) geneGoMap, getGeneGOMapFileName() );
+        saveCacheToDisk( geneGoMap, getGeneGOMapFileName() );
     }
 
     /**
@@ -1839,13 +1813,6 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             log.error( "Couldn't write to file: " + ioe );
 
         }
-    }
-
-    private void writeLinks( Collection<GenePair> pairs, Writer writer ) {
-        /*
-         * print the pairs out in the same format that we can read in.
-         */
-        throw new UnsupportedOperationException( "Not implemented" );
     }
 
 }
