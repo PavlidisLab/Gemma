@@ -44,9 +44,14 @@ public class ExternalFileGeneLoaderServiceTest extends BaseSpringContextTest {
     public void setup() throws Exception {
         geneFile = ( ConfigUtils.getString( "gemma.home" ) )
                 .concat( "/gemma-core/src/test/resources/data/loader/genome/gene/externalGeneFileLoadTest.txt" );
-
-        Collection<Gene> genes = geneService.loadAll();
-        if ( !genes.isEmpty() ) geneService.remove( genes );
+        try {
+            Collection<Gene> zyx = geneService.findByOfficialSymbol( "ZYX" );
+            if ( !zyx.isEmpty() ) geneService.remove( zyx );
+            Collection<Gene> zxdc = geneService.findByOfficialSymbol( "ZXDC" );
+            if ( !zxdc.isEmpty() ) geneService.remove( zxdc );
+        } catch ( Exception e ) {
+            // this test may fail if we don't start with an empty database.
+        }
     }
 
     /**
