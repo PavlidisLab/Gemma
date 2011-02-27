@@ -434,7 +434,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             overallPs.add( lm.getP() );
         }
         // qvalues for overall p
-        double[] qValues = super.getQValues( overallPs.toArray( new Double[] {} ) );
+        // double[] qValues = super.getQValues( overallPs.toArray( new Double[] {} ) );
 
         /*
          * Create result objects for each model fit. Keeping things in order is important.
