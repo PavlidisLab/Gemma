@@ -19,8 +19,8 @@ import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.model.analysis.ProbeLoading;
-import ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis;
+import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
+import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 

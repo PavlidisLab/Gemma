@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -71,7 +71,7 @@ public interface DifferentialExpressionAnalysisService extends
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
+            ExpressionAnalysisResultSet resultSet, double threshold );
 
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 

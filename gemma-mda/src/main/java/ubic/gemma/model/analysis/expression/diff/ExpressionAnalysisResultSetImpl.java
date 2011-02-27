@@ -16,9 +16,11 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.analysis.expression;
+package ubic.gemma.model.analysis.expression.diff;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -28,7 +30,7 @@ import ubic.gemma.model.genome.GeneImpl;
 /**
  * @see ubic.gemma.model.expression.analysis.ExpressionAnalysisResultSet
  */
-public class ExpressionAnalysisResultSetImpl extends ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet {
+public class ExpressionAnalysisResultSetImpl extends ExpressionAnalysisResultSet {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

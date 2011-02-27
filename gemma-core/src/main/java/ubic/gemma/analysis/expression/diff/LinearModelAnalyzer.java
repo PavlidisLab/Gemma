@@ -42,6 +42,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.math.distribution.FDistribution;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
@@ -51,9 +52,9 @@ import ubic.basecode.util.r.type.LinearModelSummary;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
-import ubic.gemma.model.analysis.ContrastResult;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.common.measurement.Measurement;
@@ -424,6 +425,18 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         }
 
         /*
+         * Limma-style consideration of F statistics
+         */
+        List<Double> overallPs = new ArrayList<Double>( namedMatrix.rows() );
+        for ( CompositeSequence el : namedMatrix.getRowNames() ) {
+
+            LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
+            overallPs.add( lm.getP() );
+        }
+        // qvalues for overall p
+        double[] qValues = super.getQValues( overallPs.toArray( new Double[] {} ) );
+
+        /*
          * Create result objects for each model fit. Keeping things in order is important.
          */
         boolean warned = false;
@@ -445,9 +458,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 log.info( lm );
             }
 
-            /*
-             * Main effects
-             */
             for ( String factorName : label2Factors.keySet() ) {
 
                 Double overallPValue = null;
@@ -490,12 +500,21 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 } else {
 
                     /*
-                     * Main effect TODO: possibly exclude main effects if the interaction is significant.
+                     * Main effect
                      */
 
                     assert factorsForName.size() == 1;
                     ExperimentalFactor experimentalFactor = factorsForName.iterator().next(); // we know there is only
                     // one.
+
+                    /*
+                     * Determine critical F statistic
+                     */
+                    /*
+                     *  
+                     */
+                    // double
+                    // FDistribution f = new FDistributionImpl(/);
 
                     if ( interceptFactor != null && factorsForName.size() == 1
                             && experimentalFactor.equals( interceptFactor ) ) {
@@ -505,6 +524,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     }
 
                     if ( overallPValue < PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+
                         /*
                          * Add contrasts, one for each FactorValue which is "significant."
                          */
@@ -514,6 +534,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                         Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
 
                         for ( String term : mainEffectContrastPvalues.keySet() ) {
+
+                            /*
+                             * TODO Idea from limma: retain contrast if the f statistic is significant if you set all
+                             * larger t stats to the same value as this one
+                             */
+
                             Double contrastPvalue = mainEffectContrastPvalues.get( term );
 
                             if ( contrastPvalue < PVALUE_CONTRAST_SELECT_THRESHOLD ) {

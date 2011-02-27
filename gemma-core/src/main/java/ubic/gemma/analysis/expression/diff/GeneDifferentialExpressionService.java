@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.math.metaanalysis.MetaAnalysis;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.common.description.Characteristic;
@@ -527,8 +527,8 @@ public class GeneDifferentialExpressionService {
                 }
 
                 DifferentialExpressionValueObject devo = diffExResultToValueObject( r, gene, eevo, efs );
-                
-                if (r.getCorrectedPvalue() == null) {
+
+                if ( r.getCorrectedPvalue() == null ) {
                     log.warn( "No p-value for ProbeAnalysisResult: " + r.getId() );
                     continue;
                 }

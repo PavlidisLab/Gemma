@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2007 University of British Columbia
+ * Copyright (c) 2006-2010 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,25 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.analysis.expression;
-
-import ubic.gemma.persistence.BaseDao;
+package ubic.gemma.model.analysis.expression.diff;
 
 /**
- * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet
+ * @author paul
+ * @version $Id$
+ * @see ubic.gemma.model.analysis.ContrastResult
  */
-public interface ExpressionAnalysisResultSetDao extends BaseDao<ExpressionAnalysisResultSet> {
+public class ContrastResultImpl extends ubic.gemma.model.analysis.expression.diff.ContrastResult {
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -4310735803120153778L;
 
     /**
-     * 
+     * @see ubic.gemma.model.analysis.ContrastResult#toString()
      */
-    public void thaw( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
-
-    /**
-     * @param resultSet Only thaws the factor not the probe information
-     */
-    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet );
+    @Override
+    public java.lang.String toString() {
+        return "Contrast for " + this.getFactorValue().toString();
+    }
 
 }

@@ -119,11 +119,11 @@
 				</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/analysis/Eigenvalue.hbm.xml
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvalue.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/analysis/Eigenvector.hbm.xml
+				<value>classpath:ubic/gemma/model/analysis/expression/pca/Eigenvector.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/analysis/HitListSize.hbm.xml
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/HitListSize.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalFactor.hbm.xml
 				</value>
@@ -175,13 +175,13 @@
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResult.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/analysis/CoexpressionProbe.hbm.xml
+				<value>classpath:ubic/gemma/model/analysis/expression/coexpression/CoexpressionProbe.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/Investigation.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResultSet.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/analysis/ContrastResult.hbm.xml
+				<value>classpath:ubic/gemma/model/analysis/expression/diff/ContrastResult.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/expression/ExpressionExperimentSet.hbm.xml
 				</value>

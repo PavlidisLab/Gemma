@@ -24,8 +24,8 @@ import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -95,10 +95,9 @@ public interface DifferentialExpressionResultService {
     public Map<BioAssaySet, List<ProbeAnalysisResult>> find( ubic.gemma.model.genome.Gene gene, double threshold,
             Integer limit );
 
-    
-    public List<Long> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, double threshold, Integer limit );
+    public List<Long> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold,
+            Integer limit );
 
-    
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold
      * 

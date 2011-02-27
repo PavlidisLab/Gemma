@@ -20,7 +20,7 @@
  * This is only generated once! It will never be overwritten.
  * You can (and have to!) safely modify it by hand.
  */
-package ubic.gemma.model.analysis.expression;
+package ubic.gemma.model.analysis.expression.pca;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,12 +30,9 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.analysis.expression.pca.Eigenvalue;
-import ubic.gemma.model.analysis.expression.pca.Eigenvector;
-import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 
 /**
- * @see ubic.gemma.model.analysis.PrincipalComponentAnalysis
+ * @see ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis
  */
 public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
     /**

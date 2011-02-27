@@ -24,8 +24,8 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
@@ -70,8 +70,9 @@ public class DifferentialExpressionResultServiceImpl extends
         return this.getDifferentialExpressionResultDao().find( gene, threshold, limit );
     }
 
-    public List<Long> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, double threshold, Integer limit ) {
-        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, threshold, limit );        
+    public List<Long> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold,
+            Integer limit ) {
+        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, threshold, limit );
     }
 
     public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
@@ -98,7 +99,7 @@ public class DifferentialExpressionResultServiceImpl extends
         this.getDifferentialExpressionResultDao().thaw( results );
     }
 
-    public void thawLite( ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
+    public void thawLite( ExpressionAnalysisResultSet resultSet ) {
         this.getExpressionAnalysisResultSetDao().thawLite( resultSet );
 
     }

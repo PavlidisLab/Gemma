@@ -12,7 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.model.analysis.expression;
+package ubic.gemma.model.analysis.expression.pca;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,7 +25,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.analysis.ProbeLoading;
+import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -99,8 +99,8 @@ public class PrincipalComponentAnalysisDaoImpl extends HibernateDaoSupport imple
         HibernateTemplate t = new HibernateTemplate( getSessionFactory() );
         t.setMaxResults( count );
         return t.findByNamedParam( "select pr from PrincipalComponentAnalysisImpl p join p.probeLoadings pr"
-                + " where p.experimentAnalyzed = :ee and pr.componentNumber = :cmp order by pr.loadingRank ", new String[] {
-                "ee", "cmp" }, new Object[] { ee, component } );
+                + " where p.experimentAnalyzed = :ee and pr.componentNumber = :cmp order by pr.loadingRank ",
+                new String[] { "ee", "cmp" }, new Object[] { ee, component } );
     }
 
     /*

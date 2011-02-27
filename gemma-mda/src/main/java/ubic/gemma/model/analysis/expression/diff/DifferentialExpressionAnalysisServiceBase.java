@@ -20,7 +20,6 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao;
 
 /**
  * <p>
@@ -60,7 +59,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
     public java.util.Collection find( final ubic.gemma.model.genome.Gene gene,
-            final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, final double threshold ) {
+            final ExpressionAnalysisResultSet resultSet, final double threshold ) {
         try {
             return this.handleFind( gene, resultSet, threshold );
         } catch ( Throwable th ) {
@@ -182,8 +181,7 @@ public abstract class DifferentialExpressionAnalysisServiceBase extends
      * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
      */
     protected abstract java.util.Collection handleFind( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold )
-            throws java.lang.Exception;
+            ExpressionAnalysisResultSet resultSet, double threshold ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByInvestigationIds(java.util.Collection)}

@@ -12,7 +12,7 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.model.analysis.expression;
+package ubic.gemma.model.analysis.expression.pca;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +24,9 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.analysis.Eigenvalue;
-import ubic.gemma.model.analysis.Eigenvector;
-import ubic.gemma.model.analysis.ProbeLoading;
+import ubic.gemma.model.analysis.expression.pca.Eigenvalue;
+import ubic.gemma.model.analysis.expression.pca.Eigenvector;
+import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;

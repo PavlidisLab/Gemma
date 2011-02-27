@@ -315,8 +315,8 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     /**
      * Performs the core logic for {@link #getExpressionExperimentsTestedIn(Collection, Collection, boolean)}
      */
-    protected abstract Map handleGetExpressionExperimentsTestedIn( Collection<Long> geneIds,
-            Collection<BioAssaySet> experiments, boolean filterNonSpecific ) throws Exception;
+    protected abstract Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsTestedIn(
+            Collection<Long> geneIds, Collection<BioAssaySet> experiments, boolean filterNonSpecific ) throws Exception;
 
     /**
      * Performs the core logic for

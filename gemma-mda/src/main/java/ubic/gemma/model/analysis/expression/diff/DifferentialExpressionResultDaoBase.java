@@ -22,7 +22,7 @@ import java.util.Collection;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
@@ -36,7 +36,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSupport implements
         ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao {
 
-        
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#create(int, java.util.Collection)
      */
@@ -63,8 +62,7 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
      * @see ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResultDao#create(int transform,
      *      ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
      */
-    public ProbeAnalysisResult create(
-            final ubic.gemma.model.analysis.expression.ProbeAnalysisResult probeAnalysisResult ) {
+    public ProbeAnalysisResult create( final ProbeAnalysisResult probeAnalysisResult ) {
         if ( probeAnalysisResult == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.create - 'ProbeAnalysisResult' can not be null" );
         }
@@ -90,12 +88,12 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
      */
     public java.util.Collection<ExperimentalFactor> getExperimentalFactors(
-            final ubic.gemma.model.analysis.expression.ProbeAnalysisResult ProbeAnalysisResult ) {
+            final ProbeAnalysisResult ProbeAnalysisResult ) {
         try {
             return this.handleGetExperimentalFactors( ProbeAnalysisResult );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResultDao.getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult ProbeAnalysisResult)' --> "
+                    "Error performing 'diff.ProbeAnalysisResultDao.getExperimentalFactors(diff.ProbeAnalysisResult ProbeAnalysisResult)' --> "
                             + th, th );
         }
     }
@@ -106,23 +104,23 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#load(int, java.lang.Long)
+     * @see diff.DifferentialExpressionResultDao#load(int, java.lang.Long)
      */
     public ProbeAnalysisResult load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.load - 'id' can not be null" );
         }
-        return this.getHibernateTemplate().get( ubic.gemma.model.analysis.expression.ProbeAnalysisResultImpl.class, id );
+        return this.getHibernateTemplate().get( ProbeAnalysisResultImpl.class, id );
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#remove(java.lang.Long)
+     * @see diff.DifferentialExpressionResultDao#remove(java.lang.Long)
      */
     public void remove( java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.analysis.expression.ProbeAnalysisResult entity = this.load( id );
+        ProbeAnalysisResult entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }
@@ -139,9 +137,9 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#remove(ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
+     * @see diff.DifferentialExpressionResultDao#remove(diff.ProbeAnalysisResult)
      */
-    public void remove( ubic.gemma.model.analysis.expression.ProbeAnalysisResult ProbeAnalysisResult ) {
+    public void remove( ProbeAnalysisResult ProbeAnalysisResult ) {
         if ( ProbeAnalysisResult == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.remove - 'ProbeAnalysisResult' can not be null" );
         }
@@ -169,9 +167,9 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#update(ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)
+     * @see diff.DifferentialExpressionResultDao#update(diff.ProbeAnalysisResult)
      */
-    public void update( ubic.gemma.model.analysis.expression.ProbeAnalysisResult ProbeAnalysisResult ) {
+    public void update( ProbeAnalysisResult ProbeAnalysisResult ) {
         if ( ProbeAnalysisResult == null ) {
             throw new IllegalArgumentException( "ProbeAnalysisResult.update - 'ProbeAnalysisResult' can not be null" );
         }
@@ -185,10 +183,9 @@ public abstract class DifferentialExpressionResultDaoBase extends HibernateDaoSu
             java.util.Collection<ProbeAnalysisResult> ProbeAnalysisResults ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for
-     * {@link #getExperimentalFactors(ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult)}
+     * Performs the core logic for {@link #getExperimentalFactors(diff.ProbeAnalysisResult)}
      */
     protected abstract java.util.Collection<ExperimentalFactor> handleGetExperimentalFactors(
-            ubic.gemma.model.analysis.expression.ProbeAnalysisResult ProbeAnalysisResult ) throws java.lang.Exception;
+            ProbeAnalysisResult ProbeAnalysisResult ) throws java.lang.Exception;
 
 }

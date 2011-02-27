@@ -21,7 +21,7 @@ package ubic.gemma.model.analysis.expression.diff;
 import java.util.Collection;
 
 import ubic.gemma.model.analysis.expression.ExpressionAnalysisDao;
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
@@ -59,7 +59,7 @@ public interface DifferentialExpressionAnalysisDao extends ExpressionAnalysisDao
      * @return
      */
     public java.util.Collection<DifferentialExpressionAnalysis> find( ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold );
+            ExpressionAnalysisResultSet resultSet, double threshold );
 
     /**
      * @param ef

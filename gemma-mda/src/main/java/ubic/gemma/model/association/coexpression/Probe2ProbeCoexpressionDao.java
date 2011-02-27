@@ -72,15 +72,15 @@ public interface Probe2ProbeCoexpressionDao {
      * which one or both of the genes were detected by only probes predicted to be non-specific for the gene.
      * </p>
      */
-    public java.util.Map getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene geneA,
-            java.util.Collection<Long> genesB, java.util.Collection<BioAssaySet> expressionExperiments,
-            boolean filterNonSpecific );
+    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
+            ubic.gemma.model.genome.Gene geneA, java.util.Collection<Long> genesB,
+            java.util.Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * 
      */
-    public java.util.Map getExpressionExperimentsTestedIn( java.util.Collection<Long> geneIds,
-            java.util.Collection<Long> experiments, boolean filterNonSpecific );
+    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
+            java.util.Collection<Long> geneIds, java.util.Collection<Long> experiments, boolean filterNonSpecific );
 
     /**
      * <p>

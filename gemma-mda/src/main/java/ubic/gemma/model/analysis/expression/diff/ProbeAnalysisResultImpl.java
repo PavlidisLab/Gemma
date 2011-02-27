@@ -16,13 +16,15 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.analysis.expression;
+package ubic.gemma.model.analysis.expression.diff;
+
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 
 /**
  * @see ubic.gemma.model.analysis.expression.ProbeAnalysisResult
  * @version $Id$
  */
-public class ProbeAnalysisResultImpl extends ubic.gemma.model.analysis.expression.ProbeAnalysisResult {
+public class ProbeAnalysisResultImpl extends ProbeAnalysisResult {
     /**
      * The serial version UID of this class. Needed for serialization.
      */

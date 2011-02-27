@@ -28,8 +28,8 @@ import java.util.Map;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -55,7 +55,7 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
 
     /**
      * Tests getting the collection of factors for the result.
-     */ 
+     */
     @Test
     public void testGetExperimentalFactors() {
         String shortName = "GSE2018";
@@ -89,7 +89,7 @@ public class DifferentialExpressionAnalysisResultServiceTest extends BaseSpringC
 
     /**
      * Tests getting the map of factors keyed by results
-     */ 
+     */
     @Test
     public void testGetMapOfExperimentalFactors() {
         String shortName = "GSE2018";

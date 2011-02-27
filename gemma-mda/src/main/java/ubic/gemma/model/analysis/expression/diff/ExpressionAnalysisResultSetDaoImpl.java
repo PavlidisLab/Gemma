@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.analysis.expression;
+package ubic.gemma.model.analysis.expression.diff;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -28,6 +28,8 @@ import org.springframework.orm.hibernate3.HibernateCallback;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 
 /**
@@ -37,14 +39,14 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  */
 @Repository
 public class ExpressionAnalysisResultSetDaoImpl extends
-        ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDaoBase {
+        ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSetDaoBase {
 
     @Autowired
     public ExpressionAnalysisResultSetDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
 
-    public void thawLite( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
+    public void thawLite( final ExpressionAnalysisResultSet resultSet ) {
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
@@ -63,10 +65,10 @@ public class ExpressionAnalysisResultSetDaoImpl extends
     }
 
     /**
-     * @see ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSetDao#thaw(ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet)
+     * @see ExpressionAnalysisResultSetDao#thaw(ExpressionAnalysisResultSet)
      */
     @Override
-    protected void handleThaw( final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet ) {
+    protected void handleThaw( final ExpressionAnalysisResultSet resultSet ) {
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {

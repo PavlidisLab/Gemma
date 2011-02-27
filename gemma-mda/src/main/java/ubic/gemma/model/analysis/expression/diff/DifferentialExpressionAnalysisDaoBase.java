@@ -20,7 +20,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
@@ -94,7 +94,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
      *      ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
     public java.util.Collection<DifferentialExpressionAnalysis> find( final ubic.gemma.model.genome.Gene gene,
-            final ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, final double threshold ) {
+            final ExpressionAnalysisResultSet resultSet, final double threshold ) {
         try {
             return this.handleFind( gene, resultSet, threshold );
         } catch ( Throwable th ) {
@@ -339,8 +339,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
      * {@link #find(ubic.gemma.model.genome.Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)}
      */
     protected abstract java.util.Collection<DifferentialExpressionAnalysis> handleFind(
-            ubic.gemma.model.genome.Gene gene,
-            ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet resultSet, double threshold )
+            ubic.gemma.model.genome.Gene gene, ExpressionAnalysisResultSet resultSet, double threshold )
             throws java.lang.Exception;
 
     /**
