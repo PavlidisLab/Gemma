@@ -52,6 +52,10 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 		if (newWidth == 0) this._hidden = true;
 	},						
 
+	refresh: function() {
+		this.items.each(function() {if ( this._hidden != true ) this.refresh();});		
+	}
+	
 });
 
 
@@ -106,7 +110,6 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 		this.setWidth( newWidth );
 		if (numberHidden == this.dataColumns.length) this._hidden = true;
 	},						
-
 	
 });
 

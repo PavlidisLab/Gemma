@@ -47,6 +47,10 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Ext.Panel, {
 								  geneIds: this.geneIds[i]}));
 		}
 		
+	},
+	
+	refresh: function() {
+		this.items.each(function() { this.refresh(); });
 	}
 	
 });
@@ -190,13 +194,13 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 		this.syncSize();
 		
 		this.el.on('click', function(e,t) {
-			
-
 			var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(datasetName, datasetId);
 			popup.show();
 		}, this);		
-
-		
+	},
+	
+	refresh: function() {
+		this._drawTopLabels();
 	}
 				
 });
@@ -278,7 +282,11 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 			var popup = Gemma.MetaVisualizationPopups.makeGeneInfoWindow(geneName, geneId);
 			popup.show();
 		}, this);		
+	},
+	refresh: function() {
+		this._drawLabels();		
 	}
+	
 });
 
 
@@ -311,6 +319,10 @@ Gemma.MetaHeatmapLabelsColumn = Ext.extend(Ext.Panel, {
 								  geneGroupName: this.geneGroupNames[groupIndex],
 								  geneGroupId: groupIndex }) );
 		}
+	},
+	
+	refresh: function() {
+		this.items.each(function() {this.refresh();} );
 	}
 				
 });
@@ -443,7 +455,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		  							  							  					
 		  					_metaVizApp = new Gemma.MetaHeatmapApp({visualizationData: data, applyTo:'meta-heatmap-div'});
 		  					_metaVizApp.doLayout();		  						  				
-		  					
+		  					_metaVizApp.refreshVisualization();
 		  					_sortPanel.add({xtype:'checkbox',
 		  									boxLabel:'Sort by gene score.',
 		  									listeners: { 
@@ -451,7 +463,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 													if (checked) {
 														//Sort genes : changes gene order
 														for (var i = 0; i < this.geneScores[0].length; i++) {
-															this.geneScores[0][i].sort( function ( o1, o2 ) { return o1.score - o2.score; } );																	
+															this.geneScores[0][i].sort( function ( o1, o2 ) { return o2.score - o1.score; } );																	
 														}
 														for (var geneGroupIndex = 0; geneGroupIndex < this._heatmapArea.geneNames.length; geneGroupIndex++) {			
 															this.geneOrdering[geneGroupIndex] = [];
@@ -470,6 +482,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 															}
 														}
 													}
+								  					this.refreshVisualization();
 												}, scope: _metaVizApp
 		  									}		  					
 		  					});
@@ -478,13 +491,19 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		  									listeners: { 
 		  										check : function(target, checked) {
 		  											if (checked) {
-		  												var filteringFn = function(o) {return (o.overallDifferentialExpressionScore == 0);};
+		  												var filteringFn = function(o) {
+		  														if (o.overallDifferentialExpressionScore == 0) return true;
+		  														if (o.miniPieValue > 120) return true;
+		  														if ((o.missingValuesScore / this._metaVizApp.TOTAL_NUMBER_OF_ROWS) > 0.7 ) return true;		  														
+		  														return false;
+		  													};
 		  												this.filterColumns(filteringFn);
 		  												this.doLayout();
 		  											} else {
 //		  												this._unfilterColumns();
 //		  												this.doLayout();		  												
 		  											}
+		  											this.refreshVisualization();
 		  										}, scope: _metaVizApp
 		  									},
 		  					});
@@ -497,9 +516,10 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		  												listeners: { 
 		  													check : function(target, checked) {
 		  														if (checked) {
-		  															this._sortColumns('ASC', function(o1, o2){return o1.overallDifferentialExpressionScore - o2.overallDifferentialExpressionScore;});
+		  															this._sortColumns('DESC', function(o1, o2){return o1.overallDifferentialExpressionScore - o2.overallDifferentialExpressionScore;});
 		  															this.doLayout();
 		  														}
+		  														this.refreshVisualization();
 		  													}, scope: _metaVizApp
 		  												},
 		  						  					},		  						  					
@@ -512,6 +532,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		  															this._sortColumns('DESC', function(o1, o2){return o1.specificityScore - o2.specificityScore;});
 		  															this.doLayout();
 		  														}
+		  														this.refreshVisualization();
 		  													}, scope: _metaVizApp
 		  												},
 		  						  					}]
@@ -548,10 +569,15 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	
 		Ext.apply(this, {
 			width: 1700,
-			height: 850,
+			height: 3000,
 			_visualizationData : this.visualizationData,
 			geneScores: this.visualizationData.geneScores,
 			geneOrdering: null,
+			
+			visibleMissingValuesGeneScore: null,
+			
+			TOTAL_NUMBER_OF_COLUMNS: null,
+			TOTAL_NUMBER_OF_ROWS: null,
 			
 			layout: 'absolute',
 			filterColumns: function(filteringFn) {
@@ -570,9 +596,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			{
 				xtype: 'button',
 				x:5,				
-				y:25,
+				y:29,
 				ref: 'miniWindowButton',					
-				text: 'tool #1',
+				text: 'Pvalue',
 				enableToggle: true,
 				listeners: { 
 					toggle : function ( target, checked ) { 			
@@ -625,14 +651,22 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		this.topLabelsPanel._setHeatmapContainer ( this._heatmapArea );
 		this._heatmapArea._setTopLabelsBox ( this._rotatedLabelsBox );	
 
+		this.TOTAL_NUMBER_OF_ROWS = 0;
 		//Default geneOrdering
-		this.geneOrdering = new Array(this.visualizationData.geneNames.length);
+		this.geneOrdering = new Array(this.visualizationData.geneNames.length);		
 		for (var geneGroupIndex = 0; geneGroupIndex < this.visualizationData.geneNames.length; geneGroupIndex++) {			
 			this.geneOrdering[geneGroupIndex] = [];
 			for (var i = 0; i < this.visualizationData.geneNames[geneGroupIndex].length; i++) {
 				this.geneOrdering[geneGroupIndex].push(i);
+				this.TOTAL_NUMBER_OF_ROWS++;
 			}
 		}
+		
+		
+		this.TOTAL_NUMBER_OF_COLUMNS = 0;
+		for (var datasetGroupIndex = 0; datasetGroupIndex < this._visualizationData.resultSetValueObjects.length ; datasetGroupIndex++) {
+			this.TOTAL_NUMBER_OF_COLUMNS = this.TOTAL_NUMBER_OF_COLUMNS + this._visualizationData.resultSetValueObjects[datasetGroupIndex].length;
+		}		
 		
 		this.MiniWindowTool = new Ext.Window(
 					{ width: 200,
@@ -663,6 +697,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			}
 		}, this );
 
+	},
+	refreshVisualization: function() {
+		this.topLabelsPanel.refresh();
+		this._heatmapArea.refresh();
+		this._geneLabels.refresh();
 	}
+	
 
 });

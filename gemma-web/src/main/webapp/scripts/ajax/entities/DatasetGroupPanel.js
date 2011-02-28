@@ -278,9 +278,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 				 * 
 				 */
 				this.ownerCt.loadMask.show();
-				if (this.ownerCt.getStore().save() == -1  ) { 
-					Ext.Msg.alert("Error", "We encountered errors while saving your changes.");
-				}
+				this.ownerCt.getStore().save();					
 			},
 
 			/**

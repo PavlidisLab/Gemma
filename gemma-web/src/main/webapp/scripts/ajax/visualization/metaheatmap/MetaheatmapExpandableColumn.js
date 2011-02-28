@@ -15,8 +15,8 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 
 			applicationRoot: this.applicationRoot,
 
-			cellHeight: Gemma.MetaVisualizationConfig.cellHeight,   // alias with a shorter name
-			cellWidth:  Gemma.MetaVisualizationConfig.cellWidth,	// alias with a shorter name		
+			cellHeight: Gemma.MetaVisualizationConfig.cellHeight,   // shorter name to simplify access 
+			cellWidth:  Gemma.MetaVisualizationConfig.cellWidth,	// shorter name to simplify access		
 									
 			geneGroupIndex: this.rowGroup,							// gene group index
 			columnIndex: this.columnIndex,							// index within analysis panel
@@ -37,6 +37,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
             
             
             overallDifferentialExpressionScore: null,
+            missingValuesScore: null,
 		});		 
 		Gemma.MetaHeatmapColumn.superclass.initComponent.apply(this, arguments);	
 	},
@@ -67,14 +68,14 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
     _drawContrasts: function ( doResize, highlightRow, highlightColumn ) {
 		var ctx = this.el.dom.getContext("2d");    	
 
-    	var expandableColumnPanel 		= this.ownerCt;
+    	var expandableColumnPanel = this.ownerCt;
 
     	var oldWidth = ctx.canvas.width;
 		var newWidth = this.cellWidth * this._contrastsFactorValues.length;				
 
 		// Resize and clear canvas
 		ctx.canvas.width = newWidth;
-		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		ctx.clearRect (0, 0, ctx.canvas.width, ctx.canvas.height);
 
 		// Draw cells
 		for (var factorValueIndex = 0; factorValueIndex < this._contrastsFactorValues.length; factorValueIndex++) {			
@@ -108,7 +109,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
     	var column = Math.floor(x/this.cellWidth);
     	return {'row': row, 'column': column };
     },
-    
+        
 	onRender:function() {
 		Gemma.MetaHeatmapColumn.superclass.onRender.apply(this, arguments);		
 		this._drawHeatmapColumn();
@@ -143,7 +144,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			var eeId = this.ownerCt._dataColumn.datasetId;
 			var _datasetGroupPanel = this.ownerCt.ownerCt.ownerCt;
 			vizWindow.show({
-				params : [[eeId], [ this.applicationRoot._heatmapArea._geneIds[index.row] ] ]
+				params : [[eeId], [ this.applicationRoot._heatmapArea.geneIds[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]] ] ]
 			});		
 		}, this);
 		
@@ -185,7 +186,8 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			//this.applicationRoot._geneLabels.highlightGene ( this.rowGroup, -1 );
 			//this.applicationRoot._rotatedLabelsBox._drawTopLabels ( this._datasetGroupIndex );
 		}, this );
-	}					
+	},
+	
 });
 
 Ext.reg('metaVizColumn', Gemma.MetaHeatmapColumn);
@@ -221,34 +223,84 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 			},
 			
 			_visualizationColumns :[],
+            missingValuesScore: null,
+
+            datasetName: null,
+            datasetId: null,
+            analysisId: null,
+            analysisType: null,
+            factorCategory: null,
+			
+		    drawExpandButton: function (ctx) {
+		    	ctx.strokeStyle = 'rgba(10,100,10, 0.8)';
+				ctx.moveTo(3,8);
+		    	ctx.beginPath();		    	
+		    	ctx.lineTo(3,4);
+		    	ctx.lineTo(1,6);
+		    	ctx.lineTo(3,8);
+		    	ctx.moveTo(2,6);
+		    	ctx.lineTo(7,6);
+		    	ctx.moveTo(6,8);
+		    	ctx.lineTo(6,4);
+		    	ctx.lineTo(8,6);
+		    	ctx.lineTo(6,8);
+		    	ctx.stroke();		    	
+		    },
+		    
+		    drawCollapseButton: function (ctx, width) {
+		    	width = width - 5;
+		    	ctx.strokeStyle = 'rgba(10,100,10, 0.8)';
+				ctx.moveTo(1,8);
+		    	ctx.beginPath();		    	
+		    	
+		    	ctx.lineTo(3,6);
+		    	ctx.lineTo(1,4);
+		    	ctx.lineTo(1,8);
+
+		    	ctx.moveTo(2,6);
+		    	ctx.lineTo(width+1,6);
+		    	ctx.moveTo(width+2,8);
+		    	
+		    	ctx.lineTo(width+2,4);
+		    	ctx.lineTo(width,6);
+		    	ctx.lineTo(width+2,8);
+		    	ctx.stroke();		    			    	
+		    },
 			
 			layout: 'vbox',
 			items: [{ xtype: 'button',
 					  ref: '_expandButton',
 					  enableToggle: true,
-
+					  height: 10,
+					  width: 10,
 					  template: new Ext.Template('<div id="{1}"><canvas {0}></canvas></div>'),
 					  buttonSelector: 'canvas:first-child',
 					  getTemplateArgs : function(){
 						return [this.cls, this.id];
 		    		  },					  
-					  cls: " width='10px' height='10px' ",
 					  listeners: { 
 				           toggle : function ( target, checked ) { 			
-								if (checked) {
-									var ctx = this._expandButton.btnEl.dom.getContext("2d");
-									ctx.clearRect(0,0,10,10);
-									MiniPieLib.drawFilledRectangle(ctx, 3, 2, 6, 6, 'rgba(10,100,10, 0.5)');		                     
+								if (checked) {									
 									var doResize = true;
 									for (var geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {																			
 										this._visualizationColumns[geneGroupSubColumnIndex]._drawContrasts( doResize );
 										this._visualizationColumns[geneGroupSubColumnIndex]._isExpanded = true;
 										doResize = false;
 									}
+									
+									var width = this.getWidth();
+									var ctx = this._expandButton.btnEl.dom.getContext("2d");
+									this._expandButton.setWidth(width);
+									ctx.canvas.width = width;						
+									ctx.clearRect(0,0,width,10);
+									this.drawCollapseButton(ctx, width);		                     
+
 								} else {
 									var ctx = this._expandButton.btnEl.dom.getContext("2d");
+									this._expandButton.setWidth(10);
+									ctx.canvas.width = 10;
 									ctx.clearRect(0,0,10,10);
-									MiniPieLib.drawFilledRectangle(ctx, 5, 4, 2, 2, 'rgba(10,100,10, 0.5)');		                     
+									this.drawExpandButton(ctx);		                     
 
 									var doResize = true;
 									for (var geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {
@@ -286,17 +338,35 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 		}
 		
 		this.overallDifferentialExpressionScore = 0;
-		for ( var i = 0; i < this._dataColumn.pValues.length; i++ ) {
-			for ( var j = 0; j < this._dataColumn.pValues[i].length; j++ ) {
-				this.overallDifferentialExpressionScore += this._dataColumn.pValues[i][j];
+		this.missingValuesScore = 0;
+		for ( var i = 0; i < this._dataColumn.visualizationValues.length; i++ ) {
+			for ( var j = 0; j < this._dataColumn.visualizationValues[i].length; j++ ) {
+				if (this._dataColumn.visualizationValues[i][j] == null) {
+					this.missingValuesScore++;
+					this.overallDifferentialExpressionScore += 0;
+				} else {
+					this.overallDifferentialExpressionScore += this._dataColumn.visualizationValues[i][j];
+				}
 			}
 		}
 
 		this.ownerCt.overallDifferentialExpressionScore += this.overallDifferentialExpressionScore;
 		this.ownerCt.ownerCt.overallDifferentialExpressionScore += this.overallDifferentialExpressionScore;
-		
+				
 		this.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.specificityScore);
-		this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.ownerCt.specificityScore);		
+		this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.ownerCt.specificityScore);
+		
+	},
+	
+	refresh : function() {
+		var ctx = this._expandButton.btnEl.dom.getContext("2d");
+		this._expandButton.setWidth(10);
+		ctx.canvas.width = 10;
+		this.drawExpandButton(ctx);		                     		
+
+		for (var geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {																			
+			this._visualizationColumns[geneGroupSubColumnIndex]._drawHeatmapColumn( false );
+		}
 	}
 });
 
