@@ -381,12 +381,11 @@ public class ExperimentalDesignVisualizationService {
                  */
             } else {
                 if ( thawedBads.containsKey( bioAssayDimension.getId() ) ) {
-
-                    log.info( "Already got" );
+                    log.debug( "Already got" );
                     bioAssayDimension = thawedBads.get( bioAssayDimension.getId() );
                     vec.setBioAssayDimension( bioAssayDimension );
                 } else {
-                    log.info( "Thawing" );
+                    log.debug( "Thawing" );
                     bioAssayDimensionService.thaw( bioAssayDimension );
                     thawedBads.put( bioAssayDimension.getId(), bioAssayDimension );
                 }
