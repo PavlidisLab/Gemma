@@ -21,15 +21,21 @@ package ubic.gemma.web.controller.common.auditAndSecurity;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.context.support.WebApplicationObjectSupport;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.Constants;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.web.controller.BaseFormController;
 
 /**
  * Performs actions required when we wish to indicate that the system is undergoing maintenance and many not behave
@@ -38,16 +44,18 @@ import ubic.gemma.web.controller.BaseFormController;
  * @author pavlidis
  * @version $Id$
  */
-public class MaintenanceModeController extends BaseFormController {
+@Controller
+@RequestMapping("/admin/maintenanceMode.html")
+public class MaintenanceModeController extends WebApplicationObjectSupport {
 
-    Map<String, Object> config;
+    @RequestMapping(method = RequestMethod.GET)
+    public String getForm() {
+        return "admin/maintenanceMode";
+    }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
-
-        config = ( Map<String, Object> ) getServletContext().getAttribute( Constants.CONFIG );
+    @RequestMapping(method = RequestMethod.POST)
+    public ModelAndView setMode( String stop, String start, HttpServletRequest request ) throws Exception {
+        Map<String, Object> config = ( Map<String, Object> ) super.getServletContext().getAttribute( Constants.CONFIG );
 
         /*
          * check that the user is admin!
@@ -55,32 +63,19 @@ public class MaintenanceModeController extends BaseFormController {
         boolean isAdmin = SecurityService.isUserAdmin();
 
         if ( !isAdmin ) {
-            log.warn( "Attempt by non-admin to alter system maintenance mode status!" );
-            this.saveMessage( request, "Request denied." );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
-        }
-
-        String stop = request.getParameter( "stop" );
-        String start = request.getParameter( "start" );
-
-        if ( StringUtils.isBlank( start ) && StringUtils.isBlank( stop ) ) {
-            return new ModelAndView( this.getFormView() );
+            throw new AccessDeniedException( "Attempt by non-admin to alter system maintenance mode status!" );
         }
 
         if ( StringUtils.isNotBlank( start ) && StringUtils.isNotBlank( stop ) ) {
-            this.saveMessage( request, "Can't decide whether to stop or start" );
-            return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
+            throw new IllegalArgumentException( "Can't decide whether to stop or start" );
         }
 
         if ( StringUtils.isNotBlank( stop ) ) {
-            this.saveMessage( request, "Maintenance mode turned off" );
             config.put( "maintenanceMode", false );
         } else if ( StringUtils.isNotBlank( start ) ) {
-            this.saveMessage( request, "Maintenance mode turned on" );
             config.put( "maintenanceMode", true );
         }
         return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
 
     }
-
 }

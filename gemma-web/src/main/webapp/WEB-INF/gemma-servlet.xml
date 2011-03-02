@@ -12,7 +12,7 @@
           http://www.springframework.org/schema/context/spring-context-3.0.xsd 
           http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
-	
+
 	<context:component-scan base-package="ubic.gemma.web" />
 
 	<aop:aspectj-autoproxy />
@@ -59,7 +59,6 @@
 				<prop key="/gene/*">geneController</prop>
 				<prop key="/geoBrowser/*">geoRecordBrowserController</prop>
 				<prop key="/blatTrack.html">blatResultTrackController</prop>
-				<prop key="/admin/maintenanceMode.html">maintenanceModeController</prop>
 				<prop key="/admin/systemStats.html">systemStatsController</prop>
 				<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
 				<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
@@ -279,11 +278,6 @@ gemma.max.fileupload.size.bytes=
 		</property>
 	</bean>
 
-	<bean id="maintenanceModeController" class="ubic.gemma.web.controller.common.auditAndSecurity.MaintenanceModeController">
-		<property name="formView">
-			<value>/admin/maintenanceMode</value>
-		</property>
-	</bean>
 
 	<bean id="JSONTableRenderer" class="ubic.gemma.web.view.JSONTableRenderer" />
 
@@ -1260,7 +1254,7 @@ gemma.max.fileupload.size.bytes=
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
-				</entry>								
+				</entry>
 				<entry key="ubic.gemma.model.genome.gene.GeneProduct">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
@@ -1574,7 +1568,7 @@ gemma.max.fileupload.size.bytes=
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
-				</entry>				
+				</entry>
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperiment">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="hibernate3" />
@@ -1846,28 +1840,28 @@ gemma.max.fileupload.size.bytes=
 				<entry key="ubic.gemma.model.genome.biosequence.PolymerType">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
-						<property name="includes">						
+						<property name="includes">
 							<list>
 								<value>value</value>
 							</list>
-						</property>												
+						</property>
 					</bean>
-			    </entry>
+				</entry>
 				<entry key="ubic.gemma.model.genome.biosequence.SequenceType">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
-						<property name="includes">						
+						<property name="includes">
 							<list>
 								<value>value</value>
 							</list>
-						</property>												
+						</property>
 					</bean>
-			    </entry>
+				</entry>
 				<entry key="ubic.gemma.model.TaxonValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
-				</entry>				    			    			   			   
+				</entry>
 				<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
