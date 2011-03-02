@@ -83,7 +83,7 @@ public class GeneServiceImpl extends GeneServiceBase {
         Long minStartNt = Long.MAX_VALUE;
         Long maxEndNt = Long.MIN_VALUE;
         String strand = null;
-        Chromosome chromosone = null;
+        Chromosome chromosome = null;
 
         for ( GeneProduct gp : gpCollection ) {
 
@@ -104,7 +104,7 @@ public class GeneServiceImpl extends GeneServiceBase {
                 minStartNt = currentStartNt;
                 maxEndNt = currentEndNt;
                 strand = currentStrand;
-                chromosone = currentChromosone;
+                chromosome = currentChromosone;
                 continue;
             }
 
@@ -122,7 +122,7 @@ public class GeneServiceImpl extends GeneServiceBase {
                 continue;
             }
 
-            if ( !currentChromosone.equals( chromosone ) ) {
+            if ( !currentChromosone.equals( chromosome ) ) {
                 log
                         .warn( "Gene products for "
                                 + gene.getOfficialSymbol()
@@ -141,8 +141,11 @@ public class GeneServiceImpl extends GeneServiceBase {
         } // for each gene product
 
         Long length = maxEndNt - minStartNt;
-        PhysicalLocation result = PhysicalLocation.Factory.newInstance( minStartNt, length.intValue(), strand, null,
-                chromosone );
+        PhysicalLocation result = PhysicalLocation.Factory.newInstance();
+        result.setChromosome( chromosome );
+        result.setNucleotide( minStartNt );
+        result.setNucleotideLength( length.intValue() );
+        result.setStrand( strand ); // bin is null.
         return result;
 
     }
