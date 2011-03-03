@@ -334,7 +334,7 @@
 	<classpathentry kind="var" path="M2_REPO/umls/mmtx/2.4C/mmtx-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/kss-api-strip/5.0/kss-api-strip-5.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mmtxProject/2.4C/mmtxProject-2.4C.jar"/>
-	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.0/GEOMMTx-1.0.jar"/>
+	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.1-SNAPSHOT/GEOMMTx-1.1-SNAPSHOT.jar"/>
 	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRIEngine/0.5-0/JRIEngine-0.5-0.jar" sourcepath="/JAR_SRC/JRI/java/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.rforge.net/org/docs/"/>
