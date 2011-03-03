@@ -41,7 +41,7 @@ import ubic.GEOMMTx.evaluation.CheckHighLevelSpreadSheet;
 import ubic.GEOMMTx.evaluation.DescriptionExtractor;
 import ubic.GEOMMTx.filters.BIRNLexFMANullsFilter;
 import ubic.GEOMMTx.filters.UninformativeFilter;
-import ubic.GEOMMTx.mappers.BirnLexMapper;
+import ubic.GEOMMTx.mappers.NIFSTDMapper;
 import ubic.GEOMMTx.mappers.DiseaseOntologyMapper;
 import ubic.GEOMMTx.mappers.FMALiteMapper;
 import ubic.GEOMMTx.util.SetupParameters;
@@ -265,9 +265,9 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         System.out.println( "Seen manual DO URL's that we have no mapping to:" + result.size() );
 
         filterAndPrint( "birnlex", false );
-        BirnLexMapper BIRN = new BirnLexMapper();
+        NIFSTDMapper BIRN = new NIFSTDMapper();
         result = removeFromHumanSeen( BIRN.getAllURLs() );
-        System.out.println( "Seen manual BIRN URL's that we have no mapping to:" + result.size() );
+        System.out.println( "Seen manual NIFSTDMapper URL's that we have no mapping to:" + result.size() );
 
         loadMappings();
     }
