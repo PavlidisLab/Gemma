@@ -235,7 +235,7 @@
 			
 			<complexType name="geneDetailsResult">
 				<sequence>
-					element name="gene_id" type="xsd:string" />
+					<element name="gene_id" type="xsd:string" />
 					<element name="ncbi_id" type="xsd:string" />
 					<element name="official_symbol" type="xsd:string"></element>
 					<element name="official_name" type="xsd:string"></element>
