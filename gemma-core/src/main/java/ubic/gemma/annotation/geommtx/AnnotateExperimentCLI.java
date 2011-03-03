@@ -49,6 +49,12 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
     ExpressionExperimentAnnotator expressionExperimentAnnotator;
 
     @Override
+    protected void buildOptions() {
+        super.buildOptions();
+        addForceOption();
+    }
+
+    @Override
     protected Exception doWork( String[] args ) {
 
         Exception err = processCommandLine( "Expression experiment annotator pipeline", args );
@@ -61,7 +67,7 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
 
             ExpressionExperiment experiment = ( ExpressionExperiment ) bas;
 
-            boolean needToRun = this.needToRun( experiment, AutomatedAnnotationEvent.class );
+            boolean needToRun = force || this.needToRun( experiment, AutomatedAnnotationEvent.class );
 
             if ( !needToRun ) {
                 log.debug( "Skipping " + experiment + ", no need to run" );
@@ -71,7 +77,7 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
             // ees.thawLite( experiment );
             log.info( "Processing: " + experiment );
 
-            expressionExperimentAnnotator.annotate( experiment, false );
+            expressionExperimentAnnotator.annotate( experiment, force );
 
         }
         log.info( "Total Time:" + ( System.currentTimeMillis() - time ) + "ms" );
