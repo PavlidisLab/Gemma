@@ -132,34 +132,12 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
      */
     @Override
-    protected void handleThaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
+    protected void handleThaw( AuditTrail auditTrail ) {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<AuditTrail>() {
-            public AuditTrail doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( auditTrail, LockMode.NONE );
-                Hibernate.initialize( auditTrail );
-                if ( auditTrail.getEvents() == null ) return null;
-                for ( AuditEvent ae : auditTrail.getEvents() ) {
-                    if (ae == null) {
-                        log.warn("Null event in audit trail with id=" + auditTrail.getId());
-                        continue;
-                    }
-                    Hibernate.initialize( ae );
-                    if ( ae.getPerformer() != null ) {
-                        User performer = ( User ) session.get( UserImpl.class, ae.getPerformer().getId() );
-                        Hibernate.initialize( performer );
-                        session.evict( performer );
-                    } else {
-                        /*
-                         * This can happen if was the result of an anonymous user's actions.
-                         */
-                        log.debug( "No performer for audit event: id=" + ae.getId() + " - anonymous?" );
-                    }
-                }
-                session.evict( auditTrail );
-                return null;
-            }
-        } );
+
+        String q = "select at from AuditTrailImpl at inner join fetch at.events e left outer join fetch e.performer where at = :at";
+
+        auditTrail = ( AuditTrail ) templ.findByNamedParam( q, "at", auditTrail ).iterator().next();
 
     }
 
