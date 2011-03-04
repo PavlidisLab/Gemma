@@ -147,7 +147,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         for ( int j = events.size() - 1; j >= 0; j-- ) {
             AuditEvent event = events.get( j );
             if ( event == null ) {
-                continue; // defensive, this shouldn't happen!
+                continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
             }
             AuditEventType eventType = event.getEventType();
             if ( eventType != null && eventClass != null && eventClass.isAssignableFrom( eventType.getClass() )

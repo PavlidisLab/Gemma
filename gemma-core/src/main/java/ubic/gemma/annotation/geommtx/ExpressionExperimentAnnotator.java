@@ -491,7 +491,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
         List<AuditEvent> events = ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
 
         for ( AuditEvent event : events ) {
-            assert event != null;
+            if ( event == null ) continue; // legacy of ordered-list, should not happen any more
             AuditEventType eventType = event.getEventType();
             if ( eventType != null && AutomatedAnnotationEvent.class.isAssignableFrom( eventType.getClass() )
                     && !eventType.getClass().getSimpleName().startsWith( "Fail" ) ) {
