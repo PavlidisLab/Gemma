@@ -574,7 +574,7 @@ public class OntologyService implements InitializingBean {
     public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
         for ( Characteristic characteristic : vc ) {
             // load necessary to make sure we are dealing with the persistent version.
-            saveExpressionExperimentStatement( characteristic, eeService.load( ee.getId() ) );
+            saveExpressionExperimentStatement( characteristic, eeService.thawLite( eeService.load( ee.getId() ) ) );
         }
     }
 
