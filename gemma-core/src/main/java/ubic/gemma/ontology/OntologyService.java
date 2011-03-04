@@ -154,7 +154,7 @@ public class OntologyService implements InitializingBean {
     private BirnLexOntologyService birnLexOntologyService;
 
     private CellTypeOntologyService cellTypeOntologyService;
-    
+
     private NIFSTDOntologyService nifstdOntologyService;
 
     @Autowired
@@ -290,7 +290,7 @@ public class OntologyService implements InitializingBean {
         for ( AbstractOntologyService serv : this.ontologyServices ) {
             results = serv.findResources( queryString );
             if ( log.isDebugEnabled() ) log.debug( "found " + results.size() + " in " + watch.getTime() + " ms" );
-            searchResults.addAll( filter( results, queryString ));
+            searchResults.addAll( filter( results, queryString ) );
         }
 
         // Sort the individual results.
@@ -379,9 +379,9 @@ public class OntologyService implements InitializingBean {
     public BirnLexOntologyService getBirnLexOntologyService() {
         return birnLexOntologyService;
     }
-    
+
     public NIFSTDOntologyService getNifstfOntologyService() {
-        return nifstdOntologyService;        
+        return nifstdOntologyService;
     }
 
     /**
@@ -570,7 +570,7 @@ public class OntologyService implements InitializingBean {
 
         log.info( "Adding characteristic to " + ee + " : " + vc );
 
-        ee.setCharacteristics( current );
+        ee.getCharacteristics().addAll( current );
         eeService.update( ee );
 
     }
@@ -682,7 +682,7 @@ public class OntologyService implements InitializingBean {
 
         for ( OntologyResource res : terms ) {
             if ( StringUtils.isNotEmpty( res.getLabel() )
-                    && res.getLabel().toLowerCase().indexOf( caseInsensitiveFilter ) > -1) {
+                    && res.getLabel().toLowerCase().indexOf( caseInsensitiveFilter ) > -1 ) {
                 VocabCharacteristic vc = VocabCharacteristic.Factory.newInstance();
                 if ( res instanceof OntologyTerm ) {
                     OntologyTerm term = ( OntologyTerm ) res;
@@ -703,7 +703,7 @@ public class OntologyService implements InitializingBean {
 
         return filtered;
     }
-    
+
     /**
      * @param c
      * @return
