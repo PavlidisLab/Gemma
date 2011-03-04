@@ -559,8 +559,8 @@ public class OntologyService implements InitializingBean {
             // characteristic
         }
 
-        log.info( "Adding characteristic " + vc.getValue() + " to " + ee.getShortName() + " (ID=" + ee.getId() + ") : "
-                + vc );
+        log.info( "Adding characteristic '" + vc.getValue() + "' to " + ee.getShortName() + " (ID=" + ee.getId()
+                + ") : " + vc );
 
         ee.getCharacteristics().add( vc );
         eeService.update( ee );
@@ -573,7 +573,8 @@ public class OntologyService implements InitializingBean {
      */
     public void saveExpressionExperimentStatements( Collection<Characteristic> vc, ExpressionExperiment ee ) {
         for ( Characteristic characteristic : vc ) {
-            saveExpressionExperimentStatement( characteristic, ee );
+            // load necessary to make sure we are dealing with the persistent version.
+            saveExpressionExperimentStatement( characteristic, eeService.load( ee.getId() ) );
         }
     }
 
