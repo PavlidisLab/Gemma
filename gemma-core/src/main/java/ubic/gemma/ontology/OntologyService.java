@@ -559,18 +559,10 @@ public class OntologyService implements InitializingBean {
             // characteristic
         }
 
-        Set<Characteristic> chars = new HashSet<Characteristic>();
-        chars.add( vc );
-        Collection<Characteristic> current = ee.getCharacteristics();
-        if ( current == null ) {
-            current = new HashSet<Characteristic>( chars );
-        } else {
-            current.addAll( chars );
-        }
+        log.info( "Adding characteristic " + vc.getValue() + " to " + ee.getShortName() + " (ID=" + ee.getId() + ") : "
+                + vc );
 
-        log.info( "Adding characteristic to " + ee + " : " + vc );
-
-        ee.getCharacteristics().addAll( current );
+        ee.getCharacteristics().add( vc );
         eeService.update( ee );
 
     }
