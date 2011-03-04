@@ -362,9 +362,8 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         if ( probes.size() == 0 ) return new HashSet<BioAssaySet>();
 
         // Locate analyses which use these probes, return the expression experiments
-        String queryString = "select distinct ees from ProbeCoexpressionAnalysisImpl pca inner join"
-                + " pca.experimentAnalyzed e"
-                + " inner join pca.probesUsed pu inner join pu.probe p where e in (:ees) and p in (:probes)";
+        String queryString = "select distinct e from ProbeCoexpressionAnalysisImpl pca inner join"
+                + " pca.experimentAnalyzed e inner join pca.probesUsed pu inner join pu.probe p where e in (:ees) and p in (:probes)";
         List result = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "ees", "probes" },
                 new Object[] { expressionExperiments, probes } );
 
@@ -419,7 +418,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
 
-        String queryString = "select distinct pu,ees from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentAnalyzed e"
+        String queryString = "select distinct pu,e from ProbeCoexpressionAnalysisImpl pca inner join pca.experimentAnalyzed e"
                 + " inner join pca.probesUsed pu inner join fetch pu.probe where pu.id in (:probes) and e in (:ees)";
 
         Map<Long, Collection<BioAssaySet>> result = new HashMap<Long, Collection<BioAssaySet>>();
