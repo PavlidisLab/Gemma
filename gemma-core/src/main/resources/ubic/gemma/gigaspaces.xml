@@ -102,7 +102,7 @@
 					ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask
 				</value>
 				<value>
-					ubic.gemma.tasks.analysis.SvdTask
+					ubic.gemma.tasks.analysis.expression.SvdTask
 				</value>
 				<value>
 					ubic.gemma.tasks.analysis.BatchInfoFetchTask
