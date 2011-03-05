@@ -29,7 +29,7 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Test;
 
-import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
+import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -65,14 +65,14 @@ public class BioMartEnsemblNcbiParserTest {
     public void testParseOneValidLineNonHuman() {
         String line = "ENSG00000220023" + "\t" + "ENST00000418749" + "\t" + "100134091" + "\t" + "ENST00000418749";
 
-        BioMartEnsembleNcbi bioMartEnsembleNcbi = parser.parseOneLine( line );
+        Ensembl2NcbiValueObject bioMartEnsembleNcbi = parser.parseOneLine( line );
 
-        assertTrue( bioMartEnsembleNcbi.getSpecies_ncbi_taxon_id().equals( 10 ) );
-        assertEquals( "ENSG00000220023", bioMartEnsembleNcbi.getEnsembl_gene_id() );
-        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsembl_transcript_id() );
+        assertTrue( bioMartEnsembleNcbi.getNcbiTaxonId().equals( 10 ) );
+        assertEquals( "ENSG00000220023", bioMartEnsembleNcbi.getEnsemblGeneId() );
+        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblTranscriptId() );
         Collection<String> genes = bioMartEnsembleNcbi.getEntrezgenes();
         assertTrue( genes.contains( "100134091" ) );
-        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsembl_peptide_id() );
+        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblPeptideId() );
 
     }
 
@@ -101,14 +101,14 @@ public class BioMartEnsemblNcbiParserTest {
         String line = "ENSG00000220023" + "\t" + "ENST00000418749" + "\t" + "10013421" + "\t" + "ENST00000418749"
                 + "\t" + "12123";
 
-        BioMartEnsembleNcbi bioMartEnsembleNcbi = parser.parseOneLine( line );
+        Ensembl2NcbiValueObject bioMartEnsembleNcbi = parser.parseOneLine( line );
 
-        assertTrue( bioMartEnsembleNcbi.getSpecies_ncbi_taxon_id().equals( 10 ) );
-        assertEquals( "ENSG00000220023", bioMartEnsembleNcbi.getEnsembl_gene_id() );
-        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsembl_transcript_id() );
+        assertTrue( bioMartEnsembleNcbi.getNcbiTaxonId().equals( 10 ) );
+        assertEquals( "ENSG00000220023", bioMartEnsembleNcbi.getEnsemblGeneId() );
+        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblTranscriptId() );
         Collection<String> genes = bioMartEnsembleNcbi.getEntrezgenes();
         assertTrue( genes.contains( "10013421" ) );
-        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsembl_peptide_id() );
+        assertEquals( "ENST00000418749", bioMartEnsembleNcbi.getEnsemblPeptideId() );
         assertEquals( "12123", bioMartEnsembleNcbi.getHgnc_id() );
 
     }
@@ -126,18 +126,18 @@ public class BioMartEnsemblNcbiParserTest {
         try {
             parser.setBioMartFields( attributesToGet );
             parser.parse( new File( myurl.getFile() ) );
-            Collection<BioMartEnsembleNcbi> items = parser.getResults();
+            Collection<Ensembl2NcbiValueObject> items = parser.getResults();
             boolean isItemThereOne = false;
             boolean isItemThereTwo = false;
             // 27 unique peptide ids but only 20 which have entrez genes other get filtered out
             assertEquals( 20, items.size() );
 
-            for ( BioMartEnsembleNcbi item : items ) {
-                if ( item.getEnsembl_gene_id().equals( "ENSMUSG00000064341" ) ) {
+            for ( Ensembl2NcbiValueObject item : items ) {
+                if ( item.getEnsemblGeneId().equals( "ENSMUSG00000064341" ) ) {
                     assertEquals( 2, ( item.getEntrezgenes().size() ) );
                     isItemThereOne = true;
                 }
-                if ( item.getEnsembl_gene_id().equals( "ENSMUSG00000057782" ) ) {
+                if ( item.getEnsemblGeneId().equals( "ENSMUSG00000057782" ) ) {
                     assertEquals( item.getEntrezgenes().size(), 1 );
                     isItemThereTwo = true;
                 }
@@ -168,11 +168,11 @@ public class BioMartEnsemblNcbiParserTest {
         try {
             parser.setBioMartFields( attributesToGet );
             parser.parse( new File( myurl.getFile() ) );
-            Collection<BioMartEnsembleNcbi> items = parser.getResults();
+            Collection<Ensembl2NcbiValueObject> items = parser.getResults();
             // 39 unique proteins and 36 unique genes
             assertEquals( 10, items.size() );
-            for ( BioMartEnsembleNcbi item : items ) {
-                if ( item.getEnsembl_gene_id().equals( "ENSG00000215764" ) ) {
+            for ( Ensembl2NcbiValueObject item : items ) {
+                if ( item.getEnsemblGeneId().equals( "ENSG00000215764" ) ) {
                     assertEquals( 1, item.getEntrezgenes().size() );
                     assertEquals( "6330", item.getHgnc_id() );
                 }

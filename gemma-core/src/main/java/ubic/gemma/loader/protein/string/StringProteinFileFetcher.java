@@ -31,97 +31,91 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Class that downloads protein interaction Files from from the STRING website.
- * String makes available gzipped files of data, which can be downloaded from this url. *   
- * <a href=" http://string.embl.de/newstring_cgi/show_download_page.pl">String download page</a>
- * 
+ * Downloads protein interaction Files from from the STRING website. STRING makes available gzipped files of data, which
+ * can be downloaded from <a href=" http://string.embl.de/newstring_cgi/show_download_page.pl">the STRING download
+ * page</a>
  * <p>
- * The particular file that contains protein protein interaction data can be downloaded from:
- * <a href="http://string.embl.de/newstring_download/protein.links.detailed.v8.2.txt.gz">Protein Links Detailed file</a>
+ * The particular file that contains protein protein interaction data can be downloaded from (for example): <a
+ * href="http://string.embl.de/newstring_download/protein.links.detailed.v8.2.txt.gz">Protein Links Detailed file</a>
+ * Care must be taken to ensure the file name does not change it is version dependent.
  * 
- * Care must be taken to ensure the file name does not change it is version dependant.
- *  
  * @author ldonnison
  * @version $Id$
  */
-public class StringProteinFileFetcher extends HttpFetcher implements HttpArchiveFetcherInterface {  
-   
-    public final static String INTERACTION = "protein.string.linksdetailed.remotepath";    
-    
-    /**Current version of string*/
+public class StringProteinFileFetcher extends HttpFetcher implements HttpArchiveFetcherInterface {
+
+    public final static String INTERACTION = "protein.string.linksdetailed.remotepath";
+
+    /** Current version of string */
     public final static String STRINGVERSIONNUMBER = "";
-    
-    /**Name of string protein file to download*/
-    private  String stringProteinFileName = null;
-           
-           
+
+    /** Name of string protein file to download */
+    private String stringProteinFileName = null;
+
     /**
-     * If the full path to the string file to download is known then this method is called
-     * and will download the given file name. If the file is not provided then the file name
-     * is retrieved from the properties file.
+     * If the full path to the string file to download is known then this method is called and will download the given
+     * file name. If the file is not provided then the file name is retrieved from the properties file.
      * 
      * @param stringProteinFileNameToFetch The full path name to the string file to retrieve
      * @return Collection of local files detailing the files downloaded.
      */
     @Override
-    public Collection<LocalFile> fetch(String stringProteinFileNameToFetch){
-        if( stringProteinFileNameToFetch ==null){
+    public Collection<LocalFile> fetch( String stringProteinFileNameToFetch ) {
+        if ( stringProteinFileNameToFetch == null ) {
             this.initConfig();
-        }else{
+        } else {
             this.setStringProteinLinksDetailedFileName( stringProteinFileNameToFetch );
         }
-       
-        log.info("Starting download of protein STRING File at " + stringProteinFileName);
-        Collection<LocalFile> fileToUnPack = super.fetch(stringProteinFileName);       
+
+        log.info( "Starting download of protein STRING File at " + stringProteinFileName );
+        Collection<LocalFile> fileToUnPack = super.fetch( stringProteinFileName );
         return fileToUnPack;
     }
-    
-   
+
     /**
-     * Sets the paths of the remote files to download as set in the project properties files   
+     * Sets the paths of the remote files to download as set in the project properties files
      * 
-     * @throws ConfigurationException one of the file download paths in the properties file was not configured correctly.
-     */   
+     * @throws ConfigurationException one of the file download paths in the properties file was not configured
+     *         correctly.
+     */
     @Override
-    public void initConfig() {    
-      
-       stringProteinFileName = ConfigUtils.getString( INTERACTION);
+    public void initConfig() {
+
+        stringProteinFileName = ConfigUtils.getString( INTERACTION );
         if ( stringProteinFileName == null || stringProteinFileName.length() == 0 )
             throw new RuntimeException( new ConfigurationException( INTERACTION + " was null or empty" ) );
-    }   
-    
-  
+    }
+
     /**
-     * This is optional a specific file name can be set for download. This is to make the code more robust
-     * as not sure how often string updates its file names on its download page.
+     * This is optional a specific file name can be set for download. This is to make the code more robust as not sure
+     * how often string updates its file names on its download page.
      * 
      * @param stringProteinLinksDetailedFileName The full path of the file to download
      */
     public void setStringProteinLinksDetailedFileName( String stringProteinFileName ) {
         this.stringProteinFileName = stringProteinFileName;
     }
-    
 
     /**
      * Method to unarchive downloaded file.
      * 
      * @param localFile Collection of File details relating to string download
      */
-    public File unPackFile( Collection<LocalFile> localFile ){      
+    public File unPackFile( Collection<LocalFile> localFile ) {
         File stringfiledownloaded = null;
-            for(LocalFile file: localFile){        
-                String localFileName = file.getLocalURL().getFile();
-                try {
-                    FileTools.unGzipFile( file.getLocalURL().getFile() );
-                } catch ( IOException e ) {
-                    throw new RuntimeException( e );
-                }
-                 stringfiledownloaded = new File( FileTools.chompExtension( localFileName ));
-                //test file there
-                if(!stringfiledownloaded.canRead()){
-                    throw new RuntimeException( "Problem unpacking file " + stringfiledownloaded.getName());
-                }                       
-             } 
-            return stringfiledownloaded;
+        for ( LocalFile file : localFile ) {
+            String localFileName = file.getLocalURL().getFile();
+            try {
+                FileTools.unGzipFile( file.getLocalURL().getFile() );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
+            stringfiledownloaded = new File( FileTools.chompExtension( localFileName ) );
+            // test file there
+            if ( !stringfiledownloaded.canRead() ) {
+                throw new RuntimeException( "Problem unpacking file: not readable: " + stringfiledownloaded.getName() );
+            }
         }
+        return stringfiledownloaded;
     }
+}

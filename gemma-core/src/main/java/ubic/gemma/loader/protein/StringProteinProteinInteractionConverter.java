@@ -29,7 +29,7 @@ import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
+import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction;
 import ubic.gemma.loader.util.converter.Converter;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
@@ -39,14 +39,14 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Class that is responsible for converting value objects generated from the parsing of string files
- * (StringProteinProteinInteraction) into gemma objects Gene2GeneProteinAssociation. To do that it refers to a map
- * BioMartEnsembleNcbi objects keyed on ensemble peptide id.
+ * Class that is responsible for converting value objects generated from the parsing of STRING files
+ * (StringProteinProteinInteraction) into Gemma Gene2GeneProteinAssociations. To do that it refers to a map ensembl2ncbi
+ * ids
  * 
  * @author ldonnison
  * @version $Id$
  */
-public class StringBiomartProteinConverter implements Converter<Object, Object> {
+public class StringProteinProteinInteractionConverter implements Converter<Object, Object> {
 
     /** String url **/
     private static String stringUrl;
@@ -55,12 +55,12 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
     private static String stringVersion;
 
     /** The key is the ensembl protein id. */
-    private Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = null;
+    private Map<String, Ensembl2NcbiValueObject> ensembl2ncbi = null;
 
     /** Reference to external database as held in gemma system */
     private ExternalDatabase stringExternalDatabase;
 
-    private static Log log = LogFactory.getLog( StringBiomartProteinConverter.class );
+    private static Log log = LogFactory.getLog( StringProteinProteinInteractionConverter.class );
 
     /** The joining string between two protein ids to create the url link in string for the interaction */
     private static final String PROTEIN2PROTEINLINK = "%0D";
@@ -68,12 +68,10 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
     AtomicBoolean producerDone = new AtomicBoolean( false );
 
     /**
-     * Constructor which takes as input the bioMartStringEntreGeneMapping
-     * 
-     * @param bioMartStringEntreGeneMapping Map to enable mapping of ensembl peptide ids to entrez/ncbi id genes.
+     * @param ensembl2ncbi Map of ensembl peptide ids to entrez/ncbi id genes.
      */
-    public StringBiomartProteinConverter( Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping ) {
-        this.bioMartStringEntreGeneMapping = bioMartStringEntreGeneMapping;
+    public StringProteinProteinInteractionConverter( Map<String, Ensembl2NcbiValueObject> ensembl2ncbi ) {
+        this.ensembl2ncbi = ensembl2ncbi;
 
         stringVersion = ConfigUtils.getString( "protein.string.version" );
         stringUrl = ConfigUtils.getString( "protein.string.linksurl" );
@@ -176,25 +174,23 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
         // log.debug("getting ncbi gene for ensembl id " + ensemblProteinId);
         Collection<Gene> genes = new ArrayList<Gene>();
 
-        // split out species e.g 7955.ENSDARP00000088673
-        String[] split = ensemblProteinId.split( "\\." );
-        // e.g. worm has lots of puncuation in the name so just get rid of the first bit
-        if ( split.length >= 2 ) {
-            ensemblProteinId = ensemblProteinId.replaceFirst( split[0] + "\\.", "" );
-        }
+        // in case species id is still on there from STRING like 12334.ENSD....
+        String eid = ensemblProteinId.replaceFirst( "[0-9]+\\.", "" );
 
-        BioMartEnsembleNcbi bioMartEnsembleNcbi = bioMartStringEntreGeneMapping.get( ensemblProteinId );
-        if ( bioMartEnsembleNcbi != null && bioMartEnsembleNcbi.getEntrezgenes() != null ) {
-            Collection<String> entreGeneids = ( bioMartEnsembleNcbi.getEntrezgenes() );
-            for ( String entrezGeneid : entreGeneids ) {
-                if ( !entrezGeneid.isEmpty() ) {
-                    Gene gene = Gene.Factory.newInstance();
-                    gene.setNcbiId( entrezGeneid );
-                    genes.add( gene );
-                    if ( log.isDebugEnabled() ) log.debug( "Entry found for entrezGeneid " + entrezGeneid );
-                }
+        Ensembl2NcbiValueObject e2n = ensembl2ncbi.get( eid );
+        if ( e2n == null || e2n.getEntrezgenes().isEmpty() ) {
+            return genes;
+        }
+        Collection<String> entreGeneids = ( e2n.getEntrezgenes() );
+        for ( String entrezGeneid : entreGeneids ) {
+            if ( !entrezGeneid.isEmpty() ) {
+                Gene gene = Gene.Factory.newInstance();
+                gene.setNcbiId( entrezGeneid );
+                genes.add( gene );
+                if ( log.isDebugEnabled() ) log.debug( "Entry found for entrezGeneid " + entrezGeneid );
             }
         }
+
         return genes;
     }
 
@@ -264,8 +260,8 @@ public class StringBiomartProteinConverter implements Converter<Object, Object> 
      * 
      * @param bioMartStringEntreGeneMapping
      */
-    public void setEnsemblEntrzMap( Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping ) {
-        this.bioMartStringEntreGeneMapping = bioMartStringEntreGeneMapping;
+    public void setEnsemblEntrzMap( Map<String, Ensembl2NcbiValueObject> bioMartStringEntreGeneMapping ) {
+        this.ensembl2ncbi = bioMartStringEntreGeneMapping;
     }
 
     /**

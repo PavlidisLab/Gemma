@@ -27,7 +27,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
+import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.loader.util.parser.LineParser;
 import ubic.gemma.model.genome.Taxon;
 
@@ -50,7 +50,7 @@ public class BiomartEnsemblNcbiObjectGenerator {
     protected BiomartEnsemblNcbiFetcher biomartEnsemblNcbiFetcher;
 
     /** A biomart parser which is constructed a new for each taxon due to slight file taxon differences */
-    protected LineParser<BioMartEnsembleNcbi> bioMartEnsemblNcbiParser;
+    protected LineParser<Ensembl2NcbiValueObject> bioMartEnsemblNcbiParser;
 
     /** If this file name is set then implies that file is local and no remote call should be made to biomart service */
     protected File bioMartFileName = null;
@@ -77,13 +77,13 @@ public class BiomartEnsemblNcbiObjectGenerator {
      * @return Map of BioMartEnsembleNcbi value objects keyed on ensemble peptide id.
      * @throws IOException
      */
-    public Map<String, BioMartEnsembleNcbi> generate( Collection<Taxon> validTaxa ) throws IOException {
+    public Map<String, Ensembl2NcbiValueObject> generate( Collection<Taxon> validTaxa ) throws IOException {
         // fetch the biomart files to process keyed on taxon
-        if ( bioMartFileName == null ) {
-            log.info( "No file name set fetching files from biomart " );
+        if ( bioMartFileName == null || !bioMartFileName.canRead() ) {
+            log.info( "No file name set or unreadable; fetching files from biomart " );
             return generateRemote( validTaxa );
         }
-        log.info( "File name set paring directly  " + bioMartFileName );
+        log.info( "Processing: " + bioMartFileName );
         return parseTaxonBiomartFile( validTaxa.iterator().next(), bioMartFileName );
 
     }
@@ -94,8 +94,8 @@ public class BiomartEnsemblNcbiObjectGenerator {
      * @return
      * @throws IOException
      */
-    public Map<String, BioMartEnsembleNcbi> generateRemote( Collection<Taxon> validTaxa ) throws IOException {
-        Map<String, BioMartEnsembleNcbi> bioMartEnsemblNcbiIdsForValidAllGemmaTaxa = new HashMap<String, BioMartEnsembleNcbi>();
+    public Map<String, Ensembl2NcbiValueObject> generateRemote( Collection<Taxon> validTaxa ) throws IOException {
+        Map<String, Ensembl2NcbiValueObject> bioMartEnsemblNcbiIdsForValidAllGemmaTaxa = new HashMap<String, Ensembl2NcbiValueObject>();
         Map<Taxon, File> taxaBiomartFiles = this.biomartEnsemblNcbiFetcher.fetch( validTaxa );
 
         if ( taxaBiomartFiles != null && !taxaBiomartFiles.isEmpty() ) {
@@ -103,7 +103,7 @@ public class BiomartEnsemblNcbiObjectGenerator {
                 File fileForTaxon = taxaBiomartFiles.get( taxon );
                 if ( fileForTaxon != null ) {
                     log.info( "Starting processing taxon " + taxon + " for file " + fileForTaxon );
-                    Map<String, BioMartEnsembleNcbi> map = parseTaxonBiomartFile( taxon, fileForTaxon );
+                    Map<String, Ensembl2NcbiValueObject> map = parseTaxonBiomartFile( taxon, fileForTaxon );
                     bioMartEnsemblNcbiIdsForValidAllGemmaTaxa.putAll( map );
                 } else {
                     log.error( "No biomart file retrieved for taxon " + taxon );
@@ -123,10 +123,10 @@ public class BiomartEnsemblNcbiObjectGenerator {
      * @param taxaBiomartFile The biomart file for given taxon
      * @return Map of BioMartEnsembleNcbi value objects for the given taxon keyed on ensembl peptide id
      */
-    public Map<String, BioMartEnsembleNcbi> parseTaxonBiomartFile( Taxon taxon, File taxonBiomartFile ) {
+    public Map<String, Ensembl2NcbiValueObject> parseTaxonBiomartFile( Taxon taxon, File taxonBiomartFile ) {
         // get the attributes in the file and set for this taxon
         String biomartTaxonName = this.biomartEnsemblNcbiFetcher.getBiomartTaxonName( taxon );
-        Map<String, BioMartEnsembleNcbi> map = null;
+        Map<String, Ensembl2NcbiValueObject> map = null;
         if ( biomartTaxonName != null ) {
             String[] bioMartHeaderFields = this.biomartEnsemblNcbiFetcher
                     .attributesToRetrieveFromBioMartForProteinQuery( biomartTaxonName );

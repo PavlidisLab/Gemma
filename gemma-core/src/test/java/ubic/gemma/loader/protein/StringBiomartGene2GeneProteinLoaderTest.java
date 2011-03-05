@@ -19,7 +19,6 @@
 
 package ubic.gemma.loader.protein;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -29,6 +28,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
-import ubic.gemma.model.common.description.DatabaseEntryService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
@@ -62,9 +61,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTest {
 
     @Autowired
-    private DatabaseEntryService databaseService = null;
-
-    @Autowired
     private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService;
 
     private Collection<Gene2GeneProteinAssociation> geneAssociationRat = null;
@@ -73,11 +69,13 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     @Autowired
     private GeneService geneService = null;
-    private Collection<Gene> genesRat = null;
-    private Collection<Gene> genesZebra = null;
+
+    private Collection<Gene> genesRat = new HashSet<Gene>();
+
+    private Collection<Gene> genesZebra = new HashSet<Gene>();
 
     private Taxon rat = null;
-    private StringBiomartGene2GeneProteinAssociationLoader stringBiomartGene2GeneProteinAssociationLoader = null;
+    private StringProteinInteractionLoader stringBiomartGene2GeneProteinAssociationLoader = null;
 
     private Collection<Taxon> taxa = null;
     private Taxon zebraFish = null;
@@ -111,48 +109,20 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
     }
 
     /**
-     * Test data note ENSRNOP00000036045 mapped to two ncib genes
-     */
+      */
     public void getTestPeristentGenesRat() {
+
         genesRat = new ArrayList<Gene>();
-        // ENSRNOG00000023387 ENSRNOT00000028988 679739 ENSRNOP00000036045
-        Gene geneRatOne = Gene.Factory.newInstance();
-        geneRatOne.setName( "RAT1" );
-        geneRatOne.setOfficialName( "RAT1" );
-        geneRatOne.setOfficialSymbol( "RAT1" );
-        geneRatOne.setNcbiId( "679739" );
-        geneRatOne.setTaxon( rat );
-        List<GeneProduct> geneProduct = new ArrayList<GeneProduct>();
-        geneProduct.add( super.getTestPersistentGeneProduct( geneRatOne ) );
-        geneRatOne.setProducts( geneProduct );
-        geneRatOne = ( Gene ) persisterHelper.persist( geneRatOne );
+
+        Gene geneRatOne = makeGene( rat, "RAT1", "679739" );
         genesRat.add( geneRatOne );
 
-        // ENSRNOG00000023387 ENSRNOT00000028988 692052 ENSRNOP00000036045
-        Gene geneRatTwo = Gene.Factory.newInstance();
-        geneRatTwo.setName( "RAT2" );
-        geneRatTwo.setOfficialName( "RAT2" );
-        geneRatTwo.setOfficialSymbol( "RAT2" );
-        geneRatTwo.setNcbiId( "692052" );
-        geneRatTwo.setTaxon( rat );
-        List<GeneProduct> geneProductTwo = new ArrayList<GeneProduct>();
-        geneProductTwo.add( super.getTestPersistentGeneProduct( geneRatTwo ) );
-        geneRatTwo.setProducts( geneProductTwo );
-        geneRatTwo = ( Gene ) persisterHelper.persist( geneRatTwo );
-        genesZebra.add( geneRatTwo );
-
-        // ENSRNOG00000017115 ENSRNOT00000023122 297436 ENSRNOP00000023122
-        Gene geneRatThree = Gene.Factory.newInstance();
-        geneRatThree.setName( "RAT3" );
-        geneRatThree.setOfficialName( "RAT3" );
-        geneRatThree.setOfficialSymbol( "RAT4" );
-        geneRatThree.setNcbiId( "297436" );
-        geneRatThree.setTaxon( rat );
-        List<GeneProduct> geneProductThree = new ArrayList<GeneProduct>();
-        geneProductThree.add( super.getTestPersistentGeneProduct( geneRatThree ) );
-        geneRatThree.setProducts( geneProductThree );
-        geneRatThree = ( Gene ) persisterHelper.persist( geneRatThree );
+        Gene geneRatTwo = makeGene( rat, "RAT2", "297433" );
+        genesRat.add( geneRatTwo );
+        Gene geneRatThree = makeGene( rat, "RAT3", "399475" );
         genesRat.add( geneRatThree );
+
+        genesRat.add( makeGene( rat, "RFOO1", "123445" ) );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
                 .newInstance();
@@ -171,44 +141,15 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
     }
 
     public void getTestPeristentGenesZebra() {
-        genesZebra = new ArrayList<Gene>();
-        // ENSDARG00000074913 ENSDART00000109786 751652 ENSDARP00000098813
-        Gene geneZebraOne = Gene.Factory.newInstance();
-        geneZebraOne.setName( "zgc:153184" );
-        geneZebraOne.setOfficialName( "zgc:153184" );
-        geneZebraOne.setOfficialSymbol( "zgc:153184" );
-        geneZebraOne.setNcbiId( "751652" );
-        geneZebraOne.setTaxon( zebraFish );
-        List<GeneProduct> geneProduct = new ArrayList<GeneProduct>();
-        geneProduct.add( super.getTestPersistentGeneProduct( geneZebraOne ) );
-        geneZebraOne.setProducts( geneProduct );
-        geneZebraOne = ( Gene ) persisterHelper.persist( geneZebraOne );
+
+        Gene geneZebraOne = makeGene( zebraFish, "zgc.153184", "751652" );
+        Gene geneZebraTwo = makeGene( zebraFish, "appl1", "571540" );
+        Gene geneZebraThree = makeGene( zebraFish, "LOC568371", "568371" );
+        genesZebra.add( makeGene( zebraFish, "FOO1", "562059" ) );
+
         genesZebra.add( geneZebraOne );
 
-        // ENSDARG00000060734 ENSDART00000085868 571540 ENSDARP00000080303
-        Gene geneZebraTwo = Gene.Factory.newInstance();
-        geneZebraTwo.setName( "appl1" );
-        geneZebraTwo.setOfficialName( "appl1" );
-        geneZebraTwo.setOfficialSymbol( "appl1" );
-        geneZebraTwo.setNcbiId( "571540" );
-        geneZebraTwo.setTaxon( zebraFish );
-        List<GeneProduct> geneProductTwo = new ArrayList<GeneProduct>();
-        geneProductTwo.add( super.getTestPersistentGeneProduct( geneZebraTwo ) );
-        geneZebraTwo.setProducts( geneProductTwo );
-        geneZebraTwo = ( Gene ) persisterHelper.persist( geneZebraTwo );
         genesZebra.add( geneZebraTwo );
-
-        // ENSDARG00000008473 ENSDART00000019008 568371 ENSDARP00000006838
-        Gene geneZebraThree = Gene.Factory.newInstance();
-        geneZebraThree.setName( "LOC568371" );
-        geneZebraThree.setOfficialName( "LOC568371" );
-        geneZebraThree.setOfficialSymbol( "LOC568371" );
-        geneZebraThree.setNcbiId( "568371" );
-        geneZebraThree.setTaxon( zebraFish );
-        List<GeneProduct> geneProductThree = new ArrayList<GeneProduct>();
-        geneProductThree.add( super.getTestPersistentGeneProduct( geneZebraThree ) );
-        geneZebraThree.setProducts( geneProductThree );
-        geneZebraThree = ( Gene ) persisterHelper.persist( geneZebraThree );
         genesZebra.add( geneZebraThree );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
@@ -227,10 +168,24 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
     }
 
+    private Gene makeGene( Taxon t, String name, String ncbiId ) {
+        Gene g = Gene.Factory.newInstance();
+        g.setName( name );
+        g.setOfficialName( name );
+        g.setOfficialSymbol( name );
+        g.setNcbiId( ncbiId );
+        g.setTaxon( t );
+        List<GeneProduct> ggg = new ArrayList<GeneProduct>();
+        ggg.add( super.getTestPersistentGeneProduct( g ) );
+        g.setProducts( ggg );
+        g = ( Gene ) persisterHelper.persist( g );
+        return g;
+    }
+
     @Before
     public void setUp() throws Exception {
 
-        stringBiomartGene2GeneProteinAssociationLoader = new StringBiomartGene2GeneProteinAssociationLoader();
+        stringBiomartGene2GeneProteinAssociationLoader = new StringProteinInteractionLoader();
         stringBiomartGene2GeneProteinAssociationLoader.setPersisterHelper( super.persisterHelper );
 
         stringBiomartGene2GeneProteinAssociationLoader.setGeneService( geneService );
@@ -289,19 +244,22 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
     }
 
     /**
-     * Tests that two taxons can be processed at same time. NOTE it does get the files from the biomart site. It also
-     * checks that the byte representing the evidence code is stored correctly.
+     * Tests that two taxons can be processed at same time.
      */
     @Test
     public void testDoLoadRemoteBiomartFileLocalStringFileMultipleTaxon() throws Exception {
-        String fileNameStringmouse = "/data/loader/protein/string/protein.links.multitaxon.txt";
-        URL fileNameStringmouseURL = this.getClass().getResource( fileNameStringmouse );
+        String testPPis = "/data/loader/protein/string/protein.links.multitaxon.txt";
+        URL testPPisURL = this.getClass().getResource( testPPis );
+
+        String biomartTestfile = "/data/loader/protein/biomart/biomart.drerio.and.rat.test.txt";
+        URL biomartTestfileURL = this.getClass().getResource( biomartTestfile );
+
         int counterAssociationsSavedZebra = 0;
         int counterAssociationsSavedRat = 0;
 
         try {
-            stringBiomartGene2GeneProteinAssociationLoader.load( new File( fileNameStringmouseURL.getFile() ), null,
-                    null, getTaxonToProcess() );
+            stringBiomartGene2GeneProteinAssociationLoader.load( new File( testPPisURL.getFile() ), null, new File(
+                    biomartTestfileURL.getFile() ), getTaxonToProcess() );
         } catch ( IOException e ) {
             if ( e.getMessage().startsWith( "Error from BioMart" ) ) {
                 log.warn( e.getMessage() );
@@ -318,58 +276,17 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
             Gene secondGene = association.getSecondGene();
             secondGene = this.geneService.thaw( secondGene );
             String taxonScientificName = secondGene.getTaxon().getScientificName();
-            ProteinLinkOutFormatter formatter = new ProteinLinkOutFormatter();
             if ( taxonScientificName.equals( zebraFish.getScientificName() ) ) {
-
-                if ( association.getFirstGene().getNcbiId().equals( "751652" ) ) {
-                    assertEquals( "571540", secondGene.getNcbiId() );
-                    byte[] array = new byte[] { 0, 0, 1, 0, 1, 1, 1 };
-                    String accession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
-                    assertTrue( "Accession was: " + accession, accession.contains( "%0D7955." ) );
-                    log.info( "Accession for zebra fish " + accession );
-                    Double associationScore = association.getConfidenceScore();
-                    assertEquals( new Double( 180 ), associationScore );
-                    assertArrayEquals( array, association.getEvidenceVector() );
-                    counterAssociationsSavedZebra++;
-                    byte[] arrayBytes = association.getEvidenceVector();
-
-                    String formatedEvidence = formatter.getEvidenceDisplayText( arrayBytes );
-                    assertEquals( "Coocurrence:Experimental:Database:TextMining", formatedEvidence );
-
-                } else if ( association.getFirstGene().getNcbiId().equals( "568371" ) ) {
-                    assertEquals( "751652", secondGene.getNcbiId() );
-                    byte[] array = new byte[] { 1, 1, 1, 1, 1, 1, 1 };
-                    String accession = ( databaseService.find( association.getDatabaseEntry() ) ).getAccession();
-                    assertTrue( accession.contains( "%0D7955." ) );
-                    log.info( "Accession for zebra fish " + accession );
-                    Double associationScore = association.getConfidenceScore();
-                    assertEquals( new Double( 200 ), associationScore );
-                    assertArrayEquals( array, association.getEvidenceVector() );
-
-                    byte[] arrayBytes = association.getEvidenceVector();
-                    String formatedEvidence = formatter.getEvidenceDisplayText( arrayBytes );
-                    assertEquals( "Neighbourhood:GeneFusion:Coocurrence:Coexpression:Experimental:Database:TextMining",
-                            formatedEvidence );
-                    counterAssociationsSavedZebra++;
-                } else {
-                    fail( "Did not find correct association" );
-                }
-
-            }// rat
-            else if ( taxonScientificName.equals( rat.getScientificName() ) ) {
-                // should be same accession number both entries as these two map to one ensembl
-                String accession = association.getDatabaseEntry().getAccession();
-                assertTrue( accession.contains( "%0D10116.ENSRN" ) );
-                log.info( "Accession for rat  " + accession );
+                counterAssociationsSavedZebra++;
+            } else if ( taxonScientificName.equals( rat.getScientificName() ) ) {
                 counterAssociationsSavedRat++;
             } else {
                 fail();
             }
 
         }
-        assertEquals( 2, counterAssociationsSavedRat );
-        assertEquals( 2, counterAssociationsSavedZebra );
-        // delete the newly entered records
+        assertEquals( "Wrong number of rat PPIs", 1, counterAssociationsSavedRat );
+        assertEquals( "Wrong number of fish PPIs", 3, counterAssociationsSavedZebra );
 
     }
 

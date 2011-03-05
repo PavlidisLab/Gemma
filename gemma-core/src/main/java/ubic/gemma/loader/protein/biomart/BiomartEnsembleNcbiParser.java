@@ -24,7 +24,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
+import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.loader.util.parser.FileFormatException;
 import ubic.gemma.loader.util.parser.LineMapParser;
 import ubic.gemma.model.genome.Taxon;
@@ -41,10 +41,10 @@ import ubic.gemma.model.genome.Taxon;
  * @author ldonnison
  * @version $Id$
  */
-public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnsembleNcbi> {
+public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2NcbiValueObject> {
     private static final char FIELD_DELIM = '\t';
 
-    private Map<String, BioMartEnsembleNcbi> results = null;
+    private Map<String, Ensembl2NcbiValueObject> results = null;
     private Taxon taxon = null;
     private String[] bioMartHeaderFields = null;
 
@@ -58,7 +58,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
     public BiomartEnsembleNcbiParser( Taxon taxon, String[] attributesInFile ) {
         this.setTaxon( taxon );
         this.setBioMartFields( attributesInFile );
-        results = new HashMap<String, BioMartEnsembleNcbi>();
+        results = new HashMap<String, Ensembl2NcbiValueObject>();
     }
 
     /**
@@ -68,7 +68,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
      * @return BioMartEnsembleNcbi Value object representing the line parsed
      */
     @Override
-    public BioMartEnsembleNcbi parseOneLine( String line ) {
+    public Ensembl2NcbiValueObject parseOneLine( String line ) {
 
         int bioMartFieldsPerRow = this.getBioMartFieldsPerRow();
         // header line from the bioMart headers then ignore it
@@ -108,9 +108,9 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
      * @throws FileFormatException Validation than when a duplicate record is found then the peptide id is the same the
      *         ensemble gene id should be the same.
      */
-    public BioMartEnsembleNcbi createBioMartEnsembleNcbi( String[] fields ) throws NumberFormatException,
+    public Ensembl2NcbiValueObject createBioMartEnsembleNcbi( String[] fields ) throws NumberFormatException,
             FileFormatException {
-        BioMartEnsembleNcbi bioMartEnsembleNcbi = new BioMartEnsembleNcbi();
+        Ensembl2NcbiValueObject bioMartEnsembleNcbi = new Ensembl2NcbiValueObject();
         String entrezGene = fields[2].trim();
         String ensemblProteinId = fields[3].trim();
         // if there is no entrezgene skip as that is what we want
@@ -120,10 +120,10 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
         }
 
         String ensemblGeneID = fields[0].trim();
-        bioMartEnsembleNcbi.setSpecies_ncbi_taxon_id( taxon.getNcbiId() );
-        bioMartEnsembleNcbi.setEnsembl_gene_id( ensemblGeneID );
-        bioMartEnsembleNcbi.setEnsembl_transcript_id( fields[1] );
-        bioMartEnsembleNcbi.setEnsembl_peptide_id( ensemblProteinId );
+        bioMartEnsembleNcbi.setNcbiTaxonId( taxon.getNcbiId() );
+        bioMartEnsembleNcbi.setEnsemblGeneId( ensemblGeneID );
+        bioMartEnsembleNcbi.setEnsemblTranscriptId( fields[1] );
+        bioMartEnsembleNcbi.setEnsemblPeptideId( ensemblProteinId );
 
         if ( !bioMartHeaderFields[4].isEmpty() && fields[4] != null ) {
             // only humans should have this field
@@ -136,9 +136,9 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
             results.put( ensemblProteinId, bioMartEnsembleNcbi );
             log.debug( ensemblProteinId + " has no existing  entrez gene mapping" );
         } else {
-            BioMartEnsembleNcbi bioMartEnsembleNcbiDup = this.get( ensemblProteinId );
+            Ensembl2NcbiValueObject bioMartEnsembleNcbiDup = this.get( ensemblProteinId );
             // check that the this duplicate record also is the same for ensembl id
-            if ( ensemblGeneID.equals( bioMartEnsembleNcbiDup.getEnsembl_gene_id() ) ) {
+            if ( ensemblGeneID.equals( bioMartEnsembleNcbiDup.getEnsemblGeneId() ) ) {
                 this.get( ensemblProteinId ).getEntrezgenes().add( entrezGene );
                 log.debug( ensemblProteinId + "added gene to duplicate  " );
             } else {
@@ -180,7 +180,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
      * @return BioMartEnsembleNcbi associated with that peptide id.
      */
     @Override
-    public BioMartEnsembleNcbi get( String key ) {
+    public Ensembl2NcbiValueObject get( String key ) {
         return results.get( key );
     }
 
@@ -200,7 +200,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
      * @return Collection of BioMartEnsembleNcbi value objects
      */
     @Override
-    public Collection<BioMartEnsembleNcbi> getResults() {
+    public Collection<Ensembl2NcbiValueObject> getResults() {
         return results.values();
     }
 
@@ -209,7 +209,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, BioMartEnse
      * 
      * @return
      */
-    public Map<String, BioMartEnsembleNcbi> getMap() {
+    public Map<String, Ensembl2NcbiValueObject> getMap() {
         return results;
     }
 

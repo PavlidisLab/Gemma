@@ -28,7 +28,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.loader.protein.StringBiomartGene2GeneProteinAssociationLoader;
+import ubic.gemma.loader.protein.StringProteinInteractionLoader;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -125,7 +125,7 @@ public class StringProteinLoadCli extends AbstractSpringAwareCLI {
      * @throws IOException
      */
     public void loadProteinProteinInteractions() throws IOException {
-        StringBiomartGene2GeneProteinAssociationLoader loader = new StringBiomartGene2GeneProteinAssociationLoader();
+        StringProteinInteractionLoader loader = new StringProteinInteractionLoader();
 
         geneService = ( GeneService ) getBean( "geneService" );
         externalDatabaseService = ( ( ExternalDatabaseService ) getBean( "externalDatabaseService" ) );

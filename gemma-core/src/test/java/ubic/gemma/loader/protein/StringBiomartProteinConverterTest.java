@@ -33,7 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import ubic.gemma.loader.protein.biomart.BiomartEnsemblNcbiObjectGenerator;
-import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
+import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
 import ubic.gemma.model.genome.Gene;
@@ -48,7 +48,7 @@ import ubic.gemma.model.genome.Taxon;
  */
 public class StringBiomartProteinConverterTest {
 
-    StringBiomartProteinConverter stringBiomartProteinConverter = null;
+    StringProteinProteinInteractionConverter stringBiomartProteinConverter = null;
     Collection<Taxon> taxa = new ArrayList<Taxon>();
     Taxon taxon = null;
 
@@ -77,8 +77,8 @@ public class StringBiomartProteinConverterTest {
         try {
             BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
             biomartEnsemblNcbiObjectGenerator.setBioMartFileName( taxonBiomartFile );
-            Map<String, BioMartEnsembleNcbi> map = biomartEnsemblNcbiObjectGenerator.generate( taxa );
-            stringBiomartProteinConverter = new StringBiomartProteinConverter( map );
+            Map<String, Ensembl2NcbiValueObject> map = biomartEnsemblNcbiObjectGenerator.generate( taxa );
+            stringBiomartProteinConverter = new StringProteinProteinInteractionConverter( map );
         } catch ( Exception e ) {
             e.printStackTrace();
             fail();
@@ -102,7 +102,7 @@ public class StringBiomartProteinConverterTest {
 
     /**
      * The array list is burried in the object. Test method for
-     * {@link ubic.gemma.loader.protein.StringBiomartProteinConverter#convert(java.util.Collection)}.
+     * {@link ubic.gemma.loader.protein.StringProteinProteinInteractionConverter#convert(java.util.Collection)}.
      */
     @SuppressWarnings("unchecked")
     @Test
@@ -138,7 +138,7 @@ public class StringBiomartProteinConverterTest {
     /**
      * ENSMUSP00000111623 is mapped to two ncbi ids (100040601 and 245269). ENSMUSP00000100396: is mapped to three ncbi
      * ids 100044026, 100043270, 100043197 Should result in returning a collection of 6 which is 2 *3 =6 Test method for
-     * {@link ubic.gemma.loader.protein.StringBiomartProteinConverter#convert(ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction)}
+     * {@link ubic.gemma.loader.protein.StringProteinProteinInteractionConverter#convert(ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction)}
      */
     @Test
     public void testConvertStringProteinProteinInteraction() {

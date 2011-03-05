@@ -32,7 +32,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.loader.protein.biomart.BiomartEnsemblNcbiObjectGenerator;
-import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
+import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.loader.protein.string.StringProteinProteinInteractionObjectGenerator;
 import ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
@@ -45,21 +45,24 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /**
- * Loader class for loading protein protein interactions into GEMMA. Either use local files or retrieve files using
- * fetchers , those files are from String and biomart sites. Once these files are located parse them and generate value
- * objects. For biomart these value objects(BioMartEnsembleNcbi) are grouped into a map keyed on ensembl peptide id. For
- * string these value objects StringProteinProteinInteraction are grouped into arrays held in a map keyed on taxon. Then
- * one taxon at a time StringBiomartProteinConverter converts them into gemma objects using the BioMartEnsembleNcbi map
- * to find the perptide ids corresponding to the ncbi gene. The generated gemma objects Gene2GeneProteinAssociation are
- * then loaded. It is done taxon by taxon due to the risk of GC memory errors.
+ * Loader class for loading protein protein interactions into Gemma from STRING. Either use local files or retrieve
+ * files using fetchers , those files are from String and biomart sites. Once these files are located parse them and
+ * generate value objects, and load them into the database.
+ * <p>
+ * We use BioMart to get the mappings from Ensembl to NCBI. For biomart these value objects(EnsembleNcbiValueObject) are
+ * grouped into a map keyed on ensembl peptide id. For string these value objects StringProteinProteinInteraction are
+ * grouped into arrays held in a map keyed on taxon. Then one taxon at a time StringBiomartProteinConverter converts
+ * them into gemma objects using the BioMartEnsembleNcbi map to find the perptide ids corresponding to the ncbi gene.
+ * The generated gemma objects Gene2GeneProteinAssociation are then loaded. It is done taxon by taxon due to the risk of
+ * GC memory errors.
  * 
  * @author ldonnison
  * @version $Id$
  */
 
-public class StringBiomartGene2GeneProteinAssociationLoader {
+public class StringProteinInteractionLoader {
 
-    private static Log log = LogFactory.getLog( StringBiomartGene2GeneProteinAssociationLoader.class );
+    private static Log log = LogFactory.getLog( StringProteinInteractionLoader.class );
 
     private int loadedGeneCount = 0;
 
@@ -79,7 +82,7 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
     /**
      *Constructor ensure that the concurrent flags are set.
      */
-    public StringBiomartGene2GeneProteinAssociationLoader() {
+    public StringProteinInteractionLoader() {
         converterDone = new AtomicBoolean( false );
         loaderDone = new AtomicBoolean( false );
     }
@@ -93,52 +96,52 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
      * @param stringProteinFileNameLocal The name of the string file on the local system
      * @param stringProteinFileNameRemote The name of the string file on the remote system (just in case the string name
      *        proves to be too variable)
-     * @param stringBiomartFile The name of the local biomart file
+     * @param localEnsembl2EntrezMappingFile The name of the local biomart file
      * @param taxa taxa to load data for. List of taxon to process
      * @throws IOException
      */
-    public void load( File stringProteinFileNameLocal, String stringProteinFileNameRemote, File stringBiomartFile,
-            Collection<Taxon> taxa ) throws IOException {
-
-        log.info( "Starting to load protein protein interaction data from SRING and Biomart from string file " );
+    public void load( File stringProteinFileNameLocal, String stringProteinFileNameRemote,
+            File localEnsembl2EntrezMappingFile, Collection<Taxon> taxa ) throws IOException {
 
         // very basic validation before any processing done
-        validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote, stringBiomartFile, taxa );
+        validateLoadParameters( stringProteinFileNameLocal, stringProteinFileNameRemote,
+                localEnsembl2EntrezMappingFile, taxa );
 
-        // retrieve a map of string protein protein interactions keyed on taxon
+        // retrieve STRING protein protein interactions
         StringProteinProteinInteractionObjectGenerator stringProteinProteinInteractionObjectGenerator = new StringProteinProteinInteractionObjectGenerator(
                 stringProteinFileNameLocal, stringProteinFileNameRemote );
-
         Map<Taxon, Collection<StringProteinProteinInteraction>> map = stringProteinProteinInteractionObjectGenerator
                 .generate( taxa );
 
-        Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = getIdMappings( stringBiomartFile, taxa );
+        /*
+         * Get ENSEMBL to NCBI id mappings so we can store the STRING interactions
+         */
+        Map<String, Ensembl2NcbiValueObject> bioMartStringEntreGeneMapping = getIdMappings(
+                localEnsembl2EntrezMappingFile, taxa );
 
-        // we do not do all taxons in one big go as there were gc errors as there were too many objects around this
-        // is a bit slower but no memory errors
+        // To one taxon at a time to reduce memory use
         for ( Taxon key : map.keySet() ) {
             log.debug( "Loading for taxon " + key );
             Collection<StringProteinProteinInteraction> proteinInteractions = map.get( key );
-            log.info( "Found in string file this number of protein interactions " + proteinInteractions.size()
-                    + " for taxon" + key );
+            log.info( "Found " + proteinInteractions.size() + " STRING interactions for taxon" + key );
             loadOneTaxonAtATime( bioMartStringEntreGeneMapping, proteinInteractions );
         }
 
     }
 
     /**
-     * @param stringBiomartFile
+     * @param ensembl2entrezMappingFile
      * @param taxa
      * @return map between Ensembl peptide IDs and NCBI gene ids understood by Gemma.
      * @throws IOException
      */
-    private Map<String, BioMartEnsembleNcbi> getIdMappings( File stringBiomartFile, Collection<Taxon> taxa )
+    private Map<String, Ensembl2NcbiValueObject> getIdMappings( File ensembl2entrezMappingFile, Collection<Taxon> taxa )
             throws IOException {
         // retrieve a map of biomart objects keyed on ensembl peptide id to use as map between entrez gene ids and
         // ensemble ids
         BiomartEnsemblNcbiObjectGenerator biomartEnsemblNcbiObjectGenerator = new BiomartEnsemblNcbiObjectGenerator();
-        biomartEnsemblNcbiObjectGenerator.setBioMartFileName( stringBiomartFile );
-        Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping = biomartEnsemblNcbiObjectGenerator
+        biomartEnsemblNcbiObjectGenerator.setBioMartFileName( ensembl2entrezMappingFile );
+        Map<String, Ensembl2NcbiValueObject> bioMartStringEntreGeneMapping = biomartEnsemblNcbiObjectGenerator
                 .generate( taxa );
         return bioMartStringEntreGeneMapping;
     }
@@ -146,17 +149,17 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
     /**
      * Method to generate and load Gene2GeneProteinAssociation one taxon at a time
      * 
-     * @param bioMartStringEntreGeneMapping Map of peptide ids
+     * @param ensembl2ncbi Map of peptide ids to NCBI gene ids
      * @param proteinInteractionsOneTaxon The protein interactions representing one taxon
      */
-    public void loadOneTaxonAtATime( Map<String, BioMartEnsembleNcbi> bioMartStringEntreGeneMapping,
+    public void loadOneTaxonAtATime( Map<String, Ensembl2NcbiValueObject> ensembl2ncbi,
             Collection<StringProteinProteinInteraction> proteinInteractionsOneTaxon ) {
         long startTime = System.currentTimeMillis();
         converterDone.set( false );
         loaderDone.set( false );
         loadedGeneCount = 0;
         // generate gemma objects
-        StringBiomartProteinConverter converter = new StringBiomartProteinConverter( bioMartStringEntreGeneMapping );
+        StringProteinProteinInteractionConverter converter = new StringProteinProteinInteractionConverter( ensembl2ncbi );
         converter.setStringExternalDatabase( this.getExternalDatabaseForString() );
 
         // create queue for String objects to be converted
@@ -248,19 +251,24 @@ public class StringBiomartGene2GeneProteinAssociationLoader {
                 Gene geneOne = geneService.findByNCBIId( gene2GeneProteinAssociation.getFirstGene().getNcbiId() );
                 Gene geneTwo = geneService.findByNCBIId( gene2GeneProteinAssociation.getSecondGene().getNcbiId() );
 
-                if ( geneOne != null && geneTwo != null ) {
+                if ( geneOne == null ) {
+                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getFirstGene().getNcbiId()
+                            + " not in Gemma" );
+                    continue;
+                }
+                if ( geneTwo == null ) {
+                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getSecondGene().getNcbiId()
+                            + " not in Gemma" );
+                    continue;
+                }
 
-                    gene2GeneProteinAssociation.setFirstGene( geneOne );
-                    gene2GeneProteinAssociation.setSecondGene( geneTwo );
-                    persisterHelper.persist( gene2GeneProteinAssociation );
+                gene2GeneProteinAssociation.setFirstGene( geneOne );
+                gene2GeneProteinAssociation.setSecondGene( geneTwo );
+                persisterHelper.persist( gene2GeneProteinAssociation );
 
-                    if ( ++loadedGeneCount % 1000 == 0 ) {
-                        log.info( "Proceesed " + loadedGeneCount + " protein protein interactions. "
-                                + "Current queue has " + gene2GeneProteinAssociationQueue.size() + " items." );
-                    }
-
-                } else {
-                    log.debug( "Gene one " + geneOne + " or gene two not found in gemma " + geneTwo );
+                if ( ++loadedGeneCount % 1000 == 0 ) {
+                    log.info( "Proceesed " + loadedGeneCount + " protein protein interactions. " + "Current queue has "
+                            + gene2GeneProteinAssociationQueue.size() + " items." );
                 }
 
             } catch ( Exception e ) {

@@ -30,7 +30,7 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
-import ubic.gemma.loader.protein.biomart.model.BioMartEnsembleNcbi;
+import ubic.gemma.loader.protein.biomart.model.Ensembl2NcbiValueObject;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -76,7 +76,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest  {
       
         try{
             biomartEnsemblNcbiObjectGenerator.setBioMartFileName( taxonBiomartFile );
-            Map<String,BioMartEnsembleNcbi> map = biomartEnsemblNcbiObjectGenerator.generate( taxa );           
+            Map<String,Ensembl2NcbiValueObject> map = biomartEnsemblNcbiObjectGenerator.generate( taxa );           
           
             long counterEnsemblToManyGeneids =0;
             long counterEnsemblToOneGeneids =0;
@@ -85,7 +85,7 @@ public class BioMartEnsemblNcbiObjectGeneratorTest  {
             // awk -F'\t' 'length($3)>1' test.txt |  awk -F'\t' '{print $4}' | uniq |sort | wc -l -1  
             //there are 510 records which have one or more gene mapping
             assertEquals(510, map.keySet().size());
-            for(BioMartEnsembleNcbi biomart: map.values()){
+            for(Ensembl2NcbiValueObject biomart: map.values()){
                 //count how many have duplicate genes
                 if(biomart.getEntrezgenes().size()>1){
                     counterEnsemblToManyGeneids++;                   

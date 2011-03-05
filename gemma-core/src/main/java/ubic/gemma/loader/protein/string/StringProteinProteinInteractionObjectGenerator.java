@@ -34,9 +34,10 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * Handle fetching and parsing of string protein files. These string files can be processed either from local or remote
- * files. If the file is remote then the StringProteinProteinInteractionFileFetcher is called. The file path name of the
- * remote file can be provided by the user or the default used as configured in the properties file of the fetcher.
+ * Handle fetching and parsing of STRING protein interaction files. These STRING files can be processed either from
+ * local or remote files. If the file is remote then the StringProteinProteinInteractionFileFetcher is called. The file
+ * path name of the remote file can be provided by the user, or the default used as configured in the properties file of
+ * the fetcher.
  * 
  * @author ldonnison
  * @version $Id$
@@ -70,10 +71,9 @@ public class StringProteinProteinInteractionObjectGenerator {
     }
 
     /**
-     * Main method to call to generate StringProteinProteinInteraction objects. If the file is remote fetch it and
-     * unarchive it and then set the local file stringProteinInteractionFileLocal to the newly downloaded file.
+     * Main method to generate StringProteinProteinInteraction objects.
      * 
-     * @param validTaxa Taxon to generate StringProteinProteinInteraction from string (String has many taxon).
+     * @param validTaxa Taxon to generate StringProteinProteinInteraction from string (STRING has many taxon).
      * @return Collection of StringProteinProteinInteraction objects specific for the taxa that were provided, held in a
      *         may keyed on taxon.
      */
