@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.sf.ehcache.CacheManager;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -447,7 +448,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
      * @param desc the description of the text, its appended on to the URI
      */
     private void doRDF( Model model, Long eeId, String text, String desc ) {
-        if ( text.equals( "" ) ) return;
+        if ( StringUtils.isBlank( text ) ) return;
         String textToProcess = text;
         textToProcess = textToProcess.replaceAll( "Source GEO sample is GSM[0-9]+", "" );
         textToProcess = textToProcess.replaceAll( "Last updated [(]according to GEO[)].+[\\d]{4}", "" );
