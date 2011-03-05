@@ -105,7 +105,7 @@
 					ubic.gemma.tasks.analysis.expression.SvdTask
 				</value>
 				<value>
-					ubic.gemma.tasks.analysis.BatchInfoFetchTask
+					ubic.gemma.tasks.analysis.expression.BatchInfoFetchTask
 				</value>
 			</list>
 		</property>
