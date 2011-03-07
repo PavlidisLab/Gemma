@@ -41,6 +41,8 @@ public class PubMedXMLFetcher {
     protected static final Log log = LogFactory.getLog( PubMedXMLFetcher.class );
     private String uri;
 
+    private final static int MAX_TRIES = 2;
+
     public PubMedXMLFetcher() {
         String baseURL = ConfigUtils.getString( "entrez.efetch.baseurl" );
         String db = ConfigUtils.getString( "entrez.efetch.pubmed.db" );
@@ -48,30 +50,6 @@ public class PubMedXMLFetcher {
         String retmode = ConfigUtils.getString( "entrez.efetch.pubmed.retmode" );
         String rettype = ConfigUtils.getString( "entrez.efetch.pubmed.rettype" );
         uri = baseURL + "&" + db + "&" + retmode + "&" + rettype + "&" + idtag;
-    }
-
-    /**
-     * For an integer pubmed id
-     * 
-     * @param pubMedId
-     * @return BibliographicReference for the id given.
-     */
-    public BibliographicReference retrieveByHTTP( int pubMedId ) {
-        try {
-            URL toBeGotten = new URL( uri + pubMedId );
-            log.debug( "Fetching " + toBeGotten );
-            PubMedXMLParser pmxp = new PubMedXMLParser();
-            Collection<BibliographicReference> results = pmxp.parse( toBeGotten.openStream() );
-            if ( results == null || results.size() == 0 ) {
-                return null;
-            }
-            assert results.size() == 1;
-            return results.iterator().next();
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( e );
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     /**
@@ -90,5 +68,33 @@ public class PubMedXMLFetcher {
         log.debug( "Fetching " + toBeGotten );
         PubMedXMLParser pmxp = new PubMedXMLParser();
         return pmxp.parse( toBeGotten.openStream() );
+    }
+
+    /**
+     * For an integer pubmed id
+     * 
+     * @param pubMedId
+     * @return BibliographicReference for the id given.
+     */
+    public BibliographicReference retrieveByHTTP( int pubMedId ) {
+        Collection<BibliographicReference> results = null;
+        try {
+            for ( int i = 0; i < MAX_TRIES; i++ ) {
+                URL toBeGotten = new URL( uri + pubMedId );
+                log.debug( "Fetching " + toBeGotten );
+                PubMedXMLParser pmxp = new PubMedXMLParser();
+                results = pmxp.parse( toBeGotten.openStream() );
+                if ( results != null && results.size() > 0 ) break;
+            }
+            if ( results == null || results.size() == 0 ) {
+                return null;
+            }
+            assert results.size() == 1;
+            return results.iterator().next();
+        } catch ( MalformedURLException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
     }
 }
