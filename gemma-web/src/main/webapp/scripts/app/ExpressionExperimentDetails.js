@@ -858,15 +858,15 @@ Ext.onReady(function() {
  * @param {Object}
  *            bigImageUrl
  */
-var popupImage = function(url) {
+var popupImage = function(url, width, height) {
 	url = url + "&nocache=" + Math.floor(Math.random() * 1000);
 	var b = new Ext.Window({
 				modal : true,
 				stateful : false,
 				resizable : true,
-				autoHeight : false,
-				width : 200,
-				x : 50,
+				autoHeight : height, // or false.
+				width : width || 200,
+			//	x : 50,
 				padding : 10,
 				html : '<img src=\"' + url + '"\" />'
 			});

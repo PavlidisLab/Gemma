@@ -99,4 +99,14 @@ public class ExpressionExperimentQCUtils {
         return false;
     }
 
+    /**
+     * How many factors (including batches) will be displayed in the PCA results?
+     * 
+     * @param expressionExperiment
+     * @return
+     */
+    public static int numFactors( ExpressionExperiment expressionExperiment ) {
+        return 3; // FIXME
+    }
+
 }

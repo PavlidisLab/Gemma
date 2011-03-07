@@ -70,7 +70,8 @@
 		hasCorrDist="${hasCorrDist}"
 		hasCorrMat="${hasCorrMat}" hasPCA="${hasPCA}"
 		hasNodeDegreeDist="${hasNodeDegreeDist}"
-		hasPvalueDist="${hasPvalueDist}" />
+		hasPvalueDist="${hasPvalueDist}"
+		numFactors="${numFactors}" />
 
 </div>
 

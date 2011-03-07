@@ -290,6 +290,11 @@
 			<name>hasNodeDegreeDist</name>
 			<rtexprvalue>true</rtexprvalue>
 		</attribute>
+		<attribute>
+			<description>default=3</description>
+			<name>numFactors</name>
+			<rtexprvalue>true</rtexprvalue>
+		</attribute>
 	</tag>
 	<tag>
 		<name>databaseEntry</name>

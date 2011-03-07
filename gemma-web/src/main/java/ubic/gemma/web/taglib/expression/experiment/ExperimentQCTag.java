@@ -29,6 +29,7 @@ import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentQCCon
  */
 public class ExperimentQCTag extends TagSupport {
 
+    private static final int NUM_PCS_TO_DISPLAY = 3;
     private static final long serialVersionUID = -466958848014180520L;
     Long eeid;
     Size size = Size.small;
@@ -42,6 +43,8 @@ public class ExperimentQCTag extends TagSupport {
     private boolean hasPvalueDist = false;
 
     private boolean hasNodeDegreeDist = false;
+
+    private int numFactors = 2;
 
     enum Size {
         small, large
@@ -89,6 +92,15 @@ public class ExperimentQCTag extends TagSupport {
     }
 
     /**
+     * How many factors (including batch etc) are available for PCA display?
+     * 
+     * @param value
+     */
+    public void setNumFactors( int value ) {
+        this.numFactors = value;
+    }
+
+    /**
      * Size of the image {small, large} required="false" rtexprvalue="true"
      * 
      * @param size
@@ -132,12 +144,18 @@ public class ExperimentQCTag extends TagSupport {
             /*
              * popupImage is defined in ExpressinExperimentDetails.js
              */
+            int width = 400;
+            int height = 400;
             String bigImageUrl = "visualizeCorrMat.html?id=" + this.eeid + "&size=4&showLabels=1";
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><a style='cursor:pointer' "
                             + "onClick=\"popupImage('"
                             + bigImageUrl
-                            + "')"
+                            + "',"
+                            + width
+                            + ","
+                            + height
+                            + ")"
                             + ";return 1\"; "
                             + "title=\"Assay correlations (bright=higher); click for larger version\" >"
                             + "<img src=\"visualizeCorrMat.html?id="
@@ -161,14 +179,14 @@ public class ExperimentQCTag extends TagSupport {
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'><img title='PCA Scree' src=\"pcaScree.html?id="
                             + this.eeid + "\" />" );
             buf.append( "<br/>" );
-            for ( int i = 0; i < 3; i++ ) {
+            for ( int i = 0; i < NUM_PCS_TO_DISPLAY; i++ ) {
                 String linkText = "<span style='cursor:pointer' onClick=\"Ext.getCmp('ee-details-panel').visualizePcaHandler("
                         + this.eeid
                         + ","
                         + ( i + 1 )
                         + ","
                         + 100
-                        + ")\" ext:qtip=\"Click to visualize top loaded probes for component "
+                        + ")\" title=\"Click to visualize top loaded probes for component "
                         + ( i + 1 )
                         + "\"><img src=\"/Gemma/images/icons/chart_curve.png\"></span>";
                 buf.append( linkText + "&nbsp;" );
@@ -179,11 +197,18 @@ public class ExperimentQCTag extends TagSupport {
              */
             String detailsUrl = "detailedFactorAnalysis.html?id=" + this.eeid;
 
+            int width = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * numFactors;
+            int height = ExpressionExperimentQCController.DEFAULT_QC_IMAGE_SIZE_PX * NUM_PCS_TO_DISPLAY;
+
             buf
                     .append( "<td style=\"margin:3px;padding:2px;background-color:#EEEEEE\" valign='top'>"
                             + "<a style='cursor:pointer' onClick=\"popupImage('"
                             + detailsUrl
-                            + "');return 1\" >"
+                            + "',"
+                            + width
+                            + ","
+                            + height
+                            + ");return 1\" >"
                             + "<img title='Correlations of PCs with experimental factors, click for details' src=\"pcaFactors.html?id="
                             + this.eeid + "\" /></a></td>" );
 

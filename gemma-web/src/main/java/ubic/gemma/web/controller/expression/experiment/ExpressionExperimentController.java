@@ -1077,6 +1077,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         mav.addObject( "hasCorrMat", ExpressionExperimentQCUtils.hasCorrMatFile( expressionExperiment ) );
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment ) );
+        mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) ); // this is not
+                                                                                                       // fully
+                                                                                                       // implemented
         mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
     }
 
