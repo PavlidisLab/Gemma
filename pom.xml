@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
@@ -24,7 +25,7 @@
 		<connection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</connection>
 		<developerConnection>scm:cvs:ext:@katz.pavlab.chibi.ubc.ca:/space/cvs:Gemma</developerConnection>
 		<url>http://www.chibi.ubc.ca/faculty/pavlidis/fisheye/browse/pavlab/Gemma</url>
-  </scm>
+	</scm>
 	<issueManagement>
 		<system>Bugzilla</system>
 		<url>
@@ -62,24 +63,37 @@
 			<organization>University of British Columbia</organization>
 		</developer>
 		<developer>
-			<name>Kiran Keshav</name>
-			<id>keshav</id>
-			<email>kirankeshav@ginkgolabs.com</email>
-		</developer>
-		<developer>
-			<name>Kelsey Hamer</name>
-			<id>kelsey</id>
-			<email>klc@chibi.ubc.ca</email>
+			<name>Anton Zoubarev</name>
+			<id>azoubarev</id>
 			<organization>University of British Columbia</organization>
 		</developer>
 		<developer>
-			<name>Louise Donnison</name>
-			<id>ldonnison</id>
-			<email>ldonnison@chibi.ubc.ca</email>
+			<name>Thea Van Rossum</name>
+			<id>thea</id>
+			<organization>University of British Columbia</organization>
+		</developer>
+		<developer>
+			<name>Cam MacDonald</name>
+			<id>cam</id>
 			<organization>University of British Columbia</organization>
 		</developer>
 	</developers>
 	<contributors>
+		<contributor>
+			<name>Kiran Keshav</name>
+		</contributor>
+		<contributor>
+			<name>Kelsey Hamer</name>
+		</contributor>
+		<contributor>
+			<name>Louise Donnison</name>
+		</contributor>
+		<contributor>
+			<name>Leon French</name>
+		</contributor>
+		<contributor>
+			<name>Vaneet Lotay</name>
+		</contributor>
 		<contributor>
 			<name>Joseph Santos</name>
 		</contributor>
@@ -105,6 +119,9 @@
 			<name>Gavin Ha</name>
 		</contributor>
 		<contributor>
+			<name>Adam Hall</name>
+		</contributor>
+		<contributor>
 			<name>Raymond Lim</name>
 		</contributor>
 		<contributor>
@@ -121,10 +138,10 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>3.3.2.GA</version> 
+			<version>3.3.2.GA</version>
 		</dependency>
 		<dependency>
-		<!-- required by hibernate, explicitly import so we get it at runtime. -->
+			<!-- required by hibernate, explicitly import so we get it at runtime. -->
 			<groupId>javassist</groupId>
 			<artifactId>javassist</artifactId>
 			<version>3.4.GA</version>
@@ -185,7 +202,7 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-aop</artifactId>
 			<version>3.0.1.RELEASE</version>
-			<type>jar</type> 
+			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -208,7 +225,7 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-acl</artifactId>
 			<version>3.0.2.RELEASE</version>
-			<type>jar</type> 
+			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -228,7 +245,7 @@
 			<type>jar</type>
 			<scope>run</scope>
 		</dependency>
-		 <dependency>
+		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.3</version>
@@ -277,13 +294,13 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
-			<version>1.5.8</version> 
+			<version>1.5.8</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.5.8</version> 
+			<version>1.5.8</version>
 			<type>jar</type>
 		</dependency>
 		<dependency>
@@ -314,14 +331,14 @@
 						<reports>
 							<report>dependencies</report>
 							<report>dependency-convergence</report>
-								<report>index</report>
-								<report>project-team</report>
-								<report>cim</report>
-								<report>issue-tracking</report>
-								<report>license</report>
-								<report>scm</report>
-								<report>summary</report>
-								<report>mailing-list</report> 
+							<report>index</report>
+							<report>project-team</report>
+							<report>cim</report>
+							<report>issue-tracking</report>
+							<report>license</report>
+							<report>scm</report>
+							<report>summary</report>
+							<report>mailing-list</report>
 						</reports>
 					</reportSet>
 				</reportSets>
@@ -417,7 +434,7 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-release-plugin</artifactId> 
+				<artifactId>maven-release-plugin</artifactId>
 				<!--<version>2.0-beta-5</version>  2.0-beta-8 hangs on cvs update -->
 				<configuration>
 					<allowTimestampedSnapshots>
@@ -442,7 +459,7 @@
 			</snapshots>
 			<releases>
 				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
+				<updatePolicy>never</updatePolicy>
 			</releases>
 		</repository>
 		<repository>
@@ -458,41 +475,30 @@
 			</snapshots>
 			<releases>
 				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
+				<updatePolicy>never</updatePolicy>
 			</releases>
 		</repository>
+
 		<repository>
 			<id>central</id>
 			<name>central</name>
 			<url>http://repo1.maven.org/maven2/</url>
 		</repository>
 		<repository>
-    		<id>spring-milestone</id>	
-    		<name>Spring Portfolio Milestone Repository</name>
-    		<url>http://s3.amazonaws.com/maven.springframework.org/milestone</url>
+			<id>spring</id>
+			<name>Spring Portfolio Repository</name>
+			<url>http://s3.amazonaws.com/maven.springframework.org/release</url>
 		</repository>
 		<repository>
-    		<id>spring</id>	
-    		<name>Spring Portfolio Repository</name>
-    		<url>http://s3.amazonaws.com/maven.springframework.org/release</url>
+			<id>jboss</id>
+			<url>https://repository.jboss.org/nexus/content/groups/public/</url>
 		</repository>
-		<repository>
-    		<id>spring-snapshot</id>	
-    		<name>Spring snapshot Repository</name>
-    		<url>http://maven.springframework.org/snapshot</url>
-    		<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-			</snapshots>
-		</repository>
-		 <repository>
-             <id>jboss</id>
-             <url>http://repository.jboss.com/maven2</url>
-         </repository>
-         <repository>
-         	<id>sonatype-sourceforge</id>
-			<url>http://oss.sonatype.org/content/repositories/sourceforge-releases</url>
-         </repository>
+
+		<!--
+			<repository> <id>sonatype-sourceforge</id>
+			<url>http://oss.sonatype.org/content/repositories/sourceforge-releases</url> </repository>
+		-->
+
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
@@ -587,7 +593,8 @@
 			</build>
 		</profile>
 		<profile>
-		<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
+			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI)
+-->
 			<id>local-deploy</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
@@ -600,7 +607,7 @@
 					<id>localDeploy</id>
 					<name>localDeploy</name>
 					<url>file:///space/gemmaData/gemma-devsite</url>
-				</site> 
+				</site>
 				<repository>
 					<id>repo</id>
 					<name>Pavlab</name>

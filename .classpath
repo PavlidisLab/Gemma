@@ -223,8 +223,8 @@
 			<attribute name="javadoc_location" value="http://lucene.apache.org/java/2_3_2/api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.3/jena-2.6.3.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/jena/2.6.3/jena-2.6.3-sources.jar"/>
-	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.7.0/arq-2.7.0.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/arq/2.7.0/arq-2.7.0-sources.jar">
+	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/jena/2.6.4/jena-2.6.4.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/jena/2.6.3/jena-2.6.3-sources.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/hp/hpl/jena/arq/2.8.7/arq-2.8.7.jar" sourcepath="/M2_REPO/com/hp/hpl/jena/arq/2.7.0/arq-2.7.0-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.openjena.org/ARQ/javadoc/"/>
 		</attributes>
@@ -318,7 +318,7 @@
 	<classpathentry kind="var" path="M2_REPO/net/tanesha/recaptcha4j/recaptcha4j/0.0.7/recaptcha4j-0.0.7.jar" sourcepath="/JAR_SRC/recaptcha4j-0.0.7/src/main/java"/>
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-api/1.5.8/slf4j-api-1.5.8.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/slf4j/slf4j-log4j12/1.5.8/slf4j-log4j12-1.5.8.jar"/>
-	<classpathentry kind="var" path="M2_REPO/opensymphony/quartz/1.6.3/quartz-1.6.3.jar">
+	<classpathentry kind="var" path="M2_REPO/org/opensymphony/quartz/quartz/1.6.5/quartz-1.6.5.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.opensymphony.com/quartz/api/"/>
 		</attributes>
