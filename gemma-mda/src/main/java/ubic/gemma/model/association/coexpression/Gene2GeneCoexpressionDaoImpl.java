@@ -110,8 +110,9 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
     private static Log log = LogFactory.getLog( Gene2GeneCoexpressionDaoImpl.class );
 
     /**
-     * Clear the cache of gene2gene objects. This should be run when gene2gene is updated. FIXME externalize this and
-     * set it up so it can be done in a taxon-specific way?
+     * Clear the cache of gene2gene objects. This should be run when gene2gene is updated.
+     * <p>
+     * FIXME externalize this and set it up so it can be done in a taxon-specific way?
      */
     protected void clearCache() {
         this.getGene2GeneCoexpressionCache().getCache().removeAll();

@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -65,10 +65,10 @@ public class ArrayDesignMergeService {
             + "(\\d )+$";
     @Autowired
     AuditTrailService auditTrailService;
-    
+
     @Autowired
     ArrayDesignService arrayDesignService;
-    
+
     @Autowired
     PersisterHelper persisterHelper;
 
@@ -154,7 +154,7 @@ public class ArrayDesignMergeService {
      * @param arrayDesign
      */
     private void audit( ArrayDesign arrayDesign, String note ) {
-        AuditEventType eventType = ArrayDesignMergeEvent.Factory.newInstance();
+        AuditEventType eventType = new ArrayDesignMergeEventImpl();
         auditTrailService.addUpdateEvent( arrayDesign, eventType, note );
     }
 

@@ -28,8 +28,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
- * TODO Document Me
- * 
  * @version $Id$
  */
 public class GemmaEndpointTest extends TestCase {

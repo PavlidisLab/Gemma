@@ -31,7 +31,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.auditAndSecurity.ContactService;
-import ubic.gemma.model.common.auditAndSecurity.Organization;
 import ubic.gemma.model.common.auditAndSecurity.Person;
 import ubic.gemma.model.common.auditAndSecurity.PersonService;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -315,6 +314,8 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( !this.isTransient( entity ) ) return entity;
 
         for ( AuditEvent event : entity.getEvents() ) {
+            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
+                                           // any more
             event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
         }
 
@@ -436,45 +437,6 @@ abstract public class CommonPersister extends AbstractPersister {
         if ( unit == null ) return null;
         if ( !isTransient( unit ) ) return unit;
         return this.unitService.findOrCreate( unit );
-    }
-
-    //
-    // /**
-    // * @param user
-    // * @return
-    // */
-    // protected User persistUser( User user ) {
-    // if ( user == null ) return null;
-    //
-    // User existingUser = this.userService.findByUserName( user.getUserName() );
-    //
-    // if ( existingUser == null ) {
-    // log.warn( "No such user '" + user.getUserName() + "' exists" );
-    // for ( Organization affiliation : user.getAffiliations() ) {
-    // affiliation = persistOrganization( affiliation );
-    // }
-    // try {
-    // return userService.create( user );
-    // } catch ( Exception e ) {
-    // throw new RuntimeException( e );
-    // }
-    // }
-    //
-    // for ( Organization affiliation : existingUser.getAffiliations() ) {
-    // affiliation = persistOrganization( affiliation );
-    // }
-    // return existingUser;
-    // }
-
-    /**
-     * @param affiliation
-     * @return
-     */
-    private Organization persistOrganization( Organization affiliation ) {
-        if ( affiliation == null ) return null;
-        if ( !isTransient( affiliation ) ) return affiliation;
-        affiliation.setParent( persistOrganization( affiliation.getParent() ) );
-        return ( Organization ) persistContact( affiliation );
     }
 
 }

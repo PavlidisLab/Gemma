@@ -410,9 +410,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * 
      * @param id
      * @return a more informative description than the regular description 1st 120 characters of ee.description +
-     *         Experimental Design information returned string contains HTML tags. TODO: Would be more generic if passed
-     *         back a DescriptionValueObject that contains all the info necessary to reconstruct the HTML on the client
-     *         side Currently only used by ExpressionExperimentGrid.js (row expander)
+     *         Experimental Design information returned string contains HTML tags.
+     *         <p>
+     *         TODO: Would be more generic if passed back a DescriptionValueObject that contains all the info necessary
+     *         to reconstruct the HTML on the client side Currently only used by ExpressionExperimentGrid.js (row
+     *         expander)
      */
     public String getDescription( Long id ) {
         ExpressionExperiment ee = expressionExperimentService.load( id );

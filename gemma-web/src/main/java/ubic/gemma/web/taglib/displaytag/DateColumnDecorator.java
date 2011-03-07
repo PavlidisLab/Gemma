@@ -20,14 +20,19 @@ package ubic.gemma.web.taglib.displaytag;
 
 import java.util.Date;
 
+import javax.servlet.jsp.PageContext;
+
 import org.apache.commons.lang.time.FastDateFormat;
-import org.displaytag.decorator.ColumnDecorator;
+import org.displaytag.decorator.DisplaytagColumnDecorator;
+import org.displaytag.properties.MediaTypeEnum;
 
 /**
+ * FIXME I am not sure this is used anywhere.
+ * 
  * @author pavlidis
  * @version $Id$
  */
-public class DateColumnDecorator implements ColumnDecorator {
+public class DateColumnDecorator implements DisplaytagColumnDecorator {
 
     private FastDateFormat dateFormat = FastDateFormat.getInstance( "yyyy" );
 
@@ -36,7 +41,7 @@ public class DateColumnDecorator implements ColumnDecorator {
      * 
      * @see org.displaytag.decorator.ColumnDecorator#decorate(java.lang.Object)
      */
-    public String decorate( Object columnValue ) {
+    public Object decorate( Object columnValue, PageContext pc, MediaTypeEnum mte ) {
         assert columnValue instanceof Date;
         Date date = ( Date ) columnValue;
         return this.dateFormat.format( date );

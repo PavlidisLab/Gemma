@@ -30,6 +30,7 @@ import org.xml.sax.SAXException;
  * @version $Id$
  * @deprecated
  */
+@Deprecated
 public class ExptMetaTest extends TestCase {
 
     InputStream testStream;

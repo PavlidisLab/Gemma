@@ -231,7 +231,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         List<AuditEvent> events = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue;
+            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
+                                           // any more
             if ( eventClass == null
                     || ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) ) {
                 events.add( event );
@@ -276,6 +277,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         }
 
         for ( AuditEvent currentEvent : allEvents ) {
+            if ( currentEvent == null ) continue;// legacy of ordered-list which could end up with gaps; should not be
+                                                 // needed any more
 
             if ( currentEvent.getEventType() == null || currentEvent.getEventType().getClass().equals( eventClass ) ) {
                 continue;

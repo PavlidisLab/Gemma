@@ -45,7 +45,7 @@ public class ExpressionExperimentAnnotatorTest extends BaseSpringContextTest {
     OntologyService ontologyService;
 
     /*
-     * For this test to work, at least birnlex must be loaded.
+     * For this test to work, at least birnlex must be loaded, and MMTx must be available (it will be skipped if not)
      */
     @Before
     public void setup() throws Exception {

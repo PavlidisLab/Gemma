@@ -26,9 +26,9 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceUpdateEventImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -52,17 +52,17 @@ public class ArrayDesignReportServiceTest extends BaseSpringContextTest {
         if ( !persisted ) {
             ad = this.getTestPersistentArrayDesign( 5, true, false, false ); // not read only.
 
-            ads.addUpdateEvent( ad, ArrayDesignSequenceUpdateEvent.Factory.newInstance(), "sequences" );
+            ads.addUpdateEvent( ad, new ArrayDesignSequenceUpdateEventImpl(), "sequences" );
 
-            ads.addUpdateEvent( ad, ArrayDesignSequenceAnalysisEvent.Factory.newInstance(), "alignment" );
+            ads.addUpdateEvent( ad, new ArrayDesignSequenceAnalysisEventImpl(), "alignment" );
 
-            ads.addUpdateEvent( ad, ArrayDesignGeneMappingEvent.Factory.newInstance(), "mapping" );
+            ads.addUpdateEvent( ad, new ArrayDesignGeneMappingEventImpl(), "mapping" );
 
             Thread.sleep( 100 );
 
-            ads.addUpdateEvent( ad, ArrayDesignSequenceAnalysisEvent.Factory.newInstance(), "alignment 2" );
+            ads.addUpdateEvent( ad, new ArrayDesignSequenceAnalysisEventImpl(), "alignment 2" );
 
-            ads.addUpdateEvent( ad, ArrayDesignGeneMappingEvent.Factory.newInstance(), "mapping 2" );
+            ads.addUpdateEvent( ad, new ArrayDesignGeneMappingEventImpl(), "mapping 2" );
             Thread.sleep( 100 );
             persisted = true;
         }

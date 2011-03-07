@@ -44,8 +44,9 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
 
     /**
      * This overrides value from AbstractMatrixRowPairAnalysis. If fewer than this number values are available, the
-     * correlation is rejected. This helps keep the correlation distribution reasonable. (FIXME we might want to set
-     * this even higher!)
+     * correlation is rejected. This helps keep the correlation distribution reasonable.
+     * <p>
+     * FIXME we might want to set this even higher!
      */
     @SuppressWarnings("hiding")
     protected int minNumUsed = 8;
@@ -82,6 +83,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#getMetricType()
      */
     @Override
@@ -103,6 +105,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.linkAnalysis.MatrixRowPairAnalysis#correctedPvalue(int, int, double, int)
      */
     @Override

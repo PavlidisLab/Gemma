@@ -81,7 +81,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
 
     /**
-     * Sort a map's values. TODO: put this somewhere where it might be used by others.
+     * Sort a map's values.
+     * <p>
+     * TODO: put this somewhere where it might be used by others.
+     * <p>
+     * FIXME could use org.apache.commons.collections.bidimap.TreeBidiMap?
      * <p>
      * Based on a concept at www.xinotes.org/notes/note/306
      * 

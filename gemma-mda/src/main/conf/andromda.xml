@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 	<!--  $Id$ -->
-<andromda>
+<andromda xmlns="http://andromda.org/core/configuration">
 	<properties>
 		<property name="modelValidation">${modelValidation}</property>
 		<property name="cartridgeFilter">${filter}</property>
@@ -12,19 +12,20 @@
 		<port>4445</port>
 	</server>
 	<repositories>
-		<repository name="netBeansMDR">
+		<repository name="emf-uml2">
 			<models>
-				<model>
-					<uri>jar:file:${project.basedir}/src/main/uml/gemma-om.xml.zip!/gemma-om.xml
+				<model type="emf-uml2">
+					<uri>${project.basedir}/src/main/uml/gemma-om.uml2
 					</uri>
 					<moduleSearchLocations>
-						<location patterns="**/*.xml.zip, **/*.uml14">
-							${settings.localRepository}/org/andromda/profiles
+						<location patterns="**/*.uml">
+							${project.basedir}/src/main/uml/
 						</location>
 					</moduleSearchLocations>
 				</model>
 			</models>
 		</repository>
+
 	</repositories>
 	<mappingsSearchLocations>
 		<location patterns="*Mappings.xml">${project.basedir}/src/main/conf/</location>

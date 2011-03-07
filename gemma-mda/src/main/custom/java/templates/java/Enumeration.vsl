@@ -78,6 +78,7 @@ $literal.getDocumentation("     * ")
     /**
      * @see java.lang.Object#toString()
      */
+    @Override
     public String toString()
     {
         return java.lang.String.valueOf(value);

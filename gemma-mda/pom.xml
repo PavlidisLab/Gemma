@@ -61,11 +61,10 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
-				<groupId>org.andromda.maven.plugins</groupId>
-				<artifactId>andromda-multi-source-plugin</artifactId>
-				<version>3.3</version>
+				 <groupId>org.codehaus.mojo</groupId>
+        		<artifactId>build-helper-maven-plugin</artifactId>
+        		<version>1.5</version>
 				<executions>
 					<execution>
 						<phase>compile</phase>
@@ -73,9 +72,9 @@
 							<goal>add-source</goal>
 						</goals>
 						<configuration>
-							<sourceDirectories>
-								<directory>target/generated-sources/java</directory>
-							</sourceDirectories>
+							<sources>
+								<source>target/generated-sources/java</source>
+							</sources>
 						</configuration>
 					</execution>
 				</executions>
@@ -98,63 +97,63 @@
 				</executions>
 				<dependencies>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-datatype</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-webservice</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-service</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-process</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-meta</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-xml</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-persistence</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
-						<groupId>org.andromda.profiles.uml14</groupId>
+						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-presentation</artifactId>
 						<version>3.3</version>
 						<scope>provided</scope>

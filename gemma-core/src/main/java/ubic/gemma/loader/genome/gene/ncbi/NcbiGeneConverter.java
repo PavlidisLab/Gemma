@@ -41,6 +41,7 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.SequenceBinUtils;
 
 /**
@@ -53,11 +54,17 @@ import ubic.gemma.util.SequenceBinUtils;
  */
 public class NcbiGeneConverter implements Converter<Object, Object> {
 
+    // configured in project.properties, override in Gemma.properties
+    private static final String RETAIN_PROTEIN_INFO_PARAM = "gemma.store.ncbi.proteininfo";
+
     private static Log log = LogFactory.getLog( NcbiGeneConverter.class.getName() );
     AtomicBoolean producerDone = new AtomicBoolean( false );
     AtomicBoolean sourceDone = new AtomicBoolean( false );
     private static ExternalDatabase genBank;
     private static ExternalDatabase ensembl;
+
+    private static boolean retainProteinInformation = ConfigUtils.getBoolean( RETAIN_PROTEIN_INFO_PARAM, false );
+
     static {
         genBank = ExternalDatabase.Factory.newInstance();
         genBank.setName( "Genbank" );
@@ -161,7 +168,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     public Collection<GeneProduct> convert( NCBIGene2Accession acc, Gene gene ) {
         Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
         // initialize up to two Gene Products
-        // one for RNA, one for Protein
+        // one for RNA, one for Protein (if retainProteinInformation = true)
 
         // RNA section
         if ( acc.getRnaNucleotideAccession() != null ) {
@@ -204,7 +211,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
         }
 
         // Protein section
-        if ( acc.getProteinAccession() != null ) {
+        if ( retainProteinInformation && acc.getProteinAccession() != null ) {
             GeneProduct protein = GeneProduct.Factory.newInstance();
 
             // set available fields
@@ -290,6 +297,12 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     public void convert( final BlockingQueue<NcbiGeneData> geneInfoQueue, final BlockingQueue<Gene> geneQueue ) {
         // start up thread to convert a member of geneInfoQueue to a gene/geneproduct/databaseentry
         // then push the gene onto the geneQueue for loading
+
+        if ( !retainProteinInformation ) {
+            log.info( "Note that protein information will be ignored; set " + RETAIN_PROTEIN_INFO_PARAM
+                    + " to true to change" );
+        }
+
         Thread convertThread = new Thread( new Runnable() {
             @SuppressWarnings("synthetic-access")
             public void run() {

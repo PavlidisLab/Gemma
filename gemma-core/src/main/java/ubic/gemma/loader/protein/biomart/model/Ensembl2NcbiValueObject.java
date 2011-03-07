@@ -18,8 +18,7 @@
  */
 package ubic.gemma.loader.protein.biomart.model;
 
-import java.io.Serializable;
-import java.util.ArrayList;
+import java.io.Serializable; 
 import java.util.Collection;
 import java.util.HashSet;
 

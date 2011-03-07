@@ -39,6 +39,7 @@ import ubic.gemma.web.controller.visualization.ExpressionExperimentVisualization
  * @version $Id$
  * @deprecated
  */
+@Deprecated
 public class ExpressionExperimentVisualizationControllerTest extends BaseSpringWebTest {
 
     @Autowired

@@ -49,7 +49,7 @@ public class BibliographicReferenceServiceImpl extends
      */
     @Override
     protected void handleAddPDF( LocalFile pdfFile, BibliographicReference bibliographicReference ) throws Exception {
-        bibliographicReference.setFullTextPDF( pdfFile );
+        bibliographicReference.setFullTextPdf( pdfFile );
         this.getBibliographicReferenceDao().update( bibliographicReference );
 
     }

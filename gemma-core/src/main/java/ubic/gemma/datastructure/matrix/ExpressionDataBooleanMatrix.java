@@ -204,7 +204,7 @@ public class ExpressionDataBooleanMatrix extends BaseExpressionDataMatrix<Boolea
      * 
      * @see ubic.gemma.datastructure.matrix.ExpressionDataMatrix#get(java.util.List, java.util.List)
      */
-    public Boolean[][] get( List designElements, List bioAssays ) {
+    public Boolean[][] get( List<CompositeSequence> designElements, List<BioAssay> bioAssays ) {
         // TODO Implement me
         throw new UnsupportedOperationException();
     }

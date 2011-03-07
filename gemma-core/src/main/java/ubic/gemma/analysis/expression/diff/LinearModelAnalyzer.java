@@ -431,7 +431,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
 
             LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
-            overallPs.add( lm.getP() );
+            overallPs.add( lm.getP() ); // FIXME this isn't working for t-tests.
         }
         // qvalues for overall p
         // double[] qValues = super.getQValues( overallPs.toArray( new Double[] {} ) );
@@ -827,8 +827,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 baselineGroup = baselineConditions.get( factorsUsed.iterator().next() );
             }
 
-            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( baselineGroup,
-                    expressionAnalysis, resultLists.get( fName ), null, factorsUsed );
+            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( factorsUsed,
+                    baselineGroup, expressionAnalysis, resultLists.get( fName ), null /* hit list sizes */);
             resultSets.add( resultSet );
 
         }

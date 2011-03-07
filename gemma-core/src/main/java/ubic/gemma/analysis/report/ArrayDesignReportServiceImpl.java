@@ -499,7 +499,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         List<AuditEvent> events = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : ad.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue;
+            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
             if ( event.getEventType() != null && eventType.isAssignableFrom( event.getEventType().getClass() ) ) {
                 events.add( event );
             }

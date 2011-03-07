@@ -205,6 +205,8 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 Hibernate.initialize( auditable.getAuditTrail() );
                 Hibernate.initialize( auditable.getAuditTrail().getEvents() );
                 for ( AuditEvent ae : auditable.getAuditTrail().getEvents() ) {
+                    if ( ae == null ) continue;
+                    // legacy of ordered-list which could end up with gaps; should not be needed any more
                     thaw( ae );
                 }
                 return null;

@@ -28,6 +28,7 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  * @deprecated
  */
+@Deprecated
 public abstract class SmdFetcher extends FtpFetcher {
 
     /*

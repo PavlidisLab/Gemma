@@ -107,17 +107,17 @@ public class BibliographicReferenceTag extends TagSupport {
                 buf.append( "(No abstract available)" );
             }
 
-            if ( bibliographicReference.getFullTextPDF() != null ) {
+            if ( bibliographicReference.getFullTextPdf() != null ) {
 
                 String baseUrl = ConfigUtils.getString( "local.userfile.baseurl" );
                 String basePath = ConfigUtils.getString( "local.userfile.basepath" );
-                String localUriPath = bibliographicReference.getFullTextPDF().getLocalURL().toString();
+                String localUriPath = bibliographicReference.getFullTextPdf().getLocalURL().toString();
                 String relativeUrl = StringUtils.remove( localUriPath, "file:/" + basePath );
                 String absoluteUrl = baseUrl + relativeUrl;
 
                 buf.append( "</td></tr><tr><td valign=\"top\"><b>PDF</B></td><td>&nbsp;</td><td valign=\"top\">" );
                 buf.append( "<a href=\"" + absoluteUrl + "\">" + absoluteUrl + "</a>" );
-                buf.append( "&nbsp;(" + bibliographicReference.getFullTextPDF().getSize() + " bytes)" );
+                buf.append( "&nbsp;(" + bibliographicReference.getFullTextPdf().getSize() + " bytes)" );
             }
 
             if ( bibliographicReference.getKeywords().size() > 0 ) {

@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
@@ -269,9 +270,8 @@ public class SVDServiceImpl implements SVDService {
 
         Map<Long, Date> bioMaterialDates = new HashMap<Long, Date>();
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
-        Map<ExperimentalFactor, Boolean> isContinuous = new HashMap<ExperimentalFactor, Boolean>();
 
-        prepareForFactorComparisons( svo, bioAssays, bioMaterialDates, bioMaterialFactorMap, isContinuous );
+        prepareForFactorComparisons( svo, bioAssays, bioMaterialDates, bioMaterialFactorMap );
 
         if ( bioMaterialDates.isEmpty() && bioMaterialFactorMap.isEmpty() ) {
             log.warn( "No factor or date information to compare to the eigengenes" );
@@ -293,7 +293,7 @@ public class SVDServiceImpl implements SVDService {
 
         for ( int componentNumber = 0; componentNumber < Math.min( svo.getvMatrix().columns(), MAX_EIGEN_GENES_TO_TEST ); componentNumber++ ) {
             analyzeComponent( svo, componentNumber, svo.getvMatrix(), bioMaterialDates, bioMaterialFactorMap,
-                    isContinuous, svdBioMaterials );
+                    svdBioMaterials );
         }
 
         // saveValueObject( svo );
@@ -310,12 +310,11 @@ public class SVDServiceImpl implements SVDService {
      * @param bioMaterialDates
      * @param bioMaterialFactorMap Map of factors to biomaterials to the value we're going to use. Even for
      *        non-continuous factors the value is a double.
-     * @param isContinuous
      * @param svdBioMaterials
      */
     private void analyzeComponent( SVDValueObject svo, int componentNumber, DoubleMatrix<Integer, Integer> vMatrix,
             Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
-            Map<ExperimentalFactor, Boolean> isContinuous, Long[] svdBioMaterials ) {
+            Long[] svdBioMaterials ) {
         DoubleArrayList eigenGene = new DoubleArrayList( vMatrix.getColumn( componentNumber ) );
         // since we use rank correlation/anova, we just use the casted ids (two-groups) or dates as the covariate
 
@@ -388,7 +387,7 @@ public class SVDServiceImpl implements SVDService {
                 continue;
             }
 
-            if ( isContinuous.get( ef ) ) {
+            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
                 double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                 svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
             } else {
@@ -428,7 +427,7 @@ public class SVDServiceImpl implements SVDService {
                     double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                     double corrPvalue = CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing
                             .size() );
-
+                    assert Math.abs( factorCorrelation ) < 1.0 + 1e-2; // sanity.
                     /*
                      * Avoid storing a pvalue, as it's hard to compare. If the regular linear correlation is strong,
                      * then we should just use that -- basically, it means the order we have the groups happens to be a
@@ -442,7 +441,6 @@ public class SVDServiceImpl implements SVDService {
                                 .size() );
                         svo.setPCFactorCorrelation( componentNumber, ef, approxCorr );
 
-                        // svo.setPCFactorPvalue( componentNumber, ef, kwpval );
                     }
                 }
 
@@ -474,11 +472,9 @@ public class SVDServiceImpl implements SVDService {
      * @param bioAssays
      * @param bioMaterialDates
      * @param bioMaterialFactorMap
-     * @param isContinuous
      */
     private void prepareForFactorComparisons( SVDValueObject svo, Collection<BioAssay> bioAssays,
-            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
-            Map<ExperimentalFactor, Boolean> isContinuous ) {
+            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
         /*
          * Note that dates or batch information can be missing for some bioassays.
          */
@@ -491,8 +487,6 @@ public class SVDServiceImpl implements SVDService {
                 for ( FactorValue fv : bm.getFactorValues() ) {
 
                     ExperimentalFactor experimentalFactor = fv.getExperimentalFactor();
-
-                    isContinuous.put( experimentalFactor, isContinuous( experimentalFactor ) );
 
                     if ( !bioMaterialFactorMap.containsKey( experimentalFactor ) ) {
                         bioMaterialFactorMap.put( experimentalFactor, new HashMap<Long, Double>() );
@@ -512,9 +506,6 @@ public class SVDServiceImpl implements SVDService {
                          * This is a hack. We're storing the ID but as a double.
                          */
                         valueToStore = fv.getId().doubleValue();
-                        assert !isContinuous.containsKey( experimentalFactor )
-                                || !isContinuous.get( experimentalFactor ) : experimentalFactor
-                                + " shouldn't be considered continuous?";
                     }
                     bioMaterialFactorMap.get( experimentalFactor ).put( bm.getId(), valueToStore );
                 }

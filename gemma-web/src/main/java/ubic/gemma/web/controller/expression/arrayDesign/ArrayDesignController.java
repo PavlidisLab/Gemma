@@ -57,7 +57,6 @@ import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.AlternateName;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -154,9 +153,6 @@ public class ArrayDesignController extends AbstractTaskService {
 
     @Autowired
     private AuditableUtil auditableUtil;
-
-    @Autowired
-    private AuditEventService auditEventService;
 
     @Autowired
     private AuditTrailService auditTrailService;

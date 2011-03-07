@@ -18,8 +18,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.analysis.sequence.ProbeMapperConfig;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AlignmentBasedGeneMappingEventImpl;
+import ubic.gemma.model.common.auditAndSecurity.eventType.AnnotationBasedGeneMappingEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
@@ -299,7 +299,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
             arrayDesignProbeMapperService.processArrayDesign( design, this.config, this.useDB );
             successObjects.add( design.getName() );
-            ArrayDesignGeneMappingEvent eventType = AlignmentBasedGeneMappingEvent.Factory.newInstance();
+            ArrayDesignGeneMappingEvent eventType = new AlignmentBasedGeneMappingEventImpl();
             audit( design, "Part of a batch job", eventType );
 
         } catch ( Exception e ) {
@@ -447,7 +447,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                             throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
                         }
                         arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase );
-                        audit( arrayDesign, "Imported from " + f, AnnotationBasedGeneMappingEvent.Factory.newInstance() );
+                        audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEventImpl() );
                     } catch ( IOException e ) {
                         return e;
                     }
@@ -462,14 +462,12 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                     if ( useDB ) {
 
                         if ( this.hasOption( MIRNA_ONLY_MODE_OPTION ) ) {
-                            audit( arrayDesign, "Run in miRNA-only mode.", AlignmentBasedGeneMappingEvent.Factory
-                                    .newInstance() );
+                            audit( arrayDesign, "Run in miRNA-only mode.", new AlignmentBasedGeneMappingEventImpl() );
                         } else if ( this.hasOption( CONFIG_OPTION ) ) {
                             audit( arrayDesign, "Run with configuration=" + this.getOptionValue( CONFIG_OPTION ),
-                                    AlignmentBasedGeneMappingEvent.Factory.newInstance() );
+                                    new AlignmentBasedGeneMappingEventImpl() );
                         } else {
-                            audit( arrayDesign, "Run with default parameters", AlignmentBasedGeneMappingEvent.Factory
-                                    .newInstance() );
+                            audit( arrayDesign, "Run with default parameters", new AlignmentBasedGeneMappingEventImpl() );
                         }
                     }
                 }
@@ -547,7 +545,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         log.debug( allEvents.size() + " to inspect" );
         for ( int j = allEvents.size() - 1; j >= 0; j-- ) {
             AuditEvent currentEvent = allEvents.get( j );
-
+            if ( currentEvent == null ) continue; // legacy of ordered-list which could end up with gaps; should not be
+            // needed any more
             if ( currentEvent.getEventType() == null ) continue;
 
             // we only care about ArrayDesignAnalysisEvent events.

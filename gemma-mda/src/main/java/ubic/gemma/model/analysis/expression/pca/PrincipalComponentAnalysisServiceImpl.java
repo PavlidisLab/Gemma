@@ -85,8 +85,8 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
 
             for ( int j = 0; j < Math.min( u.rows(), numLoadingsToStore ) - 1; j++ ) {
                 CompositeSequence probe = inOrder.get( j );
-                ProbeLoading plr = ProbeLoading.Factory.newInstance( i + 1, u.getRowByName( probe )[i], j, probe,
-                        loadingQt );
+                ProbeLoading plr = ProbeLoading.Factory.newInstance( loadingQt, i + 1, u.getRowByName( probe )[i], j,
+                        probe );
                 pca.getProbeLoadings().add( plr );
             }
 
@@ -155,9 +155,10 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
      * @return
      */
     private QuantitationType getLoadingQt() {
-        QuantitationType loadingQt = QuantitationType.Factory.newInstance( false, PrimitiveType.DOUBLE,
+        QuantitationType loadingQt = QuantitationType.Factory.newInstance( "Loading",
+                "Loading of a feature on an eigenvector", Boolean.FALSE, PrimitiveType.DOUBLE,
                 GeneralType.QUANTITATIVE, StandardQuantitationType.CORRELATION, ScaleType.LINEAR, false, false, false,
-                false, false, "Loading", "Loading of a feature on an eigenvector" );
+                false, false );
         return quantitationTypeDao.findOrCreate( loadingQt );
     }
 

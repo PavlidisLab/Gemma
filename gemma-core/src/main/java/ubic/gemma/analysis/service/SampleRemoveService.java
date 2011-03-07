@@ -193,7 +193,7 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
     }
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
+        this.auditTrailService = auditTrailService; 
     }
 
     /**

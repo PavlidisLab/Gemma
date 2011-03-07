@@ -34,6 +34,7 @@ public class ContrastResultImpl extends ubic.gemma.model.analysis.expression.dif
     /**
      * @see ubic.gemma.model.analysis.ContrastResult#toString()
      */
+    @Override
     public java.lang.String toString() {
         // @todo implement public java.lang.String toString()
         return null;

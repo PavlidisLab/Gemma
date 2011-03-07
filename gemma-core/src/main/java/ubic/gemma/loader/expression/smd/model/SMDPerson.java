@@ -56,7 +56,7 @@ public class SMDPerson {
         Person result = new PersonImpl();
 
         result.setEmail( this.email );
-        result.setLastName( this.name ); // FIXME.
+        result.setLastName( this.name );
         result.setAddress( this.address1 + " " + this.address2 + " " + this.address3 + " " + this.address4 + " "
                 + this.state + " " + this.postalCode + " " + this.country );
 

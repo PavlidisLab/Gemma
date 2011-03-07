@@ -37,7 +37,7 @@ public class ExpressionExperimentAuditViewTag extends TagSupport {
     public int doEndTag() {
         return EVAL_PAGE;
     }
- 
+
     @Override
     public int doStartTag() throws JspException {
         StringBuilder buf = new StringBuilder();
@@ -48,6 +48,8 @@ public class ExpressionExperimentAuditViewTag extends TagSupport {
             boolean hasAnalyses = false;
             buf.append( "<table><tr><th>Analysis</th><th>Date</th><th>Notes</th></tr>" );
             for ( AuditEvent event : expressionExperiment.getAuditTrail().getEvents() ) {
+                if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be
+                                               // needed any more
                 if ( event.getEventType() != null && event.getEventType() instanceof ExpressionExperimentAnalysisEvent ) {
                     buf.append( "<td>" + event.getEventType() + "</td>" );
                     buf.append( "<td>" + event.getDate() + "</td>" );

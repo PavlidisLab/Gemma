@@ -112,8 +112,7 @@ public class MeshService {
     public static ubic.basecode.ontology.model.ObjectProperty hasQualifier() {
         Property property = model.createProperty( "http://purl.org/obo/owl/MESH#hasQualifier" );
         RDFNode node = property.inModel( model );
-        model.setStrictMode( false ); // FIXME this probably isn't such a good idea, but allows the conversion to
-        // proceed.
+        model.setStrictMode( false );
         return new ObjectPropertyImpl( node.as( com.hp.hpl.jena.ontology.ObjectProperty.class ) );
     }
 
@@ -123,8 +122,7 @@ public class MeshService {
     public static ubic.basecode.ontology.model.DatatypeProperty isMajorHeading() {
         Property property = model.createProperty( "http://purl.org/obo/owl/MESH#isMajorHeading" );
         RDFNode node = property.inModel( model );
-        model.setStrictMode( false ); // FIXME this probably isn't such a good idea, but allows the conversion to
-        // proceed.
+        model.setStrictMode( false );
         return new ubic.basecode.ontology.model.DatatypePropertyImpl( node
                 .as( com.hp.hpl.jena.ontology.DatatypeProperty.class ) );
     }

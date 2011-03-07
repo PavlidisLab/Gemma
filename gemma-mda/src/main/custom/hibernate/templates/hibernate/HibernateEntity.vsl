@@ -35,11 +35,12 @@ public abstract class $entity.entityName
      */
      public ${entity.entityName}() {}
      
+##if ($serializable) ## no need to make conditional.    
     /**
      * The serial version UID of this class. Needed for serialization.
      */
-    private static final long serialVersionUID = ${entity.serialVersionUID}L;
-
+   private static final long serialVersionUID = ${entity.serialVersionUID}L;
+##end
 #if ($stringUtils.isNotBlank($entity.hibernateVersionProperty))
 #if (!$entity.generalization || ($entity.generalization && !$entity.hibernateInheritanceSubclass))
 #set ($versionProperty = $entity.hibernateVersionProperty)
@@ -129,6 +130,9 @@ $target.getDocumentation("     * ")
     /**
 $operation.getDocumentation("     * ")
      */
+#if ($signature.startsWith("toString") )
+    @Override
+#end
 #if ($operation.exceptionsPresent)
     $operation.visibility abstract $returnType.fullyQualifiedName $signature
         throws $operation.exceptionList;

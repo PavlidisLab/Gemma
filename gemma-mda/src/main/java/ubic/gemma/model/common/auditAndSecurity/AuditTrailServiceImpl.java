@@ -27,12 +27,9 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
-import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.CommentedEventImpl;
 import ubic.gemma.model.common.auditAndSecurity.eventType.OKStatusFlagEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEventImpl;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEventImpl;
 
 /**
@@ -70,7 +67,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
 
     @Override
     protected void handleAddComment( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = CommentedEvent.Factory.newInstance();
+        AuditEventType type = new CommentedEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
 
     }
@@ -79,13 +76,13 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     protected void handleAddOkFlag( Auditable auditable, String comment, String detail ) throws Exception {
         // TODO possibly don't allow this if there isn't already a trouble event on this object. That is, maybe OK
         // should only be used to reverse "trouble".
-        AuditEventType type = OKStatusFlagEvent.Factory.newInstance();
+        AuditEventType type = new OKStatusFlagEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
     }
 
     @Override
     protected void handleAddTroubleFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = TroubleStatusFlagEvent.Factory.newInstance();
+        AuditEventType type = new TroubleStatusFlagEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
     }
 
@@ -130,7 +127,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
 
     @Override
     protected void handleAddValidatedFlag( Auditable auditable, String comment, String detail ) throws Exception {
-        AuditEventType type = ValidatedFlagEvent.Factory.newInstance();
+        AuditEventType type = new ValidatedFlagEventImpl();
         this.addUpdateEvent( auditable, type, comment, detail );
 
     }

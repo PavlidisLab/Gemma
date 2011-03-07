@@ -55,6 +55,8 @@ public class BioAssayWrapper extends TableDecorator {
 
         AuditTrail auditTrail = object.getAuditTrail();
         for ( AuditEvent ae : auditTrail.getEvents() ) {
+            if ( ae == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed any
+                                        // more
             if ( ae.getEventType() != null && ae.getEventType() instanceof SampleRemovalEvent ) {
                 return "<img src=\"/Gemma/images/icons/stop.png\"/>";
             }

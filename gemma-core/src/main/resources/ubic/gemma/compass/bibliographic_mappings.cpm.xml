@@ -41,8 +41,8 @@
 			<meta-data>publication</meta-data>
 			<meta-data>bibliographic reference publication</meta-data>
 		</property>
-		<property name="fullTextURI">
-			<meta-data>fullTextURI</meta-data>
+		<property name="fullTextUri">
+			<meta-data>fullTextUri</meta-data>
 			<meta-data>bibliographic reference full text URI</meta-data>
 		</property>
 		<property name="citation">

@@ -110,7 +110,7 @@ public class RawDataFetcher extends FtpArchiveFetcher {
         return newDir + File.separator + identifier + "_RAW.tar";
     }
 
-    /**
+    /** ftp://ftp.ncbi.nih.gov/pub/geo/DATA/supplementary/series/GSE1105/GSE1105%5FRAW%2Etar
      * @param identifier
      * @return
      */

@@ -37,6 +37,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @author keshav
  * @version $Id$
  */
+@Deprecated
 public class ArrayDesignParserIntegrationTest extends BaseSpringContextTest {
     protected static final Log log = LogFactory.getLog( ArrayDesignParserIntegrationTest.class );
 

@@ -264,14 +264,14 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
             }
 
             if ( vcFromClient != null && vcFromDatabase == null ) {
-                vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( VocabCharacteristic.Factory
-                        .newInstance( null, null, cFromDatabase.getValue(), cFromDatabase.getCategory(), cFromDatabase
-                                .getEvidenceCode(), cFromDatabase.getName(), cFromDatabase.getDescription(), null, null
-                        /*
-                         * don'tcopy AuditTrail to avoid cascade error...
-                         */
-                        // cFromDatabase.getAuditTrail()
-                        ) );
+                VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+                c.setValue( cFromDatabase.getValue() );
+                c.setEvidenceCode( cFromDatabase.getEvidenceCode() );
+                c.setDescription( cFromDatabase.getDescription() );
+                c.setCategory( cFromDatabase.getCategory() );
+                c.setName( cFromDatabase.getName() );
+
+                vcFromDatabase = ( VocabCharacteristic ) characteristicService.create( c );
 
                 removeFromParent( cFromDatabase, parent );
                 characteristicService.delete( cFromDatabase );
@@ -279,10 +279,11 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
                 cFromDatabase = vcFromDatabase;
             } else if ( vcFromClient == null && vcFromDatabase != null ) {
                 cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance( vcFromDatabase
-                        .getValue(), vcFromDatabase.getCategory(), vcFromDatabase.getEvidenceCode(), vcFromDatabase
-                        .getName(), vcFromDatabase.getDescription(), null // don't copy AuditTrail to avoid cascade
+                        .getValue(), vcFromDatabase.getCategory(), null, vcFromDatabase.getName(), vcFromDatabase
+                        .getDescription() // don't copy AuditTrail to avoid
+                        // cascade
                         // error... vcFromDatabase.getAuditTrail()
-                        ) );
+                        , vcFromDatabase.getEvidenceCode() ) );
                 removeFromParent( vcFromDatabase, parent );
                 characteristicService.delete( vcFromDatabase );
                 addToParent( cFromDatabase, parent );

@@ -78,7 +78,7 @@
 		<property name="editor">
 			<meta-data>editor</meta-data>
 		</property>
-		<property name="fullTextURI">
+		<property name="fullTextUri">
 			<meta-data>full text URI</meta-data>
 		</property>
 		<property name="issue">
