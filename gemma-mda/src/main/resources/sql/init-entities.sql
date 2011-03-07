@@ -39,20 +39,20 @@ insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, A
 
 -- initialize the audit trails 
 set @n:=now();
-insert into AUDIT_EVENT VALUES (1, @n, 'C', 'From init script', '', 1, NULL, 1, 0 ); 
-insert into AUDIT_EVENT VALUES (2, @n, 'C', 'From init script', '', 1, NULL, 2, 0); 
-insert into AUDIT_EVENT VALUES (3, @n, 'C', 'From init script', '', 1, NULL, 3, 0);  
-insert into AUDIT_EVENT VALUES (4, @n, 'C', 'From init script', '', 1, NULL, 4, 0); 
-insert into AUDIT_EVENT VALUES (5, @n, 'C', 'From init script', '', 1, NULL, 5, 0); 
-insert into AUDIT_EVENT VALUES (6, @n, 'C', 'From init script', '', 1, NULL, 6, 0); 
-insert into AUDIT_EVENT VALUES (7, @n, 'C', 'From init script', '', 1, NULL, 7, 0); 
-insert into AUDIT_EVENT VALUES (8, @n, 'C', 'From init script', '', 1, NULL, 8, 0); 
-insert into AUDIT_EVENT VALUES (9, @n, 'C', 'From init script', '', 1, NULL, 9, 0); 
-insert into AUDIT_EVENT VALUES (10, @n, 'C', 'From init script', '', 1, NULL, 10, 0); 
-insert into AUDIT_EVENT VALUES (11, @n, 'C', 'From init script', '', 1, NULL, 11, 0); 
-insert into AUDIT_EVENT VALUES (12, @n, 'C', 'From init script', '', 1, NULL, 12, 0); 
-insert into AUDIT_EVENT VALUES (13, @n, 'C', 'From init script', '', 1, NULL, 13, 0);
-insert into AUDIT_EVENT VALUES (14, @n, 'C', 'From init script', '', 1, NULL, 14, 0);
+insert into AUDIT_EVENT VALUES (1, @n, 'C', 'From init script', '', 1, NULL, 1); 
+insert into AUDIT_EVENT VALUES (2, @n, 'C', 'From init script', '', 1, NULL, 2); 
+insert into AUDIT_EVENT VALUES (3, @n, 'C', 'From init script', '', 1, NULL, 3);  
+insert into AUDIT_EVENT VALUES (4, @n, 'C', 'From init script', '', 1, NULL, 4); 
+insert into AUDIT_EVENT VALUES (5, @n, 'C', 'From init script', '', 1, NULL, 5); 
+insert into AUDIT_EVENT VALUES (6, @n, 'C', 'From init script', '', 1, NULL, 6); 
+insert into AUDIT_EVENT VALUES (7, @n, 'C', 'From init script', '', 1, NULL, 7); 
+insert into AUDIT_EVENT VALUES (8, @n, 'C', 'From init script', '', 1, NULL, 8); 
+insert into AUDIT_EVENT VALUES (9, @n, 'C', 'From init script', '', 1, NULL, 9); 
+insert into AUDIT_EVENT VALUES (10, @n, 'C', 'From init script', '', 1, NULL, 10); 
+insert into AUDIT_EVENT VALUES (11, @n, 'C', 'From init script', '', 1, NULL, 11); 
+insert into AUDIT_EVENT VALUES (12, @n, 'C', 'From init script', '', 1, NULL, 12); 
+insert into AUDIT_EVENT VALUES (13, @n, 'C', 'From init script', '', 1, NULL, 13);
+insert into AUDIT_EVENT VALUES (14, @n, 'C', 'From init script', '', 1, NULL, 14);
 
 
 -- username=gemmaAgent: id = 2, password = 'gemmaAgent', audit trail #2, using salt={username}
