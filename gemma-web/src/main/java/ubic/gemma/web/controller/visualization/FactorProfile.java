@@ -28,6 +28,7 @@ import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.FactorType;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Represents data for displaying a factor (+ factor values) in a chart.
@@ -141,19 +142,25 @@ public class FactorProfile {
 
     }
 
+    /**
+     * @param ef FIXME duplicates code in SVDServiceImpl.
+     */
     private void checkIfFactorIsContinuous( ExperimentalFactor ef ) {
-        this.isContinuous = ef.getType().equals(FactorType.CONTINUOUS);
-//        for ( FactorValue fv : ef.getFactorValues() ) {
-//            if ( fv.getMeasurement() != null ) {
-//                try {
-//                    Double.parseDouble( fv.getMeasurement().getValue() );
-//                    this.isContinuous = true;
-//                } catch ( NumberFormatException e ) {
-//                    this.isContinuous = false;
-//                    break;
-//                }
-//            }
-//        }
+        if ( ef.getType() != null ) {
+            this.isContinuous = ef.getType().equals( FactorType.CONTINUOUS );
+        } else {
+            for ( FactorValue fv : ef.getFactorValues() ) {
+                if ( fv.getMeasurement() != null ) {
+                    try {
+                        Double.parseDouble( fv.getMeasurement().getValue() );
+                        this.isContinuous = true;
+                    } catch ( NumberFormatException e ) {
+                        this.isContinuous = false;
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private List<Double> extractFactorPlotValues( ExperimentalFactor ef,

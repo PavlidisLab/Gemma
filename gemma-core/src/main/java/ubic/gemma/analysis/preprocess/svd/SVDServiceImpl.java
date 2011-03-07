@@ -96,15 +96,21 @@ public class SVDServiceImpl implements SVDService {
      * @param experimentalFactor
      * @return true if the factor is continuous; false if it looks to be categorical.
      */
-    public static boolean isContinuous( ExperimentalFactor experimentalFactor ) {
-        boolean hasMeasurements = false;
-        for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
-            if ( fv.getMeasurement() != null && fv.getCharacteristics() == null ) {
-                hasMeasurements = true;
-                // don't break, in case some are missing values.
+    public static boolean isContinuous( ExperimentalFactor ef ) {
+        if ( ef.getType() != null ) {
+            return ef.getType().equals( FactorType.CONTINUOUS );
+        }
+        for ( FactorValue fv : ef.getFactorValues() ) {
+            if ( fv.getMeasurement() != null ) {
+                try {
+                    Double.parseDouble( fv.getMeasurement().getValue() );
+                    return true;
+                } catch ( NumberFormatException e ) {
+                    return false;
+                }
             }
         }
-        return hasMeasurements;
+        return false;
     }
 
     /**
@@ -387,7 +393,7 @@ public class SVDServiceImpl implements SVDService {
                 continue;
             }
 
-            if ( ef.getType().equals( FactorType.CONTINUOUS ) ) {
+            if ( isContinuous( ef ) ) {
                 double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                 svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
             } else {
