@@ -721,11 +721,10 @@ public class ExpressionExperimentQCController extends BaseController {
             for ( Long efId : factorCorrelations.get( component ).keySet() ) {
 
                 /*
-                 * this happens if the serialized SVD report is out of synch with the experiment.
+                 * Should not happen.
                  */
                 if ( !efs.containsKey( efId ) ) {
-                    log.warn( "No experimental factor with id " + efId
-                            + ", expected one from the SVD results: is the report up to date?" );
+                    log.warn( "No experimental factor with id " + efId );
                     continue;
                 }
 
@@ -771,10 +770,20 @@ public class ExpressionExperimentQCController extends BaseController {
 
                         DefaultMultiValueCategoryDataset dataset = new DefaultMultiValueCategoryDataset();
 
+                        /*
+                         * What this code does is organize the factor values by the groups.
+                         */
                         Map<String, List<Double>> groupedValues = new TreeMap<String, List<Double>>();
                         for ( int i = 0; i < values.size(); i++ ) {
                             Long fvId = values.get( i ).longValue();
                             String fvValue = categories.get( fvId );
+                            if ( fvValue == null ) {
+                                /*
+                                 * Problem ...eg gill2006fateinocean id=1748 -- missing values. We just don't plot
+                                 * anything for this sample.
+                                 */
+                                continue; // is this all we need to do?
+                            }
                             if ( !groupedValues.containsKey( fvValue ) ) {
                                 groupedValues.put( fvValue, new ArrayList<Double>() );
                             }
@@ -823,7 +832,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
                         // don't show x-axis label, which would otherwise be efs.get( efId )
                         chart = ChartFactory.createScatterPlot( title, null, "eigen" + ( component + 1 ), series,
-                                PlotOrientation.HORIZONTAL, false, false, false );
+                                PlotOrientation.VERTICAL, false, false, false );
                         XYPlot plot = chart.getXYPlot();
                         plot.setRangeGridlinesVisible( false );
                         plot.setDomainGridlinesVisible( false );

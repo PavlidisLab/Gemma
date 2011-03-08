@@ -864,6 +864,7 @@ var popupImage = function(url, width, height) {
 				modal : true,
 				stateful : false,
 				resizable : true,
+				autoScroll : true,
 				autoHeight : height, // or false.
 				width : width || 200,
 			//	x : 50,

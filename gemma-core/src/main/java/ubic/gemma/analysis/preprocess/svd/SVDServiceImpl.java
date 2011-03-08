@@ -463,8 +463,12 @@ public class SVDServiceImpl implements SVDService {
         for ( Long id : svdBioMaterials ) {
             for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
                 if ( !bioMaterialFactorMap.get( ef ).containsKey( id ) ) {
-                    log.warn( "Incomplete factorvalue information for " + ef + " (biomaterial id=" + id
-                            + " missing a value)" );
+                    /*
+                     * Missing values in factors, not fatal but not great either.
+                     */
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Incomplete factorvalue information for " + ef + " (biomaterial id=" + id
+                                + " missing a value)" );
                     bioMaterialFactorMap.get( ef ).put( id, Double.NaN );
                 }
             }
