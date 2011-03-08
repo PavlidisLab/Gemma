@@ -238,6 +238,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					thumbnails : false,
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
 					title : "Top diff. ex. probes for " + factorDetails,
+					showLegend : false,
 					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid,
 							diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
 				});
@@ -257,6 +258,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					thumbnails : false,
 					readMethod : DEDVController.getDEDVForPcaVisualization,
 					title : "Top loaded probes for PC" + component,
+					showLegend : false,
 					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid,
 							component, count)
 				});
@@ -867,7 +869,7 @@ var popupImage = function(url, width, height) {
 				autoScroll : true,
 				autoHeight : height, // or false.
 				width : width || 200,
-			//	x : 50,
+				// x : 50,
 				padding : 10,
 				html : '<img src=\"' + url + '"\" />'
 			});

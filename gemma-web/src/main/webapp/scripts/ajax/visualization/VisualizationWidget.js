@@ -3,14 +3,17 @@
  * 
  * Copyright (c) 2009 University of British Columbia
  * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not
+ * use this file except in compliance with the License. You may obtain a copy of
+ * the License at
  * 
  * http://www.apache.org/licenses/LICENSE-2.0
  * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations under
+ * the License.
  * 
  */
 Ext.namespace('Gemma');
@@ -35,7 +38,8 @@ Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR = 30;
 Gemma.MAX_EE_NAME_LENGTH = 40;
 
 /**
- * Vertical strip of plots, with a legend. Supports little heatmaps or little linecharts.
+ * Vertical strip of plots, with a legend. Supports little heatmaps or little
+ * linecharts.
  */
 Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 			autoHeight : true,
@@ -48,8 +52,8 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 			itemSelector : 'div.vizWrap',
 
 			/**
-			 * The data get from the server is not compatible with flotr out-of-the box. A little transformation is
-			 * needed.
+			 * The data get from the server is not compatible with flotr
+			 * out-of-the box. A little transformation is needed.
 			 * 
 			 * @param {}
 			 *            data for one record.
@@ -61,8 +65,8 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 			},
 
 			/**
-			 * Gets the selected node's record; or, if no node is selected, returns the first record; or null if there
-			 * are no nodes.
+			 * Gets the selected node's record; or, if no node is selected,
+			 * returns the first record; or null if there are no nodes.
 			 * 
 			 * @return {record}
 			 */
@@ -97,7 +101,8 @@ Gemma.DataVectorThumbnailsView = Ext.extend(Ext.DataView, {
 		});
 
 /**
- * Takes a collection of VisualizationValueObjects, which in turn each contain a collection of GeneExpressionProfiles.
+ * Takes a collection of VisualizationValueObjects, which in turn each contain a
+ * collection of GeneExpressionProfiles.
  * 
  * @param {}
  *            data
@@ -115,7 +120,8 @@ Gemma.prepareProfiles = function(data) {
 		var genes = geneExpressionProfile[i].genes;
 		var color = geneExpressionProfile[i].color;
 		var factor = geneExpressionProfile[i].factor;
-		var pvalue = geneExpressionProfile[i].PValue; // yes, it's PValue, not pValue.
+		var pvalue = geneExpressionProfile[i].PValue; // yes, it's PValue, not
+														// pValue.
 
 		var fade = factor < 2;
 
@@ -124,7 +130,8 @@ Gemma.prepareProfiles = function(data) {
 		}
 
 		/*
-		 * Format the gene symbols and names into strings that will be displayed in the legend.
+		 * Format the gene symbols and names into strings that will be displayed
+		 * in the legend.
 		 */
 
 		var geneSymbols = "Unmapped"; // was 'no gene'...
@@ -173,7 +180,8 @@ Gemma.prepareProfiles = function(data) {
 		var qtip = 'Probe: ' + probe + ' (' + geneSymbols + ') ';
 		if (factor && factor < 2) {
 			labelStyle = "font-style:italic";
-			qtip = qtip + " [Not significant]"; // FIXME this might not always be appropriate.
+			qtip = qtip + " [Not significant]"; // FIXME this might not always
+												// be appropriate.
 		}
 
 		/*
@@ -208,7 +216,8 @@ Gemma.prepareProfiles = function(data) {
 	}
 
 	/*
-	 * The prepared data is augmented with the 'data' field and formatted labels.
+	 * The prepared data is augmented with the 'data' field and formatted
+	 * labels.
 	 */
 	data.profiles = preparedData;
 
@@ -266,9 +275,12 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 							});
 
 					/*
-					 * Note: passing in 'newDiv' works in FF but not in IE. (flotr, anyway)
+					 * Note: passing in 'newDiv' works in FF but not in IE.
+					 * (flotr, anyway)
 					 */
-					LinePlot.draw($(shortName + "_vis"), record.profiles, this.graphConfig); // no sample names
+					LinePlot.draw($(shortName + "_vis"), record.profiles, this.graphConfig); // no
+																								// sample
+																								// names
 				}
 			}
 		});
@@ -301,7 +313,9 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 					/*
 					 * Note: 'newDiv' works in FF but not in IE.
 					 */
-					Heatmap.draw($(shortName + "_vis"), record.profiles, this.graphConfig); // no sample names
+					Heatmap.draw($(shortName + "_vis"), record.profiles, this.graphConfig); // no
+																							// sample
+																							// names
 				}
 			}
 		});
@@ -318,7 +332,8 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 Gemma.getProfileThumbnailTemplate = function(heatmap, havePvalues, smooth) {
 	var pvalueString = "";
 	if (havePvalues) {
-		// yes, minPvalue, from EEVO pValue. The best pvalue of any of the profiles.
+		// yes, minPvalue, from EEVO pValue. The best pvalue of any of the
+		// profiles.
 		pvalueString = '{[(values.minPvalue < 1) ? sprintf("<br/><span style=\'font-size:smaller\'>p=%.2e</span>", values.minPvalue) : ""]}';
 	}
 
@@ -361,12 +376,13 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 			})],
 
 	/*
-	 * The following are only used if we don't have a parent container, or on initialization.
+	 * The following are only used if we don't have a parent container, or on
+	 * initialization.
 	 */
 	heatmapMode : false,
 	forceFitPlots : false,
 	smoothLineGraphs : false,
-	showLegend : true,
+	showLegend : false,
 
 	initComponent : function() {
 
@@ -445,7 +461,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 			smoothLineGraphs : smooth,
 
 			legend : {
-				show : this.showLegend || this.heatmapMode,
+				show : this.showLegend && !this.heatmapMode,
 				// container : this.legendDiv ? this.legendDiv : this.body.id,
 				labelFormatter : function(s) {
 					// assume we only have one link defined...
@@ -453,7 +469,8 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 					return k[0] + "</a>" + Ext.util.Format.ellipsis(k[1], Gemma.MAX_THUMBNAILLABEL_LENGTH_CHAR);
 				},
-				position : "sw" // best to be west, if we're expanded...applies to linecharts.
+				position : "sw" // best to be west, if we're expanded...applies
+								// to linecharts.
 			},
 			label : true
 
@@ -478,8 +495,9 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 			LinePlot.draw($(this.body.id), profiles, graphConfig, sampleNames);
 
-			// make the line chart legend clickable. Selector is based on flotr's output.
-			legend = Ext.DomQuery.select("div.flotr-legend", this.el.dom);
+			// make the line chart legend clickable. Selector is based on
+			// flotr's output.
+			var legend = Ext.DomQuery.select("div.flotr-legend", this.el.dom);
 
 			if (legend && legend[0]) {
 
@@ -503,13 +521,15 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 						if (profiles[i].labelID == probeId) {
 							if (profiles[i].selected) {
 								profiles[i].lines.lineWidth = (profiles[i].lines.lineWidth / Gemma.SELECTED);
-								// profiles[i].lines.color = profile[i].lines.color; // put it back...
+								// profiles[i].lines.color =
+								// profile[i].lines.color; // put it back...
 								Ext.DomHelper.applyStyles(event.getTarget(), "border:black 2px");
 								profiles[i].selected = false;
 							} else {
 								profiles[i].selected = true;
 								profiles[i].lines.lineWidth = profiles[i].lines.lineWidth * Gemma.SELECTED;
-								// profiles[i].lines.color = profile[i].lines.color; // make it selected
+								// profiles[i].lines.color =
+								// profile[i].lines.color; // make it selected
 
 								Ext.DomHelper.applyStyles(event.getTarget(), "border:green 2px");
 
@@ -563,7 +583,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	forceFitPlots : false,
 	smoothLineGraphs : false,
 	havePvalues : false,
-	showLegend : true,
+	showLegend : false,
 
 	toggleViewBtnId : 'toggleViewBtn-' + Ext.id(),
 
@@ -580,7 +600,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					heatmapMode : this.heatmapMode,
 					forceFitPlots : this.forceFitPlots,
 					smoothLineGraphs : this.smoothLineGraphs,
-					showLegend : this.showLegend
+					showLegend : false
 				});
 	},
 
@@ -706,7 +726,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		// }
 		//
 		// // force a refresh of the thumbnails.
-		// var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, this.smoothLineGraphs);
+		// var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode,
+		// this.havePvalues, this.smoothLineGraphs);
 		// this.dv.setTemplate(template);
 		//
 		// // force a refresh of the zoom.
@@ -821,8 +842,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					hidden : !this.thumbnails,
 
 					/*
-					 * legend div FIXME make this go to the TOP. Might need to make it a separate div in this panel
-					 * instead.
+					 * legend div FIXME make this go to the TOP. Might need to
+					 * make it a separate div in this panel instead.
 					 */
 					html : {
 						id : this.zoomLegendId,
@@ -848,11 +869,15 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 											icon : '../images/download.gif',
 											cls : 'x-btn-text-icon',
 											hidden : this.downloadLink === undefined,
-											disabled : true, // enabled after load.
+											disabled : true, // enabled after
+																// load.
 											tooltip : "Download displayed data in a tab-delimited format",
 											handler : this.downloadData.createDelegate(this)
 										}, browserWarning, '->', {
-											xtype : 'tbbutton', // in ext3, use button; tbbutton is deprecated.
+											xtype : 'tbbutton', // in ext3, use
+																// button;
+																// tbbutton is
+																// deprecated.
 											text : this.showLegend ? "Hide legend" : "Show legend",
 											id : this.toggleLegendBtnId,
 											handler : this.toggleLegend.createDelegate(this),
@@ -863,9 +888,11 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 										// {
 										// xtype : 'tbbutton',
-										// text : this.smoothLineGraphs ? "Unsmooth" : "Smooth",
+										// text : this.smoothLineGraphs ?
+										// "Unsmooth" : "Smooth",
 										// id : this.smoothBtnId,
-										// handler : this.toggleSmooth.createDelegate(this),
+										// handler :
+										// this.toggleSmooth.createDelegate(this),
 										// disabled : true,
 										// hidden : true
 										// },
@@ -884,7 +911,10 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 											id : this.toggleViewBtnId,
 											disabled : true,
 											handler : this.switchView.createDelegate(this)
-										} /* todo: add standarization on/off option. */]
+										} /*
+											 * todo: add standarization on/off
+											 * option.
+											 */]
 							})
 				});
 
@@ -898,13 +928,15 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					Ext.getCmp(this.toggleLegendBtnId).enable();
 					Ext.getCmp(this.downloadDataBtnId).enable();
 
-					// So initial state is sure to be okay, after restore from cookie
+					// So initial state is sure to be okay, after restore from
+					// cookie
 					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode
 							? "Switch to line plot"
 							: "Switch to heatmap");
 					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Expand" : "Fit width");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
-					// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs ? "Unsmooth" : "Smooth");
+					// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
+					// ? "Unsmooth" : "Smooth");
 
 					if (this.heatmapMode) {
 						// Ext.getCmp(this.smoothBtnId).hide();
@@ -942,7 +974,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 				}, this);
 
 		/*
-		 * Tell thumbnails where to put the legend. Currently it's in the body of the graph.
+		 * Tell thumbnails where to put the legend. Currently it's in the body
+		 * of the graph.
 		 */
 		// this.on('show', function(cmp) {
 		// cmp.zoomLegendId = cmp.getBottomToolbar().id;
@@ -1001,7 +1034,8 @@ Gemma.VisualizationStore = function(config) {
 	if (config && config.readMethod) {
 		this.readMethod = config.readMethod;
 	} else {
-		this.readMethod = DEDVController.getDEDVForVisualization; // takes eeids,geneids.
+		this.readMethod = DEDVController.getDEDVForVisualization; // takes
+																	// eeids,geneids.
 	}
 
 	this.proxy = new Ext.data.DWRProxy(this.readMethod);
@@ -1029,9 +1063,10 @@ Ext.extend(Gemma.VisualizationStore, Ext.data.Store, {});
 // Utility functions for visualization
 
 /**
- * Sort in this order: 1. Query probes that show coexpression or sig. diff ex., ordered by pvalue 2. Target probes that
- * show coexp or sig diff ex. 3. Query probes that do not show coexpression or sig. diff ex. (faded) 4. Target probes
- * that do not show coexp or sig diff ex.
+ * Sort in this order: 1. Query probes that show coexpression or sig. diff ex.,
+ * ordered by pvalue 2. Target probes that show coexp or sig diff ex. 3. Query
+ * probes that do not show coexpression or sig. diff ex. (faded) 4. Target
+ * probes that do not show coexp or sig diff ex.
  * 
  * @param {}
  *            a
@@ -1043,10 +1078,12 @@ Gemma.sortByImportance = function(a, b) {
 
 	// first level sort: by pvalue, if present.
 	if (a.PValue !== null && a.PValue !== undefined && b.PValue !== null && b.PValue !== undefined) {
-		return Math.log(a.PValue) - Math.log(b.PValue); // log to avoid roundoff trouble.
+		return Math.log(a.PValue) - Math.log(b.PValue); // log to avoid roundoff
+														// trouble.
 	}
 
-	// Second level sort: by factor > 1 means 'involved in sig. coexpression' or "query gene".
+	// Second level sort: by factor > 1 means 'involved in sig. coexpression' or
+	// "query gene".
 	if (a.factor > b.factor) {
 		return -1;
 	}
