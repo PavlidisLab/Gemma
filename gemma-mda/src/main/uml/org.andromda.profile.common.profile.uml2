@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527625671_782614_56" name="common" metamodelReference="_11_5_e240333_1154527625671_782614_56_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_eM6P8EgzEeC0OvyRfrR6Fw" source="attributes">
-    <details xmi:id="_eM6P8UgzEeC0OvyRfrR6Fw" key="version" value="0"/>
+  <eAnnotations xmi:id="_NYWZukk_EeCaOrC2KWCfhw" source="attributes">
+    <details xmi:id="_NYWZu0k_EeCaOrC2KWCfhw" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_eM6P8kgzEeC0OvyRfrR6Fw" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_eM6P80gzEeC0OvyRfrR6Fw" name="common_0" nsURI="http:///common_0_eMeyAEgzEeC0OvyRfrR6Fw.profile.uml2" nsPrefix="common_0">
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6P9EgzEeC0OvyRfrR6Fw" name="common__Exception">
-        <eAnnotations xmi:id="_eM6P9UgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_eM6P9kgzEeC0OvyRfrR6Fw" key="documentation" value="The base exception stereotype, all exception stereotypes extend from this stereotype."/>
+  <eAnnotations xmi:id="_NYWZvEk_EeCaOrC2KWCfhw" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_NYWZvUk_EeCaOrC2KWCfhw" name="common_0" nsURI="http:///common_0_NYF6AEk_EeCaOrC2KWCfhw.profile.uml2" nsPrefix="common_0">
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZvkk_EeCaOrC2KWCfhw" name="common__Exception">
+        <eAnnotations xmi:id="_NYWZv0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_NYWZwEk_EeCaOrC2KWCfhw" key="documentation" value="The base exception stereotype, all exception stereotypes extend from this stereotype."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_eM6P90gzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_97120_6"/>
+        <eAnnotations xmi:id="_NYWZwUk_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_97120_6"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6P-EgzEeC0OvyRfrR6Fw" name="common__Enumeration">
-        <eAnnotations xmi:id="_eM6P-UgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_eM6P-kgzEeC0OvyRfrR6Fw" key="documentation" value="Allows the definition of an enumeration type.  Enumerations can only contain attributes with optional default values.  If the default value is not specified, the name of the attribute will be used for the enumeration value as well as the literal name."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZwkk_EeCaOrC2KWCfhw" name="common__Enumeration">
+        <eAnnotations xmi:id="_NYWZw0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_NYWZxEk_EeCaOrC2KWCfhw" key="documentation" value="Allows the definition of an enumeration type.  Enumerations can only contain attributes with optional default values.  If the default value is not specified, the name of the attribute will be used for the enumeration value as well as the literal name."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_eM6P-0gzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_700962_14"/>
+        <eAnnotations xmi:id="_NYWZxUk_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_700962_14"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6P_EgzEeC0OvyRfrR6Fw" name="common__EnvEntry">
-        <eAnnotations xmi:id="_eM6P_UgzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_31945_16"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZxkk_EeCaOrC2KWCfhw" name="common__EnvEntry">
+        <eAnnotations xmi:id="_NYWZx0k_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_31945_16"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6P_kgzEeC0OvyRfrR6Fw" name="common__Role">
-        <eAnnotations xmi:id="_eM6P_0gzEeC0OvyRfrR6Fw" source="stereotype" references="_11_5_e240333_1154527611593_185410_8"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_eM6QAEgzEeC0OvyRfrR6Fw" name="_andromdarolename" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_eM6QAUgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_eM6QAkgzEeC0OvyRfrR6Fw" key="documentation" value="Defines the role name (if it should be different than the actual name of the actor that represents the role)."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZyEk_EeCaOrC2KWCfhw" name="common__Role">
+        <eAnnotations xmi:id="_NYWZyUk_EeCaOrC2KWCfhw" source="stereotype" references="_11_5_e240333_1154527611593_185410_8"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYWZykk_EeCaOrC2KWCfhw" name="_andromdarolename" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_NYWZy0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_NYWZzEk_EeCaOrC2KWCfhw" key="documentation" value="Defines the role name (if it should be different than the actual name of the actor that represents the role)."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6QA0gzEeC0OvyRfrR6Fw" name="common__ValueObject">
-        <eAnnotations xmi:id="_eM6QBEgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_eM6QBUgzEeC0OvyRfrR6Fw" key="documentation" value="Allows the object to be exposed as a value object.  Value objects are those objects that will be presented to the calling client."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZzUk_EeCaOrC2KWCfhw" name="common__ValueObject">
+        <eAnnotations xmi:id="_NYWZzkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_NYWZz0k_EeCaOrC2KWCfhw" key="documentation" value="Allows the object to be exposed as a value object.  Value objects are those objects that will be presented to the calling client."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_eM6QBkgzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_59537_10"/>
+        <eAnnotations xmi:id="_NYWZ0Ek_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_59537_10"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6QB0gzEeC0OvyRfrR6Fw" name="common__UnexpectedException" eSuperTypes="_eM6P9EgzEeC0OvyRfrR6Fw">
-        <eAnnotations xmi:id="_eM6QCEgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_eM6QCUgzEeC0OvyRfrR6Fw" key="documentation" value="An exception thrown an unexpected exception occurs."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZ0Uk_EeCaOrC2KWCfhw" name="common__UnexpectedException" eSuperTypes="_NYWZvkk_EeCaOrC2KWCfhw">
+        <eAnnotations xmi:id="_NYWZ0kk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_NYWZ00k_EeCaOrC2KWCfhw" key="documentation" value="An exception thrown an unexpected exception occurs."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_eM6QCkgzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_761556_5"/>
+        <eAnnotations xmi:id="_NYWZ1Ek_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_761556_5"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6QC0gzEeC0OvyRfrR6Fw" name="common__ExceptionRef">
-        <eAnnotations xmi:id="_eM6QDEgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_eM6QDUgzEeC0OvyRfrR6Fw" key="documentation" value="A reference to exception, you would use this if you did NOT want to generate the exception but instead generate a reference to an exception that you woulid then implement."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZ1Uk_EeCaOrC2KWCfhw" name="common__ExceptionRef">
+        <eAnnotations xmi:id="_NYWZ1kk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_NYWZ10k_EeCaOrC2KWCfhw" key="documentation" value="A reference to exception, you would use this if you did NOT want to generate the exception but instead generate a reference to an exception that you woulid then implement."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_eM6QDkgzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_64798_17"/>
+        <eAnnotations xmi:id="_NYWZ2Ek_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_64798_17"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6QD0gzEeC0OvyRfrR6Fw" name="common__ApplicationException" eSuperTypes="_eM6P9EgzEeC0OvyRfrR6Fw">
-        <eAnnotations xmi:id="_eM6QEEgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_eM6QEUgzEeC0OvyRfrR6Fw" key="documentation" value="Represents a exception that could occur during normal application flow."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZ2Uk_EeCaOrC2KWCfhw" name="common__ApplicationException" eSuperTypes="_NYWZvkk_EeCaOrC2KWCfhw">
+        <eAnnotations xmi:id="_NYWZ2kk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_NYWZ20k_EeCaOrC2KWCfhw" key="documentation" value="Represents a exception that could occur during normal application flow."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_eM6QEkgzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_116094_8"/>
+        <eAnnotations xmi:id="_NYWZ3Ek_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_116094_8"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_eM6QE0gzEeC0OvyRfrR6Fw" name="common__Nullable">
-        <eAnnotations xmi:id="_eM6QFEgzEeC0OvyRfrR6Fw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_eM6QFUgzEeC0OvyRfrR6Fw" key="documentation" value="Placed on a parameter to indicate whether or not a null parameter should be allowed."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYWZ3Uk_EeCaOrC2KWCfhw" name="common__Nullable">
+        <eAnnotations xmi:id="_NYWZ3kk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_NYWZ30k_EeCaOrC2KWCfhw" key="documentation" value="Placed on a parameter to indicate whether or not a null parameter should be allowed."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_eM6QFkgzEeC0OvyRfrR6Fw" source="stereotype" references="_9_0_1fe00f9_1119373197267_872834_19"/>
+        <eAnnotations xmi:id="_NYWZ4Ek_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119373197267_872834_19"/>
       </eClassifiers>
     </contents>
   </eAnnotations>
@@ -158,7 +158,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527611703_30793_39"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527611703_971942_16" memberEnd="_11_5_e240333_1154527611703_687049_18 _11_5_e240333_1154527611703_499212_17">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527611703_971942_16" memberEnd="_11_5_e240333_1154527611703_499212_17 _11_5_e240333_1154527611703_687049_18">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527611703_687049_18" name="extension_ValueObject" visibility="private" type="_9_0_1fe00f9_1119373197267_59537_10" association="_11_5_e240333_1154527611703_971942_16" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527611703_984487_20" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527611703_935334_19"/>
