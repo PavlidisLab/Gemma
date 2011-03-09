@@ -302,6 +302,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
 
+        if ( probes.isEmpty() ) return results;
+
         Map<CompositeSequence, Collection<Gene>> cs2gene = null;
         if ( fullMap ) {
             cs2gene = CommonQueries.getFullCs2AllGeneMap( probes, this.getSession() );

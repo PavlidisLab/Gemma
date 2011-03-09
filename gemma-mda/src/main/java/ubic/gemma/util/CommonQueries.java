@@ -272,7 +272,7 @@ public class CommonQueries {
      */
     public static Map<CompositeSequence, Collection<Gene>> getFullCs2AllGeneMap( Collection<CompositeSequence> probes,
             Session session ) {
-
+        if ( probes.isEmpty() ) return new HashMap<CompositeSequence, Collection<Gene>>();
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
                 + " where ba.bioSequence=cs.biologicalCharacteristic and ba.geneProduct = gp and cs in (:probes) ";
@@ -288,6 +288,7 @@ public class CommonQueries {
      */
     public static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
             Session session ) {
+        if ( probes.isEmpty() ) return new HashMap<CompositeSequence, Collection<Gene>>();
 
         final String csQueryString = "select distinct cs, gene from GeneImpl as gene"
                 + " left outer join gene.products gp, BioSequence2GeneProductImpl ba, CompositeSequenceImpl cs "
@@ -330,6 +331,9 @@ public class CommonQueries {
 
     private static Map<CompositeSequence, Collection<Gene>> getFullCs2GeneMap( Collection<CompositeSequence> probes,
             Session session, final String csQueryString ) {
+
+        if ( probes.isEmpty() ) return new HashMap<CompositeSequence, Collection<Gene>>();
+
         StopWatch timer = new StopWatch();
         timer.start();
         Map<CompositeSequence, Collection<Gene>> cs2gene = new HashMap<CompositeSequence, Collection<Gene>>();

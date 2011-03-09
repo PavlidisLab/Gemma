@@ -75,6 +75,13 @@ public class ProcessedExpressionDataVectorServiceImpl implements ProcessedExpres
         return this.getProcessedExpressionDataVectorDao().getProcessedDataArrays( ee, limit, fullMap );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService#getProcessedDataArraysByProbe(java
+     * .util.Collection, java.util.Collection, boolean)
+     */
     public Collection<DoubleVectorValueObject> getProcessedDataArraysByProbe(
             Collection<? extends BioAssaySet> expressionExperiments, Collection<CompositeSequence> compositeSequences,
             boolean fullMap ) {

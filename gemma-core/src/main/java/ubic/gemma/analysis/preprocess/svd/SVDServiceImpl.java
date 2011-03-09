@@ -158,15 +158,11 @@ public class SVDServiceImpl implements SVDService {
 
         Map<CompositeSequence, ProbeLoading> probes = new HashMap<CompositeSequence, ProbeLoading>();
         for ( ProbeLoading probeLoading : topLoadedProbes ) {
-            if ( probeLoading.getLoading() < 0 ) {
-                /*
-                 * FIXME this is temporary as a test.
-                 */
-                continue;
-            }
             CompositeSequence probe = probeLoading.getProbe();
             probes.put( probe, probeLoading );
         }
+
+        if ( probes.isEmpty() ) return result;
 
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( ee );
