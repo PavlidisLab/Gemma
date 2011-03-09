@@ -174,6 +174,11 @@ public class SVDServiceImpl implements SVDService {
         for ( DoubleVectorValueObject vct : vect ) {
             ProbeLoading probeLoading = probes.get( vct.getDesignElement() );
 
+            if ( probeLoading == null ) {
+                log.warn( "Missing probe loading for " + vct.getDesignElement() + "; possible bug?" );
+                continue;
+            }
+
             // FIXME this is to make sure smaller values
             // are better, they are not pvalues
             vct.setPvalue( 1.0 / Math.abs( probeLoading.getLoading() ) );
