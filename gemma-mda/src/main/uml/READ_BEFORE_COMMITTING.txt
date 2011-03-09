@@ -1,0 +1,18 @@
+# Important instructions on working with the UML files.
+# $Id$
+
+The new UML2 format requires a little more work to prepare for commits to the repository.
+
+First, in MagicDraw you must export the model as Eclipse EMF 1.0. 
+This creats the file gemma-om.uml2.
+
+You will get complaints from MagicDraw that it cannot write to the files. 
+Thus you should use the 'Team->edit' function on all the *.uml2 files in this
+directory (you can do it all at once).
+
+However, only the gemma-om.uml2 will be changed by this. The *profile* files will not.
+
+Therefore when you commit, do not recommit the profile files -- use "Override and update". It's
+not bad if you do commit them, it is just unnecessary and wastes space/time.
+
+Only commit the gemma-om.uml2 and gemma-om.xml.zip files.
