@@ -1,430 +1,430 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527378140_885914_432" name="presentation" metamodelReference="_11_5_e240333_1154527378140_885914_432_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_NYRg-Ek_EeCaOrC2KWCfhw" source="attributes">
-    <details xmi:id="_NYRg-Uk_EeCaOrC2KWCfhw" key="version" value="0"/>
+  <eAnnotations xmi:id="_4hU6ckqGEeC8Y81Hdii9Kw" source="attributes">
+    <details xmi:id="_4hU6c0qGEeC8Y81Hdii9Kw" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_NYRg-kk_EeCaOrC2KWCfhw" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_NYRg-0k_EeCaOrC2KWCfhw" name="presentation_0" nsURI="http:///presentation_0_NYNOwEk_EeCaOrC2KWCfhw.profile.uml2" nsPrefix="presentation_0">
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_NYRg_Ek_EeCaOrC2KWCfhw" name="presentation__WebActionFormScope">
-        <eAnnotations xmi:id="_NYRg_Uk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRg_kk_EeCaOrC2KWCfhw" key="documentation" value="Denotes the scope given to the &quot;form&quot; attribute when executing an action."/>
+  <eAnnotations xmi:id="_4hU6dEqGEeC8Y81Hdii9Kw" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_4hU6dUqGEeC8Y81Hdii9Kw" name="presentation_0" nsURI="http:///presentation_0_4hBYcEqGEeC8Y81Hdii9Kw.profile.uml2" nsPrefix="presentation_0">
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_4hU6dkqGEeC8Y81Hdii9Kw" name="presentation__WebActionFormScope">
+        <eAnnotations xmi:id="_4hU6d0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU6eEqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the scope given to the &quot;form&quot; attribute when executing an action."/>
         </eAnnotations>
-        <eLiterals xmi:id="_NYRg_0k_EeCaOrC2KWCfhw" name="default">
-          <eAnnotations xmi:id="_NYRhAEk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161152779750_588418_118"/>
+        <eLiterals xmi:id="_4hU6eUqGEeC8Y81Hdii9Kw" name="default">
+          <eAnnotations xmi:id="_4hU6ekqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161152779750_588418_118"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhAUk_EeCaOrC2KWCfhw" name="none" value="1">
-          <eAnnotations xmi:id="_NYRhAkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhA0k_EeCaOrC2KWCfhw" key="documentation" value="Denotes that the &quot;form&quot; attribute will not be set within any scope."/>
+        <eLiterals xmi:id="_4hU6e0qGEeC8Y81Hdii9Kw" name="none" value="1">
+          <eAnnotations xmi:id="_4hU6fEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6fUqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes that the &quot;form&quot; attribute will not be set within any scope."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhBEk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_941904_35"/>
+          <eAnnotations xmi:id="_4hU6fkqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_941904_35"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhBUk_EeCaOrC2KWCfhw" name="request" value="2">
-          <eAnnotations xmi:id="_NYRhBkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhB0k_EeCaOrC2KWCfhw" key="documentation" value="Denotes that the &quot;form&quot; attribute will be set within a request scope."/>
+        <eLiterals xmi:id="_4hU6f0qGEeC8Y81Hdii9Kw" name="request" value="2">
+          <eAnnotations xmi:id="_4hU6gEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6gUqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes that the &quot;form&quot; attribute will be set within a request scope."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhCEk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_183700_36"/>
+          <eAnnotations xmi:id="_4hU6gkqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_183700_36"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhCUk_EeCaOrC2KWCfhw" name="session" value="3">
-          <eAnnotations xmi:id="_NYRhCkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhC0k_EeCaOrC2KWCfhw" key="documentation" value="Denotes that the &quot;form&quot; attribute will be set within a session scope."/>
+        <eLiterals xmi:id="_4hU6g0qGEeC8Y81Hdii9Kw" name="session" value="3">
+          <eAnnotations xmi:id="_4hU6hEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6hUqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes that the &quot;form&quot; attribute will be set within a session scope."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhDEk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_114826_37"/>
+          <eAnnotations xmi:id="_4hU6hkqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_114826_37"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_NYRhDUk_EeCaOrC2KWCfhw" name="presentation__WebFieldType">
-        <eAnnotations xmi:id="_NYRhDkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRhD0k_EeCaOrC2KWCfhw" key="documentation" value="Denotes the type of the form field to use for an action parameter."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_4hU6h0qGEeC8Y81Hdii9Kw" name="presentation__WebFieldType">
+        <eAnnotations xmi:id="_4hU6iEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU6iUqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the type of the form field to use for an action parameter."/>
         </eAnnotations>
-        <eLiterals xmi:id="_NYRhEEk_EeCaOrC2KWCfhw" name="default">
-          <eAnnotations xmi:id="_NYRhEUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161152781468_227878_121"/>
+        <eLiterals xmi:id="_4hU6ikqGEeC8Y81Hdii9Kw" name="default">
+          <eAnnotations xmi:id="_4hU6i0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161152781468_227878_121"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhEkk_EeCaOrC2KWCfhw" name="select" value="1">
-          <eAnnotations xmi:id="_NYRhE0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhFEk_EeCaOrC2KWCfhw" key="documentation" value="Use a combobox (also known as drop-down box) from which to select the value, only a single value can be selected unless the underlying type is a collection or array."/>
+        <eLiterals xmi:id="_4hU6jEqGEeC8Y81Hdii9Kw" name="select" value="1">
+          <eAnnotations xmi:id="_4hU6jUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6jkqGEeC8Y81Hdii9Kw" key="documentation" value="Use a combobox (also known as drop-down box) from which to select the value, only a single value can be selected unless the underlying type is a collection or array."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhFUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_416969_11"/>
+          <eAnnotations xmi:id="_4hU6j0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_416969_11"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhFkk_EeCaOrC2KWCfhw" name="hidden" value="2">
-          <eAnnotations xmi:id="_NYRhF0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhGEk_EeCaOrC2KWCfhw" key="documentation" value="Do not show the parameter on the screen."/>
+        <eLiterals xmi:id="_4hU6kEqGEeC8Y81Hdii9Kw" name="hidden" value="2">
+          <eAnnotations xmi:id="_4hU6kUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6kkqGEeC8Y81Hdii9Kw" key="documentation" value="Do not show the parameter on the screen."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhGUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_572946_12"/>
+          <eAnnotations xmi:id="_4hU6k0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_572946_12"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhGkk_EeCaOrC2KWCfhw" name="password" value="3">
-          <eAnnotations xmi:id="_NYRhG0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhHEk_EeCaOrC2KWCfhw" key="documentation" value="The field should be shown but it's content is to be masked using asterisks."/>
+        <eLiterals xmi:id="_4hU6lEqGEeC8Y81Hdii9Kw" name="password" value="3">
+          <eAnnotations xmi:id="_4hU6lUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6lkqGEeC8Y81Hdii9Kw" key="documentation" value="The field should be shown but it's content is to be masked using asterisks."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhHUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_638510_13"/>
+          <eAnnotations xmi:id="_4hU6l0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_638510_13"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhHkk_EeCaOrC2KWCfhw" name="link" value="4">
-          <eAnnotations xmi:id="_NYRhH0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhIEk_EeCaOrC2KWCfhw" key="documentation" value="This type can only be used when displaying the field in a table and you want to attach it to only of the possible page actions."/>
+        <eLiterals xmi:id="_4hU6mEqGEeC8Y81Hdii9Kw" name="link" value="4">
+          <eAnnotations xmi:id="_4hU6mUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6mkqGEeC8Y81Hdii9Kw" key="documentation" value="This type can only be used when displaying the field in a table and you want to attach it to only of the possible page actions."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhIUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_778620_14"/>
+          <eAnnotations xmi:id="_4hU6m0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_778620_14"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhIkk_EeCaOrC2KWCfhw" name="textarea" value="5">
-          <eAnnotations xmi:id="_NYRhI0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhJEk_EeCaOrC2KWCfhw" key="documentation" value="Use a textarea with multiple rows."/>
+        <eLiterals xmi:id="_4hU6nEqGEeC8Y81Hdii9Kw" name="textarea" value="5">
+          <eAnnotations xmi:id="_4hU6nUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6nkqGEeC8Y81Hdii9Kw" key="documentation" value="Use a textarea with multiple rows."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhJUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_558582_15"/>
+          <eAnnotations xmi:id="_4hU6n0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_558582_15"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhJkk_EeCaOrC2KWCfhw" name="text" value="6">
-          <eAnnotations xmi:id="_NYRhJ0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhKEk_EeCaOrC2KWCfhw" key="documentation" value="Use a simple text field."/>
+        <eLiterals xmi:id="_4hU6oEqGEeC8Y81Hdii9Kw" name="text" value="6">
+          <eAnnotations xmi:id="_4hU6oUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6okqGEeC8Y81Hdii9Kw" key="documentation" value="Use a simple text field."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhKUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_43090_16"/>
+          <eAnnotations xmi:id="_4hU6o0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_43090_16"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhKkk_EeCaOrC2KWCfhw" name="checkbox" value="7">
-          <eAnnotations xmi:id="_NYRhK0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhLEk_EeCaOrC2KWCfhw" key="documentation" value="Use a checkbox, ideal for boolean values."/>
+        <eLiterals xmi:id="_4hU6pEqGEeC8Y81Hdii9Kw" name="checkbox" value="7">
+          <eAnnotations xmi:id="_4hU6pUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6pkqGEeC8Y81Hdii9Kw" key="documentation" value="Use a checkbox, ideal for boolean values."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhLUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_91479_17"/>
+          <eAnnotations xmi:id="_4hU6p0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_91479_17"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhLkk_EeCaOrC2KWCfhw" name="multibox" value="8">
-          <eAnnotations xmi:id="_NYRhL0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhMEk_EeCaOrC2KWCfhw" key="documentation" value="Use this field type when you want to render several checkboxes that need to be initialized based on the property of a single array."/>
+        <eLiterals xmi:id="_4hU6qEqGEeC8Y81Hdii9Kw" name="multibox" value="8">
+          <eAnnotations xmi:id="_4hU6qUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6qkqGEeC8Y81Hdii9Kw" key="documentation" value="Use this field type when you want to render several checkboxes that need to be initialized based on the property of a single array."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhMUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_926770_18"/>
+          <eAnnotations xmi:id="_4hU6q0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_926770_18"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhMkk_EeCaOrC2KWCfhw" name="radio" value="9">
-          <eAnnotations xmi:id="_NYRhM0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhNEk_EeCaOrC2KWCfhw" key="documentation" value="Generates a few options from which the value can be selected, only a single option can be selected at a time."/>
+        <eLiterals xmi:id="_4hU6rEqGEeC8Y81Hdii9Kw" name="radio" value="9">
+          <eAnnotations xmi:id="_4hU6rUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6rkqGEeC8Y81Hdii9Kw" key="documentation" value="Generates a few options from which the value can be selected, only a single option can be selected at a time."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhNUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_790419_19"/>
+          <eAnnotations xmi:id="_4hU6r0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_790419_19"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhNkk_EeCaOrC2KWCfhw" name="plaintext" value="10">
-          <eAnnotations xmi:id="_NYRhN0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhOEk_EeCaOrC2KWCfhw" key="documentation" value="Display this property as a plain text string."/>
+        <eLiterals xmi:id="_4hU6sEqGEeC8Y81Hdii9Kw" name="plaintext" value="10">
+          <eAnnotations xmi:id="_4hU6sUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6skqGEeC8Y81Hdii9Kw" key="documentation" value="Display this property as a plain text string."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhOUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_219748_20"/>
+          <eAnnotations xmi:id="_4hU6s0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_219748_20"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhOkk_EeCaOrC2KWCfhw" name="table" value="11">
-          <eAnnotations xmi:id="_NYRhO0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhPEk_EeCaOrC2KWCfhw" key="documentation" value="Allows you to submit an entire table (only makes sense on an array or collection) type.  Arrays are preferrable as they allow us to know the type of element which makes up the collection."/>
+        <eLiterals xmi:id="_4hU6tEqGEeC8Y81Hdii9Kw" name="table" value="11">
+          <eAnnotations xmi:id="_4hU6tUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6tkqGEeC8Y81Hdii9Kw" key="documentation" value="Allows you to submit an entire table (only makes sense on an array or collection) type.  Arrays are preferrable as they allow us to know the type of element which makes up the collection."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhPUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_5_1_12ab03bf_1127428788109_430313_0"/>
+          <eAnnotations xmi:id="_4hU6t0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_5_1_12ab03bf_1127428788109_430313_0"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_NYRhPkk_EeCaOrC2KWCfhw" name="presentation__WebActionType">
-        <eAnnotations xmi:id="_NYRhP0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRhQEk_EeCaOrC2KWCfhw" key="documentation" value="Denotes the type of the generated struts action, as displayed on screen."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_4hU6uEqGEeC8Y81Hdii9Kw" name="presentation__WebActionType">
+        <eAnnotations xmi:id="_4hU6uUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU6ukqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the type of the generated struts action, as displayed on screen."/>
         </eAnnotations>
-        <eLiterals xmi:id="_NYRhQUk_EeCaOrC2KWCfhw" name="default">
-          <eAnnotations xmi:id="_NYRhQkk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161152780343_930810_119"/>
+        <eLiterals xmi:id="_4hU6u0qGEeC8Y81Hdii9Kw" name="default">
+          <eAnnotations xmi:id="_4hU6vEqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161152780343_930810_119"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhQ0k_EeCaOrC2KWCfhw" name="hyperlink" value="1">
-          <eAnnotations xmi:id="_NYRhREk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhRUk_EeCaOrC2KWCfhw" key="documentation" value="The action will be rendered as an hyperlink."/>
+        <eLiterals xmi:id="_4hU6vUqGEeC8Y81Hdii9Kw" name="hyperlink" value="1">
+          <eAnnotations xmi:id="_4hU6vkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6v0qGEeC8Y81Hdii9Kw" key="documentation" value="The action will be rendered as an hyperlink."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhRkk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_344864_49"/>
+          <eAnnotations xmi:id="_4hU6wEqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_344864_49"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhR0k_EeCaOrC2KWCfhw" name="form" value="2">
-          <eAnnotations xmi:id="_NYRhSEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhSUk_EeCaOrC2KWCfhw" key="documentation" value="The action will be rendered as a form."/>
+        <eLiterals xmi:id="_4hU6wUqGEeC8Y81Hdii9Kw" name="form" value="2">
+          <eAnnotations xmi:id="_4hU6wkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6w0qGEeC8Y81Hdii9Kw" key="documentation" value="The action will be rendered as a form."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhSkk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_180440_50"/>
+          <eAnnotations xmi:id="_4hU6xEqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_180440_50"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhS0k_EeCaOrC2KWCfhw" name="image" value="3">
-          <eAnnotations xmi:id="_NYRhTEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhTUk_EeCaOrC2KWCfhw" key="documentation" value="The action will be rendered as a clickable image."/>
+        <eLiterals xmi:id="_4hU6xUqGEeC8Y81Hdii9Kw" name="image" value="3">
+          <eAnnotations xmi:id="_4hU6xkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6x0qGEeC8Y81Hdii9Kw" key="documentation" value="The action will be rendered as a clickable image."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhTkk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_526064_51"/>
+          <eAnnotations xmi:id="_4hU6yEqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_526064_51"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhT0k_EeCaOrC2KWCfhw" name="table" value="4">
-          <eAnnotations xmi:id="_NYRhUEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhUUk_EeCaOrC2KWCfhw" key="documentation" value="Denotes the action will work on all rows of a table."/>
+        <eLiterals xmi:id="_4hU6yUqGEeC8Y81Hdii9Kw" name="table" value="4">
+          <eAnnotations xmi:id="_4hU6ykqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6y0qGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the action will work on all rows of a table."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhUkk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_2_1fe00f9_1122552631953_327936_0"/>
+          <eAnnotations xmi:id="_4hU6zEqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_2_1fe00f9_1122552631953_327936_0"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhU0k_EeCaOrC2KWCfhw" name="popup" value="5">
-          <eAnnotations xmi:id="_NYRhVEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhVUk_EeCaOrC2KWCfhw" key="documentation" value="When this is selected the resulting view will be rendered as a popup."/>
+        <eLiterals xmi:id="_4hU6zUqGEeC8Y81Hdii9Kw" name="popup" value="5">
+          <eAnnotations xmi:id="_4hU6zkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6z0qGEeC8Y81Hdii9Kw" key="documentation" value="When this is selected the resulting view will be rendered as a popup."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhVkk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_2_12ab03bf_1125616954921_758307_0"/>
+          <eAnnotations xmi:id="_4hU60EqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_2_12ab03bf_1125616954921_758307_0"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_NYRhV0k_EeCaOrC2KWCfhw" name="presentation__WebExportType">
-        <eLiterals xmi:id="_NYRhWEk_EeCaOrC2KWCfhw" name="default">
-          <eAnnotations xmi:id="_NYRhWUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161152780921_326825_120"/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_4hU60UqGEeC8Y81Hdii9Kw" name="presentation__WebExportType">
+        <eLiterals xmi:id="_4hU60kqGEeC8Y81Hdii9Kw" name="default">
+          <eAnnotations xmi:id="_4hU600qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161152780921_326825_120"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhWkk_EeCaOrC2KWCfhw" name="xml" value="1">
-          <eAnnotations xmi:id="_NYRhW0k_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_322449_39"/>
+        <eLiterals xmi:id="_4hU61EqGEeC8Y81Hdii9Kw" name="xml" value="1">
+          <eAnnotations xmi:id="_4hU61UqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_322449_39"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhXEk_EeCaOrC2KWCfhw" name="csv" value="2">
-          <eAnnotations xmi:id="_NYRhXUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_219149_40"/>
+        <eLiterals xmi:id="_4hU61kqGEeC8Y81Hdii9Kw" name="csv" value="2">
+          <eAnnotations xmi:id="_4hU610qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_219149_40"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhXkk_EeCaOrC2KWCfhw" name="excel" value="3">
-          <eAnnotations xmi:id="_NYRhX0k_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_563091_41"/>
+        <eLiterals xmi:id="_4hU62EqGEeC8Y81Hdii9Kw" name="excel" value="3">
+          <eAnnotations xmi:id="_4hU62UqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_563091_41"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhYEk_EeCaOrC2KWCfhw" name="pdf" value="4">
-          <eAnnotations xmi:id="_NYRhYUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_805562_42"/>
+        <eLiterals xmi:id="_4hU62kqGEeC8Y81Hdii9Kw" name="pdf" value="4">
+          <eAnnotations xmi:id="_4hU620qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_805562_42"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhYkk_EeCaOrC2KWCfhw" name="none" value="5">
-          <eAnnotations xmi:id="_NYRhY0k_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_670329_43"/>
+        <eLiterals xmi:id="_4hU63EqGEeC8Y81Hdii9Kw" name="none" value="5">
+          <eAnnotations xmi:id="_4hU63UqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_1fe00f9_1119337248937_670329_43"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_NYRhZEk_EeCaOrC2KWCfhw" name="presentation__ViewType">
-        <eAnnotations xmi:id="_NYRhZUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRhZkk_EeCaOrC2KWCfhw" key="documentation" value="Represents the types of views."/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_4hU63kqGEeC8Y81Hdii9Kw" name="presentation__ViewType">
+        <eAnnotations xmi:id="_4hU630qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU64EqGEeC8Y81Hdii9Kw" key="documentation" value="Represents the types of views."/>
         </eAnnotations>
-        <eLiterals xmi:id="_NYRhZ0k_EeCaOrC2KWCfhw" name="default">
-          <eAnnotations xmi:id="_NYRhaEk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161152774281_666603_117"/>
+        <eLiterals xmi:id="_4hU64UqGEeC8Y81Hdii9Kw" name="default">
+          <eAnnotations xmi:id="_4hU64kqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161152774281_666603_117"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhaUk_EeCaOrC2KWCfhw" name="regular" value="1">
-          <eAnnotations xmi:id="_NYRhakk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRha0k_EeCaOrC2KWCfhw" key="documentation" value="A &quot;regular&quot; view."/>
+        <eLiterals xmi:id="_4hU640qGEeC8Y81Hdii9Kw" name="regular" value="1">
+          <eAnnotations xmi:id="_4hU65EqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU65UqGEeC8Y81Hdii9Kw" key="documentation" value="A &quot;regular&quot; view."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhbEk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_2_12ab03bf_1125759114125_637903_1"/>
+          <eAnnotations xmi:id="_4hU65kqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_2_12ab03bf_1125759114125_637903_1"/>
         </eLiterals>
-        <eLiterals xmi:id="_NYRhbUk_EeCaOrC2KWCfhw" name="popup" value="2">
-          <eAnnotations xmi:id="_NYRhbkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhb0k_EeCaOrC2KWCfhw" key="documentation" value="A &quot;popup&quot; view."/>
+        <eLiterals xmi:id="_4hU650qGEeC8Y81Hdii9Kw" name="popup" value="2">
+          <eAnnotations xmi:id="_4hU66EqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU66UqGEeC8Y81Hdii9Kw" key="documentation" value="A &quot;popup&quot; view."/>
           </eAnnotations>
-          <eAnnotations xmi:id="_NYRhcEk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_9_0_2_12ab03bf_1125759114125_324601_2"/>
-        </eLiterals>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRhcUk_EeCaOrC2KWCfhw" name="presentation__FrontEndRegistration">
-        <eAnnotations xmi:id="_NYRhckk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRhc0k_EeCaOrC2KWCfhw" key="documentation" value="Place this on a use case that represents a front-end registration process."/>
-        </eAnnotations>
-        <eAnnotations xmi:id="_NYRhdEk_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_2_12ab03bf_1126726268765_386289_0"/>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRhdUk_EeCaOrC2KWCfhw" name="presentation__FrontEndException">
-        <eAnnotations xmi:id="_NYRhdkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRhd0k_EeCaOrC2KWCfhw" key="documentation" value="Have this transition point to a &lt;&lt;FrontEndView>> action state or a final state, it will have any exception directed to that page or use-case respectively. Using tagged values you can have control on the type of exception for each of such transitions."/>
-        </eAnnotations>
-        <eAnnotations xmi:id="_NYRheEk_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119337248937_447433_8"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRheUk_EeCaOrC2KWCfhw" name="_andromdapresentationexceptiontype" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhekk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhe0k_EeCaOrC2KWCfhw" key="documentation" value="The type of exception that is to be handled by this transition."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRhfEk_EeCaOrC2KWCfhw" name="presentation__FrontEndTable">
-        <eAnnotations xmi:id="_NYRhfUk_EeCaOrC2KWCfhw" source="stereotype" references="_11_5_e240333_1154527287671_632374_75"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhfkk_EeCaOrC2KWCfhw" name="_andromdapresentationviewtablecolumns" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhf0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhgEk_EeCaOrC2KWCfhw" key="documentation" value="Determines which properties of the value objects in a Collection are to be called in order to render the columns of the table. The order directly specifies the order of the columns. Multiple values are separated by commas or whitespace."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhgUk_EeCaOrC2KWCfhw" name="_andromdapresentationviewtable" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhgkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhg0k_EeCaOrC2KWCfhw" key="documentation" value="A flag indicating whether or not a parameter should be considered a table.  This must be set to true when you wish to display a list of simple types (such as strings) within a table. If you specify the table's columns in @andromda.presentation.view.table.columns, then this tagged value is not required to indicate that the parameter is table (as it will be assumed)."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhhEk_EeCaOrC2KWCfhw" name="_andromdapresentationviewtablesortable" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhhUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhhkk_EeCaOrC2KWCfhw" key="documentation" value="Denotes whether or not columns are supposed to be sortable, defaults to true in case of absence."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhh0k_EeCaOrC2KWCfhw" name="_andromdapresentationviewtablemaxrows" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhiEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhiUk_EeCaOrC2KWCfhw" key="documentation" value="Denotes the maximum number of rows per 'page'. Defaults to 15."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhikk_EeCaOrC2KWCfhw" name="_andromdapresentationviewtableexport" ordered="false" upperBound="-1" eType="_NYRhV0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhi0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhjEk_EeCaOrC2KWCfhw" key="documentation" value="This tagged value specifies which types of export are supported. "/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhjUk_EeCaOrC2KWCfhw" name="_andromdastrutsviewtabledecorator" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhjkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhj0k_EeCaOrC2KWCfhw" key="documentation" value="Denotes whether or not to render a displaytag table decorator, will be ignored if this parameter does not represent a table."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhkEk_EeCaOrC2KWCfhw" name="_andromdapresentationviewtablepageable" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhkUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhkkk_EeCaOrC2KWCfhw" key="documentation" value="Defines whether or not a table is considered &quot;pageable&quot;.  Pageable tables trigger generation of DB paging support."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_NYRhk0k_EeCaOrC2KWCfhw" name="presentation__TernaryBoolean">
-        <eLiterals xmi:id="_NYRhlEk_EeCaOrC2KWCfhw" name="default">
-          <eAnnotations xmi:id="_NYRhlUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161153044171_420133_126"/>
-        </eLiterals>
-        <eLiterals xmi:id="_NYRhlkk_EeCaOrC2KWCfhw" name="true" value="1">
-          <eAnnotations xmi:id="_NYRhl0k_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161153044140_843873_124"/>
-        </eLiterals>
-        <eLiterals xmi:id="_NYRhmEk_EeCaOrC2KWCfhw" name="false" value="2">
-          <eAnnotations xmi:id="_NYRhmUk_EeCaOrC2KWCfhw" source="enumerationLiteral" references="_11_6_e240333_1161153044171_46313_125"/>
+          <eAnnotations xmi:id="_4hU66kqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_9_0_2_12ab03bf_1125759114125_324601_2"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRhmkk_EeCaOrC2KWCfhw" name="presentation__FrontEndField">
-        <eAnnotations xmi:id="_NYRhm0k_EeCaOrC2KWCfhw" source="stereotype" references="_11_5_e240333_1154527287656_847272_19"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhnEk_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldcalendar" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhnUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhnkk_EeCaOrC2KWCfhw" key="documentation" value="Put this tagged value on a parameter of type Date to denote that you want a calendar popup."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhn0k_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldequal" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhoEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhoUk_EeCaOrC2KWCfhw" key="documentation" value="Allows you to specify the name for the field that this field must be equal to."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhokk_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldreset" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRho0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhpEk_EeCaOrC2KWCfhw" key="documentation" value="Denotes whether this field should be reset to an empty value "/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhpUk_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldrows" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhpkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhp0k_EeCaOrC2KWCfhw" key="documentation" value="Denotes the number of rows of a textarea field."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhqEk_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldsize" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhqUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhqkk_EeCaOrC2KWCfhw" key="documentation" value="Denotes the number of columns of an input field."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhq0k_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldtype" ordered="false" lowerBound="1" eType="_NYRhDUk_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhrEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhrUk_EeCaOrC2KWCfhw" key="documentation" value="Use this tagged value if you wish to display input fields using a special widget."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhrkk_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldvalidators" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhr0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhsEk_EeCaOrC2KWCfhw" key="documentation" value="Allows users to specify custom validators for a field, when used the validation-rules-3.3.xml will need an update to include these validators."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhsUk_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewfieldvalidwhen" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhskk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhs0k_EeCaOrC2KWCfhw" key="documentation" value="Makes the validity of this parameter dependent on another parameter. This is useful for example for confirming passwords."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhtEk_EeCaOrC2KWCfhw" name="_andromdapresentationviewfieldmultibox" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhtUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhtkk_EeCaOrC2KWCfhw" key="documentation" value="When using the @andromda.struts.view.field.type=multibox tagged value (which is only allowed in tables) you must specify also this tagged value to specify the collection or array holding the actual values to match against."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRht0k_EeCaOrC2KWCfhw" name="_andromdapresentationviewfieldradio" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhuEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhuUk_EeCaOrC2KWCfhw" key="documentation" value="This tagged value only makes sense when used in combination with @andromda.struts.field.type=radio, it denotes the number of options to render. Specify an integer value, or specify a comma-separated list of property values."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhukk_EeCaOrC2KWCfhw" name="_andromdapresentationviewfieldreadonly" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhu0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhvEk_EeCaOrC2KWCfhw" key="documentation" value="Will make the parameter read-only."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhvUk_EeCaOrC2KWCfhw" name="_andromdapresentationviewfieldrequired" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhvkk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhv0k_EeCaOrC2KWCfhw" key="documentation" value="The parameter is not allowed to represent a blank (null or whitespace)."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhwEk_EeCaOrC2KWCfhw" name="_andromdapresentationviewfieldtableidentifiercolumns" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhwUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhwkk_EeCaOrC2KWCfhw" key="documentation" value="A comma seperated list; used with the table input type. Defines the columns that make up the identifier of the row (these are necessary in order to allow the merging of the value with the backing value when submitting and loading an input table)."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhw0k_EeCaOrC2KWCfhw" name="_andromdapresentationviewfieldformat" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhxEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhxUk_EeCaOrC2KWCfhw" key="documentation" value="Denotes the format of the parameter value, this value will be check on the client as well as on the server. You may enter more than one value for this tag."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRhxkk_EeCaOrC2KWCfhw" name="presentation__FrontEndAction">
-        <eAnnotations xmi:id="_NYRhx0k_EeCaOrC2KWCfhw" source="stereotype" references="_11_5_e240333_1154527287671_31101_88"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhyEk_EeCaOrC2KWCfhw" name="_andromdapresentationwebactionformreset" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhyUk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhykk_EeCaOrC2KWCfhw" key="documentation" value="Allows one to reset the values on the corresponding action's (a transition coming out a of a front end view) form."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhy0k_EeCaOrC2KWCfhw" name="_andromdapresentationwebactiontablelink" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRhzEk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRhzUk_EeCaOrC2KWCfhw" key="documentation" value="Use this tagged value when you have an incoming transition with a Collection parameter that is to be represented as a table. The value of this tagged value will then be used to determine which table use when calling this action.&#xA;&#xA;The value should the name of an table page-variable entering the page on which this action has been modeled."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRhzkk_EeCaOrC2KWCfhw" name="_andromdapresentationwebactiontype" ordered="false" lowerBound="1" eType="_NYRhPkk_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRhz0k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh0Ek_EeCaOrC2KWCfhw" key="documentation" value="Denotes how the action is to be rendered."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh0Uk_EeCaOrC2KWCfhw" name="_andromdapresentationwebactionresettable" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRh0kk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh00k_EeCaOrC2KWCfhw" key="documentation" value="Denotes that the user should be able to reset the action form."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh1Ek_EeCaOrC2KWCfhw" name="_andromdapresentationwebactionredirect" ordered="false" lowerBound="1" eType="_NYRhk0k_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRh1Uk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh1kk_EeCaOrC2KWCfhw" key="documentation" value="Defines whether or not the struts action should be redirected when forwarding to the next action."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh10k_EeCaOrC2KWCfhw" name="_andromdapresentationwebactionformscope" ordered="false" lowerBound="1" eType="_NYRg_Ek_EeCaOrC2KWCfhw">
-          <eAnnotations xmi:id="_NYRh2Ek_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh2Uk_EeCaOrC2KWCfhw" key="documentation" value="Denotes the scope in which the &quot;form&quot; attribute should be placed when executing the action."/>
-          </eAnnotations>
-        </eStructuralFeatures>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRh2kk_EeCaOrC2KWCfhw" name="presentation__FrontEndApplication">
-        <eAnnotations xmi:id="_NYRh20k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRh3Ek_EeCaOrC2KWCfhw" key="documentation" value="This stereotype means that the use-case will be consider the first one when entering the application."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU660qGEeC8Y81Hdii9Kw" name="presentation__FrontEndRegistration">
+        <eAnnotations xmi:id="_4hU67EqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU67UqGEeC8Y81Hdii9Kw" key="documentation" value="Place this on a use case that represents a front-end registration process."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_NYRh3Uk_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119337248937_791195_9"/>
+        <eAnnotations xmi:id="_4hU67kqGEeC8Y81Hdii9Kw" source="stereotype" references="_9_0_2_12ab03bf_1126726268765_386289_0"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRh3kk_EeCaOrC2KWCfhw" name="presentation__FrontEndController">
-        <eAnnotations xmi:id="_NYRh30k_EeCaOrC2KWCfhw" source="stereotype" references="_11_5_e240333_1154527287656_99430_24"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh4Ek_EeCaOrC2KWCfhw" name="_andromdapresentationcontrollerusecase" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRh4Uk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh4kk_EeCaOrC2KWCfhw" key="documentation" value="For those CASE tools with marginal UML support this tagged value allows the controller to reference the use-case. You should give the name of the use-case, nothing more and nothing less."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRh40k_EeCaOrC2KWCfhw" name="presentation__FrontEndUseCase">
-        <eAnnotations xmi:id="_NYRh5Ek_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRh5Uk_EeCaOrC2KWCfhw" key="documentation" value="A use-case to be processed by AndroMDA."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU670qGEeC8Y81Hdii9Kw" name="presentation__FrontEndException">
+        <eAnnotations xmi:id="_4hU68EqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU68UqGEeC8Y81Hdii9Kw" key="documentation" value="Have this transition point to a &lt;&lt;FrontEndView>> action state or a final state, it will have any exception directed to that page or use-case respectively. Using tagged values you can have control on the type of exception for each of such transitions."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_NYRh5kk_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119337248937_839982_7"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh50k_EeCaOrC2KWCfhw" name="_andromdapresentationusecaseactivity" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRh6Ek_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh6Uk_EeCaOrC2KWCfhw" key="documentation" value="This tagged value is used to reference activity graphs from a use-case. In doing so you will associate the graph with the usecase. Instead of using this tagged value you can simply assign a single graph in the namespace of the use-case."/>
-          </eAnnotations>
-          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-        </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh6kk_EeCaOrC2KWCfhw" name="_andromdapresentationwebactionformkey" ordered="false" lowerBound="1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRh60k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh7Ek_EeCaOrC2KWCfhw" key="documentation" value="Denotes the key used to store this action's form under. Depending on the setting of the @andromda.presentation.web.action.form.scope tagged value this key is used for either request or session scope. Will only be used when the form is not empty, it is ignored otherwise."/>
+        <eAnnotations xmi:id="_4hU68kqGEeC8Y81Hdii9Kw" source="stereotype" references="_9_0_1fe00f9_1119337248937_447433_8"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU680qGEeC8Y81Hdii9Kw" name="_andromdapresentationexceptiontype" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU69EqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU69UqGEeC8Y81Hdii9Kw" key="documentation" value="The type of exception that is to be handled by this transition."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRh7Uk_EeCaOrC2KWCfhw" name="presentation__FrontEndView">
-        <eAnnotations xmi:id="_NYRh7kk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRh70k_EeCaOrC2KWCfhw" key="documentation" value="A presentation component interfacing with the end-user."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU69kqGEeC8Y81Hdii9Kw" name="presentation__FrontEndTable">
+        <eAnnotations xmi:id="_4hU690qGEeC8Y81Hdii9Kw" source="stereotype" references="_11_5_e240333_1154527287671_632374_75"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU6-EqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewtablecolumns" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU6-UqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6-kqGEeC8Y81Hdii9Kw" key="documentation" value="Determines which properties of the value objects in a Collection are to be called in order to render the columns of the table. The order directly specifies the order of the columns. Multiple values are separated by commas or whitespace."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU6-0qGEeC8Y81Hdii9Kw" name="_andromdapresentationviewtable" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU6_EqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU6_UqGEeC8Y81Hdii9Kw" key="documentation" value="A flag indicating whether or not a parameter should be considered a table.  This must be set to true when you wish to display a list of simple types (such as strings) within a table. If you specify the table's columns in @andromda.presentation.view.table.columns, then this tagged value is not required to indicate that the parameter is table (as it will be assumed)."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU6_kqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewtablesortable" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU6_0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7AEqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes whether or not columns are supposed to be sortable, defaults to true in case of absence."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7AUqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewtablemaxrows" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7AkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7A0qGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the maximum number of rows per 'page'. Defaults to 15."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7BEqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewtableexport" ordered="false" upperBound="-1" eType="_4hU60UqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7BUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7BkqGEeC8Y81Hdii9Kw" key="documentation" value="This tagged value specifies which types of export are supported. "/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7B0qGEeC8Y81Hdii9Kw" name="_andromdastrutsviewtabledecorator" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7CEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7CUqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes whether or not to render a displaytag table decorator, will be ignored if this parameter does not represent a table."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7CkqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewtablepageable" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7C0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7DEqGEeC8Y81Hdii9Kw" key="documentation" value="Defines whether or not a table is considered &quot;pageable&quot;.  Pageable tables trigger generation of DB paging support."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_4hU7DUqGEeC8Y81Hdii9Kw" name="presentation__TernaryBoolean">
+        <eLiterals xmi:id="_4hU7DkqGEeC8Y81Hdii9Kw" name="default">
+          <eAnnotations xmi:id="_4hU7D0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161153044171_420133_126"/>
+        </eLiterals>
+        <eLiterals xmi:id="_4hU7EEqGEeC8Y81Hdii9Kw" name="true" value="1">
+          <eAnnotations xmi:id="_4hU7EUqGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161153044140_843873_124"/>
+        </eLiterals>
+        <eLiterals xmi:id="_4hU7EkqGEeC8Y81Hdii9Kw" name="false" value="2">
+          <eAnnotations xmi:id="_4hU7E0qGEeC8Y81Hdii9Kw" source="enumerationLiteral" references="_11_6_e240333_1161153044171_46313_125"/>
+        </eLiterals>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7FEqGEeC8Y81Hdii9Kw" name="presentation__FrontEndField">
+        <eAnnotations xmi:id="_4hU7FUqGEeC8Y81Hdii9Kw" source="stereotype" references="_11_5_e240333_1154527287656_847272_19"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7FkqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldcalendar" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7F0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7GEqGEeC8Y81Hdii9Kw" key="documentation" value="Put this tagged value on a parameter of type Date to denote that you want a calendar popup."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7GUqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldequal" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7GkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7G0qGEeC8Y81Hdii9Kw" key="documentation" value="Allows you to specify the name for the field that this field must be equal to."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7HEqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldreset" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7HUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7HkqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes whether this field should be reset to an empty value "/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7H0qGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldrows" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7IEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7IUqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the number of rows of a textarea field."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7IkqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldsize" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7I0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7JEqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the number of columns of an input field."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7JUqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldtype" ordered="false" lowerBound="1" eType="_4hU6h0qGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7JkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7J0qGEeC8Y81Hdii9Kw" key="documentation" value="Use this tagged value if you wish to display input fields using a special widget."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7KEqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldvalidators" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7KUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7KkqGEeC8Y81Hdii9Kw" key="documentation" value="Allows users to specify custom validators for a field, when used the validation-rules-3.3.xml will need an update to include these validators."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7K0qGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewfieldvalidwhen" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7LEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7LUqGEeC8Y81Hdii9Kw" key="documentation" value="Makes the validity of this parameter dependent on another parameter. This is useful for example for confirming passwords."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7LkqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewfieldmultibox" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7L0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7MEqGEeC8Y81Hdii9Kw" key="documentation" value="When using the @andromda.struts.view.field.type=multibox tagged value (which is only allowed in tables) you must specify also this tagged value to specify the collection or array holding the actual values to match against."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7MUqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewfieldradio" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7MkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7M0qGEeC8Y81Hdii9Kw" key="documentation" value="This tagged value only makes sense when used in combination with @andromda.struts.field.type=radio, it denotes the number of options to render. Specify an integer value, or specify a comma-separated list of property values."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7NEqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewfieldreadonly" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7NUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7NkqGEeC8Y81Hdii9Kw" key="documentation" value="Will make the parameter read-only."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7N0qGEeC8Y81Hdii9Kw" name="_andromdapresentationviewfieldrequired" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7OEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7OUqGEeC8Y81Hdii9Kw" key="documentation" value="The parameter is not allowed to represent a blank (null or whitespace)."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7OkqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewfieldtableidentifiercolumns" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7O0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7PEqGEeC8Y81Hdii9Kw" key="documentation" value="A comma seperated list; used with the table input type. Defines the columns that make up the identifier of the row (these are necessary in order to allow the merging of the value with the backing value when submitting and loading an input table)."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7PUqGEeC8Y81Hdii9Kw" name="_andromdapresentationviewfieldformat" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7PkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7P0qGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the format of the parameter value, this value will be check on the client as well as on the server. You may enter more than one value for this tag."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7QEqGEeC8Y81Hdii9Kw" name="presentation__FrontEndAction">
+        <eAnnotations xmi:id="_4hU7QUqGEeC8Y81Hdii9Kw" source="stereotype" references="_11_5_e240333_1154527287671_31101_88"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7QkqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebactionformreset" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7Q0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7REqGEeC8Y81Hdii9Kw" key="documentation" value="Allows one to reset the values on the corresponding action's (a transition coming out a of a front end view) form."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7RUqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebactiontablelink" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7RkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7R0qGEeC8Y81Hdii9Kw" key="documentation" value="Use this tagged value when you have an incoming transition with a Collection parameter that is to be represented as a table. The value of this tagged value will then be used to determine which table use when calling this action.&#xA;&#xA;The value should the name of an table page-variable entering the page on which this action has been modeled."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7SEqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebactiontype" ordered="false" lowerBound="1" eType="_4hU6uEqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7SUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7SkqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes how the action is to be rendered."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7S0qGEeC8Y81Hdii9Kw" name="_andromdapresentationwebactionresettable" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7TEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7TUqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes that the user should be able to reset the action form."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7TkqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebactionredirect" ordered="false" lowerBound="1" eType="_4hU7DUqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7T0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7UEqGEeC8Y81Hdii9Kw" key="documentation" value="Defines whether or not the struts action should be redirected when forwarding to the next action."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7UUqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebactionformscope" ordered="false" lowerBound="1" eType="_4hU6dkqGEeC8Y81Hdii9Kw">
+          <eAnnotations xmi:id="_4hU7UkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7U0qGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the scope in which the &quot;form&quot; attribute should be placed when executing the action."/>
+          </eAnnotations>
+        </eStructuralFeatures>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7VEqGEeC8Y81Hdii9Kw" name="presentation__FrontEndApplication">
+        <eAnnotations xmi:id="_4hU7VUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU7VkqGEeC8Y81Hdii9Kw" key="documentation" value="This stereotype means that the use-case will be consider the first one when entering the application."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_NYRh8Ek_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119337248937_676970_30"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh8Uk_EeCaOrC2KWCfhw" name="_andromdapresentationwebviewtype" ordered="false" lowerBound="1" eType="_NYRhZEk_EeCaOrC2KWCfhw"/>
+        <eAnnotations xmi:id="_4hU7V0qGEeC8Y81Hdii9Kw" source="stereotype" references="_9_0_1fe00f9_1119337248937_791195_9"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRh8kk_EeCaOrC2KWCfhw" name="presentation__FrontEndSessionObject">
-        <eAnnotations xmi:id="_NYRh80k_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_NYRh9Ek_EeCaOrC2KWCfhw" key="documentation" value="A session object needs to be associated with controllers, that way the controller will have some code to lookup the session object and can therefore expose it in your manual code."/>
-        </eAnnotations>
-        <eAnnotations xmi:id="_NYRh9Uk_EeCaOrC2KWCfhw" source="stereotype" references="_9_0_1fe00f9_1119337248937_233969_55"/>
-      </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_NYRh9kk_EeCaOrC2KWCfhw" name="presentation__FrontEndMessage">
-        <eAnnotations xmi:id="_NYRh90k_EeCaOrC2KWCfhw" source="stereotype" references="_11_6_e240333_1161154424000_684096_139"/>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh-Ek_EeCaOrC2KWCfhw" name="_andromdapresentationactionwarningmessage" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRh-Uk_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh-kk_EeCaOrC2KWCfhw" key="documentation" value="Place this tagged value on a transition if you want to have an automatic warning message rendered into the target jsp page, this message will indicate that the action has finished succesfully but the user's attention should go to a specific topic. The value assigned to this tagged value will be used as the warning message in case it contains more than 5 characters, otherwise the value needs to be 'true' to be taken into account."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7WEqGEeC8Y81Hdii9Kw" name="presentation__FrontEndController">
+        <eAnnotations xmi:id="_4hU7WUqGEeC8Y81Hdii9Kw" source="stereotype" references="_11_5_e240333_1154527287656_99430_24"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7WkqGEeC8Y81Hdii9Kw" name="_andromdapresentationcontrollerusecase" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7W0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7XEqGEeC8Y81Hdii9Kw" key="documentation" value="For those CASE tools with marginal UML support this tagged value allows the controller to reference the use-case. You should give the name of the use-case, nothing more and nothing less."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
-        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_NYRh-0k_EeCaOrC2KWCfhw" name="_andromdapresentationactionsuccessmessage" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
-          <eAnnotations xmi:id="_NYRh_Ek_EeCaOrC2KWCfhw" source="http://www.eclipse.org/emf/2002/GenModel">
-            <details xmi:id="_NYRh_Uk_EeCaOrC2KWCfhw" key="documentation" value="Place this tagged value on a transition if you want to have an automatic confirmation message rendered into the target jsp page, this message will indicate that the action has finished succesfully. The value assigned to this tagged value will be used as the success message in case it contains more than 5 characters, otherwise the value needs to be 'true' to be taken into account."/>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7XUqGEeC8Y81Hdii9Kw" name="presentation__FrontEndUseCase">
+        <eAnnotations xmi:id="_4hU7XkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU7X0qGEeC8Y81Hdii9Kw" key="documentation" value="A use-case to be processed by AndroMDA."/>
+        </eAnnotations>
+        <eAnnotations xmi:id="_4hU7YEqGEeC8Y81Hdii9Kw" source="stereotype" references="_9_0_1fe00f9_1119337248937_839982_7"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7YUqGEeC8Y81Hdii9Kw" name="_andromdapresentationusecaseactivity" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7YkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7Y0qGEeC8Y81Hdii9Kw" key="documentation" value="This tagged value is used to reference activity graphs from a use-case. In doing so you will associate the graph with the usecase. Instead of using this tagged value you can simply assign a single graph in the namespace of the use-case."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7ZEqGEeC8Y81Hdii9Kw" name="_andromdapresentationwebactionformkey" ordered="false" lowerBound="1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7ZUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7ZkqGEeC8Y81Hdii9Kw" key="documentation" value="Denotes the key used to store this action's form under. Depending on the setting of the @andromda.presentation.web.action.form.scope tagged value this key is used for either request or session scope. Will only be used when the form is not empty, it is ignored otherwise."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7Z0qGEeC8Y81Hdii9Kw" name="presentation__FrontEndView">
+        <eAnnotations xmi:id="_4hU7aEqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU7aUqGEeC8Y81Hdii9Kw" key="documentation" value="A presentation component interfacing with the end-user."/>
+        </eAnnotations>
+        <eAnnotations xmi:id="_4hU7akqGEeC8Y81Hdii9Kw" source="stereotype" references="_9_0_1fe00f9_1119337248937_676970_30"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7a0qGEeC8Y81Hdii9Kw" name="_andromdapresentationwebviewtype" ordered="false" lowerBound="1" eType="_4hU63kqGEeC8Y81Hdii9Kw"/>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7bEqGEeC8Y81Hdii9Kw" name="presentation__FrontEndSessionObject">
+        <eAnnotations xmi:id="_4hU7bUqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_4hU7bkqGEeC8Y81Hdii9Kw" key="documentation" value="A session object needs to be associated with controllers, that way the controller will have some code to lookup the session object and can therefore expose it in your manual code."/>
+        </eAnnotations>
+        <eAnnotations xmi:id="_4hU7b0qGEeC8Y81Hdii9Kw" source="stereotype" references="_9_0_1fe00f9_1119337248937_233969_55"/>
+      </eClassifiers>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_4hU7cEqGEeC8Y81Hdii9Kw" name="presentation__FrontEndMessage">
+        <eAnnotations xmi:id="_4hU7cUqGEeC8Y81Hdii9Kw" source="stereotype" references="_11_6_e240333_1161154424000_684096_139"/>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7ckqGEeC8Y81Hdii9Kw" name="_andromdapresentationactionwarningmessage" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7c0qGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7dEqGEeC8Y81Hdii9Kw" key="documentation" value="Place this tagged value on a transition if you want to have an automatic warning message rendered into the target jsp page, this message will indicate that the action has finished succesfully but the user's attention should go to a specific topic. The value assigned to this tagged value will be used as the warning message in case it contains more than 5 characters, otherwise the value needs to be 'true' to be taken into account."/>
+          </eAnnotations>
+          <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+        </eStructuralFeatures>
+        <eStructuralFeatures xmi:type="ecore:EAttribute" xmi:id="_4hU7dUqGEeC8Y81Hdii9Kw" name="_andromdapresentationactionsuccessmessage" ordered="false" lowerBound="1" upperBound="-1" defaultValueLiteral="">
+          <eAnnotations xmi:id="_4hU7dkqGEeC8Y81Hdii9Kw" source="http://www.eclipse.org/emf/2002/GenModel">
+            <details xmi:id="_4hU7d0qGEeC8Y81Hdii9Kw" key="documentation" value="Place this tagged value on a transition if you want to have an automatic confirmation message rendered into the target jsp page, this message will indicate that the action has finished succesfully. The value assigned to this tagged value will be used as the success message in case it contains more than 5 characters, otherwise the value needs to be 'true' to be taken into account."/>
           </eAnnotations>
           <eType xmi:type="ecore:EDataType" href="http://www.eclipse.org/emf/2002/Ecore#//EString"/>
         </eStructuralFeatures>
@@ -755,13 +755,13 @@
       <type xmi:type="uml:Class" href="pathmap://UML2_METAMODELS/UML2.metamodel.uml2#_m88uxq86EdiEh75YJ_3n8g"/>
     </ownedAttribute>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527331125_669071_417" memberEnd="_11_5_e240333_1154527331125_934188_419 _11_5_e240333_1154527331125_15563_418">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527331125_669071_417" memberEnd="_11_5_e240333_1154527331125_15563_418 _11_5_e240333_1154527331125_934188_419">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527331125_934188_419" name="extension_FrontEndView" visibility="private" type="_9_0_1fe00f9_1119337248937_676970_30" association="_11_5_e240333_1154527331125_669071_417" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527331140_887349_421" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527331140_484488_420"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527288062_877396_341" memberEnd="_11_5_e240333_1154527288062_348945_342 _11_5_e240333_1154527288062_856788_343">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527288062_877396_341" memberEnd="_11_5_e240333_1154527288062_856788_343 _11_5_e240333_1154527288062_348945_342">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527288062_856788_343" name="extension_@andromda.presentation.web.action.form.reset" visibility="private" type="_11_5_e240333_1154527287671_31101_88" association="_11_5_e240333_1154527288062_877396_341" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527288062_56699_345" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527288062_595912_344"/>
@@ -779,13 +779,13 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527288078_194545_371"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527287968_334402_165" memberEnd="_11_5_e240333_1154527287968_514621_167 _11_5_e240333_1154527287968_867227_166">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527287968_334402_165" memberEnd="_11_5_e240333_1154527287968_867227_166 _11_5_e240333_1154527287968_514621_167">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527287968_514621_167" name="extension_@andromda.presentation.web.view.field.calendar" visibility="private" type="_11_5_e240333_1154527287656_847272_19" association="_11_5_e240333_1154527287968_334402_165" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527287968_189272_169" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527287968_860457_168"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527288000_296291_252" memberEnd="_11_5_e240333_1154527288000_288006_253 _11_5_e240333_1154527288000_912747_254">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527288000_296291_252" memberEnd="_11_5_e240333_1154527288000_912747_254 _11_5_e240333_1154527288000_288006_253">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527288000_912747_254" name="extension_@andromda.presentation.view.table.columns" visibility="private" type="_11_5_e240333_1154527287671_632374_75" association="_11_5_e240333_1154527288000_296291_252" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527288000_159732_256" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527288000_27717_255"/>
@@ -803,13 +803,13 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527288000_852272_265"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527287890_998142_106" memberEnd="_11_5_e240333_1154527287890_496902_107 _11_5_e240333_1154527287890_353960_108">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527287890_998142_106" memberEnd="_11_5_e240333_1154527287890_353960_108 _11_5_e240333_1154527287890_496902_107">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527287890_353960_108" name="extension_@andromda.presentation.controller.usecase" visibility="private" type="_11_5_e240333_1154527287656_99430_24" association="_11_5_e240333_1154527287890_998142_106" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527287890_264361_110" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527287890_455090_109"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527287937_114543_154" memberEnd="_11_5_e240333_1154527287937_268071_156 _11_5_e240333_1154527287937_730560_155">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527287937_114543_154" memberEnd="_11_5_e240333_1154527287937_730560_155 _11_5_e240333_1154527287937_268071_156">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527287937_268071_156" name="extension_FrontEndException" visibility="private" type="_9_0_1fe00f9_1119337248937_447433_8" association="_11_5_e240333_1154527287937_114543_154" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527287937_916429_158" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527287937_973782_157"/>
@@ -838,7 +838,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_6_e240333_1161154437921_568484_148"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161154558906_210642_156" memberEnd="_11_6_e240333_1161154558906_663163_157 _11_6_e240333_1161154558906_939217_158">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_6_e240333_1161154558906_210642_156" memberEnd="_11_6_e240333_1161154558906_939217_158 _11_6_e240333_1161154558906_663163_157">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_6_e240333_1161154558906_939217_158" name="extension_Table" visibility="private" type="_11_5_e240333_1154527287671_632374_75" association="_11_6_e240333_1161154558906_210642_156" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_6_e240333_1161154558906_878400_160" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_6_e240333_1161154558906_656073_159"/>
