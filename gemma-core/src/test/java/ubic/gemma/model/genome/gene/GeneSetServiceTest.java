@@ -165,6 +165,9 @@ public class GeneSetServiceTest extends BaseSpringContextTest {
         gene2GoService.create( g2Go1 );
 
         Gene2GOAssociation g2Go2 = Gene2GOAssociation.Factory.newInstance();
+        oe = VocabCharacteristic.Factory.newInstance();
+        oe.setValueUri( GeneOntologyService.BASE_GO_URI + GOTERM_INDB );
+        oe.setValue( GOTERM_INDB );
         g2Go2.setOntologyEntry( oe );
         g2Go2.setGene( g3 );
         gene2GoService.create( g2Go2 );
