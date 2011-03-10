@@ -146,10 +146,14 @@ public class PredictedCharacteristicFactory implements InitializingBean {
             }
         } else if ( URI.contains( "BIRNLex-Anatomy" ) ) {
             category = "OrganismPart";
+        } else if ( URI.contains( "NIF-GrossAnatomy" ) ) {
+            category = "OrganismPart";
         } else if ( URI.contains( "/owl/DOID#" ) ) {
             category = "DiseaseState";
+        } else if ( URI.contains( "NIF-Dysfunction.owl" ) ) {
+            category = "DiseaseState";
         } else {
-            log.debug( "Could not infer category for : " + URI );
+            log.warn( "Could not infer category for : " + URI );
         }
         return category;
     }
