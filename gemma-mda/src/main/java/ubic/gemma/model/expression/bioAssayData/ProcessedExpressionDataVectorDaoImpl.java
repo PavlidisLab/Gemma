@@ -311,11 +311,11 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             cs2gene = CommonQueries.getFullCs2GeneMap( probes, this.getSession() );
         }
 
-        Collection<CompositeSequence> noGeneProbes = new HashSet<CompositeSequence>();
+        Map<CompositeSequence, Collection<Gene>> noGeneProbes = new HashMap<CompositeSequence, Collection<Gene>>();
 
         for ( CompositeSequence p : probes ) {
             if ( !cs2gene.containsKey( p ) || cs2gene.get( p ).isEmpty() ) {
-                noGeneProbes.add( p );
+                noGeneProbes.put( p, new HashSet<Gene>() );
             }
         }
 
@@ -334,7 +334,25 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         /*
          * FIXME noGeneProbes are never cached.
          */
-        if ( !noGeneProbes.isEmpty() || needToSearch.size() != 0 ) {
+        if ( !noGeneProbes.isEmpty() ) {
+            Collection<ExpressionExperiment> eesForNoGeneProbes = new HashSet<ExpressionExperiment>();
+            eesForNoGeneProbes.addAll( ( Collection<? extends ExpressionExperiment> ) ees );
+
+            Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
+                    eesForNoGeneProbes, noGeneProbes );
+
+            Collection<DoubleVectorValueObject> newResults = unpack( processedDataVectors );
+            cacheResults( newResults );
+
+            newResults = sliceSubsets( ees, newResults );
+
+            results.addAll( newResults );
+        }
+
+        /*
+         * Non-cached items.
+         */
+        if ( !needToSearch.isEmpty() ) {
             Map<ProcessedExpressionDataVector, Collection<Gene>> processedDataVectors = getProcessedVectors(
                     needToSearch, cs2gene );
 
@@ -650,8 +668,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param bioAssaySets that we exactly need the data for.
      * @param genes that might have cached results
      * @param results from the cache will be put here
-     * @param needToSearch experiments that need to be searched (not fully cached)
-     * @param genesToSearch that stll need to be searched (not in cache)
+     * @param needToSearch experiments that need to be searched (not fully cached); this will be populated
+     * @param genesToSearch that still need to be searched (not in cache)
      */
     @SuppressWarnings("unchecked")
     private void checkCache( Collection<? extends BioAssaySet> bioAssaySets, Collection<Gene> genes,
@@ -670,7 +688,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
             }
 
             assert experiment != null;
-
             Cache cache = processedDataVectorCache.getCache( ee.getId() );
             for ( Gene g : genes ) {
                 Element element = cache.get( g );
@@ -696,6 +713,10 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
     }
 
+    /**
+     * @param bas
+     * @return
+     */
     private ExpressionExperiment getExperiment( BioAssaySet bas ) {
         ExpressionExperiment e = null;
         if ( bas instanceof ExpressionExperiment ) {

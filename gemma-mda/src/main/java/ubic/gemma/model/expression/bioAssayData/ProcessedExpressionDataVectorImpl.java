@@ -28,4 +28,9 @@ public class ProcessedExpressionDataVectorImpl extends
      */
     private static final long serialVersionUID = -3948846630785289034L;
 
+    @Override
+    public String toString() {
+        return "ProcessedExpressionDataVector [ID=" + getId() + "]";
+    }
+
 }
