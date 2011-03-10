@@ -164,18 +164,27 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
 
         Set<String> predictedAnnotations;
 
-        // go through each text source one by one
-        log.info( "Initialized ..." );
-
+        // business.
         annotateAll( model, e );
 
         // all the above calls for each text source builds a RDF model
+        predictedAnnotations = ProjectRDFModelTools.getURLsFromSingle( model );
+        log.debug( "Before filtering:" );
+        for ( String string : predictedAnnotations ) {
+            log.debug( string );
+        }
 
         // apply the filters one by one
         for ( AbstractFilter filter : filters ) {
             int result = filter.filter( model );
             log.debug( "Removed: " + result );
         }
+
+        log.debug( "After filtering:" );
+        for ( String string : predictedAnnotations ) {
+            log.debug( string );
+        }
+
         log.debug( "Final Mentions:" + ProjectRDFModelTools.getMentionCount( model ) );
 
         // write the file somewhere we may also want to write the file before
