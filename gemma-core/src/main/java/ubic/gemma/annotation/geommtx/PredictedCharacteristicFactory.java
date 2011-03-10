@@ -152,6 +152,8 @@ public class PredictedCharacteristicFactory implements InitializingBean {
             category = "DiseaseState";
         } else if ( URI.contains( "NIF-Dysfunction.owl" ) ) {
             category = "DiseaseState";
+        } else if ( URI.contains( "NIF-Function.owl" ) ) {
+            category = "Phenotype";
         } else {
             log.warn( "Could not infer category for : " + URI );
         }
