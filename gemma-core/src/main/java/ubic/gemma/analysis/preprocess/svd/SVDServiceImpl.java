@@ -164,10 +164,17 @@ public class SVDServiceImpl implements SVDService {
 
         if ( probes.isEmpty() ) return result;
 
+        assert probes.size() <= count;
+
         Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
         ees.add( ee );
         Collection<DoubleVectorValueObject> vect = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, probes.keySet(), true );
+
+        /*
+         * This is actually expected, because we go through the genes.
+         */
+        // assert vect.size() <= count : vect.size() + " vectors, expected max " + probes.keySet().size();
 
         this.bioAssayDimensionService.thaw( pca.getBioAssayDimension() );
 
@@ -175,7 +182,9 @@ public class SVDServiceImpl implements SVDService {
             ProbeLoading probeLoading = probes.get( vct.getDesignElement() );
 
             if ( probeLoading == null ) {
-                log.warn( "Missing probe loading for " + vct.getDesignElement() + "; possible bug?" );
+                /*
+                 * This is okay, we will skip this probe. It was another probe for a gene that _was_ highly loaded.
+                 */
                 continue;
             }
 
