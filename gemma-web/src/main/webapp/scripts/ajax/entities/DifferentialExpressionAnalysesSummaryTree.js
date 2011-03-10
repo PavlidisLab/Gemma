@@ -68,7 +68,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 				});
 				this.setRootNode(root);
 				// just show "Not Avalailable" root if no analyses
-				if(analyses.size() == 0){
+				if(!analyses || analyses.size() == 0){
 					root.appendChild(new Ext.tree.TreeNode({
 											id: 'nodeNA',
 											expanded: false,
