@@ -31,6 +31,7 @@ import cern.colt.matrix.linalg.Algebra;
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.math.MatrixStats;
 import ubic.basecode.math.SingularValueDecomposition;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter;
@@ -60,6 +61,7 @@ public class ExpressionDataSVD {
     private double norm1;
     private boolean normalized = false;
     DenseDoubleMatrix2D missingValueInfo; // fixme use booleans
+
     SingularValueDecomposition<CompositeSequence, Integer> svd;
 
     /**
@@ -73,8 +75,8 @@ public class ExpressionDataSVD {
 
     /**
      * @param expressionData Note that this may be modified!
-     * @param normalizeMatrix If true, the data matrix will be rescaled and centred to mean zero, variance one, on a
-     *        per-row (sample) basis. We assume that generally the columns are already on the same scale.
+     * @param normalizeMatrix If true, the data matrix will be rescaled and centred to mean zero, variance one, for both
+     *        rows and columns ("double-standardized")
      */
     public ExpressionDataSVD( ExpressionDataDoubleMatrix expressionData, boolean normalizeMatrix ) {
         this.expressionData = expressionData;
@@ -114,14 +116,7 @@ public class ExpressionDataSVD {
         imputeMissing( matrix );
 
         if ( normalizeMatrix ) {
-            for ( int i = 0; i < matrix.rows(); i++ ) {
-                double[] row = matrix.getRow( i );
-                DoubleArrayList li = new DoubleArrayList( row );
-                DescriptiveWithMissing.standardize( li );
-                for ( int j = 0; j < matrix.columns(); j++ ) {
-                    matrix.set( i, j, li.getQuick( j ) );
-                }
-            }
+            matrix = MatrixStats.doubleStandardize( matrix );
         }
 
         this.svd = new SingularValueDecomposition<CompositeSequence, Integer>( matrix );
@@ -190,10 +185,17 @@ public class ExpressionDataSVD {
         double[] singularValues = this.getSingularValues();
         double[] eigenvalues = new double[singularValues.length];
         for ( int i = 0; i < singularValues.length; i++ ) {
-            double d = Math.sqrt( singularValues[i] );
+            double d = Math.pow( singularValues[i], 2 ) / ( this.getNumVariables() - 1 );
             eigenvalues[i] = d;
         }
         return eigenvalues;
+    }
+
+    /**
+     * @return how many rows the U matrix has.
+     */
+    public int getNumVariables() {
+        return this.svd.getU().rows();
     }
 
     /**
@@ -231,10 +233,14 @@ public class ExpressionDataSVD {
      */
     public Double[] getVarianceFractions() {
         double[] singularValues = svd.getSingularValues();
-        // should be square roots of the eigenvalues: check
+        // d should be be square roots of the eigenvalues scaled by number of variables: check
+
+        int numVariables = this.getNumVariables();
+
         double sum = 0;
         for ( double d : singularValues ) {
-            double d2 = d * d;
+
+            double d2 = d * d / ( numVariables - 1 );
             sum += d2;
         }
         Double[] answer = new Double[singularValues.length];
