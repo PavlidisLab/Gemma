@@ -45,6 +45,8 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -913,6 +915,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         mav.addObject( "hasBatchInformation", hasBatchInformation );
+        mav.addObject( "batchConfound", this.batchConfound( expExp ) );
 
         addQCInfo( expExp, mav );
 
@@ -924,6 +927,28 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         return mav;
+    }
+
+    private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
+
+    /**
+    
+     */
+    public String batchConfound( ExpressionExperiment ee ) {
+
+        Collection<BatchConfoundValueObject> confounds = BatchConfound.test( ee );
+
+        StringBuilder buf = new StringBuilder();
+        buf.append( "" );
+
+        for ( BatchConfoundValueObject c : confounds ) {
+            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                String factorName = c.getEf().getName();
+                buf.append( "Factor: " + factorName + " may be confounded with batches; p="
+                        + String.format( "%.2g", c.getP() ) + "<br />" );
+            }
+        }
+        return buf.toString();
     }
 
     /**
@@ -1078,8 +1103,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         mav.addObject( "hasPvalueDist", ExpressionExperimentQCUtils.hasPvalueDistFiles( expressionExperiment ) );
         mav.addObject( "hasPCA", svdService.hasPca( expressionExperiment ) );
         mav.addObject( "numFactors", ExpressionExperimentQCUtils.numFactors( expressionExperiment ) ); // this is not
-                                                                                                       // fully
-                                                                                                       // implemented
+        // fully
+        // implemented
         mav.addObject( "hasNodeDegreeDist", ExpressionExperimentQCUtils.hasNodeDegreeDistFile( expressionExperiment ) );
     }
 

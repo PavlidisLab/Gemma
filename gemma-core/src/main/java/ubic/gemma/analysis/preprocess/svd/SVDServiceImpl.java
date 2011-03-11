@@ -33,6 +33,7 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Distance;
 import ubic.basecode.math.KruskalWallis;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
@@ -79,27 +80,6 @@ public class SVDServiceImpl implements SVDService {
     private static final int MAX_EIGEN_GENES_TO_TEST = 5;
 
     private static Log log = LogFactory.getLog( SVDServiceImpl.class );
-
-    /**
-     * @param experimentalFactor
-     * @return true if the factor is continuous; false if it looks to be categorical.
-     */
-    public static boolean isContinuous( ExperimentalFactor ef ) {
-        if ( ef.getType() != null ) {
-            return ef.getType().equals( FactorType.CONTINUOUS );
-        }
-        for ( FactorValue fv : ef.getFactorValues() ) {
-            if ( fv.getMeasurement() != null ) {
-                try {
-                    Double.parseDouble( fv.getMeasurement().getValue() );
-                    return true;
-                } catch ( NumberFormatException e ) {
-                    return false;
-                }
-            }
-        }
-        return false;
-    }
 
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
@@ -357,6 +337,8 @@ public class SVDServiceImpl implements SVDService {
             double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
 
             svo.setPCDateCorrelation( componentNumber, dateCorrelation );
+            svo.setPCDateCorrelationPval( componentNumber, CorrelationStats.spearmanPvalue( dateCorrelation, eigenGene
+                    .size() ) );
         }
 
         /*
@@ -397,7 +379,7 @@ public class SVDServiceImpl implements SVDService {
                 continue;
             }
 
-            if ( isContinuous( ef ) ) {
+            if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
                 double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                 svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
             } else {
@@ -430,9 +412,13 @@ public class SVDServiceImpl implements SVDService {
                     // use the one that still has missing values.
                     double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                     svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
+                    svo.setPCFactorCorrelationPval( componentNumber, ef, CorrelationStats.spearmanPvalue(
+                            factorCorrelation, eigenGeneWithoutMissing.size() ) );
                 } else {
                     // one-way ANOVA on ranks.
                     double kwpval = KruskalWallis.test( eigenGeneWithoutMissing, groupings );
+
+                    svo.setPCFactorCorrelationPval( componentNumber, ef, kwpval );
 
                     double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                     double corrPvalue = CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing
@@ -446,7 +432,7 @@ public class SVDServiceImpl implements SVDService {
                     if ( corrPvalue <= kwpval ) {
                         svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
                     } else {
-                        // FIXME this is a total hack. A bit like turning pvalues into probit
+                        // hack. A bit like turning pvalues into probit
                         double approxCorr = CorrelationStats.correlationForPvalue( kwpval, eigenGeneWithoutMissing
                                 .size() );
                         svo.setPCFactorCorrelation( componentNumber, ef, approxCorr );

@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
@@ -41,7 +44,34 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  */
 public class SVDValueObject implements Serializable {
 
+    private static Log log = LogFactory.getLog( SVDValueObject.class.getName() );
+
     private static final long serialVersionUID = 1L;
+
+    /**
+     * In order like the rows of the v matrix.
+     */
+    private Long[] bioMaterialIds;
+
+    private Map<Integer, Double> dateCorrelations = new HashMap<Integer, Double>();
+
+    private Map<Integer, Double> datePvals = new HashMap<Integer, Double>();
+
+    private List<Date> dates = new ArrayList<Date>();
+
+    private Map<Integer, Map<Long, Double>> factorCorrelations = new HashMap<Integer, Map<Long, Double>>();
+
+    /*
+     * Need to store the correlations of eigengenes with dates of assays, and also with factors. Statistics are
+     * rank-based correlations
+     */
+
+    private Map<Integer, Map<Long, Double>> factorPvals = new HashMap<Integer, Map<Long, Double>>();
+
+    /**
+     * Map of factors to the double-ized representations of them.
+     */
+    private Map<Long, List<Double>> factors = new HashMap<Long, List<Double>>();
 
     /**
      * ID of the experiment this is for
@@ -51,27 +81,6 @@ public class SVDValueObject implements Serializable {
     private Double[] variances = null;
 
     private DoubleMatrix<Integer, Integer> vMatrix = null;
-
-    /*
-     * Need to store the correlations of eigengenes with dates of assays, and also with factors. Statistics are
-     * rank-based correlations
-     */
-
-    /**
-     * In order like the rows of the v matrix.
-     */
-    private Long[] bioMaterialIds;
-
-    Map<Integer, Double> dateCorrelations = new HashMap<Integer, Double>();
-
-    private List<Date> dates = new ArrayList<Date>();
-
-    /**
-     * Map of factors to the double-ized representations of them.
-     */
-    private Map<Long, List<Double>> factors = new HashMap<Long, List<Double>>();
-
-    private Map<Integer, Map<Long, Double>> factorCorrelations = new HashMap<Integer, Map<Long, Double>>();
 
     /**
      * @param id
@@ -107,7 +116,13 @@ public class SVDValueObject implements Serializable {
             }
         }
         this.bioMaterialIds = bmids.toArray( new Long[] {} );
-        this.vMatrix = new DenseDoubleMatrix<Integer, Integer>( bioMaterialIds.length, eigenvectorArrays.size() );
+        this.vMatrix = new DenseDoubleMatrix<Integer, Integer>( eigenvectorArrays.get( 0 ).length, eigenvectorArrays
+                .size() );
+
+        if ( this.bioMaterialIds.length != eigenvectorArrays.get( 0 ).length ) {
+            log.warn( "Biomaterials and eigenvectors are of different length: " + this.bioMaterialIds.length
+                    + " != eigenvector len = " + eigenvectorArrays.get( 0 ).length );
+        }
 
         int j = 0;
         for ( Double[] vec : eigenvectorArrays ) {
@@ -130,6 +145,10 @@ public class SVDValueObject implements Serializable {
         return dateCorrelations;
     }
 
+    public Map<Integer, Double> getDatePvals() {
+        return datePvals;
+    }
+
     public List<Date> getDates() {
         if ( this.dates == null ) this.dates = new ArrayList<Date>();
         return dates;
@@ -141,6 +160,10 @@ public class SVDValueObject implements Serializable {
      */
     public Map<Integer, Map<Long, Double>> getFactorCorrelations() {
         return factorCorrelations;
+    }
+
+    public Map<Integer, Map<Long, Double>> getFactorPvals() {
+        return factorPvals;
     }
 
     /**
@@ -183,11 +206,23 @@ public class SVDValueObject implements Serializable {
         this.dateCorrelations.put( componentNumber, dateCorrelation );
     }
 
+    public void setPCDateCorrelationPval( int componentNumber, double spearmanPvalue ) {
+        this.datePvals.put( componentNumber, spearmanPvalue );
+
+    }
+
     public void setPCFactorCorrelation( int componentNumber, ExperimentalFactor ef, double factorCorrelation ) {
         if ( !this.factorCorrelations.containsKey( componentNumber ) ) {
             this.factorCorrelations.put( componentNumber, new HashMap<Long, Double>() );
         }
         this.factorCorrelations.get( componentNumber ).put( ef.getId(), factorCorrelation );
+    }
+
+    public void setPCFactorCorrelationPval( int componentNumber, ExperimentalFactor ef, double spearmanPvalue ) {
+        if ( !this.factorPvals.containsKey( componentNumber ) ) {
+            this.factorPvals.put( componentNumber, new HashMap<Long, Double>() );
+        }
+        this.factorPvals.get( componentNumber ).put( ef.getId(), spearmanPvalue );
     }
 
     public void setVariances( Double[] variances ) {

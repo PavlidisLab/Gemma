@@ -44,6 +44,8 @@
 	<c:if test="${ hasBatchInformation}">
 		<span style="font-size: smaller">This experimental design also
 			has information on batches, not shown.</span>
+		<br />
+		<span style="color:#DD2222;font-size: smaller"> ${batchConfound} </span>
 	</c:if>
 </div>
 
@@ -64,14 +66,12 @@
 				href="refreshCorrMatrix.html?id=${expressionExperiment.id}"><img
 						src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh"
 						alt="refresh" /> </a> </span>
-			</security:accesscontrollist>
+		</security:accesscontrollist>
 	</h3>
 	<Gemma:expressionQC ee="${expressionExperiment.id}"
-		hasCorrDist="${hasCorrDist}"
-		hasCorrMat="${hasCorrMat}" hasPCA="${hasPCA}"
-		hasNodeDegreeDist="${hasNodeDegreeDist}"
-		hasPvalueDist="${hasPvalueDist}"
-		numFactors="${numFactors}" />
+		hasCorrDist="${hasCorrDist}" hasCorrMat="${hasCorrMat}"
+		hasPCA="${hasPCA}" hasNodeDegreeDist="${hasNodeDegreeDist}"
+		hasPvalueDist="${hasPvalueDist}" numFactors="${numFactors}" />
 
 </div>
 

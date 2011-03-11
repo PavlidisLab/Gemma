@@ -54,7 +54,9 @@ public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
             result.add( null );
         }
         for ( Eigenvector ev : this.getEigenVectors() ) {
-            result.set( ev.getComponentNumber() - 1, ArrayUtils.toObject( bac.byteArrayToDoubles( ev.getVector() ) ) );
+            int index = ev.getComponentNumber() - 1;
+            if ( index >= this.getNumComponentsStored() ) continue;
+            result.set( index, ArrayUtils.toObject( bac.byteArrayToDoubles( ev.getVector() ) ) );
         }
         CollectionUtils.filter( result, new Predicate() {
             @Override

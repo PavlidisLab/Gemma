@@ -85,11 +85,13 @@ import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
-import ubic.gemma.analysis.preprocess.svd.SVDServiceImpl;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -156,7 +158,7 @@ public class ExpressionExperimentQCController extends BaseController {
 
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
-            log.warn( "Could not load experiment with id " + id ); // or access deined.
+            log.warn( "Could not load experiment with id " + id ); // or access denied.
             writePlaceholderImage( os );
             return null;
         }
@@ -701,7 +703,7 @@ public class ExpressionExperimentQCController extends BaseController {
                 .getExperimentalFactors() );
         Collection<Long> continuousFactors = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            boolean isContinous = SVDServiceImpl.isContinuous( ef );
+            boolean isContinous = ExperimentalDesignUtils.isContinuous( ef );
             if ( isContinous ) {
                 continuousFactors.add( ef.getId() );
             }
