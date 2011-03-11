@@ -66,6 +66,9 @@ public class SVDValueObject implements Serializable {
 
     private List<Date> dates = new ArrayList<Date>();
 
+    /**
+     * Map of factors to the double-ized representations of them.
+     */
     private Map<Long, List<Double>> factors = new HashMap<Long, List<Double>>();
 
     private Map<Integer, Map<Long, Double>> factorCorrelations = new HashMap<Integer, Map<Long, Double>>();

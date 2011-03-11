@@ -80,18 +80,6 @@ public class SVDServiceImpl implements SVDService {
 
     private static Log log = LogFactory.getLog( SVDServiceImpl.class );
 
-    @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
-
-    @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
-
-    @Autowired
-    private PrincipalComponentAnalysisService principalComponentAnalysisService;
-
     /**
      * @param experimentalFactor
      * @return true if the factor is continuous; false if it looks to be categorical.
@@ -113,26 +101,17 @@ public class SVDServiceImpl implements SVDService {
         return false;
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    public boolean hasPca( ExpressionExperiment ee ) {
-        return retrieveSvd( ee ) != null;
-    }
+    @Autowired
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    /**
-     * Get the SVD information for experiment with id given.
-     * 
-     * @param id
-     * @return value or null if there isn't one.
-     */
-    public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
-        PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
-        if ( pca == null ) return null;
-        bioAssayDimensionService.thaw( pca.getBioAssayDimension() );
-        return new SVDValueObject( pca );
-    }
+    @Autowired
+    private AuditTrailService auditTrailService;
+
+    @Autowired
+    private BioAssayDimensionService bioAssayDimensionService;
+
+    @Autowired
+    private PrincipalComponentAnalysisService principalComponentAnalysisService;
 
     /*
      * (non-Javadoc)
@@ -198,6 +177,27 @@ public class SVDServiceImpl implements SVDService {
 
         return result;
 
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    public boolean hasPca( ExpressionExperiment ee ) {
+        return retrieveSvd( ee ) != null;
+    }
+
+    /**
+     * Get the SVD information for experiment with id given.
+     * 
+     * @param id
+     * @return value or null if there isn't one.
+     */
+    public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
+        PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
+        if ( pca == null ) return null;
+        bioAssayDimensionService.thaw( pca.getBioAssayDimension() );
+        return new SVDValueObject( pca );
     }
 
     /*
@@ -295,12 +295,6 @@ public class SVDServiceImpl implements SVDService {
         }
 
         Long[] svdBioMaterials = svo.getBioMaterialIds();
-
-        if ( svdBioMaterials == null || svdBioMaterials.length == 0 ) {
-            throw new IllegalStateException( "SVD did not have biomaterial information" );
-        }
-
-        fillInMissingValues( bioMaterialFactorMap, svdBioMaterials );
 
         svo.getDateCorrelations().clear();
         svo.getFactorCorrelations().clear();
@@ -486,19 +480,12 @@ public class SVDServiceImpl implements SVDService {
     }
 
     /**
-     * Gather the information we need for comparing PCs to factors.
-     * 
-     * @param svo
      * @param bioAssays
      * @param bioMaterialDates
      * @param bioMaterialFactorMap
      */
-    private void prepareForFactorComparisons( SVDValueObject svo, Collection<BioAssay> bioAssays,
-            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
-        /*
-         * Note that dates or batch information can be missing for some bioassays.
-         */
-
+    private void getFactorsForAnalysis( Collection<BioAssay> bioAssays, Map<Long, Date> bioMaterialDates,
+            Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
         for ( BioAssay bioAssay : bioAssays ) {
             Date processingDate = bioAssay.getProcessingDate();
             for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
@@ -532,6 +519,23 @@ public class SVDServiceImpl implements SVDService {
 
             }
         }
+    }
+
+    /**
+     * Gather the information we need for comparing PCs to factors.
+     * 
+     * @param svo
+     * @param bioAssays
+     * @param bioMaterialDates
+     * @param bioMaterialFactorMap
+     */
+    private void prepareForFactorComparisons( SVDValueObject svo, Collection<BioAssay> bioAssays,
+            Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
+        /*
+         * Note that dates or batch information can be missing for some bioassays.
+         */
+
+        getFactorsForAnalysis( bioAssays, bioMaterialDates, bioMaterialFactorMap );
         Long[] svdBioMaterials = svo.getBioMaterialIds();
 
         if ( svdBioMaterials == null || svdBioMaterials.length == 0 ) {

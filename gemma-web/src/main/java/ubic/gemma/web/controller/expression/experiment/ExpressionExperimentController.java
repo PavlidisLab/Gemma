@@ -1146,7 +1146,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             if ( eesToKeep.isEmpty() ) {
                 return filtered;
             }
-            Map<Long, Object> idMap = EntityUtils.getIdMap( eesToKeep );
+            Map<Long, ExpressionExperiment> idMap = EntityUtils.getIdMap( eesToKeep );
             for ( ExpressionExperimentValueObject eevo : eeValObjectCol ) {
                 if ( idMap.containsKey( eevo.getId() ) ) {
                     filtered.add( eevo );

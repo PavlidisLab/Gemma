@@ -210,7 +210,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             return results;
         }
 
-        Map<Long, Object> eemap = EntityUtils.getIdMap( ees );
+        Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
 
         Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.class );
         Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.class );
@@ -246,7 +246,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             Long id = eeVo.getId();
 
-            ExpressionExperiment ee = ( ExpressionExperiment ) eemap.get( id );
+            ExpressionExperiment ee = eemap.get( id );
 
             if ( linkAnalysisEvents.containsKey( ee ) ) {
                 AuditEvent event = linkAnalysisEvents.get( ee );

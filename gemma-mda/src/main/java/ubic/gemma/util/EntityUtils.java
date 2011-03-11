@@ -102,10 +102,10 @@ public class EntityUtils {
      * @param entities
      * @return
      */
-    public static Map<Long, Object> getIdMap( Collection<? extends Object> entities ) {
-        Map<Long, Object> result = new HashMap<Long, Object>();
+    public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities ) {
+        Map<Long, T> result = new HashMap<Long, T>();
 
-        for ( Object object : entities ) {
+        for ( T object : entities ) {
             result.put( getId( object ), object );
         }
 

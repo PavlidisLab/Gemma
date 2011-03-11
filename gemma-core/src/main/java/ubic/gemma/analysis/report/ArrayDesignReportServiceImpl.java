@@ -119,7 +119,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         Collection<ArrayDesign> arrayDesigns = arrayDesignService.loadMultiple( ids );
 
-        Map<Long, Object> idMap = EntityUtils.getIdMap( arrayDesigns );
+        Map<Long, ArrayDesign> idMap = EntityUtils.getIdMap( arrayDesigns );
 
         Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = auditEventService.getLastEvents(
                 arrayDesigns, typesToGet );
@@ -134,7 +134,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         for ( ArrayDesignValueObject adVo : adVos ) {
 
             Long id = adVo.getId();
-            ArrayDesign ad = ( ArrayDesign ) idMap.get( id );
+            ArrayDesign ad = idMap.get( id );
 
             if ( geneMappingEvents.containsKey( ad ) ) {
                 AuditEvent event = geneMappingEvents.get( ad );
@@ -499,7 +499,8 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         List<AuditEvent> events = new ArrayList<AuditEvent>();
 
         for ( AuditEvent event : ad.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
+            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
+                                           // any more
             if ( event.getEventType() != null && eventType.isAssignableFrom( event.getEventType().getClass() ) ) {
                 events.add( event );
             }

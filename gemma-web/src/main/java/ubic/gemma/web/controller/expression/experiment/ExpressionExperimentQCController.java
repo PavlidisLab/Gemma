@@ -366,8 +366,8 @@ public class ExpressionExperimentQCController extends BaseController {
      * @param efId
      * @param categories map of factor ID to text value. Strings will be unique, but possibly abbreviated and/or munged.
      */
-    private void getCategories( Map<Long, Object> efIdMap, Long efId, Map<Long, String> categories ) {
-        ExperimentalFactor ef = ( ExperimentalFactor ) efIdMap.get( efId );
+    private void getCategories( Map<Long, ExperimentalFactor> efIdMap, Long efId, Map<Long, String> categories ) {
+        ExperimentalFactor ef = efIdMap.get( efId );
         if ( ef == null ) return;
         int maxCategoryLabelLength = 10;
 
@@ -697,7 +697,8 @@ public class ExpressionExperimentQCController extends BaseController {
         ee = expressionExperimentService.thawLite( ee ); // need the experimental design
         int maxWidth = 30;
         Map<Long, String> efs = getFactorNames( ee, maxWidth );
-        Map<Long, Object> efIdMap = EntityUtils.getIdMap( ee.getExperimentalDesign().getExperimentalFactors() );
+        Map<Long, ExperimentalFactor> efIdMap = EntityUtils.getIdMap( ee.getExperimentalDesign()
+                .getExperimentalFactors() );
         Collection<Long> continuousFactors = new HashSet<Long>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             boolean isContinous = SVDServiceImpl.isContinuous( ef );
