@@ -63,7 +63,6 @@ public class BatchConfound {
     private static Map<ExperimentalFactor, Map<Long, Double>> getBioMaterialFactorMap( ExpressionExperiment ee ) {
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
 
-        // code copied from SVDServiceImpl
         for ( BioAssay bioAssay : ee.getBioAssays() ) {
             for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
                 for ( FactorValue fv : bm.getFactorValues() ) {

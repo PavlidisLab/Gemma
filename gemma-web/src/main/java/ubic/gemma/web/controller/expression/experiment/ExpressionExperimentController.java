@@ -50,6 +50,7 @@ import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
+import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
@@ -301,6 +302,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private SVDService svdService;
+
+    private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
+
+    private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
 
     /**
      * Exposed for AJAX calls.
@@ -915,7 +920,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         mav.addObject( "hasBatchInformation", hasBatchInformation );
-        mav.addObject( "batchConfound", this.batchConfound( expExp ) );
+        if ( hasBatchInformation ) {
+            mav.addObject( "batchConfound", this.batchConfound( expExp ) );
+            mav.addObject( "batchArtifact", this.batchEffect( expExp ) );
+        }
 
         addQCInfo( expExp, mav );
 
@@ -927,28 +935,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         return mav;
-    }
-
-    private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
-
-    /**
-    
-     */
-    public String batchConfound( ExpressionExperiment ee ) {
-
-        Collection<BatchConfoundValueObject> confounds = BatchConfound.test( ee );
-
-        StringBuilder buf = new StringBuilder();
-        buf.append( "" );
-
-        for ( BatchConfoundValueObject c : confounds ) {
-            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
-                String factorName = c.getEf().getName();
-                buf.append( "Factor: " + factorName + " may be confounded with batches; p="
-                        + String.format( "%.2g", c.getP() ) + "<br />" );
-            }
-        }
-        return buf.toString();
     }
 
     /**
@@ -1183,6 +1169,53 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // temporary - no filtering.
         return eeValObjectCol;
+    }
+
+    /**
+    
+     */
+    private String batchConfound( ExpressionExperiment ee ) {
+
+        Collection<BatchConfoundValueObject> confounds = BatchConfound.test( ee );
+
+        StringBuilder buf = new StringBuilder();
+        buf.append( "" );
+
+        for ( BatchConfoundValueObject c : confounds ) {
+            if ( c.getP() < BATCH_CONFOUND_THRESHOLD ) {
+                String factorName = c.getEf().getName();
+                buf.append( "Factor: " + factorName + " may be confounded with batches; p="
+                        + String.format( "%.2g", c.getP() ) + "<br />" );
+            }
+        }
+        return buf.toString();
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private String batchEffect( ExpressionExperiment ee ) {
+        String result = "";
+
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
+                SVDValueObject svd = svdService.svdFactorAnalysis( ee );
+                for ( Integer component : svd.getFactorPvals().keySet() ) {
+                    Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
+
+                    Double pval = cmpEffects.get( ef.getId() );
+                    if ( pval != null && pval < BATCH_EFFECT_PVALTHRESHOLD ) {
+                        result = "This data set may have a batch artifact (PC" + ( component + 1 ) + "); p="
+                                + String.format( "%.2g", pval ) + "<br />";
+                    }
+
+                }
+                break;
+            }
+        }
+        return result;
+
     }
 
     /**

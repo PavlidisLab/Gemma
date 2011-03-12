@@ -46,6 +46,7 @@
 			has information on batches, not shown.</span>
 		<br />
 		<span style="color:#DD2222;font-size: smaller"> ${batchConfound} </span>
+		<span style="color:#DD2222;font-size: smaller"> ${batchArtifact} </span>
 	</c:if>
 </div>
 
