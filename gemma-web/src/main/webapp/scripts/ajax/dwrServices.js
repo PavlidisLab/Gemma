@@ -84,15 +84,6 @@ AuditController.getAuditable = function(p0, callback) {
 AuditController.getEvents = function(p0, callback) {
 	dwr.engine._execute(AuditController._path, 'AuditController', 'getEvents', p0, callback);
 }
-
-// ====================================================================================
-if (BatchInfoFetchController == null)
-	var BatchInfoFetchController = {};
-BatchInfoFetchController._path = '/Gemma/dwr';
-BatchInfoFetchController.run = function(p0, callback) {
-	dwr.engine
-			._execute(BatchInfoFetchController._path, 'BatchInfoFetchController', 'run', p0, callback);
-}
 // ====================================================================================
 if (BibliographicReferenceController == null)
 	var BibliographicReferenceController = {};
@@ -200,10 +191,6 @@ DEDVController.getVectorData = function(p0, callback) {
 }
 DEDVController.getDEDVForDiffExVisualizationByThreshold = function(p0, p1, p2, callback) {
 	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForDiffExVisualizationByThreshold', p0, p1, p2,
-			callback);
-}
-DEDVController.getDEDVForPcaVisualization = function(p0, p1, p2, callback) {
-	dwr.engine._execute(DEDVController._path, 'DEDVController', 'getDEDVForPcaVisualization', p0, p1, p2,
 			callback);
 }
 DEDVController.getDEDVForDiffExVisualizationByExperiment = function(p0, p1, p2, callback) {
@@ -335,6 +322,15 @@ ExpressionExperimentController.find = function(p0, p1, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'find', p0, p1,
 			callback);
 }
+ExpressionExperimentController.searchExpressionExperiments = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExpressionExperiments', p0, callback);
+}
+ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroups', p0, callback);
+}
+ExpressionExperimentController.searchExperimentsAndExperimentGroupsGetIds = function(p0, p1, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroupsGetIds', p0, p1, callback);
+}
 ExpressionExperimentController.getDescription = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'getDescription', p0,
 			callback);
@@ -444,6 +440,10 @@ ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
 			'getExperimentsInSet', p0, callback);
 }
+ExpressionExperimentSetController.getExperimentIdsInSet = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
+			'getExperimentIdsInSet', p0, callback);
+}
 // ====================================================================================
 
 if (ExpressionExperimentReportGenerationController == null)
@@ -497,8 +497,17 @@ GenePickerController._path = '/Gemma/dwr';
 GenePickerController.getGenes = function(p0, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getGenes', p0, callback);
 }
+GenePickerController.getGenesByGOId = function(p0, p1, callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getGenesByGOId', p0, p1, callback);
+}
 GenePickerController.searchGenes = function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenes', p0, p1, callback);
+}
+GenePickerController.searchGenesAndGeneGroups= function(p0, p1, callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesAndGeneGroups', p0, p1, callback);
+}
+GenePickerController.searchGenesAndGeneGroupsGetIds= function(p0, p1, callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchGenesAndGeneGroupsGetIds', p0, p1, callback);
 }
 GenePickerController.getTaxa = function(callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getTaxa', callback);
@@ -599,6 +608,9 @@ GeneSetController._path = '/Gemma/dwr';
 GeneSetController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
 }
+GeneSetController.getGeneSetsByGOId = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGeneSetsByGO', p0, p1, callback);
+}
 GeneSetController.update = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'update', p0, callback);
 }
@@ -683,6 +695,22 @@ ProcessedExpressionDataVectorCreateController.run = function(p0, callback) {
 	dwr.engine._execute(ProcessedExpressionDataVectorCreateController._path,
 			'ProcessedExpressionDataVectorCreateController', 'run', p0, callback);
 }
+ProcessedExpressionDataVectorCreateController.run = function(p0, callback) {
+	dwr.engine._execute(ProcessedExpressionDataVectorCreateController._path,
+			'ProcessedExpressionDataVectorCreateController', 'run', p0, callback);
+}
+// ====================================================================================
+if (TwoChannelMissingValueController == null)
+	var TwoChannelMissingValueController = {};
+TwoChannelMissingValueController._path = '/Gemma/dwr';
+TwoChannelMissingValueController.run = function(p0, callback) {
+	dwr.engine
+			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
+}
+TwoChannelMissingValueController.run = function(p0, callback) {
+	dwr.engine
+			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
+}
 // ====================================================================================
 if (ProgressStatusService == null)
 	var ProgressStatusService = {};
@@ -708,28 +736,6 @@ ProgressStatusService.getCancelledTasks = function(p0, callback) {
 ProgressStatusService.getFinishedTasks = function(p0, callback) {
 	dwr.engine._execute(ProgressStatusService._path, 'ProgressStatusService', 'getFinishedTasks', callback);
 }
-// ====================================================================================
-
-if (TwoChannelMissingValueController == null)
-	var TwoChannelMissingValueController = {};
-TwoChannelMissingValueController._path = '/Gemma/dwr';
-TwoChannelMissingValueController.run = function(p0, callback) {
-	dwr.engine
-			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
-}
-TwoChannelMissingValueController.run = function(p0, callback) {
-	dwr.engine
-			._execute(TwoChannelMissingValueController._path, 'TwoChannelMissingValueController', 'run', p0, callback);
-}
-// ====================================================================================
-if (SvdController == null)
-	var SvdController = {};
-SvdController._path = '/Gemma/dwr';
-SvdController.run = function(p0, callback) {
-	dwr.engine
-			._execute(SvdController._path, 'SvdController', 'run', p0, callback);
-}
-
 // ====================================================================================
 if (SearchService == null)
 	var SearchService = {};

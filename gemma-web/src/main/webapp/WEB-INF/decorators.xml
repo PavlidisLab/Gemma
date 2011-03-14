@@ -15,6 +15,9 @@
     <decorator name="homePage" page="home.jsp">
         <pattern>/mainMenu*</pattern>
     </decorator>
+    <decorator name="homePage2" page="home2.jsp">
+        <pattern>/home2*</pattern>
+    </decorator>
     
     <!--  Need this filter so that ajax json responses don't get decorated 
           Would have rather used an exclude but they don't work -

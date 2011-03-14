@@ -244,8 +244,10 @@
 <h2>
 	AnalysisResultsSearch
 </h2>
-<div class="widget" id="analysis-results-search-form"></div>
-
+	<div id="analysis-results-search-form" align="center" ></div>
+	<br>
+	<div id="analysis-results-search-form-messages"></div>
+	<div id="analysis-results-search-form-results"></div>
 
 <h2>
 	Widget

@@ -21,9 +21,12 @@ package ubic.gemma.web.controller.genome.gene;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,17 +39,26 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
+
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchResult;
+import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
+import ubic.gemma.search.GeneSetSearch;
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
  * For 'live searches' from the web interface.
@@ -63,7 +75,14 @@ public class GenePickerController {
     private GeneService geneService = null;
 
     @Autowired
+    private GeneSetService geneSetService = null;
+
+    @Autowired
     private TaxonService taxonService = null;
+    
+    @Autowired
+    private GeneOntologyService geneOntologyService = null;
+    
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -73,6 +92,9 @@ public class GenePickerController {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private GeneSetSearch geneSetSearch;
 
     private static final int MAX_GENES_PER_QUERY = 1000;
 
@@ -95,6 +117,32 @@ public class GenePickerController {
         return GeneValueObject.convert2ValueObjects( geneService.thawLite( geneService.loadMultiple( geneIds ) ) );
     }
 
+    /**
+     * for AJAX get all genes in the given taxon that are annotated with the given go id, including its child
+     *         terms in the hierarchy
+     * 
+     * @param goId GO id that must be in the format "GO_#######"
+     * @param taxonId must not be null and must correspond to a taxon
+     * @return  Collection<GeneSet> empty if goId was blank or taxonId didn't correspond to a taxon
+     */
+    public Collection<GeneValueObject> getGenesByGOId( String goId, Long taxonId ) {
+
+        Taxon tax = taxonService.load( taxonId );
+    	
+        if ( 	!StringUtils.isBlank( goId ) &&
+        		tax != null &&
+        		goId.toUpperCase().startsWith( "GO" ) ) {
+        	
+        	Collection<Gene> results = this.geneOntologyService.getGenes(goId, tax );
+        	if(results!=null){
+        		return GeneValueObject.convert2ValueObjects( results );
+        	}
+        }
+        
+        return new HashSet<GeneValueObject>();
+
+    }
+    
     /**
      * AJAX
      * 
@@ -210,6 +258,330 @@ public class GenePickerController {
         return geneValueObjects;
     } 
 
+    /**
+     * AJAX (used by GeneAndGeneGroupCombo.js)
+     * 
+     * @param query
+     * @param taxonId
+     * @return Collection of SearchResultDisplayObject
+     */
+    public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
+
+    	Collection<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        
+       	// if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent session-bound sets
+    	if(query.equals("")){
+    		
+        	// get authenticated user's sets
+        	Collection<GeneSet> userGeneSets = new ArrayList<GeneSet>();
+            if ( SecurityService.isUserLoggedIn() ) {
+            	userGeneSets = (taxon!=null)? geneSetService.loadMyGeneSets(taxon): geneSetService.loadMyGeneSets();
+            	SearchResultDisplayObject newSRDO = null;
+        		for(GeneSet registeredUserSet : userGeneSets){
+        			newSRDO = new SearchResultDisplayObject(registeredUserSet);
+        			newSRDO.setType("usersGeneSet");
+        			displayResults.add(newSRDO);
+        		}
+            }
+
+    	}else{
+        
+        /*
+         * GET GENES AND GENESETS
+         */
+        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
+        settings.setGeneralSearch(true); //add a general search
+        settings.setSearchGeneSets(true); // add searching for geneSets 
+		Map<Class<?>, List<SearchResult>> results = searchService.search(settings);
+
+		Collection<SearchResultDisplayObject> genes = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(results.get( Gene.class ));
+		Collection<SearchResultDisplayObject> geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(results.get( GeneSet.class ));
+        
+        // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in search results)
+		// TODO make a db call so you can just test each gene set by ID to see if the owner is the current user (avoids loading all user's sets' genes)
+		// probably not high priority fix b/c users won't tend to have many sets
+		ArrayList<Long> userSetsIds = new ArrayList<Long>();
+		// get ids of user's sets
+		if ( SecurityService.isUserLoggedIn() ) {
+			Collection<GeneSet> myGeneSets = (taxon!=null)? geneSetService.loadMyGeneSets(taxon): geneSetService.loadMyGeneSets();
+			for(GeneSet myGeneSet : myGeneSets){
+				userSetsIds.add(myGeneSet.getId());
+			}
+			// tag search result display objects appropriately
+			for(SearchResultDisplayObject srdo: geneSets){
+				if(userSetsIds.contains(srdo.getId())){
+					srdo.setType("usersGeneSet");
+				}
+			}
+		}
+
+		displayResults.addAll(genes);
+		displayResults.addAll(geneSets);
+		
+        /*
+         * GET GO GROUPS
+         */
+		List<GeneSet> goSets = new ArrayList<GeneSet>();
+        
+        if ( query.toUpperCase().startsWith( "GO" ) ) {
+            GeneSet goSet = this.geneSetSearch.findByGoId( query, taxon );
+            if ( goSet != null ){
+            	SearchResultDisplayObject sdo = new SearchResultDisplayObject(goSet);
+            	displayResults.add( sdo );
+            	goSets.add(goSet);
+            }
+        } else {
+        	for(GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxon ) ){
+        		// don't bother adding empty GO groups 
+        		// (should probably do this check elsewhere in case it speeds things up)
+        		if (geneSet.getMembers()!= null && geneSet.getMembers().size()!=0){
+        			SearchResultDisplayObject sdo = new SearchResultDisplayObject(geneSet);
+        			sdo.setType("GOgroup");
+        			displayResults.add(sdo);
+                	goSets.add(geneSet);
+        		}
+        	}
+        }
+        
+        /*
+         * GET 'ALL RESULTS' GROUPS
+         */
+        
+        // if >1 result, add a group whose members are all genes returned from search
+        if( (genes.size()+geneSets.size()+goSets.size()) >1){
+
+        	// if a gene was returned by both gene and gene set search, don't count it twice (managed by set)
+        	HashSet<Long> geneIds = new HashSet<Long>();
+//       	HashMap<Taxon,HashSet<Long>> genesByTaxon = new HashMap<Taxon,HashSet<Long>>();
+
+        	// add every individual experiment to the set
+        	for(SearchResultDisplayObject srdo : genes){
+//        		if(!genesByTaxon.containsKey(srdo.getTaxon())){
+//        			genesByTaxon.put(srdo.getTaxon(), new HashSet<Long>());
+//        		}
+//        		genesByTaxon.get(srdo.getTaxon()).add(srdo.getId());
+
+        		geneIds.add(srdo.getId());
+        	}
+        	
+        	// if there's a group, get the number of members by taxon
+        	if( geneSets.size() > 0){
+        		// for each group
+        		for(SearchResult geneSetSRO : results.get( GeneSet.class )){
+        			// get the ids of the gene members
+        			Iterator<GeneSetMember> iter = ((GeneSet) geneSetSRO.getResultObject()).getMembers().iterator();
+        			Long id = null; Gene gene = null;
+        			while(iter.hasNext()){
+        				gene = iter.next().getGene();
+        				id = gene.getId();
+        				geneIds.add(id);
+//                    	// add gene set members to the hashmap
+//        				taxon = gene.getTaxon();
+//                		if(!genesByTaxon.containsKey(taxon)){
+//                			genesByTaxon.put(taxon, new HashSet<Long>());
+//                		}
+//                		genesByTaxon.get(taxon).add(id);
+        			}
+        		}
+        	}
+        	
+        	// if there are any go group results, get the members
+        	if( goSets.size() > 0){
+        		// for each group
+        		for(GeneSet geneSet : goSets){
+        			// get the ids of the gene members
+        			Iterator<GeneSetMember> iter = geneSet.getMembers().iterator();
+        			Long id = null; Gene gene = null;
+        			while(iter.hasNext()){
+        				gene = iter.next().getGene();
+        				id = gene.getId();
+        				geneIds.add(id);
+        			}
+        		}
+        	}
+
+        	/* 
+        	 * only need this is going to have >1 taxon active in gene combo
+        	 * not the case right now
+        	*//*
+        	// make an entry for each taxon
+        	for(Map.Entry<Taxon,HashSet<Long>> entry : genesByTaxon.entrySet()){
+        		taxon = entry.getKey();
+            	displayResults.add(
+            			new SearchResultDisplayObject(GeneSet.class, null, 
+						"All \""+query+"\" results for "+taxon.getCommonName(), "All "+taxon.getCommonName()+" genes found for your query", 
+						true, entry.getValue().size(), taxon, "freeText"));
+			*/        		
+        	
+        	SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(ExpressionExperimentSet.class, null, 
+        													"All '"+query+"' results", "All genes found for your query", 
+        													true, geneIds.size(), null, "freeText");
+        	displayResults.add(allResultsGroup);
+        	}
+
+        }
+        
+        
+        /******** HACK TO FIX BROKEN EXTERNAL DATABASE PROPERTY IN TAXON OBJECTS ********/
+        
+        for(SearchResultDisplayObject srdo : displayResults){
+        	if(srdo.getTaxon() != null){
+        		srdo.getTaxon().setExternalDatabase(null);
+        		srdo.getTaxon().setParentTaxon(null);
+        	}
+        }
+        
+        /*********************************************************************************/
+        
+        if ( displayResults== null || displayResults.isEmpty() ) {
+            log.info( "No results for search: " + query + " taxon=" + ((taxon==null)? null: taxon.getCommonName()) );
+            return new HashSet<SearchResultDisplayObject>();
+        }
+        log.info( "Results for search: " + query + ", size=" + displayResults.size());
+        
+        return displayResults;
+    	
+    } 
+
+
+    /**
+     * AJAX (used by GeneAndGeneGroupCombo.js)
+     * 
+     * @param query
+     * @param taxonId
+     * @return Collection of gene ids
+     */
+    public Collection<Long> searchGenesAndGeneGroupsGetIds( String query, Long taxonId ) {
+
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
+
+        // if an experiment was returned by both gene and gene set search, don't count it twice (managed by set)
+        HashSet<Long> geneIds = new HashSet<Long>();
+
+        /*
+         * GET GENES AND GENESETS
+         */
+        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
+        settings.setGeneralSearch(true); //add a general search
+        settings.setSearchGeneSets(true); // add searching for geneSets 
+		Map<Class<?>, List<SearchResult>> results = searchService.search(settings);
+
+        List<SearchResult> geneSetSRs = results.get( GeneSet.class );
+        List<SearchResult> geneSRs = results.get( Gene.class ); 
+        
+        Long id = null;
+        
+        // add every individual experiment to the set
+        for(SearchResult sr : geneSRs){
+        	id = sr.getId();
+        	if(id!=null) geneIds.add(id);
+        }
+        	
+        // if there's a group, get the members 
+        if( geneSetSRs.size() > 0){
+        	// for each group
+        	for(SearchResult geneSetSRO : geneSetSRs){
+        		// get the ids of the experiment members
+        		Iterator<GeneSetMember> iter = ((GeneSet) geneSetSRO.getResultObject()).getMembers().iterator();
+        		while(iter.hasNext()){
+                	id = iter.next().getId();
+                	if(id!=null) geneIds.add(id);
+        		}
+        	}
+       	}      
+
+        /*
+         * GET GO GROUPS
+         */
+        
+        List<GeneSet> goSets = new ArrayList<GeneSet>();
+        
+        if ( query.toUpperCase().startsWith( "GO" ) ) {
+            GeneSet goSet = this.geneSetSearch.findByGoId( query, taxon );
+            if ( goSet != null ){
+            	goSets.add(goSet);
+            }
+        } else {
+        	for(GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxon ) ){
+        		// don't bother adding empty GO groups 
+        		// (should probably do this check elsewhere in case it speeds things up)
+        		if (geneSet.getMembers()!= null && geneSet.getMembers().size()>0){
+                	goSets.add(geneSet);
+        		}
+        	}
+        }
+        // if there's a group, get the members 
+        if( goSets.size() > 0){
+        	// for each group
+        	for(GeneSet geneSet : goSets){
+        		// get the ids of the experiment members
+        		Iterator<GeneSetMember> iter = geneSet.getMembers().iterator();
+        		while(iter.hasNext()){
+                	id = iter.next().getId();
+                	if(id!=null) geneIds.add(id);
+        		}
+        	}
+       	}
+        
+        if ( geneIds== null || geneIds.isEmpty() ) {
+            log.info( "No results for search: " + query + " taxon=" + taxonId );
+            return new HashSet<Long>();
+        }
+        log.info( "Results for search: " + query + ", size=" + geneIds.size());
+        
+        return geneIds;
+    	
+    } 
+
+      
+    /**
+     * Similar to method of same name in GeneSetController.java but here: 
+     * - no taxon needed 
+     * - GO groups always searched
+     * - GeneSet objects returned instead of GeneSetValueObjects
+     * @param query string to match to a gene set.
+     * @param taxonId
+     * @return collection of GeneSet
+     */
+    public Collection<GeneSet> findGeneSetsByName( String query, Long taxonId ) {
+
+        if ( StringUtils.isBlank( query ) ) {
+            return new HashSet<GeneSet>();
+        }
+        Collection<GeneSet> foundGeneSets = null;
+        Taxon tax = null;
+        tax = taxonService.load( taxonId );
+	
+	  if ( tax == null ) {
+		  //throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
+		  foundGeneSets = this.geneSetSearch.findByName( query );
+      }else{
+    	  foundGeneSets = this.geneSetSearch.findByName( query, tax );
+      }
+	  
+	  foundGeneSets.clear(); //for testing general search
+
+        /*
+         * SEARCH GENE ONTOLOGY
+         */
+
+      if ( query.toUpperCase().startsWith( "GO" ) ) {
+         GeneSet goSet = this.geneSetSearch.findByGoId( query, tax );
+         if ( goSet != null ) foundGeneSets.add( goSet );
+      } 
+      else {
+            foundGeneSets.addAll( geneSetSearch.findByGoTermName( query, tax ) );
+      }
+
+      return foundGeneSets;
+    }
     /**
      * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
      * 

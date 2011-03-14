@@ -144,9 +144,24 @@ public class SearchSettings {
      */
     public static SearchSettings expressionExperimentSearch( String query ) {
         SearchSettings s = new SearchSettings( query );
+        s.setSearchGenes(false);
         s.setGeneralSearch( false );
         s.noSearches();
         s.setSearchExperiments( true );
+        return s;
+    }
+    
+    /**
+     * Convenience method to get pre-configured settings.
+     * 
+     * @param query
+     * @return
+     */
+    public static SearchSettings expressionExperimentSetSearch( String query ) {
+        SearchSettings s = new SearchSettings( query );
+        s.setGeneralSearch( false );
+        s.noSearches();
+        s.setSearchExperimentSets( true );
         return s;
     }
 
@@ -254,6 +269,7 @@ public class SearchSettings {
         this.searchArrays = false;
         this.searchBibrefs = false;
         this.searchBioSequences = false;
+        this.searchGenes = false;
         this.searchGenesByGO = false;
         this.searchExperiments = false;
         this.searchProbes = false;

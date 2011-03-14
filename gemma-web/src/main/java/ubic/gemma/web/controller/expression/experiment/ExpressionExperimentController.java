@@ -28,6 +28,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -60,6 +61,8 @@ import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -83,6 +86,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -98,6 +102,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
+import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
@@ -272,6 +277,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private ExpressionExperimentService expressionExperimentService = null;
 
     @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService = null;
+    
+    @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
 
     private final String identifierNotFound = "Must provide a valid ExpressionExperiment identifier";
@@ -376,6 +384,393 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public Collection<Long> find( String query, Long taxonId ) {
         log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
+    }
+    
+    /**
+     * AJAX (used by experimentAndExperimentGroupCombo.js)
+     * 
+     * @param query
+     * @return Collection of SearchResultDisplayObjects
+     */
+    public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query) {
+        
+    	Collection<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+
+    	// if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent session-bound sets
+    	if(query.equals("")){
+    		
+        	// get authenticated user's sets
+        	Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
+            if ( SecurityService.isUserLoggedIn() ) {
+            	userExperimentSets = expressionExperimentSetService.loadMySets();
+            	SearchResultDisplayObject newSRDO = null;
+            	Taxon taxon = null;
+        		for(ExpressionExperimentSet registeredUserSet : userExperimentSets){
+
+        			newSRDO = new SearchResultDisplayObject(registeredUserSet);
+        			//expressionExperimentSetService.thaw(registeredUserSet);
+        			// thawing didn't work for some reason, was still getting "TaxonImpl_$$_javassist_92" as value of taxon which caused errors
+        			// so have to hack it
+        			//
+        			/*** HACK TO GET TAXON ***/
+        			Iterator<BioAssaySet> iter = registeredUserSet.getExperiments().iterator();
+        			// get the taxon from the first member of the eeSet and make assumption that it (or its top-most parent) is the taxon for the set
+        			if(iter.hasNext()){
+        				Long eeID = iter.next().getId();
+        				taxon = expressionExperimentService.getTaxon(eeID);
+        				
+        				/* thawing probably won't work again...
+        				 * while(taxon.getParentTaxon() != null){
+        					taxonService.thaw(taxon);
+        					taxon = taxon.getParentTaxon();
+        				}*/
+        				// if the 1st member's taxon has a parent taxon, then make sure to get top-most level taxon in group (try to find a member without a parent taxon)
+        				while(iter.hasNext() && taxon.getParentTaxon()!=null){
+            				eeID = iter.next().getId();
+            				taxon = expressionExperimentService.getTaxon(eeID);
+        				}
+        				newSRDO.setTaxon(taxon);
+        			}
+        			/*************************/
+        			
+    				// if set was automatically generated, don't label as user-created (technically was created by admin user)
+    				if(newSRDO.getDescription().indexOf("Automatically generated")<0){
+    					newSRDO.setType("usersExperimentSet");
+    				}
+        			displayResults.add(newSRDO);
+        		}
+            }
+
+            
+    		// get user's temp sets
+    		// TODO
+            
+            
+            // get auto generated sets
+    		// TODO this should be replaced with a query for all lists where 'modifiable = false' (?)
+    		SearchSettings settings = new SearchSettings("Automatically generated");
+    		settings.noSearches();
+    		settings.setSearchExperimentSets(true); // add searching for experimentSets 
+    		settings.setGeneralSearch(true); // add searching for experimentSets 
+    		List<SearchResult> autoGenSetsSearchResults = searchService.search(settings).get( ExpressionExperimentSet.class );
+    		Collection<SearchResultDisplayObject> autoGenSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(autoGenSetsSearchResults);
+            
+    		displayResults.addAll(autoGenSets);
+
+    		
+    		/*********************TAXON HACK STARTS*********************/ 
+
+    		// populate taxon values here 
+    		// (hack to fix inaccessible taxon values in ExpressionExperiment and unloaded taxon in EESet)
+
+    		Taxon taxon = null;
+    		HashMap<Long,Taxon> eeSetIDtoTaxon = new HashMap<Long,Taxon>();
+
+    		for(SearchResult eesSRO : autoGenSetsSearchResults){
+    			// get the ids of the experiment members
+    			Iterator<BioAssaySet> iter = ((ExpressionExperimentSet) eesSRO.getResultObject()).getExperiments().iterator();
+    			// get the taxon from the first member of the eeSet and make assumption that it (or its top-most parent) is the taxon for the set
+    			if(iter.hasNext()){
+    				Long eeID = iter.next().getId();
+    				taxon = expressionExperimentService.getTaxon(eeID);
+    				/* thawing doesn't work again...
+    				 * while(taxon.getParentTaxon() != null){
+    					taxonService.thaw(taxon);
+    					taxon = taxon.getParentTaxon();
+    				}*/
+    				// if the 1st member's taxon has a parent taxon, then make sure to get top-most level taxon in group (try to find a member without a parent taxon)
+    				while(iter.hasNext() && taxon.getParentTaxon()!=null){
+        				eeID = iter.next().getId();
+        				taxon = expressionExperimentService.getTaxon(eeID);
+    				}
+    				eeSetIDtoTaxon.put(eesSRO.getId(), taxon);
+    			}
+    		}
+
+    		for(ExpressionExperimentSet eeUserSet : userExperimentSets){
+    			// get the ids of the experiment members
+    			Iterator<BioAssaySet> iter = eeUserSet.getExperiments().iterator();
+    			// get the taxon from the first member of the eeSet and make assumption that it (or its top-most parent) is the taxon for the set
+    			if(iter.hasNext()){
+    				Long eeID = iter.next().getId();
+    				taxon = expressionExperimentService.getTaxon(eeID);
+    				/*while(taxon.getParentTaxon() != null){
+    					taxon = taxon.getParentTaxon();
+    				}*/    				// if the 1st member's taxon has a parent taxon, then make sure to get top-most level taxon in group (try to find a member without a parent taxon)
+    				while(iter.hasNext() && taxon.getParentTaxon()!=null){
+        				eeID = iter.next().getId();
+        				taxon = expressionExperimentService.getTaxon(eeID);
+    				}
+    				eeSetIDtoTaxon.put(eeUserSet.getId(), taxon);
+    			}
+    		}
+
+    		// for each experiment set
+    		for(SearchResultDisplayObject srdo : displayResults){
+
+    			// even hackier alternate way, using hashmap constructed above (an infering taxon of set from taxon of 1st member)
+    			srdo.setTaxon(eeSetIDtoTaxon.get(srdo.getId()));
+    		}
+
+    		/*********************END OF TAXON HACK*********************/ 
+    		
+            
+            /******** HACK TO FIX BROKEN EXTERNAL DATABASE PROPERTY IN TAXON OBJECTS ********/
+            
+            for(SearchResultDisplayObject srdo : displayResults){
+            	if(srdo.getTaxon() != null){
+            		srdo.getTaxon().setExternalDatabase(null);
+            		srdo.getTaxon().setParentTaxon(null);
+            	}
+            }
+            
+            /*********************************************************************************/
+    		
+            return displayResults;
+
+    	}
+    	else{
+
+    		/*
+    		 * GET EXPERIMENTS AND SETS
+    		 */
+    		SearchSettings settings = SearchSettings.expressionExperimentSearch(query);
+    		settings.setGeneralSearch(true); //add a general search
+    		settings.setSearchExperimentSets(true); // add searching for experimentSets 
+    		Map<Class<?>, List<SearchResult>> results = searchService.search(settings);
+
+    		List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
+    		Collection<SearchResultDisplayObject> experiments = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(results.get( ExpressionExperiment.class ));
+    		Collection<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(results.get( ExpressionExperimentSet.class ));
+
+    		// when searching for an experiment by short name, an experiment set is also returned 
+    		// ex: searching 'GSE2178' gets the experiment and a group called GSE2178 with 1 member
+    		// to fix this, if 1 ee and 1 eeSet are returned, and the group only has 1 member and it's member has the same Id as 
+    		// the 1 ee returned, then don't return the ee set
+    		if(experiments.size() == 1 && eesSR.size() == 1 
+    				&& ((ExpressionExperimentSet)eesSR.iterator().next().getResultObject()).getExperiments().size() == 1){
+  // add this if we need to be extra cautious:  && ((ExpressionExperimentSet)eesSR.iterator().next().getResultObject()).getExperiments().iterator().next().getId() == experiments.iterator().next().getId()
+    			experimentSets.clear();
+    		}
+    		
+    		// if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in search results)
+    		// TODO make a db call so you can just test each experiment by ID to see if the owner is the current user (avoids loading all user's experiments)
+    		// probably not high priority fix b/c users won't tend to have many sets
+    		ArrayList<Long> userSetsIds = new ArrayList<Long>();
+    		// get ids of user's sets
+    		if ( SecurityService.isUserLoggedIn() && experimentSets.size()>0 ) {
+    			Collection<ExpressionExperimentSet> myEEsets= expressionExperimentSetService.loadMySets();
+    			for(ExpressionExperimentSet myEESet : myEEsets){
+    				userSetsIds.add(myEESet.getId());
+    			}
+    			// tag search result display objects appropriately
+    			for(SearchResultDisplayObject srdo: experimentSets){
+    				// if set was automatically generated, don't label as user-created (technically was created by admin user)
+    				if(userSetsIds.contains(srdo.getId()) && srdo.getDescription().indexOf("Automatically generated")<0){
+    					srdo.setType("usersExperimentSet");
+    				}
+    			}
+    		}
+			
+    		
+    		
+    		/*********************TAXON HACK STARTS*********************/ 
+
+    		// populate taxon values here 
+    		// (hack to fix inaccessible taxon values in ExpressionExperiment and unloaded taxon in EESet)
+
+    		Taxon taxon = null;
+    		HashMap<Long,Taxon> eeSetIDtoTaxon = new HashMap<Long,Taxon>();
+
+    		for(SearchResult eesSRO : eesSR){
+    			// get the ids of the experiment members
+    			Iterator<BioAssaySet> iter = ((ExpressionExperimentSet) eesSRO.getResultObject()).getExperiments().iterator();
+    			// get the taxon from the first member of the eeSet and make assumption that it (or its top-most parent) is the taxon for the set
+    			if(iter.hasNext()){
+    				Long eeID = iter.next().getId();
+    				taxon = expressionExperimentService.getTaxon(eeID);
+    				while(taxon.getParentTaxon() != null){
+    					taxon = taxon.getParentTaxon();
+    					taxonService.thaw(taxon);
+    				}
+    				eeSetIDtoTaxon.put(eesSRO.getId(), taxon);
+    			}
+    		}
+
+    		// for each experiment set
+    		for(SearchResultDisplayObject srdo : experimentSets){
+
+    			/* GOT 'HIBERNATE SESSION CLOSED' ERROR FOR THIS
+        	// use the service to thaw it
+        	ExpressionExperimentSet ees = expressionExperimentSetService.load(srdo.getId());
+        	expressionExperimentSetService.thaw(ees);
+        	// get the taxon
+        	taxon = ees.getTaxon();
+        	// set the taxon for the searchResultObject
+        	srdo.setTaxon(taxon);
+    			 */
+
+    			// even hackier alternate way, using hashmap constructed above (an infering taxon of set from taxon of 1st member)
+    			srdo.setTaxon(eeSetIDtoTaxon.get(srdo.getId()));
+    		}
+
+    		// for each experiment
+    		for(SearchResultDisplayObject srdo : experiments){
+    			taxon = expressionExperimentService.getTaxon(srdo.getId());
+    			srdo.setTaxon(taxon);
+    		}
+
+    		/*********************END OF TAXON HACK*********************/ 
+
+    		displayResults.addAll(experiments);
+    		displayResults.addAll(experimentSets);
+    		
+    	/*
+    	 * ALL RESULTS BY TAXON GROUPS
+    	 */
+    		
+        // if >1 result, add a group whose members are all experiments returned from search
+        if( (experiments.size()+experimentSets.size()) >1){
+
+        	// if an experiment was returned by both experiment and experiment set search, don't count it twice (managed by set)
+        	HashSet<Long> eeIds = new HashSet<Long>();
+        	HashMap<Taxon,HashSet<Long>> eeIdsByTaxon = new HashMap<Taxon,HashSet<Long>>();
+
+        	// add every individual experiment to the set
+        	for(SearchResultDisplayObject srdo : experiments){
+        		if(!eeIdsByTaxon.containsKey(srdo.getTaxon())){
+        			eeIdsByTaxon.put(srdo.getTaxon(), new HashSet<Long>());
+        		}
+        		eeIdsByTaxon.get(srdo.getTaxon()).add(srdo.getId());
+
+        		eeIds.add(srdo.getId());
+        	}
+        	
+        	// if there's a group, get the number of members 
+        	if( experimentSets.size() > 0){
+        		// for each group
+        		for(SearchResult eesSRO : eesSR){
+        			// get the ids of the experiment members
+        			Iterator<BioAssaySet> iter = ((ExpressionExperimentSet) eesSRO.getResultObject()).getExperiments().iterator();
+        			Long id = null; 
+        			while(iter.hasNext()){
+        				id = iter.next().getId();
+        				eeIds.add(id);
+                    	// add experiment set members to the hashmap
+        				taxon = expressionExperimentService.getTaxon(id);
+                		if(!eeIdsByTaxon.containsKey(taxon)){
+                			eeIdsByTaxon.put(taxon, new HashSet<Long>());
+                		}
+                		eeIdsByTaxon.get(taxon).add(id);
+        			}
+        		}
+        	}
+
+        	// make an entry for each taxon
+        	for(Map.Entry<Taxon,HashSet<Long>> entry : eeIdsByTaxon.entrySet()){
+        		taxon = entry.getKey();
+        		if(taxon!= null && entry.getValue().size()>0){
+        			displayResults.add(
+        					new SearchResultDisplayObject(ExpressionExperimentSet.class, null, 
+        							"All '"+query+"' results for "+taxon.getCommonName(), 
+        							"All "+taxon.getCommonName()+" experiments found for your query", 
+        							true, entry.getValue().size(), taxon, "freeText"));
+        		}
+        	}
+        }
+        
+        /******** HACK TO FIX BROKEN EXTERNAL DATABASE PROPERTY IN TAXON OBJECTS ********/
+        
+        for(SearchResultDisplayObject srdo : displayResults){
+        	if(srdo.getTaxon() != null){
+        		srdo.getTaxon().setExternalDatabase(null);
+        	}
+        }
+        
+        /*********************************************************************************/
+
+        if ( displayResults.isEmpty() ) {
+        	log.info( "No results for search: " + query);
+        }else{
+        	log.info( "Results for search: " + query + " size=" + displayResults.size()+" entry0: "+((SearchResultDisplayObject)(displayResults.toArray())[0]).getName()+" id:"+((SearchResultDisplayObject)(displayResults.toArray())[0]).getId());
+        }
+        return displayResults;
+    	}
+    } 
+    
+    /**
+     * AJAX (used by experimentAndExperimentGroupCombo.js)
+     * 
+     * @param query
+     * @return Collection of SearchResultDisplayObjects
+     */
+    public Collection<Long> searchExperimentsAndExperimentGroupsGetIds( String query, Long taxonId) {
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
+         /*
+         * GET EXPERIMENTS AND SETS
+         */
+        SearchSettings settings = SearchSettings.expressionExperimentSearch(query);
+        settings.setGeneralSearch(true); //add a general search
+        settings.setSearchExperimentSets(true); // add searching for experimentSets 
+        if(taxon!=null) settings.setTaxon(taxon);
+        Map<Class<?>, List<SearchResult>> results = searchService.search(settings);
+        
+        List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
+        List<SearchResult> eeSR = results.get( ExpressionExperiment.class );        
+        
+        // if an experiment was returned by both experiment and experiment set search, don't count it twice (managed by set)
+        HashSet<Long> eeIds = new HashSet<Long>();
+        
+        // add every individual experiment to the set
+        for(SearchResult sr : eeSR){
+        	eeIds.add(sr.getId());
+        }
+        	
+        // if there's a group, get the members 
+        if( eesSR.size() > 0){
+        	// for each group
+        	for(SearchResult eesSRO : eesSR){
+        		// get the ids of the experiment members
+        		Iterator<BioAssaySet> iter = ((ExpressionExperimentSet) eesSRO.getResultObject()).getExperiments().iterator();
+        		while(iter.hasNext()){
+        			eeIds.add(iter.next().getId());
+        		}
+        	}
+       	}
+        
+        if ( eeIds.isEmpty() ) {
+            log.info( "No results for search: " + query);
+        }else{
+        	log.info( "Results for search: " + query + " size=" + eeIds.size()+" entry0: "+(eeIds.toArray())[0]);
+        }
+        return eeIds;
+    } 
+
+
+    /**
+     * AJAX (used by ExperimentCombo.js)
+     * 
+     * @param query
+     * @return Collection of expression experiment entity objects
+     */
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query) {
+
+        SearchSettings settings = SearchSettings.expressionExperimentSearch(query);
+        List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
+
+        if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
+            log.info( "No experiments for search: " + query );
+            return new HashSet<ExpressionExperimentValueObject>();
+        }
+
+        log.info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
+        Collection<ExpressionExperimentValueObject> experimentValueObjects = 
+        	ExpressionExperimentValueObject.convert2ValueObjects( expressionExperimentService.loadMultiple(EntityUtils.getIds( experimentSearchResults)));
+        log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned.");        
+        return experimentValueObjects;
     }
 
     /**

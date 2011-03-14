@@ -72,9 +72,9 @@ Gemma.ExpressionExperimentDataView = Ext.extend(Ext.DataView, {
 					}
 				}, this);
 
-		this.getStore().on("load", function(store, records, options) {
+		/*this.getStore().on("load", function(store, records, options) {
 					this.ownerCt.doLayout.createDelegate(this);
-				}, this);
+				}, this);*/
 
 		if (this.eeids) {
 			this.getStore().load({

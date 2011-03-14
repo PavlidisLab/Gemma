@@ -114,32 +114,39 @@ public class GeneSetController {
     /**
      * @param query string to match to a gene set.
      * @param taxonId
-     * @return
+     * @return collection of GeneSetValueObject
      */
     public Collection<GeneSetValueObject> findGeneSetsByName( String query, Long taxonId ) {
 
         if ( StringUtils.isBlank( query ) ) {
             return new HashSet<GeneSetValueObject>();
         }
-
+        Collection<GeneSet> foundGeneSets = null;
+        Taxon tax = null;
         if ( taxonId == null ) {
-            throw new IllegalArgumentException( "Taxon must not be null" );
+            //throw new IllegalArgumentException( "Taxon must not be null" );
+            foundGeneSets = this.geneSetSearch.findByName( query );
+        }else{
+        	
+	        tax = taxonService.load( taxonId );
+	
+	        if ( tax == null ) {
+	            //throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
+	            foundGeneSets = this.geneSetSearch.findByName( query );
+	        }else{
+	        	foundGeneSets = this.geneSetSearch.findByName( query, tax );
+	        }
         }
-
-        Taxon tax = taxonService.load( taxonId );
-
-        if ( tax == null ) {
-            throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
-        }
-
-        Collection<GeneSet> foundGeneSets = this.geneSetSearch.findByName( query, tax );
+        
 
         /*
          * Behaviour implemented here (easy to change): If we have a match in our system we stop here. Otherwise, we go
          * on to search the Gene Ontology.
          */
 
-        if ( foundGeneSets.isEmpty() ) {
+        // need taxon ID to be set for now, easy to change in Gene2GOAssociationDaoImpl.handleFindByGoTerm(String, Taxon)
+
+        if ( foundGeneSets.isEmpty() && tax != null) {
             if ( query.toUpperCase().startsWith( "GO" ) ) {
                 GeneSet goSet = this.geneSetSearch.findByGoId( query, tax );
                 if ( goSet != null ) foundGeneSets.add( goSet );
@@ -150,6 +157,7 @@ public class GeneSetController {
 
         return GeneSetValueObject.convert2ValueObjects( foundGeneSets, false );
     }
+    
 
     /**
      * AJAX If the current user has access to given gene group will return the gene ids in the gene group
