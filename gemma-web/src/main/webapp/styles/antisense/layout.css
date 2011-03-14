@@ -36,7 +36,7 @@ div#homeheader {
 div#homeheaderclear {
 	padding: 10px 0px 2px 20px;
 	text-align: left;
-	height: 160px; /* needed by IE 7 */
+	height: 180px; /* needed by IE 7 */
 	background-position: right;
 }
 
