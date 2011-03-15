@@ -627,14 +627,38 @@ GeneSetController.getGeneSetsByGOId = function(p0, p1, callback) {
 GeneSetController.update = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'update', p0, callback);
 }
+GeneSetController.updateSessionGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateSessionGroups', p0, callback);
+}
+GeneSetController.updateUserAndSessionGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateUserAndSessionGroups', p0, callback);
+}
 GeneSetController.create = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'create', p0, callback);
+}
+GeneSetController.addSessionGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addSessionGroups', p0, callback);
+}
+GeneSetController.addUserAndSessionGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addUserAndSessionGroups', p0, callback);
 }
 GeneSetController.remove = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'remove', p0, callback);
 }
+GeneSetController.removeSessionGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'removeSessionGroups', p0, callback);
+}
+GeneSetController.removeUserAndSessionGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'removeUserAndSessionGroups', p0, callback);
+}
 GeneSetController.getUsersGeneGroups = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUsersGeneGroups', p0, p1, callback);
+}
+GeneSetController.getUserSessionGeneGroups = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUserSessionGeneGroups', p0, p1, callback);
+}
+GeneSetController.getUserAndSessionGeneGroups = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getUserAndSessionGeneGroups', p0, p1, callback);
 }
 GeneSetController.findGeneSetsByGene = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByGene', p0, callback);
