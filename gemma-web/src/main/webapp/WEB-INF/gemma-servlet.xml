@@ -167,6 +167,15 @@ gemma.max.fileupload.size.bytes=
 			</list>
 		</property>
 	</bean>
+	
+	<bean id="geneSetListContainer" class="ubic.gemma.web.session.GeneSetListContainer" scope="session">
+		<aop:scoped-proxy/>
+	</bean>
+	
+	<bean id="experimentSetListContainer" class="ubic.gemma.web.session.ExperimentSetListContainer" scope="session">
+		<aop:scoped-proxy/>
+	</bean>
+	
 
 	<bean id="expressionExperimentSetController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetController">
 
@@ -1114,11 +1123,19 @@ gemma.max.fileupload.size.bytes=
 						<property name="includes">
 							<list>
 								<value>create</value>
+								<value>addSessionGroups</value>
+								<value>addUserAndSessionGroups</value>
 								<value>remove</value>
+								<value>removeSessionGroups</value>
+								<value>removeUserAndSessionGroups</value>
 								<value>getUsersGeneGroups</value>
+								<value>getUserSessionGeneGroups</value>
+								<value>getUserAndSessionGeneGroups</value>
 								<value>getGenesInGroup</value>
 								<value>getGeneSetByGOId</value>
 								<value>update</value>
+								<value>updateSessionGroups</value>
+								<value>updateUserAndSessionGroups</value>
 								<value>findGeneSetsByGene</value>
 								<value>findGeneSetsByName</value>
 							</list>
