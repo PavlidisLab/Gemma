@@ -394,7 +394,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
      */
     public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query) {
         
-    	Collection<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+    	List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
     	// if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent session-bound sets
     	if(query.equals("")){
@@ -525,7 +525,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
             
             /*********************************************************************************/
-    		
+
+    		Collections.sort(displayResults);
             return displayResults;
 
     	}
@@ -679,11 +680,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
         	}
         }
         
-        /******** HACK TO FIX BROKEN EXTERNAL DATABASE PROPERTY IN TAXON OBJECTS ********/
+        /******** HACK TO FIX ERROR-CAUSING PROPERTIES IN TAXON OBJECTS ********/
         
         for(SearchResultDisplayObject srdo : displayResults){
         	if(srdo.getTaxon() != null){
         		srdo.getTaxon().setExternalDatabase(null);
+        		srdo.getTaxon().setParentTaxon(null);
         	}
         }
         

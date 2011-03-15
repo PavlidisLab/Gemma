@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -271,7 +272,7 @@ public class GenePickerController {
             taxon = taxonService.load( taxonId );
         }
 
-    	Collection<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+    	List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
         
        	// if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent session-bound sets
     	if(query.equals("")){
@@ -286,6 +287,7 @@ public class GenePickerController {
         			newSRDO.setType("usersGeneSet");
         			displayResults.add(newSRDO);
         		}
+        		Collections.sort(displayResults);
             }
 
     	}else{
@@ -491,7 +493,7 @@ public class GenePickerController {
         		// get the ids of the experiment members
         		Iterator<GeneSetMember> iter = ((GeneSet) geneSetSRO.getResultObject()).getMembers().iterator();
         		while(iter.hasNext()){
-                	id = iter.next().getId();
+                	id = iter.next().getGene().getId();
                 	if(id!=null) geneIds.add(id);
         		}
         	}
@@ -524,7 +526,7 @@ public class GenePickerController {
         		// get the ids of the experiment members
         		Iterator<GeneSetMember> iter = geneSet.getMembers().iterator();
         		while(iter.hasNext()){
-                	id = iter.next().getId();
+                	id = iter.next().getGene().getId();
                 	if(id!=null) geneIds.add(id);
         		}
         	}
