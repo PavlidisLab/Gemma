@@ -84,6 +84,8 @@ public class GeneSetValueObject implements Serializable {
     private boolean publik;
     private boolean shared;
     private Integer size;
+    private Integer sessionId;
+    private boolean session;
 
     /**
      * default constructor to satisfy java bean contract
@@ -132,6 +134,14 @@ public class GeneSetValueObject implements Serializable {
     public Long getId() {
         return id;
     }
+    
+    /**
+     * @return
+     */
+    public Integer getSessionId() {
+        return sessionId;
+    }
+
 
     /**
      * @return
@@ -163,6 +173,10 @@ public class GeneSetValueObject implements Serializable {
     public boolean isShared() {
         return this.shared;
     }
+    
+    public boolean isSession() {
+        return this.session;
+    }
 
     /**
      * @param currentUserHasWritePermission the currentUserHasWritePermission to set
@@ -191,6 +205,13 @@ public class GeneSetValueObject implements Serializable {
     public void setId( Long id ) {
         this.id = id;
     }
+    
+    /**
+     * @param sessionId
+     */
+    public void setSessionId( Integer sessionId ) {
+        this.sessionId = sessionId;
+    }
 
     /**
      * @param name
@@ -205,6 +226,10 @@ public class GeneSetValueObject implements Serializable {
 
     public void setShared( boolean isShared ) {
         this.shared = isShared;
+    }
+    
+    public void setSession( boolean isSession ) {
+        this.session = isSession;
     }
 
     /**
