@@ -23,7 +23,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 
 	layout : 'table',
 	layoutConfig:{ columns:8},
-	width : 920,
+	width : 900,
 	//height : 200,
 	frame : false,
 	stateful : false,
@@ -64,7 +64,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	 **************************************************************/
 
 	doSearch : function() {
-		console.log("in do search");
+		//console.log("in do search");
 		
 		this.fireEvent('beforesearch', this);
 		if(!this.loadMask){
@@ -265,7 +265,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			if (msg.length === 0) {
 				this.loadMask.show();
 				var errorHandler = this.handleError.createDelegate(this, [], true);
-				//console.log("dsc: "+dsc);
 				DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
 					callback: this.returnFromDiffExSearch.createDelegate(this),
 					errorHandler: errorHandler
@@ -327,21 +326,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			return "";
 		}
 	},
-	
-	/**************************************************************
-	 **               		VISUALIZATION   					 **
-	 **************************************************************/
-
-	doVisualization: function(){},
-	
-	
-
-
 
 	/**   Shared methods   **/
 
 	handleError : function(msg, e) {
-		//console.log("msg: "+msg);
 		Ext.DomHelper.overwrite("analysis-results-search-form-messages", {
 					tag : 'img',
 					src : '/Gemma/images/icons/warning.png'
@@ -380,19 +368,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		this.fireEvent('aftersearch', this, result);
 		this.fireEvent('showDiffExResults', this, result);
 	},
-	returnFromVisSearch : function(result) {
-		this.loadMask.hide();
-		this.fireEvent('aftersearch', this, result);
-		this.fireEvent('showVisResults', this, result);
-	},
 
 	getActiveEeIds : function() {
 		if(this.activeEeIds){
 			return this.activeEeIds; 
 		}
-//		if (this.currentSet) {
-//			return this.currentSet.get("expressionExperimentIds");
-//		}
 		return [];
 	},
 	
@@ -427,19 +407,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 								},
 							}
 						});
-/*
-//add listeners here (load,loadexception,add,beforeload,clear,datachanged,remove,update)	
-		this.experimentCombo.getStore().on('beforeload',function(options){console.log('Store listener fired beforeload, arguments=',options);});
-		this.experimentCombo.getStore().on('load',function(){console.log('Store listener fired load, arguments=',arguments);});
-		this.experimentCombo.getStore().on('loadexception',function(misc){console.log('Store listener fired exception, arguments=',misc);});
-		this.experimentCombo.getStore().on('exception',function(misc){console.log('Store listener fired exception, arguments=',misc);});
-		this.experimentCombo.getStore().on('add',function(store, records, index){console.log('Store listener fired add, arguments=',records);});
-		this.experimentCombo.on('focus',function(field){console.log('Combo listener fired focus, arguments=',arguments);});
-		this.experimentCombo.on('blur',function(field){console.log('Combo listener fired blur, arguments=',arguments);});
-		this.experimentCombo.on('collapse',function(combo){console.log('Combo listener fired collapse, arguments=',arguments);});
-		this.experimentCombo.on('select',function(combo,record,index){console.log('Combo listener fired select, arguments=',arguments);});
-		this.experimentCombo.on('change',function(field,newVal,oldVal){console.log('Combo listener fired change, arguments=',arguments);});
-*/
+
 		/****** EE PREVIEW **************************************************************************/
 			
 		this.datasetMembersDataView = new Gemma.ExpressionExperimentDataView({
@@ -470,7 +438,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					listeners : {
 						'select' : {
 							fn : function(combo, record, index) {
-								console.log("in select, record:"+record)
+								//console.log("in select, record:"+record)
 								this.loadGeneOrGroup(record);
 							},
 							scope : this
@@ -485,6 +453,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 						}
 					}
 				});
+				
+			/*
+//add listeners here (load,loadexception,add,beforeload,clear,datachanged,remove,update)	
+		this.experimentCombo.getStore().on('beforeload',function(options){console.log('Store listener fired beforeload, arguments=',options);});
+		this.experimentCombo.getStore().on('load',function(){console.log('Store listener fired load, arguments=',arguments);});
+		this.experimentCombo.getStore().on('loadexception',function(misc){console.log('Store listener fired exception, arguments=',misc);});
+		this.experimentCombo.getStore().on('exception',function(misc){console.log('Store listener fired exception, arguments=',misc);});
+		this.experimentCombo.getStore().on('add',function(store, records, index){console.log('Store listener fired add, arguments=',records);});
+		this.experimentCombo.on('focus',function(field){console.log('Combo listener fired focus, arguments=',arguments);});
+		this.experimentCombo.on('blur',function(field){console.log('Combo listener fired blur, arguments=',arguments);});
+		this.experimentCombo.on('collapse',function(combo){console.log('Combo listener fired collapse, arguments=',arguments);});
+		this.geneGroupCombo.on('select',function(combo,record,index){console.log('Combo listener fired select, arguments=',arguments);});
+		this.geneGroupCombo.on('change',function(field,newVal,oldVal){console.log('Combo listener fired change, arguments=',arguments);});
+*/
 				
 			this.symbolList = new Gemma.GeneImportPanel({
 						listeners : {
@@ -609,30 +591,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	/**
 	 * Show the selected eeset members 
 	 */
-/*
-		loadExperimentPreview : function(record, previewSize) {
-			if (record && this.datasetMembersDataView) {
-				this.experimentList.loadMask= new Ext.LoadMask(this.experimentList.getEl(), {
-					msg : "Loading experiments ..."
-				});this.experimentList.loadMask.show();
-				this.datasetMembersDataView.getStore().removeAll();
-				this.datasetMembersDataView.getStore().load({
-							params : [null,record.get("expressionExperimentIds"),3,null],
-							callback: function(r, options, success){
-								Ext.DomHelper.overwrite(Ext.getCmp('experimentPreview').body, {cn: '<div style="padding-bottom:7px;font-weight:bold;">Experiment Selection Preview </div>'});
-								//console.log("r.size"+r.size());
-								var limit = (r.size() < 3)? r.size(): 3;
-								for(var i =0;i<limit;i++){
-									Ext.getCmp('experimentPreview').update(r[i].data);
-								}
-								Ext.DomHelper.append(Ext.getCmp('experimentPreview').body, {cn: '<div style="text-align:right"><a>'+(record.get("expressionExperimentIds").size()-limit)+' more<a></div>'});
-								Ext.getCmp('experimentPreview').loadMask.hide();
-							}
-				});
-			}
-		},*/
-		loadExperimentOrGroup : function(record, callback, args) {
-			console.log("in loadExperimentOrGroup, record:"+record+", args:"+args);
+	loadExperimentOrGroup : function(record, callback, args) {
+			//console.log("in loadExperimentOrGroup, record:"+record+", args:"+args);
 				
 				var id = record.get("id");
 				var isGroup = record.get("isGroup");
@@ -694,7 +654,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 						// name format: All "{query}" results
 						/* TODO get the query a better way*/
 						var query = record.get("name").split("'")[1];
-						console.log("query: "+query);
+						//console.log("query: "+query);
 						
 						this.experimentList.loadMask = new Ext.LoadMask(this.experimentList.getEl(), {
 							msg: "Loading Experiments ..."
@@ -735,7 +695,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				//load single experiment if experiment was selected
 				else {
 					this.activeEeIds = [id];
-					console.log("id:"+id+", record:"+record+" name:"+record.get("name")+" desc"+record.get("description")+" taxon:"+record.get("taxon"));
+					//console.log("id:"+id+", record:"+record+" name:"+record.get("name")+" desc"+record.get("description")+" taxon:"+record.get("taxon"));
 					// reset the experiment preview panel content
 					Ext.DomHelper.overwrite(Ext.getCmp('experimentPreview').body, {
 						cn: '<div style="padding-bottom:7px;font-weight:bold;">Experiment Selection Preview </div>'
@@ -759,27 +719,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		setTaxon: function(taxon){
 			this.taxon = taxon;
 		},
-		// set value in gene combo 
-		setGene : function(geneId, callback, args) {
-				GenePickerController.getGenes([geneId], function(genes) {
-							var g = genes[0];
-							if (g) {
-								
-								this.geneGroupCombo.setGene(g);
-								this.geneGroupCombo.setValue(g.officialSymbol);
-								
-								this.getStore().removeAll();
-								this.addButton.enable();
-							}
-							if (callback) {
-								callback(args);
-							}
-						}.createDelegate(this));
-			},
-			/**
-			 * Check if the taxon needs to be changed, and if so, update the geneAndGroupCombo and reset the gene preivew
-			 * @param {} taxon
-			 */
+
+		/**
+		 * Check if the taxon needs to be changed, and if so, update the geneAndGroupCombo and reset the gene preivew
+		 * @param {} taxon
+		 */
 		taxonChanged : function(taxon) {
 
 				// if the 'new' taxon is the same as the 'old' taxon for the experiment combo, don't do anything
@@ -791,11 +735,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {cn: '<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview </div>'});
 					this.geneGroupCombo.setTaxon(taxon);
 					this.setTaxon(taxon);
+					this.geneGroupCombo.reset();
 				}
 
 				this.fireEvent("taxonchanged", taxon);
 			},
-			loadGeneOrGroup : function(record, callback, args) {
+		loadGeneOrGroup : function(record, callback, args) {
 				
 				var id = record.get("id");
 				var isGroup = record.get("isGroup");
@@ -912,7 +857,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 								// for testing, get it from the name of the entry, but this is very fragile!
 								// name format: All "{query}" results
 								var query = record.get("name").split("'")[1];
-								console.log("query: " + query);
+								//console.log("query: " + query);
 								
 								this.geneList.loadMask = new Ext.LoadMask(this.geneList.getEl(), {
 									msg: "Loading Genes ..."
@@ -924,7 +869,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 																	
 									//store selected ids for searching
 									this.geneIds = ids;
-									console.log('ids:'+ids);
 									
 									// reset the gene preview panel content
 									Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {
@@ -936,13 +880,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 									for (var i = 0; i < limit; ++i) {
 										idsToPreview[i] = ids[i];
 									}
-									console.log('limit:'+idsToPreview);
-																		console.log('ids to preview:'+idsToPreview);
-
-									console.log('ids to preview:'+idsToPreview);
 									GenePickerController.getGenes(idsToPreview, function(genes){
-									
-									console.log('genes to preview count:'+genes.size());
 										for (var j = 0; j < genes.size(); ++j) {
 											Ext.getCmp('genePreview').update(genes[j]);
 										}
