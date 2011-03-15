@@ -15,7 +15,7 @@ public class GeneSetListContainer implements Serializable {
 	 */
 	private static final long serialVersionUID = 2163440335723257830L;
 
-	static final int MAX_SIZE = 10;
+	static final int MAX_SIZE = 100;
 	
 	Integer largestSessionId=0;
 	
