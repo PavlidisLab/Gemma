@@ -357,7 +357,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
                                 + OPTION_EST + " - search EST track for transcripts (Default=false)\n"
 
-                                + OPTION_MRNA + " - search mRNA track for transcripts\n"
+                                + OPTION_MRNA + " - search mRNA track for transcripts (Default=false)\n"
 
                                 + OPTION_ACEMBLY + " - search Acembly track for predicted genes\n"
 
@@ -488,6 +488,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
         return null;
     }
 
+    /**
+     * @param arrayDesign
+     */
     private void processProbes( ArrayDesign arrayDesign ) {
         assert this.probeNames != null && this.probeNames.length > 0;
         arrayDesign = arrayDesignService.thawLite( arrayDesign );
@@ -496,6 +499,11 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         for ( String probeName : this.probeNames ) {
             CompositeSequence probe = compositeSequenceService.findByName( arrayDesign, probeName );
+
+            if ( probe == null ) {
+                log.warn( "No such probe: " + probeName + " on " + arrayDesign.getShortName() );
+                continue;
+            }
 
             probe = compositeSequenceService.thaw( probe );
 

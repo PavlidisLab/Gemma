@@ -116,12 +116,13 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param sizes
      * @param exonOverlap Exon overlap we're starting with. We only care to improve on this.
      * @param strand of the region
+     * @param gene
      * @return The best overlap with any exons from an mRNA in the selected region.
      * @see getThreePrimeDistances
      */
     @SuppressWarnings("unchecked")
     private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
-            int exonOverlap, String strand ) {
+            int exonOverlap, String strand, Gene gene ) {
 
         String key = "MRNA " + chromosome + "||" + queryStart.toString() + "||" + queryEnd.toString() + strand;
 
@@ -140,6 +141,12 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
             int maxOverlap = exonOverlap;
             for ( Gene mRNA : mRNAs ) {
+
+                if ( gene != null
+                        && !gene.getOfficialSymbol().equals( this.getGeneForMessage( mRNA.getOfficialSymbol() ) ) ) {
+                    continue;
+                }
+
                 int overlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, mRNA );
                 if ( log.isDebugEnabled() ) log.debug( "overlap with " + mRNA.getNcbiId() + "=" + overlap );
                 if ( overlap > maxOverlap ) {
@@ -153,6 +160,32 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         }
 
         return exonOverlap;
+    }
+
+    /**
+     * Only for refseq genes.
+     * 
+     * @param ncbiId mRNA accession eg. NR_000028
+     * @return
+     */
+    private String getGeneForMessage( String ncbiId ) {
+        try {
+            return ( String ) qr.query( conn,
+                    "select rg.name2 from all_mrna m inner join refGene rg ON m.qName = rg.name where m.qName = ? ",
+                    new Object[] { ncbiId }, new ResultSetHandler() {
+                        @SuppressWarnings("synthetic-access")
+                        public Object handle( ResultSet rs ) throws SQLException {
+                            while ( rs.next() ) {
+                                String string = rs.getString( 0 );
+                                if ( StringUtils.isNotBlank( string ) ) return string;
+                            }
+                            return null;
+                        }
+
+                    } );
+        } catch ( SQLException e ) {
+            throw new RuntimeException( e );
+        }
     }
 
     /**
@@ -246,7 +279,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
             if ( config.isUseMrnas() && exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
                 int newOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
-                        .getStrand() );
+                        .getStrand(), geneProduct.getGene() );
 
                 if ( newOverlap > exonOverlap ) {
                     log.debug( "mRNA overlap was higher than primary transcript" );
@@ -363,8 +396,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         gene.setOfficialSymbol( rs.getString( 2 ) );
                         gene.setName( gene.getOfficialSymbol() );
                         Taxon taxon = getTaxon();
-                        
-                        assert taxon != null;                        
+
+                        assert taxon != null;
                         gene.setTaxon( taxon );
 
                         PhysicalLocation pl = PhysicalLocation.Factory.newInstance();
@@ -473,9 +506,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         gene.setOfficialSymbol( rs.getString( 2 ) );
                         gene.setName( gene.getOfficialSymbol() );
                         Taxon taxon = getTaxon();
-                        
+
                         assert taxon != null;
-                        
+
                         gene.setTaxon( taxon );
                         gene.getAccessions().add( accession );
                         gene.setMethod( source );
@@ -625,9 +658,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( rs.getString( 1 ) ) );
                         Taxon taxon = getTaxon();
-                        
+
                         assert taxon != null;
-                        
+
                         c.setTaxon( taxon );
                         blatResult.setTargetChromosome( c );
 
@@ -843,9 +876,9 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                         Chromosome c = Chromosome.Factory.newInstance();
                         c.setName( SequenceManipulation.deBlatFormatChromosomeName( chromosome ) );
                         Taxon taxon = getTaxon();
-                        
+
                         assert taxon != null;
-                        
+
                         c.setTaxon( taxon );
                         pl.setChromosome( c );
 

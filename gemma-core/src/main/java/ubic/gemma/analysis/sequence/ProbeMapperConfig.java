@@ -24,7 +24,11 @@ public class ProbeMapperConfig {
      */
     public static final double DEFAULT_IDENTITY_THRESHOLD = 80;
 
-    public static final double DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION = 0.0;
+    /**
+     * Fraction of bases which must overlap with an annotated exon. This should probably be higher than zero, to avoid
+     * "pure intron" hits, but setting it too high can cause loss of sensitivity.
+     */
+    public static final double DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION = 0.05;
 
     /**
      * BLAT score threshold below which we do not consider hits. This reflects the fraction of aligned bases.
@@ -103,16 +107,13 @@ public class ProbeMapperConfig {
 
     private boolean useEnsembl = false;
 
-    /**
-     * This is the only track off by default.
-     */
     private boolean useEsts = false;
 
     private boolean useKnownGene = true;
 
     private boolean useMiRNA = true;
 
-    private boolean useMrnas = true;
+    private boolean useMrnas = false; // doesn't add much.
 
     private boolean useNscan = false;
 

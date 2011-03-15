@@ -35,6 +35,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
+import ubic.gemma.model.genome.sequenceAnalysis.ThreePrimeDistanceMethod;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -93,7 +94,8 @@ public class ProbeMapperTest extends TestCase {
 
     /**
      * Test based on U83843, should bring up CCT7 (NM_006429 and NM_001009570). Valid locations as of 2/2011 for hg19.
-     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}73,461,405-73,480,144)
+     * {@link http://genome.ucsc.edu/cgi-bin/hgTracks?hgsid=79741184&hgt.out1=1.5x&position=chr2%3A73320308-73331929}
+     * 73,461,405-73,480,144)
      */
     public void testLocateGene() throws Exception {
         if ( !hasHumangp ) {
@@ -156,15 +158,37 @@ public class ProbeMapperTest extends TestCase {
             log.warn( "Skipping test because mm could not be configured" );
             return;
         }
-        ProbeMapper pm = new ProbeMapper();
-        Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres );
+        ProbeMapperConfig config = new ProbeMapperConfig();
+        config.setMinimumExonOverlapFraction( 0 ); // test is sensitive to this.
 
+        ProbeMapper pm = new ProbeMapper();
+        Map<String, Collection<BlatAssociation>> res = pm.processBlatResults( mousegp, blatres, config );
         // This test will fail if the database changes :)
         assertTrue( "No results", res.values().size() > 0 );
         assertTrue( "No results", res.values().iterator().next().size() > 0 );
         assertEquals( "Filip1l", res.values().iterator().next().iterator().next().getGeneProduct().getGene()
                 .getOfficialSymbol() );
 
+    }
+
+    public void testIntronIssues() throws Exception {
+        if ( !hasHumangp ) {
+            log.warn( "Skipping test because hg could not be configured" );
+            return;
+        }
+        GoldenPathSequenceAnalysis db = new GoldenPathSequenceAnalysis( Taxon.Factory.newInstance( "Homo sapiens",
+                "human", "", "", "", null, true, true, null, null ) );
+        ProbeMapperConfig config = new ProbeMapperConfig();
+        Collection<BlatAssociation> results = db.findAssociations( "chr1", 145517370L, 145518088L,
+                "145517370,145518070", "18,18", null, ThreePrimeDistanceMethod.RIGHT, config );
+
+        assertTrue( !results.isEmpty() );
+        for ( BlatAssociation blatAssociation : results ) {
+            log.debug( blatAssociation );
+            if ( blatAssociation.getGeneProduct().getGene().getOfficialSymbol().equals( "NBPF10" ) ) {
+                fail( "Should not have gotten NBPF10" );
+            }
+        }
     }
 
     @Override
