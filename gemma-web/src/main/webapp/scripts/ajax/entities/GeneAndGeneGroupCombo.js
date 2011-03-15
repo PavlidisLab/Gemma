@@ -138,7 +138,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	 * @return {}
 	 */
 	getParams : function(query) {
-		console.log('getParams IS called!');
 		var taxon = this.getTaxon();
 		return [query, taxon ? taxon.id : 1]; // default taxon is human
 	},
@@ -150,7 +149,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setGeneGroup : function(combo, geneGroup, index) {
-		// this.reset();
+//		this.reset();
 		this.selectedGeneGroup = geneGroup.data;
 		this.lastQuery = null;
 
@@ -163,7 +162,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	setTaxon : function(taxon) {
 		if (!this.taxon || this.taxon.id != taxon.id) {
 			this.taxon = taxon;
-			this.reset();
+//			this.reset();
 
 			/*
 			 * this is to make sure we always search again after a taxon change, in case the user searches for the same
