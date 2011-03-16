@@ -138,7 +138,7 @@ public class SVDServiceImpl implements SVDService {
         bioAssayDimension = this.bioAssayDimensionService.thaw( bioAssayDimension );
         assert bioAssayDimension != null;
         assert !bioAssayDimension.getBioAssays().isEmpty();
-        
+
         for ( DoubleVectorValueObject vct : vect ) {
             ProbeLoading probeLoading = probes.get( vct.getDesignElement() );
 
@@ -223,6 +223,7 @@ public class SVDServiceImpl implements SVDService {
 
         Collection<BioAssayDimension> bioAssayDimensions = mat.getBioAssayDimensions();
         if ( bioAssayDimensions.size() > 1 ) {
+            /* FIXME see bug 2139 */
             log.warn( "Multiple bioassaydimensions" );
         }
         BioAssayDimension bad = bioAssayDimensions.iterator().next();
@@ -374,10 +375,17 @@ public class SVDServiceImpl implements SVDService {
                     svo.getFactors().get( ef.getId() ).add( bmToFv.get( svdBioMaterials[j] ) );
                 }
             }
+
+            if ( fvs.length != eigenGene.size() ) {
+                log.debug( fvs.length + " factor values (biomaterials) but " + eigenGene.size()
+                        + " values in the eigengene" );
+                continue;
+            }
+
             initializing = false;
 
             if ( numNotMissing < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
-                log.warn( "Insufficient values to compare " + ef + " to eigengenes" );
+                log.debug( "Insufficient values to compare " + ef + " to eigengenes" );
                 continue;
             }
 
@@ -401,12 +409,12 @@ public class SVDServiceImpl implements SVDService {
                 }
 
                 if ( groups.size() < 2 ) {
-                    log.warn( "Factor had less than two groups: " + ef + ", SVD comparison can't be done." );
+                    log.debug( "Factor had less than two groups: " + ef + ", SVD comparison can't be done." );
                     continue;
                 }
 
                 if ( eigenGeneWithoutMissing.size() < MINIMUM_POINTS_TO_COMARE_TO_EIGENGENE ) {
-                    log.warn( "Too few non-missing values for factor to compare to eigengenes: " + ef );
+                    log.debug( "Too few non-missing values for factor to compare to eigengenes: " + ef );
                     continue;
                 }
 

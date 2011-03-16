@@ -30,6 +30,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 
 /**
  * @see ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis
@@ -50,7 +51,8 @@ public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
         ByteArrayConverter bac = new ByteArrayConverter();
         List<Double[]> result = new ArrayList<Double[]>( this.getNumComponentsStored() );
 
-        for ( int i = 0; i < this.getBioAssayDimension().getBioAssays().size(); i++ ) {
+        BioAssayDimension bioAssayDimension = this.getBioAssayDimension();
+        for ( int i = 0; i < bioAssayDimension.getBioAssays().size(); i++ ) {
             result.add( null );
         }
         for ( Eigenvector ev : this.getEigenVectors() ) {

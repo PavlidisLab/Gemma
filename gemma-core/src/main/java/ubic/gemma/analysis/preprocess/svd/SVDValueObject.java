@@ -117,13 +117,15 @@ public class SVDValueObject implements Serializable {
             }
         }
         this.bioMaterialIds = bmids.toArray( new Long[] {} );
+
         this.vMatrix = new DenseDoubleMatrix<Long, Integer>( eigenvectorArrays.get( 0 ).length, eigenvectorArrays
                 .size() );
-        this.vMatrix.setRowNames( Arrays.asList( getBioMaterialIds() ) );
 
         if ( this.bioMaterialIds.length != eigenvectorArrays.get( 0 ).length ) {
             log.warn( "Biomaterials and eigenvectors are of different length: " + this.bioMaterialIds.length
                     + " != eigenvector len = " + eigenvectorArrays.get( 0 ).length );
+        } else {
+            this.vMatrix.setRowNames( Arrays.asList( getBioMaterialIds() ) );
         }
 
         int j = 0;

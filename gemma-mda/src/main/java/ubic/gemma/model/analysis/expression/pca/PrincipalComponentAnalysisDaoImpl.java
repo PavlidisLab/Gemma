@@ -74,7 +74,7 @@ public class PrincipalComponentAnalysisDaoImpl extends HibernateDaoSupport imple
     public PrincipalComponentAnalysis findByExperiment( ExpressionExperiment ee ) {
         if ( ee == null || ee.getId() == null ) return null;
         List<?> fetched = this.getHibernateTemplate().findByNamedParam(
-                "select p from PrincipalComponentAnalysisImpl as p where p.experimentAnalyzed = :ee", "ee", ee );
+                "select p from PrincipalComponentAnalysisImpl as p fetch all properties where p.experimentAnalyzed = :ee", "ee", ee );
         if ( fetched.isEmpty() ) return null;
 
         if ( fetched.size() > 1 ) {
