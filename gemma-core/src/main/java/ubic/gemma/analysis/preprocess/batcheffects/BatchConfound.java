@@ -183,7 +183,11 @@ public class BatchConfound {
 
                 for ( Long bm : bmToFv.keySet() ) {
                     long fv = factorValueMembership.get( bm );
-                    long batch = batchMembership.get( bm );
+                    Long batch = batchMembership.get( bm );
+                    if ( batch == null ) {
+                        log.warn( "No batch membership for : " + bm );
+                        continue;
+                    }
                     int batchIndex = batchIndexes.get( batch );
                     int factorIndex = factorValueIndexes.get( fv );
                     counts[batchIndex][factorIndex]++;
