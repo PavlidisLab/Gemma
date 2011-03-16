@@ -65,7 +65,9 @@ public class ExperimentalDesignUtils {
                 .size(), factors.size() );
 
         Map<ExperimentalFactor, String> factorNamesInR = new LinkedHashMap<ExperimentalFactor, String>();
-
+        for ( ExperimentalFactor factor : factors ) {
+            factorNamesInR.put( factor, nameForR( factor ) );
+        }
         designMatrix.setColumnNames( new ArrayList<String>( factorNamesInR.values() ) );
 
         List<String> rowNames = new ArrayList<String>();
