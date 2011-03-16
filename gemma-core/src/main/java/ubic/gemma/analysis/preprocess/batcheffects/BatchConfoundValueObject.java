@@ -76,7 +76,7 @@ public class BatchConfoundValueObject {
 
     @Override
     public String toString() {
-        return ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getName() + "\t"
+        return ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getCategory().getCategory() + "\t"
                 + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p ) + "\t"
                 + numBatches;
     }
