@@ -24,6 +24,7 @@ import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
@@ -39,11 +40,11 @@ public class ExpressionDataQuantileNormalizer {
      */
     public static void normalize( ExpressionDataDoubleMatrix matrix ) {
 
-        DoubleMatrix<CompositeSequence, Integer> rawMatrix = matrix.getMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = matrix.getMatrix();
 
         try {
-            QuantileNormalizer<CompositeSequence, Integer> normalizer = new QuantileNormalizer<CompositeSequence, Integer>();
-            DoubleMatrix<CompositeSequence, Integer> normalized = normalizer.normalize( rawMatrix );
+            QuantileNormalizer<CompositeSequence, BioMaterial> normalizer = new QuantileNormalizer<CompositeSequence, BioMaterial>();
+            DoubleMatrix<CompositeSequence, BioMaterial> normalized = normalizer.normalize( rawMatrix );
 
             for ( int i = 0; i < normalized.rows(); i++ ) {
                 matrix.setRow( i, ArrayUtils.toObject( normalized.getRow( i ) ) );

@@ -29,6 +29,8 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
@@ -80,7 +82,7 @@ public class SVDValueObject implements Serializable {
 
     private Double[] variances = null;
 
-    private DoubleMatrix<Integer, Integer> vMatrix = null;
+    private DoubleMatrix<Long, Integer> vMatrix = null;
 
     /**
      * @param id
@@ -88,8 +90,7 @@ public class SVDValueObject implements Serializable {
      * @param singularValues
      * @param vMatrix
      */
-    public SVDValueObject( Long id, List<Long> bioMaterialIds, Double[] variances,
-            DoubleMatrix<Integer, Integer> vMatrix ) {
+    public SVDValueObject( Long id, List<Long> bioMaterialIds, Double[] variances, DoubleMatrix<Long, Integer> vMatrix ) {
         super();
         this.id = id;
         this.variances = variances;
@@ -116,8 +117,9 @@ public class SVDValueObject implements Serializable {
             }
         }
         this.bioMaterialIds = bmids.toArray( new Long[] {} );
-        this.vMatrix = new DenseDoubleMatrix<Integer, Integer>( eigenvectorArrays.get( 0 ).length, eigenvectorArrays
+        this.vMatrix = new DenseDoubleMatrix<Long, Integer>( eigenvectorArrays.get( 0 ).length, eigenvectorArrays
                 .size() );
+        this.vMatrix.setRowNames( Arrays.asList( getBioMaterialIds() ) );
 
         if ( this.bioMaterialIds.length != eigenvectorArrays.get( 0 ).length ) {
             log.warn( "Biomaterials and eigenvectors are of different length: " + this.bioMaterialIds.length
@@ -125,12 +127,16 @@ public class SVDValueObject implements Serializable {
         }
 
         int j = 0;
+        List<Integer> columNames = new ArrayList<Integer>();
         for ( Double[] vec : eigenvectorArrays ) {
             for ( int i = 0; i < vec.length; i++ ) {
                 vMatrix.set( i, j, vec[i] ); // fill columns
             }
+            columNames.add( j );
             j++;
         }
+        vMatrix.setColumnNames( columNames );
+
     }
 
     public Long[] getBioMaterialIds() {
@@ -182,7 +188,12 @@ public class SVDValueObject implements Serializable {
         return variances;
     }
 
-    public DoubleMatrix<Integer, Integer> getvMatrix() {
+    /**
+     * Row names: biomaterial ids; column names: eigengene number (from 0)
+     * 
+     * @return
+     */
+    public DoubleMatrix<Long, Integer> getvMatrix() {
         return vMatrix;
     }
 
@@ -229,7 +240,7 @@ public class SVDValueObject implements Serializable {
         this.variances = variances;
     }
 
-    public void setvMatrix( DoubleMatrix<Integer, Integer> vMatrix ) {
+    public void setvMatrix( DoubleMatrix<Long, Integer> vMatrix ) {
         this.vMatrix = vMatrix;
     }
 

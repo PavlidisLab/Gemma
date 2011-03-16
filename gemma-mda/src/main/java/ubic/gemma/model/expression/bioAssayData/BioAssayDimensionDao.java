@@ -24,38 +24,6 @@ import ubic.gemma.persistence.BaseDao;
  * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimension
  */
 public interface BioAssayDimensionDao extends BaseDao<BioAssayDimension> {
-    /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.expression.bioAssayData.BioAssayDimension)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(int, ubic.gemma.model.expression.bioAssayData.BioAssayDimension
-     * bioAssayDimension)}.
-     * </p>
-     */
-    public BioAssayDimension find( int transform, String queryString,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public BioAssayDimension find( int transform,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #find(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension find( String queryString,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
      * 
@@ -64,45 +32,10 @@ public interface BioAssayDimensionDao extends BaseDao<BioAssayDimension> {
             ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}
-     * with an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findOrCreate(int,
-     * ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension)}.
-     * </p>
-     */
-    public BioAssayDimension findOrCreate( int transform, String queryString,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public BioAssayDimension findOrCreate( int transform,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in
-     * {@link #findOrCreate(ubic.gemma.model.expression.bioAssayData.BioAssayDimension)}.
-     * </p>
-     */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate( String queryString,
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
-
-    /**
      * 
      */
-    public ubic.gemma.model.expression.bioAssayData.BioAssayDimension findOrCreate(
-            ubic.gemma.model.expression.bioAssayData.BioAssayDimension bioAssayDimension );
+    public BioAssayDimension findOrCreate( BioAssayDimension bioAssayDimension );
 
-    public void thaw( BioAssayDimension bioAssayDimension );
+    public BioAssayDimension thaw( BioAssayDimension bioAssayDimension );
 
 }

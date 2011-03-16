@@ -103,7 +103,7 @@ public class ExperimentalDesignVisualizationService {
 
         BioAssayDimension bd = bds.iterator().next();
         assert bd != null;
-        this.bioAssayDimensionService.thaw( bd );
+        bd = this.bioAssayDimensionService.thaw( bd );
         ExpressionExperiment tee = this.expressionExperimentService.thawLite( e );
 
         LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> result = getExperimentalDesignLayout( tee, bd );
@@ -259,7 +259,7 @@ public class ExperimentalDesignVisualizationService {
     public Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs ) {
 
-        //  layouts.clear(); // FIXEM TEMPORARY FOR DEBUGGING. If performance is okay, move this cache into this scope
+        // layouts.clear(); // FIXEM TEMPORARY FOR DEBUGGING. If performance is okay, move this cache into this scope
         // entirely
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>>();
@@ -391,7 +391,7 @@ public class ExperimentalDesignVisualizationService {
                     vec.setBioAssayDimension( bioAssayDimension );
                 } else {
                     log.debug( "Thawing" );
-                    bioAssayDimensionService.thaw( bioAssayDimension );
+                    bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
                     thawedBads.put( bioAssayDimension.getId(), bioAssayDimension );
                 }
             }

@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.loader.expression.geo.fetcher.RawDataFetcher;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -70,14 +71,6 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 @Service
 public class BatchInfoPopulationService {
 
-    public static final String BATCH_FACTOR_NAME_PREFIX = "Batch_";
-
-    public static final String BATCH_FACTOR_CATEGORY_URI = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction";
-
-    public static final String BATCH_FACTOR_CATEGORY_NAME = "ComplexAction";
-
-    public static final String BATCH_FACTOR_NAME = "batch";
-
     /**
      * How many hours do we allow to pass between samples, before we consider them to be a separate batch (if they are
      * not run on the same day). This 'slack' is necessary to allow for the possibility that all the hybridizations were
@@ -104,11 +97,11 @@ public class BatchInfoPopulationService {
 
         boolean isBatchFactor = false;
 
-        boolean looksLikeBatch = ef.getName().equals( BATCH_FACTOR_NAME );
+        boolean looksLikeBatch = ef.getName().equals( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
 
         if ( c != null && c instanceof VocabCharacteristic ) {
             VocabCharacteristic v = ( VocabCharacteristic ) c;
-            if ( v.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) ) {
+            if ( v.getCategory().equals( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME ) ) {
                 isBatchFactor = true;
 
             }
@@ -209,85 +202,6 @@ public class BatchInfoPopulationService {
     }
 
     /**
-     * @param ee
-     * @param dates
-     * @return
-     */
-    private ExperimentalFactor convertToFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
-
-        /*
-         * Go through the dates and convert to factor values.
-         */
-        Collection<Date> allDates = new HashSet<Date>();
-        allDates.addAll( dates.values() );
-
-        Map<String, Collection<Date>> datesToBatch = convertDatesToBatches( allDates );
-
-        Map<Date, FactorValue> d2fv = new HashMap<Date, FactorValue>();
-        ExperimentalFactor ef = null;
-        if ( datesToBatch.size() < 2 ) {
-            log.info( "There is only one batch" );
-            // we still put the processing dates in, below.
-        } else {
-            ef = makeFactorForBatch( ee );
-            for ( String batchId : datesToBatch.keySet() ) {
-                FactorValue fv = FactorValue.Factory.newInstance();
-                fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
-                fv.setValue( batchId );
-                Collection<Characteristic> chars = new HashSet<Characteristic>();
-                VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
-                c.setCategory( BATCH_FACTOR_CATEGORY_NAME );
-                c.setValue( batchId );
-                c.setCategoryUri( BATCH_FACTOR_CATEGORY_URI );
-                c.setEvidenceCode( GOEvidenceCode.IIA );
-
-                chars.add( c );
-                fv.setCharacteristics( chars );
-                fv.setExperimentalFactor( ef );
-
-                /*
-                 * persist
-                 */
-                fv.setCharacteristics( chars );
-                factorValueService.create( fv );
-
-                ef.getFactorValues().add( fv );
-
-                experimentalFactorService.update( ef );
-
-                for ( Date d : datesToBatch.get( batchId ) ) {
-                    d2fv.put( d, fv );
-                }
-            }
-        }
-
-        /*
-         * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
-         */
-        for ( BioMaterial bm : dates.keySet() ) {
-            bioMaterialService.thaw( bm );
-
-            if ( !d2fv.isEmpty() ) bm.getFactorValues().add( d2fv.get( dates.get( bm ) ) );
-
-            for ( BioAssay ba : bm.getBioAssaysUsedIn() ) {
-                if ( ba.getProcessingDate() != null ) {
-                    if ( !ba.getProcessingDate().equals( dates.get( bm ) ) ) {
-                        ba.setProcessingDate( dates.get( bm ) );
-                        bioAssayService.update( ba );
-                    }
-                } else {
-                    ba.setProcessingDate( dates.get( bm ) );
-                    bioAssayService.update( ba );
-                }
-
-            }
-            bioMaterialService.update( bm );
-        }
-
-        return ef;
-    }
-
-    /**
      * Currently only supports GEO
      * 
      * @param ee
@@ -311,7 +225,8 @@ public class BatchInfoPopulationService {
      */
     private String formatBatchName( int batchNum, DateFormat df, Date d ) {
         String batchDateString;
-        batchDateString = BATCH_FACTOR_NAME_PREFIX + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
+        batchDateString = ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX
+                + StringUtils.leftPad( Integer.toString( batchNum ), 2, "0" ) + "_"
                 + df.format( DateUtils.truncate( d, Calendar.HOUR ) );
         return batchDateString;
     }
@@ -353,30 +268,12 @@ public class BatchInfoPopulationService {
      */
     private VocabCharacteristic getBatchFactorCategory() {
         VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
-        c.setCategory( BATCH_FACTOR_CATEGORY_NAME );
-        c.setValue( BATCH_FACTOR_CATEGORY_NAME );
-        c.setValueUri( BATCH_FACTOR_CATEGORY_URI );
-        c.setCategoryUri( BATCH_FACTOR_CATEGORY_URI );
+        c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        c.setValue( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+        c.setValueUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
+        c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
         c.setEvidenceCode( GOEvidenceCode.IIA );
         return c;
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private ExperimentalFactor makeFactorForBatch( ExpressionExperiment ee ) {
-        ExperimentalDesign ed = ee.getExperimentalDesign();
-        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
-        ef.setType( FactorType.CATEGORICAL );
-        ef.setCategory( getBatchFactorCategory() );
-        ef.setExperimentalDesign( ed );
-        ef.setName( BATCH_FACTOR_NAME );
-        ef.setDescription( "Scan date or similar proxy for 'sample processing batch'"
-                + " extracted from the raw data files." );
-
-        ef = persistFactor( ee, ef );
-        return ef;
     }
 
     /**
@@ -395,32 +292,6 @@ public class BatchInfoPopulationService {
         // again perhaps
 
         return false; // already did it.
-
-    }
-
-    /**
-     * @param ee
-     * @param factor
-     * @return
-     */
-    private ExperimentalFactor persistFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
-        ExperimentalDesign ed = experimentalDesignService.load( ee.getExperimentalDesign().getId() );
-
-        if ( ed == null ) {
-            throw new IllegalStateException( "No experimental design for " + ee );
-        }
-
-        /*
-         * Note: this call should not be needed because of cascade behaviour.
-         */
-        // experimentalFactorService.create( ef );
-
-        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
-        ed.getExperimentalFactors().add( factor );
-
-        experimentalDesignService.update( ed );
-
-        return factor;
 
     }
 
@@ -544,6 +415,129 @@ public class BatchInfoPopulationService {
         }
 
         return result;
+
+    }
+
+    /**
+     * @param ee
+     * @param dates
+     * @return
+     */
+    protected ExperimentalFactor convertToFactor( ExpressionExperiment ee, Map<BioMaterial, Date> dates ) {
+
+        /*
+         * Go through the dates and convert to factor values.
+         */
+        Collection<Date> allDates = new HashSet<Date>();
+        allDates.addAll( dates.values() );
+
+        Map<String, Collection<Date>> datesToBatch = convertDatesToBatches( allDates );
+
+        Map<Date, FactorValue> d2fv = new HashMap<Date, FactorValue>();
+        ExperimentalFactor ef = null;
+        if ( datesToBatch.size() < 2 ) {
+            log.info( "There is only one batch" );
+            // we still put the processing dates in, below.
+        } else {
+            ef = makeFactorForBatch( ee );
+            for ( String batchId : datesToBatch.keySet() ) {
+                FactorValue fv = FactorValue.Factory.newInstance();
+                fv.setIsBaseline( false ); /* we could set true for the first batch, but nobody cares. */
+                fv.setValue( batchId );
+                Collection<Characteristic> chars = new HashSet<Characteristic>();
+                VocabCharacteristic c = VocabCharacteristic.Factory.newInstance();
+                c.setCategory( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME );
+                c.setValue( batchId );
+                c.setCategoryUri( ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_URI );
+                c.setEvidenceCode( GOEvidenceCode.IIA );
+
+                chars.add( c );
+                fv.setCharacteristics( chars );
+                fv.setExperimentalFactor( ef );
+
+                /*
+                 * persist
+                 */
+                fv.setCharacteristics( chars );
+                factorValueService.create( fv );
+
+                ef.getFactorValues().add( fv );
+
+                experimentalFactorService.update( ef );
+
+                for ( Date d : datesToBatch.get( batchId ) ) {
+                    d2fv.put( d, fv );
+                }
+            }
+        }
+
+        /*
+         * Associate dates with bioassays and any new factors with the biomaterials. Note we can have missing values.
+         */
+        for ( BioMaterial bm : dates.keySet() ) {
+            bioMaterialService.thaw( bm );
+
+            if ( !d2fv.isEmpty() ) bm.getFactorValues().add( d2fv.get( dates.get( bm ) ) );
+
+            for ( BioAssay ba : bm.getBioAssaysUsedIn() ) {
+                if ( ba.getProcessingDate() != null ) {
+                    if ( !ba.getProcessingDate().equals( dates.get( bm ) ) ) {
+                        ba.setProcessingDate( dates.get( bm ) );
+                        bioAssayService.update( ba );
+                    }
+                } else {
+                    ba.setProcessingDate( dates.get( bm ) );
+                    bioAssayService.update( ba );
+                }
+
+            }
+            bioMaterialService.update( bm );
+        }
+
+        return ef;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    protected ExperimentalFactor makeFactorForBatch( ExpressionExperiment ee ) {
+        ExperimentalDesign ed = ee.getExperimentalDesign();
+        ExperimentalFactor ef = ExperimentalFactor.Factory.newInstance();
+        ef.setType( FactorType.CATEGORICAL );
+        ef.setCategory( getBatchFactorCategory() );
+        ef.setExperimentalDesign( ed );
+        ef.setName( ExperimentalDesignUtils.BATCH_FACTOR_NAME );
+        ef.setDescription( "Scan date or similar proxy for 'sample processing batch'"
+                + " extracted from the raw data files." );
+
+        ef = persistFactor( ee, ef );
+        return ef;
+    }
+
+    /**
+     * @param ee
+     * @param factor
+     * @return
+     */
+    protected ExperimentalFactor persistFactor( ExpressionExperiment ee, ExperimentalFactor factor ) {
+        ExperimentalDesign ed = experimentalDesignService.load( ee.getExperimentalDesign().getId() );
+
+        if ( ed == null ) {
+            throw new IllegalStateException( "No experimental design for " + ee );
+        }
+
+        /*
+         * Note: this call should not be needed because of cascade behaviour.
+         */
+        // experimentalFactorService.create( ef );
+
+        if ( ed.getExperimentalFactors() == null ) ed.setExperimentalFactors( new HashSet<ExperimentalFactor>() );
+        ed.getExperimentalFactors().add( factor );
+
+        experimentalDesignService.update( ed );
+
+        return factor;
 
     }
 

@@ -21,20 +21,18 @@ package ubic.gemma.model.expression.bioAssayData;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
  * @author pavlidis
@@ -136,36 +134,30 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      * @seeubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao#thaw(ubic.gemma.model.expression.bioAssayData.
      * BioAssayDimension)
      */
-    public void thaw( final BioAssayDimension bioAssayDimension ) {
+    public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
 
-        if ( bioAssayDimension.getId() == null ) return;
+        if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
 
-        // List thawed = this
-        // .getHibernateTemplate()
-        // .findByNamedParam(
-        // "seled bad from BioAssayDimensionImpl bad inner join bad.bioAssays bas inner "
-        // + "join fetch bas.samplesUsed su inner join fetch su.bioAssaysedUsedIn inner join fetch su.factorValues ",
-        // "id", bioAssayDimension.getId() );
+        List<?> thawed = this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        " from BioAssayDimensionImpl bad inner join bad.bioAssays bas inner "
+                                + "join  fetch bas.samplesUsed su inner join fetch  su.bioAssaysUsedIn inner join fetch su.factorValues where bad = :bad ",
+                        "bad", bioAssayDimension );
         // log.info( thawed );
+        return ( BioAssayDimension ) ( ( Object[] ) thawed.iterator().next() )[0];
 
-        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( bioAssayDimension, LockMode.NONE );
-                Hibernate.initialize( bioAssayDimension );
-                Hibernate.initialize( bioAssayDimension.getBioAssays() );
-
-                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    session.lock( ba, LockMode.NONE );
-                    Hibernate.initialize( ba );
-                    Hibernate.initialize( ba.getSamplesUsed() );
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
-                        Hibernate.initialize( bm.getFactorValues() );
-                    }
-                }
-                return null;
-            }
-        } );
+        /*
+         * this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+         * public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+         * session.lock( bioAssayDimension, LockMode.NONE ); Hibernate.initialize( bioAssayDimension );
+         * Hibernate.initialize( bioAssayDimension.getBioAssays() );
+         * 
+         * for ( BioAssay ba : bioAssayDimension.getBioAssays() ) { session.lock( ba, LockMode.NONE );
+         * Hibernate.initialize( ba ); Hibernate.initialize( ba.getSamplesUsed() ); for ( BioMaterial bm :
+         * ba.getSamplesUsed() ) { Hibernate.initialize( bm.getBioAssaysUsedIn() ); Hibernate.initialize(
+         * bm.getFactorValues() ); } } return null; } } );
+         */
     }
 
 }

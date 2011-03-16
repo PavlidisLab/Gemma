@@ -83,11 +83,9 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchConfound;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchConfoundValueObject;
-import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
@@ -318,8 +316,40 @@ public class ExpressionExperimentQCController extends BaseController {
         return null; // nothing to return;
     }
 
-    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
+    /**
+     * @param eeid
+     * @param os
+     * @throws IOException
+     */
+    @RequestMapping("/expressionExperiment/eigenGenes.html")
+    public void writeEigenGenes( Long eeid, OutputStream os ) throws IOException {
+        ExpressionExperiment ee = expressionExperimentService.load( eeid );
+        if ( ee == null ) {
+            throw new IllegalArgumentException( "Could not load experiment with id " + eeid ); // or access deined.
+        }
+        SVDValueObject svdo = svdService.retrieveSvd( ee );
 
+        DoubleMatrix<Long, Integer> vMatrix = svdo.getvMatrix();
+
+        /*
+         * FIXME put the biomaterial names in there instead of the IDs.
+         */
+
+        MatrixWriter<Long, Integer> mr = new MatrixWriter<Long, Integer>( os );
+
+        mr.writeMatrix( vMatrix, true );
+
+    }
+
+    /**
+     * @param chart
+     * @param g2
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     */
+    private void addChartToGraphics( JFreeChart chart, Graphics2D g2, double x, double y, double width, double height ) {
         chart.draw( g2, new Rectangle2D.Double( x, y, width, height ), null, null );
     }
 
@@ -380,8 +410,8 @@ public class ExpressionExperimentQCController extends BaseController {
                     value = c.getValue();
                 }
             }
-            if ( value.startsWith( BatchInfoPopulationService.BATCH_FACTOR_NAME_PREFIX ) ) {
-                value = value.replaceFirst( BatchInfoPopulationService.BATCH_FACTOR_NAME_PREFIX, "" );
+            if ( value.startsWith( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX ) ) {
+                value = value.replaceFirst( ExperimentalDesignUtils.BATCH_FACTOR_NAME_PREFIX, "" );
             } else {
 
                 value = StringUtils.abbreviate( value, maxCategoryLabelLength );
@@ -544,24 +574,6 @@ public class ExpressionExperimentQCController extends BaseController {
         return efs;
     }
 
-    /**
-     * @param svdo
-     * @return
-     */
-    private CategoryDataset getPCAScree( SVDValueObject svdo ) {
-        DefaultCategoryDataset series = new DefaultCategoryDataset();
-
-        Double[] variances = svdo.getVariances();
-        if ( variances == null || variances.length == 0 ) {
-            return series;
-        }
-        int MAX_COMPONENTS_FOR_SCREE = 10; // make constant
-        for ( int i = 0; i < Math.min( MAX_COMPONENTS_FOR_SCREE, variances.length ); i++ ) {
-            series.addValue( variances[i], new Integer( 1 ), new Integer( i + 1 ) );
-        }
-        return series;
-    }
-
     //
     // /**
     // * @param ee
@@ -589,12 +601,22 @@ public class ExpressionExperimentQCController extends BaseController {
     // return files;
     // }
 
-    private File locateCorrMatDataFile( ExpressionExperiment ee ) {
-        String shortName = ee.getShortName();
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
-        File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
-        return f;
+    /**
+     * @param svdo
+     * @return
+     */
+    private CategoryDataset getPCAScree( SVDValueObject svdo ) {
+        DefaultCategoryDataset series = new DefaultCategoryDataset();
+
+        Double[] variances = svdo.getVariances();
+        if ( variances == null || variances.length == 0 ) {
+            return series;
+        }
+        int MAX_COMPONENTS_FOR_SCREE = 10; // make constant
+        for ( int i = 0; i < Math.min( MAX_COMPONENTS_FOR_SCREE, variances.length ); i++ ) {
+            series.addValue( variances[i], new Integer( 1 ), new Integer( i + 1 ) );
+        }
+        return series;
     }
 
     //
@@ -623,6 +645,14 @@ public class ExpressionExperimentQCController extends BaseController {
     //
     // return files;
     // }
+
+    private File locateCorrMatDataFile( ExpressionExperiment ee ) {
+        String shortName = ee.getShortName();
+        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
+                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
+        File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
+        return f;
+    }
 
     /**
      * @param ee

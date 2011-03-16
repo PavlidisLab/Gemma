@@ -57,7 +57,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     private static final long serialVersionUID = 1L;
     private static final int MAX_ROWS_TO_STRING = 100;
     private static Log log = LogFactory.getLog( ExpressionDataDoubleMatrix.class.getName() );
-    private DoubleMatrix<CompositeSequence, Integer> matrix;
+    private DoubleMatrix<CompositeSequence, BioMaterial> matrix;
 
     private Map<CompositeSequence, Double> ranks = new HashMap<CompositeSequence, Double>();
 
@@ -353,16 +353,16 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param maxSize
      * @return DoubleMatrixNamed
      */
-    private DoubleMatrix<CompositeSequence, Integer> createMatrix(
+    private DoubleMatrix<CompositeSequence, BioMaterial> createMatrix(
             Collection<? extends DesignElementDataVector> vectors, int maxSize ) {
 
         int numRows = this.rowDesignElementMapByInteger.keySet().size();
 
-        DoubleMatrix<CompositeSequence, Integer> mat = new DenseDoubleMatrix<CompositeSequence, Integer>( numRows,
-                maxSize );
+        DoubleMatrix<CompositeSequence, BioMaterial> mat = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                numRows, maxSize );
 
         for ( int j = 0; j < mat.columns(); j++ ) {
-            mat.addColumnName( j );
+            mat.addColumnName( this.getBioMaterialForColumn( j ) );
         }
 
         // initialize the matrix to -Infinity; this marks values that are not yet initialized.
@@ -476,7 +476,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
 
-        this.matrix = new DenseDoubleMatrix<CompositeSequence, Integer>( rowsToUse.size(), sourceMatrix.columns() );
+        this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( rowsToUse.size(), sourceMatrix.columns() );
         this.matrix.setColumnNames( sourceMatrix.getMatrix().getColNames() );
 
         log.info( "Creating a filtered matrix " + rowsToUse.size() + " x " + sourceMatrix.columns() );
@@ -508,7 +508,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
 
-        this.matrix = new DenseDoubleMatrix<CompositeSequence, Integer>( sourceMatrix.rows(), columnsToUse.size() );
+        this.matrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>( sourceMatrix.rows(), columnsToUse.size() );
         this.matrix.setRowNames( sourceMatrix.getMatrix().getRowNames() );
 
         this.ranks = sourceMatrix.ranks; // not strictly correct if we are using subcolumns
@@ -518,17 +518,13 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
          */
         List<Integer> originalBioMaterialIndices = new ArrayList<Integer>();
 
-        List<Integer> columnNames = new ArrayList<Integer>();
-        int k = 0;
         List<BioAssay> bioAssays = new ArrayList<BioAssay>();
         for ( BioMaterial bm : columnsToUse ) {
             originalBioMaterialIndices.add( sourceMatrix.getColumnIndex( bm ) );
-            columnNames.add( k );
             bioAssays.add( bm.getBioAssaysUsedIn().iterator().next() );
-            k++;
         }
 
-        this.matrix.setColumnNames( columnNames );
+        this.matrix.setColumnNames( columnsToUse );
 
         /*
          * fix the upper level column name maps.
@@ -572,7 +568,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
      * @param dataMatrix - The rows can be different than the original matrix, but the columns must be the same.
      */
     public ExpressionDataDoubleMatrix( ExpressionDataDoubleMatrix sourceMatrix,
-            DoubleMatrix<CompositeSequence, Integer> dataMatrix ) {
+            DoubleMatrix<CompositeSequence, BioMaterial> dataMatrix ) {
         init();
         this.expressionExperiment = sourceMatrix.expressionExperiment;
         this.bioAssayDimensions = sourceMatrix.bioAssayDimensions;
@@ -591,7 +587,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
     /**
      * @return
      */
-    public DoubleMatrix<CompositeSequence, Integer> getMatrix() {
+    public DoubleMatrix<CompositeSequence, BioMaterial> getMatrix() {
         return matrix;
     }
 

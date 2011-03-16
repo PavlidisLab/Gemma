@@ -34,6 +34,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeDao;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -65,8 +66,8 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
      */
     @Override
     public PrincipalComponentAnalysis create( ExpressionExperiment ee, DoubleMatrix<CompositeSequence, Integer> u,
-            double[] eigenvalues, DoubleMatrix<Integer, Integer> v, BioAssayDimension bad, int numComponentsToStore,
-            int numLoadingsToStore ) {
+            double[] eigenvalues, DoubleMatrix<Integer, BioMaterial> v, BioAssayDimension bad,
+            int numComponentsToStore, int numLoadingsToStore ) {
 
         PrincipalComponentAnalysis pca = PrincipalComponentAnalysis.Factory.newInstance();
         int actualNumberOfComponentsStored = Math.min( numComponentsToStore, v.columns() );

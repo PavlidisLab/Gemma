@@ -39,6 +39,7 @@ import ubic.gemma.analysis.preprocess.filter.RowMissingValueFilter;
 import ubic.gemma.analysis.preprocess.filter.AffyProbeNameFilter.Pattern;
 import ubic.gemma.analysis.preprocess.filter.RowLevelFilter.Method;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 
 /**
@@ -62,7 +63,7 @@ public class ExpressionDataSVD {
     private boolean normalized = false;
     DenseDoubleMatrix2D missingValueInfo; // fixme use booleans
 
-    SingularValueDecomposition<CompositeSequence, Integer> svd;
+    SingularValueDecomposition<CompositeSequence, BioMaterial> svd;
 
     /**
      * Does normalization.
@@ -107,7 +108,7 @@ public class ExpressionDataSVD {
         }
 
         this.normalized = normalizeMatrix;
-        DoubleMatrix<CompositeSequence, Integer> matrix = this.expressionData.getMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> matrix = this.expressionData.getMatrix();
 
         assert matrix.getRowNames().size() > 0;
         assert matrix.getColNames().size() > 0;
@@ -119,7 +120,7 @@ public class ExpressionDataSVD {
             matrix = MatrixStats.doubleStandardize( matrix );
         }
 
-        this.svd = new SingularValueDecomposition<CompositeSequence, Integer>( matrix );
+        this.svd = new SingularValueDecomposition<CompositeSequence, BioMaterial>( matrix );
     }
 
     /**
@@ -144,8 +145,8 @@ public class ExpressionDataSVD {
         DoubleMatrix2D v = new DenseDoubleMatrix2D( rawV );
 
         Algebra a = new Algebra();
-        DoubleMatrix<CompositeSequence, Integer> reconstructed = new DenseDoubleMatrix<CompositeSequence, Integer>( a
-                .mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
+        DoubleMatrix<CompositeSequence, BioMaterial> reconstructed = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                a.mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
 
         reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
         reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
@@ -224,7 +225,7 @@ public class ExpressionDataSVD {
      * @return the right singular vectors. The column indices are of the eigengenes (starting from 0). The row indices
      *         are of the original samples in the given ExpressionDataDoubleMatrix.
      */
-    public DoubleMatrix<Integer, Integer> getV() {
+    public DoubleMatrix<Integer, BioMaterial> getV() {
         return svd.getV();
     }
 
@@ -275,8 +276,8 @@ public class ExpressionDataSVD {
         DoubleMatrix2D v = new DenseDoubleMatrix2D( rawV );
 
         Algebra a = new Algebra();
-        DoubleMatrix<CompositeSequence, Integer> reconstructed = new DenseDoubleMatrix<CompositeSequence, Integer>( a
-                .mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
+        DoubleMatrix<CompositeSequence, BioMaterial> reconstructed = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                a.mult( a.mult( u, s ), a.transpose( v ) ).toArray() );
 
         reconstructed.setRowNames( this.expressionData.getMatrix().getRowNames() );
         reconstructed.setColumnNames( this.expressionData.getMatrix().getColNames() );
@@ -312,15 +313,22 @@ public class ExpressionDataSVD {
 
         DoubleMatrix<CompositeSequence, Integer> rawUMatrix = svd.getU();
 
+        DoubleMatrix<CompositeSequence, BioMaterial> result = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                rawUMatrix.rows(), rawUMatrix.columns() );
+
         // take the absolute value of the U matrix.
         for ( int i = 0; i < rawUMatrix.rows(); i++ ) {
             for ( int j = 0; j < rawUMatrix.columns(); j++ ) {
-                rawUMatrix.set( i, j, Math.abs( rawUMatrix.get( i, j ) ) );
+                result.set( i, j, Math.abs( rawUMatrix.get( i, j ) ) );
             }
         }
+        List<BioMaterial> colNames = svd.getV().getColNames();
+
+        result.setColumnNames( colNames );
+        result.setRowNames( rawUMatrix.getRowNames() );
 
         // use that as the 'expression data'
-        return new ExpressionDataDoubleMatrix( this.expressionData, rawUMatrix );
+        return new ExpressionDataDoubleMatrix( this.expressionData, result );
     }
 
     /**
@@ -420,7 +428,7 @@ public class ExpressionDataSVD {
      * 
      * @param matrix
      */
-    private void imputeMissing( DoubleMatrix<CompositeSequence, Integer> matrix ) {
+    private void imputeMissing( DoubleMatrix<CompositeSequence, BioMaterial> matrix ) {
         /*
          * keep track of the missing values so they can be re-masked later.
          */

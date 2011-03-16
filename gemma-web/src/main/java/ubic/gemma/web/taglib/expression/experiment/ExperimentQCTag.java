@@ -191,6 +191,11 @@ public class ExperimentQCTag extends TagSupport {
                         + "\"><img src=\"/Gemma/images/icons/chart_curve.png\"></span>";
                 buf.append( linkText + "&nbsp;" );
             }
+
+            buf
+                    .append( "&nbsp;&nbsp;&nbsp;<span><a title=\"Download a file containing the raw eigengenes\" class=\"newpage\"  target=\"_blank\"  href=\"eigenGenes.html?eeid="
+                            + this.eeid + "\">Get data</a></span>" );
+
             buf.append( "</td>" );
             /*
              * popupImage is defined in ExpressinExperimentDetails.js

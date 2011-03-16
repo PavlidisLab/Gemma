@@ -53,6 +53,7 @@ import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
@@ -207,6 +208,8 @@ public class DEDVController {
     }
 
     /**
+     * AJAX
+     * 
      * @param eeId
      * @param component
      * @param count
@@ -221,8 +224,9 @@ public class DEDVController {
 
         Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( ee,
                 component, count );
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = experimentalDesignVisualizationService
-                .sortVectorDataByDesign( topLoadedVectors.values() );
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( topLoadedVectors.values() );
         return makeVisCollection( topLoadedVectors.values(), null, null, layouts );
     }
 
@@ -385,7 +389,6 @@ public class DEDVController {
      * @param geneIds
      * @return
      */
-
     public VisualizationValueObject[] getDEDVForVisualization( Collection<Long> eeIds, Collection<Long> geneIds ) {
 
         StopWatch watch = new StopWatch();
@@ -534,13 +537,10 @@ public class DEDVController {
 
         Collection<Long> geneIds = extractIds( request.getParameter( "g" ) ); // might not be any
         Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) ); // might not be there
-        /*
-         * The following should be set if we're viewing diff. ex results.
-         */
-        String threshSt = request.getParameter( "thresh" ); // qvalue threshold.
+        String threshSt = request.getParameter( "thresh" );
         String resultSetIdSt = request.getParameter( "rs" );
 
-        Double thresh = null;
+        Double thresh = 100.0;
         if ( StringUtils.isNotBlank( threshSt ) ) {
             try {
                 thresh = Double.parseDouble( threshSt );
@@ -548,6 +548,26 @@ public class DEDVController {
                 throw new RuntimeException( "Threshold was not a valid value: " + threshSt );
             }
         }
+
+        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = null;
+
+        if ( request.getParameter( "pca" ) != null ) {
+            int component = Integer.parseInt( request.getParameter( "component" ) );
+            ExpressionExperiment ee = expressionExperimentService.load( eeIds.iterator().next() );
+            if ( ee == null ) return null;
+
+            Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( ee,
+                    component, thresh.intValue() );
+
+            ModelAndView mav = new ModelAndView( new TextView() );
+            mav.addObject( "text", format4File( topLoadedVectors.values() ) );
+
+            return mav;
+        }
+
+        /*
+         * The following should be set if we're viewing diff. ex results.
+         */
 
         Long resultSetId = null;
         if ( StringUtils.isNumeric( resultSetIdSt ) ) {
@@ -562,16 +582,17 @@ public class DEDVController {
 
         }
 
-        Map<ExpressionExperiment, Map<Gene, Collection<DoubleVectorValueObject>>> result = null;
-
         if ( thresh != null && resultSetId != null ) {
 
+            /*
+             * Diff ex case.
+             */
             Long eeId = eeIds.iterator().next();
 
             Collection<DoubleVectorValueObject> diffExVectors = getDiffExVectors( resultSetId, thresh );
 
             if ( diffExVectors == null || diffExVectors.isEmpty() ) {
-                mav.addObject( "text", "No DEDV results" );
+                mav.addObject( "text", "No results" );
                 return mav;
             }
 
@@ -594,8 +615,10 @@ public class DEDVController {
 
             result.put( ee, gmap );
 
-        } else {
+        } else if ( geneIds != null && !geneIds.isEmpty() ) {
             result = getDEDV( eeIds, geneIds );
+        } else {
+
         }
 
         if ( result == null || result.isEmpty() ) {
@@ -607,11 +630,47 @@ public class DEDVController {
         watch.stop();
         Long time = watch.getTime();
 
-        log.info( "Retrieved and Formated" + result.keySet().size() + " DEDVs for eeIDs: " + eeIds + " and GeneIds: "
-                + geneIds + " in : " + time + " ms." );
+        if ( time > 100 ) {
+            log.info( "Retrieved and Formated" + result.keySet().size() + " DEDVs for eeIDs: " + eeIds
+                    + " and GeneIds: "
 
+                    + geneIds + " in : " + time + " ms." );
+        }
         return mav;
 
+    }
+
+    private String format4File( Collection<DoubleVectorValueObject> vectors ) {
+        StringBuffer converted = new StringBuffer();
+        converted.append( "# Generated by Gemma\n# " + ( new Date() ) + "\n" );
+        converted.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
+        boolean didHeader = false;
+        for ( DoubleVectorValueObject vec : vectors ) {
+            if ( !didHeader ) {
+                converted.append( makeHeader( vec ) );
+                didHeader = true;
+            }
+
+            List<String> geneSymbols = new ArrayList<String>();
+            List<String> geneNames = new ArrayList<String>();
+            for ( Gene g : vec.getGenes() ) {
+                geneSymbols.add( g.getOfficialSymbol() );
+                geneNames.add( g.getOfficialName() );
+            }
+
+            converted.append( StringUtils.join( geneSymbols, "|" ) + "\t" + StringUtils.join( geneNames, "|" ) + "\t" );
+            converted.append( vec.getDesignElement().getName() + "\t" );
+
+            if ( vec.getData() != null || vec.getData().length != 0 ) {
+                for ( double data : vec.getData() ) {
+                    converted.append( String.format( "%.3f", data ) + "\t" );
+                }
+                converted.deleteCharAt( converted.length() - 1 ); // remove the trailing tab // FIXME just joind
+            }
+            converted.append( "\n" );
+        }
+
+        return converted.toString();
     }
 
     /**
@@ -856,7 +915,7 @@ public class DEDVController {
      */
     private void getSampleNames( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
-        DoubleVectorValueObject vec = vectors.iterator().next();
+        DoubleVectorValueObject vec = vectors.iterator().next(); // just one as an example.
 
         List<String> sampleNames = new ArrayList<String>();
         if ( layouts != null && layouts.get( vec.getExpressionExperiment() ) != null ) {
@@ -867,14 +926,12 @@ public class DEDVController {
                 log.debug( sampleNames.size() + " sample names!" );
                 vvo.setSampleNames( sampleNames );
             }
-        } else if ( vec.getBioAssayDimension() == null ) {
+        } else {
             sampleNames = getSampleNames( vec );
             if ( sampleNames.size() > 0 ) {
                 log.debug( sampleNames.size() + " sample names!" );
                 vvo.setSampleNames( sampleNames );
             }
-        } else {
-            // sorry.
         }
     }
 
@@ -884,12 +941,14 @@ public class DEDVController {
      */
     private List<String> getSampleNames( DoubleVectorValueObject dedv ) {
         List<String> result = new ArrayList<String>();
-        if ( dedv.getBioAssayDimension() == null ) {
+        BioAssayDimension bioAssayDimension = dedv.getBioAssayDimension();
+        if ( bioAssayDimension == null ) {
             return result;
         }
-        if ( dedv.getBioAssayDimension().getId() != null )
-            bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
-        for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
+        if ( bioAssayDimension.getId() != null ) {
+            bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
+        }
+        for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
             result.add( ba.getName() );
         }
         return result;
@@ -1019,8 +1078,8 @@ public class DEDVController {
 
         buf.append( "Gene Symbol\tGene Name\tProbe\t" );
 
-        bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
-        for ( BioAssay ba : dedv.getBioAssayDimension().getBioAssays() ) {
+        BioAssayDimension bad = bioAssayDimensionService.thaw( dedv.getBioAssayDimension() );
+        for ( BioAssay ba : bad.getBioAssays() ) {
             buf.append( ba.getName() + "\t" );
         }
         buf.deleteCharAt( buf.length() - 1 );

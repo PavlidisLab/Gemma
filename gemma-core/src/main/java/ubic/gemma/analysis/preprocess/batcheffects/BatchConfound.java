@@ -98,7 +98,6 @@ public class BatchConfound {
      * @param ee
      * @param bioMaterialFactorMap
      * @param svdo
-     * @throws MathException
      */
     private static Collection<BatchConfoundValueObject> factorBatchConfoundTest( ExpressionExperiment ee,
             Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
@@ -107,7 +106,7 @@ public class BatchConfound {
         ExperimentalFactor batchFactor = null;
         Map<Long, Integer> batchIndexes = new HashMap<Long, Integer>();
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-            if ( ef.getName().equalsIgnoreCase( "batch" ) ) {
+            if ( ExperimentalDesignUtils.isBatch( ef ) ) {
                 batchFactor = ef;
 
                 int index = 0;
@@ -142,6 +141,7 @@ public class BatchConfound {
             double p;
             double chiSquare;
             int df;
+            int numBatches = batchFactor.getFactorValues().size();
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
 
                 DoubleArrayList factorValues = new DoubleArrayList( numBioMaterials );
@@ -159,7 +159,7 @@ public class BatchConfound {
 
                 log.debug( "KWallis\t" + ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t"
                         + ef.getName() + "\t" + String.format( "%.2f", chiSquare ) + "\t" + df + "\t"
-                        + String.format( "%.2g", p ) );
+                        + String.format( "%.2g", p ) + "\t" + numBatches );
             } else {
 
                 Map<Long, Integer> factorValueIndexes = new HashMap<Long, Integer>();
@@ -173,7 +173,7 @@ public class BatchConfound {
                     factorValueMembership.put( bmId, bmToFv.get( bmId ).longValue() );
                 }
 
-                long[][] counts = new long[batchFactor.getFactorValues().size()][ef.getFactorValues().size()];
+                long[][] counts = new long[numBatches][ef.getFactorValues().size()];
 
                 for ( int i = 0; i < batchIndexes.size(); i++ ) {
                     for ( int j = 0; j < factorValueIndexes.size(); j++ ) {
@@ -202,9 +202,10 @@ public class BatchConfound {
                 }
 
                 log.debug( "ChiSq\t" + ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getName()
-                        + "\t" + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p ) );
+                        + "\t" + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p )
+                        + "\t" + numBatches );
             }
-            BatchConfoundValueObject summary = new BatchConfoundValueObject( ee, ef, chiSquare, df, p );
+            BatchConfoundValueObject summary = new BatchConfoundValueObject( ee, ef, chiSquare, df, p, numBatches );
 
             result.add( summary );
         }

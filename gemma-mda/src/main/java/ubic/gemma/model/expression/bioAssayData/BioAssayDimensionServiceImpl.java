@@ -28,11 +28,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase {
 
-    public void thaw( BioAssayDimension bioAssayDimension ) {
-        this.getBioAssayDimensionDao().thaw( bioAssayDimension );
-
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService#thaw(ubic.gemma.model.expression.bioAssayData
+     * .BioAssayDimension)
+     */
+    public BioAssayDimension thaw( BioAssayDimension bioAssayDimension ) {
+        return this.getBioAssayDimensionDao().thaw( bioAssayDimension );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase#handleCreate(ubic.gemma.model.expression
+     * .bioAssayData.BioAssayDimension)
+     */
     @Override
     protected BioAssayDimension handleCreate( BioAssayDimension bioAssayDimension ) throws Exception {
         return this.getBioAssayDimensionDao().create( bioAssayDimension );
@@ -47,16 +60,35 @@ public class BioAssayDimensionServiceImpl extends ubic.gemma.model.expression.bi
         return this.getBioAssayDimensionDao().findOrCreate( bioAssayDimension );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase#handleLoad(java.lang.Long)
+     */
     @Override
     protected BioAssayDimension handleLoad( Long id ) throws Exception {
         return this.getBioAssayDimensionDao().load( id );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase#handleRemove(ubic.gemma.model.expression
+     * .bioAssayData.BioAssayDimension)
+     */
     @Override
     protected void handleRemove( BioAssayDimension bioAssayDimension ) throws Exception {
         this.getBioAssayDimensionDao().remove( bioAssayDimension );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssayData.BioAssayDimensionServiceBase#handleUpdate(ubic.gemma.model.expression
+     * .bioAssayData.BioAssayDimension)
+     */
     @Override
     protected void handleUpdate( BioAssayDimension bioAssayDimension ) throws Exception {
         this.getBioAssayDimensionDao().update( bioAssayDimension );

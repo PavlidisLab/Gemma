@@ -99,7 +99,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         timer.stop();
         if ( timer.getTime() > 50 ) {
             log.info( "Fetched " + dedv2genes.size() + " vectors for " + cs2gene.size() + " probes in "
-                    + ( ees == null ? "(?)" : ees.size() ) + "ees : " + timer.getTime() + "ms" );
+                    + ( ees == null ? "(?)" : ees.size() ) + " ees : " + timer.getTime() + "ms" );
         }
         return dedv2genes;
     }
@@ -244,8 +244,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      */
     void thaw( org.hibernate.Session session, T designElementDataVector ) {
         // thaw the design element.
-        BioSequence seq = designElementDataVector.getDesignElement()
-                .getBiologicalCharacteristic();
+        BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
         if ( seq != null ) {
             session.lock( seq, LockMode.NONE );
             Hibernate.initialize( seq );

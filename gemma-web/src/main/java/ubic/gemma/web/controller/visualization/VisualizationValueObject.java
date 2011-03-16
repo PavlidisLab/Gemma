@@ -46,7 +46,7 @@ import ubic.gemma.model.genome.Gene;
  */
 public class VisualizationValueObject {
 
-    private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" }; 
+    private static String[] colors = new String[] { "red", "black", "blue", "green", "orange" };
 
     private static Log log = LogFactory.getLog( VisualizationValueObject.class );
 
@@ -98,10 +98,12 @@ public class VisualizationValueObject {
                         + this.eevo.getId() + "  ee2: " + vector.getExpressionExperiment().getId() );
             }
 
-            String color = null;
+            Collection<Gene> vectorGenes = vector.getGenes();
+
+            String color = "black";
             if ( genes != null ) {
                 for ( Gene g : genes ) {
-                    if ( !vector.getGenes().contains( g ) ) {
+                    if ( !vectorGenes.contains( g ) ) {
                         continue;
                     }
                     color = colorMap.get( g.getId() );
@@ -266,6 +268,9 @@ public class VisualizationValueObject {
         }
     }
 
+    /**
+     * @param genes
+     */
     private void populateColorMap( List<Gene> genes ) {
         int i = 0;
         if ( genes.size() > colors.length ) {

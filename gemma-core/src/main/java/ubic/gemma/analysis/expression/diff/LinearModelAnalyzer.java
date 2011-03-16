@@ -42,22 +42,21 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.math.distribution.FDistribution;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
-import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.r.type.LinearModelSummary;
+import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
-import ubic.gemma.model.common.measurement.Measurement;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -86,8 +85,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 public abstract class LinearModelAnalyzer extends AbstractDifferentialExpressionAnalyzer {
-
-    private static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
 
     private static Log log = LogFactory.getLog( LinearModelAnalyzer.class );
 
@@ -189,7 +186,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
             List<ExperimentalFactor> factors = config.getFactorsToInclude();
 
-            List<BioMaterial> samplesUsed = getOrderedSamples( dmatrix, factors );
+            List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
 
             dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, dmatrix );
 
@@ -215,7 +212,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                     log.info( "Analyzing subset: " + subsetFactorValue );
 
-                    List<BioMaterial> bioMaterials = getOrderedSamples( subsets.get( subsetFactorValue ), factors );
+                    List<BioMaterial> bioMaterials = ExperimentalDesignUtils.getOrderedSamples( subsets
+                            .get( subsetFactorValue ), factors );
 
                     /*
                      * make a EESubSet
@@ -325,7 +323,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 List<String> interactionFactorNames = new ArrayList<String>();
                 for ( ExperimentalFactor factor : interactionTerms ) {
-                    interactionFactorNames.add( nameForR( factor ) ); // see above for naming convention.
+                    interactionFactorNames.add( ExperimentalDesignUtils.nameForR( factor ) );
                 }
 
                 factTerm = factTerm + " + " + StringUtils.join( interactionFactorNames, "*" ); // in the R
@@ -361,7 +359,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         final Map<String, Collection<ExperimentalFactor>> label2Factors = getRNames( factors );
 
-        Map<ExperimentalFactor, FactorValue> baselineConditions = getBaselineConditions( samplesUsed, factors );
+        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils.getBaselineConditions(
+                samplesUsed, factors );
 
         QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
 
@@ -371,7 +370,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          * Build our factor terms, with interactions handled specially
          */
         List<String[]> interactionFactorLists = new ArrayList<String[]>();
-        ObjectMatrix<String, String, Object> designMatrix = buildFactorsInR( factors, samplesUsed, baselineConditions );
+        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils.buildFactorsForR( factors,
+                samplesUsed, baselineConditions );
 
         setupFactors( designMatrix, baselineConditions );
 
@@ -383,7 +383,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             modelFormula = buildModelFormula( config, label2Factors, interceptFactor, interactionFactorLists );
         }
 
-        DoubleMatrix<CompositeSequence, Integer> namedMatrix = dmatrix.getMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
         /*
          * Log transform, if necessary
@@ -567,51 +567,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
-     * @param samplesUsed
-     * @param factors
-     * @return
-     */
-    private Map<ExperimentalFactor, FactorValue> getBaselineConditions( List<BioMaterial> samplesUsed,
-            List<ExperimentalFactor> factors ) {
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExpressionDataMatrixColumnSort
-                .getBaselineLevels( factors );
-
-        /*
-         * For factors that don't have an obvious baseline, use the first factorvalue.
-         */
-        Collection<FactorValue> factorValuesOfFirstSample = samplesUsed.iterator().next().getFactorValues();
-        for ( ExperimentalFactor factor : factors ) {
-            if ( !baselineConditions.containsKey( factor ) ) {
-
-                for ( FactorValue biomf : factorValuesOfFirstSample ) {
-                    /*
-                     * the first biomaterial has the values used as baseline in R.
-                     */
-                    if ( biomf.getExperimentalFactor().equals( factor ) ) {
-                        log.debug( "Using default baseline for " + factor + ": " + biomf );
-                        baselineConditions.put( factor, biomf );
-                    }
-                }
-            }
-        }
-        return baselineConditions;
-    }
-
-    /**
-     * This puts the control samples up front if possible.
-     * 
-     * @param dmatrix
-     * @param factors
-     * @return
-     */
-    private List<BioMaterial> getOrderedSamples( ExpressionDataDoubleMatrix dmatrix, List<ExperimentalFactor> factors ) {
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
-                .getBioMaterialsForBioAssays( dmatrix );
-        samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
-        return samplesUsed;
-    }
-
-    /**
      * @param resultLists
      * @param pvaluesForQvalue
      */
@@ -644,8 +599,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     private Map<String, Collection<ExperimentalFactor>> getRNames( List<ExperimentalFactor> factors ) {
         final Map<String, Collection<ExperimentalFactor>> label2Factors = new LinkedHashMap<String, Collection<ExperimentalFactor>>();
         for ( ExperimentalFactor experimentalFactor : factors ) {
-            label2Factors.put( nameForR( experimentalFactor ), new HashSet<ExperimentalFactor>() );
-            label2Factors.get( nameForR( experimentalFactor ) ).add( experimentalFactor );
+            label2Factors.put( ExperimentalDesignUtils.nameForR( experimentalFactor ),
+                    new HashSet<ExperimentalFactor>() );
+            label2Factors.get( ExperimentalDesignUtils.nameForR( experimentalFactor ) ).add( experimentalFactor );
         }
         return label2Factors;
     }
@@ -728,7 +684,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         contrast.setLogFoldChange( nan2Null( coefficient ) );
 
-        if ( term.contains( FACTOR_VALUE_RNAME_PREFIX ) ) { // otherwise, it's continuous, and we don't put in a
+        if ( term.contains( ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX ) ) { // otherwise, it's continuous, and
+            // we don't put in a
             // factorvalue.
 
             String[] terms = new String[2];
@@ -747,7 +704,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             Long factorValueId = null;
 
             try {
-                factorValueId = Long.parseLong( firstTerm.replace( factorNames[0] + FACTOR_VALUE_RNAME_PREFIX, "" ) );
+                factorValueId = Long.parseLong( firstTerm.replace( factorNames[0]
+                        + ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
             } catch ( NumberFormatException e ) {
                 throw new RuntimeException( "Failed to parse: " + firstTerm + " into a factorvalue id" );
             }
@@ -766,8 +724,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 assert secondTerm != null;
 
                 try {
-                    factorValueId = Long
-                            .parseLong( secondTerm.replace( factorNames[1] + FACTOR_VALUE_RNAME_PREFIX, "" ) );
+                    factorValueId = Long.parseLong( secondTerm.replace( factorNames[1]
+                            + ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX, "" ) );
                 } catch ( NumberFormatException e ) {
                     throw new RuntimeException( "Failed to parse: " + secondTerm + " into a factorvalue id" );
                 }
@@ -887,7 +845,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @return
      * @see ExpressionExperimentFilter for a related implementation.
      */
-    private boolean onLogScale( QuantitationType quantitationType, DoubleMatrix<CompositeSequence, Integer> namedMatrix ) {
+    private boolean onLogScale( QuantitationType quantitationType,
+            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
         if ( quantitationType.getScale() != null ) {
             if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
                 return true;
@@ -924,7 +883,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param rowNameExtractor
      * @return results
      */
-    private Map<String, LinearModelSummary> runAnalysis( final DoubleMatrix<CompositeSequence, Integer> namedMatrix,
+    private Map<String, LinearModelSummary> runAnalysis(
+            final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
             final Transformer rowNameExtractor ) {
 
@@ -985,99 +945,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
-     * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix
-     * (defined by samplesUsed).
-     * 
-     * @param factors
-     * @param samplesUsed
-     * @param factors in the order they will be used
-     * @param factorNames
-     * @param baselines
-     * @return a design matrix
-     */
-    protected ObjectMatrix<String, String, Object> buildFactorsInR( List<ExperimentalFactor> factors,
-            List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines ) {
-
-        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<String, String, Object>( samplesUsed
-                .size(), factors.size() );
-
-        Map<ExperimentalFactor, String> factorNamesInR = new LinkedHashMap<ExperimentalFactor, String>();
-
-        Map<ExperimentalFactor, Boolean> isContinuous = new HashMap<ExperimentalFactor, Boolean>();
-        for ( ExperimentalFactor factor : factors ) {
-            factorNamesInR.put( factor, nameForR( factor ) );
-            isContinuous.put( factor, factor.getType().equals( FactorType.CONTINUOUS ) );
-        }
-
-        designMatrix.setColumnNames( new ArrayList<String>( factorNamesInR.values() ) );
-
-        List<String> rowNames = new ArrayList<String>();
-
-        int row = 0;
-        for ( BioMaterial samp : samplesUsed ) {
-
-            rowNames.add( "biomat_" + samp.getId() );
-
-            int col = 0;
-            for ( ExperimentalFactor factor : factors ) {
-
-                FactorValue baseLineFV = baselines.get( factor );
-
-                /*
-                 * Find this biomaterial's value for the current factor.
-                 */
-                Object value = null;
-                boolean found = false;
-                for ( FactorValue fv : samp.getFactorValues() ) {
-
-                    if ( fv.getExperimentalFactor().equals( factor ) ) {
-
-                        if ( found ) {
-                            // not unique
-                            throw new IllegalStateException( "Biomaterial had more than one value for factor: "
-                                    + factor );
-                        }
-
-                        boolean isBaseline = baseLineFV != null && fv.equals( baseLineFV );
-
-                        if ( isContinuous.get( factor ) ) {
-                            Measurement measurement = fv.getMeasurement();
-                            assert measurement != null;
-                            try {
-                                value = Double.parseDouble( measurement.getValue() );
-                            } catch ( NumberFormatException e ) {
-                                log.warn( "Failed to parse measurement as number: " + measurement.getValue() );
-                                value = Double.NaN;
-                            }
-                        } else {
-                            /*
-                             * We always use a dummy value. It's not as human-readable but at least we're sure it is
-                             * unique and R-compliant. (assuming the fv is persistent!)
-                             */
-                            value = nameForR( fv, isBaseline );
-                        }
-                        found = true;
-                        // could break here but nice to check for uniqueness.
-                    }
-                }
-                if ( !found ) {
-                    throw new IllegalStateException( "Biomaterial did not have a matching factor value for: " + factor );
-                }
-
-                designMatrix.set( row, col, value );
-
-                col++;
-
-            }
-            row++;
-
-        }
-
-        designMatrix.setRowNames( rowNames );
-        return designMatrix;
-    }
-
-    /**
      * @param experimentalFactor
      * @param quantitationType
      * @return boolean true if we need the intercept.
@@ -1092,22 +959,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     "Cannot deal with constant factors unless the data are ratiometric non-reference design" );
         }
         return false;
-    }
-
-    /**
-     * @param factor
-     * @return
-     */
-    protected Boolean isContinuous( ExperimentalFactor factor ) {
-        return factor.getType().equals( FactorType.CONTINUOUS );
-    }
-
-    protected String nameForR( ExperimentalFactor experimentalFactor ) {
-        return "fact." + experimentalFactor.getId();
-    }
-
-    protected String nameForR( FactorValue fv, boolean isBaseline ) {
-        return FACTOR_VALUE_RNAME_PREFIX + fv.getId() + ( isBaseline ? "_base" : "" );
     }
 
     /**
@@ -1147,10 +998,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 continue;
             }
 
-            String factorName = nameForR( factor );
+            String factorName = ExperimentalDesignUtils.nameForR( factor );
             Object[] column = designMatrix.getColumn( designMatrix.getColIndexByName( factorName ) );
 
-            if ( isContinuous( factor ) ) {
+            if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
                 double[] colD = new double[column.length];
                 for ( int i = 0; i < column.length; i++ ) {
                     colD[i] = ( Double ) column[i];
@@ -1164,7 +1015,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 FactorValue baseLineFV = baselineConditions.get( factor );
 
-                String fvName = nameForR( baseLineFV, true );
+                String fvName = ExperimentalDesignUtils.nameForR( baseLineFV, true );
 
                 rc.assignFactor( factorName, Arrays.asList( colS ) );
                 List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );

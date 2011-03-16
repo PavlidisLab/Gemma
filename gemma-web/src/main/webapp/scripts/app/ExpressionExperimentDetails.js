@@ -239,7 +239,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
 					title : "Top diff. ex. probes for " + factorDetails,
 					showLegend : false,
-					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid,
+					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
 							diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
 				});
 		this.visDiffWindow.show({
@@ -259,7 +259,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					readMethod : DEDVController.getDEDVForPcaVisualization,
 					title : "Top loaded probes for PC" + component,
 					showLegend : false,
-					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}", eeid,
+					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&component={1}&thresh={2}&pca=1", eeid,
 							component, count)
 				});
 		this.vispcaWindow.show({

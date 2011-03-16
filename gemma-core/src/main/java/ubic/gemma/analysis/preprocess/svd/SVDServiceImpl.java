@@ -49,7 +49,7 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorSer
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment; 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
@@ -134,8 +134,11 @@ public class SVDServiceImpl implements SVDService {
          */
         // assert vect.size() <= count : vect.size() + " vectors, expected max " + probes.keySet().size();
 
-        this.bioAssayDimensionService.thaw( pca.getBioAssayDimension() );
-
+        BioAssayDimension bioAssayDimension = pca.getBioAssayDimension();
+        bioAssayDimension = this.bioAssayDimensionService.thaw( bioAssayDimension );
+        assert bioAssayDimension != null;
+        assert !bioAssayDimension.getBioAssays().isEmpty();
+        
         for ( DoubleVectorValueObject vct : vect ) {
             ProbeLoading probeLoading = probes.get( vct.getDesignElement() );
 
@@ -149,7 +152,7 @@ public class SVDServiceImpl implements SVDService {
             // FIXME this is to make sure smaller values
             // are better, they are not pvalues
             vct.setPvalue( 1.0 / Math.abs( probeLoading.getLoading() ) );
-            vct.setBioAssayDimension( pca.getBioAssayDimension() );
+            vct.setBioAssayDimension( bioAssayDimension );
             vct.setExpressionExperiment( ee );
             result.put( probeLoading, vct );
         }
@@ -175,7 +178,7 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) return null;
-        bioAssayDimensionService.thaw( pca.getBioAssayDimension() );
+        pca.setBioAssayDimension( bioAssayDimensionService.thaw( pca.getBioAssayDimension() ) );
         return new SVDValueObject( pca );
     }
 
@@ -209,7 +212,7 @@ public class SVDServiceImpl implements SVDService {
         /*
          * Save the results
          */
-        DoubleMatrix<Integer, Integer> v = svd.getV();
+        DoubleMatrix<Integer, BioMaterial> v = svd.getV();
 
         List<Long> bioMaterialIds = new ArrayList<Long>();
         for ( int i = 0; i < mat.columns(); i++ ) {
@@ -258,7 +261,7 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();
-        bioAssayDimensionService.thaw( bad );
+        bad = bioAssayDimensionService.thaw( bad );
         List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
 
         SVDValueObject svo = new SVDValueObject( pca );
@@ -301,7 +304,7 @@ public class SVDServiceImpl implements SVDService {
      *        non-continuous factors the value is a double.
      * @param svdBioMaterials
      */
-    private void analyzeComponent( SVDValueObject svo, int componentNumber, DoubleMatrix<Integer, Integer> vMatrix,
+    private void analyzeComponent( SVDValueObject svo, int componentNumber, DoubleMatrix<Long, Integer> vMatrix,
             Map<Long, Date> bioMaterialDates, Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap,
             Long[] svdBioMaterials ) {
         DoubleArrayList eigenGene = new DoubleArrayList( vMatrix.getColumn( componentNumber ) );

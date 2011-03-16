@@ -30,6 +30,11 @@ public class BatchConfoundValueObject {
     private final ExpressionExperiment ee;
     private final ExperimentalFactor ef;
     private final double p;
+    private int numBatches;
+
+    public int getNumBatches() {
+        return numBatches;
+    }
 
     /**
      * @param ee
@@ -37,13 +42,16 @@ public class BatchConfoundValueObject {
      * @param chiSquare
      * @param df
      * @param p
+     * @param numBatches
      */
-    public BatchConfoundValueObject( ExpressionExperiment ee, ExperimentalFactor ef, double chiSquare, int df, double p ) {
+    public BatchConfoundValueObject( ExpressionExperiment ee, ExperimentalFactor ef, double chiSquare, int df,
+            double p, int numBatches ) {
         this.ee = ee;
         this.ef = ef;
         this.chiSquare = chiSquare;
         this.df = df;
         this.p = p;
+        this.numBatches = numBatches;
     }
 
     public double getChiSquare() {
@@ -69,7 +77,8 @@ public class BatchConfoundValueObject {
     @Override
     public String toString() {
         return ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getName() + "\t"
-                + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p );
+                + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p ) + "\t"
+                + numBatches;
     }
 
 }
