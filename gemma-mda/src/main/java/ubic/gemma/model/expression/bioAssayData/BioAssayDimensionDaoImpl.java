@@ -27,12 +27,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 
 /**
  * @author pavlidis
@@ -138,26 +141,27 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
         if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
 
-        List<?> thawed = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        " from BioAssayDimensionImpl bad inner join bad.bioAssays bas inner "
-                                + "join  fetch bas.samplesUsed su inner join fetch  su.bioAssaysUsedIn inner join fetch su.factorValues where bad = :bad ",
-                        "bad", bioAssayDimension );
-        // log.info( thawed );
-        return ( BioAssayDimension ) ( ( Object[] ) thawed.iterator().next() )[0];
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( bioAssayDimension, LockMode.NONE );
+                Hibernate.initialize( bioAssayDimension );
+                Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
-        /*
-         * this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-         * public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-         * session.lock( bioAssayDimension, LockMode.NONE ); Hibernate.initialize( bioAssayDimension );
-         * Hibernate.initialize( bioAssayDimension.getBioAssays() );
-         * 
-         * for ( BioAssay ba : bioAssayDimension.getBioAssays() ) { session.lock( ba, LockMode.NONE );
-         * Hibernate.initialize( ba ); Hibernate.initialize( ba.getSamplesUsed() ); for ( BioMaterial bm :
-         * ba.getSamplesUsed() ) { Hibernate.initialize( bm.getBioAssaysUsedIn() ); Hibernate.initialize(
-         * bm.getFactorValues() ); } } return null; } } );
-         */
+                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+                    session.lock( ba, LockMode.NONE );
+                    Hibernate.initialize( ba );
+                    Hibernate.initialize( ba.getSamplesUsed() );
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        session.lock( bm, LockMode.NONE );
+                        Hibernate.initialize( bm );
+                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                        Hibernate.initialize( bm.getFactorValues() );
+                    }
+                }
+                return null;
+            }
+        } );
+        return bioAssayDimension;
     }
 
 }
