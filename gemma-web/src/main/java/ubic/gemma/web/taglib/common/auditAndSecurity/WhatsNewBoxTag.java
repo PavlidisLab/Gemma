@@ -160,8 +160,6 @@ public class WhatsNewBoxTag extends TagSupport {
             }
 
             if ( updatedAds > 0 ) {
-
-                buf.append( "<a href=\"/Gemma/arrays/showAllArrayDesigns.html?id=" );
                 int count = 0;
                 boolean tooMany = false;
                 List<Long> ids = new ArrayList<Long>();
