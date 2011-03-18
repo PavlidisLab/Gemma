@@ -113,7 +113,6 @@ public class ExpressionDataSVD {
         assert matrix.getRowNames().size() > 0;
         assert matrix.getColNames().size() > 0;
 
-        missingValueInfo = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
         imputeMissing( matrix );
 
         if ( normalizeMatrix ) {
@@ -432,7 +431,7 @@ public class ExpressionDataSVD {
         /*
          * keep track of the missing values so they can be re-masked later.
          */
-
+        missingValueInfo = new DenseDoubleMatrix2D( matrix.rows(), matrix.columns() );
         for ( int i = 0; i < matrix.rows(); i++ ) {
             DoubleArrayList v = new DoubleArrayList( matrix.getRow( i ) );
             double m = DescriptiveWithMissing.mean( v );
