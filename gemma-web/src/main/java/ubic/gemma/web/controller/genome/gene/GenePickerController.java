@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,6 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 
 
@@ -59,6 +61,9 @@ import ubic.gemma.search.SearchSettings;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
+import ubic.gemma.web.controller.expression.experiment.GeneSetController;
+import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
@@ -83,7 +88,9 @@ public class GenePickerController {
     
     @Autowired
     private GeneOntologyService geneOntologyService = null;
-    
+
+    @Autowired
+    private SecurityService securityService = null;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -96,6 +103,9 @@ public class GenePickerController {
 
     @Autowired
     private GeneSetSearch geneSetSearch;
+
+    @Autowired
+    private SessionListManager sessionListManager;
 
     private static final int MAX_GENES_PER_QUERY = 1000;
 
@@ -270,8 +280,19 @@ public class GenePickerController {
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
+            if ( taxon == null ) {
+                 throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
+            }
+                
         }
-
+        boolean privateOnly = true;
+        
+    	/* Arbitrary id values for temporary groups (GO groups and 'all results' groups)
+    	 * (only needed so when displayed in a combo box, 
+	   	 * the selected entry's name will appear in the field after being selected)
+	   	 * */
+		Long tempId = new Long(-3); 
+		
     	List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
         
        	// if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent session-bound sets
@@ -279,17 +300,39 @@ public class GenePickerController {
     		
         	// get authenticated user's sets
         	Collection<GeneSet> userGeneSets = new ArrayList<GeneSet>();
+        	Collection<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
             if ( SecurityService.isUserLoggedIn() ) {
-            	userGeneSets = (taxon!=null)? geneSetService.loadMyGeneSets(taxon): geneSetService.loadMyGeneSets();
+            	// get DB groups
+                if ( privateOnly ) {
+                    try {
+                    	userGeneSets = (taxon!=null)? geneSetService.loadMyGeneSets(taxon): geneSetService.loadMyGeneSets();
+                        userGeneSets.retainAll( securityService.choosePrivate( userGeneSets ) );
+                    } catch ( AccessDeniedException e ) {
+                        // okay, they just aren't allowed to see those.
+                    }
+                } else {
+                	userGeneSets = (taxon!=null)? geneSetService.loadMyGeneSets(taxon): geneSetService.loadMyGeneSets();
+                }
+                result = GeneSetValueObject.convert2ValueObjects(userGeneSets, false);
+            }
+            // get any session-bound groups
+
+            //TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
+            Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets();
+                
+            sessionListManager.setUniqueGeneSetStoreIds(result, sessionResult);        
+                
+            result.addAll(sessionResult);  
+ 	
             	SearchResultDisplayObject newSRDO = null;
-        		for(GeneSet registeredUserSet : userGeneSets){
+        		for(GeneSetValueObject registeredUserSet : result){
         			newSRDO = new SearchResultDisplayObject(registeredUserSet);
-        			newSRDO.setType("usersGeneSet");
+        			newSRDO.setType("users"+newSRDO.getType()); // will either end up bring usergeneSet or usergeneSetSession
+        			newSRDO.setId(new Long(registeredUserSet.getSessionId()));
         			displayResults.add(newSRDO);
         		}
         		Collections.sort(displayResults);
-            }
-
+            
     	}else{
         
         /*
@@ -333,6 +376,8 @@ public class GenePickerController {
             GeneSet goSet = this.geneSetSearch.findByGoId( query, taxon );
             if ( goSet != null ){
             	SearchResultDisplayObject sdo = new SearchResultDisplayObject(goSet);
+    			sdo.setId(tempId); // needed for displaying in combo box
+            	tempId--;
             	displayResults.add( sdo );
             	goSets.add(goSet);
             }
@@ -343,6 +388,8 @@ public class GenePickerController {
         		if (geneSet.getMembers()!= null && geneSet.getMembers().size()!=0){
         			SearchResultDisplayObject sdo = new SearchResultDisplayObject(geneSet);
         			sdo.setType("GOgroup");
+        			sdo.setId(tempId); // needed for displaying in combo box
+                	tempId--;
         			displayResults.add(sdo);
                 	goSets.add(geneSet);
         		}
@@ -419,9 +466,10 @@ public class GenePickerController {
 						true, entry.getValue().size(), taxon, "freeText"));
 			*/        		
         	
-        	SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(ExpressionExperimentSet.class, null, 
+        	SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(ExpressionExperimentSet.class, tempId, 
         													"All '"+query+"' results", "All genes found for your query", 
         													true, geneIds.size(), null, "freeText");
+        	tempId--;
         	displayResults.add(allResultsGroup);
         	}
 
@@ -653,6 +701,83 @@ public class GenePickerController {
 
         }
         return GeneValueObject.convert2ValueObjects( geneService.thawLite( genes ) );
+    }
+    /**
+     * AJAX Search for multiple genes at once. This attempts to limit the number of genes per query to only one.
+     * 
+     * @param query A list of gene names (symbols), one per line.
+     * @param taxonId
+     * @return map with each gene-query as a key and a collection of the search-results as the value
+     * @throws IOException
+     */
+    public Map<String,Collection<GeneValueObject>> searchMultipleGenesGetMap( String query, Long taxonId ) throws IOException {
+        Taxon taxon = taxonService.load( taxonId );
+        BufferedReader reader = new BufferedReader( new StringReader( query ) );
+        String line = null;  
+        int genesAdded = 0;
+        
+        Map<String,Collection<GeneValueObject>> queryToGenes = new HashMap<String, Collection<GeneValueObject>>();
+        while ( ( line = reader.readLine() ) != null ) {
+        	queryToGenes.put(line, new HashSet<GeneValueObject>());
+        }        
+
+        reader = new BufferedReader( new StringReader( query ) );
+        while ( ( line = reader.readLine() ) != null ) {
+            if ( StringUtils.isBlank( line ) ) continue;
+            if ( genesAdded >= MAX_GENES_PER_QUERY ) {
+                log.warn( "Too many genes, stopping" );
+                break;
+            }
+            line = StringUtils.strip( line );
+            SearchSettings settings = SearchSettings.geneSearch( line, taxon );
+            List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class ); // drops predicted gene results
+            
+            // FIXME inform the user (on the client!) if there are some that don't have results.
+            if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
+                log.warn( "No gene results for gene with id: " + line );
+            } else if ( geneSearchResults.size() == 1 ) { // Just one result so add it
+            	Gene g = ( Gene ) geneSearchResults.iterator().next().getResultObject();
+                queryToGenes.get(line).add(new GeneValueObject(g));
+                genesAdded++;
+            } else { // Many results need to find best if possible
+                Collection<Gene> notExactMatch = new HashSet<Gene>();
+                Collection<GeneValueObject> sameTaxonMatch = new HashSet<GeneValueObject>();
+
+                Boolean foundMatch = false;
+
+                // Usually if there is more than 1 results the search term was a official symbol and picked up matches
+                // like grin1, grin2, grin3, grin (given the search term was grin)
+                for ( SearchResult sr : geneSearchResults ) {
+                    Gene srGene = ( Gene ) sr.getResultObject();
+                    if ( srGene.getOfficialSymbol().equalsIgnoreCase( line ) ) {
+                        queryToGenes.get(line).add(new GeneValueObject(srGene));
+                        genesAdded++;
+                        foundMatch = true;
+                        break; // found so return
+                    } else if ( srGene.getTaxon().equals( taxon ) ) {
+                        sameTaxonMatch.add( new GeneValueObject(srGene) );
+                    } else
+                        notExactMatch.add( srGene );
+                }
+
+                // if no exact match found add all of them of the same taxon and toss a warning
+                if ( !foundMatch ) {
+
+                    if ( !sameTaxonMatch.isEmpty() ) {
+                    	
+                        queryToGenes.get(line).addAll(sameTaxonMatch);
+                        
+                        log.warn( sameTaxonMatch.size() + " genes found for query id = " + line + ". Genes found are: "
+                                + sameTaxonMatch + ". Adding All" );
+                    } else {
+                        log.warn( notExactMatch.size() + " genes found for query id = " + line + ". Genes found are: "
+                                + notExactMatch + ". Adding None" );
+                    }
+                }
+            }
+        }
+        
+        return queryToGenes;
     }
 
 }

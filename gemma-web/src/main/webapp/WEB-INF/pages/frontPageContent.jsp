@@ -14,12 +14,12 @@
 
 	<div id="analysis-results-search-form" align="center" ></div>
 	<br>
-	<div id="analysis-results-search-form-messages"></div>
-	<div id="analysis-results-search-form-results"></div>
+	<div id="analysis-results-search-form-messages" align="left" ></div>
+	<div id="analysis-results-search-form-results" align="left" ></div>
 	
 <br>
 
-<table id="frontPageContent" align="left">
+<table id="frontPageContent" align="left" style="text-align: left">
 <tr><td style="font-size:0.9em;vertical-align:top;padding-right:10px">
 
 

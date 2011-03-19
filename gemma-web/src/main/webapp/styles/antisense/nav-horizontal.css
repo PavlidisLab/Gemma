@@ -14,7 +14,7 @@ div#nav {
 
 div#nav div.wrapper {
 	position: absolute;
-	left: 20px;
+	/*left: 20px;*/
 	bottom: 0;
 }
 

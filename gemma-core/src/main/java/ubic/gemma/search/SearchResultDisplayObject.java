@@ -21,6 +21,7 @@ package ubic.gemma.search;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 
 
@@ -29,6 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
 
 /**
  * Object to store search results of different classes in a similar way for displaying to user
@@ -153,6 +155,21 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     	this.description = geneSet.getDescription();
         this.type = "geneSet";
     }
+    /**
+     * 
+     * @param geneSet
+     */
+     public SearchResultDisplayObject( GeneSetValueObject geneSet ) {
+     	this.id = (geneSet.isSession())? geneSet.getSessionId(): geneSet.getId();
+     	this.resultClass = GeneSet.class;
+     	this.isGroup = true;
+     	this.size = (geneSet.getGeneIds()!=null)?geneSet.getGeneIds().size():null;
+     	this.taxon = null;
+     	this.name = geneSet.getName();
+     	this.description = geneSet.getDescription();
+        this.type = (geneSet.isSession())? "geneSetSession": "geneSet";
+        this.memberIds = geneSet.getGeneIds();
+     }
 
     /**
      * 
@@ -200,6 +217,10 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private int size; // the number of items; 1 if not a group
     
     private Taxon taxon; // the id of the associated taxon, can be null
+   /**
+    * only used with geneSet value object to support session-bound groups
+    */
+    private Collection<Long> memberIds = new HashSet<Long>(); 
     
     private String type;
 
@@ -208,6 +229,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
     public Long getId() {
         return this.id;
+    }
+    public void setId(Long id) {
+        this.id = id;
     }
     public Boolean getIsGroup() {
         return this.isGroup;
@@ -232,6 +256,12 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
     public void setType(String type){
     	this.type = type;
+    }
+    public Collection<Long> getMemberIds(){
+    	return this.memberIds;
+    }
+    public void setMemberIds(Collection<Long> memberIds){
+    	this.memberIds = memberIds;
     }
     /**
      * Creates a collection of SearchResultDisplayObjects from a collection of objects

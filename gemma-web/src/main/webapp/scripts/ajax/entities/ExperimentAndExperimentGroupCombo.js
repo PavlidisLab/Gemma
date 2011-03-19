@@ -24,9 +24,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
 	//lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
-	//triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
-	//allQuery:'Automatically generated', // so that groups like 'All human' and 'All rat no brain' etc will be easily accessible 
-	
 	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
 	allQuery:'', // loading of auto gen and user's sets handled in Controller when query = ''
 
@@ -39,8 +36,42 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	forceSelection: true,
 	mode : 'remote',
 	queryDelay : 800, // default = 500
+	listeners: {
+		beforequery:function(queryEvent){
+			// queryEvent has combo, query, forceAll and cancel fields
+			var store = queryEvent.combo.getStore();
+			console.log("before query");
+		},
+		beforeexpand:function(combo){
+			console.log("before expand");
+		},
+		beforecollapse:function(combo){
+			console.log("before collapse");
+		}
+	},
+	// overwrite expand, only proceed is beforeexpand returns true
+	expand: function () {
+        if(this.isExpanded() || !this.hasFocus){
+            return;
+        }
+    	if (this.fireEvent("beforeexpand", this)) {
+            Gemma.ExperimentAndExperimentGroupCombo.superclass.expand.apply(this);
+        }
+    },
+	// overwrite collapse
+	collapse: function () {
+        if(!this.isExpanded() || !this.hasFocus){
+            return;
+        }
+    	if (this.fireEvent("beforecollapse", this)) {
+           Gemma.ExperimentAndExperimentGroupCombo.superclass.collapse.apply(this);
+        }
+    },
+	
 
 	initComponent : function() {
+
+        this.addEvents("beforeexpand","beforecollapse"); // if beforeexpand returns false, expand is cancelled
 
 		Ext.apply(this, {
 					// format fields to show in combo, only show size in brakets if the entry is a group
@@ -49,7 +80,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonCommonName})</span></div>' +
 					'</tpl>'+
 					'<tpl if="type==\'usersExperimentSet\'">' +
-					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'experimentSet\'">' +
 					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
@@ -87,7 +118,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 							}])),
 				
 					proxy : new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
-					autoLoad : false
+					autoLoad : false,
 				}
 		});
 

@@ -578,6 +578,13 @@ a.tooltip:hover .tooltiptext {
 .upload-icon {
 	background: url('../../images/icons/add.png') no-repeat 0 0 !important;
 }
+.transparent-btn .x-btn-tl, .transparent-btn .x-btn-tr, .transparent-btn .x-btn-tc, .transparent-btn .x-btn-ml, .transparent-btn .x-btn-mr, .transparent-btn .x-btn-mc, .transparent-btn .x-btn-bl, .transparent-btn .x-btn-br, .transparent-btn .x-btn-bc {
+    background-image:url(../../images/s.gif);
+
+}
+.right-align-btn .x-btn-mc{
+ 	text-align: right;
+ }
 
 #fi-button-msg {
 	border: 2px solid #ccc;

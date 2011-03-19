@@ -445,6 +445,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     		// get user's temp sets
     		// TODO
             
+    		Collections.sort(displayResults);
             
             // get auto generated sets
     		// TODO this should be replaced with a query for all lists where 'modifiable = false' (?)
@@ -453,8 +454,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
     		settings.setSearchExperimentSets(true); // add searching for experimentSets 
     		settings.setGeneralSearch(true); // add searching for experimentSets 
     		List<SearchResult> autoGenSetsSearchResults = searchService.search(settings).get( ExpressionExperimentSet.class );
-    		Collection<SearchResultDisplayObject> autoGenSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(autoGenSetsSearchResults);
-            
+    		List<SearchResultDisplayObject> autoGenSets = new ArrayList<SearchResultDisplayObject>(SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(autoGenSetsSearchResults));
+
+    		Collections.sort(autoGenSets);
+    		
     		displayResults.addAll(autoGenSets);
 
     		
@@ -526,11 +529,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
             
             /*********************************************************************************/
 
-    		Collections.sort(displayResults);
             return displayResults;
 
     	}
-    	else{
+    	else{ // if the user entered a query
 
     		/*
     		 * GET EXPERIMENTS AND SETS
@@ -668,14 +670,20 @@ public class ExpressionExperimentController extends AbstractTaskService {
         	}
 
         	// make an entry for each taxon
+        	
+        	/* Arbitrary id values for temporary groups (only needed so when displayed in a combo box, 
+        	   the selected entry's name will appear in the field after being selected)*/
+        	Long tempId = new Long(-3); 
+        	
         	for(Map.Entry<Taxon,HashSet<Long>> entry : eeIdsByTaxon.entrySet()){
         		taxon = entry.getKey();
         		if(taxon!= null && entry.getValue().size()>0){
         			displayResults.add(
-        					new SearchResultDisplayObject(ExpressionExperimentSet.class, null, 
+        					new SearchResultDisplayObject(ExpressionExperimentSet.class, tempId, 
         							"All '"+query+"' results for "+taxon.getCommonName(), 
         							"All "+taxon.getCommonName()+" experiments found for your query", 
         							true, entry.getValue().size(), taxon, "freeText"));
+        			tempId--;
         		}
         	}
         }
@@ -722,6 +730,25 @@ public class ExpressionExperimentController extends AbstractTaskService {
         
         List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
         List<SearchResult> eeSR = results.get( ExpressionExperiment.class );        
+        
+        // searching for experiments using the index (compass search) doesn't check for taxon, so need to filter afterwards
+        /************** filter by taxon *******************/
+        for(SearchResult result : eesSR){
+        	ExpressionExperimentSet ees = (ExpressionExperimentSet)result.getResultObject();
+        	Taxon tax = ees.getTaxon(); // for debugging
+        	if(taxon != null && ees.getTaxon()!=null && taxon.getId() != ees.getTaxon().getId()){
+        		eesSR.remove(result);
+        	}
+        }
+        /**** TAXON HACK BECAUSE CAN'T DO expressionExperiment.getTaxon()****/
+        for(SearchResult result : eeSR){
+        	ExpressionExperiment ee = (ExpressionExperiment)result.getResultObject();
+        	Taxon tax = expressionExperimentService.getTaxon(ee.getId()); // for debugging
+        	if(taxon != null && tax!=null && taxon.getId() != tax.getId()){
+        		boolean rmv = eesSR.remove(result);
+        	}
+        }
+        /***********end of filtering by taxon**************/
         
         // if an experiment was returned by both experiment and experiment set search, don't count it twice (managed by set)
         HashSet<Long> eeIds = new HashSet<Long>();

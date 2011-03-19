@@ -51,8 +51,11 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					'<tpl if="type==\'geneSet\'">' +
 					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</div>' +
 					'</tpl>' +
-					'<tpl if="type==\'usersGeneSet\'">' +
+					'<tpl if="type==\'usersgeneSet\'">' +
 					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
+					'</tpl>' +	
+					'<tpl if="type==\'usersgeneSetSession\'">' +
+					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'GOgroup\'">' +
 					'	<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</div>' +
@@ -86,6 +89,9 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 							},{
 								name: "type",
 								type: "string"
+							},{
+								name: "memberIds",
+								defaultValue: []
 							}])),
 					
 						proxy : new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups),

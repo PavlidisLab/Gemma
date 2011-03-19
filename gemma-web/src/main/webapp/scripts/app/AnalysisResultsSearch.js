@@ -22,6 +22,8 @@ Ext.onReady(function() {
 	var searchPanel = new Gemma.AnalysisResultsSearchForm();
 
 	searchPanel.render("analysis-results-search-form");
+	
+	// override actions triggered by nav keys for combo boxes (ie tab should not bring the user to the next box)
 
 	// panel to hold all results of searches 
 	this.resultsPanel = new Ext.Panel({
@@ -31,6 +33,8 @@ Ext.onReady(function() {
 		border:false,
 		autoHeight:true,
 		hidden:true,
+		bodyStyle:'text-align:left;',
+		style:'text-align:left',
 		//hideMode:'visibility'
 	});
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
@@ -62,6 +66,8 @@ Ext.onReady(function() {
 			resultsPanel.add({html:"<h2>Coexpression Search Results</h2><br>"+result.errorState+"<br><br><br>", border:false});
 			//Ext.DomHelper.overwrite('analysis-results-search-form-messages', result.errorState);
 			if (knownGeneGrid) {knownGeneGrid.getStore().removeAll();}
+			resultsPanel.doLayout();
+			resultsPanel.show();
 			return;
 		}
 
@@ -84,7 +90,7 @@ Ext.onReady(function() {
 				title : "Coexpressed genes",
 				colspan : 2,
 				user : user,
-				hidden:true
+				//hidden:true
 			});
 		
 		
@@ -136,7 +142,7 @@ Ext.onReady(function() {
 
 		}
 		
-		panel.resetPreviews();
+		panel.collapsePreviews();
 		resultsPanel.add({html:"<h2>Coexpression Search Results</h2>", border:false});
 		resultsPanel.add(items);
 
@@ -198,7 +204,7 @@ Ext.onReady(function() {
 		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
 				result.knownGeneDatasets);
 				
-		knownGeneGrid.show();
+		//knownGeneGrid.show();
 				
 		if (admin) {
 			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.predictedGeneDatasets, eeMap);
@@ -222,7 +228,7 @@ Ext.onReady(function() {
 				height:200,
 				width:900
 			});
-		panel.resetPreviews();
+		panel.collapsePreviews();
 		resultsPanel.add({html:"<h2>Differential Expression Search Results</h2>", border:false});
 		resultsPanel.add(diffExResultsGrid);
 		

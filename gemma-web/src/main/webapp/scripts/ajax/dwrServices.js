@@ -540,6 +540,9 @@ GenePickerController.getTaxaWithArrays = function(callback) {
 GenePickerController.searchMultipleGenes = function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenes', p0, p1, callback);
 }
+GenePickerController.searchMultipleGenesGetMap = function(p0, p1, callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenesGetMap', p0, p1, callback);
+}
 // ====================================================================================
 if (GeoBrowserService == null)
 	var GeoBrowserService = {};
