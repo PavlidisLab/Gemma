@@ -77,10 +77,15 @@ public class ExperimentalDesignVisualizationService {
     /**
      * Cache. TODO: use ehcache so we can manage this.
      */
-    Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>>();
+    private Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>>();
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
+
+    /**
+     * Cache. TODO: use ehcache so we can manage this.
+     */
+    private Map<Long, BioAssayDimension> thawedBads = new HashMap<Long, BioAssayDimension>();
 
     /**
      * For an experiment, spit out
@@ -103,7 +108,13 @@ public class ExperimentalDesignVisualizationService {
 
         BioAssayDimension bd = bds.iterator().next();
         assert bd != null;
-        bd = this.bioAssayDimensionService.thaw( bd );
+        bd = this.thawedBads.get( bd.getId() );
+        if ( bd == null ) {
+            bd = this.bioAssayDimensionService.thaw( bd );
+            this.thawedBads.put( bd.getId(), bd );
+        }
+
+        // needed?
         ExpressionExperiment tee = this.expressionExperimentService.thawLite( e );
 
         LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> result = getExperimentalDesignLayout( tee, bd );
@@ -251,16 +262,15 @@ public class ExperimentalDesignVisualizationService {
     }
 
     /**
-     * Put data vectors in the order you'd want to display the experimental design. Note that once this done, the
-     * BioAssayDimension no longer means anything, so we invalidate it.
+     * Put data vectors in the order you'd want to display the experimental design.
      * 
      * @param dedvs
      */
     public Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs ) {
 
-        // layouts.clear(); // FIXEM TEMPORARY FOR DEBUGGING. If performance is okay, move this cache into this scope
-        // entirely
+        // thawedBads.clear(); // FIXME TEMPORARY FOR DEBUGGING.
+        // layouts.clear(); // FIXME TEMPORARY FOR DEBUGGING.
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>>();
 
@@ -280,21 +290,18 @@ public class ExperimentalDesignVisualizationService {
          * This loop is not a performance issue.
          */
         for ( DoubleVectorValueObject vec : dedvs ) {
-
+            LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> layout = layouts.get( vec
+                    .getExpressionExperiment() );
+            returnedLayouts.put( vec.getExpressionExperiment(), layout );
             BioAssayDimension bad = vec.getBioAssayDimension();
 
-            if ( bad == null ) {
+            if ( bad == null || vec.isReorganized() ) {
                 /*
                  * We've already done this vector, probably - from the cache. If the experimental design changed in the
                  * meantime ... bad
                  */
                 continue;
             }
-
-            LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> layout = getExperimentalDesignLayout( vec
-                    .getExpressionExperiment() );
-
-            returnedLayouts.put( vec.getExpressionExperiment(), layout );
 
             Map<BioAssay, Integer> ordering = getOrdering( layout );
 
@@ -305,8 +312,7 @@ public class ExperimentalDesignVisualizationService {
             double[] dol = ArrayUtils.clone( data );
 
             int j = 0;
-
-            Collection<BioAssay> oldOrdering = bad.getBioAssays();
+            Collection<BioAssay> oldOrdering = thawedBads.get( bad.getId() ).getBioAssays();
             assert oldOrdering instanceof List<?>;
             for ( BioAssay ba : oldOrdering ) {
 
@@ -317,26 +323,19 @@ public class ExperimentalDesignVisualizationService {
 
                 int targetIndex = ordering.get( ba );
 
-                /*
-                 * Just makes it explicit: if the data is already in the right place, don't change it.
-                 */
-
-                if ( targetIndex != j ) {
-                    // move value
-                    data[targetIndex] = dol[j++];
-                }
+                data[targetIndex] = dol[j++];
 
             }
-
             /*
              * Invalidate the bioassaydimension, it's in the wrong order compared to the bioasays.
              */
+            vec.setReorganized( true );
             vec.setBioAssayDimension( null );
 
         }
 
         if ( timer.getTime() > 1500 ) {
-            log.info( "Sort vectors by design: " + timer.getTime() + "ms" );
+            // log.info( "Sort vectors by design: " + timer.getTime() + "ms" );
         }
 
         return returnedLayouts;
@@ -366,8 +365,6 @@ public class ExperimentalDesignVisualizationService {
      */
     private void prepare( Collection<DoubleVectorValueObject> dedvs ) {
 
-        Map<Long, BioAssayDimension> thawedBads = new HashMap<Long, BioAssayDimension>();
-
         for ( DoubleVectorValueObject vec : dedvs ) {
             ExpressionExperiment ee = vec.getExpressionExperiment();
 
@@ -388,19 +385,18 @@ public class ExperimentalDesignVisualizationService {
                 if ( thawedBads.containsKey( bioAssayDimension.getId() ) ) {
                     log.debug( "Already got" );
                     bioAssayDimension = thawedBads.get( bioAssayDimension.getId() );
-                    vec.setBioAssayDimension( bioAssayDimension );
                 } else {
                     log.debug( "Thawing" );
                     bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
                     thawedBads.put( bioAssayDimension.getId(), bioAssayDimension );
                 }
+                vec.setBioAssayDimension( bioAssayDimension );
             }
 
             /*
              * The following is the really slow part if we don't use a cache.
              */
             ee = expressionExperimentService.thawLite( ee );
-            bioAssayDimensionService.thaw( bioAssayDimension );
             // plotExperimentalDesign( ee ); // debugging/testing
             LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
                     ee, bioAssayDimension );

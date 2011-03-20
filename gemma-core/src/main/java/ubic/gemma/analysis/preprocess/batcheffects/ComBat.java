@@ -479,6 +479,10 @@ public class ComBat<R, C> {
     private DoubleMatrix1D[] itSol( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat, double gbar,
             double t2, double a, double b ) {
 
+        /*
+         * FIXME deal with missing values.
+         */
+
         DoubleMatrix1D n = rowNonMissingCounts( matrix );
         DoubleMatrix1D gold = gHat;
         DoubleMatrix1D dold = dHat;
@@ -508,6 +512,8 @@ public class ComBat<R, C> {
     }
 
     /**
+     * The method used by ComBat is veerrryyy slow, and I don't know how many cases it will prove to be necessary;
+     * 
      * @param matrix
      * @param gHat
      * @param dHat

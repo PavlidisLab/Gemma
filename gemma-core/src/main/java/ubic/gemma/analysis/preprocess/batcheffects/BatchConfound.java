@@ -109,12 +109,18 @@ public class BatchConfound {
             if ( ExperimentalDesignUtils.isBatch( ef ) ) {
                 batchFactor = ef;
 
+                Map<Long, Double> bmToFv = bioMaterialFactorMap.get( batchFactor );
+
+                if ( bmToFv == null ) {
+                    log.warn( "No biomaterial --> factor value map for batch factor: " + batchFactor );
+                    continue;
+                }
+
                 int index = 0;
-                for ( FactorValue fv : ef.getFactorValues() ) {
+                for ( FactorValue fv : batchFactor.getFactorValues() ) {
                     batchIndexes.put( fv.getId(), index++ );
                 }
 
-                Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
                 for ( Long bmId : bmToFv.keySet() ) {
                     batchMembership.put( bmId, bmToFv.get( bmId ).longValue() );
                 }
@@ -201,7 +207,7 @@ public class BatchConfound {
                 try {
                     p = 1.0 - distribution.cumulativeProbability( chiSquare );
                 } catch ( MathException e ) {
-                    log.warn( "Match exception computing ChiSq probability for " + chiSquare + ": " + e.getMessage() );
+                    log.warn( "Math exception computing ChiSq probability for " + chiSquare + ": " + e.getMessage() );
                     p = Double.NaN;
                 }
 

@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -114,7 +115,7 @@ public class SVDServiceImpl implements SVDService {
             return result;
         }
 
-        Map<CompositeSequence, ProbeLoading> probes = new HashMap<CompositeSequence, ProbeLoading>();
+        Map<CompositeSequence, ProbeLoading> probes = new LinkedHashMap<CompositeSequence, ProbeLoading>();
         for ( ProbeLoading probeLoading : topLoadedProbes ) {
             CompositeSequence probe = probeLoading.getProbe();
             probes.put( probe, probeLoading );
@@ -128,6 +129,7 @@ public class SVDServiceImpl implements SVDService {
         ees.add( ee );
         Collection<DoubleVectorValueObject> vect = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, probes.keySet(), true );
+        // note that this might have come from a cache.
 
         /*
          * This is actually expected, because we go through the genes.
@@ -135,7 +137,6 @@ public class SVDServiceImpl implements SVDService {
         // assert vect.size() <= count : vect.size() + " vectors, expected max " + probes.keySet().size();
 
         BioAssayDimension bioAssayDimension = pca.getBioAssayDimension();
-        bioAssayDimension = this.bioAssayDimensionService.thaw( bioAssayDimension );
         assert bioAssayDimension != null;
         assert !bioAssayDimension.getBioAssays().isEmpty();
 
@@ -149,10 +150,9 @@ public class SVDServiceImpl implements SVDService {
                 continue;
             }
 
-            // FIXME this is to make sure smaller values
-            // are better, they are not pvalues
-            vct.setPvalue( 1.0 / Math.abs( probeLoading.getLoading() ) );
-            vct.setBioAssayDimension( bioAssayDimension );
+            // FIXME they are not pvalues
+            vct.setPvalue( ( double ) probeLoading.getLoadingRank() );
+            // vct.setBioAssayDimension( bioAssayDimension );
             vct.setExpressionExperiment( ee );
             result.put( probeLoading, vct );
         }
