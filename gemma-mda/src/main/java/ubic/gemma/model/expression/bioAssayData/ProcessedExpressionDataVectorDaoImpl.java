@@ -316,6 +316,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         for ( CompositeSequence p : probes ) {
             if ( !cs2gene.containsKey( p ) || cs2gene.get( p ).isEmpty() ) {
                 noGeneProbes.put( p, new HashSet<Gene>() );
+                cs2gene.remove( p );
             }
         }
 
@@ -689,6 +690,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
             assert experiment != null;
             Cache cache = processedDataVectorCache.getCache( ee.getId() );
+
+
             for ( Gene g : genes ) {
                 Element element = cache.get( g );
                 if ( element != null ) {

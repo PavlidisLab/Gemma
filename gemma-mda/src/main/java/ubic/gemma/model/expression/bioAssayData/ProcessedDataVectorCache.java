@@ -45,12 +45,12 @@ import ubic.gemma.util.ConfigUtils;
 @Component
 public class ProcessedDataVectorCache {
 
-    private static final String PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE = "DataVectorCache";
-    private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
-    private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
-    private static final int PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
-    private static final boolean PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
-    private static final boolean PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
+    private static final String VECTOR_CACHE_NAME_BASE = "DataVectorCache";
+    private static final int VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
+    private static final int VECTOR_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
+    private static final int VECTOR_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
+    private static final boolean VECTOR_CACHE_DEFAULT_ETERNAL = true;
+    private static final boolean VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
     /**
      * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
@@ -108,7 +108,7 @@ public class ProcessedDataVectorCache {
     }
 
     private String getCacheName( Long eeid ) {
-        return PROBE2PROBE_COEXPRESSION_CACHE_NAME_BASE + "_" + eeid;
+        return VECTOR_CACHE_NAME_BASE + "_" + eeid;
     }
 
     /**
@@ -122,18 +122,14 @@ public class ProcessedDataVectorCache {
             return;
         }
 
-        int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
-        int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_LIVE );
-        int timeToIdle = ConfigUtils.getInt( "gemma.cache.probe2probe.timetoidle",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE );
+        int maxElements = ConfigUtils.getInt( "gemma.cache.vectors.maxelements", VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
+        int timeToLive = ConfigUtils.getInt( "gemma.cache.vectors.timetolive", VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
+        int timeToIdle = ConfigUtils.getInt( "gemma.cache.vectors.timetoidle", VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
 
-        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.probe2probe.usedisk",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
+        boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.vectors.usedisk",
+                VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
-                PROBE2PROBE_COEXPRESSION_CACHE_DEFAULT_ETERNAL );
+        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal", VECTOR_CACHE_DEFAULT_ETERNAL );
 
         String cacheName = getCacheName( eeid );
 

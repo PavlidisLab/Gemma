@@ -79,9 +79,9 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         QuantitationType loadingQt = getLoadingQt();
 
         /*
-         * deal with U. We keep only the first N components for the first M genes.
+         * deal with U. We keep only the first numComponentsToStore components for the first numLoadingsToStore genes.
          */
-        for ( int i = 0; i < actualNumberOfComponentsStored; i++ ) {
+        for ( int i = 0; i < actualNumberOfComponentsStored; i++ ) { 
             List<CompositeSequence> inOrder = u.sortByColumnAbsoluteValues( i, true );
 
             for ( int j = 0; j < Math.min( u.rows(), numLoadingsToStore ) - 1; j++ ) {

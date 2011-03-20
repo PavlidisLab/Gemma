@@ -38,12 +38,24 @@ import cern.colt.list.DoubleArrayList;
  */
 public class DoubleVectorValueObject extends DataVectorValueObject {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -5116242513725297615L;
     private double[] data = null;
     private boolean masked = false;
+
+    private boolean reorganized = false;
+
+    /**
+     * @return true if the data has been rearranged relative to the bioassaydimension (as a matter of practice the
+     *         bioassaydimension should be nulled if it is not valid; this boolean is an additional check)
+     */
+    public boolean isReorganized() {
+        return reorganized;
+    }
+
+    public void setReorganized( boolean reorganized ) {
+        this.reorganized = reorganized;
+    }
+
     private Double pvalue;
     private Double rankByMax;
     private Double rankByMean;

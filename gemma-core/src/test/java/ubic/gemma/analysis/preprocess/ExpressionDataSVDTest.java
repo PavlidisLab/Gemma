@@ -103,10 +103,9 @@ public class ExpressionDataSVDTest {
      * <pre>
      * testdata<-read.table("C:/users/paul/dev/eclipseworkspace/Gemma/gemma-core/src/test/resources/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort", 
      *          header=T, row.names=1)
-     * testdata.s <- t(scale(t(testdata)))
-     * testdata.s <- t(scale(t(testdata)))
+     * testdata.s <- testdata
      * for(i in 1:5) {
-     *   testdata.s <-  t( scale(t(scale(testdata.s))));  
+     *   testdata.s <-  t(scale(t(scale(testdata.s))));  
      * }
      * s<-svd(testdata.s)
      * s$d

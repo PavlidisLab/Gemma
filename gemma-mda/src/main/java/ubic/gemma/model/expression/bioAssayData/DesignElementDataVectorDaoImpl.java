@@ -37,12 +37,10 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayImpl;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialImpl;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.expression.bioAssayData.DesignElementDataVector
@@ -129,7 +127,25 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             session.lock( vector, LockMode.NONE );
             Hibernate.initialize( vector );
             Hibernate.initialize( vector.getQuantitationType() );
-            dims.add( vector.getBioAssayDimension() );
+            BioAssayDimension bioAssayDimension = vector.getBioAssayDimension();
+
+            if ( !dims.contains( bioAssayDimension ) ) {
+                Hibernate.initialize( bioAssayDimension );
+                Hibernate.initialize( bioAssayDimension.getBioAssays() );
+                for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
+                    session.lock( ba, LockMode.NONE );
+                    Hibernate.initialize( ba );
+                    Hibernate.initialize( ba.getSamplesUsed() );
+                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                        session.lock( bm, LockMode.NONE );
+                        Hibernate.initialize( bm );
+                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                        Hibernate.initialize( bm.getFactorValues() );
+                    }
+                }
+                dims.add( bioAssayDimension );
+            }
+
             cs.add( vector.getDesignElement() );
             ees.add( vector.getExpressionExperiment() );
             session.evict( vector.getQuantitationType() );
@@ -156,43 +172,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
 
         timer.reset();
         timer.start();
-
-        // thaw the bioassaydimensions we saw -- This requires a lot of queries, but there usually aren't very many dims
-        // to do.
-        for ( BioAssayDimension bad : dims ) {
-            Hibernate.initialize( bad );
-            for ( BioAssay ba : bad.getBioAssays() ) {
-
-                session.lock( ba, LockMode.NONE );
-
-                Hibernate.initialize( ba );
-                Hibernate.initialize( ba.getSamplesUsed() );
-
-                Collection<BioAssay> bioAssaysUsedIn = null;
-                for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                    EntityUtils.attach( session, bm, BioMaterialImpl.class, bm.getId() );
-                    Hibernate.initialize( bm );
-                    bioAssaysUsedIn = bm.getBioAssaysUsedIn();
-                    Hibernate.initialize( bioAssaysUsedIn );
-                    Hibernate.initialize( bm.getFactorValues() );
-                    session.evict( bm );
-                }
-
-                Hibernate.initialize( ba.getArrayDesignUsed() );
-                Hibernate.initialize( ba.getDerivedDataFiles() );
-
-                /*
-                 * We have to do it this way, or we risk having the bioassay in the session already.
-                 */
-                if ( bioAssaysUsedIn != null ) {
-                    for ( BioAssay baui : bioAssaysUsedIn ) {
-                        session.evict( baui );
-                    }
-                }
-                // don't do this -- see above.
-                // session.evict( ba );
-            }
-        }
 
         if ( timer.getTime() > 100 ) {
             log.info( "Thaw phase 3, " + dims.size() + " vector-associated bioassaydimensions in " + timer.getTime()

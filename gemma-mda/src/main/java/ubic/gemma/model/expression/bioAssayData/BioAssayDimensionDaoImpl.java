@@ -138,7 +138,7 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
      * BioAssayDimension)
      */
     public BioAssayDimension thaw( final BioAssayDimension bioAssayDimension ) {
-
+        if ( bioAssayDimension == null ) return null;
         if ( bioAssayDimension.getId() == null ) return bioAssayDimension;
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
