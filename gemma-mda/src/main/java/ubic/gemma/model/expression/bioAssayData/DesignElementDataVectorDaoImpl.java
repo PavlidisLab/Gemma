@@ -139,9 +139,17 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
                         session.lock( bm, LockMode.NONE );
                         Hibernate.initialize( bm );
-                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+                        Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
+                        Hibernate.initialize( bioAssaysUsedIn );
                         Hibernate.initialize( bm.getFactorValues() );
+                        session.evict( bm );
+                        if ( bioAssaysUsedIn != null ) {
+                            for ( BioAssay baui : bioAssaysUsedIn ) {
+                                session.evict( baui );
+                            }
+                        }
                     }
+                    session.evict( ba );
                 }
                 dims.add( bioAssayDimension );
             }
