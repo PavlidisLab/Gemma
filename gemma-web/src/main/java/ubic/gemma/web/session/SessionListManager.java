@@ -4,7 +4,7 @@ import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 
 

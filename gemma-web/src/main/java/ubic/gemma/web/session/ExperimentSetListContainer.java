@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 
 public class ExperimentSetListContainer implements Serializable {

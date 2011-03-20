@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.common.auditAndSecurity;
+package ubic.gemma.model.genome.gene;
 
 import java.io.Serializable;
 import java.util.ArrayList;

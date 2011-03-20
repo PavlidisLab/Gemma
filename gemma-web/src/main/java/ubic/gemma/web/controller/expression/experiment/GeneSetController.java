@@ -41,10 +41,10 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
 import ubic.gemma.web.session.SessionListManager;
 
 /**
