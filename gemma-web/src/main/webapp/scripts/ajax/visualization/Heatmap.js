@@ -244,7 +244,7 @@ var Heatmap = function() {
 					var ctx = constructCanvas($(labelDiv), heatmapWidth, labelHeight);
 
 					ctx.fillStyle = "#000000";
-					ctx.font = Math.min(12, boxWidth - 1) + "px sans-serif";
+					ctx.font = Math.min(10, boxWidth - 1) + "px sans-serif";
 					ctx.textAlign = "left";
 					ctx.translate(0, labelHeight - 2);
 
