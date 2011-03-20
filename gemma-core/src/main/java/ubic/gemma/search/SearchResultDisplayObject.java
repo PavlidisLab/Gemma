@@ -30,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.web.controller.common.auditAndSecurity.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 
 /**
  * Object to store search results of different classes in a similar way for displaying to user
