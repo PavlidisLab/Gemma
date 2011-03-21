@@ -359,7 +359,7 @@ public class GenePickerController {
 			// tag search result display objects appropriately
 			for(SearchResultDisplayObject srdo: geneSets){
 				if(userSetsIds.contains(srdo.getId())){
-					srdo.setType("usersGeneSet");
+					srdo.setType("usersgeneSet");
 				}
 			}
 		}

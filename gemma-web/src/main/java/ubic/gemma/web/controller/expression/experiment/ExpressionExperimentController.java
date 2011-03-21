@@ -395,6 +395,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query) {
         
     	List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+    	List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
 
     	// if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent session-bound sets
     	if(query.equals("")){
@@ -436,16 +437,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
     				// if set was automatically generated, don't label as user-created (technically was created by admin user)
     				if(newSRDO.getDescription().indexOf("Automatically generated")<0){
     					newSRDO.setType("usersExperimentSet");
+    					displayResults.add(newSRDO);
+    				}else{
+    					autoGenResults.add(newSRDO);
     				}
-        			displayResults.add(newSRDO);
         		}
             }
-
-            
-    		// get user's temp sets
-    		// TODO
-            
-    		Collections.sort(displayResults);
             
             // get auto generated sets
     		// TODO this should be replaced with a query for all lists where 'modifiable = false' (?)
@@ -456,9 +453,14 @@ public class ExpressionExperimentController extends AbstractTaskService {
     		List<SearchResult> autoGenSetsSearchResults = searchService.search(settings).get( ExpressionExperimentSet.class );
     		List<SearchResultDisplayObject> autoGenSets = new ArrayList<SearchResultDisplayObject>(SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(autoGenSetsSearchResults));
 
-    		Collections.sort(autoGenSets);
     		
-    		displayResults.addAll(autoGenSets);
+            // keep sets in proper order (user's groups first, then public ones)
+    		Collections.sort(displayResults);
+    		
+    		autoGenResults.addAll(autoGenSets);
+            Collections.sort(autoGenResults);
+            
+    		displayResults.addAll(autoGenResults);
 
     		
     		/*********************TAXON HACK STARTS*********************/ 

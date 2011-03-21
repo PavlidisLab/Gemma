@@ -668,7 +668,8 @@ public class TaskRunningService implements InitializingBean {
      * for too long.
      */
     private void sweepUp() {
-        log.debug( "Running task result cleanup" );
+    // can cause npe error, breaking hot deploy
+    	if(log != null) log.debug( "Running task result cleanup" );
 
         if ( finishedTasks.size() > 0 ) log.debug( finishedTasks.size() + " finished tasks in the hold" );
         if ( failedTasks.size() > 0 ) log.debug( failedTasks.size() + " failed tasks in the hold" );

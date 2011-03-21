@@ -68,8 +68,11 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					//'<div style="font-size:11px" class="x-combo-list-item" ext:qtip="{name} ({size})">{name} - {description}</div></tpl>' ),
 					store:{
 						reader : new Ext.data.ListRangeReader({
-								id : "id"
+								id : "sessionId"
 							}, Ext.data.Record.create([{
+								name : "sessionId",
+								type : "int"
+							},{
 								name : "id",
 								type : "int"
 							},{

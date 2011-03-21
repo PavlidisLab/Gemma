@@ -36,8 +36,12 @@ import ubic.gemma.model.genome.gene.GeneSetValueObject;
  * Object to store search results of different classes in a similar way for displaying to user
  * (ex: enables genes and gene sets to be entries in the same combo box)
  * 
- * object types handled are: Gene, GeneSet, ExpressionExperiment and ExpressionExperimentSet 
+ * object types handled are: Gene, GeneSet, GeneSetValueObject, ExpressionExperiment and ExpressionExperimentSet 
  * SearchObject is also handled if the object it holds is of any of those types
+ * 
+ * sessionId field is the unique id that a search result is given when session-bound and db-backed entities will be displayed together
+ * if a geneSet is session-bound (has the type: "usergeneSetSession"), then id=sessionId
+ * if a geneSet is db-backed (has the type: "geneSet" or "usergeneSet"), then id is the database id for the set and sessionId is the id used by the store
  * 
  * @author thea
  * @version $Id$
@@ -48,6 +52,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 	 * Method to create a display object from scratch
 	 * @param resultClass cannot be null
 	 * @param id can be null
+	 * @param sessionId can be null
 	 * @param name cannot be null
 	 * @param description should not be null
 	 * @param isGroup cannot be null
@@ -60,6 +65,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 	    	
 	    	this.resultClass = resultClass;
 	    	this.id = id;
+	    	this.sessionId = id;
 	    	this.name = name;
 	    	this.description = description;
 	    	this.isGroup = isGroup;
@@ -81,42 +87,19 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         // class-specific construction
     	if(this.resultClass == Gene.class ){
         	Gene gene = (Gene) searchResult.getResultObject();
-        	this.id = gene.getId();
-        	this.isGroup = false;
-        	this.size = 1;
-        	this.taxon = gene.getTaxon();
-        	this.name = gene.getOfficialSymbol();
-        	this.description = gene.getOfficialName();
-        	this.type = "gene";
+        	setValues(gene);
         }else if(this.resultClass == GeneSet.class ){
         	GeneSet geneSet = (GeneSet) searchResult.getResultObject();
-        	this.id = geneSet.getId();
-        	this.isGroup = true;
-        	this.size = (geneSet.getMembers()!=null)?geneSet.getMembers().size():null;
-        	this.taxon = null;
-        	this.name = geneSet.getName();
-        	this.description = geneSet.getDescription();
-        	this.type= "geneSet";
+        	setValues(geneSet);
         }else if(this.resultClass == ExpressionExperiment.class){
         	ExpressionExperiment ee = (ExpressionExperiment) searchResult.getResultObject();
-        	this.id = ee.getId();
-        	this.isGroup = false;
-        	this.size = 1;
-        	this.taxon = null; //expressionExperimentService.getTaxon(this.id);
-        	this.name = ee.getShortName(); 
-        	this.description = ee.getName();
-        	this.type = "experiment";
+        	setValues(ee);
         }else if(this.resultClass == ExpressionExperimentSet.class){
         	ExpressionExperimentSet eeSet = (ExpressionExperimentSet) searchResult.getResultObject();
-        	this.id = eeSet.getId();
-        	this.isGroup = true; 
-        	this.size = (eeSet.getExperiments()!=null)?eeSet.getExperiments().size():null;
-        	this.taxon = null; //eeSet.getTaxon(); //ExpressionExperimentSetService eess; eess.thaw(eeSet);
-        	this.name = eeSet.getName();
-        	this.description = eeSet.getDescription();
-        	this.type = "experimentSet";
+        	setValues(eeSet);
         }else{
         	this.id = new Long(-1);
+         	this.sessionId = this.getId();
         	this.isGroup = false;
         	this.size = -1;
         	this.taxon = null;
@@ -131,14 +114,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     * @param gene
     */
     public SearchResultDisplayObject( Gene gene ) {
-    	this.id = gene.getId();
-    	this.resultClass = Gene.class;
-        this.isGroup = false;
-        this.size = 1;
-    	this.taxon = gene.getTaxon();
-    	this.name = gene.getOfficialSymbol();
-    	this.description = gene.getOfficialName();
-        this.type = "gene";
+    	setValues(gene);
     }
     
    /**
@@ -146,29 +122,14 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     * @param geneSet
     */
     public SearchResultDisplayObject( GeneSet geneSet ) {
-    	this.id = geneSet.getId();
-    	this.resultClass = GeneSet.class;
-    	this.isGroup = true;
-    	this.size = (geneSet.getMembers()!=null)?geneSet.getMembers().size():null;
-    	this.taxon = null;
-    	this.name = geneSet.getName();
-    	this.description = geneSet.getDescription();
-        this.type = "geneSet";
+    	setValues(geneSet);
     }
     /**
      * 
      * @param geneSet
      */
      public SearchResultDisplayObject( GeneSetValueObject geneSet ) {
-     	this.id = (geneSet.isSession())? geneSet.getSessionId(): geneSet.getId();
-     	this.resultClass = GeneSet.class;
-     	this.isGroup = true;
-     	this.size = (geneSet.getGeneIds()!=null)?geneSet.getGeneIds().size():null;
-     	this.taxon = null;
-     	this.name = geneSet.getName();
-     	this.description = geneSet.getDescription();
-        this.type = (geneSet.isSession())? "geneSetSession": "geneSet";
-        this.memberIds = geneSet.getGeneIds();
+     	setValues(geneSet);
      }
 
     /**
@@ -176,14 +137,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param expressionExperiment
      */
     public SearchResultDisplayObject( ExpressionExperiment expressionExperiment) {
-    	this.id = expressionExperiment.getId();
-    	this.resultClass = ExpressionExperiment.class;
-    	this.isGroup = false;
-    	this.size = 1; 
-    	this.taxon = null;  //expressionExperimentService.getTaxon(this.id);
-    	this.name = expressionExperiment.getShortName();
-    	this.description = expressionExperiment.getName();
-        this.type = "experiment";
+    	setValues(expressionExperiment);
         
     }
     /**
@@ -191,20 +145,94 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param expressionExperimentSet
      */
     public SearchResultDisplayObject( ExpressionExperimentSet expressionExperimentSet) {
-    	this.id = expressionExperimentSet.getId();
-    	this.resultClass = ExpressionExperimentSet.class;
-    	this.isGroup = true;
-    	this.size = (expressionExperimentSet.getExperiments()!=null)?expressionExperimentSet.getExperiments().size():null;
-    	this.taxon = expressionExperimentSet.getTaxon();
-    	this.name = expressionExperimentSet.getName();
-    	this.description = expressionExperimentSet.getDescription();
-        this.type = "experimentSet";
+    	setValues(expressionExperimentSet);
     }
 
+    /**
+     * 
+     * @param gene
+     */
+    private void setValues( Gene gene ) {
+     	this.id = gene.getId();
+      	this.sessionId = this.getId();
+     	this.resultClass = Gene.class;
+         this.isGroup = false;
+         this.size = 1;
+     	this.taxon = gene.getTaxon();
+     	this.name = gene.getOfficialSymbol();
+     	this.description = gene.getOfficialName();
+         this.type = "gene";
+     }
+     
+    /**
+     * 
+     * @param geneSet
+     */
+     private void setValues( GeneSet geneSet ) {
+     	this.id = geneSet.getId();
+      	this.sessionId = this.getId();
+     	this.resultClass = GeneSet.class;
+     	this.isGroup = true;
+     	this.size = (geneSet.getMembers()!=null)?geneSet.getMembers().size():null;
+     	this.taxon = null;
+     	this.name = geneSet.getName();
+     	this.description = geneSet.getDescription();
+         this.type = "geneSet";
+     }
+     /**
+      * 
+      * @param geneSet
+      */
+     private void setValues( GeneSetValueObject geneSet ) {
+      	this.id = geneSet.getId();
+      	this.sessionId = (geneSet.isSession())? geneSet.getSessionId(): geneSet.getId();
+      	this.resultClass = GeneSet.class;
+      	this.isGroup = true;
+      	this.size = (geneSet.getGeneIds()!=null)?geneSet.getGeneIds().size():null;
+      	this.taxon = null;
+      	this.name = geneSet.getName();
+      	this.description = geneSet.getDescription();
+         this.type = (geneSet.isSession())? "geneSetSession": "geneSet";
+         this.memberIds = geneSet.getGeneIds();
+      }
+
+     /**
+      * 
+      * @param expressionExperiment
+      */
+      private void setValues( ExpressionExperiment expressionExperiment) {
+     	this.id = expressionExperiment.getId();
+      	this.sessionId = this.getId();
+     	this.resultClass = ExpressionExperiment.class;
+     	this.isGroup = false;
+     	this.size = 1; 
+     	this.taxon = null;  //expressionExperimentService.getTaxon(this.id);
+     	this.name = expressionExperiment.getShortName();
+     	this.description = expressionExperiment.getName();
+         this.type = "experiment";
+         
+     }
+     /**
+      * 
+      * @param expressionExperimentSet
+      */
+     private void setValues( ExpressionExperimentSet expressionExperimentSet) {
+     	this.id = expressionExperimentSet.getId();
+      	this.sessionId = this.getId();
+     	this.resultClass = ExpressionExperimentSet.class;
+     	this.isGroup = true;
+     	this.size = (expressionExperimentSet.getExperiments()!=null)?expressionExperimentSet.getExperiments().size():null;
+     	this.taxon = null; //expressionExperimentSet.getTaxon();
+     	this.name = expressionExperimentSet.getName();
+     	this.description = expressionExperimentSet.getDescription();
+         this.type = "experimentSet";
+     }
 
     private Class<?> resultClass;
     
     private Long id; 
+
+    private Long sessionId; 
     
     private Boolean isGroup; // whether this search result represents a group of entities or not
     
@@ -232,6 +260,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
     public void setId(Long id) {
         this.id = id;
+    }
+    public Long getSessionId() {
+        return this.sessionId;
     }
     public Boolean getIsGroup() {
         return this.isGroup;

@@ -537,9 +537,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			if(newGeneIds){
 				// geneids are passed for testing
 				this.loadGenes(newGeneIds);
-			}else if(groupName){
+			} if(groupName){
+				this.geneCombo.setRawValue(groupName);
 				
-				// get group
+				//this.geneCombo.setValue(groupName); // this should select the new group?
 				
 				// if groupId is passed, that means group has been created or updated and genes should be loaded from there
 				// by selecting the group with the gene combo
@@ -556,6 +557,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							width: '200px',
 							tooltip : "Edit your selection",
 							hidden : true,
+							disabled: true,
 							ctCls: 'right-align-btn transparent-btn'
 		});
 		 
@@ -702,6 +704,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	resetGenePreview: function(){
 		Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {cn: '<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview </div>'});
 //		this.genePreview.add(this.geneSelectionEditorBtn);
+		this.geneSelectionEditorBtn.disable();
 		this.geneSelectionEditorBtn.hide();
 //		this.genePreview.doLayout();
 	},
@@ -872,12 +875,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				var size = record.get("size");
 				var taxon = this.getTaxon();
 				var geneIds = [];
-				//console.log("isGroup: "+isGroup);
 								
 				// load preview of group if group was selected
 				if (isGroup) {
 										
-					if (type == "geneSet" || type == "usersgeneSet" ) {
+					if (type == "geneSet" || type == "usersgeneSet" || type == "usersGeneSet" ) {
 						// get number of genes in group
 						var groupSize = record.get("size");
 						this.geneGroupId = id;
