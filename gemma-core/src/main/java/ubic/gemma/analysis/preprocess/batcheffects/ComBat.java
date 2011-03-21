@@ -26,6 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.math.DescriptiveWithMissing;
@@ -39,8 +43,16 @@ import cern.colt.matrix.linalg.QRDecomposition;
 import cern.jet.math.Functions;
 
 /**
+ * An implementation of the ComBat algorithm described by Johson et al ({@link http://jlab.byu.edu/ComBat/Download.html}
+ * ), as described in:
+ * <p>
+ * Johnson, WE, Rabinovic, A, and Li, C (2007). Adjusting batch effects in microarray expression data using Empirical
+ * Bayes methods. Biostatistics 8(1):118-127.
  */
 public class ComBat<R, C> {
+
+    private static Log log = LogFactory.getLog( ComBat.class );
+
     private final ObjectMatrix<C, String, Object> sampleInfo;
     private final DoubleMatrix<R, C> data;
     private Algebra solver;
@@ -51,18 +63,29 @@ public class ComBat<R, C> {
 
     private LinkedHashMap<String, Collection<C>> batches;
 
-    // postmean <- function(g.hat,g.bar,n,d.star,t2){(t2*n*g.hat+d.star*g.bar)/(t2*n+d.star)}
-    // postvar <- function(sum2,n,a,b){(.5*sum2+b)/(n/2+a-1)}
-
     private HashMap<String, Map<C, Integer>> originalLocationsInMatrix;
 
     private int numSamples;
 
     private int numBatches;
 
+    private boolean hasMissing = false;
+
     private int numProbes;
-    private DenseDoubleMatrix2D deltaHat;
-    private DenseDoubleMatrix2D y;
+
+    /**
+     * Prior distribution
+     */
+    private DoubleMatrix2D deltaHat;
+
+    /**
+     * The data matrix
+     */
+    private DoubleMatrix2D y;
+
+    /**
+     * The design matrix
+     */
     private DoubleMatrix2D X;
 
     public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, Object> sampleInfo ) {
@@ -81,15 +104,16 @@ public class ComBat<R, C> {
      *        (Redundant) level.
      * @return
      */
-    public DoubleMatrix2D buildDesign( List<?> vec, DoubleMatrix2D inputDesign, int start ) {
+    protected DoubleMatrix2D buildDesign( List<?> vec, DoubleMatrix2D inputDesign, int start ) {
         /*
          * Make a matrix that is initialized
          */
         DoubleMatrix2D tmp = null;
         if ( vec.get( 0 ) instanceof Double ) {
             /*
-             * CONTINUOUS COVARIATE
+             * CONTINUOUS COVARIATE - Not known to work correctly?
              */
+            log.warn( "Treating factor as continuous covariate" );
             if ( inputDesign != null ) {
                 /*
                  * copy it into a new one.
@@ -159,7 +183,7 @@ public class ComBat<R, C> {
     /**
      * @param sdata
      */
-    public void deltaHat( DoubleMatrix2D sdata ) {
+    protected void deltaHat( DoubleMatrix2D sdata ) {
         int batchIndex;
         deltaHat = new DenseDoubleMatrix2D( numBatches, numProbes );
         batchIndex = 0;
@@ -178,7 +202,7 @@ public class ComBat<R, C> {
      * @param sampleInfo
      * @return
      */
-    public DoubleMatrix2D designMatrix() {
+    protected DoubleMatrix2D designMatrix() {
         DoubleMatrix2D design = null;
         /*
          * Find the batch
@@ -209,7 +233,7 @@ public class ComBat<R, C> {
      * @param vec
      * @return
      */
-    public Set<String> levels( Collection<String> vec ) {
+    protected Set<String> levels( Collection<String> vec ) {
         Set<String> result = new LinkedHashSet<String>();
         result.addAll( vec );
         return result;
@@ -220,17 +244,25 @@ public class ComBat<R, C> {
      */
     public DoubleMatrix2D ordinaryLeastSquares( DoubleMatrix2D A, DoubleMatrix2D b ) {
 
-        /*
-         * FIXME deal with missing values.
-         */
+        if ( this.hasMissing ) {
 
-        // DoubleMatrix2D tDes = solver.transpose( A );// A'
-        // DoubleMatrix2D mult = solver.mult( tDes, A );
-        // DoubleMatrix2D invXXT = solver.inverse( mult );
-        // DoubleMatrix2D x = solver.mult( solver.mult( invXXT, tDes ), solver.transpose( b ) );
-        // return x;
+            double[][] rawResult = new double[b.rows()][];
+
+            /*
+             * deal with missing values.
+             */
+
+            for ( int i = 0; i < b.rows(); i++ ) {
+                DoubleMatrix1D row = b.viewRow( i );
+                DoubleMatrix1D withoutMissing = ordinaryLeastSquaresWithMissing( row, A );
+                rawResult[i] = withoutMissing.toArray();
+            }
+
+            return solver.transpose( new DenseDoubleMatrix2D( rawResult ) );
+        }
         QRDecomposition qr = new QRDecomposition( A );
         return qr.solve( solver.transpose( b ) );
+
     }
 
     /**
@@ -295,7 +327,6 @@ public class ComBat<R, C> {
         // assertEquals( -0.30273984, adjustedData.get( 14, 6 ), 0.0001 );
         // assertEquals( 0.2097977, adjustedData.get( 7, 3 ), 0.0001 );
         // log.info( adjustedData );
-        // bayesdata <- (bayesdata*(sqrt(var.pooled)%*%t(rep(1,n.array))))+stand.mean
         return restoreScale( adjustedData );
     }
 
@@ -304,7 +335,8 @@ public class ComBat<R, C> {
      * @param A
      * @return
      */
-    public DoubleMatrix2D standardize( DoubleMatrix2D b, DoubleMatrix2D A ) {
+    protected DoubleMatrix2D standardize( DoubleMatrix2D b, DoubleMatrix2D A ) {
+
         DoubleMatrix2D beta = ordinaryLeastSquares( A, b );
 
         // assertEquals( 3.7805, beta.get( 0, 0 ), 0.001 );
@@ -320,21 +352,29 @@ public class ComBat<R, C> {
 
         // assertEquals( 5.8134, grandMeanM.get( 0, 1 ), 0.001 );
 
-        varpooled = y.copy().assign( solver.transpose( solver.mult( X, beta ) ), Functions.minus ).assign(
-                Functions.pow( 2 ) );
-
-        DoubleMatrix2D scale = new DenseDoubleMatrix2D( numSamples, 1 );
-        scale.assign( 1.0 / numSamples );
-        varpooled = solver.mult( varpooled, scale );
+        if ( hasMissing ) {
+            varpooled = y.copy().assign( solver.transpose( solver.mult( X, beta ) ), Functions.minus );
+            DoubleMatrix2D var = new DenseDoubleMatrix2D( varpooled.rows(), 1 );
+            for ( int i = 0; i < varpooled.rows(); i++ ) {
+                DoubleMatrix1D row = varpooled.viewRow( i );
+                double m = DescriptiveWithMissing.mean( new DoubleArrayList( row.toArray() ) );
+                double v = DescriptiveWithMissing.sampleVariance( new DoubleArrayList( row.toArray() ), m );
+                var.set( i, 0, v );
+            }
+            varpooled = var;
+        } else {
+            varpooled = y.copy().assign( solver.transpose( solver.mult( X, beta ) ), Functions.minus ).assign(
+                    Functions.pow( 2 ) );
+            DoubleMatrix2D scale = new DenseDoubleMatrix2D( numSamples, 1 );
+            scale.assign( 1.0 / numSamples );
+            varpooled = solver.mult( varpooled, scale );
+        }
 
         DoubleMatrix2D size = new DenseDoubleMatrix2D( numSamples, 1 );
         size.assign( 1.0 );
 
         standMean = solver.mult( solver.transpose( grandMeanM ), solver.transpose( size ) );
 
-        // tmp <- design;
-        // tmp[,c(1:n.batch)] <- 0;
-        // stand.mean <- stand.mean+t(tmp%*%B.hat)
         DoubleMatrix2D tmpX = X.copy();
         for ( batchIndex = 0; batchIndex < numBatches; batchIndex++ ) {
             for ( int j = 0; j < X.rows(); j++ ) {
@@ -443,8 +483,20 @@ public class ComBat<R, C> {
         return result;
     }
 
+    /**
+     * 
+     */
     private void initPartA() {
         numSamples = sampleInfo.rows();
+
+        for ( int i = 0; i < data.rows(); i++ ) {
+            for ( int j = 0; j < data.columns(); j++ ) {
+                if ( data.isMissing( i, j ) ) {
+                    this.hasMissing = true;
+                    break;
+                }
+            }
+        }
 
         int batchColumnIndex = sampleInfo.getColIndexByName( "batch" );
         batches = new LinkedHashMap<String, Collection<C>>();
@@ -495,13 +547,23 @@ public class ComBat<R, C> {
             DoubleMatrix1D sum2 = stepSum( matrix, gnew );
             DoubleMatrix1D dnew = postVar( sum2, n, a, b );
 
-            double gnewmax = gnew.copy().assign( gold, Functions.minus ).assign( Functions.abs ).assign( gold,
-                    Functions.div ).aggregate( Functions.max, Functions.identity );
-            double dnewmax = dnew.copy().assign( dold, Functions.minus ).assign( Functions.abs ).assign( dold,
-                    Functions.div ).aggregate( Functions.max, Functions.identity );
+            DoubleMatrix1D gnewtmp = gnew.copy().assign( gold, Functions.minus ).assign( Functions.abs ).assign( gold,
+                    Functions.div );
+
+            DoubleMatrix1D dnewtmp = dnew.copy().assign( dold, Functions.minus ).assign( Functions.abs ).assign( dold,
+                    Functions.div );
+            double gnewmax = 0.0;
+            double dnewmax = 0.0;
+            if ( hasMissing ) {
+                gnewmax = DescriptiveWithMissing.max( new DoubleArrayList( gnewtmp.toArray() ) );
+                dnewmax = DescriptiveWithMissing.max( new DoubleArrayList( dnewtmp.toArray() ) );
+            } else {
+                gnewmax = gnewtmp.aggregate( Functions.max, Functions.identity );
+                dnewmax = dnewtmp.aggregate( Functions.max, Functions.identity );
+            }
 
             change = Math.max( gnewmax, dnewmax );
-            // log.info( count + " " + gnewmax + " " + dnewmax + " " + change );
+            // System.err.println( count + " " + gnewmax + " " + dnewmax + " " + change );
 
             gold = gnew;
             dold = dnew;
@@ -512,7 +574,41 @@ public class ComBat<R, C> {
     }
 
     /**
-     * The method used by ComBat is veerrryyy slow, and I don't know how many cases it will prove to be necessary;
+     * @param a
+     * @param b
+     * @return
+     */
+    private DoubleMatrix2D multWithMissing( DoubleMatrix2D a, DoubleMatrix2D b ) {
+        int m = a.rows();
+        int n = a.columns();
+        int p = b.columns();
+
+        if ( b.rows() != a.columns() ) {
+            throw new IllegalArgumentException();
+        }
+
+        DoubleMatrix2D C = new DenseDoubleMatrix2D( m, p );
+        C.assign( 0.0 );
+        for ( int i = 0; i < p; i++ ) {
+            for ( int j = 0; j < m; j++ ) {
+                double s = 0.0;
+                for ( int k = 0; k < n; k++ ) {
+                    double aval = a.getQuick( j, k );
+                    double bval = b.getQuick( k, i );
+                    if ( Double.isNaN( aval ) || Double.isNaN( bval ) ) {
+                        continue;
+                    }
+                    s += aval * bval;
+                }
+                C.setQuick( j, i, s + C.getQuick( j, i ) );
+            }
+        }
+        return C;
+    }
+
+    /**
+     * The method used by ComBat is veerrryyy slow, and I don't know how many cases it will prove to be necessary.
+     * Probably it can be sped up computing corrections for each batch in parallel, and maybe Java is just plain faster.
      * 
      * @param matrix
      * @param gHat
@@ -520,34 +616,51 @@ public class ComBat<R, C> {
      * @return
      */
     private DoubleMatrix1D[] nonParametricFit( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat ) {
-        return null;
+        throw new UnsupportedOperationException( "This is too slow to want to implement yet." );
     }
 
-    // #likelihood function used below
-    // L <- function(x,g.hat,d.hat){prod(dnorm(x,g.hat,sqrt(d.hat)))}
+    /**
+     * @param b
+     * @param des
+     * @return
+     */
+    private DoubleMatrix1D ordinaryLeastSquaresWithMissing( DoubleMatrix1D b, DoubleMatrix2D des ) {
+        List<Double> r = new ArrayList<Double>( b.size() );
+        double[] elements = b.toArray();
+        int size = b.size();
 
-    // int.eprior <- function(sdat,g.hat,d.hat){
-    // g.star <- d.star <- NULL
-    // r <- nrow(sdat)
-    // for(i in 1:r){
-    // g <- g.hat[-i]
-    // d <- d.hat[-i]
-    // x <- sdat[i,!is.na(sdat[i,])]
-    // n <- length(x)
-    // j <- numeric(n)+1
-    // dat <- matrix(as.numeric(x),length(g),n,byrow=T)
-    // resid2 <- (dat-g)^2
-    // sum2 <- resid2%*%j
-    // LH <- 1/(2*pi*d)^(n/2)*exp(-sum2/(2*d))
-    // LH[LH=="NaN"]=0
-    // g.star <- c(g.star,sum(g*LH)/sum(LH))
-    // d.star <- c(d.star,sum(d*LH)/sum(LH))
-    // #if(i%%1000==0){cat(i,'\n')}
-    // }
-    // adjust <- rbind(g.star,d.star)
-    // rownames(adjust) <- c("g.star","d.star")
-    // adjust
-    // }
+        int countNonMissing = 0;
+        for ( int i = 0; i < size; i++ ) {
+            if ( !Double.isNaN( elements[i] ) ) {
+                countNonMissing++;
+            }
+        }
+
+        if ( countNonMissing < 3 ) {
+            /*
+             * return nothing.
+             */
+        }
+
+        double[][] rawDesignWithoutMissing = new double[countNonMissing][];
+        int index = 0;
+        for ( int i = 0; i < size; i++ ) {
+            if ( Double.isNaN( elements[i] ) ) {
+                continue;
+            }
+            r.add( elements[i] );
+            rawDesignWithoutMissing[index++] = des.viewRow( i ).toArray();
+        }
+        DoubleMatrix2D designWithoutMissing = new DenseDoubleMatrix2D( rawDesignWithoutMissing );
+        DenseDoubleMatrix1D yp = new DenseDoubleMatrix1D( ArrayUtils.toPrimitive( r.toArray( new Double[] {} ) ) );
+        DoubleMatrix2D tDes = solver.transpose( designWithoutMissing );// A'
+        DoubleMatrix2D mult = solver.mult( tDes, designWithoutMissing );
+        DoubleMatrix2D invXXT = solver.inverse( mult );
+        DoubleMatrix1D x = solver.mult( solver.mult( invXXT, tDes ), yp );
+        return x;
+
+    }
+
     /**
      * @param ghat
      * @param gbar
@@ -593,7 +706,6 @@ public class ComBat<R, C> {
 
             DoubleMatrix2D adjustedBatch = batchData.copy().assign( solver.transpose( solver.mult( Xbb, gammastar ) ),
                     Functions.minus );
-            // (sqrt(delta.star[j,])%*%t(rep(1,n.batches[j])))
 
             DoubleMatrix1D deltaStarRow = deltastar.viewRow( batchNum );
             deltaStarRow.assign( Functions.sqrt );
@@ -672,7 +784,7 @@ public class ComBat<R, C> {
         sumsq.assign( 0.0 );
 
         for ( int i = 0; i < deltas.rows(); i++ ) {
-            sumsq.set( i, deltas.viewRow( i ).aggregate( Functions.plus, Functions.identity ) );
+            sumsq.set( i, DescriptiveWithMissing.sum( new DoubleArrayList( deltas.viewRow( i ).toArray() ) ) );
         }
         return sumsq;
     }

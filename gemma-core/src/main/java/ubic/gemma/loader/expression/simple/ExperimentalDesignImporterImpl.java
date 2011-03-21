@@ -350,6 +350,19 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
      */
     private void addExperimentalFactorsToExperimentalDesign( ExperimentalDesign experimentalDesign,
             List<String> experimentalFactorFileLines, String[] headerFields, List<String> factorValueLines ) {
+
+        int maxWait = 0;
+        while ( !mgedOntologyService.isOntologyLoaded() ) {
+            try {
+                Thread.sleep( 1000 );
+                if ( maxWait++ > 100 ) {
+                    throw new RuntimeException( "MGED is not loaded and gave up waiting" );
+                }
+            } catch ( InterruptedException e ) {
+                e.printStackTrace();
+            }
+        }
+
         log.info( "Addding experimental factors to experimental design: " + experimentalDesign.getId() );
 
         Collection<OntologyTerm> terms = mgedOntologyService.getMgedTermsByKey( "factor" );
@@ -595,7 +608,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
         // make sure we don't add two values.
         for ( FactorValue existingfv : bioMaterial.getFactorValues() ) {
             if ( existingfv.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) {
-                log.info( factorValue + " matches existing " + existingfv + bioMaterial
+                log.debug( factorValue + " matches existing " + existingfv + bioMaterial
                         + " already has a factorvalue for " + factorValue.getExperimentalFactor() + "(" + existingfv
                         + ")" );
             }
