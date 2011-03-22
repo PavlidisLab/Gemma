@@ -31,6 +31,7 @@ import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
+import ubic.gemma.web.session.GemmaSessionBackedValueObject;
 
 /**
  * Represents a Gene group gene set.
@@ -38,7 +39,7 @@ import ubic.gemma.model.genome.gene.GeneSetMember;
  * @author kelsey
  * @version $Id$
  */
-public class GeneSetValueObject implements Serializable {
+public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serializable {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
@@ -84,7 +85,7 @@ public class GeneSetValueObject implements Serializable {
     private boolean publik;
     private boolean shared;
     private Integer size;
-    private Integer sessionId;
+    private Long sessionId;
     private boolean session;
 
     /**
@@ -138,7 +139,7 @@ public class GeneSetValueObject implements Serializable {
     /**
      * @return
      */
-    public Integer getSessionId() {
+    public Long getSessionId() {
         return sessionId;
     }
 
@@ -209,7 +210,7 @@ public class GeneSetValueObject implements Serializable {
     /**
      * @param sessionId
      */
-    public void setSessionId( Integer sessionId ) {
+    public void setSessionId( Long sessionId ) {
         this.sessionId = sessionId;
     }
 
