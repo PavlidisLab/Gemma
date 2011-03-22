@@ -624,6 +624,9 @@ GeneSetController._path = '/Gemma/dwr';
 GeneSetController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
 }
+GeneSetController.getGenesInGroupBySessionId = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroupBySessionId', p0, callback);
+}
 GeneSetController.getGeneSetsByGOId = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGeneSetsByGO', p0, p1, callback);
 }
