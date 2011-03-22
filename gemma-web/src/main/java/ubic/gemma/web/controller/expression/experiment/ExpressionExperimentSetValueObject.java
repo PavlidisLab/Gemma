@@ -23,18 +23,21 @@ import java.util.HashSet;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.web.session.GemmaSessionBackedValueObject;
 
 /**
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentSetValueObject implements Comparable<ExpressionExperimentSetValueObject> {
+public class ExpressionExperimentSetValueObject implements GemmaSessionBackedValueObject, Comparable<ExpressionExperimentSetValueObject> {
 
     private boolean currentUserHasWritePermission = false;
 
     private boolean publik;
 
     private boolean shared;
+    
+    private boolean session;
 
     /**
      * @return the publik
@@ -63,10 +66,20 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
     public void setShared( boolean shared ) {
         this.shared = shared;
     }
+    
+    public boolean isSession() {
+        return session;
+    }
+    
+    public void setSession( boolean session ) {
+        this.session = session;
+    }
 
     private String description;
     private Collection<Long> expressionExperimentIds;
     private Long id;
+    
+    private Long sessionId;
 
     /**
      * If modifying the set is constrained by existing analyses.
@@ -138,6 +151,10 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
     public Long getId() {
         return id;
     }
+    
+    public Long getSessionId() {
+        return sessionId;
+    }
 
     public String getName() {
         return name;
@@ -190,6 +207,10 @@ public class ExpressionExperimentSetValueObject implements Comparable<Expression
 
     public void setId( Long id ) {
         this.id = id;
+    }
+    
+    public void setSessionId( Long sessionId ) {
+        this.sessionId = sessionId;
     }
 
     public void setModifiable( boolean modifiable ) {
