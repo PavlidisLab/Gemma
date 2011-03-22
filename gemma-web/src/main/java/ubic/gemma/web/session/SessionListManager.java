@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.persistence.GemmaSessionBackedValueObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 
 

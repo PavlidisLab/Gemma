@@ -8,6 +8,8 @@ import java.util.Collection;
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
 
+import ubic.gemma.persistence.GemmaSessionBackedValueObject;
+
 public abstract class AbstractSetListContainer implements Serializable {
 	
 	/**
@@ -61,12 +63,12 @@ public abstract class AbstractSetListContainer implements Serializable {
 	public Long incrementAndGetLargestSessionId(){
 		largestSessionId = largestSessionId +1;
 		
-		//unique sessionId for each entry in the user's session(doubt that a user will have over 100000 set session entries however
-		// large gaps can occur between sessionIds because of 'fake' sessionIds assigned to db backed sets for the front end store-
-		// eg. page reloads within a user's session lifecycle will create these gaps
-		//still I believe 100000 provides a large enough range to avoid conflicts
+		//unique sessionId for each entry in the user's session(doubt that a user will have over 100000 set session entries
+		//so I believe 100000 provides a large enough range to avoid conflicts
+		//
 		if (largestSessionId>100000){
 			largestSessionId = 0l;
+			dbIdToSessionIdMap.clear();
 		}
 		
 		return largestSessionId;
