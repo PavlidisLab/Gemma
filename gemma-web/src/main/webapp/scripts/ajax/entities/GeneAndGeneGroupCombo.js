@@ -49,7 +49,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description}</div>' +
 					'</tpl>'+
 					'<tpl if="type==\'geneSet\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</div>' +
+					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</div>' +
 					'</tpl>' +
 					'<tpl if="type==\'usersgeneSet\'">' +
 					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
@@ -61,7 +61,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					'	<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</div>' +
 					'</tpl>' +
 					'<tpl if="type==\'freeText\'">' +
-					'	<div style="font-size:11px;background-color:#F9EEFF" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</span></div>' +
 					'</tpl>' +
 					'</tpl>'),
 					//tpl: new Ext.XTemplate('<tpl for=".">' +
