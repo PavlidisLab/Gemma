@@ -25,7 +25,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	listWidth : 450, // ridiculously large so IE displays it properly
 	//lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
 	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
-	allQuery:'', // loading of auto gen and user's sets handled in Controller when query = ''
+	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
 
 	loadingText : 'Searching...',
 
@@ -36,10 +36,10 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	forceSelection: true,
 	mode : 'remote',
 	queryDelay : 800, // default = 500
-	listeners: {
+	/*listeners: {
 		beforequery:function(queryEvent){
 			// queryEvent has combo, query, forceAll and cancel fields
-			var store = queryEvent.combo.getStore();
+			//var store = queryEvent.combo.getStore();
 			console.log("before query");
 		},
 		beforeexpand:function(combo){
@@ -66,7 +66,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
     	if (this.fireEvent("beforecollapse", this)) {
            Gemma.ExperimentAndExperimentGroupCombo.superclass.collapse.apply(this);
         }
-    },
+    },*/
 	
 
 	initComponent : function() {

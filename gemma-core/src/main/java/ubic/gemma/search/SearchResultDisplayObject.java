@@ -185,7 +185,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
       */
      private void setValues( GeneSetValueObject geneSet ) {
       	this.id = geneSet.getId();
-      	this.sessionId = (geneSet.isSession())? geneSet.getSessionId(): geneSet.getId();
+      	this.sessionId = (geneSet.getSessionId()!=null)? geneSet.getSessionId(): geneSet.getId();
       	this.resultClass = GeneSet.class;
       	this.isGroup = true;
       	this.size = (geneSet.getGeneIds()!=null)?geneSet.getGeneIds().size():null;

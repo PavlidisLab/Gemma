@@ -169,6 +169,9 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setTaxon : function(taxon) {
+		if(!taxon){
+			return;
+		}
 		if (!this.taxon || this.taxon.id != taxon.id) {
 			this.taxon = taxon;
 //			this.reset();

@@ -682,7 +682,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         		if(taxon!= null && entry.getValue().size()>0){
         			displayResults.add(
         					new SearchResultDisplayObject(ExpressionExperimentSet.class, tempId, 
-        							"All '"+query+"' results for "+taxon.getCommonName(), 
+        							"All "+taxon.getCommonName()+" results for '"+query+"'", 
         							"All "+taxon.getCommonName()+" experiments found for your query", 
         							true, entry.getValue().size(), taxon, "freeText"));
         			tempId--;

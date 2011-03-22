@@ -425,7 +425,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 										
 										// store the eeid(s) selected and load some EE into the previewer
 										// store the taxon associated with selection
-										var query = combo.lastQuery;
+										var query = combo.store.baseParams.query;
 										this.loadExperimentOrGroup(record, query);
 										
 										// once an experiment has been selected, cue the user that the gene select is now active
@@ -464,8 +464,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					listeners : {
 						'select' : {
 							fn : function(combo, record, index) {
-								var query = combo.lastQuery;
-								this.loadGeneOrGroup(record, query);
+									var query = combo.store.baseParams.query;
+									this.loadGeneOrGroup(record, query);
 							},
 							scope : this
 						},
@@ -638,12 +638,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 						}),
 					
 					{},{},this.experimentPreview,{},{items: this.genePreview,colspan: 2},{},
-					
-					{
-						//items: [this.geneSelectionEditorBtn],
-						colspan: 6
-					} 
-					
 					],
 		});
 		
@@ -759,14 +753,18 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							msg: "Loading genes ..."
 						});
 		this.geneSelectionEditor.loadMask.show();
-		var newGroupName = 'Edited \"'+this.geneCombo.selectedGeneGroup.name+'\" group';
-		Ext.apply(this.geneSelectionEditor, {geneGroupId: this.geneGroupId, newGroupName: newGroupName});
+		var newGroupName = 'Edited \''+this.geneCombo.selectedGeneGroup.name+'\' group';
+		Ext.apply(this.geneSelectionEditor, {
+			geneGroupId: this.geneGroupId,
+			selectedGeneGroup: this.geneCombo.selectedGeneGroup, 
+			newGroupName: newGroupName
+		});
 		this.geneSelectionEditor.loadGenes(gids, function(){Ext.getCmp('geneSelectionEditor').loadMask.hide();});
 	},
 	/**
 	 * Show the selected eeset members 
 	 */
-	loadExperimentOrGroup : function(record, query, callback, args) {
+	loadExperimentOrGroup : function(record, query) {
 			//console.log("in loadExperimentOrGroup, record:"+record+", args:"+args);
 				
 				var id = record.get("id");
@@ -868,7 +866,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					});
 				}
 			},
-		loadGeneOrGroup : function(record, query, callback, args) {
+		loadGeneOrGroup : function(record, query) {
 				var id = record.get("id");
 				var isGroup = record.get("isGroup");
 				var type = record.get("type");
@@ -1036,10 +1034,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				// load some genes to display 
 				var limit = (ids.size() < this.PREVIEW_SIZE) ? ids.size() : this.PREVIEW_SIZE;
 				var previewIds = ids.slice(0,limit);
+				this.maskGenePreview();
 				GenePickerController.getGenes(previewIds, function(genes){
 						
-							this.maskGenePreview();
-
 							// reset the gene preview panel content
 							this.resetGenePreview();
 							for (var i = 0; i < genes.size(); i++) {
@@ -1053,7 +1050,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			},
 			
 			loadGeneGroup : function(groupName) {
-				var geneIds = [];
+				// TODO  implement this
+/*				var geneIds = [];
 								
 						// get a few geneIds from the group
 						// get just a few genes for the preview
@@ -1077,7 +1075,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							this.geneIds = geneIds;
 							
 						}.createDelegate(this));
-						
+	*/					
 			},
 			
 			/**
