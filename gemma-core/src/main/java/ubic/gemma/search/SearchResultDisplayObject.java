@@ -320,8 +320,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
 	@Override
 	public int compareTo(SearchResultDisplayObject o) {
-		int result = this.name.compareTo(o.name);
-		return (result == 0)? this.description.compareTo(o.description):result;
+		int result = this.name.toLowerCase().compareTo(o.name.toLowerCase());
+		return (result == 0)? this.description.toLowerCase().compareTo(o.description.toLowerCase()):result;
 	}
     
   /*  public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
