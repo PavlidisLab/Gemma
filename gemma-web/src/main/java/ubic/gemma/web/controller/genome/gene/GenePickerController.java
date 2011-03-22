@@ -320,7 +320,7 @@ public class GenePickerController {
             //TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
             Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets();
                 
-            sessionListManager.setUniqueGeneSetStoreIds(result, sessionResult);        
+            sessionListManager.setUniqueGeneSetStoreIds(result);        
                 
             result.addAll(sessionResult);  
  	
