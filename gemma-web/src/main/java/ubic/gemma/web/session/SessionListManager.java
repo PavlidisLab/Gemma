@@ -1,5 +1,7 @@
 package ubic.gemma.web.session;
+
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,50 +20,71 @@ public class SessionListManager{
 	ExperimentSetListContainer experimentSetList;
 	
 	public Collection<GeneSetValueObject> getRecentGeneSets(){
-		return geneSetList.getRecentGeneSets();
+		
+		//We know that geneSetList will only contain GeneSetValueObjects (via SessionListManager.addGeneSet(GeneSetValueObject) so this cast is okay
+		@SuppressWarnings("unchecked")
+		List<GeneSetValueObject> castedCollection = (List)geneSetList.getRecentSets();
+				
+		return castedCollection;
 	}
 	
 	public GeneSetValueObject addGeneSet(GeneSetValueObject gsvo){
 		
-		return geneSetList.addGeneSet(gsvo);
+		return (GeneSetValueObject)geneSetList.addSet(gsvo);
 		
 	}
 	
 	public void removeGeneSet(GeneSetValueObject gsvo){
 		
-		geneSetList.removeGeneSet(gsvo);
+		geneSetList.removeSet(gsvo);
 		
 	}
 	
 	public void updateGeneSet(GeneSetValueObject gsvo){
 		
-		geneSetList.updateGeneSet(gsvo);
+		geneSetList.updateSet(gsvo);
 		
 	}
 	
-	//this gives result(from the DB) unique Session Ids(used by the front end store)
-	//ugly and hackish
-	public void setUniqueGeneSetStoreIds(Collection<GeneSetValueObject> result, Collection<GeneSetValueObject> sessionResult){		
+	//this gives result(from the DB) unique Session Ids(used by the front end store) if it doesn't already have one
+	public void setUniqueGeneSetStoreIds(Collection<GeneSetValueObject> result){
+		
+		//this cast is safe because we know that we are getting a Collection of GeneSetValueObjects(which implements GemmaSessionBackedValueObject
+		@SuppressWarnings("unchecked")
+		Collection<GemmaSessionBackedValueObject> castedCollection = (Collection)result;
+		
+		geneSetList.setUniqueSetStoreIds(castedCollection);		
         
-        //give db genesets a unique sessionId so that the javascript widget plays nice
-        for (GeneSetValueObject gsvo: result){      	
-        	gsvo.setSessionId(geneSetList.incrementAndGetLargestSessionId());        	
-        	
-        }
 	}
 	
-	public Integer incrementAndGetLargestGeneSetSessionId(){
+	public boolean isDbBackedGeneSetSessionId(Long sessionId){
+		
+		return geneSetList.isDbBackedSessionId(sessionId);
+		
+	}
+	
+	public Long getDbGeneSetIdBySessionId(Long sessionId){
+		return geneSetList.getDbIdFromSessionId(sessionId);
+	}
+	
+	public Long incrementAndGetLargestGeneSetSessionId(){
 		return geneSetList.incrementAndGetLargestSessionId();
 	}
 	
 	
-	public Collection<ExpressionExperimentSetValueObject> getRecentExperimentSets(){
-		return experimentSetList.getRecentExperimentSets();
+	public Collection<ExpressionExperimentSetValueObject> getRecentExperimentSets(){		
+		
+		@SuppressWarnings("unchecked")
+		List<ExpressionExperimentSetValueObject> castedCollection = (List)experimentSetList.getRecentSets();
+				
+		return castedCollection;		
+		
 	}
 	
+	//may have to return added set(like geneset
 	public void addExperimentSet(ExpressionExperimentSetValueObject eesvo){
 		
-		experimentSetList.addExperimentSet(eesvo);
+		experimentSetList.addSet(eesvo);
 		
 	}
 	
