@@ -31,7 +31,8 @@ import edu.emory.mathcs.backport.java.util.Collections;
 
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.web.session.GemmaSessionBackedValueObject;
+import ubic.gemma.persistence.GemmaSessionBackedValueObject;
+
 
 /**
  * Represents a Gene group gene set.

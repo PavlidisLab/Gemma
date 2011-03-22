@@ -22,8 +22,9 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.persistence.GemmaSessionBackedValueObject;
 import ubic.gemma.util.EntityUtils;
-import ubic.gemma.web.session.GemmaSessionBackedValueObject;
+
 
 /**
  * @author paul
