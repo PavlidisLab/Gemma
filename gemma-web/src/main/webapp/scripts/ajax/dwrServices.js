@@ -449,6 +449,22 @@ ExpressionExperimentSetController.loadAll = function(callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAll',
 			callback);
 }
+ExpressionExperimentSetController.removeUserAndSessionGroups = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'removeUserAndSessionGroups', p0,
+			callback);
+}
+ExpressionExperimentSetController.addUserAndSessionGroups = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addUserAndSessionGroups', p0,
+			callback);
+}
+ExpressionExperimentSetController.updateUserAndSessionGroups = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateUserAndSessionGroups', p0,
+			callback);
+}
+ExpressionExperimentSetController.loadAllUserAndSessionGroups = function(callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAllUserAndSessionGroups',
+			callback);
+}
 ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
 			'getExperimentsInSet', p0, callback);
