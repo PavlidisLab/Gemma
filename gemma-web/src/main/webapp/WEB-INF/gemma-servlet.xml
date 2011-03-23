@@ -946,6 +946,10 @@ gemma.max.fileupload.size.bytes=
 								<value>update</value>
 								<value>create</value>
 								<value>remove</value>
+								<value>loadAllUserAndSessionGroups</value>
+								<value>updateUserAndSessionGroups</value>
+								<value>addUserAndSessionGroups</value>
+								<value>removeUserAndSessionGroups</value>
 							</list>
 						</property>
 					</bean>
