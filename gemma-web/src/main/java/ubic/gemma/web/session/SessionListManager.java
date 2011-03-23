@@ -80,15 +80,49 @@ public class SessionListManager{
 				
 		return castedCollection;		
 		
+	}	
+	
+	public ExpressionExperimentSetValueObject addExperimentSet(ExpressionExperimentSetValueObject eesvo){
+		
+		return (ExpressionExperimentSetValueObject)experimentSetList.addSet(eesvo);
+		
 	}
 	
-	//may have to return added set(like geneset
-	public void addExperimentSet(ExpressionExperimentSetValueObject eesvo){
+	public void removeExperimentSet(ExpressionExperimentSetValueObject eesvo){
 		
-		experimentSetList.addSet(eesvo);
+		experimentSetList.removeSet(eesvo);
 		
 	}
 	
+	public void updateExperimentSet(ExpressionExperimentSetValueObject eesvo){
+		
+		experimentSetList.updateSet(eesvo);
+		
+	}
+	
+	public void setUniqueExperimentSetStoreIds(Collection<ExpressionExperimentSetValueObject> result){
+		
+		//this cast is safe because we know that we are getting a Collection of ExpressionExperimentSetValueObjects(which implements GemmaSessionBackedValueObject
+		@SuppressWarnings("unchecked")
+		Collection<GemmaSessionBackedValueObject> castedCollection = (Collection)result;
+		
+		experimentSetList.setUniqueSetStoreIds(castedCollection);		
+        
+	}
+	
+	public Long incrementAndGetLargestExperimentSetSessionId(){
+		return experimentSetList.incrementAndGetLargestSessionId();
+	}
+	
+	public boolean isDbBackedExperimentSetSessionId(Long sessionId){
+		
+		return experimentSetList.isDbBackedSessionId(sessionId);
+		
+	}
+	
+	public Long getDbExperimentSetIdBySessionId(Long sessionId){
+		return experimentSetList.getDbIdFromSessionId(sessionId);
+	}	
 	
 
 }
