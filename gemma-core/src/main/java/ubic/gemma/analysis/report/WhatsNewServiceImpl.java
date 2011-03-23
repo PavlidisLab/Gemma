@@ -28,7 +28,12 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
@@ -50,6 +55,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 
@@ -125,11 +131,97 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      */
     public WhatsNew getReport( Date date ) {
         WhatsNew wn = new WhatsNew( date );
-        wn.setUpdatedObjects( auditEventService.getUpdatedSinceDate( date ) );
+        Collection<Auditable> updatedObjects =  auditEventService.getUpdatedSinceDate( date );
+        wn.setUpdatedObjects(updatedObjects);
         log.info( wn.getUpdatedObjects().size() + " updated objects since " + date );
-        wn.setNewObjects( auditEventService.getNewSinceDate( date ) );
+        Collection<Auditable> newObjects =  auditEventService.getNewSinceDate( date );
+        wn.setNewObjects(newObjects);
         log.info( wn.getNewObjects().size() + " new objects since " + date );
+        
+        Collection<ExpressionExperiment> updatedExpressionExperiments = getExpressionExperiments( updatedObjects );
+        Collection<ExpressionExperiment> newExpressionExperiments = getExpressionExperiments( newObjects );
+        Collection<ArrayDesign> updatedArrayDesigns = getArrayDesigns( updatedObjects );
+        Collection<ArrayDesign> newArrayDesigns= getArrayDesigns( newObjects );
+        
+        // don't show things that are "new" as "updated" too (if they were updated after being loaded) 
+        updatedExpressionExperiments.removeAll( newExpressionExperiments );
+        updatedArrayDesigns.removeAll( newArrayDesigns );
+        
+        // build total, new and updated counts by taxon to display in data summary widget on front page
+        wn.setNewEECountPerTaxon( getExpressionExperimentCountsByTaxon( newExpressionExperiments ) );
+        wn.setUpdatedEECountPerTaxon( getExpressionExperimentCountsByTaxon( updatedExpressionExperiments) );
+        
+        wn.setNewAssayCount(getAssayCount( newExpressionExperiments ));
+        
         return wn;
+    }
+    
+    /**
+     * 
+     * @param items a collection of objects that may include expression experiments
+     * @return the expression experiment subset of the collection passed in 
+     */
+    private Collection<ExpressionExperiment> getExpressionExperiments(Collection<Auditable> items){
+        
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+        for ( Auditable auditable : items ) {
+            if ( auditable instanceof ExpressionExperiment ) {
+                ees.add( ( ExpressionExperiment ) auditable );
+            }
+        }
+        return ees;
+    }
+    /**
+     * 
+     * @param items a collection of objects that may include array designs
+     * @return the array design subset of the collection passed in 
+     */
+    private Collection<ArrayDesign> getArrayDesigns(Collection<Auditable> items){
+        
+        Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
+        for ( Auditable auditable : items ) {
+            if ( auditable instanceof ArrayDesign ) {
+                ads.add( ( ArrayDesign ) auditable );
+            }
+        }
+        return ads;
+    }
+    
+    /**
+     * 
+     * @param ees a collection of expression experiments
+     * @return the number of assays in all the expression experiments passed in
+     */
+    private int getAssayCount(Collection<ExpressionExperiment> ees){
+        
+        int count = 0;
+        //for ( ExpressionExperiment ee : ees ) {
+            //count += ee.getBioAssays().size(); // TODO trying to access bio assays causes LazyInitializationException
+        //}
+        return count;
+    }
+    
+    private Map<Taxon, Long> getExpressionExperimentCountsByTaxon(Collection<ExpressionExperiment> ees){
+        /*
+         * Sort taxa by name.
+         */
+        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
+            @Override
+            public int compare( Taxon o1, Taxon o2 ) {
+                return o1.getScientificName().compareTo( o2.getScientificName() );
+            }
+        } );
+                
+        ExpressionExperiment ee = null;
+        Taxon t = null;
+
+        // get counts of new experiments by taxon
+        for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) { 
+            ee = it.next();
+            t = expressionExperimentService.getTaxon(ee.getId());
+            eesPerTaxon.put(t, (eesPerTaxon.containsKey(t))? (eesPerTaxon.get(t)+1): 1);
+        }
+        return eesPerTaxon;
     }
 
     /**

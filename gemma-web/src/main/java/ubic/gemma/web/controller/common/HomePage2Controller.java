@@ -101,7 +101,7 @@ public class HomePage2Controller {
     public void updateCounts() {
         Map<String, Long> stats = new HashMap<String, Long>();
 
-        long bioAssayCount = bioAssayService.countAll();
+        long bioAssayCount = bioAssayService.countAll(); 
         long arrayDesignCount = arrayDesignService.countAll();
 
         /*
@@ -113,11 +113,6 @@ public class HomePage2Controller {
                 return o1.getScientificName().compareTo( o2.getScientificName() );
             }
         } );
-        
-    	/*Store counts for new and updated experiments by taxonId*/
-        TreeMap<Taxon, Long> newEEsPerTaxon = (TreeMap<Taxon, Long>) eesPerTaxon.clone();
-        TreeMap<Taxon, Long> updatedEEsPerTaxon = (TreeMap<Taxon, Long>) eesPerTaxon.clone();
-
         
         eesPerTaxon.putAll( expressionExperimentService.getPerTaxonCount() );
         
@@ -139,12 +134,7 @@ public class HomePage2Controller {
         }
 
         WhatsNew wn = whatsNewService.retrieveReport();
-        
-        
-        // TODO When taxon issues with expression experiments are solved, move this to WhatsNew.java 
-        // (need to call ExpressionExperimentService to get taxon for an ee right now, can't do this in WhatsNew.java )
-        // this will make page loading MUCH faster
-        /*
+                
         if(wn == null){
         	Calendar c = Calendar.getInstance();
         	Date date = c.getTime();
@@ -152,65 +142,42 @@ public class HomePage2Controller {
         	wn = whatsNewService.getReport( date );
         }
         if(wn != null){
-        	 //Get count for new and updated assays
-        	int newAssayCount = 0;
-        	int updatedAssayCount = 0;
+        	 //Get count for new assays
+        	int newAssayCount = wn.getNewAssayCount();
                 
-        	ExpressionExperiment ee = null;
-        	int newExpressionExperimentCount = 0;
-        	int updatedExpressionExperimentCount = 0;
-        	Taxon t = null;
-        	
-            Collection<ExpressionExperiment> newExpressionExperiments = wn.getNewExpressionExperiments();
-            Collection<ArrayDesign> newArrayDesigns = wn.getNewArrayDesigns();
-            Collection<ExpressionExperiment> updatedExpressionExperiments = wn.getUpdatedExpressionExperiments();
-            Collection<ArrayDesign> updatedArrayDesigns = wn.getUpdatedArrayDesigns();
-            // don't show things that are "new" as "updated" too (if they were updated after being loaded)
-            updatedExpressionExperiments.removeAll( newExpressionExperiments );
-            updatedArrayDesigns.removeAll( newArrayDesigns );
-            
-            for ( Iterator<ExpressionExperiment> it = newExpressionExperiments.iterator(); it.hasNext(); ) { 
-            	newExpressionExperimentCount++;
-            	ee = it.next();
-            	//newAssayCount += ee.getBioAssays().size();
-            	t = expressionExperimentService.getTaxon(ee.getId());
-            	newEEsPerTaxon.put(t, (newEEsPerTaxon.containsKey(t))? (newEEsPerTaxon.get(t)+1): 1);
-            }
-        
-        	for ( Iterator<ExpressionExperiment> it = updatedExpressionExperiments.iterator(); it.hasNext(); ) { 
-        		updatedExpressionExperimentCount++;
-        		ee = it.next(); 
-            	//updatedAssayCount += ee.getBioAssays().size();
-        		t = expressionExperimentService.getTaxon(ee.getId());
-            	updatedEEsPerTaxon.put(t, (updatedEEsPerTaxon.containsKey(t))? (updatedEEsPerTaxon.get(t)+1): 1);
-        	}
+        	int newExpressionExperimentCount = (wn.getNewExpressionExperiments()!=null)?
+        	                                            wn.getNewExpressionExperiments().size():0;
+        	int updatedExpressionExperimentCount = (wn.getUpdatedExpressionExperiments() != null)?
+        	                                            wn.getUpdatedExpressionExperiments().size():0;
+           
+            /*Store counts for new and updated experiments by taxonId*/
+            Map<Taxon, Long> newEEsPerTaxon = wn.getNewEECountPerTaxon();
+            Map<Taxon, Long> updatedEEsPerTaxon = wn.getUpdatedEECountPerTaxon();
         
         	//Get count for new and updated array designs
-        	Long newArrayCount = new Long(newArrayDesigns.size());
-        	Long updatedArrayCount = new Long(updatedArrayDesigns.size());
+            int newArrayCount = (wn.getNewArrayDesigns()!=null)? wn.getNewArrayDesigns().size():0;
+            int updatedArrayCount = (wn.getUpdatedArrayDesigns()!=null)? wn.getUpdatedArrayDesigns().size():0;
         	
         	boolean drawNewColumn = (newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0)? true:false;
-        	boolean drawUpdatedColumn = (updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 || updatedAssayCount > 0)? true:false;
+        	boolean drawUpdatedColumn = (updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 )? true:false;
+        	String date = DateFormat.getDateInstance(DateFormat.MEDIUM).format(wn.getDate());
+        	date.replace( '-', ' ' );
 
-
-        	mav.addObject( "updateDate", DateFormat.getDateInstance(DateFormat.MEDIUM).format(wn.getDate()) );
+        	mav.addObject( "updateDate",  date);
         	mav.addObject( "drawNewColumn", drawNewColumn);
         	mav.addObject( "drawUpdatedColumn", drawUpdatedColumn);
         	if(newAssayCount != 0) stats.put( "newBioAssayCount", new Long(newAssayCount) );
-        	if(updatedAssayCount != 0) stats.put( "updatedBioAssayCount", new Long(updatedAssayCount) );
-        	if(newArrayCount != 0) stats.put( "newArrayDesignCount", newArrayCount);
-        	if(updatedArrayCount != 0) stats.put( "updatedArrayDesignCount", updatedArrayCount);
+        	if(newArrayCount != 0) stats.put( "newArrayDesignCount", new Long(newArrayCount));
+        	if(updatedArrayCount != 0) stats.put( "updatedArrayDesignCount", new Long(updatedArrayCount));
             if(newExpressionExperimentCount != 0) mav.addObject( "newExpressionExperimentCount",  newExpressionExperimentCount);
             if(updatedExpressionExperimentCount != 0) mav.addObject( "updatedExpressionExperimentCount", updatedExpressionExperimentCount);
         	mav.addObject( "newPerTaxonCount", newEEsPerTaxon );
         	mav.addObject( "updatedPerTaxonCount", updatedEEsPerTaxon );
         }
-        */       
-       
+               
         stats.put( "bioAssayCount", bioAssayCount );
         stats.put( "arrayDesignCount", arrayDesignCount );
         
-
         mav.addObject( "stats", stats );
         mav.addObject( "taxonCount", eesPerTaxon );
         mav.addObject( "expressionExperimentCount", expressionExperimentCount );
