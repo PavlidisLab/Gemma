@@ -26,6 +26,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -38,6 +39,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.session.SessionListManager;
 
 /**
  * For fetching and manipulating ExpressionExperimentSets
@@ -53,6 +55,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
     private SecurityService securityService;
 
     private TaxonService taxonService;
+    
+    @Autowired
+    private SessionListManager sessionListManager;
 
     /**
      * @param entities
@@ -65,6 +70,56 @@ public class ExpressionExperimentSetController extends BaseFormController {
             result.add( this.create( ees ) );
         }
         return result;
+    }
+    
+    /**
+     * AJAX adds the Expression Experiment group to the session
+     * 
+     * @param eeSetVos value object constructed on the client.
+     * 
+     */
+    public Collection<ExpressionExperimentSetValueObject> addSessionGroups( Collection<ExpressionExperimentSetValueObject> eeSetVos ) {
+
+    	Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
+    	
+    	for (ExpressionExperimentSetValueObject eesvo: eeSetVos){
+    		results.add(sessionListManager.addExperimentSet(eesvo));
+    		
+    	}    	
+        
+        return eeSetVos;
+    }
+
+
+    public Collection<ExpressionExperimentSetValueObject> addUserAndSessionGroups(
+            Collection<ExpressionExperimentSetValueObject> entities ) {    	
+        
+        Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();    	
+    	
+    	Collection<ExpressionExperimentSetValueObject> sessionResult = new HashSet<ExpressionExperimentSetValueObject>();
+    	
+    	for (ExpressionExperimentSetValueObject eesvo: entities){
+    		
+    		if (eesvo.isSession()){
+    			sessionResult.add(eesvo);
+    		}
+    		else{
+    			result.add(eesvo);   			
+    		}
+    		
+    	}
+    	
+    	result = create(result);
+    	//need to give new database entry a session Id so that it will play nice with the extJS combined session/db backed store
+    	for (ExpressionExperimentSetValueObject eesvo:result){
+    		eesvo.setSessionId(sessionListManager.incrementAndGetLargestExperimentSetSessionId());
+    	}
+    	
+    	result.addAll(addSessionGroups(sessionResult));
+        
+        return result;
+        
+        
     }
 
     /**
@@ -113,6 +168,27 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         return results;
     }
+    
+    /**
+     * AJAX
+     * 
+     * @return all available sets that have at least 2 experiments (so not really all) from db
+     * and also session backed sets
+     */
+    public Collection<ExpressionExperimentSetValueObject> loadAllUserAndSessionGroups() {
+        
+        Collection<ExpressionExperimentSetValueObject> results = loadAll();
+        
+        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
+        
+        sessionListManager.setUniqueExperimentSetStoreIds(results);        
+        
+        results.addAll(sessionResults);
+        
+        
+
+        return results;
+    }
 
     /**
      * @param entities
@@ -124,6 +200,46 @@ public class ExpressionExperimentSetController extends BaseFormController {
             this.remove( ees );
         }
         return entities;
+    }
+    
+    /**
+     * AJAX Given a valid experiment group will remove it from the session.
+     * 
+     * @param groups
+     */
+    public Collection<ExpressionExperimentSetValueObject> removeSessionGroups( Collection<ExpressionExperimentSetValueObject> vos ) {
+        for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
+            sessionListManager.removeExperimentSet(experimentSetValueObject);
+        }
+        
+        return vos;
+    }
+    
+    /**
+     * AJAX Given valid experiment groups will remove them from the session or the database appropriately.
+     * 
+     * @param groups
+     */
+    public Collection<ExpressionExperimentSetValueObject> removeUserAndSessionGroups( Collection<ExpressionExperimentSetValueObject> vos ) {
+    	Collection<ExpressionExperimentSetValueObject> databaseCollection = new HashSet<ExpressionExperimentSetValueObject>();
+    	Collection<ExpressionExperimentSetValueObject> sessionCollection = new HashSet<ExpressionExperimentSetValueObject>();
+    	
+    	for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
+    		if (experimentSetValueObject.isSession()){
+    			sessionCollection.add(experimentSetValueObject);
+    		}
+    		else{
+    			databaseCollection.add(experimentSetValueObject);
+    		}
+            
+        }
+    	
+    	sessionCollection = removeSessionGroups(sessionCollection);
+        databaseCollection = remove(databaseCollection);
+        
+        databaseCollection.addAll(sessionCollection);
+        
+        return databaseCollection;
     }
 
     public void setExpressionExperimentReportService(
@@ -164,6 +280,47 @@ public class ExpressionExperimentSetController extends BaseFormController {
             update( ees );
         }
         return entities;
+    }
+    
+    /**
+     * AJAX Updates the session group.
+     * 
+     * @param groups
+     */
+    public Collection<ExpressionExperimentSetValueObject> updateSessionGroups( Collection<ExpressionExperimentSetValueObject> vos ) {
+        for ( ExpressionExperimentSetValueObject expressionExperimentSetValueObject : vos ) {
+            sessionListManager.updateExperimentSet(expressionExperimentSetValueObject);
+        }
+        return vos;        
+    }
+    
+    /**
+     * AJAX Updates the session group and user database groups.
+     * 
+     * @param groups
+     */
+    public Collection<ExpressionExperimentSetValueObject> updateUserAndSessionGroups( Collection<ExpressionExperimentSetValueObject> vos ) {
+        
+    	Collection<ExpressionExperimentSetValueObject> databaseCollection = new HashSet<ExpressionExperimentSetValueObject>();
+    	Collection<ExpressionExperimentSetValueObject> sessionCollection = new HashSet<ExpressionExperimentSetValueObject>();
+    	
+    	for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
+    		if (experimentSetValueObject.isSession()){
+    			sessionCollection.add(experimentSetValueObject);
+    		}
+    		else{
+    			databaseCollection.add(experimentSetValueObject);
+    		}
+            
+        }
+    	
+    	sessionCollection = updateSessionGroups(sessionCollection);
+        databaseCollection = update(databaseCollection);
+        
+        databaseCollection.addAll(sessionCollection);
+        
+        return databaseCollection;
+        
     }
 
     /**
