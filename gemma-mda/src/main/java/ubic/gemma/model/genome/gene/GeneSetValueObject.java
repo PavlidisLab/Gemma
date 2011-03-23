@@ -88,7 +88,9 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     private Integer size;
     private Long sessionId;
     private boolean session;
-
+    private String taxonName;
+    private long taxonId;
+    
     /**
      * default constructor to satisfy java bean contract
      */
@@ -112,10 +114,32 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
 
         this.setDescription( gs.getDescription() );
         this.geneIds.addAll( gids );
-        this.setSize( geneIds.size() );
+        this.setSize( geneIds.size() );        
 
+        if ( geneIds.size() > 0 ) {
+            // FIXME: The assumption is that all genes in a gene set belong to the same taxon. I think this is enforced at UI level only.
+            // This assumption is used in other parts of the code as well.
+            this.setTaxonName ( gs.getMembers().iterator().next().getGene().getTaxon().getCommonName() );
+            this.setTaxonId ( gs.getMembers().iterator().next().getGene().getTaxon().getId() );
+        }        
+    }
+   
+    public String getTaxonName() {
+        return this.taxonName;
+    }    
+
+    public void setTaxonName( String taxonName ) {
+        this.taxonName = taxonName;        
     }
 
+    public long getTaxonId() {
+        return this.taxonId;
+    }    
+
+    public void setTaxonId( long taxonId ) {
+        this.taxonId = taxonId;        
+    }
+    
     /**
      * @return
      */
