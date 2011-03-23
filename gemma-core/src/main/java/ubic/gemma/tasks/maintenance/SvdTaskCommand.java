@@ -52,7 +52,7 @@ public class SvdTaskCommand extends TaskCommand {
 
     public SvdTaskCommand( ExpressionExperiment expressionExperiment ) {
         super();
-        this.setMaxRuntime( 1 );
+        this.setMaxRuntime( 10 );
         this.expressionExperiment = expressionExperiment;
     }
 }
