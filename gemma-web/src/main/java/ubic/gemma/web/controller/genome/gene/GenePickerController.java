@@ -341,10 +341,29 @@ public class GenePickerController {
         settings.setGeneralSearch(true); //add a general search
         settings.setSearchGeneSets(true); // add searching for geneSets 
 		Map<Class<?>, List<SearchResult>> results = searchService.search(settings);
-
+		List<SearchResult> geneSetSearchResults = results.get( GeneSet.class );
+		
+		// filter results by taxon
+        for(SearchResult sr : geneSetSearchResults){
+            GeneSet gs = (GeneSet) sr.getResultObject();
+            GeneSetValueObject gsvo = new GeneSetValueObject(gs);
+            if(gsvo.getTaxonId() != taxonId){
+                geneSetSearchResults.remove( sr );
+            }
+        }
+		
 		Collection<SearchResultDisplayObject> genes = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(results.get( Gene.class ));
-		Collection<SearchResultDisplayObject> geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(results.get( GeneSet.class ));
+		Collection<SearchResultDisplayObject> geneSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(geneSetSearchResults);
         
+		// set the taxon values for geneSets
+		Taxon tax = taxonService.load( taxonId );
+		taxonService.thaw( tax );
+		for(SearchResultDisplayObject srdo : geneSets){
+		    // geneSets were filtered by taxon above: 
+		    // if taxonId for geneSet want = taxonId param, then geneset was removed
+		    srdo.setTaxon( tax );
+		}
+		
         // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in search results)
 		// TODO make a db call so you can just test each gene set by ID to see if the owner is the current user (avoids loading all user's sets' genes)
 		// probably not high priority fix b/c users won't tend to have many sets
@@ -467,7 +486,7 @@ public class GenePickerController {
         	
         	SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(ExpressionExperimentSet.class, tempId, 
         													"All '"+query+"' results", "All genes found for your query", 
-        													true, geneIds.size(), null, "freeText",  geneIds);
+        													true, geneIds.size(), tax, "freeText",  geneIds);
         	tempId--;
         	displayResults.add(allResultsGroup);
         	}
