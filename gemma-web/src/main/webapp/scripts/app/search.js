@@ -108,7 +108,7 @@ Gemma.Search.app = function() {
 					});
 		}
 	};
-}();
+};
 
 Gemma.Search.MAX_AUTO_EXPAND_SIZE = 15;
 
@@ -129,11 +129,15 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 
 					if ((params.termUri) && (params.termUri.length !== 0)) {
 						this.form.findField('query').setValue(params.termUri);
-					} else if (params.query) {
-						this.form.findField('query').setValue(params.query);
-					} else
-						// NO Query object (just a random ? in string uri)
-						return false;
+					}
+					else 
+						if (params.query) {
+							this.form.findField('query').setValue(params.query);
+						}
+						else {
+							// NO Query object (just a random ? in string uri)
+							return false;
+						}
 
 					if (params.scope) {
 						if (params.scope.indexOf('E') > -1) {
@@ -446,7 +450,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 			} else {
 				return false;
 			}
-		}
+		};
 	},
 
 	searchForText : function(button, keyev) {
