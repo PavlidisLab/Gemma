@@ -1,3 +1,19 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * 
+ */
+
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
@@ -11,7 +27,6 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  */
 
 Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel, {
-	
 		animate: true,
 		id:'differentialExpressionAnalysesSummaryTreeEEPage',
 		rootVisible: false,
@@ -49,7 +64,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					if(node.attributes.numberOfFactors){
 						return parseInt(node.attributes.numberOfFactors,10)+node.attributes.text;
 					}
-					return node.attributes.text
+					return node.attributes.text;
 				}
 			});
 			//sorter.doSort(this.getRootNode());
@@ -68,14 +83,14 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 				});
 				this.setRootNode(root);
 				// just show "Not Avalailable" root if no analyses
-				if(!analyses || analyses.size() == 0){
+				if(!analyses || analyses.size() === 0){
 					root.appendChild(new Ext.tree.TreeNode({
 											id: 'nodeNA',
 											expanded: false,
 											leaf:true,
 											text: 'Not Available'
 					}));
-					return
+					return;
 				}
 				var subsetTracker = {}; //used to keep subset nodes adjacent
 				var nodeId = 0; // used to keep track of nodes and give each a specific div in which to draw a pie chart
@@ -129,7 +144,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					}
 					
 					// if analysis has only one result set, don't give it children and put all info in parent node
-					if(analysis.resultSets.size()==1){
+					if(analysis.resultSets.size()===1){
 						var resultSet = analysis.resultSets[0];
 							// get experimental factor string and build analysis parent node text
 							var analysisName = this.getFactorNameText(resultSet);
@@ -158,7 +173,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 							interaction += analysisName[1];
 							
 							// only grab factor name when 1 factor, otherwise will grab doubles from interaction
-							if (resultSet.experimentalFactors.size() == 1) {
+							if (resultSet.experimentalFactors.size() === 1) {
 								// keep factors in alpha order
 								parentText = (!parentText) ? factor : (factor<parentText)?( factor + " & " + parentText):( parentText + " & " + factor);
 							}
@@ -189,22 +204,22 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					for (var i = 0; i < analysis.resultSets.size(); i++) {
 						var resultSet = analysis.resultSets[i];
 						// ignore the result sets where interactions are being looked at
-						if(resultSet.experimentalFactors.size()==1){
+						if(resultSet.experimentalFactors.size()===1){
 							numberOfFactors++;} 
 					}
 					
 					var analysisDesc = '';
-					if(numberOfFactors==1){
+					if(numberOfFactors===1){
 						analysisDesc = 'One-way ANOVA on ';
-					}else if(numberOfFactors==2){
+					}else if(numberOfFactors===2){
 						analysisDesc = 'Two-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
-					}else if(numberOfFactors==3){
+					}else if(numberOfFactors===3){
 						analysisDesc = 'Three-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
-					}else if(numberOfFactors==4){
+					}else if(numberOfFactors===4){
 						analysisDesc = 'Four-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
-					}else if(numberOfFactors==5){
+					}else if(numberOfFactors===5){
 						analysisDesc = 'Five-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
-					}else if(numberOfFactors==6){
+					}else if(numberOfFactors===6){
 						analysisDesc = 'Six-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
 					}else{
 						analysisDesc = 'n-way ANOVA' + ((interaction>0) ? ' with interactions on ' : ' on ');
@@ -250,7 +265,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		
 		// save number of up regulated probes for drawing as chart after tree has been rendered
 		// if there are no up or down regulated probes, draw an empty circle
-		if(resultSet.numberOfDiffExpressedProbes==0){
+		if(resultSet.numberOfDiffExpressedProbes===0){
 			this.contrastPercents[nodeId]=null;	
 		}else{
 			this.contrastPercents[nodeId]={'up':resultSet.upregulatedCount/this.totalProbes,
@@ -280,7 +295,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 			var percentDifferentiallyExpressed = (resultSet.upregulatedCount+resultSet.downregulatedCount)/this.totalProbes;
 					
 		if((percentDifferentiallyExpressed< 0.05 && percentDifferentiallyExpressed > 0)){
-			linkText += " ["+((Math.round(percentDifferentiallyExpressed*100)==0)?"<1":Math.round(percentDifferentiallyExpressed*100))+"% diff. expr.]";
+			linkText += " ["+((Math.round(percentDifferentiallyExpressed*100)===0)?"<1":Math.round(percentDifferentiallyExpressed*100))+"% diff. expr.]";
 		}
 		
 		linkText += '</span>';
@@ -302,7 +317,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 	getFactorNameText:function(resultSet){
 		var factor ='';
 		var interaction = 0;
-		if (resultSet.experimentalFactors == null || resultSet.experimentalFactors.size() == 0) {
+		if (resultSet.experimentalFactors === null || resultSet.experimentalFactors.size() === 0) {
 			factor = "n/a";
 		}
 		else {
@@ -321,7 +336,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		for (i = 0; i < this.contrastPercents.size(); i++) {
 			if (Ext.get('chartDiv' + i)) {
 				ctx = Ext.get('chartDiv' + i).dom.getContext("2d");
-				if(this.totalProbes==null || this.totalProbes==0 || this.contrastPercents[i]==null){
+				if(this.totalProbes===null || this.totalProbes===0 || this.contrastPercents[i]===null){
 					drawOneColourMiniPie(ctx, 12, 12, 14, 'white', 0, 'grey');
 				}else{
 					up = this.contrastPercents[i].up;

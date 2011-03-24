@@ -834,7 +834,6 @@ gemma.max.fileupload.size.bytes=
 								<value>find</value>
 								<value>searchExpressionExperiments</value>
 								<value>searchExperimentsAndExperimentGroups</value>
-								<value>searchExperimentsAndExperimentGroupsGetIds</value>
 								<value>updateReport</value>
 								<value>updateAllReports</value>
 								<value>updateBasics</value>

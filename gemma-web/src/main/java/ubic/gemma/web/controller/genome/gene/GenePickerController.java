@@ -62,7 +62,6 @@ import ubic.gemma.search.SearchSettings;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
-import ubic.gemma.web.controller.expression.experiment.GeneSetController;
 import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 
@@ -468,7 +467,7 @@ public class GenePickerController {
         	
         	SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(ExpressionExperimentSet.class, tempId, 
         													"All '"+query+"' results", "All genes found for your query", 
-        													true, geneIds.size(), null, "freeText");
+        													true, geneIds.size(), null, "freeText",  geneIds);
         	tempId--;
         	displayResults.add(allResultsGroup);
         	}

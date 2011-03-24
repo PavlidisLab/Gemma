@@ -55,7 +55,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'usersgeneSetSession\'">' +
-					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'GOgroup\'">' +
 					'	<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" ext:qtip="{name}: {description}"><b>{name}</b>: {description} ({size})</div>' +
@@ -108,7 +108,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		
 		this.on('focus', function(){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
-			if(this.getValue() ==''){
+			if(this.getValue() ===''){
 				if(this.getTaxon()){
 					// passing in taxon instead of taxonId breaks this call
 					GenePickerController.searchGenesAndGeneGroups("", this.getTaxon().id,
@@ -152,8 +152,9 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	getGeneGroup : function() {
-		if (this.getRawValue() == '')
+		if (this.getRawValue() === ''){
 			return null;
+		}
 		return this.selectedGeneGroup;
 	},
 
@@ -172,7 +173,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		if(!taxon){
 			return;
 		}
-		if (!this.taxon || this.taxon.id != taxon.id) {
+		if (!this.taxon || this.taxon.id !== taxon.id) {
 			this.taxon = taxon;
 //			this.reset();
 

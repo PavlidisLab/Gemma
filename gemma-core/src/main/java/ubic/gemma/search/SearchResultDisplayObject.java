@@ -24,308 +24,325 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.search.SearchResult;
 
 /**
- * Object to store search results of different classes in a similar way for displaying to user
- * (ex: enables genes and gene sets to be entries in the same combo box)
- * 
- * object types handled are: Gene, GeneSet, GeneSetValueObject, ExpressionExperiment and ExpressionExperimentSet 
- * SearchObject is also handled if the object it holds is of any of those types
- * 
- * sessionId field is the unique id that a search result is given when session-bound and db-backed entities will be displayed together
- * if a geneSet is session-bound (has the type: "usergeneSetSession"), then id=sessionId
- * if a geneSet is db-backed (has the type: "geneSet" or "usergeneSet"), then id is the database id for the set and sessionId is the id used by the store
+ * Object to store search results of different classes in a similar way for displaying to user (ex: enables genes and
+ * gene sets to be entries in the same combo box) object types handled are: Gene, GeneSet, GeneSetValueObject,
+ * ExpressionExperiment and ExpressionExperimentSet SearchObject is also handled if the object it holds is of any of
+ * those types sessionId field is the unique id that a search result is given when session-bound and db-backed entities
+ * will be displayed together if a geneSet is session-bound (has the type: "usergeneSetSession"), then id=sessionId if a
+ * geneSet is db-backed (has the type: "geneSet" or "usergeneSet"), then id is the database id for the set and sessionId
+ * is the id used by the store
  * 
  * @author thea
  * @version $Id$
  */
-public class SearchResultDisplayObject implements Comparable<SearchResultDisplayObject>  {
-	
-	/**
-	 * Method to create a display object from scratch
-	 * @param resultClass cannot be null
-	 * @param id can be null
-	 * @param sessionId can be null
-	 * @param name cannot be null
-	 * @param description should not be null
-	 * @param isGroup cannot be null
-	 * @param size should not be null (should be 1 for non-groups)
-	 * @param taxon can be null
-	 * @param type can be null
-	 */
-	 public SearchResultDisplayObject(Class<?> resultClass, Long id, String name, 
-			 String description, Boolean isGroup, int size, Taxon taxon, String type) {
-	    	
-	    	this.resultClass = resultClass;
-	    	this.id = id;
-	    	this.sessionId = id;
-	    	this.name = name;
-	    	this.description = description;
-	    	this.isGroup = isGroup;
-	    	this.size = size;
-	    	this.taxon = taxon;
-	        this.type = type;
-	 }
-	 
-	
+public class SearchResultDisplayObject implements Comparable<SearchResultDisplayObject> {
+
     /**
+     * Method to create a display object from scratch
      * 
+     * @param resultClass cannot be null
+     * @param id can be null
+     * @param sessionId can be null
+     * @param name cannot be null
+     * @param description should not be null
+     * @param isGroup cannot be null
+     * @param size should not be null (should be 1 for non-groups)
+     * @param taxon can be null
+     * @param type can be null
+     * @param memberIds can be null
+     */
+    public SearchResultDisplayObject( Class<?> resultClass, Long id, String name, String description, Boolean isGroup,
+            int size, Taxon taxon, String type, Collection<Long> memberIds ) {
+
+        this.resultClass = resultClass;
+        this.id = id;
+        this.sessionId = id;
+        this.name = name;
+        this.description = description;
+        this.isGroup = isGroup;
+        this.size = size;
+        this.taxon = taxon;
+        this.type = type;
+        this.memberIds = memberIds;
+    }
+
+    /**
      * @param searchResult
      */
     public SearchResultDisplayObject( SearchResult searchResult ) {
 
-    	// if it's a search result, grab the underlying object
-    	this.resultClass = searchResult.getResultClass();
+        // if it's a search result, grab the underlying object
+        this.resultClass = searchResult.getResultClass();
 
         // class-specific construction
-    	if(this.resultClass == Gene.class ){
-        	Gene gene = (Gene) searchResult.getResultObject();
-        	setValues(gene);
-        }else if(this.resultClass == GeneSet.class ){
-        	GeneSet geneSet = (GeneSet) searchResult.getResultObject();
-        	setValues(geneSet);
-        }else if(this.resultClass == ExpressionExperiment.class){
-        	ExpressionExperiment ee = (ExpressionExperiment) searchResult.getResultObject();
-        	setValues(ee);
-        }else if(this.resultClass == ExpressionExperimentSet.class){
-        	ExpressionExperimentSet eeSet = (ExpressionExperimentSet) searchResult.getResultObject();
-        	setValues(eeSet);
-        }else{
-        	this.id = new Long(-1);
-         	this.sessionId = this.getId();
-        	this.isGroup = false;
-        	this.size = -1;
-        	this.taxon = null;
-        	this.name = "Unhandled type";
-        	this.description = "Unhandled result type: "+this.resultClass;
-        	this.type= this.getClass().getSimpleName();
+        if ( this.resultClass == Gene.class ) {
+            Gene gene = ( Gene ) searchResult.getResultObject();
+            setValues( gene );
+        } else if ( this.resultClass == GeneSet.class ) {
+            GeneSet geneSet = ( GeneSet ) searchResult.getResultObject();
+            setValues( geneSet );
+        } else if ( this.resultClass == ExpressionExperiment.class ) {
+            ExpressionExperiment ee = ( ExpressionExperiment ) searchResult.getResultObject();
+            setValues( ee );
+        } else if ( this.resultClass == ExpressionExperimentSet.class ) {
+            ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) searchResult.getResultObject();
+            setValues( eeSet );
+        } else {
+            this.id = new Long( -1 );
+            this.sessionId = this.getId();
+            this.isGroup = false;
+            this.size = -1;
+            this.taxon = null;
+            this.name = "Unhandled type";
+            this.description = "Unhandled result type: " + this.resultClass;
+            this.type = this.getClass().getSimpleName();
+            this.memberIds = null;
         }
     }
-    
-   /**
-    * 
-    * @param gene
-    */
-    public SearchResultDisplayObject( Gene gene ) {
-    	setValues(gene);
-    }
-    
-   /**
-    * 
-    * @param geneSet
-    */
-    public SearchResultDisplayObject( GeneSet geneSet ) {
-    	setValues(geneSet);
-    }
+
     /**
-     * 
+     * @param gene
+     */
+    public SearchResultDisplayObject( Gene gene ) {
+        setValues( gene );
+    }
+
+    /**
      * @param geneSet
      */
-     public SearchResultDisplayObject( GeneSetValueObject geneSet ) {
-     	setValues(geneSet);
-     }
+    public SearchResultDisplayObject( GeneSet geneSet ) {
+        setValues( geneSet );
+    }
 
     /**
-     * 
+     * @param geneSet
+     */
+    public SearchResultDisplayObject( GeneSetValueObject geneSet ) {
+        setValues( geneSet );
+    }
+
+    /**
      * @param expressionExperiment
      */
-    public SearchResultDisplayObject( ExpressionExperiment expressionExperiment) {
-    	setValues(expressionExperiment);
-        
-    }
-    /**
-     * 
-     * @param expressionExperimentSet
-     */
-    public SearchResultDisplayObject( ExpressionExperimentSet expressionExperimentSet) {
-    	setValues(expressionExperimentSet);
+    public SearchResultDisplayObject( ExpressionExperiment expressionExperiment ) {
+        setValues( expressionExperiment );
+
     }
 
     /**
-     * 
+     * @param expressionExperimentSet
+     */
+    public SearchResultDisplayObject( ExpressionExperimentSet expressionExperimentSet ) {
+        setValues( expressionExperimentSet );
+    }
+
+    /**
      * @param gene
      */
     private void setValues( Gene gene ) {
-     	this.id = gene.getId();
-      	this.sessionId = this.getId();
-     	this.resultClass = Gene.class;
-         this.isGroup = false;
-         this.size = 1;
-     	this.taxon = gene.getTaxon();
-     	this.name = gene.getOfficialSymbol();
-     	this.description = gene.getOfficialName();
-         this.type = "gene";
-     }
-     
+        this.id = gene.getId();
+        this.sessionId = this.getId();
+        this.resultClass = Gene.class;
+        this.isGroup = false;
+        this.size = 1;
+        this.taxon = gene.getTaxon();
+        this.name = gene.getOfficialSymbol();
+        this.description = gene.getOfficialName();
+        this.type = "gene";
+        this.memberIds = null;
+    }
+
     /**
-     * 
      * @param geneSet
      */
-     private void setValues( GeneSet geneSet ) {
-     	this.id = geneSet.getId();
-      	this.sessionId = this.getId();
-     	this.resultClass = GeneSet.class;
-     	this.isGroup = true;
-     	this.size = (geneSet.getMembers()!=null)?geneSet.getMembers().size():null;
-     	this.taxon = null;
-     	this.name = geneSet.getName();
-     	this.description = geneSet.getDescription();
-         this.type = "geneSet";
-     }
-     /**
-      * 
-      * @param geneSet
-      */
-     private void setValues( GeneSetValueObject geneSet ) {
-      	this.id = geneSet.getId();
-      	this.sessionId = (geneSet.getSessionId()!=null)? geneSet.getSessionId(): geneSet.getId();
-      	this.resultClass = GeneSet.class;
-      	this.isGroup = true;
-      	this.size = (geneSet.getGeneIds()!=null)?geneSet.getGeneIds().size():null;
-      	this.taxon = null;
-      	this.name = geneSet.getName();
-      	this.description = geneSet.getDescription();
-         this.type = (geneSet.isSession())? "geneSetSession": "geneSet";
-         this.memberIds = geneSet.getGeneIds();
-      }
+    private void setValues( GeneSet geneSet ) {
+        this.id = geneSet.getId();
+        this.sessionId = this.getId();
+        this.resultClass = GeneSet.class;
+        this.isGroup = true;
+        this.size = ( geneSet.getMembers() != null ) ? geneSet.getMembers().size() : null;
+        this.taxon = null;
+        this.name = geneSet.getName();
+        this.description = geneSet.getDescription();
+        this.type = "geneSet";
+        for ( GeneSetMember gm : geneSet.getMembers() ) {
+            this.memberIds.add( gm.getGene().getId() );
+        }
+    }
 
-     /**
-      * 
-      * @param expressionExperiment
-      */
-      private void setValues( ExpressionExperiment expressionExperiment) {
-     	this.id = expressionExperiment.getId();
-      	this.sessionId = this.getId();
-     	this.resultClass = ExpressionExperiment.class;
-     	this.isGroup = false;
-     	this.size = 1; 
-     	this.taxon = null;  //expressionExperimentService.getTaxon(this.id);
-     	this.name = expressionExperiment.getShortName();
-     	this.description = expressionExperiment.getName();
-         this.type = "experiment";
-         
-     }
-     /**
-      * 
-      * @param expressionExperimentSet
-      */
-     private void setValues( ExpressionExperimentSet expressionExperimentSet) {
-     	this.id = expressionExperimentSet.getId();
-      	this.sessionId = this.getId();
-     	this.resultClass = ExpressionExperimentSet.class;
-     	this.isGroup = true;
-     	this.size = (expressionExperimentSet.getExperiments()!=null)?expressionExperimentSet.getExperiments().size():null;
-     	this.taxon = null; //expressionExperimentSet.getTaxon();
-     	this.name = expressionExperimentSet.getName();
-     	this.description = expressionExperimentSet.getDescription();
-         this.type = "experimentSet";
-     }
+    /**
+     * @param geneSet
+     */
+    private void setValues( GeneSetValueObject geneSet ) {
+        this.id = geneSet.getId();
+        this.sessionId = ( geneSet.getSessionId() != null ) ? geneSet.getSessionId() : geneSet.getId();
+        this.resultClass = GeneSet.class;
+        this.isGroup = true;
+        this.size = ( geneSet.getGeneIds() != null ) ? geneSet.getGeneIds().size() : null;
+        this.taxon = null;
+        this.name = geneSet.getName();
+        this.description = geneSet.getDescription();
+        this.type = ( geneSet.isSession() ) ? "geneSetSession" : "geneSet";
+        this.memberIds = geneSet.getGeneIds();
+    }
+
+    /**
+     * @param expressionExperiment
+     */
+    private void setValues( ExpressionExperiment expressionExperiment ) {
+        this.id = expressionExperiment.getId();
+        this.sessionId = this.getId();
+        this.resultClass = ExpressionExperiment.class;
+        this.isGroup = false;
+        this.size = 1;
+        this.taxon = null; // expressionExperimentService.getTaxon(this.id);
+        this.name = expressionExperiment.getShortName();
+        this.description = expressionExperiment.getName();
+        this.type = "experiment";
+        this.memberIds = null;
+
+    }
+
+    /**
+     * @param expressionExperimentSet
+     */
+    private void setValues( ExpressionExperimentSet expressionExperimentSet ) {
+        this.id = expressionExperimentSet.getId();
+        this.sessionId = this.getId();
+        this.resultClass = ExpressionExperimentSet.class;
+        this.isGroup = true;
+        this.size = ( expressionExperimentSet.getExperiments() != null ) ? expressionExperimentSet.getExperiments()
+                .size() : null;
+        this.taxon = expressionExperimentSet.getTaxon();
+        this.name = expressionExperimentSet.getName();
+        this.description = expressionExperimentSet.getDescription();
+        this.type = "experimentSet";
+        for ( BioAssaySet bas : expressionExperimentSet.getExperiments() ) {
+            this.memberIds.add( bas.getId() );
+        }
+    }
 
     private Class<?> resultClass;
-    
-    private Long id; 
 
-    private Long sessionId; 
-    
+    private Long id;
+
+    private Long sessionId;
+
     private Boolean isGroup; // whether this search result represents a group of entities or not
-    
-    //private String text; // the text to show to user when displaying search results, how this is built depends on object type
-    
+
     private String name;
-    
+
     private String description;
-    
+
     private int size; // the number of items; 1 if not a group
-    
+
     private Taxon taxon; // the id of the associated taxon, can be null
-   /**
-    * only used with geneSet value object to support session-bound groups
-    */
-    private Collection<Long> memberIds = new HashSet<Long>(); 
-    
+
+    private Collection<Long> memberIds = new HashSet<Long>();
+
     private String type;
 
     public Class<?> getResultClass() {
         return this.resultClass;
     }
+
     public Long getId() {
         return this.id;
     }
-    public void setId(Long id) {
+
+    public void setId( Long id ) {
         this.id = id;
     }
+
     public Long getSessionId() {
         return this.sessionId;
     }
+
     public Boolean getIsGroup() {
         return this.isGroup;
     }
+
     public String getName() {
         return this.name;
     }
+
     public String getDescription() {
         return this.description;
     }
+
     public int getSize() {
         return this.size;
     }
+
     public Taxon getTaxon() {
         return this.taxon;
     }
-    public void setTaxon(Taxon taxon) {
+
+    public void setTaxon( Taxon taxon ) {
         this.taxon = taxon;
     }
-    public String getType(){
-    	return this.type;
+
+    public String getType() {
+        return this.type;
     }
-    public void setType(String type){
-    	this.type = type;
+
+    public void setType( String type ) {
+        this.type = type;
     }
-    public Collection<Long> getMemberIds(){
-    	return this.memberIds;
+
+    public Collection<Long> getMemberIds() {
+        return this.memberIds;
     }
-    public void setMemberIds(Collection<Long> memberIds){
-    	this.memberIds = memberIds;
+
+    public void setMemberIds( Collection<Long> memberIds ) {
+        this.memberIds = memberIds;
     }
+
     /**
-     * Creates a collection of SearchResultDisplayObjects from a collection of objects
-     * object types handled are: Gene, GeneSet, ExpressionExperiment, ExpressionExperimentSet and SearchObjects
-     * containing an object of any of those types
+     * Creates a collection of SearchResultDisplayObjects from a collection of objects object types handled are: Gene,
+     * GeneSet, ExpressionExperiment, ExpressionExperimentSet and SearchObjects containing an object of any of those
+     * types
+     * 
      * @param results a collection of SearchResult objects to create SearchResultDisplayObjects for
      * @return a collection of SearchResultDisplayObjects created from the objects passed in, sorted by name
      */
-    public static Collection<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects( List<SearchResult> results){
-    	
-    	// collection of SearchResultDisplayObjects to return
-    	List<SearchResultDisplayObject> searchResultDisplayObjects = new ArrayList<SearchResultDisplayObject>();
-    	
-    	if(results!=null && results.size()>0){
-    		// for every object passed in, create a SearchResultDisplayObject
-    		for (SearchResult result : results){
-    			searchResultDisplayObjects.add(new SearchResultDisplayObject(result));
-    		}
-    	}
-    	Collections.sort(searchResultDisplayObjects);
-    	
-    	return searchResultDisplayObjects;
+    public static Collection<SearchResultDisplayObject> convertSearchResults2SearchResultDisplayObjects(
+            List<SearchResult> results ) {
+
+        // collection of SearchResultDisplayObjects to return
+        List<SearchResultDisplayObject> searchResultDisplayObjects = new ArrayList<SearchResultDisplayObject>();
+
+        if ( results != null && results.size() > 0 ) {
+            // for every object passed in, create a SearchResultDisplayObject
+            for ( SearchResult result : results ) {
+                searchResultDisplayObjects.add( new SearchResultDisplayObject( result ) );
+            }
+        }
+        Collections.sort( searchResultDisplayObjects );
+
+        return searchResultDisplayObjects;
     }
 
+    @Override
+    public int compareTo( SearchResultDisplayObject o ) {
+        int result = this.name.toLowerCase().compareTo( o.name.toLowerCase() );
+        return ( result == 0 ) ? this.description.toLowerCase().compareTo( o.description.toLowerCase() ) : result;
+    }
 
-	@Override
-	public int compareTo(SearchResultDisplayObject o) {
-		int result = this.name.toLowerCase().compareTo(o.name.toLowerCase());
-		return (result == 0)? this.description.toLowerCase().compareTo(o.description.toLowerCase()):result;
-	}
-    
-  /*  public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }*/
+    /*
+     * public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+     * this.expressionExperimentService = expressionExperimentService; }
+     */
 
 }

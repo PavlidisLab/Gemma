@@ -121,13 +121,13 @@
 			<div id="dataSummary" style="margin-left: 15px;margin-right: 15px">
 				<table>
 					<tr>
-						<td width="300px"><strong>Data Summary</strong></td>
-						<td></td>
+						<td width="350px"><strong>Data Summary</strong></td>
+						<td align="right" width="60px">Total</td>
 						<c:if test="${ drawUpdatedColumn}">
-							<td align="right" width="60px"><a>Updated</a></td>
+							<td align="right" width="60px">Updated</td>
 						</c:if>
 						<c:if test="${ drawNewColumn}">
-							<td align="right" width="40px"><a>New</a></td>
+							<td align="right" width="40px">New</td>
 						</c:if>
 					</tr>
 					<tr>
@@ -169,13 +169,13 @@
 							<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'> Array Designs: </a>
 						</td>
 						<td align="right">
-							<b><c:out value="${ stats.arrayDesignCount }" /> </b>
+							<b><c:out value="${ stats.arrayDesignCount }" /></b>
 						</td>
 						<td align="right">
-							<b><c:out value="${ stats.updatedArrayDesignCount}" /> </b>&nbsp;&nbsp;
+							<b><c:out value="${ stats.updatedArrayDesignCount}" /></b>&nbsp;&nbsp;
 						</td>
 						<td align="right">
-							<b><c:out value="${ stats.newArrayDesignCount}" /> </b>&nbsp;&nbsp;
+							<b><c:out value="${ stats.newArrayDesignCount}" /></b>&nbsp;&nbsp;
 						</td>
 					</tr>
 					<tr>
@@ -186,7 +186,7 @@
 							<b><c:out value="${ stats.bioAssayCount }" /> </b>
 						</td>
 							<td align="right">
-								<b><c:out value="${ stats.updatedBioAssayCount}" /></b>&nbsp;&nbsp;
+								&nbsp;&nbsp;
 							</td>
 							<td align="right">
 								<b><c:out value="${ stats.newBioAssayCount}" /></b>&nbsp;&nbsp;

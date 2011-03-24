@@ -115,10 +115,13 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 							},{
 								name: "type",
 								type: "string"
+							},{
+								name: "memberIds",
+								defaultValue: []
 							}])),
 				
 					proxy : new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
-					autoLoad : false,
+					autoLoad : false
 				}
 		});
 
@@ -128,7 +131,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 		this.on('focus', function(){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
-			if(this.getValue() ==''){
+			if(this.getValue() ===''){
 				ExpressionExperimentController.searchExperimentsAndExperimentGroups("",
 					function(records) {
 									this.getStore().loadData(records);
@@ -160,8 +163,9 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	getExpressionExperimentGroup : function() {
-		if (this.getRawValue() == '')
+		if (this.getRawValue() === ''){
 			return null;
+		}
 		return this.selectedExpressionExperimentGroup;
 	},
 
