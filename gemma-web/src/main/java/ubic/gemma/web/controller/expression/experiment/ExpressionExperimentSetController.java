@@ -32,6 +32,7 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -146,6 +147,46 @@ public class ExpressionExperimentSetController extends BaseFormController {
         expressionExperimentReportService.fillReportInformation( result );
         return result;
     }
+    
+    public Collection<ExpressionExperimentValueObject> getExperimentsInSetBySessionId( Long sessionId ) {
+    	
+    	Collection<ExpressionExperimentValueObject> results = null;
+    	
+    	
+    	if (sessionListManager.isDbBackedExperimentSetSessionId(sessionId)){    		
+    		
+            results = getExperimentsInSet(sessionListManager.getDbExperimentSetIdBySessionId(sessionId) );   		
+    		
+    	} else{
+    		
+    		Collection<ExpressionExperimentSetValueObject> sessionExperimentSets = sessionListManager.getRecentExperimentSets();
+    		
+    		Collection<ExpressionExperiment> expressionExperiments = null;
+    		
+    		for (ExpressionExperimentSetValueObject eesvo: sessionExperimentSets){
+    			if (sessionId.equals(eesvo.getSessionId())){
+    				expressionExperiments = expressionExperimentService.loadMultiple( eesvo.getExpressionExperimentIds());
+    				break;
+    			}
+    		}
+    		
+    		if (expressionExperiments!=null){
+    			
+    			results = new HashSet<ExpressionExperimentValueObject>();
+    			
+    			for (ExpressionExperiment ee: expressionExperiments){
+    				
+    				results.add( new ExpressionExperimentValueObject(ee));
+    				
+    			}
+    			
+    		}    		
+    		
+    	}    	
+        
+        return results;
+    }
+
 
     /**
      * AJAX

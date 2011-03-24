@@ -469,6 +469,10 @@ ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
 			'getExperimentsInSet', p0, callback);
 }
+ExpressionExperimentSetController.getExperimentsInSetBySessionId = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
+			'getExperimentsInSetBySessionId', p0, callback);
+}
 ExpressionExperimentSetController.getExperimentIdsInSet = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
 			'getExperimentIdsInSet', p0, callback);
