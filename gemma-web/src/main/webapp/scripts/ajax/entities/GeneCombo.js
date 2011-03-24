@@ -72,7 +72,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	onSelect : function(record, index) {
 		Gemma.GeneCombo.superclass.onSelect.call(this, record, index);
-		if (!this.selectedGene || record.data.id != this.selectedGene.id) {
+		if (!this.selectedGene || record.data.id !== this.selectedGene.id) {
 			this.setGene(record.data);
 			// 'select' event is also fired by superclass.onSelect.call
 			this.fireEvent('select', this, this.selectedGene); 
@@ -103,8 +103,9 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	getGene : function() {
-		if (this.getRawValue() == '')
+		if (this.getRawValue() === ''){
 			return null;
+		}
 		return this.selectedGene;
 	},
 
@@ -132,7 +133,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setTaxon : function(taxon) {
-		if (!this.taxon || this.taxon.id != taxon.id) {
+		if (!this.taxon || this.taxon.id !== taxon.id) {
 			this.taxon = taxon;
 			this.reset();
 
@@ -183,7 +184,7 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 					var msg = this.validateSearch(this.geneCombo.getValue());
 					if (msg.length === 0) {
 
-						if (typeof pageTracker != 'undefined') {
+						if (typeof pageTracker !== 'undefined') {
 							pageTracker._trackPageview("/Gemma/gene/showGene");
 						}
 						document.location.href = String.format("/Gemma/gene/showGene.html?id={0}", this.geneCombo
@@ -196,12 +197,12 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 				var enterButtonPressed = function(object, event) {
 
 					var keycode = event.getKey();
-					if (keycode == 13) { // 13 = keycode for "enter" button
+					if (keycode === 13) { // 13 = keycode for "enter" button
 
 						var msg = this.validateSearch(this.geneCombo.getValue());
 						if (msg.length === 0) {
 
-							if (typeof pageTracker != 'undefined') {
+							if (typeof pageTracker !== 'undefined') {
 								pageTracker._trackPageview("/Gemma/gene/showGene");
 							}
 							document.location.href = String.format("/Gemma/gene/showGene.html?id={0}", this.geneCombo
