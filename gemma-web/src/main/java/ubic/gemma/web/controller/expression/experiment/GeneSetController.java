@@ -70,7 +70,7 @@ public class GeneSetController {
 
     @Autowired
     private TaxonService taxonService = null;
-    
+
     @Autowired
     private SessionListManager sessionListManager;
 
@@ -95,7 +95,7 @@ public class GeneSetController {
         }
         return results;
     }
-    
+
     /**
      * AJAX adds the gene group to the session
      * 
@@ -104,16 +104,26 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> addSessionGroups( Collection<GeneSetValueObject> geneSetVos ) {
 
-    	Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
-    	
-    	for (GeneSetValueObject gsvo: geneSetVos){
-    		results.add(sessionListManager.addGeneSet(gsvo));
-    		
-    	}    	
-        
+        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+
+        for ( GeneSetValueObject gsvo : geneSetVos ) {
+            
+            for (Long l : gsvo.getGeneIds()){
+                Gene gene = geneService.load( l );
+                
+                if (gene!=null && gene.getTaxon()!=null){
+                    gsvo.setTaxonId( gene.getTaxon().getId() );
+                    gsvo.setTaxonName( gene.getTaxon().getCommonName() );
+                    break;//assuming that the taxon will be the same for all genes in the set so no need to load all genes from set
+                }
+                
+            }
+            results.add( sessionListManager.addGeneSet( gsvo ) );
+
+        }
+
         return geneSetVos;
     }
-
 
     /**
      * AJAX adds the gene group to the session
@@ -122,34 +132,33 @@ public class GeneSetController {
      * @return id of the new gene group
      */
     public Collection<GeneSetValueObject> addUserAndSessionGroups( Collection<GeneSetValueObject> geneSetVos ) {
-    	
-    	Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();    	
-    	
-    	Collection<GeneSetValueObject> sessionResult = new HashSet<GeneSetValueObject>();
-    	
-    	for (GeneSetValueObject gsvo: geneSetVos){
-    		
-    		if (gsvo.isSession()){
-    			sessionResult.add(gsvo);
-    		}
-    		else{
-    			result.add(gsvo);   			
-    		}
-    		
-    	}
-    	
-    	result = create(result);
-    	//need to give new database entry a session Id so that it will play nice with the extJS combined session/db backed store
-    	for (GeneSetValueObject gsvo:result){
-    		gsvo.setSessionId(sessionListManager.incrementAndGetLargestGeneSetSessionId());
-    	}
-    	
-    	result.addAll(addSessionGroups(sessionResult));
-        
+
+        Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
+
+        Collection<GeneSetValueObject> sessionResult = new HashSet<GeneSetValueObject>();
+
+        for ( GeneSetValueObject gsvo : geneSetVos ) {
+
+            if ( gsvo.isSession() ) {
+                sessionResult.add( gsvo );
+            } else {
+                result.add( gsvo );
+            }
+
+        }
+
+        result = create( result );
+        // need to give new database entry a session Id so that it will play nice with the extJS combined session/db
+        // backed store
+        for ( GeneSetValueObject gsvo : result ) {
+            gsvo.setSessionId( sessionListManager.incrementAndGetLargestGeneSetSessionId() );
+        }
+
+        result.addAll( addSessionGroups( sessionResult ) );
+
         return result;
     }
 
-    
     /**
      * Given a Gemma Gene Id will find all gene groups that the current user is allowed to use
      * 
@@ -178,29 +187,29 @@ public class GeneSetController {
         Collection<GeneSet> foundGeneSets = null;
         Taxon tax = null;
         if ( taxonId == null ) {
-            //throw new IllegalArgumentException( "Taxon must not be null" );
+            // throw new IllegalArgumentException( "Taxon must not be null" );
             foundGeneSets = this.geneSetSearch.findByName( query );
-        }else{
-        	
-	        tax = taxonService.load( taxonId );
-	
-	        if ( tax == null ) {
-	            //throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
-	            foundGeneSets = this.geneSetSearch.findByName( query );
-	        }else{
-	        	foundGeneSets = this.geneSetSearch.findByName( query, tax );
-	        }
+        } else {
+
+            tax = taxonService.load( taxonId );
+
+            if ( tax == null ) {
+                // throw new IllegalArgumentException( "Can't locate taxon with id=" + taxonId );
+                foundGeneSets = this.geneSetSearch.findByName( query );
+            } else {
+                foundGeneSets = this.geneSetSearch.findByName( query, tax );
+            }
         }
-        
 
         /*
          * Behaviour implemented here (easy to change): If we have a match in our system we stop here. Otherwise, we go
          * on to search the Gene Ontology.
          */
 
-        // need taxon ID to be set for now, easy to change in Gene2GOAssociationDaoImpl.handleFindByGoTerm(String, Taxon)
+        // need taxon ID to be set for now, easy to change in Gene2GOAssociationDaoImpl.handleFindByGoTerm(String,
+        // Taxon)
 
-        if ( foundGeneSets.isEmpty() && tax != null) {
+        if ( foundGeneSets.isEmpty() && tax != null ) {
             if ( query.toUpperCase().startsWith( "GO" ) ) {
                 GeneSet goSet = this.geneSetSearch.findByGoId( query, tax );
                 if ( goSet != null ) foundGeneSets.add( goSet );
@@ -211,7 +220,6 @@ public class GeneSetController {
 
         return GeneSetValueObject.convert2ValueObjects( foundGeneSets, false );
     }
-    
 
     /**
      * AJAX If the current user has access to given gene group will return the gene ids in the gene group
@@ -231,52 +239,49 @@ public class GeneSetController {
         return results;
 
     }
-    
+
     /**
-     * AJAX If the current user has access to given gene group denoted by sessionId(could be a session or db backed group, security is only on db backed group)
-     *  will return the gene ids in the gene group
-     * 
-     * This method assumes that the sessionId being passed was generated by the SessionListManager for the user calling this
+     * AJAX If the current user has access to given gene group denoted by sessionId(could be a session or db backed
+     * group, security is only on db backed group) will return the gene ids in the gene group This method assumes that
+     * the sessionId being passed was generated by the SessionListManager for the user calling this
      * 
      * @param groupId
      * @return
      */
     public Collection<GeneValueObject> getGenesInGroupBySessionId( Long sessionId ) {
 
-    	Collection<GeneValueObject> results = null;
-    	
-    	if (sessionListManager.isDbBackedGeneSetSessionId(sessionId)){
-    	
-    		results = getGenesInGroup(sessionListManager.getDbGeneSetIdBySessionId(sessionId));
-    		
-    	} else {
-    		
-    		Collection<GeneSetValueObject> sessionGeneSets = sessionListManager.getRecentGeneSets();
-    		
-    		Collection<Gene> genes = null;
-    		
-    		for (GeneSetValueObject gsvo: sessionGeneSets){
-    			if (sessionId.equals(gsvo.getSessionId())){
-    				genes = geneService.loadMultiple( gsvo.getGeneIds());
-    				break;
-    			}
-    		}
-    		
-    		if (genes!=null){
-    			
-    			results = new HashSet<GeneValueObject>();
-    			
-    			for (Gene g:genes){
-    				
-    				results.add( new GeneValueObject(g));
-    				
-    			}
-    			
-    		}
-    		
-    		
-    		
-    	}
+        Collection<GeneValueObject> results = null;
+
+        if ( sessionListManager.isDbBackedGeneSetSessionId( sessionId ) ) {
+
+            results = getGenesInGroup( sessionListManager.getDbGeneSetIdBySessionId( sessionId ) );
+
+        } else {
+
+            Collection<GeneSetValueObject> sessionGeneSets = sessionListManager.getRecentGeneSets();
+
+            Collection<Gene> genes = null;
+
+            for ( GeneSetValueObject gsvo : sessionGeneSets ) {
+                if ( sessionId.equals( gsvo.getSessionId() ) ) {
+                    genes = geneService.loadMultiple( gsvo.getGeneIds() );
+                    break;
+                }
+            }
+
+            if ( genes != null ) {
+
+                results = new HashSet<GeneValueObject>();
+
+                for ( Gene g : genes ) {
+
+                    results.add( new GeneValueObject( g ) );
+
+                }
+
+            }
+
+        }
 
         return results;
 
@@ -315,10 +320,10 @@ public class GeneSetController {
         Collection<GeneSetValueObject> result = makeValueObects( geneSets );
         return result;
     }
-    
+
     /**
-     * AJAX Returns the current users gene sets as well as their session gene sets
-     * returned GeneSetValueObjects have a unique sessionId set for use with the ExtJS store(w
+     * AJAX Returns the current users gene sets as well as their session gene sets returned GeneSetValueObjects have a
+     * unique sessionId set for use with the ExtJS store(w
      * 
      * @param privateOnly
      * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
@@ -326,18 +331,18 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> getUserAndSessionGeneGroups( boolean privateOnly, Long taxonId ) {
 
-    	Collection<GeneSetValueObject> result = getUsersGeneGroups(privateOnly, taxonId);
+        Collection<GeneSetValueObject> result = getUsersGeneGroups( privateOnly, taxonId );
 
-    	//TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-    	Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets();
-        
-        sessionListManager.setUniqueGeneSetStoreIds(result);        
-        
-        result.addAll(sessionResult);       
-                
+        // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
+        Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets(taxonId);
+
+        sessionListManager.setUniqueGeneSetStoreIds( result );
+
+        result.addAll( sessionResult );
+
         return result;
     }
-    
+
     /**
      * AJAX Returns just the current users gene sets
      * 
@@ -345,12 +350,12 @@ public class GeneSetController {
      * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
      * @return
      */
-    public Collection<GeneSetValueObject> getUserSessionGeneGroups( boolean privateOnly, Long taxonId ) {        
+    public Collection<GeneSetValueObject> getUserSessionGeneGroups( boolean privateOnly, Long taxonId ) {
 
-    	//TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-        Collection<GeneSetValueObject> result = sessionListManager.getRecentGeneSets() ;
+        // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
+        Collection<GeneSetValueObject> result = sessionListManager.getRecentGeneSets(taxonId);
         return result;
-    }    
+    }
 
     /**
      * AJAX Given a valid gene group will remove it from db (if the user has permissons to do so).
@@ -364,7 +369,7 @@ public class GeneSetController {
         }
         return new HashSet<GeneSetValueObject>();
     }
-    
+
     /**
      * AJAX Given a valid gene group will remove it from the session.
      * 
@@ -372,36 +377,35 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> removeSessionGroups( Collection<GeneSetValueObject> vos ) {
         for ( GeneSetValueObject geneSetValueObject : vos ) {
-            sessionListManager.removeGeneSet(geneSetValueObject);
+            sessionListManager.removeGeneSet( geneSetValueObject );
         }
-        
+
         return new HashSet<GeneSetValueObject>();
     }
-    
+
     /**
      * AJAX Given valid gene groups will remove them from the session or the database appropriately.
      * 
      * @param groups
      */
     public Collection<GeneSetValueObject> removeUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
-    	Collection<GeneSetValueObject> databaseCollection = new HashSet<GeneSetValueObject>();
-    	Collection<GeneSetValueObject> sessionCollection = new HashSet<GeneSetValueObject>();
-    	
-    	for ( GeneSetValueObject geneSetValueObject : vos ) {
-    		if (geneSetValueObject.isSession()){
-    			sessionCollection.add(geneSetValueObject);
-    		}
-    		else{
-    			databaseCollection.add(geneSetValueObject);
-    		}
-            
+        Collection<GeneSetValueObject> databaseCollection = new HashSet<GeneSetValueObject>();
+        Collection<GeneSetValueObject> sessionCollection = new HashSet<GeneSetValueObject>();
+
+        for ( GeneSetValueObject geneSetValueObject : vos ) {
+            if ( geneSetValueObject.isSession() ) {
+                sessionCollection.add( geneSetValueObject );
+            } else {
+                databaseCollection.add( geneSetValueObject );
+            }
+
         }
-    	
-    	sessionCollection = removeSessionGroups(sessionCollection);
-        databaseCollection = remove(databaseCollection);
-        
-        databaseCollection.addAll(sessionCollection);
-        
+
+        sessionCollection = removeSessionGroups( sessionCollection );
+        databaseCollection = remove( databaseCollection );
+
+        databaseCollection.addAll( sessionCollection );
+
         return databaseCollection;
     }
 
@@ -412,40 +416,39 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> updateSessionGroups( Collection<GeneSetValueObject> vos ) {
         for ( GeneSetValueObject geneSetValueObject : vos ) {
-            sessionListManager.updateGeneSet(geneSetValueObject);
+            sessionListManager.updateGeneSet( geneSetValueObject );
         }
-        return vos;        
+        return vos;
     }
-    
+
     /**
      * AJAX Updates the session group and user database groups.
      * 
      * @param groups
      */
     public Collection<GeneSetValueObject> updateUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
-        
-    	Collection<GeneSetValueObject> databaseCollection = new HashSet<GeneSetValueObject>();
-    	Collection<GeneSetValueObject> sessionCollection = new HashSet<GeneSetValueObject>();
-    	
-    	for ( GeneSetValueObject geneSetValueObject : vos ) {
-    		if (geneSetValueObject.isSession()){
-    			sessionCollection.add(geneSetValueObject);
-    		}
-    		else{
-    			databaseCollection.add(geneSetValueObject);
-    		}
-            
+
+        Collection<GeneSetValueObject> databaseCollection = new HashSet<GeneSetValueObject>();
+        Collection<GeneSetValueObject> sessionCollection = new HashSet<GeneSetValueObject>();
+
+        for ( GeneSetValueObject geneSetValueObject : vos ) {
+            if ( geneSetValueObject.isSession() ) {
+                sessionCollection.add( geneSetValueObject );
+            } else {
+                databaseCollection.add( geneSetValueObject );
+            }
+
         }
-    	
-    	sessionCollection = updateSessionGroups(sessionCollection);
-        databaseCollection = update(databaseCollection);
-        
-        databaseCollection.addAll(sessionCollection);
-        
+
+        sessionCollection = updateSessionGroups( sessionCollection );
+        databaseCollection = update( databaseCollection );
+
+        databaseCollection.addAll( sessionCollection );
+
         return databaseCollection;
-        
-    }    
-    
+
+    }
+
     /**
      * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
      * gene to be added to the gene set twice.
@@ -569,6 +572,6 @@ public class GeneSetController {
         } );
 
         return result;
-    }    
+    }
 
 }
