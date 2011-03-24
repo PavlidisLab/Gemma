@@ -83,7 +83,7 @@ Ext.onReady(function() {
 							} else {
 								this.store.load();
 							}
-						})
+						});
 					}
 				},
 				scope : this

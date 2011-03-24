@@ -100,7 +100,7 @@ function handleLoadSuccess(taskId) {
 		return;
 	}
 
-};
+}
 
 function load(accession) {
 

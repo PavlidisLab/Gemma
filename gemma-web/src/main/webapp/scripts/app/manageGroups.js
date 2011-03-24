@@ -48,7 +48,7 @@ Ext.onReady(function() {
 		refreshGroupMembers(groupName);
 		refreshData(groupName);
 
-	}
+	};
 
 	/*
 	 * Load the users in the group, put in the members store.
@@ -57,7 +57,7 @@ Ext.onReady(function() {
 		Ext.getCmp('group-members-grid').getStore().load({
 					params : [groupName]
 				});
-	}
+	};
 
 	/*
 	 * Load the data available to the _current_ user w.r.t the selected group, put in the data column.
@@ -69,7 +69,7 @@ Ext.onReady(function() {
 		Ext.getCmp('group-data-grid').getStore().load({
 					params : [groupName, showPrivateOnly]
 				});
-	}
+	};
 
 
 	/*
@@ -103,7 +103,7 @@ Ext.onReady(function() {
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			collapsible : true,
-			width : panelWidth*.25,
+			width : panelWidth*0.25,
 
 			tbar : {
 				items : [{
@@ -137,7 +137,7 @@ Ext.onReady(function() {
 													errorHandler : function(e) {
 														Ext.Msg.alert('Sorry', e);
 													}
-												})
+												});
 									}
 															
 								});
@@ -174,8 +174,8 @@ Ext.onReady(function() {
 												Ext.Msg.alert('Sorry', e);
 											}
 										});
-							};
-						}
+							}
+						};
 
 						Ext.Msg.show({
 									title : 'Are you sure?',
@@ -273,7 +273,7 @@ Ext.onReady(function() {
 			title : 'Group members',
 			id : 'manager-group-members-panel',
 			region : 'center',
-			width : panelWidth*.25,
+			width : panelWidth*0.25,
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {
@@ -398,7 +398,7 @@ Ext.onReady(function() {
 			title : 'Data',
 			id : 'manager-group-data-panel',
 			region : 'east',
-			width : panelWidth*.5,
+			width : panelWidth*0.5,
 			margins : '5 0 0 0',
 			cmargins : '5 5 0 0',
 			tbar : {

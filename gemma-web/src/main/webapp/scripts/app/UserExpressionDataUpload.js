@@ -455,7 +455,7 @@ Ext.onReady(function() {
 				} else if (Ext.getCmp('pubmedid').isValid()) {
 					Ext.getCmp('public').setValue(true);
 					Ext.getCmp('public').disable();
-					tool.commandObject.pubMedId = Ext.getCmp('pubmedid').getValue()
+					tool.commandObject.pubMedId = Ext.getCmp('pubmedid').getValue();
 				} else {
 					Ext.getCmp('public').setValue(false);
 					Ext.getCmp('public').enable();

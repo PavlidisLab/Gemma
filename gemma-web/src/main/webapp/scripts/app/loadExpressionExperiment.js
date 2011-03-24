@@ -99,7 +99,7 @@ function handleSuccess(taskId) {
 		var p = new Gemma.ProgressWindow({
 					taskId : taskId,
 					callback : function(p) {
-						window.location = p
+						window.location = p;
 					},
 					errorHandler : handleFailure
 				});

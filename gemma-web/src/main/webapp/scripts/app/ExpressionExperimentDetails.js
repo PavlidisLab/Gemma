@@ -85,7 +85,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 									// Ext.DomHelper.append('pubmed-region-wrap',
 									// html);
 									window.location.reload();
-								}, this)
+								}, this);
 						k.handleWait(data, false);
 					}.createDelegate(this)
 				});
@@ -115,7 +115,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 													}, this);
 											k.handleWait(data, false);
 										}.createDelegate(this)
-									})
+									});
 						}
 					},
 					scope : this
@@ -214,7 +214,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	},
 	renderCoExpressionLinkCount : function(ee) {
 
-		if (ee.coexpressionLinkCount == null) {
+		if (ee.coexpressionLinkCount === null) {
 			return "Unavailable"; // analysis not run.
 		}
 
@@ -233,7 +233,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	 */
 	visualizeDiffExpressionHandler : function(eeid, diffResultId, factorDetails) {
 
-		var params = {}
+		var params = {};
 		this.visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
 					thumbnails : false,
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
@@ -253,7 +253,7 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 	 */
 	visualizePcaHandler : function(eeid, component, count) {
 
-		var params = {}
+		var params = {};
 		this.vispcaWindow = new Gemma.VisualizationWithThumbsWindow({
 					thumbnails : false,
 					readMethod : DEDVController.getDEDVForPcaVisualization,

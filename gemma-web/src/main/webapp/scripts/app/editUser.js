@@ -137,7 +137,7 @@ Ext.onReady(function() {
 									busyText : 'Validating...'
 								})
 
-					})
+					});
 
 			editUser.form.load({
 						url : 'loadUser.html',
@@ -145,7 +145,7 @@ Ext.onReady(function() {
 						success : function(f, action) {
 							// in case we need it.
 						}
-					})
+					});
 		});
 
 /**

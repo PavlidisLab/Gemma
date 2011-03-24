@@ -51,7 +51,7 @@ Ext.onReady(function() {
 
 		var sb = Ext.getCmp('my-status');
 		sb.showBusy();
-	}
+	};
 
 	var signup = new Ext.FormPanel({
 		labelWidth : 140, // label settings here cascade unless overridden
