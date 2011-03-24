@@ -54,7 +54,7 @@ Gemma.UserSessionDatasetGroupStore = function(config) {
 	// todo replace with JsonReader.
 	this.reader = new Ext.data.ListRangeReader({
 				id : "sessionId"
-			}, this.record),
+			}, this.record);
 
 	Gemma.UserSessionDatasetGroupStore.superclass.constructor.call(this, config);
 
