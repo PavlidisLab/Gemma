@@ -146,7 +146,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 	historyWindow : null,
 
 	showAuditWindow : function(id) {
-		if (this.historyWindow != null) {
+		if (this.historyWindow !== null) {
 			this.historyWindow.destroy();
 		}
 		this.historyWindow = new Ext.Window({
@@ -238,7 +238,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						}
 					},
 					scope : this
-				})
+				});
 	},
 
 	/**
@@ -346,7 +346,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											this.relayEvents(k, ['done', 'fail']);
 											Ext.getBody().unmask();
 											k.on('done', function(payload) {
-														this.fireEvent('deleted', payload)
+														this.fireEvent('deleted', payload);
 													});
 										}.createDelegate(this),
 										errorHandler : function(error) {
@@ -356,7 +356,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
 							/* after deletion, clear bottom details pane */
-							Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>'
+							Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
 
 						}
 					},
@@ -524,7 +524,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
-							var callParams = []
+							var callParams = [];
 							callParams.push(id);
 							Ext.getBody().mask();
 							callParams.push({
@@ -534,7 +534,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 											this.relayEvents(k, ['done', 'fail']);
 											Ext.getBody().unmask();
 											k.on('done', function(payload) {
-														this.fireEvent('missingValue', payload)
+														this.fireEvent('missingValue', payload);
 													});
 										}.createDelegate(this),
 										errorHandler : function(error) {
@@ -718,7 +718,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						callParams.push(id);
 						callParams.push(factorsToUseIds);
 						callParams.push(includeInteractions);
-						callParams.push(subsetFactor)
+						callParams.push(subsetFactor);
 						Ext.getBody().mask();
 						callParams.push({
 									callback : function(data) {
@@ -727,7 +727,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										m.relayEvents(k, ['done', 'fail']);
 										Ext.getBody().unmask();
 										k.on('done', function(payload) {
-													m.fireEvent('differential', payload)
+													m.fireEvent('differential', payload);
 												});
 									}.createDelegate(m),
 									errorHandler : function(error) {

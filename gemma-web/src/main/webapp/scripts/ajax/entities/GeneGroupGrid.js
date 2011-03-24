@@ -27,8 +27,8 @@ Ext.namespace('Gemma');
 	// if window is wider than 1000, give wider panel
 	var availablePanelWidth = Ext.getBody().getViewSize().width * 0.9;
 	var panelWidth = (availablePanelWidth > 1000)? availablePanelWidth : 1000;
-	var westWidth = panelWidth*.5;
-	var eastWidth = panelWidth*.5;
+	var westWidth = panelWidth*0.5;
+	var eastWidth = panelWidth*0.5;
 Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 
 			id : "gene-manager-panel",
@@ -204,7 +204,7 @@ Gemma.GeneGroupMemberPanel = Ext.extend(Gemma.GeneGrid, {
 					var geneIds = [];
 					var taxonId = geneValueObjs[0].taxonId;
 					for (var i = 0; i < geneValueObjs.length; i++) {
-						if (taxonId != geneValueObjs[0].taxonId) {
+						if (taxonId !== geneValueObjs[0].taxonId) {
 							Ext.Msg.alert('Sorry',
 									'Gene groups do not support mixed taxa. Please remove this gene group');
 							break;
@@ -454,7 +454,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 				if (rec) {
 					Ext.Msg.confirm("Delete?", "Are you sure you want to delete this set? This cannot be undone.",
 							function(but) {
-								if (but == 'no') {
+								if (but === 'no') {
 									return;
 								}
 
@@ -504,7 +504,7 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 								msg : 'You have unsaved changes which will be lost if you change modes.',
 								buttons : Ext.Msg.YESNO,
 								fn : function(btn, text) {
-									if (btn == 'yes') {
+									if (btn === 'yes') {
 
 										this.ownerCt.getStore().load({
 													params : [showPrivateOnly, null]
@@ -734,7 +734,15 @@ Gemma.GeneSetDetailsDialog = Ext.extend(Ext.Window, {
 																		name : 'newSetDescription',
 																		value : this.description,
 																		width : 300
-																	})]
+																	})/*, new Ext.form.Radio({
+																		fieldLabel : 'Private',
+																		name : 'publicPrivate',
+																		checked: true
+																	}), new Ext.form.Radio({
+																		fieldLabel : 'Public',
+																		name : 'publicPrivate',
+																		checked: false
+																	})*/]
 												}),
 										buttons : [{
 													text : "Cancel",
@@ -781,7 +789,7 @@ Gemma.GeneGroupStore = function(config) {
 				type : "string",
 				convert : function(v, rec) {
 					if (rec.name.startsWith("GO")) {
-						return rec.name
+						return rec.name;
 					}
 					return v;
 				}
@@ -805,7 +813,7 @@ Gemma.GeneGroupStore = function(config) {
 	// todo replace with JsonReader.
 	this.reader = new Ext.data.ListRangeReader({
 				id : "id"
-			}, this.record),
+			}, this.record);
 
 	Gemma.GeneGroupStore.superclass.constructor.call(this, config);
 

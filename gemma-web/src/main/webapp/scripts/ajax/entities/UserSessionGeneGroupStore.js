@@ -36,7 +36,7 @@ Gemma.UserSessionGeneGroupStore = function(config) {
 				type : "string",
 				convert : function(v, rec) {
 					if (rec.name.startsWith("GO")) {
-						return rec.name
+						return rec.name;
 					}
 					return v;
 				}
@@ -63,7 +63,7 @@ Gemma.UserSessionGeneGroupStore = function(config) {
 	// todo replace with JsonReader.
 	this.reader = new Ext.data.ListRangeReader({
 				id : "sessionId"
-			}, this.record),
+			}, this.record);
 
 	Gemma.UserSessionGeneGroupStore.superclass.constructor.call(this, config);
 

@@ -44,8 +44,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 				ExpressionExperimentController.loadExpressionExperiments(eeIds, function(ees) {
 							var eeData = [];
-							var i = 0;
-							for (i; i < ees.length; ++i) {
+							var i;
+							for (i = 0; i < ees.length; ++i) {
 								eeData.push([ees[i].id, ees[i].shortName, ees[i].name, 
 								ees[i].arrayDesignCount, ees[i].bioAssayCount]);
 							}
@@ -69,15 +69,15 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	initComponent : function() {
 		// Create RowActions Plugin
 			 	this.action = new Ext.ux.grid.RowActions({
-					 header:'Actions'
+					 header:'Actions',
 					//,autoWidth:false
 					//,hideMode:'display'
-					,keepSelection:true
-					,actions:[{
-						 iconCls:'icon-cross'
-						,tooltip:'Remove gene'
-					}]
-					,callbacks:{
+					keepSelection:true,
+					actions:[{
+						 iconCls:'icon-cross',
+						tooltip:'Remove gene'
+					}],
+					callbacks:{
 						'icon-cross':function(grid, record, action, row, col) {
 						}
 					}
@@ -378,8 +378,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}	
 				);
 				
-				var recType = sessionStore.record;
-				var rec = new recType();
+				var RecType = sessionStore.record;
+				var rec = new RecType();
 				rec.set("geneIds", ids);
 				rec.set("size", ids.length);	
 				rec.set("name", name);
@@ -435,8 +435,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}	
 		);
 		
-		var recType = sessionStore.record;
-		var rec = new recType();
+		var RecType = sessionStore.record;
+		var rec = new RecType();
 		rec.set("geneIds", ids);
 		rec.set("size", ids.length);	
 		rec.set("name", name);

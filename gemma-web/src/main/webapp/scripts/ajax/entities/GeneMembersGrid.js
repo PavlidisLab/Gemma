@@ -80,7 +80,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				GenePickerController.getGenes(geneIds, function(genes) {
 							var geneData = [];
 							var i = 0;
-							for (i; i < genes.length; i++) {
+							for (i=0; i < genes.length; i++) {
 								geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
 										genes[i].officialName]);
 							}
@@ -104,15 +104,15 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			 	// Create RowActions Plugin
 			 	this.action = new Ext.ux.grid.RowActions({
-					 header:'Actions'
+					 header:'Actions',
 					//,autoWidth:false
 					//,hideMode:'display'
-					,keepSelection:true
-					,actions:[{
-						 iconCls:'icon-cross'
-						,tooltip:'Remove gene'
-					}]
-					,callbacks:{
+					keepSelection:true,
+					actions:[{
+						 iconCls:'icon-cross',
+						tooltip:'Remove gene'
+					}],
+					callbacks:{
 						'icon-cross':function(grid, record, action, row, col) {
 						}
 					}
@@ -262,8 +262,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			removeGene : function() {
 				var selected = this.getSelectionModel().getSelections();
-				var i = 0;
-				for (i; i < selected.length; i++) {
+				var i;
+				for (i = 0; i < selected.length; i++) {
 					this.getStore().remove(selected[i]);
 				}
 				this.getSelectionModel().selectLastRow();
@@ -309,7 +309,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				var ids = [];
 				var all = this.getStore().getRange();
 				var i = 0;
-				for ( i; i < all.length; ++i) {
+				for ( i =0 ; i < all.length; ++i) {
 					ids.push(all[i].data.id);
 				}
 				return ids;
@@ -327,7 +327,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				var genes = [];
 				var all = this.getStore().getRange();
 				var i = 0;
-				for ( i; i < all.length; ++i) {
+				for ( i =0; i < all.length; ++i) {
 					genes.push(all[i].data);
 				}
 				return genes;

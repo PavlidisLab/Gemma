@@ -61,7 +61,7 @@ Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 				Gemma.DatasetSearchField.superclass.initEvents.call(this);
 				var queryTask = new Ext.util.DelayedTask(this.findDatasets, this);
 				this.el.on("keyup", function(e) {
-							if (e.getCharCode() == Ext.EventObject.ENTER) {
+							if (e.getCharCode() === Ext.EventObject.ENTER) {
 								queryTask.delay(5);
 							}
 						});

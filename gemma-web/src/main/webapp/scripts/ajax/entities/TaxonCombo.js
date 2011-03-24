@@ -127,8 +127,7 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	},
 
 	getTaxon : function() {
-		return this.store.getById(this.getValue())
-				|| this.store.getAt(this.store.find('commonName', this.getValue(), 0, false));
+		return (this.store.getById(this.getValue()) || this.store.getAt(this.store.find('commonName', this.getValue(), 0, false)));
 
 	},
 

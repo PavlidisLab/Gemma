@@ -65,7 +65,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 			 *            args
 			 */
 			loadGenes : function(geneIds, callback, args) {
-				if (!geneIds || geneIds.length == 0) {
+				if (!geneIds || geneIds.length === 0) {
 					return;
 				}
 
@@ -130,7 +130,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 						}, this);
 
 				this.on("keypress", function(e) {
-							if (!this.getTopToolbar().disabled && e.getCharCode() == Ext.EventObject.DELETE) {
+							if (!this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE) {
 								this.removeGene();
 							}
 						}, this);
@@ -255,7 +255,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (gene) {
 					for (var j = 0; j < ids.length; ++j) {
 						// don't add twice.
-						if (ids[j] == gene.id) {
+						if (ids[j] === gene.id) {
 							return ids;
 						}
 					}
@@ -281,7 +281,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (gene) {
 					for (var j = 0; j < genes.length; ++j) {
 						// don't add twice.
-						if (genes[j].id == gene.id) {
+						if (genes[j].id === gene.id) {
 							return genes;
 						}
 					}
@@ -355,7 +355,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 				// clear any genes.
 				var all = this.getStore().getRange();
 				for (var i = 0; i < all.length; ++i) {
-					if (all[i].get('taxonId') != taxon.id) {
+					if (all[i].get('taxonId') !== taxon.id) {
 						this.getStore().remove(all[i]);
 					}
 				}
@@ -542,7 +542,7 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 							buttons : [{
 										text : 'Cancel',
 										handler : function() {
-											this.hide()
+											this.hide();
 										}.createDelegate(this),
 										scope : this
 									}, {

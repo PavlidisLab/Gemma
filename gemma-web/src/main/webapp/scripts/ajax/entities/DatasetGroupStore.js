@@ -48,7 +48,7 @@ Gemma.DatasetGroupStore = function(config) {
 	// todo replace with JsonReader.
 	this.reader = new Ext.data.ListRangeReader({
 				id : "id"
-			}, this.record),
+			}, this.record);
 
 	Gemma.DatasetGroupStore.superclass.constructor.call(this, config);
 

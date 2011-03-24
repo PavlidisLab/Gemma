@@ -48,7 +48,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (!this.addEventDialog) {
 					this.addEventDialog = new Gemma.AddAuditEventDialog();
 					this.addEventDialog.on("commit", function(resultObj) {
-								this.createEvent(resultObj)
+								this.createEvent(resultObj);
 							}.createDelegate(this));
 				}
 				this.addEventDialog.show();
@@ -64,11 +64,11 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				var ret = value.replace(/.*\./, '').replace("Impl", '').replace(/([A-Z])/g, ' $1');
 
-				if (value == 'TroubleStatusFlagEventImpl') {
+				if (value === 'TroubleStatusFlagEventImpl') {
 					ret = '<img  src="/Gemma/images/icons/stop.png">&nbsp;' + ret;
-				} else if (value == 'ValidatedFlagEventImpl') {
+				} else if (value === 'ValidatedFlagEventImpl') {
 					ret = '<img  src="/Gemma/images/icons/emoticon_smile.png">&nbsp;' + ret;
-				} else if (value == 'OkStatusEventFlagImpl') {
+				} else if (value === 'OkStatusEventFlagImpl') {
 					ret = '<img  src="/Gemma/images/icons/checked.gif">&nbsp;' + ret;
 				}
 

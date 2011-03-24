@@ -149,7 +149,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 					this.sourceDatasetsGrid.setTitle(this.sourceDatasetsGrid.title + ", " +
 							this.sourceDatasetsGrid.getStore().getCount() + " addable");
 
-				}.createDelegate(this))
+				}.createDelegate(this));
 
 				this.datasetGroupGrid.getTopToolbar().on("delete-set", function(rec) {
 							this.clearDisplay();
@@ -198,7 +198,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 
 			showEEDetails : function(model, rowindex, record) {
 
-				if (this.detailsmask == null) {
+				if (this.detailsmask === null) {
 					this.detailsmask = new Ext.LoadMask(this.dataSetDetailsPanel.body, {
 								msg : "Loading details ..."
 							});
@@ -294,7 +294,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 									cancel : 'No'
 								},
 								fn : function(btn, text) {
-									if (btn == 'ok') {
+									if (btn === 'ok') {
 										this.datasetGroupStore.commitChanges();
 									}
 									if (rec) {

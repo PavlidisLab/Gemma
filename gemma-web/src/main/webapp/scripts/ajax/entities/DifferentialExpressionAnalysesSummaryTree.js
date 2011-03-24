@@ -150,7 +150,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 							var analysisName = this.getFactorNameText(resultSet);
 							var nodeText= '';
 							//if there's subset text, add baseline and links to it to maintain order
-							if(subsetText!=''){
+							if(subsetText!==''){
 								subsetText += this.getBaseline(resultSet);
 								subsetText += this.getActionLinks(resultSet,analysisName[0],this.ee.id, nodeId);
 							}else{
@@ -249,13 +249,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		 var numbers = resultSet.numberOfDiffExpressedProbes +  ' differentially expressed probes<br>' ;
 		
 		 //if (resultSet.upregulatedCount != 0) {
-			 numbers += resultSet.upregulatedCount
-			 + "&nbsp;Up";
+			 numbers += resultSet.upregulatedCount + "&nbsp;Up";
 		 //}
 		
 		 //if (resultSet.downregulatedCount != 0) {
-			 numbers += ';&nbsp;' + resultSet.downregulatedCount
-			 + "&nbsp;Down";
+			 numbers += ';&nbsp;' + resultSet.downregulatedCount+ "&nbsp;Down";
 		// }
 		if(showThreshold){
 			numbers += '. <br>Threshold value = '+resultSet.threshold;
@@ -343,8 +341,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					down = this.contrastPercents[i].down;
 					diffExpressed = this.contrastPercents[i].diffExpressed;
 					interesting=false;
-					if(diffExpressed<0.07){diffExpressed=0.07,interesting = true};
-					if(diffExpressed<0.20){interesting = true};
+					if(diffExpressed<0.07){diffExpressed=0.07;interesting = true;}
+					if(diffExpressed<0.20){interesting = true;}
 					if(interesting){
 						drawOneColourMiniPie(ctx, 12, 12, 14, '#1f6568', diffExpressed*360, 'black');
 					}else{

@@ -67,7 +67,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		return function(r, id) {
 			var obj = r.data;
 			return value.match(obj.name) || value.match(obj.shortName);
-		}
+		};
 	},
 
 	initComponent : function() {
@@ -181,7 +181,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		Gemma.ExpressionExperimentGrid.superclass.initComponent.call(this);
 
 		this.on("keypress", function(e) {
-					if (e.getCharCode() == Ext.EventObject.DELETE) {
+					if (e.getCharCode() === Ext.EventObject.DELETE) {
 						this.removeSelected();
 					}
 				}, this);

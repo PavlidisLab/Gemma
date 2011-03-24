@@ -77,7 +77,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 	setValue : function(v) {
 		var changed = false;
-		if (this.getValue() != v) {
+		if (this.getValue() !== v) {
 			changed = true;
 		}
 
@@ -105,7 +105,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 		}
 
 		this.taxon = taxon;
-		if (this.getArrayDesign() && this.getArrayDesign().taxon && this.getArrayDesign().taxon.id != taxon.id) {
+		if (this.getArrayDesign() && this.getArrayDesign().taxon && this.getArrayDesign().taxon.id !== taxon.id) {
 			this.reset();
 		}
 		this.applyFilter(taxon);
@@ -118,7 +118,7 @@ Gemma.ArrayDesignCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 		}
 
 		this.store.filterBy(function(record, id) {
-					if (!record.data.taxon || record.data.taxon.indexOf(taxon.commonName) == -1) {
+					if (!record.data.taxon || record.data.taxon.indexOf(taxon.commonName) === -1) {
 						return false;
 					} else {
 						return true;

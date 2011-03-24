@@ -83,7 +83,7 @@ Gemma.DatasetGroupComboPanel = Ext.extend(Ext.Panel, {
 
 				this.dcp.on("delete-set", function(rec) {
 							if (this.store.getPreviousSelection()) { // fixme
-								this.combo.setValue(this.store.getPreviousSelection().get("name"))
+								this.combo.setValue(this.store.getPreviousSelection().get("name"));
 							} else {
 								this.combo.setValue("");
 							}

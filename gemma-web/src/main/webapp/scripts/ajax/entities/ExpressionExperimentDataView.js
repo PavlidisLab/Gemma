@@ -61,13 +61,13 @@ Gemma.ExpressionExperimentDataView = Ext.extend(Ext.DataView, {
 					});
 		}
 		
-		Ext.apply(this, {tpl: new Ext.Template('<div><b>{shortName}</b><br>{name}</div>')})
+		Ext.apply(this, {tpl: new Ext.Template('<div><b>{shortName}</b><br>{name}</div>')});
 
 
 		Gemma.ExpressionExperimentDataView.superclass.initComponent.call(this);
 
 		this.on("keypress", function(e) {
-					if (e.getCharCode() == Ext.EventObject.DELETE) {
+					if (e.getCharCode() === Ext.EventObject.DELETE) {
 						this.removeSelected();
 					}
 				}, this);

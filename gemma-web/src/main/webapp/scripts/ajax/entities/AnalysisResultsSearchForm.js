@@ -414,8 +414,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		// Shows the combo box for EE groups 
 		this.experimentCombo = new Gemma.ExperimentAndExperimentGroupCombo({
 							typeAhead: false,
-							width : 210,
-							
+							width : 210
 						});
 		this.experimentCombo.on('select', function(combo, record, index) {
 										
@@ -483,7 +482,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				//height:100,
 				width:219,
 				frame:true,
-				items:[this.experimentPreviewContent,this.experimentSelectionEditorBtn],
+				items:[this.experimentPreviewContent,this.experimentSelectionEditorBtn]
 		});
 		
 		/****** GENE COMBO ******************************************************************************/
@@ -604,7 +603,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				id:'genePreview',
 				html:'<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview</div>',
 				tpl: new Ext.Template('<div style="padding-bottom:7px;"><a href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName}</div>'),
-				tplWriteMode: 'append', // use this to append to content when calling update instead of replacing
+				tplWriteMode: 'append' // use this to append to content when calling update instead of replacing
 				//tplWriteMode: 'overwrite',
 				//frame:true,
 				//items:this.geneSelectionEditorBtn,
@@ -615,7 +614,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				//layout:'hbox',
 				//id:'genePreview',
 				frame:true,
-				items:[this.genePreviewContent,this.geneSelectionEditorBtn],
+				items:[this.genePreviewContent,this.geneSelectionEditorBtn]
 		});
 		
 		/******* BUTTONS ********************************************************************************/
@@ -626,14 +625,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							scale: 'medium',
 							width:150,
 							enableToggle:true,
-							pressed:true,
+							pressed:true
 						});
 		this.diffExToggle = new Ext.Button({
 							text: "<span style=\"font-size:1.3em\">Differential Expression</span>",
 							style:'padding-bottom:0.4em',
 							scale: 'medium',
 							width:150,
-							enableToggle:true,
+							enableToggle:true
 						});
 
 
@@ -668,11 +667,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					new Ext.Button({
 							text: "<span style=\"font-size:1.1em\">Go!</span>",
 							handler: this.doSearch.createDelegate(this, [], false),
-							width:35,
+							width:35
 						}),
 					
-					{},{},this.experimentPreview,{},{items: this.genePreview,colspan: 2},{},
-					],
+					{},{},this.experimentPreview,{},{items: this.genePreview,colspan: 2},{}
+					]
 		});
 		
 		/* factor chooser for differential expression*/
@@ -798,7 +797,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	launchExperimentSelectionEditor: function(){
 				
 		if(!this.experimentIds || this.experimentIds.length === 0){
-			this.experimentIds = [1101,3,1096,]; // FOR TESTING
+			this.experimentIds = [1101,3,1096]; // FOR TESTING
 		}
 
 		this.experimentSelectionEditorWindow = new Ext.Window({
@@ -1002,6 +1001,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				GenePickerController.searchMultipleGenesGetMap(text, taxonId, {
 
 							callback : function(queryToGenes) {
+								var i;
 								var geneData = [];
 								var warned = false;
 								if (i >= Gemma.MAX_GENES_PER_QUERY) {
@@ -1019,32 +1019,33 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 								var genesToPreview = [];
 								var queriesWithMoreThanOneResult = [];
 								var queriesWithNoResults = [];
+								var query; 
 								
 								// for each query
-								for (var query in queryToGenes) {
+								for (query in queryToGenes) {
 									var genes = queryToGenes[query];
 									// for each result of that query
 									
 									// if a query matched more than one result, store for notifying user
-									if(genes.length>1){queriesWithMoreThanOneResult.push(query)}
+									if(genes.length>1){queriesWithMoreThanOneResult.push(query);}
 									
 									// if a query matched no results, store for notifying user
-									if(genes.length===0){queriesWithNoResults.push(query)}
+									if(genes.length===0){queriesWithNoResults.push(query);}
 									
-									for(var i = 0; i<genes.length; i++){
+									for(i = 0; i<genes.length; i++){
 										// store some genes for previewing 
 										if (genesToPreview.length < this.PREVIEW_SIZE) {
 											genesToPreview.push(genes[i]);
 										}
 										// store all ids
-										geneIds.push(genes[i].id)
+										geneIds.push(genes[i].id);
 									}
 								}
 								
 								// reset the gene preview panel content
 								this.resetGenePreview();
 								
-								for (var i=0; i<genesToPreview.length;i++) {
+								for ( i=0; i<genesToPreview.length;i++) {
 									this.genePreviewContent.update(genesToPreview[i]);
 								}
 								
@@ -1058,25 +1059,25 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 								if(queriesWithMoreThanOneResult.length>0){
 									msgMany = queriesWithMoreThanOneResult.length+((queriesWithMoreThanOneResult.length===1)?" query":" queries")+"  returned more than one gene, all were added to the results: ";
 									// for each query
-									var query = '';
-									for (var i = 0; i< queriesWithMoreThanOneResult.length; i++) {
+									query = '';
+									for ( i = 0; i< queriesWithMoreThanOneResult.length; i++) {
 										query = queriesWithMoreThanOneResult[i];
 										msgMany += "<br> - \""+query+"\" matched: ";
-										var genes = queryToGenes[query];
+										genes = queryToGenes[query];
 										// for each result of that query
 										for(var j = 0; j<genes.length && j<10; j++){
 											msgMany += genes[j].officialSymbol;
 											msgMany += (j+1<genes.length)? ", ":".";
 										}
-										if(genes.length>10){msgMany += "...("+genes.length-20+" more)"}
+										if(genes.length>10){msgMany += "...("+genes.length-20+" more)";}
 									}
 									msgMany+= '<br><br>';
 								}
 								if(queriesWithNoResults.length>0){
 									msgNone = queriesWithNoResults.length+((queriesWithNoResults.length===1)?" query":" queries")+" didn't match any genes in Gemma:<br>";
 									// for each query									
-									var query = '';
-									for (var i = 0; i< queriesWithNoResults.length; i++) {
+									query = '';
+									for ( i = 0; i< queriesWithNoResults.length; i++) {
 										query = queriesWithNoResults[i];
 										msgNone += " - "+query+"<br>";
 									}
@@ -1105,5 +1106,5 @@ Ext.LinkButton = Ext.extend(Ext.Button, {
         '<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
         '</tbody></table>').compile(),
     buttonSelector : 'a:first',
-	ctCls: "transparent-btn", // no button image
+	ctCls: "transparent-btn" // no button image
 });

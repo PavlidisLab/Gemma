@@ -39,6 +39,11 @@ Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 			return;
 		}
 
+		// all taxa is taxonId=-1
+		if(taxonId===-1){
+			this.store.clearFilter();
+			return;
+		}
 		this.doQueryBy(function(record, id) {
 					if (!record.get("taxonId")) {
 						return true; // in case there is none.
@@ -50,7 +55,7 @@ Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 				});
 
 		// clear the field if the current selection is for a record that was filtered out.
-		if (this.store.getSelected() && this.store.getSelected().get("taxonId") != taxonId) {
+		if (this.store.getSelected() && this.store.getSelected().get("taxonId") !== taxonId) {
 			this.setValue("");
 		}
 	}, 
@@ -81,7 +86,7 @@ Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 		this.suppressFiltering = true;
 		var index = this.store.findBy(function(record, i) {
-					return record.get("name").toLowerCase() == name.toLowerCase();
+					return record.get("name").toLowerCase() === name.toLowerCase();
 				});
 
 		if (index >= 0) {
@@ -111,6 +116,30 @@ Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 		Gemma.DatasetGroupCombo.superclass.initComponent.call(this);
 
+		if(this.allExperiments){
+			this.store.load({
+							params : [],
+							add : false,
+							callback: function (){
+									// add an option so user can select all experiments
+									var allExperimentsRecord = new this.recordType({
+										id: '-1',
+										name: 'All Experiments',
+										description: 'All expression experiments in the database.',
+										numExperiments: -10,
+										currentUserHasWritePermission: false
+									},0);
+									this.insert(0, allExperimentsRecord);
+							}
+						});
+		}else{
+			this.store.load({
+							params : [],
+							add : false
+						});	
+		}
+		
+		
 		this.on("select", function(cb, rec, index) {
 					this.store.setSelected(rec);
 				});

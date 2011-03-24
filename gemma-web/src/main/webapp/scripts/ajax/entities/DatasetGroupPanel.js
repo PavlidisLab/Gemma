@@ -34,8 +34,8 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 				this.detailsWin.purgeListeners();
 
 				this.detailsWin.on("commit", function(args) {
-							var constr = this.ownerCt.getStore().record;
-							var newRec = new constr({
+							var Constr = this.ownerCt.getStore().record;
+							var newRec = new Constr({
 										name : args.name,
 										description : args.description,
 										// id : -1, // maybe not important.
@@ -230,7 +230,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 					Ext.Msg.confirm("Delete?", "Are you sure you want to delete this set? This cannot be undone.",
 							function(but) {
 
-								if (but == 'no') {
+								if (but === 'no') {
 									return;
 								}
 
@@ -286,8 +286,8 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			 */
 			copy : function() {
 				var rec = this.getCurrentSet();
-				var constr = this.ownerCt.getStore().record;
-				var newRec = new constr({
+				var Constr = this.ownerCt.getStore().record;
+				var newRec = new Constr({
 							name : "Copy of " + rec.get("name"), // indicate they should edit it.
 							description : rec.get("description"),
 							modifiable : true,
@@ -374,7 +374,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					sortable : true,
 					editable : false,
 					//width : 60,
-					width: 0.09,
+					width: 0.09
 					//fixed : true
 				}, {
 					header : "Taxon",
@@ -382,7 +382,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					sortable : true,
 					editable : false,
 					//width : 100
-					width: 0.125,
+					width: 0.125
 				}, {
 					header : "Locked",
 					dataIndex : "modifiable",
@@ -512,7 +512,7 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 				var taxon = Ext.getCmp(this.formId).getForm().findField('newEesetTaxon').getTaxon();
 
 				var indexOfExisting = this.store.findBy(function(record, id) {
-							return record.get("name") == values.newEesetName;
+							return record.get("name") === values.newEesetName;
 						}, this);
 
 				if (indexOfExisting >= 0) {

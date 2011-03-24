@@ -90,8 +90,9 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	getGeneGroup : function() {
-		if (this.getRawValue() == '')
+		if (this.getRawValue() === ''){
 			return null;
+		}
 		return this.selectedGeneGroup;
 	},
 
@@ -111,7 +112,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	},
 
 	setTaxon : function(taxon) {
-		if (!this.taxon || this.taxon.id != taxon.id) {
+		if (!this.taxon || this.taxon.id !== taxon.id) {
 			this.taxon = taxon;
 			this.reset();
 

@@ -28,7 +28,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	eeFactorsMap : null,
 
 	reset : function(eeSet) {
-		if (this.currentEEset && eeSet != this.currentEEset) {
+		if (this.currentEEset && eeSet !== this.currentEEset) {
 			// console.log("reset " + eeSet);
 			this.eeFactorsMap = null;
 		}
@@ -47,7 +47,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 		for (var experimentName in eeFactorSource) {
 			var factorName = eeFactorSource[experimentName];
-			if (typeof factorName != 'string') {
+			if (typeof factorName !== 'string') {
 				continue;
 			}
 
@@ -61,7 +61,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 				var eeName = eeInfo.name;
 
-				if (eeName != experimentName) {
+				if (eeName !== experimentName) {
 					continue;
 				}
 
@@ -75,7 +75,7 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 						continue;
 					}
 					var efName = ef.name;
-					if (efName == factorName) {
+					if (efName === factorName) {
 						var efId = ef.id;
 						this.eeFactorsMap.push({
 									efId : efId,
@@ -244,16 +244,16 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 	applyHintingFilter : function() {
 		var choice = Ext.getCmp('factor-hinting-button').getGroupValue();
-		if (choice == '1') {
+		if (choice === '1') {
 			// organism part
 			this.efGrid.getStore().filterBy(this.organismPartFilter, this);
-		} else if (choice == '2') {
+		} else if (choice === '2') {
 			this.efGrid.getStore().filterBy(this.diseaseStateFilter, this);
-		} else if (choice == '3') {
+		} else if (choice === '3') {
 			this.efGrid.getStore().filterBy(this.samplingTimeFilter, this);
-		} else if (choice == '4') {
+		} else if (choice === '4') {
 			this.efGrid.getStore().filterBy(this.treatmentFilter, this);
-		} else if (choice == '5') {
+		} else if (choice === '5') {
 			// no filtering
 		} else {
 			// no filtering
