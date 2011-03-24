@@ -13,9 +13,11 @@ Gemma.UserSessionGeneGroupStore = function(config) {
 			{
 				name : "id",
 				type : "int"
-			},
-			{
+			},{
 				name : "sessionId",
+				type : "int"
+			},{
+				name : "taxonId",
 				type : "int"
 			},{
 				name : "name",
@@ -26,7 +28,10 @@ Gemma.UserSessionGeneGroupStore = function(config) {
 					}
 					return v;
 				}
-			}, {
+			},{
+				name : "taxonName",
+				type : "string"				
+			},{
 				name : "description",
 				type : "string",
 				convert : function(v, rec) {
