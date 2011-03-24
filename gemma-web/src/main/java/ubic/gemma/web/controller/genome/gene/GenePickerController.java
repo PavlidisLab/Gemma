@@ -315,9 +315,8 @@ public class GenePickerController {
                 result = GeneSetValueObject.convert2ValueObjects(userGeneSets, false);
             }
             // get any session-bound groups
-
-            //TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-            Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets();
+            
+            Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets(taxonId);
                 
             sessionListManager.setUniqueGeneSetStoreIds(result);        
                 
