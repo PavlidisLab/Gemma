@@ -941,6 +941,7 @@ gemma.max.fileupload.size.bytes=
 						<property name="includes">
 							<list>
 								<value>getExperimentsInSet</value>
+								<value>getExperimentsInSetBySessionId</value>
 								<value>getExperimentIdsInSet</value>
 								<value>loadAll</value>
 								<value>update</value>
