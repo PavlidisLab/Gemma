@@ -95,7 +95,7 @@ Gemma.Search.app = function() {
 								}]
 					});
 
-			if (typeof pageTracker != 'undefined') {
+			if (typeof pageTracker !== 'undefined') {
 				pageTracker._trackPageview("/Gemma/searcher.search?query=" + escape(query) + scopes);
 			}
 
@@ -127,7 +127,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 					var sq = url.substr(url.indexOf("?") + 1);
 					var params = Ext.urlDecode(sq);
 
-					if ((params.termUri) && (params.termUri.length != 0)) {
+					if ((params.termUri) && (params.termUri.length !== 0)) {
 						this.form.findField('query').setValue(params.termUri);
 					} else if (params.query) {
 						this.form.findField('query').setValue(params.query);
@@ -202,7 +202,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 															listeners : {
 																'specialkey' : {
 																	fn : function(r, e) {
-																		if (e.getKey() == e.ENTER) {
+																		if (e.getKey() === e.ENTER) {
 																			this.fireEvent("search");
 																		}
 																	}.createDelegate(this),
@@ -431,16 +431,16 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			var clazz = r.get("resultClass");
 			var obj = r.data.resultObject;
-			if (clazz == "ExpressionExperimentValueObject") {
+			if (clazz === "ExpressionExperimentValueObject") {
 				return value.test(obj.shortName) || value.test(obj.name);
-			} else if (clazz == "CompositeSequence") {
+			} else if (clazz === "CompositeSequence") {
 				return value.test(obj.name) || value.test(obj.description) || value.test(obj.arrayDesign.shortName);
-			} else if (clazz == "ArrayDesignValueObject") {
+			} else if (clazz === "ArrayDesignValueObject") {
 				return value.test(obj.name) || value.test(obj.description);
 			} else if (/^BioSequence.*/.exec(clazz)) { // because we get
 				// proxies.
 				return value.test(obj.name) || value.test(obj.description) || value.test(obj.taxon.commonName);
-			} else if (clazz == "Gene" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
+			} else if (clazz === "Gene" || clazz === "PredictedGene" || clazz === "ProbeAlignedRegion") {
 				return value.test(obj.officialSymbol) || value.test(obj.officialName)
 						|| value.test(obj.taxon.commonName);
 			} else {
@@ -598,19 +598,19 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	 */
 	renderEntityClass : function(data, metadata, record, row, column, store) {
 		var clazz = record.get("resultClass");
-		if (clazz == "ExpressionExperimentValueObject") {
+		if (clazz === "ExpressionExperimentValueObject") {
 			return "Expression dataset";
-		} else if (clazz == "CompositeSequence") {
+		} else if (clazz === "CompositeSequence") {
 			return "Probe";
-		} else if (clazz == "ArrayDesignValueObject") {
+		} else if (clazz === "ArrayDesignValueObject") {
 			return "Array";
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return "Sequence";
-		} else if (clazz == "GeneValueObject") {
+		} else if (clazz === "GeneValueObject") {
 			return "Gene";
-		} else if (clazz == "GeneSetValueObject") {
+		} else if (clazz === "GeneSetValueObject") {
 			return "Gene set";
-		} else if (clazz == "ExpressionExperimentSetValueObject") {
+		} else if (clazz === "ExpressionExperimentSetValueObject") {
 			return "Experiment set";
 		} else {
 			return clazz;
@@ -619,16 +619,16 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	sortInfo : function(record) {
 		var clazz = record.resultsClass;
-		if (clazz == "ExpressionExperimentValueObject") {
+		if (clazz === "ExpressionExperimentValueObject") {
 			return record.shortName;
-		} else if (clazz == "CompositeSequence") {
+		} else if (clazz === "CompositeSequence") {
 			return record.name;
-		} else if (clazz == "ArrayDesignValueObject") {
+		} else if (clazz === "ArrayDesignValueObject") {
 			return record.shortName;
 		} else if (/^BioSequence.*/.exec(clazz)) { // because we get proxies.
 			return record.name;
-		} else if (clazz == "GeneValueObject" || clazz == 'GeneSetValueObject'
-				|| clazz == 'ExpressionExperimentSetValueObject') {
+		} else if (clazz === "GeneValueObject" || clazz === 'GeneSetValueObject'
+				|| clazz === 'ExpressionExperimentSetValueObject') {
 			return record.name;
 		} else {
 			return clazz;
@@ -638,32 +638,32 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	renderEntity : function(data, metadata, record, row, column, store) {
 		var dh = Ext.DomHelper;
 		var clazz = record.get("resultClass");
-		if (clazz == "ExpressionExperimentValueObject") {
+		if (clazz === "ExpressionExperimentValueObject") {
 			return "<a href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
 					+ (data.sourceExperiment ? data.sourceExperiment : data.id) + "\">" + data.shortName + "</a> - "
 					+ data.name;
-		} else if (clazz == "CompositeSequence") {
+		} else if (clazz === "CompositeSequence") {
 			return "<a href=\"/Gemma/compositeSequence/show.html?id=" + data.id + "\">" + data.name + "</a> - "
 					+ (data.description ? data.description : "") + "; Array: " + data.arrayDesign.shortName;
-		} else if (clazz == "ArrayDesignValueObject") {
+		} else if (clazz === "ArrayDesignValueObject") {
 			return "<a href=\"/Gemma/arrays/showArrayDesign.html?id=" + data.id + "\">" + data.shortName + "</a>  "
 					+ data.name;
 		} else if (/^BioSequence.*/.exec(clazz)) {
 			return "<a href=\"/Gemma/genome/bioSequence/showBioSequence.html?id=" + data.id + "\">" + data.name
 					+ "</a> - " + data.taxon.commonName + " " + (data.description ? data.description : "");
-		} else if (clazz == "GeneValueObject" || clazz == "PredictedGene" || clazz == "ProbeAlignedRegion") {
+		} else if (clazz === "GeneValueObject" || clazz === "PredictedGene" || clazz === "ProbeAlignedRegion") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.officialSymbol
 					+ "</a>  - Species: " + data.taxonCommonName + " Desc: " + data.officialName;
-		} else if (clazz == "Bibliographicreference") {
+		} else if (clazz === "Bibliographicreference") {
 			return "<a href=\"/Gemma/gene/showGene.html?id=" + data.id + "\">" + data.title + "</a> [" + data.pubmedId
 					+ "]";
-		} else if (clazz == "ExpressionExperimentSetValueObject") {
+		} else if (clazz === "ExpressionExperimentSetValueObject") {
 
 			/*
 			 * TODO add links.
 			 */
 			return data.name;
-		} else if (clazz == "GeneSetValueObject") {
+		} else if (clazz === "GeneSetValueObject") {
 
 			/*
 			 * TODO add links

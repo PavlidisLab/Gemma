@@ -174,6 +174,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		this.selectedExpressionExperimentGroup = expressionExperimentGroup.data;
 		this.lastQuery = null;
 
-	},
+	}
 
 });

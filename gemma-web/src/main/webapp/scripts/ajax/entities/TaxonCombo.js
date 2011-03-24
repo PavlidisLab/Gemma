@@ -42,7 +42,7 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	/* 
 	 * this controls whether or not the entry 'All taxa' is added at the top of the list; 
 	 * this option must be handled in the function that responds to the combo box's selection event
-	 * for example, adding "if(record.get('commonName') == "All taxa"){...}"
+	 * for example, adding "if(record.get('commonName') === "All taxa"){...}"
 	 */ 
 	allTaxa: false, 
 	emptyText : 'Select a taxon',
@@ -56,7 +56,7 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	filter : function(taxon) {
 		this.store.clearFilter();
 		this.store.filterBy(function(record, id) {
-					if (taxon.id == record.get("id")) {
+					if (taxon.id === record.get("id")) {
 						return true;
 					} else {
 						return false;
@@ -120,7 +120,7 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 		}else{
 			this.store.load({
 							params : [],
-							add : false,
+							add : false
 						});	
 		}
 		
