@@ -79,7 +79,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				GenePickerController.getGenes(geneIds, function(genes) {
 							var geneData = [];
-							for (var i = 0; i < genes.length; ++i) {
+							var i = 0;
+							for (i; i < genes.length; i++) {
 								geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol,
 										genes[i].officialName]);
 							}
@@ -120,7 +121,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				// dummy action event handler - just outputs some arguments to console
 				this.action.on({
 					action:function(grid, record, action, row, col) {
-						if(action=='icon-cross'){
+						if(action==='icon-cross'){
 							this.changeMade = true;
 							grid.getStore().remove(record);
 						}
@@ -139,15 +140,22 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 										
 				// function to deal with user choice of what to do after editing an existing group
 				this.editedExistingGroup = function(btn){
-											if(btn == 'no'){ // no is don't save
+											if (btn === 'no') { // no is don't save
 												this.saveToSession();
-											}else if(btn == 'ok'){ // ok is save
-												this.saveToSession();
-											}else if(btn == 'yes'){ // yes is save as
+											}
+											else 
+												if (btn === 'ok') { // ok is save
+													this.saveToSession();
+												}
+												else 
+													if (btn === 'yes') { // yes is save as
 														this.detailsWin.name = '';
 														this.detailsWin.description = '';
 														this.detailsWin.show();
-											} else return;
+													}
+													else {
+														return;
+													}
 										}.createDelegate(this);
 										
 				Ext.apply(this, {
@@ -214,11 +222,11 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 												hidden: true
 										}, this.action]
 									}),
-							plugins:[this.action],
+							plugins:[this.action]
 				}); 
 				
 				// add columns dependent on columnSet config
-				if(this.columnSet=="full"){
+				if(this.columnSet==="full"){
 					console.log("in columnSet=\"full\"");
 					Ext.apply(this, this.getFullColumnModel());
 				}
@@ -239,7 +247,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 						}, this);
 
 				this.on("keypress", function(e) {
-							if (!this.getTopToolbar().disabled && e.getCharCode() == Ext.EventObject.DELETE) {
+							if (!this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE) {
 								this.removeGene();
 							}
 						}, this);
@@ -248,13 +256,14 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (this.genes) {
 					var genes = this.genes instanceof Array ? this.genes : this.genes.split(",");
 					this.loadGenes(genes);
-				};
+				}
 
 			},//eo initComponent
 
 			removeGene : function() {
 				var selected = this.getSelectionModel().getSelections();
-				for (var i = 0; i < selected.length; ++i) {
+				var i = 0;
+				for (i; i < selected.length; i++) {
 					this.getStore().remove(selected[i]);
 				}
 				this.getSelectionModel().selectLastRow();
@@ -299,7 +308,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			getGeneIds : function() {
 				var ids = [];
 				var all = this.getStore().getRange();
-				for (var i = 0; i < all.length; ++i) {
+				var i = 0;
+				for ( i; i < all.length; ++i) {
 					ids.push(all[i].data.id);
 				}
 				return ids;
@@ -316,7 +326,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			getGenes : function() {
 				var genes = [];
 				var all = this.getStore().getRange();
-				for (var i = 0; i < all.length; ++i) {
+				var i = 0;
+				for ( i; i < all.length; ++i) {
 					genes.push(all[i].data);
 				}
 				return genes;
@@ -342,7 +353,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 				
 				// if name for new group wasn't passed from parent component, make one up
-				if(!this.groupName || this.groupName == null || this.groupName == ''){
+				if(!this.groupName || this.groupName === null || this.groupName === ''){
 					this.newGroupName = "Gene group created: "+(new Date()).toString();
 				} else{
 					this.newGroupName = 'Edited \''+this.groupName+'\' group';
@@ -355,7 +366,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 								
 				// if description for new group wasn't passed from parent component, make one up
-				if(!this.newGroupDescription || this.newGroupDescription == null){
+				if(!this.newGroupDescription || this.newGroupDescription === null){
 					this.newGroupDescription = "Temporary gene group saved "+(new Date()).toString(); 
 				} 					
 				
@@ -365,7 +376,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}else{
 					// if geneGroupId is null, then there was no group to start with
 					// if user has made any changes, a new gene set will be created
-					if(!this.geneGroupId || this.geneGroupId == null){
+					if(!this.geneGroupId || this.geneGroupId === null){
 						//ask user if they want to save changes
 								Ext.Msg.show({
 									title: 'Save Changes?',
@@ -382,7 +393,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					}else{// if this is an edit of an existing gene group, give options to create or edit
 					
 						// if group of genes being edited belongs to the user, ask if they want to save changes
-							if(this.selectedGeneGroup!=null && this.selectedGeneGroup.type.indexOf('user')>=0){
+							if(this.selectedGeneGroup!==null && this.selectedGeneGroup.type.indexOf('user')>=0){
 								//ask user if they want to save changes
 								Ext.Msg.show({
 								   title:'Save Changes?',
@@ -458,12 +469,12 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				
 				tempstore.each(
 					function(r){
-						ids.push(r.get("id"))
+						ids.push(r.get("id"));
 					}	
 				);
 				
-				var recType = sessionStore.record;
-				var rec = new recType();
+				var RecType = sessionStore.record;
+				var rec = new RecType();
 				rec.set("geneIds", ids);
 				rec.set("size", ids.length);	
 				rec.set("name", name);
@@ -515,12 +526,12 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		tempstore.each(
 			function(r){
-				ids.push(r.get("id"))		
+				ids.push(r.get("id"));	
 			}	
 		);
 		
-		var recType = sessionStore.record;
-		var rec = new recType();
+		var RecType = sessionStore.record;
+		var rec = new RecType();
 		rec.set("geneIds", ids);
 		rec.set("size", ids.length);	
 		rec.set("name", name);
@@ -531,7 +542,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		sessionStore.save();
 		
-	},
+	}
 });
 Ext.reg('geneMembersGrid', Gemma.GeneMembersGrid);
 

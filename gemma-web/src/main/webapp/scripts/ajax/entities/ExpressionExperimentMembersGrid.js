@@ -44,7 +44,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 				ExpressionExperimentController.loadExpressionExperiments(eeIds, function(ees) {
 							var eeData = [];
-							for (var i = 0; i < ees.length; ++i) {
+							var i = 0;
+							for (i; i < ees.length; ++i) {
 								eeData.push([ees[i].id, ees[i].shortName, ees[i].name, 
 								ees[i].arrayDesignCount, ees[i].bioAssayCount]);
 							}
@@ -85,7 +86,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				// dummy action event handler - just outputs some arguments to console
 				this.action.on({
 					action:function(grid, record, action, row, col) {
-						if(action=='icon-cross'){
+						if(action==='icon-cross'){
 							this.changeMade = true;
 							grid.getStore().remove(record);
 						}
@@ -103,24 +104,31 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 										
 				// function to deal with user choice of what to do after editing an existing group
 				this.editedExistingGroup = function(btn){
-											if(btn == 'no'){ // no is don't save
+											if (btn === 'no') { // no is don't save
 												this.saveToSession();
-											}else if(btn == 'ok'){ // ok is save
-												this.saveToSession();
-											}else if(btn == 'yes'){ // yes is save as
+											}
+											else 
+												if (btn === 'ok') { // ok is save
+													this.saveToSession();
+												}
+												else 
+													if (btn === 'yes') { // yes is save as
 														this.detailsWin.name = '';
 														this.detailsWin.description = '';
 														this.detailsWin.show();
-											} else return;
+													}
+													else {
+														return;
+													}
 										}.createDelegate(this);
 				
 				Ext.apply(this, {
-							buttons : [{
+							buttons : [/*{
 										id : 'save-button',
 										text : "Save...",
 										handler : this.save,
 										scope : this
-									},{
+									},*/{
 										id : 'done-selecting-button',
 										text : "Done",
 										handler : this.done,
@@ -178,7 +186,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 											sortable : true
 										}*/,  this.action]
 									}),
-							plugins:[this.action],
+							plugins:[this.action]
 				}); 
 
 		Gemma.ExpressionExperimentMembersGrid.superclass.initComponent.call(this);
@@ -254,7 +262,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}
 				
 				// if name for new group wasn't passed from parent component, make one up
-				if(!this.groupName || this.groupName == null || this.groupName == ''){
+				if(!this.groupName || this.groupName === null || this.groupName === ''){
 					this.newGroupName = "Experiment group created: "+(new Date()).toString();
 				} else{
 					this.newGroupName = 'Edited \''+this.groupName+'\' group';
@@ -267,7 +275,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}
 								
 				// if description for new group wasn't passed from parent component, make one up
-				if(!this.newGroupDescription || this.newGroupDescription == null){
+				if(!this.newGroupDescription || this.newGroupDescription === null){
 					this.newGroupDescription = "Temporary experiment group saved "+(new Date()).toString(); 
 				} 					
 				
@@ -277,7 +285,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}else{
 					// if geneGroupId is null, then there was no group to start with
 					// if user has made any changes, a new gene set will be created
-					if(!this.experimentGroupId || this.experimentGroupId == null){
+					if(!this.experimentGroupId || this.experimentGroupId === null){
 						//ask user if they want to save changes
 								Ext.Msg.show({
 									title: 'Save Changes?',
@@ -294,7 +302,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}else{// if this is an edit of an existing gene group, give options to create or edit
 					
 						// if group of genes being edited belongs to the user, ask if they want to save changes
-							if(this.selectedExperimentGroup!=null && this.selectedExperimentGroup.type.indexOf('user')>=0){
+							if(this.selectedExperimentGroup!==null && this.selectedExperimentGroup.type.indexOf('user')>=0){
 								//ask user if they want to save changes
 								Ext.Msg.show({
 								   title:'Save Changes?',
@@ -367,7 +375,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				
 				tempstore.each(
 					function(r){
-						ids.push(r.get("id"))
+						ids.push(r.get("id"));
 					}	
 				);
 				
@@ -424,7 +432,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 		tempstore.each(
 			function(r){
-				ids.push(r.get("id"))		
+				ids.push(r.get("id"));	
 			}	
 		);
 		
@@ -440,7 +448,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 		sessionStore.save();
 		
-	},
+	}
 });
 
 

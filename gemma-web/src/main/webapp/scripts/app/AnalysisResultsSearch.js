@@ -7,8 +7,8 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
-	var admin = (Ext.get('hasAdmin')!=null)? Ext.get('hasAdmin').getValue(): null;
-	var user = (Ext.get('hasUser')!=null)? Ext.get('hasUser').getValue(): null;
+	var admin = (Ext.get('hasAdmin')!==null)? Ext.get('hasAdmin').getValue(): null;
+	var user = (Ext.get('hasUser')!==null)? Ext.get('hasUser').getValue(): null;
 	
 	if (Ext.isIE && Ext.isIE6) {
 		Ext.DomHelper.append('analysis-results-search-form', {
@@ -34,7 +34,7 @@ Ext.onReady(function() {
 		autoHeight:true,
 		hidden:true,
 		bodyStyle:'text-align:left;',
-		style:'text-align:left',
+		style:'text-align:left'
 		//hideMode:'visibility'
 	});
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
@@ -53,7 +53,9 @@ Ext.onReady(function() {
 		//if(left) left.animate({height:{to:0},opacity:{to:0}},2,function(){left.remove()});
 		//if(right) right.animate({height:{to:0},opacity:{to:0}},2,function(){right.remove()});
 		
-		if(toHide) toHide.remove();
+		if (toHide) {
+			toHide.remove();
+		}
 	
 	});
 	
@@ -83,15 +85,17 @@ Ext.onReady(function() {
 				colspan : 2,
 				collapsed : true
 			});
-
-		var knownGeneGrid = new Gemma.CoexpressionGrid({
+		if(!knownGeneGrid){
+			var knownGeneGrid = new Gemma.CoexpressionGrid({
 				width : 900,
 				height : 400,
 				title : "Coexpressed genes",
 				colspan : 2,
-				user : user,
+				user : user
 				//hidden:true
 			});
+		}
+		
 		
 		
 	var items = [summaryPanel, knownGeneDatasetGrid, knownGeneGrid];

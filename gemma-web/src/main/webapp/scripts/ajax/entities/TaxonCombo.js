@@ -161,8 +161,8 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 		if (!records || records.size() < 1) {
 			return -1;
 		}
-
-		for (var i = 0; i < records.size(); i++) {
+		var i = 0;
+		for (i = 0; i < records.size(); i++) {
 			if (records[i].data.commonName === commonName) {
 				this.setTaxon(records[i].data.id);
 				return records[i].data;

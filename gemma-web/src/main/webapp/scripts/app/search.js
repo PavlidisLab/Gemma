@@ -571,8 +571,8 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 		// size.
 		var lastResultClass = this.getStore().getAt(0).data.resultClass;
 		var expand = true;
-
-		for (var i = 1; i < this.getStore().getCount(); i++) {
+		var i = 1;
+		for (i; i < this.getStore().getCount(); i++) {
 			var record = this.getStore().getAt(i).data;
 			if (record.resultClass !== lastResultClass) {
 				expand = false;

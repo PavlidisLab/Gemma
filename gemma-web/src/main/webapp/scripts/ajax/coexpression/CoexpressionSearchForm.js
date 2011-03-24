@@ -130,7 +130,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		}
 
 		if (param.an) {
-			csc.eeSetName = param.an
+			csc.eeSetName = param.an;
 		}
 
 		if (param.setName) {
@@ -255,7 +255,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 							errorHandler : errorHandler
 						});
 			}
-			if (typeof pageTracker != 'undefined') {
+			if (typeof pageTracker !== 'undefined') {
 				pageTracker._trackPageview("/Gemma/coexpressionSearch.doSearch");
 			}
 		} else {
@@ -321,7 +321,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 		} else
 			numDatasets = datasets.length;
 
-		if (numDatasets != 0)
+		if (numDatasets !== 0)
 			Ext.getCmp('stringencyfield').maxValue = numDatasets;
 
 		Ext.getCmp('analysis-options').setTitle(String.format("Analysis options - Up to {0} datasets will be analyzed",
@@ -368,7 +368,7 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 
 		this.eeSetChooserPanel.on("select", function(combo, eeSetRecord, index) {
 
-					if (eeSetRecord === null || eeSetRecord == undefined) {
+					if (eeSetRecord === null || eeSetRecord === undefined) {
 						return;
 					}
 

@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
@@ -55,8 +53,6 @@ import ubic.gemma.web.session.SessionListManager;
  */
 @Controller
 public class GeneSetController {
-
-    private static Log log = LogFactory.getLog( GeneSetController.class );
 
     private static final Double DEFAULT_SCORE = 0.0;
 
