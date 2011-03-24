@@ -888,7 +888,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					for (var j = 0; j < ees.size(); j++) {
 						this.experimentPreviewContent.update(ees[j]);
 					}
-					this.experimentSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - Edit</a>');
+					this.experimentSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - View</a>');
 					this.showExperimentPreview();
 							
 				}.createDelegate(this));

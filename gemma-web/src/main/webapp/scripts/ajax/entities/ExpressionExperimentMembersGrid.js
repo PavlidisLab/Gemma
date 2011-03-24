@@ -128,12 +128,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 										text : "Save...",
 										handler : this.save,
 										scope : this
-									},*/{
+									},{
 										id : 'done-selecting-button',
 										text : "Done",
 										handler : this.done,
 										scope : this
-									}, {
+									},*/ {
 										id : 'cancel-selecting-button',
 										text : "Cancel",
 										handler : this.cancel,
@@ -177,14 +177,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 												record.data.id, record.data.shortName,record.data.name);
 											},
 											sortable : true
-										}/*, {
-											id : 'name',
-											header : "Name",
-											dataIndex : "name",
-											tooltip : "The descriptive name of the dataset, usually supplied by the submitter",
-											// width : 120,
-											sortable : true
-										}*/,  this.action]
+										}/*,  this.action*/]
 									}),
 							plugins:[this.action]
 				}); 
@@ -278,6 +271,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				if(!this.newGroupDescription || this.newGroupDescription === null){
 					this.newGroupDescription = "Temporary experiment group saved "+(new Date()).toString(); 
 				} 					
+				
+				// for now, just save to session
+				this.saveToSession();
+				this.fireEvent('experimentListModified', this.getEEIds(), this.newGroupName);
+				this.fireEvent('doneModification');
+				return;
 				
 				// if user is not logged in, only saving to session is available
 				if (!Ext.get('hasUser').getValue()) {
