@@ -57,7 +57,7 @@ Gemma.StatefulRemoteCombo = Ext.extend(Ext.form.ComboBox, {
 				if (r) {
 					return ({
 						id : r.get('id')
-					})
+					});
 				}
 			},
 

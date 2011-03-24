@@ -8,7 +8,7 @@ Gemma.BioMaterialEditor = function(config) {
 	};
 
 	Gemma.BioMaterialEditor.superclass.constructor.call(this, config);
-}
+};
 
 /**
  * Grid with list of biomaterials for editing experimental design parameters.
@@ -50,7 +50,7 @@ Ext.extend(Gemma.BioMaterialEditor, Ext.Panel, {
 			 * Gets called on startup but also when a refresh is needed.
 			 */
 			init : function() {
-				var loadMaskTarget = this.el != null ? this.el : Ext.getBody();
+				var loadMaskTarget = this.el !== null ? this.el : Ext.getBody();
 
 				this.loadMask = new Ext.LoadMask(loadMaskTarget, {
 							msg : "Please wait..."
@@ -159,7 +159,7 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			// text used for header of the column.
 			var label = factor.description ? factor.description : factor.name +
-					(factor.name == factor.description || factor.description == "" ? "" : " (" + factor.description +
+					(factor.name === factor.description || factor.description === "" ? "" : " (" + factor.description +
 							")");
 
 			columns.push({

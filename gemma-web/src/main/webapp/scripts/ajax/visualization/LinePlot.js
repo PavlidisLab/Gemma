@@ -139,7 +139,7 @@ var LinePlot = function() {
 						var lab = Ext.util.Format.ellipsis(sampleLabels[j], SAMPLE_LABEL_MAX_CHAR);
 
 						ctx.rotate(-Math.PI / 2);
-						ctx.fillText(lab, 0, 0)
+						ctx.fillText(lab, 0, 0);
 						ctx.rotate(Math.PI / 2);
 						ctx.translate(spacePerPoint, 0);
 					}

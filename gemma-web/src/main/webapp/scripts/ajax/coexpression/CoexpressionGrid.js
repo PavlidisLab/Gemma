@@ -111,7 +111,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.proteinlinkStyler.createDelegate(this),
 						tooltip : "Evidence for interactions from external sources",
 						sortable : true
-					}]
+					}];
 		} else {
 			columns = [{
 						id : 'query',
@@ -187,7 +187,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						width : 30,
 						tooltip : "Links to other websites for more information",
 						renderer : this.linkOutStyler
-					}]
+					}];
 		}
 
 		Ext.apply(this, {
@@ -345,7 +345,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			btn.setText(Gemma.SHOW_ONLY_MINE);
 		} else {
 			this.getStore().filterBy(function(r, id) {
-						return r.get("containsMyData")
+						return r.get("containsMyData");
 					}, this, 0);
 			btn.setText(Gemma.SHOW_ALL);
 		}
@@ -369,7 +369,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 
 			return false;
-		}
+		};
 	},
 
 	record : Ext.data.Record.create([{
@@ -530,7 +530,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.officialName = "";
 		}
 
-		if (g.taxonId != null) {
+		if (g.taxonId !== null) {
 			g.taxonId = g.taxonId;
 			g.taxonName = g.taxonCommonName;
 		} else {
@@ -571,7 +571,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		var width = bits.length * Gemma.CoexpressionGrid.bitImageBarWidth;
 		var gap = 0;
 
-		var s = ''
+		var s = '';
 		var maxheight = 0;
 		for (var i = 0; i < bits.length; ++i) {
 			if (i > 0) {
@@ -696,7 +696,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				var foundGene = record.data.foundGene;
 				var activeExperiments = record.data.supportingExperiments;
 				// destroy if already open???
-				if (this.coexpVisWindow != null) {
+				if (this.coexpVisWindow !== null) {
 					this.coexpVisWindow.close();
 					this.coexpVisWindow = null;
 				}
@@ -712,7 +712,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						});
 
 				var params = [];
-				params.push(activeExperiments)
+				params.push(activeExperiments);
 				params.push(queryGene.id);
 				params.push(foundGene.id);
 
@@ -737,7 +737,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						});
 
 				// Close if already open
-				if (this.detailsWindow !== undefined && this.detailsWindow != null) {
+				if (this.detailsWindow !== undefined && this.detailsWindow !== null) {
 					this.detailsWindow.close();
 				}
 
@@ -854,7 +854,7 @@ Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 	// scrolling to next image)
 	var popUpHtml;
 
-	if (linkOutValueObject.abaGeneImageUrls.length == 0) {
+	if (linkOutValueObject.abaGeneImageUrls.length === 0) {
 		window.alert("No Allen Brain Atlas images available for this gene");
 		return;
 	} else {
@@ -864,7 +864,7 @@ Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 	var abaWindowId = "coexpressionAbaWindow";
 
 	var popUpLinkOutWin = Ext.getCmp(abaWindowId);
-	if (popUpLinkOutWin != null) {
+	if (popUpLinkOutWin !== null) {
 		popUpLinkOutWin.close();
 		popUpLinkOutWin = null;
 	}

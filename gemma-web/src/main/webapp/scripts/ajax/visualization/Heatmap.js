@@ -254,7 +254,7 @@ var Heatmap = function() {
 
 						ctx.translate(boxWidth, 0);
 						ctx.rotate(-Math.PI / 2);
-						ctx.fillText(lab, 0, 0)
+						ctx.fillText(lab, 0, 0);
 						ctx.rotate(Math.PI / 2);
 					}
 				} else if (config.forceFit) {

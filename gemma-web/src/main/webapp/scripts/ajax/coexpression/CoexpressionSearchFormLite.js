@@ -49,7 +49,7 @@ Gemma.CoexpressionSearchFormLite = Ext.extend(Ext.FormPanel, {
 								var taxon = {
 									id : eeSet.store.getSelected().get("taxonId"),
 									name : eeSet.store.getSelected().get("taxonName")
-								}
+								};
 								this.taxonChanged(taxon);
 							}
 						}, this);

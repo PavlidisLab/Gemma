@@ -39,7 +39,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Ext.Panel, {
 			title = "Data for selected genes";
 		} else {
 			geneList = [];
-			title = "Data for a 'random' sampling of probes"
+			title = "Data for a 'random' sampling of probes";
 		}
 
 		this.visWindow = new Gemma.VisualizationWithThumbsWindow({

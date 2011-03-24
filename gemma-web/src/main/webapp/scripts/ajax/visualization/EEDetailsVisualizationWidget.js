@@ -113,9 +113,8 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneList.join(','));
 		} else {
 			geneList = [];
-			title = "Data for a 'random' sampling of probes", downloadLink = String.format(
-					"/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
-
+			title = "Data for a 'random' sampling of probes"; 
+			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
 		}
 
 		this.visWindow = new Gemma.VisualizationWithThumbsWindow({

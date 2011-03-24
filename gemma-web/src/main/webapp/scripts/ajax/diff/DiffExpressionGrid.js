@@ -225,7 +225,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	anchor_test : function() {
-		window.alert("This is an anchor test.")
+		window.alert("This is an anchor test.");
 	},
 
 	visStyler : function(value, metadata, record, row, col, ds) {
@@ -263,7 +263,7 @@ Gemma.DiffExpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 	// TODO: Make pop up window show more than one image (have a button for scrolling to next image)
 	var popUpHtml;
 
-	if (linkOutValueObject == null) {
+	if (linkOutValueObject === null) {
 		window.alert("No Allen Brain Atlas details available for this gene");
 		return;
 	} else {
@@ -274,7 +274,7 @@ Gemma.DiffExpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 	var abaWindowId = "diffExpressionAbaWindow";
 
 	var popUpLinkOutWin = Ext.getCmp(abaWindowId);
-	if (popUpLinkOutWin != null) {
+	if (popUpLinkOutWin !== null) {
 		popUpLinkOutWin.close();
 		popUpLinkOutWin = null;
 	}
