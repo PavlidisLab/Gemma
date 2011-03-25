@@ -87,7 +87,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/indexer.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
-
+    <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/metaheatmap.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -114,12 +114,13 @@
 	<!-- ==================================================== -->
 	<!--           Used to configure menus on pages           -->
 	<!-- ==================================================== -->
+	<!-- 
 	<bean id="menu" class="net.sf.navigator.menu.MenuLoader">
 		<property name="menuConfig">
 			<value>/WEB-INF/menu-config.xml</value>
 		</property>
 	</bean>
-
+ -->
 	<!--
 		 Used for file uploads. Simply defining this makes Spring use it.
 	-->
@@ -206,8 +207,7 @@ gemma.max.fileupload.size.bytes=
 	</bean>
 
 	<bean id="fileUploadController" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUploadController" />
-
-
+  
 	<bean id="expressionExperimentFormController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentFormController">
 
 		<property name="commandName">
@@ -968,6 +968,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getDifferentialExpressionForFactors</value>
 								<value>getDiffMetaAnalysisForGenes</value>
 								<value>getFactors</value>
+								<value>differentialExpressionAnalysisVisualizationSearch</value>
 							</list>
 						</property>
 					</bean>
@@ -1288,6 +1289,26 @@ gemma.max.fileupload.size.bytes=
 						<property name="type" value="bean" />
 					</bean>
 				</entry>								
+				<entry key="ubic.gemma.web.controller.diff.DifferentialExpressionSearchController$DifferentialExpressionResultsValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.visualization.DifferentialExpressionAnalysisResultSetVisualizationValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.visualization.DifferentialExpressionVisualizationValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>												
+				<entry key="ubic.gemma.web.visualization.DifferentialExpressionVisualizationValueObject$GeneScore">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>												
 				<entry key="ubic.gemma.model.genome.gene.GeneProduct">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
