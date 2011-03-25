@@ -551,7 +551,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		});
 		
 		this.geneSelectionEditor.on('geneListModified', function(newGeneIds, groupName){
-			console.log('geneListModified event received, newGeneIds: '+newGeneIds+" name:"+groupName);
 			if(newGeneIds){
 				this.loadGenes(newGeneIds);
 			} if(groupName){

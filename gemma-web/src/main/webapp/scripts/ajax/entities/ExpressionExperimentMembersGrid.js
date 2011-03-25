@@ -209,7 +209,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		});
 
 		this.getStore().on("remove", function() {
-			console.log("Ext.getCmp('save-selection-button')"+Ext.getCmp('save-selection-button'));
 							this.changesMade = true;
 							this.saveButton.enable();
 							this.doneButton.enable();
