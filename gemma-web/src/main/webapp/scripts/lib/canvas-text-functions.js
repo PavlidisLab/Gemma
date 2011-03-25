@@ -27,6 +27,23 @@ MiniPieLib.drawFilledRectangle = function (ctx, x, y, width, height, color) {
     ctx.restore();
 }		    
 
+MiniPieLib.drawFilledRotatedRectangle = function (ctx, x, y, width, height, angle, color) {
+	xtop = Math.cos( angle*2*Math.PI / 360) * height;
+	ytop = Math.sin( angle*2*Math.PI / 360) * height;
+	ctx.save();
+    ctx.fillStyle = color;
+	ctx.strokeStyle = color;
+	ctx.translate(x, y);
+    ctx.beginPath();
+    ctx.lineTo(xtop, ytop);
+    ctx.lineTo(xtop + width, ytop);
+    ctx.lineTo(width, 0);
+    ctx.lineTo(0,0);    
+    ctx.fill();
+    ctx.restore();
+}		    
+
+
 //
 // This code is released to the public domain by Jim Studt, 2007.
 // He may keep some sort of up to date copy at http://www.federated.com/~jim/canvastext/
