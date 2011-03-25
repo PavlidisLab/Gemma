@@ -464,7 +464,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             if ( sessionResult != null && sessionResult.size() > 0 ) {
                 // for every object passed in, create a SearchResultDisplayObject
                 for ( ExpressionExperimentSetValueObject eevo : sessionResult ) {
-                    SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
+                    ExpressionExperimentSet eeSet = expressionExperimentSetService.load( eevo.getId() );
+                    SearchResultDisplayObject srdo = new SearchResultDisplayObject( eeSet );
                     srdo.setType( srdo.getType()+"Session" );
                     sessionSets.add( srdo );
                 }
