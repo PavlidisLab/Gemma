@@ -158,21 +158,24 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 														return;
 													}
 										}.createDelegate(this);
-				
+				this.saveButton = new Ext.Button({
+							id: 'save-selection-button',
+							text: "Save",
+							handler: this.save,
+							scope: this,
+							disabled: true
+						});
+				this.doneButton = new Ext.Button({
+							id: 'done-selecting-button',
+							text: "Done",
+							handler: this.done,
+							scope: this,
+							disabled: true
+						});
 				// add save button if user isn't logged in
-				if(this.loggedIn){
+				if(Ext.get('hasUser').getValue()){
 					Ext.apply(this, {
-							buttons : [{
-										id : 'save-selection-button',
-										text : "Save",
-										handler : this.save,
-										scope : this
-									},{
-										id : 'done-selecting-button',
-										text : "Done",
-										handler : this.done,
-										scope : this
-									}, {
+							buttons : [this.saveButton, this.doneButton, {
 										id : 'cancel-selecting-button',
 										text : "Cancel",
 										handler : this.cancel,
@@ -181,12 +184,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					});
 				}else{
 					Ext.apply(this, {
-							buttons : [{
-										id : 'done-selecting-button',
-										text : "Done",
-										handler : this.done,
-										scope : this
-									}, {
+							buttons : [this.doneButton, {
 										id : 'cancel-selecting-button',
 										text : "Cancel",
 										handler : this.cancel,
@@ -262,14 +260,22 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				this.addEvents('addgenes', 'removegenes', 'geneListModified');
 
+				this.on('doneModification', function(){
+					this.changesMade = false;
+				});
+
 				this.getStore().on("remove", function() {
 							this.fireEvent("removegenes");
 							this.changesMade = true;
+							this.saveButton.enable();
+							this.doneButton.enable();
 						}, this);
 
 				this.getStore().on("add", function() {
 							this.fireEvent("addgenes");
 							this.changesMade = true;
+							this.saveButton.enable();
+							this.doneButton.enable();
 						}, this);
 
 				this.on("keypress", function(e) {

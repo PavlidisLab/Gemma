@@ -18,6 +18,7 @@
  */
 package ubic.gemma.web.controller.expression.experiment;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -30,7 +31,9 @@ import ubic.gemma.util.EntityUtils;
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentSetValueObject implements GemmaSessionBackedValueObject, Comparable<ExpressionExperimentSetValueObject> {
+public class ExpressionExperimentSetValueObject implements Serializable, GemmaSessionBackedValueObject, Comparable<ExpressionExperimentSetValueObject> {
+
+    private static final long serialVersionUID = -6852364688337216390L;
 
     private boolean currentUserHasWritePermission = false;
 

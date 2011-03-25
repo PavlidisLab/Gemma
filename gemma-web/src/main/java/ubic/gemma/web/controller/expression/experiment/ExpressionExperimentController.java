@@ -111,6 +111,7 @@ import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.remote.EntityDelegator;
+import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.web.taglib.displaytag.ExpressionExperimentValueObjectComparator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -311,6 +312,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
     @Autowired
     private SVDService svdService;
 
+    @Autowired
+    private SessionListManager sessionListManager;
+
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
 
     private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
@@ -395,7 +399,14 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query ) {
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
         List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
+
+        /*
+         * Arbitrary id values for temporary groups (only needed so when displayed in a combo box, the selected entry's
+         * name will appear in the field after being selected)
+         */
+        Long tempId = new Long( -3 );
 
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
@@ -416,7 +427,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     // user)
                     if ( newSRDO.getDescription().indexOf( "Automatically generated" ) < 0 ) {
                         newSRDO.setType( "usersExperimentSet" );
-                        displayResults.add( newSRDO );
+                        usersResults.add( newSRDO );
                     } else {
                         autoGenResults.add( newSRDO );
                     }
@@ -440,23 +451,34 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     SearchResultDisplayObject
                             .convertSearchResults2SearchResultDisplayObjects( autoGenSetsSearchResults ) );
 
-            // get the temporary sets
-            /*
-             * //TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-             * Collection<ExpressionExperimentSetValueObject> sessionResult =
-             * sessionListManager.getRecentExperimentSets();
-             * 
-             * sessionListManager.setUniqueExperimentSetStoreIds( result );
-             * 
-             * result.addAll(sessionResult);
-             */
+            // get any session-bound groups
+            Collection<ExpressionExperimentSetValueObject> sessionResult = sessionListManager.getRecentExperimentSets();
+
+            // make some unique toss-away ids for session-bound sets
+            for ( ExpressionExperimentSetValueObject sessionSet : sessionResult ) {
+                sessionSet.setId( tempId );
+                tempId--;
+            }
+            List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
+
+            if ( sessionResult != null && sessionResult.size() > 0 ) {
+                // for every object passed in, create a SearchResultDisplayObject
+                for ( ExpressionExperimentSetValueObject eevo : sessionResult ) {
+                    SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
+                    srdo.setType( srdo.getType()+"Session" );
+                    sessionSets.add( srdo );
+                }
+            }
 
             // keep sets in proper order (user's groups first, then public ones)
-            Collections.sort( displayResults );
+            Collections.sort( sessionSets );
+            displayResults.addAll( sessionSets );
+
+            Collections.sort( usersResults );
+            displayResults.addAll( usersResults );
 
             autoGenResults.addAll( autoGenSets );
             Collections.sort( autoGenResults );
-
             displayResults.addAll( autoGenResults );
 
             return displayResults;
@@ -576,11 +598,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
                 // make an entry for each taxon
 
-                /*
-                 * Arbitrary id values for temporary groups (only needed so when displayed in a combo box, the selected
-                 * entry's name will appear in the field after being selected)
-                 */
-                Long tempId = new Long( -3 );
                 Long taxonId = null;
                 for ( Map.Entry<Long, HashSet<Long>> entry : eeIdsByTaxonId.entrySet() ) {
                     taxonId = entry.getKey();

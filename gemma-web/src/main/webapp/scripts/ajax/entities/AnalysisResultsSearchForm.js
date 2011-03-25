@@ -414,7 +414,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		// Shows the combo box for EE groups 
 		this.experimentCombo = new Gemma.ExperimentAndExperimentGroupCombo({
 							typeAhead: false,
-							width : 210
+							width : 220
 						});
 		this.experimentCombo.on('select', function(combo, record, index) {
 										
@@ -440,18 +440,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			hideHeaders:true,
 			frame:false
 		});
+		
 		this.experimentSelectionEditor.on('experimentListModified', function(newExperimentIds, groupName){
 			if (console) {
 				console.log('geneListModified event received, newGeneIds: ' + newExperimentIds + " name:" + groupName);
 			}
 			if(newExperimentIds){
-				// geneids are passed for testing
 				this.loadExperiments(newExperimentIds);
 			} if(groupName){
 				this.experimentCombo.setRawValue(groupName);
 			}
 		},this);
+		
 		this.experimentSelectionEditor.on('doneModification', function(){
+			this.getEl().unmask();
 			this.experimentSelectionEditorWindow.hide();
 			},this);
 
@@ -492,8 +494,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					width:187,
 					hideTrigger: false,
 					typeAhead: false,
-					style:'background:Gainsboro;',
-					//editable : false, //true to enable search of combo values
+					style:'background:Gainsboro;', // because it starts disabled
 					listeners : {
 						'select' : {
 							fn : function(combo, record, index) {
@@ -512,22 +513,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 						}
 					}
 				});
-				
-			/*
-//add listeners here (load,loadexception,add,beforeload,clear,datachanged,remove,update)	
-		this.experimentCombo.getStore().on('beforeload',function(options){console.log('Store listener fired beforeload, arguments=',options);});
-		this.experimentCombo.getStore().on('load',function(){console.log('Store listener fired load, arguments=',arguments);});
-		this.experimentCombo.getStore().on('loadexception',function(misc){console.log('Store listener fired exception, arguments=',misc);});
-		this.experimentCombo.getStore().on('exception',function(misc){console.log('Store listener fired exception, arguments=',misc);});
-		this.experimentCombo.getStore().on('add',function(store, records, index){console.log('Store listener fired add, arguments=',records);});
-		this.experimentCombo.on('focus',function(field){console.log('Combo listener fired focus, arguments=',arguments);});
-		this.experimentCombo.on('blur',function(field){console.log('Combo listener fired blur, arguments=',arguments);});
-		this.experimentCombo.on('collapse',function(combo){console.log('Combo listener fired collapse, arguments=',arguments);});
-		this.experimentCombo.on('select',function(combo,record,index){console.log('Combo listener fired select, arguments=',arguments);});
-		this.geneCombo.on('change',function(field,newVal,oldVal){console.log('Combo listener fired change, arguments=',arguments);});
-		this.experimentCombo.on('beforequery',function(queryEvent){console.log('Combo listener fired beforequery, arguments=',arguments);});
-*/
-				
+			
 			this.symbolList = new Gemma.GeneImportPanel({
 						listeners : {
 							'commit' : {
@@ -556,31 +542,25 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		
 		
 		/******* GENE SELECTION EDITOR ******************************************************************/		
-		var loggedIn = Ext.get('hasUser').getValue();
 		this.geneSelectionEditor = new Gemma.GeneMembersGrid( {
 			id: 'geneSelectionEditor',
 			height : 200,
 			//hidden: 'true',
 			hideHeaders:true,
-			frame:false,
-			loggedIn: loggedIn
+			frame:false
 		});
+		
 		this.geneSelectionEditor.on('geneListModified', function(newGeneIds, groupName){
 			console.log('geneListModified event received, newGeneIds: '+newGeneIds+" name:"+groupName);
-			//this.geneSelectionEditorWindow.hide();
 			if(newGeneIds){
-				// geneids are passed for testing
 				this.loadGenes(newGeneIds);
 			} if(groupName){
 				this.geneCombo.setValue(groupName);
-				
-				//this.geneCombo.setValue(groupName); // this should select the new group?
-				
-				// if groupId is passed, that means group has been created or updated and genes should be loaded from there
-				// by selecting the group with the gene combo
 			}
 		},this);
+		
 		this.geneSelectionEditor.on('doneModification', function(){
+			this.getEl().unmask();
 			this.geneSelectionEditorWindow.hide();
 			},this);
 
@@ -605,15 +585,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				html:'<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview</div>',
 				tpl: new Ext.Template('<div style="padding-bottom:7px;"><a href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName}</div>'),
 				tplWriteMode: 'append' // use this to append to content when calling update instead of replacing
-				//tplWriteMode: 'overwrite',
-				//frame:true,
-				//items:this.geneSelectionEditorBtn,
 		});
 		this.genePreview = new Ext.Panel({
 				//height:100,
 				width:219,
-				//layout:'hbox',
-				//id:'genePreview',
 				frame:true,
 				items:[this.genePreviewContent,this.geneSelectionEditorBtn]
 		});
@@ -648,18 +623,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					{},{html: 'these experiments', style:'text-align:center;font-size:1.4em;'},
 					{},{html: 'these genes', style:'text-align:center;font-size:1.4em;padding:0px'},
 					{},{},
-					/*{
-						rowspan: 5,
-						items: [{html:"<br><br>",border:false},new Ext.Button({
-							text: "<span style=\"font-size:1.1em\">Go</span>",
-							handler: this.doSearch.createDelegate(this, [], false),
-							style:'padding-bottom:0.4em; padding-top:0.8em',
-							//scale: 'medium',
-							width:35,
-						})]
-					},*/
-			
-			
+					
 					{html:'Search for ', style:'text-align:center;vertical-align:middle;font-size:1.7em;', rowspan:1},
 					{html: ' in ', style:'text-align:center;vertical-align:middle;font-size:1.7em;', rowspan:1},
 					this.experimentCombo,
@@ -684,16 +648,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		
 		this.addEvents('beforesearch', 'aftersearch','showDiffExResults','showCoexResults');		
 
-		/*this.on('afterrender', function() {
-					Ext.apply(this, {
-								loadMask : new Ext.LoadMask(this.getEl(), {
-											msg : "Preparing Search Interface  ..."
-										})
-							});
-
-					this.loadMask.show();
-				});
-	*/
 		this.doLayout();
 		
 	},
@@ -774,6 +728,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		if(!this.geneIds || this.geneIds ===null || this.geneIds.length === 0){
 			return;
 		}
+		this.getEl().mask();
 
 		this.geneSelectionEditorWindow = new Ext.Window({
 			closeAction: 'hide',
@@ -793,13 +748,18 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			selectedGeneGroup: this.geneCombo.selectedGeneGroup, 
 			groupName: this.geneCombo.selectedGeneGroup.name
 		});
-		this.geneSelectionEditor.loadGenes(this.geneIds, function(){Ext.getCmp('geneSelectionEditor').loadMask.hide();});
+		this.geneSelectionEditor.loadGenes(this.geneIds, function(){
+			Ext.getCmp('geneSelectionEditor').loadMask.hide();
+			
+		});
 	},
 	launchExperimentSelectionEditor: function(){
 				
 		if(!this.experimentIds || this.experimentIds.length === 0){
 			this.experimentIds = [1101,3,1096]; // FOR TESTING
 		}
+		
+		this.getEl().mask();
 
 		this.experimentSelectionEditorWindow = new Ext.Window({
 			closeAction: 'hide',
@@ -848,7 +808,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				//load single experiment if experiment was selected
 				else {
 					this.experimentIds = [id];
-					//console.log("id:"+id+", record:"+record+" name:"+record.get("name")+" desc"+record.get("description")+" taxonId:"+record.get("taxonId"));
 					// reset the experiment preview panel content
 					this.resetExperimentPreview();
 					
@@ -888,7 +847,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					for (var j = 0; j < ees.size(); j++) {
 						this.experimentPreviewContent.update(ees[j]);
 					}
-					this.experimentSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - View</a>');
+					this.experimentSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - Edit</a>');
 					this.showExperimentPreview();
 							
 				}.createDelegate(this));

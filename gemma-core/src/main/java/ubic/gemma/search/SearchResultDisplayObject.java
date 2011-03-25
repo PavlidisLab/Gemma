@@ -32,6 +32,7 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.search.SearchResult;
+import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
  * Object to store search results of different classes in a similar way for displaying to user (ex: enables genes and
@@ -150,6 +151,14 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
 
     /**
+     * @param expressionExperiment
+     */
+    public SearchResultDisplayObject( ExpressionExperimentSetValueObject expressionExperimentSet ) {
+        setValues( expressionExperimentSet );
+
+    }
+
+    /**
      * @param gene
      */
     private void setValues( Gene gene ) {
@@ -240,6 +249,23 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         for ( BioAssaySet bas : expressionExperimentSet.getExperiments() ) {
             this.memberIds.add( bas.getId() );
         }
+    }
+    
+    /**
+     * @param expressionExperimentSet
+     */
+    private void setValues( ExpressionExperimentSetValueObject expressionExperimentSet ) {
+        this.id = expressionExperimentSet.getId();
+        this.sessionId = this.getId();
+        this.resultClass = ExpressionExperimentSet.class;
+        this.isGroup = true;
+        this.size = expressionExperimentSet.getExpressionExperimentIds().size();
+        this.taxonName = expressionExperimentSet.getTaxonName();
+        this.taxonId = expressionExperimentSet.getTaxonId();
+        this.name = expressionExperimentSet.getName();
+        this.description = expressionExperimentSet.getDescription();
+        this.type = "experimentSet";
+        this.memberIds = expressionExperimentSet.getExpressionExperimentIds();
     }
 
     private Class<?> resultClass;
