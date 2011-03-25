@@ -69,7 +69,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	 **************************************************************/
 
 	doSearch : function() {
-		//console.log("in do search");
 		
 		this.fireEvent('beforesearch', this);
 		if(!this.loadMask){
@@ -126,7 +125,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	},
 
 	doCoexpressionSearch : function(csc) {
-		//console.log("in do search");
 		if (!csc) {
 			csc = this.getCoexpressionSearchCommand();
 		}
@@ -391,7 +389,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		this.fireEvent('showCoexResults', this, result);
 	},
 	returnFromDiffExSearch : function(result) {
-		//console.log("in return from diffSearch");
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
 		this.fireEvent('showDiffExResults', this, result);
@@ -442,9 +439,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		});
 		
 		this.experimentSelectionEditor.on('experimentListModified', function(newExperimentIds, groupName){
-			if (console) {
-				console.log('geneListModified event received, newGeneIds: ' + newExperimentIds + " name:" + groupName);
-			}
 			if(newExperimentIds){
 				this.loadExperiments(newExperimentIds);
 			} if(groupName){
@@ -785,7 +779,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	 * Show the selected eeset members 
 	 */
 	loadExperimentOrGroup : function(record, query) {
-			//console.log("in loadExperimentOrGroup, record:"+record+", args:"+args);
 				
 				var id = record.get("id");
 				var isGroup = record.get("isGroup");

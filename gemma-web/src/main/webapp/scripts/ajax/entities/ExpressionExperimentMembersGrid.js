@@ -70,8 +70,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// Create RowActions Plugin
 			 	this.action = new Ext.ux.grid.RowActions({
 					 header:'Actions',
-					//,autoWidth:false
-					//,hideMode:'display'
 					keepSelection:true,
 					actions:[{
 						 iconCls:'icon-cross',
@@ -375,7 +373,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var taxonId = this.selectedExperimentGroup.taxonId;
 			
 				var sessionStore = new Gemma.UserSessionDatasetGroupStore();
-				
+				sessionStore.purgeListeners();
 				var ids = this.getEEIds();
 		
 				var RecType = sessionStore.record;

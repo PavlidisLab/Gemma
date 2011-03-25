@@ -251,7 +251,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				
 				// add columns dependent on columnSet config
 				if(this.columnSet==="full"){
-					console.log("in columnSet=\"full\"");
 					Ext.apply(this, this.getFullColumnModel());
 				}
 				
