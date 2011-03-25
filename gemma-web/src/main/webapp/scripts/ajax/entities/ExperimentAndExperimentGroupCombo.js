@@ -77,16 +77,16 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					// format fields to show in combo, only show size in brakets if the entry is a group
 					tpl: new Ext.XTemplate('<tpl for=".">' +
 					'<tpl if="type==\'experiment\'">' +
-						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonCommonName})</span></div>' +
+						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>'+
 					'<tpl if="type==\'usersExperimentSet\'">' +
-					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'experimentSet\'">' +
-					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'freeText\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonCommonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonCommonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +
 					'</tpl>'),
 				store:{
@@ -108,10 +108,14 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 								name: "size",
 								type: "int"
 							},{
-								name: "taxon"
+								name: "taxonId",
+								type: "int",
+								defaultValue: "-1"
 							},{
-								name: "taxonCommonName",
-								mapping: 'taxon.commonName'
+								name: "taxonName",
+								type: "string",
+								defaultValue: ""
+								
 							},{
 								name: "type",
 								type: "string"

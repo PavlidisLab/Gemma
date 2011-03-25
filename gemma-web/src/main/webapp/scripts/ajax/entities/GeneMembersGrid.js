@@ -37,6 +37,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			changeMade: false,
 //			bubbleEvents: ['geneListModified'],
 			geneGroupId: null, 
+			loggedId: null,
 			/*
 			 * columnSet can be "reduced" or "full", 
 			 * if "reduced": only symbol and description are shown
@@ -101,7 +102,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}),
 
 			initComponent : function() {
-
+				
 			 	// Create RowActions Plugin
 			 	this.action = new Ext.ux.grid.RowActions({
 					 header:'Actions',
@@ -157,8 +158,29 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 														return;
 													}
 										}.createDelegate(this);
-										
-				Ext.apply(this, {
+				
+				// add save button if user isn't logged in
+				if(this.loggedIn){
+					Ext.apply(this, {
+							buttons : [{
+										id : 'save-selection-button',
+										text : "Save",
+										handler : this.save,
+										scope : this
+									},{
+										id : 'done-selecting-button',
+										text : "Done",
+										handler : this.done,
+										scope : this
+									}, {
+										id : 'cancel-selecting-button',
+										text : "Cancel",
+										handler : this.cancel,
+										scope : this
+									}]
+					});
+				}else{
+					Ext.apply(this, {
 							buttons : [{
 										id : 'done-selecting-button',
 										text : "Done",
@@ -169,7 +191,11 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 										text : "Cancel",
 										handler : this.cancel,
 										scope : this
-									}],
+									}]
+					});
+				}
+										
+				Ext.apply(this, {
 							store : new Ext.data.SimpleStore({
 										fields : [{
 													name : 'id',
@@ -339,19 +365,12 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			cancel: function(){
 				this.fireEvent('doneModification');
 			},
-
-
+			
 			/**
-			 * When user clicks 'done', deal with changes
+			 * Sets ups name and description for new group
 			 */
-			done : function() {
-				
-				// if user hasn't made any changes, just close the window
-				if(!this.changesMade){
-					this.fireEvent('doneModification');
-					return;
-				}
-				
+			createDetails: function(){
+												
 				// if name for new group wasn't passed from parent component, make one up
 				if(!this.groupName || this.groupName === null || this.groupName === ''){
 					this.newGroupName = "Gene group created: "+(new Date()).toString();
@@ -368,54 +387,75 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				// if description for new group wasn't passed from parent component, make one up
 				if(!this.newGroupDescription || this.newGroupDescription === null){
 					this.newGroupDescription = "Temporary gene group saved "+(new Date()).toString(); 
-				} 					
+				} 
+			},
+
+			/**
+			 * When user clicks done, just save to session 
+			 */
+			done: function(){
+				// if user hasn't made any changes, just close the window
+				if(!this.changesMade){
+					this.fireEvent('doneModification');
+					return;
+				}
+				this.createDetails();
+				this.saveToSession();
+			},
+
+			/**
+			 * When user clicks 'save', figure out what kind of save to do
+			 */
+			save : function() {
 				
-				// if user is not logged in, only saving to session is available
+				// if user hasn't made any changes, just close the window
+				if(!this.changesMade){
+					this.fireEvent('doneModification');
+					return;
+				}
+				
+				// get name and description set up
+				this.createDetails();				
+				
+				// save button should only be visible if user is not logged in, but just to be safe:
 				if (!Ext.get('hasUser').getValue()) {
+						Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "
+											+" however, your list will be available temporarily.");
 						this.saveToSession();
 				}else{
+					
 					// if geneGroupId is null, then there was no group to start with
 					// if user has made any changes, a new gene set will be created
 					if(!this.geneGroupId || this.geneGroupId === null){
 						//ask user if they want to save changes
-								Ext.Msg.show({
-									title: 'Save Changes?',
-									msg: 'Would you like to save your changes? <br>' +
-									'(Unsaved lists are available until you log out.) ',
-									buttons: {
-										yes: 'Save As',
-										no: 'Don\'t save'
-									},
-									fn: this.editedExistingGroup,
-									icon: Ext.MessageBox.QUESTION
-								});
+								this.editedExistingGroup('yes'); // yes means 'save as'
 						
 					}else{// if this is an edit of an existing gene group, give options to create or edit
 					
+						// if group being edited is session-bound, only offer to save to database
+							if (this.selectedGeneGroup !== null && 
+									(this.selectedGeneGroup.type.indexOf('Session') >= 0 ||
+									 this.selectedGeneGroup.type.indexOf('session') >= 0)) {
+								
+								this.editedExistingGroup('yes'); // yes means 'save as'
+							}
+					
 						// if group of genes being edited belongs to the user, ask if they want to save changes
-							if(this.selectedGeneGroup!==null && this.selectedGeneGroup.type.indexOf('user')>=0){
+							else if (this.selectedGeneGroup !== null && 
+									(this.selectedGeneGroup.type.indexOf('user') >= 0 ||
+									 this.selectedGeneGroup.type.indexOf('User') >= 0)) {
 								//ask user if they want to save changes
 								Ext.Msg.show({
 								   title:'Save Changes?',
 								   msg: 'You have edited an existing group, '+
-											'would you like to save your changes?'+
-											'(Unsaved lists are available until you log out.) ',
-								   buttons: {ok:'Save', yes:'Save As', no:'Don\'t save'},
+											'would you like to save your changes?<br>'+
+											'(Unsaved lists are available until you log out.)',
+								   buttons: {ok:'Save', yes:'Save As...', no:'Don\'t save'},
 								   fn: this.editedExistingGroup,
 								   icon: Ext.MessageBox.QUESTION
 								});
 							}else{
-								Ext.Msg.show({
-									title: 'Save Changes?',
-									msg: 'Would you like to save your changes? <br>' +
-									'(Unsaved lists are available until you log out.) ',
-									buttons: {
-										yes: 'Save As',
-										no: 'Don\'t save'
-									},
-									fn: this.editedExistingGroup,
-									icon: Ext.MessageBox.QUESTION
-								});
+								this.editedExistingGroup('yes'); // yes means 'save as'
 							}
 					}
 				} 
@@ -426,17 +466,21 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			saveToSession : function() {
 				var name = this.newGroupName;
 				var description = this.newGroupDescription;
+				var taxonName = this.selectedGeneGroup.taxonName;
+				var taxonId = this.selectedGeneGroup.taxonId;
 			
-				sessionStore = new Gemma.UserSessionGeneGroupStore();		
+				var sessionStore = new Gemma.UserSessionGeneGroupStore();		
 		
 				var ids = this.getGeneIds();
 		
-				var RecType = groupStore.record;
+				var RecType = sessionStore.record;
 				var rec = new RecType();
 				rec.set("geneIds", ids);
 				rec.set("size", ids.length);	
 				rec.set("name", name);
 				rec.set("description",description);
+				rec.set("taxonName",taxonName);
+				rec.set("taxonId",taxonId);
 				rec.set("session", true);
 				
 				sessionStore.add(rec);
@@ -450,8 +494,10 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		createInDatabase : function() {
 		var name = this.newGroupName;
 		var description = this.newGroupDescription;
+		var taxonName = this.selectedGeneGroup.taxonName;
+		var taxonId = this.selectedGeneGroup.taxonId;
 
-		groupStore = new Gemma.GeneGroupStore();		
+		var groupStore = new Gemma.GeneGroupStore();		
 		
 		var ids = this.getGeneIds();
 		
@@ -461,6 +507,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		rec.set("size", ids.length);	
 		rec.set("name", name);
 		rec.set("description",description);
+		rec.set("taxonName",taxonName);
+		rec.set("taxonId",taxonId);
 		rec.set("session", false);
 		
 		groupStore.add(rec);

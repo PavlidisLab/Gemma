@@ -28,7 +28,6 @@ import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
@@ -58,12 +57,13 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param description should not be null
      * @param isGroup cannot be null
      * @param size should not be null (should be 1 for non-groups)
-     * @param taxon can be null
+     * @param taxonId can be null
+     * @param taxonName can be null
      * @param type can be null
      * @param memberIds can be null
      */
     public SearchResultDisplayObject( Class<?> resultClass, Long id, String name, String description, Boolean isGroup,
-            int size, Taxon taxon, String type, Collection<Long> memberIds ) {
+            int size, Long taxonId, String taxonName,String type, Collection<Long> memberIds ) {
 
         this.resultClass = resultClass;
         this.id = id;
@@ -72,7 +72,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.description = description;
         this.isGroup = isGroup;
         this.size = size;
-        this.taxon = taxon;
+        this.taxonId = taxonId;
+        this.taxonName = taxonName;
         this.type = type;
         this.memberIds = memberIds;
     }
@@ -103,7 +104,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
             this.sessionId = this.getId();
             this.isGroup = false;
             this.size = -1;
-            this.taxon = null;
+            this.taxonId = new Long( -1 );
+            this.taxonName = "unknown";
             this.name = "Unhandled type";
             this.description = "Unhandled result type: " + this.resultClass;
             this.type = this.getClass().getSimpleName();
@@ -156,7 +158,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.resultClass = Gene.class;
         this.isGroup = false;
         this.size = 1;
-        this.taxon = gene.getTaxon();
+        this.taxonId = ( gene.getTaxon() != null ) ? gene.getTaxon().getId() : null;
+        this.taxonName = ( gene.getTaxon() != null ) ? gene.getTaxon().getCommonName() : null;
         this.name = gene.getOfficialSymbol();
         this.description = gene.getOfficialName();
         this.type = "gene";
@@ -172,7 +175,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.resultClass = GeneSet.class;
         this.isGroup = true;
         this.size = ( geneSet.getMembers() != null ) ? geneSet.getMembers().size() : null;
-        this.taxon = null;
+        this.taxonId = null;
+        this.taxonName = null;
         this.name = geneSet.getName();
         this.description = geneSet.getDescription();
         this.type = "geneSet";
@@ -190,7 +194,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.resultClass = GeneSet.class;
         this.isGroup = true;
         this.size = ( geneSet.getGeneIds() != null ) ? geneSet.getGeneIds().size() : null;
-        this.taxon = null;
+        this.taxonId = geneSet.getTaxonId();
+        this.taxonName = geneSet.getTaxonName();
         this.name = geneSet.getName();
         this.description = geneSet.getDescription();
         this.type = ( geneSet.isSession() ) ? "geneSetSession" : "geneSet";
@@ -206,7 +211,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.resultClass = ExpressionExperiment.class;
         this.isGroup = false;
         this.size = 1;
-        this.taxon = null; // expressionExperimentService.getTaxon(this.id);
+        this.taxonId = null;
+        this.taxonName = null;
         this.name = expressionExperiment.getShortName();
         this.description = expressionExperiment.getName();
         this.type = "experiment";
@@ -224,7 +230,10 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.isGroup = true;
         this.size = ( expressionExperimentSet.getExperiments() != null ) ? expressionExperimentSet.getExperiments()
                 .size() : null;
-        this.taxon = expressionExperimentSet.getTaxon();
+        this.taxonName = ( expressionExperimentSet.getTaxon() != null ) ? expressionExperimentSet.getTaxon()
+                .getCommonName() : null;
+        this.taxonId = ( expressionExperimentSet.getTaxon() != null ) ? expressionExperimentSet.getTaxon().getId()
+                : null;
         this.name = expressionExperimentSet.getName();
         this.description = expressionExperimentSet.getDescription();
         this.type = "experimentSet";
@@ -247,7 +256,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private int size; // the number of items; 1 if not a group
 
-    private Taxon taxon; // the id of the associated taxon, can be null
+    private String taxonName; // the common name of the associated taxon
+
+    private Long taxonId;
 
     private Collection<Long> memberIds = new HashSet<Long>();
 
@@ -285,12 +296,20 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         return this.size;
     }
 
-    public Taxon getTaxon() {
-        return this.taxon;
+    public Long getTaxonId() {
+        return this.taxonId;
     }
 
-    public void setTaxon( Taxon taxon ) {
-        this.taxon = taxon;
+    public void setTaxonId( Long id ) {
+        this.taxonId = id;
+    }
+
+    public String getTaxonName() {
+        return this.taxonName;
+    }
+
+    public void setTaxonName( String name ) {
+        this.taxonName = name;
     }
 
     public String getType() {
@@ -339,10 +358,5 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         int result = this.name.toLowerCase().compareTo( o.name.toLowerCase() );
         return ( result == 0 ) ? this.description.toLowerCase().compareTo( o.description.toLowerCase() ) : result;
     }
-
-    /*
-     * public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-     * this.expressionExperimentService = expressionExperimentService; }
-     */
 
 }

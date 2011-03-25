@@ -278,7 +278,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService = null;
-    
+
     @Autowired
     private ExpressionExperimentSubSetService expressionExperimentSubSetService = null;
 
@@ -385,269 +385,227 @@ public class ExpressionExperimentController extends AbstractTaskService {
         log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
     }
-    
+
     /**
      * AJAX (used by experimentAndExperimentGroupCombo.js)
      * 
      * @param query
      * @return Collection of SearchResultDisplayObjects
      */
-    public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query) {
-        
-    	List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
-    	List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
+    public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query ) {
 
-    	// if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent session-bound sets
-    	if(query.equals("")){
-    		
-        	// get authenticated user's sets
-        	Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
+
+        // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
+        // session-bound sets
+        if ( query.equals( "" ) ) {
+
+            // get authenticated user's sets
+            Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
             if ( SecurityService.isUserLoggedIn() ) {
-            	userExperimentSets = expressionExperimentSetService.loadMySets();
-            	SearchResultDisplayObject newSRDO = null;
-        		for(ExpressionExperimentSet registeredUserSet : userExperimentSets){
+                userExperimentSets = expressionExperimentSetService.loadMySets();
+                SearchResultDisplayObject newSRDO = null;
+                for ( ExpressionExperimentSet registeredUserSet : userExperimentSets ) {
 
-        			expressionExperimentSetService.thaw(registeredUserSet);
-        			taxonService.thaw( registeredUserSet.getTaxon() );
-        			newSRDO = new SearchResultDisplayObject(registeredUserSet);
-        			
-    				// if set was automatically generated, don't label as user-created (technically was created by admin user)
-    				if(newSRDO.getDescription().indexOf("Automatically generated")<0){
-    					newSRDO.setType("usersExperimentSet");
-    					displayResults.add(newSRDO);
-    				}else{
-    					autoGenResults.add(newSRDO);
-    				}
-        		}
+                    expressionExperimentSetService.thaw( registeredUserSet );
+                    taxonService.thaw( registeredUserSet.getTaxon() );
+                    newSRDO = new SearchResultDisplayObject( registeredUserSet );
+
+                    // if set was automatically generated, don't label as user-created (technically was created by admin
+                    // user)
+                    if ( newSRDO.getDescription().indexOf( "Automatically generated" ) < 0 ) {
+                        newSRDO.setType( "usersExperimentSet" );
+                        displayResults.add( newSRDO );
+                    } else {
+                        autoGenResults.add( newSRDO );
+                    }
+                }
             }
-            
-            // get auto generated sets
-    		// TODO this should be replaced with a query for all lists where 'modifiable = false' (?)
-    		SearchSettings settings = new SearchSettings("Automatically generated");
-    		settings.noSearches();
-    		settings.setSearchExperimentSets(true); // add searching for experimentSets 
-    		settings.setGeneralSearch(true); // add searching for experimentSets 
-    		List<SearchResult> autoGenSetsSearchResults = searchService.search(settings).get( ExpressionExperimentSet.class );
-    		
-    		for(SearchResult sr : autoGenSetsSearchResults){
-    		    ExpressionExperimentSet ees = (ExpressionExperimentSet) sr.getResultObject();
-                expressionExperimentSetService.thaw(ees);
-                taxonService.thaw( ees.getTaxon() );
-    		}
-    		List<SearchResultDisplayObject> autoGenSets = new ArrayList<SearchResultDisplayObject>(SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(autoGenSetsSearchResults));
 
-    		
+            // get auto generated sets
+            // FIXME this should be replaced with a query for all lists where 'modifiable = false' (?)
+            SearchSettings settings = new SearchSettings( "Automatically generated" );
+            settings.noSearches();
+            settings.setSearchExperimentSets( true ); // add searching for experimentSets
+            settings.setGeneralSearch( true ); // add searching for experimentSets
+            List<SearchResult> autoGenSetsSearchResults = searchService.search( settings ).get(
+                    ExpressionExperimentSet.class );
+
+            for ( SearchResult sr : autoGenSetsSearchResults ) {
+                ExpressionExperimentSet ees = ( ExpressionExperimentSet ) sr.getResultObject();
+                expressionExperimentSetService.thaw( ees );
+            }
+            List<SearchResultDisplayObject> autoGenSets = new ArrayList<SearchResultDisplayObject>(
+                    SearchResultDisplayObject
+                            .convertSearchResults2SearchResultDisplayObjects( autoGenSetsSearchResults ) );
+
+            // get the temporary sets
+            /*
+             * //TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
+             * Collection<ExpressionExperimentSetValueObject> sessionResult =
+             * sessionListManager.getRecentExperimentSets();
+             * 
+             * sessionListManager.setUniqueExperimentSetStoreIds( result );
+             * 
+             * result.addAll(sessionResult);
+             */
+
             // keep sets in proper order (user's groups first, then public ones)
-    		Collections.sort(displayResults);
-    		
-    		autoGenResults.addAll(autoGenSets);
-            Collections.sort(autoGenResults);
-            
-    		displayResults.addAll(autoGenResults);
+            Collections.sort( displayResults );
+
+            autoGenResults.addAll( autoGenSets );
+            Collections.sort( autoGenResults );
+
+            displayResults.addAll( autoGenResults );
 
             return displayResults;
 
-    	}
-    	else{ // if the user entered a query
+        } else { // if the user entered a query
 
             Taxon taxon = null;
-    		/*
-    		 * GET EXPERIMENTS AND SETS
-    		 */
-    		SearchSettings settings = SearchSettings.expressionExperimentSearch(query);
-    		settings.setGeneralSearch(true); //add a general search
-    		settings.setSearchExperimentSets(true); // add searching for experimentSets 
-    		Map<Class<?>, List<SearchResult>> results = searchService.search(settings);
+            /*
+             * GET EXPERIMENTS AND SETS
+             */
+            SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
+            settings.setGeneralSearch( true ); // add a general search
+            settings.setSearchExperimentSets( true ); // add searching for experimentSets
+            Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
 
-    		List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
-    		// prepare taxon property for being read
-    		for(SearchResult sr : eesSR){
-                ExpressionExperimentSet ees = (ExpressionExperimentSet) sr.getResultObject();
-                expressionExperimentSetService.thaw(ees);
-                taxonService.thaw( ees.getTaxon() );
+            List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
+            // prepare taxon property for being read
+            for ( SearchResult sr : eesSR ) {
+                ExpressionExperimentSet ees = ( ExpressionExperimentSet ) sr.getResultObject();
+                expressionExperimentSetService.thaw( ees );
             }
-    		Collection<SearchResultDisplayObject> experiments = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(results.get( ExpressionExperiment.class ));
-    		Collection<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject.convertSearchResults2SearchResultDisplayObjects(eesSR);
+            Collection<SearchResultDisplayObject> experiments = SearchResultDisplayObject
+                    .convertSearchResults2SearchResultDisplayObjects( results.get( ExpressionExperiment.class ) );
+            Collection<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
+                    .convertSearchResults2SearchResultDisplayObjects( eesSR );
 
-    		// when searching for an experiment by short name, an experiment set is also returned 
-    		// ex: searching 'GSE2178' gets the experiment and a group called GSE2178 with 1 member
-    		// to fix this, if 1 ee and 1 eeSet are returned, and the group only has 1 member and it's member has the same Id as 
-    		// the 1 ee returned, then don't return the ee set
-    		if(experiments.size() == 1 && eesSR.size() == 1 
-    				&& ((ExpressionExperimentSet)eesSR.iterator().next().getResultObject()).getExperiments().size() == 1){
-    		    // add this if we need to be extra cautious:  && ((ExpressionExperimentSet)eesSR.iterator().next().getResultObject()).getExperiments().iterator().next().getId() == experiments.iterator().next().getId()
-    			experimentSets.clear();
-    		}
-
-            // for each experiment, get the taxon -- pretty hacky
-            for(SearchResultDisplayObject srdo : experiments){
-                taxon = expressionExperimentService.getTaxon(srdo.getId());
-                taxonService.thaw( taxon );
-                srdo.setTaxon(taxon);
+            // when searching for an experiment by short name, an experiment set is also returned
+            // ex: searching 'GSE2178' gets the experiment and a group called GSE2178 with 1 member
+            // to fix this, if 1 ee and 1 eeSet are returned, and the group only has 1 member and it's member has the
+            // same Id as
+            // the 1 ee returned, then don't return the ee set
+            if ( experiments.size() == 1
+                    && eesSR.size() == 1
+                    && ( ( ExpressionExperimentSet ) eesSR.iterator().next().getResultObject() ).getExperiments()
+                            .size() == 1 ) {
+                // add this if we need to be extra cautious: &&
+                // ((ExpressionExperimentSet)eesSR.iterator().next().getResultObject()).getExperiments().iterator().next().getId()
+                // == experiments.iterator().next().getId()
+                experimentSets.clear();
             }
-    		
-    		// if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in search results)
-    		// TODO make a db call so you can just test each experiment by ID to see if the owner is the current user (avoids loading all user's experiments)
-    		// probably not high priority fix b/c users won't tend to have many sets
-    		ArrayList<Long> userSetsIds = new ArrayList<Long>();
-    		// get ids of user's sets
-    		if ( SecurityService.isUserLoggedIn() && experimentSets.size()>0 ) {
-    			Collection<ExpressionExperimentSet> myEEsets= expressionExperimentSetService.loadMySets();
-    			for(ExpressionExperimentSet myEESet : myEEsets){
-    				userSetsIds.add(myEESet.getId());
-    			}
-    			// tag search result display objects appropriately
-    			for(SearchResultDisplayObject srdo: experimentSets){
-    				// if set was automatically generated, don't label as user-created (technically was created by admin user)
-    				if(userSetsIds.contains(srdo.getId()) && srdo.getDescription().indexOf("Automatically generated")<0){
-    					srdo.setType("usersExperimentSet");
-    				}
-    			}
-    		}
 
-    		displayResults.addAll(experiments);
-    		displayResults.addAll(experimentSets);
-    		
-    	/*
-    	 * ALL RESULTS BY TAXON GROUPS
-    	 */
-    		
-        // if >1 result, add a group whose members are all experiments returned from search
-        if( (experiments.size()+experimentSets.size()) >1){
+            // for each experiment search result display object, set the taxon -- pretty hacky
+            for ( SearchResultDisplayObject srdo : experiments ) {
+                taxon = expressionExperimentService.getTaxon( srdo.getId() );
+                srdo.setTaxonId( taxon.getId() );
+                srdo.setTaxonName( taxon.getCommonName() );
+            }
 
-        	// if an experiment was returned by both experiment and experiment set search, don't count it twice (managed by set)
-        	HashSet<Long> eeIds = new HashSet<Long>();
-        	HashMap<Taxon,HashSet<Long>> eeIdsByTaxon = new HashMap<Taxon,HashSet<Long>>();
+            // if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in
+            // search results)
+            // TODO make a db call so you can just test each experiment by ID to see if the owner is the current user
+            // (avoids loading all user's experiments)
+            // probably not high priority fix b/c users won't tend to have many sets
+            ArrayList<Long> userSetsIds = new ArrayList<Long>();
+            // get ids of user's sets
+            if ( SecurityService.isUserLoggedIn() && experimentSets.size() > 0 ) {
+                Collection<ExpressionExperimentSet> myEEsets = expressionExperimentSetService.loadMySets();
+                for ( ExpressionExperimentSet myEESet : myEEsets ) {
+                    userSetsIds.add( myEESet.getId() );
+                }
+                // tag search result display objects appropriately
+                for ( SearchResultDisplayObject srdo : experimentSets ) {
+                    // if set was automatically generated, don't label as user-created (technically was created by admin
+                    // user)
+                    if ( userSetsIds.contains( srdo.getId() )
+                            && srdo.getDescription().indexOf( "Automatically generated" ) < 0 ) {
+                        srdo.setType( "usersExperimentSet" );
+                    }
+                }
+            }
 
-        	// add every individual experiment to the set
-        	for(SearchResultDisplayObject srdo : experiments){
-        		if(!eeIdsByTaxon.containsKey(srdo.getTaxon())){
-                    taxonService.thaw( taxon );
-        			eeIdsByTaxon.put(srdo.getTaxon(), new HashSet<Long>());
-        		}
-        		eeIdsByTaxon.get(srdo.getTaxon()).add(srdo.getId());
+            displayResults.addAll( experiments );
+            displayResults.addAll( experimentSets );
 
-        		eeIds.add(srdo.getId());
-        	}
-        	
-        	// if there's a group, get the number of members 
-        	if( experimentSets.size() > 0){
-        		// for each group
-        		for(SearchResult eesSRO : eesSR){
-        			// get the ids of the experiment members
-        			Iterator<BioAssaySet> iter = ((ExpressionExperimentSet) eesSRO.getResultObject()).getExperiments().iterator();
-        			Long id = null; 
-        			while(iter.hasNext()){
-        				id = iter.next().getId();
-        				eeIds.add(id);
-                    	// add experiment set members to the hashmap
-        				taxon = expressionExperimentService.getTaxon(id);
-                		if(!eeIdsByTaxon.containsKey(taxon)){
-                		    taxonService.thaw( taxon );
-                			eeIdsByTaxon.put(taxon, new HashSet<Long>());
-                		}
-                		eeIdsByTaxon.get(taxon).add(id);
-        			}
-        		}
-        	}
+            /*
+             * ALL RESULTS BY TAXON GROUPS
+             */
 
-        	// make an entry for each taxon
-        	
-        	/* Arbitrary id values for temporary groups (only needed so when displayed in a combo box, 
-        	   the selected entry's name will appear in the field after being selected)*/
-        	Long tempId = new Long(-3); 
-        	
-        	for(Map.Entry<Taxon,HashSet<Long>> entry : eeIdsByTaxon.entrySet()){
-        		taxon = entry.getKey();
-        		if(taxon!= null && entry.getValue().size()>0){
-        			displayResults.add(
-        					new SearchResultDisplayObject(ExpressionExperimentSet.class, tempId, 
-        							"All "+taxon.getCommonName()+" results for '"+query+"'", 
-        							"All "+taxon.getCommonName()+" experiments found for your query", 
-        							true, entry.getValue().size(), taxon, "freeText",entry.getValue()));
-        			tempId--;
-        		}
-        	}
-        }
+            // if >1 result, add a group whose members are all experiments returned from search
+            if ( ( experiments.size() + experimentSets.size() ) > 1 ) {
 
-        if ( displayResults.isEmpty() ) {
-        	log.info( "No results for search: " + query);
-        }else{
-        	log.info( "Results for search: " + query + " size=" + displayResults.size()+" entry0: "+((SearchResultDisplayObject)(displayResults.toArray())[0]).getName()+" id:"+((SearchResultDisplayObject)(displayResults.toArray())[0]).getId());
-        }
-        return displayResults;
-    	}
-    } 
-    
-    /**
-     * AJAX (used by experimentAndExperimentGroupCombo.js)
-     * 
-     * @param query
-     * @return Collection of SearchResultDisplayObjects
-     */
-    public Collection<Long> searchExperimentsAndExperimentGroupsGetIds( String query, Long taxonId) {
-        Taxon taxon = null;
-        if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
-        }
-         /*
-         * GET EXPERIMENTS AND SETS
-         */
-        SearchSettings settings = SearchSettings.expressionExperimentSearch(query);
-        settings.setGeneralSearch(true); //add a general search
-        settings.setSearchExperimentSets(true); // add searching for experimentSets 
-        if(taxon!=null) settings.setTaxon(taxon);
-        Map<Class<?>, List<SearchResult>> results = searchService.search(settings);
-        
-        List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
-        List<SearchResult> eeSR = results.get( ExpressionExperiment.class );        
-        
-        // searching for experiments using the index (compass search) doesn't check for taxon, so need to filter afterwards
-        /************** filter by taxon *******************/
-        for(SearchResult result : eesSR){
-        	ExpressionExperimentSet ees = (ExpressionExperimentSet)result.getResultObject();
-        	if(taxon != null && ees.getTaxon()!=null && taxon.getId() != ees.getTaxon().getId()){
-        		eesSR.remove(result);
-        	}
-        }
-        /**** TAXON HACK BECAUSE CAN'T DO expressionExperiment.getTaxon()****/
-        for(SearchResult result : eeSR){
-        	ExpressionExperiment ee = (ExpressionExperiment)result.getResultObject();
-        	Taxon tax = expressionExperimentService.getTaxon(ee.getId()); // for debugging
-        	if(taxon != null && tax!=null && taxon.getId() != tax.getId()){
-        		eesSR.remove(result);
-        	}
-        }
-        /***********end of filtering by taxon**************/
-        
-        // if an experiment was returned by both experiment and experiment set search, don't count it twice (managed by set)
-        HashSet<Long> eeIds = new HashSet<Long>();
-        
-        // add every individual experiment to the set
-        for(SearchResult sr : eeSR){
-        	eeIds.add(sr.getId());
-        }
-        	
-        // if there's a group, get the members 
-        if( eesSR.size() > 0){
-        	// for each group
-        	for(SearchResult eesSRO : eesSR){
-        		// get the ids of the experiment members
-        		Iterator<BioAssaySet> iter = ((ExpressionExperimentSet) eesSRO.getResultObject()).getExperiments().iterator();
-        		while(iter.hasNext()){
-        			eeIds.add(iter.next().getId());
-        		}
-        	}
-       	}
-        
-        if ( eeIds.isEmpty() ) {
-            log.info( "No results for search: " + query);
-        }else{
-        	log.info( "Results for search: " + query + " size=" + eeIds.size()+" entry0: "+(eeIds.toArray())[0]);
-        }
-        return eeIds;
-    } 
+                // if an experiment was returned by both experiment and experiment set search, don't count it twice
+                // (managed by set)
+                HashSet<Long> eeIds = new HashSet<Long>();
+                HashMap<Long, HashSet<Long>> eeIdsByTaxonId = new HashMap<Long, HashSet<Long>>();
 
+                // add every individual experiment to the set
+                for ( SearchResultDisplayObject srdo : experiments ) {
+                    if ( !eeIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
+                        eeIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
+                    }
+                    eeIdsByTaxonId.get( srdo.getTaxonId() ).add( srdo.getId() );
+
+                    eeIds.add( srdo.getId() );
+                }
+
+                // if there's a group, get the number of members
+                if ( experimentSets.size() > 0 ) {
+                    // for each group
+                    for ( SearchResult eesSRO : eesSR ) {
+                        // get the ids of the experiment members
+                        Iterator<BioAssaySet> iter = ( ( ExpressionExperimentSet ) eesSRO.getResultObject() )
+                                .getExperiments().iterator();
+                        Long id = null;
+                        while ( iter.hasNext() ) {
+                            id = iter.next().getId();
+                            eeIds.add( id );
+                            // add experiment set members to the hashmap
+                            taxon = expressionExperimentService.getTaxon( id );
+                            if ( !eeIdsByTaxonId.containsKey( taxon.getId() ) ) {
+                                eeIdsByTaxonId.put( taxon.getId(), new HashSet<Long>() );
+                            }
+                            eeIdsByTaxonId.get( taxon.getId() ).add( id );
+                        }
+                    }
+                }
+
+                // make an entry for each taxon
+
+                /*
+                 * Arbitrary id values for temporary groups (only needed so when displayed in a combo box, the selected
+                 * entry's name will appear in the field after being selected)
+                 */
+                Long tempId = new Long( -3 );
+                Long taxonId = null;
+                for ( Map.Entry<Long, HashSet<Long>> entry : eeIdsByTaxonId.entrySet() ) {
+                    taxonId = entry.getKey();
+                    taxon = taxonService.load( taxonId );
+                    if ( taxon != null && entry.getValue().size() > 0 ) {
+                        displayResults.add( new SearchResultDisplayObject( ExpressionExperimentSet.class, tempId,
+                                "All " + taxon.getCommonName() + " results for '" + query + "'", "All "
+                                        + taxon.getCommonName() + " experiments found for your query", true, entry
+                                        .getValue().size(), taxon.getId(), taxon.getCommonName(), "freeText", entry
+                                        .getValue() ) );
+                        tempId--;
+                    }
+                }
+            }
+
+            if ( displayResults.isEmpty() ) {
+                log.info( "No results for search: " + query );
+            } else {
+                log.info( "Results for search: " + query + " size=" + displayResults.size() + " entry0: "
+                        + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getName() + " id:"
+                        + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getId() );
+            }
+            return displayResults;
+        }
+    }
 
     /**
      * AJAX (used by ExperimentCombo.js)
@@ -655,9 +613,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @param query
      * @return Collection of expression experiment entity objects
      */
-    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query) {
+    public Collection<ExpressionExperimentValueObject> searchExpressionExperiments( String query ) {
 
-        SearchSettings settings = SearchSettings.expressionExperimentSearch(query);
+        SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
         List<SearchResult> experimentSearchResults = searchService.search( settings ).get( ExpressionExperiment.class );
 
         if ( experimentSearchResults == null || experimentSearchResults.isEmpty() ) {
@@ -666,9 +624,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         log.info( "Experiment search: " + query + ", " + experimentSearchResults.size() + " found" );
-        Collection<ExpressionExperimentValueObject> experimentValueObjects = 
-        	ExpressionExperimentValueObject.convert2ValueObjects( expressionExperimentService.loadMultiple(EntityUtils.getIds( experimentSearchResults)));
-        log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned.");        
+        Collection<ExpressionExperimentValueObject> experimentValueObjects = ExpressionExperimentValueObject
+                .convert2ValueObjects( expressionExperimentService.loadMultiple( EntityUtils
+                        .getIds( experimentSearchResults ) ) );
+        log.info( "Experiment search: " + experimentValueObjects.size() + " value objects returned." );
         return experimentValueObjects;
     }
 

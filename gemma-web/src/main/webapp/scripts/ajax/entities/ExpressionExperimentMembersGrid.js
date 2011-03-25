@@ -338,52 +338,21 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			saveToSession : function() {
 				var name = this.newGroupName;
 				var description = this.newGroupDescription;
+				var taxonName = this.selectedGeneGroup.taxonName;
+				var taxonId = this.selectedGeneGroup.taxonId;
+				
 		
-				var tempstore = new Ext.data.SimpleStore({
-												fields : [{
-															name : 'id',
-															type : 'int'
-														}, {
-															name : 'taxon'
-														}, {
-															name : 'officialSymbol',
-															type : 'string'
-														}, {
-															name : 'officialName',
-															type : 'string'
-														}],
-												sortInfo : {
-													field : 'officialSymbol',
-													direction : 'ASC'
-												}
-											});
+				var sessionStore = new Gemma.UserSessionDatasetGroupStore();		
 				
-				var records = [];
-				
-				this.store.each(
-					function(r){
-						records.push(r.copy());
-					}
-				);
-				
-				tempstore.add(records);
-				
-				sessionStore = new Gemma.UserSessionGeneGroupStore();		
-				
-				var ids = [];
-				
-				tempstore.each(
-					function(r){
-						ids.push(r.get("id"));
-					}	
-				);
-				
+				var ids =  this.getEEIds();
 				var RecType = sessionStore.record;
 				var rec = new RecType();
 				rec.set("geneIds", ids);
-				rec.set("size", ids.length);	
+				rec.set("size", ids.length);
 				rec.set("name", name);
 				rec.set("description",description);
+				rec.set("taxonName",taxonName);
+				rec.set("taxonId",taxonId);
 				rec.set("session", true);
 				
 				sessionStore.add(rec);
@@ -392,62 +361,28 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				
 			},
 		saveToDatabase : function() {
-		var name = this.newGroupName;
-		var description = this.newGroupDescription;
+			var name = this.newGroupName;
+			var description = this.newGroupDescription;
+			var taxonName = this.selectedGeneGroup.taxonName;
+			var taxonId = this.selectedGeneGroup.taxonId;
 			
-		var tempstore = new Ext.data.SimpleStore({
-										fields : [{
-													name : 'id',
-													type : 'int'
-												}, {
-													name : 'taxon'
-												}, {
-													name : 'officialSymbol',
-													type : 'string'
-												}, {
-													name : 'officialName',
-													type : 'string'
-												}],
-										sortInfo : {
-											field : 'officialSymbol',
-											direction : 'ASC'
-										}
-									});
-		
-		var records = [];
-		
-		//make a copy of all the records in geneChooserPanel to a temporary store
-		this.store.each(
-			function(r){
-				records.push(r.copy());
-			}
-		);
-		
-		tempstore.add(records);
-		
-		sessionStore = new Gemma.GeneGroupStore();		
-		
-		var ids = [];
-		
-		tempstore.each(
-			function(r){
-				ids.push(r.get("id"));	
-			}	
-		);
-		
-		var RecType = sessionStore.record;
-		var rec = new RecType();
-		rec.set("geneIds", ids);
-		rec.set("size", ids.length);	
-		rec.set("name", name);
-		rec.set("description",description);
-		rec.set("session", false);
-		
-		sessionStore.add(rec);
-		
-		sessionStore.save();
-		
-	}
+			var groupStore = new Gemma.DatasetGroupStore();
+			
+			var ids =  this.getEEIds();
+			var RecType = groupStore.record;
+			var rec = new RecType();
+			rec.set("geneIds", ids);
+			rec.set("size", ids.length);	
+			rec.set("name", name);
+			rec.set("description",description);
+			rec.set("taxonName",taxonName);
+			rec.set("taxonId",taxonId);
+			rec.set("session", false);
+			
+			geneGroupStore.add(rec);
+			
+			geneGroupStore.save();
+		}
 });
 
 

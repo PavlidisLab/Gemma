@@ -113,7 +113,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					forceProbeLevelSearch : this.DEFAULT_forceProbeLevelSearch,
 					useMyDatasets : this.DEFAULT_useMyDatasets,
 					queryGenesOnly : this.DEFAULT_queryGenesOnly,
-					taxonId : this.getTaxon().id
+					taxonId : this.getTaxonId()
 				});
 
 		if (this.currentSet) {
@@ -234,7 +234,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					geneIds : this.geneIds,
 					selectedFactors : efMap,
 					threshold : Gemma.DEFAULT_THRESHOLD ,
-					taxonId : this.getTaxon().id
+					taxonId : this.getTaxonId()
 				});
 
 		if (this.currentSet) {
@@ -419,7 +419,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		this.experimentCombo.on('select', function(combo, record, index) {
 										
 										// if the EE has changed taxon, reset the gene combo
-										this.taxonChanged(record.get("taxon"));
+										this.taxonChanged(record.get("taxonId"));
 										
 										// store the eeid(s) selected and load some EE into the previewer
 										// store the taxon associated with selection
@@ -544,7 +544,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 						disabled : false,
 						handler : function() {
 
-							if(!this.getTaxon() || isNaN(this.getTaxon().id)){
+							if(!this.getTaxonId() || isNaN(this.getTaxonId())){
 								Ext.Msg.alert("Missing information", "Please select an experiment or experiment group first.");
 								return;
 							}
@@ -556,13 +556,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		
 		
 		/******* GENE SELECTION EDITOR ******************************************************************/		
-				
+		var loggedIn = Ext.get('hasUser').getValue();
 		this.geneSelectionEditor = new Gemma.GeneMembersGrid( {
 			id: 'geneSelectionEditor',
 			height : 200,
 			//hidden: 'true',
 			hideHeaders:true,
-			frame:false
+			frame:false,
+			loggedIn: loggedIn
 		});
 		this.geneSelectionEditor.on('geneListModified', function(newGeneIds, groupName){
 			console.log('geneListModified event received, newGeneIds: '+newGeneIds+" name:"+groupName);
@@ -697,32 +698,32 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		
 	},
 	
-	getTaxon: function(){
-		return this.taxon;
+	getTaxonId: function(){
+		return this.taxonId;
 	},
-	setTaxon: function(taxon){
-		this.taxon = taxon;
+	setTaxonId: function(taxonId){
+		this.taxonId = taxonId;
 	},
 
 	/**
 	 * Check if the taxon needs to be changed, and if so, update the geneAndGroupCombo and reset the gene preivew
-	 * @param {} taxon
+	 * @param {} taxonId
 	 */
-	taxonChanged : function(taxon) {
+	taxonChanged : function(taxonId) {
 
 		// if the 'new' taxon is the same as the 'old' taxon for the experiment combo, don't do anything
-		if (taxon && this.getTaxon() && (this.getTaxon().id === taxon.id) ) {
+		if (taxonId && this.getTaxonId() && (this.getTaxonId() === taxonId) ) {
 			return;
 		}
 		// if the 'new' and 'old' taxa are different, reset the gene preview and filter the geneCombo
-		else if(taxon){
+		else if(taxonId){
 			this.resetGenePreview();
-			this.geneCombo.setTaxon(taxon);
-			this.setTaxon(taxon);
+			this.geneCombo.setTaxonId(taxonId);
+			this.setTaxonId(taxonId);
 			this.geneCombo.reset();
 		}
 
-		this.fireEvent("taxonchanged", taxon);
+		this.fireEvent("taxonchanged", taxonId);
 	},
 	collapsePreviews: function(){
 		Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {cn: '<span style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview </span><span align:"right"><a style="float:right">View</a></span>'});
@@ -831,9 +832,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				var isGroup = record.get("isGroup");
 				var type = record.get("type");
 				
-				var taxon = record.get("taxon");
-				this.setTaxon(taxon);
-				this.geneCombo.setTaxon(taxon);
+				var taxonId = record.get("taxonId");
+				this.setTaxonId(taxonId);
+				this.geneCombo.setTaxonId(taxonId);
 								
 				// load preview of group if group was selected
 				if (isGroup) {
@@ -847,7 +848,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				//load single experiment if experiment was selected
 				else {
 					this.experimentIds = [id];
-					//console.log("id:"+id+", record:"+record+" name:"+record.get("name")+" desc"+record.get("description")+" taxon:"+record.get("taxon"));
+					//console.log("id:"+id+", record:"+record+" name:"+record.get("name")+" desc"+record.get("description")+" taxonId:"+record.get("taxonId"));
 					// reset the experiment preview panel content
 					this.resetExperimentPreview();
 					
@@ -900,7 +901,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				var isGroup = record.get("isGroup");
 				var type = record.get("type");
 				var size = record.get("size");
-				var taxon = this.getTaxon();
+				var taxonId = this.getTaxonId();
 				var geneIds = [];
 								
 				// load preview of group if group was selected
@@ -908,7 +909,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					
 						if (type === "GOgroup") {
 							// if no taxon has been selected, warn user that this won't work
-							if (!this.getTaxon() || isNaN(this.getTaxon().id)) {
+							if (!this.getTaxonId() || isNaN(this.getTaxonId())) {
 								Ext.Msg.alert("Error", "You must select a taxon before selecting a GO group.");
 								return;
 							}
@@ -979,13 +980,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			 * 
 			 * @param {} e
 			 */
-			getGenesFromList : function(e, taxon) {
+			getGenesFromList : function(e, taxonId) {
 
-				var taxonId;
-				if (!taxon && this.getTaxon()) {
-					taxonId = this.getTaxon().id;
-				}else{
-					taxonId = taxon.id;
+				if (!taxonId && this.getTaxonId()) {
+					taxonId = this.getTaxonId();
 				}
 				
 				if(isNaN(taxonId)){
