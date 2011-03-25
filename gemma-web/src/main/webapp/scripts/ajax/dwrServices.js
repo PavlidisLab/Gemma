@@ -653,6 +653,9 @@ GeneSetController.getGeneSetsByGOId = function(p0, p1, callback) {
 GeneSetController.update = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'update', p0, callback);
 }
+GeneSetController.updateMembers = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateMembers', p0, p1, callback);
+}
 GeneSetController.updateSessionGroups = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateSessionGroups', p0, callback);
 }

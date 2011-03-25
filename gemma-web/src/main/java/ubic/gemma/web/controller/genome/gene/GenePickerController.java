@@ -315,10 +315,14 @@ public class GenePickerController {
                 result = GeneSetValueObject.convert2ValueObjects(userGeneSets, false);
             }
             // get any session-bound groups
-            
+
             Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets(taxonId);
-                
-            sessionListManager.setUniqueGeneSetStoreIds(result);        
+            
+            // make some unique toss-away ids for session-bound sets
+            for(GeneSetValueObject sessionSet : sessionResult){
+                sessionSet.setId( tempId );
+                tempId--;
+            }
                 
             result.addAll(sessionResult);  
  	
@@ -326,7 +330,7 @@ public class GenePickerController {
         		for(GeneSetValueObject registeredUserSet : result){
         			newSRDO = new SearchResultDisplayObject(registeredUserSet);
         			newSRDO.setType("users"+newSRDO.getType()); // will either end up usergeneSet or usergeneSetSession
-        			newSRDO.setId(new Long(registeredUserSet.getSessionId()));
+        			//newSRDO.setId(new Long(registeredUserSet.getSessionId()));
         			displayResults.add(newSRDO);
         		}
         	Collections.sort(displayResults);

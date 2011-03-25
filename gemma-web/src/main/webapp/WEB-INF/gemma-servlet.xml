@@ -1140,6 +1140,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getGenesInGroupBySessionId</value>
 								<value>getGeneSetByGOId</value>
 								<value>update</value>
+								<value>updateMembers</value>
 								<value>updateSessionGroups</value>
 								<value>updateUserAndSessionGroups</value>
 								<value>findGeneSetsByGene</value>

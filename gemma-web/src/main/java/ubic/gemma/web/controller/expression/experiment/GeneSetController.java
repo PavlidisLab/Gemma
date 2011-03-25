@@ -516,6 +516,62 @@ public class GeneSetController {
         return makeValueObects( updated );
 
     }
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds 
+     * Will not allow the same gene to be added to the gene set twice.
+     * Cannot update name or description, just members
+     * @param groupId id of the gene set being updated
+     * @param geneIds
+     */
+    public String updateMembers( Long groupId, Collection<Long> geneIds) {
+        
+            String msg = null;
+            
+            GeneSet gset = geneSetService.load( groupId );
+            if ( gset == null ) {
+                throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+            }
+            Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+
+            if ( !geneIds.isEmpty() ) {
+                Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+                if ( genes.isEmpty() ) {
+                    throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
+                            + " provided)" );
+                }
+                if ( genes.size() < geneIds.size() ) {
+                    throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
+                            + " out of " + geneIds.size() + " provided)" );
+                }
+
+                assert genes.size() == geneIds.size();
+
+                for ( Gene g : genes ) {
+
+                    GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+                    // Gene not in list create memember and add it.
+                    if ( gsm == null ) {
+                        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                        gmember.setGene( g );
+                        gmember.setScore( DEFAULT_SCORE );
+                        gset.getMembers().add( gmember );
+                        updatedGenelist.add( gmember );
+                    } else {
+                        updatedGenelist.add( gsm );
+                    }
+                }
+            }
+
+            gset.getMembers().clear();
+            gset.getMembers().addAll( updatedGenelist );
+
+            geneSetService.update( gset );
+            
+        return msg;
+
+    }
 
     /**
      * @param geneSetVo

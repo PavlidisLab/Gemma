@@ -135,7 +135,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.detailsWin.on("commit", function(args) {
 										this.newGroupName = args.name;
 										this.newGroupDescription = args.description;
-										this.saveToDatabase();
+										this.createInDatabase();
 									}.createDelegate(this));
 										
 				// function to deal with user choice of what to do after editing an existing group
@@ -145,7 +145,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 											}
 											else 
 												if (btn === 'ok') { // ok is save
-													this.saveToSession();
+													this.updateDatabase();
 												}
 												else 
 													if (btn === 'yes') { // yes is save as
@@ -419,61 +419,19 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 							}
 					}
 				} 
-				
-					
-					//this.saveToSession(name, description);
-					// update the component that create this grid (ex search widget) with the new gene ids
-					// send geneIDs for testing, eventually will always pass group id (session or db bound)
-					this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
-					
-					this.fireEvent('doneModification');
+
 					
 				
 			},
 			saveToSession : function() {
 				var name = this.newGroupName;
 				var description = this.newGroupDescription;
-		
-				var tempstore = new Ext.data.SimpleStore({
-												fields : [{
-															name : 'id',
-															type : 'int'
-														}, {
-															name : 'taxon'
-														}, {
-															name : 'officialSymbol',
-															type : 'string'
-														}, {
-															name : 'officialName',
-															type : 'string'
-														}],
-												sortInfo : {
-													field : 'officialSymbol',
-													direction : 'ASC'
-												}
-											});
-				
-				var records = [];
-				
-				this.store.each(
-					function(r){
-						records.push(r.copy());
-					}
-				);
-				
-				tempstore.add(records);
-				
+			
 				sessionStore = new Gemma.UserSessionGeneGroupStore();		
-				
-				var ids = [];
-				
-				tempstore.each(
-					function(r){
-						ids.push(r.get("id"));
-					}	
-				);
-				
-				var RecType = sessionStore.record;
+		
+				var ids = this.getGeneIds();
+		
+				var RecType = groupStore.record;
 				var rec = new RecType();
 				rec.set("geneIds", ids);
 				rec.set("size", ids.length);	
@@ -485,52 +443,19 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				
 				sessionStore.save();
 				
+				this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
+				this.fireEvent('doneModification');
+				
 			},
-		saveToDatabase : function() {
+		createInDatabase : function() {
 		var name = this.newGroupName;
 		var description = this.newGroupDescription;
-			
-		var tempstore = new Ext.data.SimpleStore({
-										fields : [{
-													name : 'id',
-													type : 'int'
-												}, {
-													name : 'taxon'
-												}, {
-													name : 'officialSymbol',
-													type : 'string'
-												}, {
-													name : 'officialName',
-													type : 'string'
-												}],
-										sortInfo : {
-											field : 'officialSymbol',
-											direction : 'ASC'
-										}
-									});
+
+		groupStore = new Gemma.GeneGroupStore();		
 		
-		var records = [];
+		var ids = this.getGeneIds();
 		
-		//make a copy of all the records in geneChooserPanel to a temporary store
-		this.store.each(
-			function(r){
-				records.push(r.copy());
-			}
-		);
-		
-		tempstore.add(records);
-		
-		sessionStore = new Gemma.GeneGroupStore();		
-		
-		var ids = [];
-		
-		tempstore.each(
-			function(r){
-				ids.push(r.get("id"));	
-			}	
-		);
-		
-		var RecType = sessionStore.record;
+		var RecType = groupStore.record;
 		var rec = new RecType();
 		rec.set("geneIds", ids);
 		rec.set("size", ids.length);	
@@ -538,10 +463,24 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		rec.set("description",description);
 		rec.set("session", false);
 		
-		sessionStore.add(rec);
+		groupStore.add(rec);
 		
-		sessionStore.save();
+		groupStore.save();
+							
+		this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
+		this.fireEvent('doneModification');
 		
+	},
+	updateDatabase : function() {
+		
+		var groupId = this.selectedGeneGroup.id;
+		this.newGroupName = this.groupName;
+		var geneIds = this.getGeneIds();
+		
+		GeneSetController.updateMembers(groupId, geneIds, function(msg){
+			this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
+			this.fireEvent('doneModification');
+		}.createDelegate(this));
 	}
 });
 Ext.reg('geneMembersGrid', Gemma.GeneMembersGrid);
