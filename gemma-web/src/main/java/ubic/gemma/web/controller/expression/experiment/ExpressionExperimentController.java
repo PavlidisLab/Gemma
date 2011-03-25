@@ -1544,12 +1544,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
             boolean filterDataByUser, Integer limit, Integer filter ) {
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
-        if ( taxonId != null && ( ids == null || ids.isEmpty() ) ) {
+        if ( taxonId != null ) {
             Taxon taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
             }
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, filterDataByUser );
+            if ( ids == null || ids.isEmpty() ) {
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, filterDataByUser );
+            } else {
+                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, ids, filterDataByUser );
+            }
+
         } else if ( ids == null || ids.isEmpty() ) {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser );
         } else {
@@ -1690,7 +1695,24 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( filterDataForUser ) {
             try {
                 if ( taxon != null ) {
-                    securedEEs = expressionExperimentService.findByTaxon( taxon );
+                    if ( eeIds == null ) {
+                        securedEEs = expressionExperimentService.findByTaxon( taxon );
+                    } else {
+                        securedEEs = expressionExperimentService.loadMultiple( eeIds );
+                        Collection<ExpressionExperiment> securedEEsfilteredByTaxon = new ArrayList<ExpressionExperiment>();
+
+                        for ( ExpressionExperiment ee : securedEEs ) {
+
+                            Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+
+                            if ( t != null && t.getId().equals( taxon.getId() ) ) {
+                                securedEEsfilteredByTaxon.add( ee );
+                            }
+                        }
+
+                        securedEEs = securedEEsfilteredByTaxon;
+                    }
+
                 } else if ( eeIds == null ) {
                     securedEEs = expressionExperimentService.loadMySharedExpressionExperiments();
                 } else {
@@ -1702,7 +1724,24 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         } else {
             if ( taxon != null ) {
-                securedEEs = expressionExperimentService.findByTaxon( taxon );
+                if ( eeIds == null ) {
+                    securedEEs = expressionExperimentService.findByTaxon( taxon );
+                } else {
+                    securedEEs = expressionExperimentService.loadMultiple( eeIds );
+                    Collection<ExpressionExperiment> securedEEsfilteredByTaxon = new ArrayList<ExpressionExperiment>();
+
+                    for ( ExpressionExperiment ee : securedEEs ) {
+
+                        Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+
+                        if ( t != null && t.getId().equals( taxon.getId() ) ) {
+                            securedEEsfilteredByTaxon.add( ee );
+                        }
+                    }
+
+                    securedEEs = securedEEsfilteredByTaxon;
+                }
+
             } else if ( eeIds == null ) {
                 securedEEs = expressionExperimentService.loadAll();
             } else {
@@ -1717,6 +1756,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         log.debug( "Loading value objects ..." );
         return getExpressionExperimentValueObjects( securedEEs );
     }
+
 
     /**
      * @param uri
