@@ -78,7 +78,6 @@
 </div-->
 </security:authorize>
 
-
 	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<div id="adminFunctions" style="margin-bottom: 10px;font-size: 0.90em;">
 				<strong> More administrative functions </strong>
@@ -119,7 +118,7 @@
 		<div style="font-size: small; padding-bottom:5px;"><b>
 <a target="_blank" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">Updated: <c:out value="${ updateDate}" /></a></b></div>
 			<div id="dataSummary" style="margin-left: 15px;margin-right: 15px">
-				<table>
+				<table  style="white-space:nowrap">
 					<tr>
 						<td width="350px"><strong>Data Summary</strong></td>
 						<td align="right" width="60px">Total</td>
@@ -131,7 +130,7 @@
 						</c:if>
 					</tr>
 					<tr>
-						<td>
+						<td width="350px">
 							<a href='<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>'> Expression Experiments: </a>
 						</td>
 						<td align="right">
@@ -146,7 +145,7 @@
 					</tr>
 					<c:forEach var="taxon" items="${ taxonCount }">
 						<tr>
-							<td>
+							<td width="350px">
 								&emsp;
 								<a
 									href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
@@ -165,7 +164,7 @@
 						</tr>
 					</c:forEach>
 					<tr>
-						<td>
+						<td width="350px">
 							<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'> Array Designs: </a>
 						</td>
 						<td align="right">
@@ -179,7 +178,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td>
+						<td width="350px">
 							Assays:
 						</td>
 						<td align="right">
