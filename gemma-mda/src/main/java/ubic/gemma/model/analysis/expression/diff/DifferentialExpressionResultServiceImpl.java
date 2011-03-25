@@ -22,12 +22,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.compass.gps.device.hibernate.embedded.HibernateHelper;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -70,9 +76,8 @@ public class DifferentialExpressionResultServiceImpl extends
         return this.getDifferentialExpressionResultDao().find( gene, threshold, limit );
     }
 
-    public List<Long> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold,
-            Integer limit ) {
-        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, threshold, limit );
+    public List<Double> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit ) {
+        return this.getDifferentialExpressionResultDao().findGeneInResultSets( gene, resultSet, arrayDesignIds, limit );        
     }
 
     public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
@@ -133,5 +138,11 @@ public class DifferentialExpressionResultServiceImpl extends
     protected void handleThaw( ExpressionAnalysisResultSet resultSet ) throws Exception {
         this.getExpressionAnalysisResultSetDao().thaw( resultSet );
     }
+    
+    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold ) {
+        return this.getDifferentialExpressionResultDao().countNumberOfDifferentiallyExpressedProbes( resultSetId, threshold );                
+    }
+    
+    
 
 }

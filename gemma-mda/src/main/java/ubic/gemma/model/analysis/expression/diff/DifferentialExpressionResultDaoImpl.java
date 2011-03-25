@@ -32,6 +32,10 @@ import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.DoubleType;
+import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -40,6 +44,7 @@ import org.springframework.stereotype.Repository;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -88,12 +93,12 @@ public class DifferentialExpressionResultDaoImpl extends
             + " inner join a.resultSets rs inner  join  rs.results r inner join fetch r.probe p "
             + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
-    private static final String fetchResultsByResultSetAndGeneQuery = "select distinct dear.ID "
-            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s, PROBE_ANALYSIS_RESULT par "
-            + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
-            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
-            + " and dear.CORRECTED_PVALUE < :threshold order by dear.CORRECTED_PVALUE ASC";
-
+    private static final String fetchResultsByResultSetAndGeneQuery = "select dear.CORRECTED_PVALUE "
+        + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par " //, COMPOSITE_SEQUENCE cs "
+        + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
+        + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id " // and g2s.CS=cs.ID and cs.ARRAY_DESIGN_FK = :array_ids"
+        + " order by dear.CORRECTED_P_VALUE_BIN DESC";
+            
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -402,14 +407,14 @@ public class DifferentialExpressionResultDaoImpl extends
         }
         return results;
     }
-
-    public List<Long> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet, double threshold,
+      
+    public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds,
             Integer limit ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
 
-        List<Long> results = null;
+        List<Double> results = null;
 
         try {
             Session session = super.getSession();
@@ -417,9 +422,14 @@ public class DifferentialExpressionResultDaoImpl extends
 
             queryObject.setLong( "gene_id", gene.getId() );
             queryObject.setLong( "rs_id", resultSet.getId() );
-            queryObject.setDouble( "threshold", threshold );
-
-            queryObject.addScalar( "ID", new LongType() );
+            //queryObject.setParameterList( "array_ids", arrayDesignIds );
+            //queryObject.setLong( "array_ids", arrayDesignIds.iterator().next() );
+            
+            if ( limit != null ) {
+                queryObject.setMaxResults( limit );
+            }
+            
+            queryObject.addScalar( "CORRECTED_PVALUE", new DoubleType() );
             results = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -427,11 +437,12 @@ public class DifferentialExpressionResultDaoImpl extends
         }
 
         timer.stop();
-        log.info( "Fetching probeResults from 1 resultSet for 1 gene took : " + timer.getTime() + " ms" );
+        log.info( "Fetching probeResults from resultSet "+resultSet.getId() +" for gene "+ gene.getId() +"and "+arrayDesignIds.size()+ "arrays took : " + timer.getTime() + " ms" );
 
         return results;
     }
-
+        
+    
     public Collection<ProbeAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
@@ -551,4 +562,28 @@ public class DifferentialExpressionResultDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
 
     }
+    
+    
+    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold ) {
+        DetachedCriteria criteria = DetachedCriteria.forClass( HitListSize.class );
+
+        criteria.add( Restrictions.eq( "id", resultSetId ) );
+        criteria.add( Restrictions.eq( "thresholdQValue", threshold ) );
+
+        List results = this.getHibernateTemplate().findByCriteria( criteria );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + HitListSize.class.getName()
+                                + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        return (( HitListSize ) result ).getNumberOfProbes();        
+    }
+
+    
 }

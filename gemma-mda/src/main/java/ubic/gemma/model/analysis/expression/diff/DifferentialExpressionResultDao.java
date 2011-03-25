@@ -22,10 +22,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
@@ -92,8 +95,10 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
     public Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
             java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit );
     
-    public List<Long> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, double threshold, Integer limit );
+    public List<Double> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit );
 
+    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold );
+    
     /**
      * 
      */
@@ -109,7 +114,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
     public void thaw( final ProbeAnalysisResult result );
 
     public void thaw( Collection<ProbeAnalysisResult> results );
-
+      
     /**
      * Find differential expression for a gene, exceeding a given significance level (using the corrected pvalue field)
      * 
