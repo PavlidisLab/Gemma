@@ -9,7 +9,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 		Ext.apply(this, {			
 			autoEl: { tag: 'canvas',
 					  width: Gemma.MetaVisualizationConfig.cellWidth,
-					  height: Gemma.MetaVisualizationConfig.cellHeight * this.visualizationSubColumnData.length,					  
+					  height: Gemma.MetaVisualizationConfig.cellHeight * this.visualizationSubColumnData.length					  
 					},
 			margins: {top:0, right:0, bottom: Gemma.MetaVisualizationConfig.groupSeparatorHeight, left:0},
 
@@ -28,7 +28,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			pValues: this.pValuesSubColumnData,
 			
 			_contrastsVisualizationValues: this.visualizationContrastsSubColumnData,
-			contrastsFoldChanges: this.contrastsFoldChanges,
+			//contrastsFoldChanges: this.contrastsFoldChanges,
 			_contrastsFactorValues: this.factorValues,
             
 			_discreteColorRange: Gemma.MetaVisualizationConfig.basicColourRange,
@@ -37,7 +37,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
             
             
             overallDifferentialExpressionScore: null,
-            missingValuesScore: null,
+            missingValuesScore: null
 		});		 
 		Gemma.MetaHeatmapColumn.superclass.initComponent.apply(this, arguments);	
 	},
@@ -54,7 +54,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 		for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupIndex].length; i++) {
 			var color = this._discreteColorRange.getCellColorString(this._visualizationValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][i]]);
 			this._drawHeatmapCell ( ctx, color, i, 0 );
-			if (highlightRow == i) this._drawHeatmapCellBox ( ctx, highlightRow, 0 );			
+			if (highlightRow === i) {this._drawHeatmapCellBox ( ctx, highlightRow, 0 );}			
 		}
 
 		if ( doResize ) {
@@ -80,9 +80,9 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 		// Draw cells
 		for (var factorValueIndex = 0; factorValueIndex < this._contrastsFactorValues.length; factorValueIndex++) {			
 			for (var geneIndex = 0; geneIndex < this.applicationRoot.geneOrdering[this.geneGroupIndex].length; geneIndex++) {				
-				var color = this._discreteColorRangeContrasts.getCellColorString(this._contrastsVisualizationValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][geneIndex]][factorValueIndex]);
+				//var color = this._discreteColorRangeContrasts.getCellColorString(this._contrastsVisualizationValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][geneIndex]][factorValueIndex]);
 				this._drawHeatmapCell ( ctx, color, geneIndex, factorValueIndex );
-				if (highlightRow == geneIndex && highlightColumn == factorValueIndex) this._drawHeatmapCellBox ( ctx, highlightRow, highlightColumn );
+				if (highlightRow === geneIndex && highlightColumn === factorValueIndex) {this._drawHeatmapCellBox ( ctx, highlightRow, highlightColumn );}
 			}			
 		}
 
@@ -162,7 +162,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				//this.applicationRoot._rotatedLabelsBox._drawTopLabels ( this._datasetGroupIndex, this._columnGroupIndex, this._columnIndex );
 				this.applicationRoot.MiniWindowTool.setTitle("Gene: "+" Experiment: "+" Factor: ");
 				this.applicationRoot.MiniWindowTool.specificity.setText("Specificity: " +  100*this.ownerCt.miniPieValue/360);
-				this.applicationRoot.MiniWindowTool.pValue.setText("pValue: " +  this.pValues[index.row]);
+				this.applicationRoot.MiniWindowTool.pValue.setText("pValue: " +  this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]);
 				//this.applicationRoot.MiniWindowTool.foldChange.setText("Fold change: " +  this._contrastsVisualizationValues[index.row][index.column]);			      	         				
 			}
 			this.applicationRoot._geneLabels.highlightGene( this.rowGroup, index.row );			
@@ -186,7 +186,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			//this.applicationRoot._geneLabels.highlightGene ( this.rowGroup, -1 );
 			//this.applicationRoot._rotatedLabelsBox._drawTopLabels ( this._datasetGroupIndex );
 		}, this );
-	},
+	}
 	
 });
 
@@ -213,9 +213,12 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 			miniPieValue: 360.0 * this.dataColumn.numberOfProbesDiffExpressed / this.dataColumn.numberOfProbesTotal,
 			sumOfPvalues: 0.0,
 			
-			_factorName: this.dataColumn.factorName,
-			_factorValueNames: this.dataColumn.contrastsFactorValues,			
-			_baselineFactorValue: this.dataColumn.baselineFactorValue,
+			factorValueIds: this.dataColumn.contrastsFactoreValueIds,
+			factorName: this.dataColumn.factorName,
+			factorValueNames: this.dataColumn.contrastsFactorValues,			
+			baselineFactorValue: this.dataColumn.baselineFactorValue,
+			baselineFactorValueId: this.dataColumn.baselineFactorValueId,
+			
 			contrastsFoldChanges: this.dataColumn.constrastsFoldChangeValues,
 						
 			updateAllParentContainersWidthBy: function (delta) {
@@ -231,25 +234,19 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
             analysisType: null,
             factorCategory: null,
 			
-		    drawExpandButton: function (ctx) {
-		    	ctx.strokeStyle = 'rgba(10,100,10, 0.8)';
-				ctx.moveTo(3,8);
+		    drawExpandButton: function (ctx, color) {
+		    	ctx.fillStyle = color;
+				ctx.moveTo(8,8);
 		    	ctx.beginPath();		    	
-		    	ctx.lineTo(3,4);
-		    	ctx.lineTo(1,6);
-		    	ctx.lineTo(3,8);
-		    	ctx.moveTo(2,6);
-		    	ctx.lineTo(7,6);
-		    	ctx.moveTo(6,8);
-		    	ctx.lineTo(6,4);
-		    	ctx.lineTo(8,6);
-		    	ctx.lineTo(6,8);
-		    	ctx.stroke();		    	
+		    	ctx.lineTo(8,1);
+		    	ctx.lineTo(1,8);
+		    	ctx.lineTo(8,8);
+		    	ctx.fill();		    	
 		    },
 		    
-		    drawCollapseButton: function (ctx, width) {
+		    drawCollapseButton: function (ctx, width, color) {
 		    	width = width - 5;
-		    	ctx.strokeStyle = 'rgba(10,100,10, 0.8)';
+		    	ctx.strokeStyle = color;
 				ctx.moveTo(1,8);
 		    	ctx.beginPath();		    	
 		    	
@@ -279,31 +276,35 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 						return [this.cls, this.id];
 		    		  },					  
 					  listeners: { 
-				           toggle : function ( target, checked ) { 			
+				           toggle : function ( target, checked ) { 
+				           	   		var ctx;
+				           	   		var doResize;
+				           	   		var geneGroupSubColumnIndex;
+
 								if (checked) {									
-									var doResize = true;
-									for (var geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {																			
+									doResize = true;
+									for (geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {																			
 										this._visualizationColumns[geneGroupSubColumnIndex]._drawContrasts( doResize );
 										this._visualizationColumns[geneGroupSubColumnIndex]._isExpanded = true;
 										doResize = false;
 									}
 									
 									var width = this.getWidth();
-									var ctx = this._expandButton.btnEl.dom.getContext("2d");
+									ctx = this._expandButton.btnEl.dom.getContext("2d");
 									this._expandButton.setWidth(width);
 									ctx.canvas.width = width;						
 									ctx.clearRect(0,0,width,10);
-									this.drawCollapseButton(ctx, width);		                     
+									this.drawCollapseButton(ctx, width, 'rgba(10,100,10, 0.8)');		                     
 
 								} else {
-									var ctx = this._expandButton.btnEl.dom.getContext("2d");
+									ctx = this._expandButton.btnEl.dom.getContext("2d");
 									this._expandButton.setWidth(10);
 									ctx.canvas.width = 10;
 									ctx.clearRect(0,0,10,10);
-									this.drawExpandButton(ctx);		                     
+									this.drawExpandButton(ctx, 'rgba(10,100,10, 0.8)');		                     
 
-									var doResize = true;
-									for (var geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {
+									doResize = true;
+									for (geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {
 										this._visualizationColumns[geneGroupSubColumnIndex]._drawHeatmapColumn( doResize );
 										this._visualizationColumns[geneGroupSubColumnIndex]._isExpanded = false;
 										doResize = false;
@@ -313,7 +314,7 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 								this.applicationRoot._heatmapArea.doLayout();							
 							}, scope: this
 					  }
-				    },]
+				    }]
 		});
 				
 		Gemma.MetaHeatmapExpandableColumn.superclass.initComponent.apply ( this, arguments );
@@ -326,9 +327,9 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 			var subColumn = new Gemma.MetaHeatmapColumn({applicationRoot: this.applicationRoot,
 												 visualizationSubColumnData: this._dataColumn.visualizationValues [ geneGroupIndex ],
 												 pValuesSubColumnData: this._dataColumn.pValues[geneGroupIndex],
-												 visualizationContrastsSubColumnData: this._dataColumn.contrastsVisualizationValues [ geneGroupIndex ],
+												 //visualizationContrastsSubColumnData: this._dataColumn.contrastsVisualizationValues [ geneGroupIndex ],
 												 factorValues: this._factorValueNames,
-												 contrastsFoldChanges: this.contrastsFoldChanges[ geneGroupIndex ],
+												 //contrastsFoldChanges: this.contrastsFoldChanges[ geneGroupIndex ],
 												 rowGroup: geneGroupIndex,
 												 columnIndex: this._columnIndex,
 												 columnGroupIndex: this._columnGroupIndex,
@@ -341,7 +342,7 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 		this.missingValuesScore = 0;
 		for ( var i = 0; i < this._dataColumn.visualizationValues.length; i++ ) {
 			for ( var j = 0; j < this._dataColumn.visualizationValues[i].length; j++ ) {
-				if (this._dataColumn.visualizationValues[i][j] == null) {
+				if (this._dataColumn.visualizationValues[i][j] === null) {
 					this.missingValuesScore++;
 					this.overallDifferentialExpressionScore += 0;
 				} else {
@@ -356,7 +357,33 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 		this.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.specificityScore);
 		this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.ownerCt.specificityScore);
 		
+		
+		
+		this.el.on('mouseover', function(e,t) { 						
+			var ctx = this._expandButton.btnEl.dom.getContext("2d");
+			if (this._expandButton.pressed) {
+				this.drawCollapseButton(ctx, this.getWidth(), 'rgb(255,10,10)');
+			} else {
+				this.drawExpandButton(ctx, 'rgb(255,10,10)');
+			}
+		}, this);
+		this.el.on('mouseout', function(e,t) {
+			var ctx = this._expandButton.btnEl.dom.getContext("2d");
+			if (this._expandButton.pressed) {
+				this.drawCollapseButton(ctx, this.getWidth(), 'rgb(10,100,10)');
+			} else {
+				this.drawExpandButton(ctx, 'rgb(10,100,10)');
+			}			
+		}, this);
 	},
+
+	updateParentsScores : function () {
+		this.ownerCt.overallDifferentialExpressionScore -= this.overallDifferentialExpressionScore;
+		this.ownerCt.ownerCt.overallDifferentialExpressionScore -= this.overallDifferentialExpressionScore;
+				
+		//this.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.specificityScore);
+		//this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.ownerCt.specificityScore);
+	},	
 	
 	refresh : function() {
 		var ctx = this._expandButton.btnEl.dom.getContext("2d");

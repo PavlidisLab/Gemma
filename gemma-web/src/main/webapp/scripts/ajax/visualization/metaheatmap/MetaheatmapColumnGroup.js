@@ -32,7 +32,7 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 			            return ((a[property] < b[property]) ? -1 : ((a[property] > b[property]) ? 1 : 0));
 			        }
 			    };
-			},			
+			}			
 		});
 		Gemma.MetaHeatmapResizablePanelBase.superclass.initComponent.apply(this, arguments);		
 	},
@@ -49,11 +49,11 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 			newWidth = newWidth + this.getWidth(); 
 		} );
 		this.setWidth( newWidth );
-		if (newWidth == 0) this._hidden = true;
+		if ( newWidth === 0 ) {this._hidden = true;}
 	},						
 
 	refresh: function() {
-		this.items.each(function() {if ( this._hidden != true ) this.refresh();});		
+		this.items.each(function() {if ( this._hidden !== true ) {this.refresh();}});		
 	}
 	
 });
@@ -73,7 +73,7 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 			analysisId: this.analysisId,
 			
 			overallDifferentialExpressionScore: null,
-			specificityScore: null,															
+			specificityScore: null															
 		});
 
 		Gemma.MetaHeatmapAnalysisColumnGroup.superclass.initComponent.apply(this, arguments);
@@ -102,15 +102,19 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 			if ( filteringFn( this ) ) {
 				this.setWidth(0);
 				this.hide();
+				this.updateParentsScores();
 				numberHidden++;
 			}					
 		});
 		//	TODO: any better way to get newWidth??
 		var newWidth = (this.dataColumns.length - numberHidden) * (Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);		
 		this.setWidth( newWidth );
-		if (numberHidden == this.dataColumns.length) this._hidden = true;
-	},						
-	
+		if (numberHidden == this.dataColumns.length) {
+			this.setWidth(0);
+			this.hide();
+			this._hidden = true;
+		}
+	}							
 });
 
 
@@ -128,7 +132,7 @@ Gemma.MetaHeatmapDatasetColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePan
 			datasetName: this.datasetName,			
 			
 			overallDifferentialExpressionScore: null,
-			specificityScore: null,												
+			specificityScore: null												
 		});
 
 		Gemma.MetaHeatmapDatasetColumnGroup.superclass.initComponent.apply(this, arguments);
@@ -140,18 +144,19 @@ Gemma.MetaHeatmapDatasetColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePan
 		// put each analysis in a separate column group
 		iGroupIndex = 0;
 		var tempColumns = [];
+		var columnGroup;
 		var analysisId = this.dataColumns[0].analysisId;
 		tempColumns.push(this.dataColumns[0]);
 		for (var i = 1; i < this.dataColumns.length; i++) {			
 			if ( analysisId == this.dataColumns[i].analysisId ) {
 				tempColumns.push ( this.dataColumns[i] );
 			} else {
-				var columnGroup = new Gemma.MetaHeatmapAnalysisColumnGroup({applicationRoot: this.applicationRoot,
-																			height: this.height,
-																			analysisId: analysisId,
-																			dataColumns: tempColumns,
-																			columnGroupIndex: iGroupIndex,
-																			datasetGroupIndex: this.datasetGroupIndex});				
+				columnGroup = new Gemma.MetaHeatmapAnalysisColumnGroup({applicationRoot: this.applicationRoot,
+											height: this.height,
+											analysisId: analysisId,
+											dataColumns: tempColumns,
+											columnGroupIndex: iGroupIndex,
+											datasetGroupIndex: this.datasetGroupIndex});				
 				this.add(columnGroup);
 				iGroupIndex++;
 
@@ -161,12 +166,12 @@ Gemma.MetaHeatmapDatasetColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePan
 				tempColumns.push(this.dataColumns[i]);
 			}			
 		}
-		var columnGroup = new Gemma.MetaHeatmapAnalysisColumnGroup({applicationRoot: this.applicationRoot,
-															height: this.height,
-															analysisId: analysisId,
-															dataColumns: tempColumns,
-															columnGroupIndex: iGroupIndex,															
-															datasetGroupIndex: this.datasetGroupIndex});				
+		columnGroup = new Gemma.MetaHeatmapAnalysisColumnGroup({	applicationRoot: this.applicationRoot,
+						  				height: this.height,
+										analysisId: analysisId,
+										dataColumns: tempColumns,
+										columnGroupIndex: iGroupIndex,															
+										datasetGroupIndex: this.datasetGroupIndex});				
 		this.add(columnGroup);				
 		initialWidth += columnGroup.width;
 
@@ -186,7 +191,7 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 	initComponent: function() {
 		Ext.apply(this, {
 			datasetGroupIndex: this.datasetGroupIndex,
-			dataColumns: this.dataFactorColumns,			
+			dataColumns: this.dataFactorColumns			
 		});
 
 		Gemma.MetaHeatmapDatasetGroupPanel.superclass.initComponent.apply(this, arguments);
@@ -198,13 +203,14 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 		// This code is used twice. How to reuse it better?
 		iGroupIndex = 0;
 		var tempColumns = [];
+		var columnGroup;
 		var datasetName = this.dataColumns[0].datasetName;
 		tempColumns.push(this.dataColumns[0]);
 		for (var i = 1; i < this.dataColumns.length; i++) {			
 			if (datasetName == this.dataColumns[i].datasetName) {
 				tempColumns.push(this.dataColumns[i]);
 			} else {
-				var columnGroup = new Gemma.MetaHeatmapDatasetColumnGroup(
+				columnGroup = new Gemma.MetaHeatmapDatasetColumnGroup(
 											{ applicationRoot: this.applicationRoot,
 											  height: this.height,
 											  datasetName: datasetName,
@@ -220,7 +226,7 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 				tempColumns.push( this.dataColumns[i] );
 			}			
 		}
-		var columnGroup = new Gemma.MetaHeatmapDatasetColumnGroup(
+		columnGroup = new Gemma.MetaHeatmapDatasetColumnGroup(
 											{ applicationRoot: this.applicationRoot,
 											  height: this.height,
 											  datasetName: datasetName,

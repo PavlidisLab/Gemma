@@ -6,7 +6,7 @@ Gemma.MetaVisualizationUtils.calculateColumnHeight = function (geneNames) {
 	var initialHeight = 20;
 	for (var i = 0; i < geneNames.length; i++) {
 		initialHeight += geneNames[i].length * Gemma.MetaVisualizationConfig.cellHeight;
-		initialHeight += Gemma.MetaVisualizationConfig.groupSeparatorHeight
+		initialHeight += Gemma.MetaVisualizationConfig.groupSeparatorHeight;
 	}
 	return initialHeight;
 };

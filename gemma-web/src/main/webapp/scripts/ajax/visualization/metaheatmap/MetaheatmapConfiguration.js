@@ -1,17 +1,31 @@
 Ext.namespace('Gemma');
 
 Gemma.MetaVisualizationConfig = {};
-Gemma.MetaVisualizationConfig.cellWidth = 10;
+
+//Sizes
+Gemma.MetaVisualizationConfig.cellWidth = 14;
 Gemma.MetaVisualizationConfig.cellHeight = 10;
 Gemma.MetaVisualizationConfig.groupSeparatorHeight = 4;
 Gemma.MetaVisualizationConfig.columnSeparatorWidth = 1;
 Gemma.MetaVisualizationConfig.groupSeparatorWidth = 4;
 Gemma.MetaVisualizationConfig.geneLabelFontSize = 9;
+Gemma.MetaVisualizationConfig.columnLabelFontSize = 9;
 
+Gemma.MetaVisualizationConfig.labelAngle = 315.0;
+
+
+//Colors
 Gemma.MetaVisualizationConfig.cellHighlightColor = 'yellow';
-Gemma.MetaVisualizationConfig.geneLabelHighlightColor = 'rgb(255,140,0)';
+Gemma.MetaVisualizationConfig.defaultLabelColor = 'black';
+Gemma.MetaVisualizationConfig.geneLabelHighlightColor = 'red';
 Gemma.MetaVisualizationConfig.analysisLabelHighlightColor = 'rgb(255,140,0)';
-Gemma.MetaVisualizationConfig.baselineColor = '';
+Gemma.MetaVisualizationConfig.baselineFactorValueColor = 'rgb(128, 0, 0)';
+Gemma.MetaVisualizationConfig.factorValueDefaultColor = 'rgb(46,139,87)';
+Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor1 = 'rgba(10,100,10, 0.1)';
+Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor2 = 'rgba(10,100,10, 0.05)';
+
+
+
 Gemma.MetaVisualizationConfig.miniPieColor = 'rgb(95,158,160)';
 
 Gemma.MetaVisualizationConfig.basicColourRange = new org.systemsbiology.visualization.DiscreteColorRange(
