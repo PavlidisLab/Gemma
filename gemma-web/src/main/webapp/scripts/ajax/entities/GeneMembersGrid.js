@@ -261,6 +261,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				this.on('doneModification', function(){
 					this.changesMade = false;
+					this.saveButton.disable();
+					this.doneButton.disable();
 				});
 
 				this.getStore().on("remove", function() {
@@ -471,8 +473,13 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			saveToSession : function() {
 				var name = this.newGroupName;
 				var description = this.newGroupDescription;
-				var taxonName = this.selectedGeneGroup.taxonName;
-				var taxonId = this.selectedGeneGroup.taxonId;
+				if(this.selectedGeneGroup){
+					var taxonName = this.selectedGeneGroup.taxonName;
+					var taxonId = this.selectedGeneGroup.taxonId;
+				}else{
+					var taxonName = this.taxonName;
+					var taxonId = this.taxonId;
+				}
 			
 				var sessionStore = new Gemma.UserSessionGeneGroupStore();		
 		

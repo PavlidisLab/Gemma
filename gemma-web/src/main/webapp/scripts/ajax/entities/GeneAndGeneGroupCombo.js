@@ -123,13 +123,15 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 										this.getStore().loadData(records);
 									}.createDelegate(this)
 						);
-				}else{
+				}
+				/* only allowing taxon searches for now
+				 * else{
 					GenePickerController.searchGenesAndGeneGroups("", null,
 						function(records) {
 										this.getStore().loadData(records);
 									}.createDelegate(this)
 						);
-				}
+				}*/
 				
 			}
 		});

@@ -120,7 +120,7 @@
 			<div id="dataSummary" style="margin-left: 15px;margin-right: 15px">
 				<table  style="white-space:nowrap">
 					<tr>
-						<td width="350px"><strong>Data Summary</strong></td>
+						<td><strong>Data Summary</strong></td>
 						<td align="right" width="60px">Total</td>
 						<c:if test="${ drawUpdatedColumn}">
 							<td align="right" width="60px">Updated</td>
@@ -145,7 +145,7 @@
 					</tr>
 					<c:forEach var="taxon" items="${ taxonCount }">
 						<tr>
-							<td width="350px">
+							<td >
 								&emsp;
 								<a
 									href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
@@ -164,7 +164,7 @@
 						</tr>
 					</c:forEach>
 					<tr>
-						<td width="350px">
+						<td >
 							<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'> Array Designs: </a>
 						</td>
 						<td align="right">
@@ -178,7 +178,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td width="350px">
+						<td >
 							Assays:
 						</td>
 						<td align="right">

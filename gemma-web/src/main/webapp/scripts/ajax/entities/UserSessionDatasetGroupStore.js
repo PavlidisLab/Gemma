@@ -113,13 +113,6 @@ Ext.extend(Gemma.UserSessionDatasetGroupStore, Ext.data.Store, {
 			},
 
 			listeners : {
-				write : function(store, action, result, res, rs) {
-					Ext.Msg.show({
-								title : "Saved",
-								msg : "Changes were saved",
-								icon : Ext.MessageBox.INFO
-							});
-				},
 				exception : function(proxy, type, action, options, res, arg) {
 					if (type === 'remote') {
 						Ext.Msg.show({

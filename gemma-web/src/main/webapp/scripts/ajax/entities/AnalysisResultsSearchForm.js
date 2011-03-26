@@ -416,7 +416,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		this.experimentCombo.on('select', function(combo, record, index) {
 										
 										// if the EE has changed taxon, reset the gene combo
-										this.taxonChanged(record.get("taxonId"));
+										this.taxonChanged(record.get("taxonId"), record.get("taxonName"));
 										
 										// store the eeid(s) selected and load some EE into the previewer
 										// store the taxon associated with selection
@@ -500,7 +500,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 						'focus' : {
 							fn : function(cb, rec, index) {
 								if(!this.currentSet){
-									Ext.Msg.alert("Missing info","Please first select an experiment or experiment group.");
+									Ext.Msg.alert("Missing information", "Please select an experiment or experiment group first.");
 								}
 							},
 							scope:this
@@ -651,12 +651,19 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	setTaxonId: function(taxonId){
 		this.taxonId = taxonId;
 	},
+	
+	getTaxonName: function(){
+		return this.taxonName;
+	},
+	setTaxonName: function(taxonId){
+		this.taxonName = taxonId;
+	},
 
 	/**
 	 * Check if the taxon needs to be changed, and if so, update the geneAndGroupCombo and reset the gene preivew
 	 * @param {} taxonId
 	 */
-	taxonChanged : function(taxonId) {
+	taxonChanged : function(taxonId, taxonName) {
 
 		// if the 'new' taxon is the same as the 'old' taxon for the experiment combo, don't do anything
 		if (taxonId && this.getTaxonId() && (this.getTaxonId() === taxonId) ) {
@@ -667,6 +674,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			this.resetGenePreview();
 			this.geneCombo.setTaxonId(taxonId);
 			this.setTaxonId(taxonId);
+			this.setTaxonName(taxonName);
 			this.geneCombo.reset();
 		}
 
@@ -739,7 +747,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		Ext.apply(this.geneSelectionEditor, {
 			geneGroupId: this.geneGroupId,
 			selectedGeneGroup: this.geneCombo.selectedGeneGroup, 
-			groupName: this.geneCombo.selectedGeneGroup.name
+			groupName: (this.geneCombo.selectedGeneGroup)? this.geneCombo.selectedGeneGroup.name : null,
+			taxonId: this.getTaxonId(),
+			taxonName: this.getTaxonName(),
 		});
 		this.geneSelectionEditor.loadGenes(this.geneIds, function(){
 			Ext.getCmp('geneSelectionEditor').loadMask.hide();
@@ -786,6 +796,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				
 				var taxonId = record.get("taxonId");
 				this.setTaxonId(taxonId);
+				var taxonName = record.get("taxonName");
+				this.setTaxonName(taxonName);
 				this.geneCombo.setTaxonId(taxonId);
 								
 				// load preview of group if group was selected
