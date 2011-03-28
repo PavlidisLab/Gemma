@@ -347,18 +347,19 @@ public class GenePickerController {
             List<SearchResult> geneSetSearchResults = results.get( GeneSet.class );
 
             // filter results by taxon
+            List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
             for ( SearchResult sr : geneSetSearchResults ) {
                 GeneSet gs = ( GeneSet ) sr.getResultObject();
                 GeneSetValueObject gsvo = new GeneSetValueObject( gs );
-                if ( gsvo.getTaxonId() != taxonId ) {
-                    geneSetSearchResults.remove( sr );
+                if ( gsvo.getTaxonId() == taxonId ) {
+                    taxonCheckedSets.add( sr );
                 }
             }
 
             Collection<SearchResultDisplayObject> genes = SearchResultDisplayObject
                     .convertSearchResults2SearchResultDisplayObjects( results.get( Gene.class ) );
             Collection<SearchResultDisplayObject> geneSets = SearchResultDisplayObject
-                    .convertSearchResults2SearchResultDisplayObjects( geneSetSearchResults );
+                    .convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
 
             // set the taxon values for geneSets
             for ( SearchResultDisplayObject srdo : geneSets ) {

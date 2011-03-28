@@ -88,9 +88,13 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							this.changeMade = true;
 							grid.getStore().remove(record);
 						}
-					}
+					},
 					//You can cancel the action by returning false from this event handler.
-					,beforeaction:function() {
+					beforeaction:function(grid, record, action, row, col) {
+						if(grid.getStore().getCount()==1 && action==='icon-cross'){
+							return false;	
+						}
+						return true;
 					}
 				});
 							
@@ -120,42 +124,46 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 													}
 										}.createDelegate(this);
 				this.saveButton = new Ext.Button({
-							id: 'save-selection-button',
+							id: 'save-selection-button-e',
 							text: "Save",
 							handler: this.save,
 							scope: this,
 							disabled: true
 						});
 				this.doneButton = new Ext.Button({
-							id: 'done-selecting-button',
+							id: 'done-selecting-button-e',
 							text: "Done",
 							handler: this.done,
 							scope: this,
 							disabled: true
 						});
-				// add save button if user isn't logged in
-				if (Ext.get('hasUser').getValue()) {
-					Ext.apply(this, {
-						buttons: [this.saveButton, this.doneButton, 
-						{
-							id: 'cancel-selecting-button',
-							text: "Cancel",
-							handler: this.cancel,
-							scope: this
-						}]
-					});
+				// add buttons only if haven't been added already
+				if(!this.buttons || this.buttons === null || this.buttons===[]){
+					// add save button if user isn't logged in
+					if (Ext.get('hasUser').getValue()) {
+						Ext.apply(this, {
+							buttons: [this.saveButton, this.doneButton, 
+							{
+								id: 'cancel-selecting-button-e',
+								text: "Cancel",
+								handler: this.cancel,
+								scope: this
+							}]
+						});
+					}
+					else {
+						Ext.apply(this, {
+							buttons: [this.doneButton,
+							 {
+								id: 'cancel-selecting-button-e',
+								text: "Cancel",
+								handler: this.cancel,
+								scope: this
+							}]
+						});
+					}
 				}
-				else {
-					Ext.apply(this, {
-						buttons: [this.doneButton,
-						 {
-							id: 'cancel-selecting-button',
-							text: "Cancel",
-							handler: this.cancel,
-							scope: this
-						}]
-					});
-				}
+				
 				Ext.apply(this, {
 							store : new Ext.data.SimpleStore({
 										fields : [{
@@ -278,13 +286,13 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				if(!this.groupName || this.groupName === null || this.groupName === ''){
 					this.newGroupName = "Experiment group created: "+(new Date()).toString();
 				} else{
-					this.newGroupName = 'Edited \''+this.groupName+'\' group';
 					// adding time to end of session-bound group titles in case it's not unique
 					var currentTime = new Date();
 					var hours = currentTime.getHours();
 					var minutes = currentTime.getMinutes();
 					if (minutes < 10) {minutes = "0" + minutes;}
-					this.newGroupName += ' ('+hours+':'+minutes+')';
+					this.newGroupName = '('+hours+':'+minutes+')';
+					this.newGroupName += ' Edited \''+this.groupName+'\' group';
 				}
 								
 				// if description for new group wasn't passed from parent component, make one up
@@ -322,8 +330,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				
 				// save button should only be visible if user is not logged in, but just to be safe:
 				if (!Ext.get('hasUser').getValue()) {
-						Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "
-											+" however, your list will be available temporarily.");
+						Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+
+											" however, your list will be available temporarily.");
 						this.saveToSession();
 				}else{
 					

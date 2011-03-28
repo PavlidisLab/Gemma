@@ -126,9 +126,13 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 							this.changeMade = true;
 							grid.getStore().remove(record);
 						}
-					}
+					},
 					//You can cancel the action by returning false from this event handler.
-					,beforeaction:function() {
+					beforeaction:function(grid, record, action, row, col) {
+						if(grid.getStore().getCount()==1 && action==='icon-cross'){
+							return false;	
+						}
+						return true;
 					}
 				});
 							
@@ -159,14 +163,14 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 													}
 										}.createDelegate(this);
 				this.saveButton = new Ext.Button({
-							id: 'save-selection-button',
+							id: 'save-selection-button-g',
 							text: "Save",
 							handler: this.save,
 							scope: this,
 							disabled: true
 						});
 				this.doneButton = new Ext.Button({
-							id: 'done-selecting-button',
+							id: 'done-selecting-button-g',
 							text: "Done",
 							handler: this.done,
 							scope: this,
@@ -176,7 +180,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				if(Ext.get('hasUser').getValue()){
 					Ext.apply(this, {
 							buttons : [this.saveButton, this.doneButton, {
-										id : 'cancel-selecting-button',
+										id : 'cancel-selecting-button-g',
 										text : "Cancel",
 										handler : this.cancel,
 										scope : this
@@ -185,7 +189,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}else{
 					Ext.apply(this, {
 							buttons : [this.doneButton, {
-										id : 'cancel-selecting-button',
+										id : 'cancel-selecting-button-g',
 										text : "Cancel",
 										handler : this.cancel,
 										scope : this
@@ -426,8 +430,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				
 				// save button should only be visible if user is not logged in, but just to be safe:
 				if (!Ext.get('hasUser').getValue()) {
-						Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "
-											+" however, your list will be available temporarily.");
+						Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+
+											" however, your list will be available temporarily.");
 						this.saveToSession();
 				}else{
 					
@@ -473,12 +477,14 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			saveToSession : function() {
 				var name = this.newGroupName;
 				var description = this.newGroupDescription;
+				var taxonName;
+				var taxonId;
 				if(this.selectedGeneGroup){
-					var taxonName = this.selectedGeneGroup.taxonName;
-					var taxonId = this.selectedGeneGroup.taxonId;
+					taxonName = this.selectedGeneGroup.taxonName;
+					taxonId = this.selectedGeneGroup.taxonId;
 				}else{
-					var taxonName = this.taxonName;
-					var taxonId = this.taxonId;
+					taxonName = this.taxonName;
+					taxonId = this.taxonId;
 				}
 			
 				var sessionStore = new Gemma.UserSessionGeneGroupStore();		

@@ -186,7 +186,8 @@ public class CoexpressionSearchController extends BaseFormController {
         /*
          * User provided a eeset by name.
          */
-        if ( eeSetId == null || eeSetId < 0 && StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
+        if ( ( eeSetId == null && searchOptions.getEeSetName() != null ) 
+                || ( eeSetId != null && eeSetId < 0 && StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) ) {
             Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
                     .getEeSetName() );
             if ( eeSets.size() == 1 ) {
