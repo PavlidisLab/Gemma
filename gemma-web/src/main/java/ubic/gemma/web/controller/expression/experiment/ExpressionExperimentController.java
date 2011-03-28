@@ -1670,7 +1670,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         return valueObjs;
     }
-
+        
     /**
      * Get the expression experiment value objects for the expression experiments.
      * 
@@ -1695,30 +1695,42 @@ public class ExpressionExperimentController extends AbstractTaskService {
         /* Filtering for security happens here. */
         if ( filterDataForUser ) {
             try {
-                if ( taxon != null ) {
-                    if ( eeIds == null ) {
-                        securedEEs = expressionExperimentService.findByTaxon( taxon );
-                    } else {
-                        securedEEs = expressionExperimentService.loadMultiple( eeIds );
-                        Collection<ExpressionExperiment> securedEEsfilteredByTaxon = new ArrayList<ExpressionExperiment>();
+                
+                securedEEs = expressionExperimentService.loadMySharedExpressionExperiments();
+                
+                if ( eeIds != null ) {
+                    Collection<ExpressionExperiment> securedEEsfilteredByEeIds = new ArrayList<ExpressionExperiment>();
+                    
+                  //only keep ExpressionExperiments that have ids contained in eeIds
+                    for ( ExpressionExperiment ee : securedEEs ) {                            
 
-                        for ( ExpressionExperiment ee : securedEEs ) {
-
-                            Taxon t = expressionExperimentService.getTaxon( ee.getId() );
-
-                            if ( t != null && t.getId().equals( taxon.getId() ) ) {
-                                securedEEsfilteredByTaxon.add( ee );
-                            }
+                        if (eeIds !=null && eeIds.contains( ee.getId() ) ) {
+                            securedEEsfilteredByEeIds.add( ee );
                         }
-
-                        securedEEs = securedEEsfilteredByTaxon;
                     }
 
-                } else if ( eeIds == null ) {
-                    securedEEs = expressionExperimentService.loadMySharedExpressionExperiments();
-                } else {
-                    securedEEs = expressionExperimentService.loadMultiple( eeIds );
+                    securedEEs = securedEEsfilteredByEeIds;
+                    
                 }
+                
+                
+                if ( taxon != null ) {                   
+                    
+                    Collection<ExpressionExperiment> securedEEsfilteredByTaxon = new ArrayList<ExpressionExperiment>();
+
+                    //only keep ExpressionExperiments that have the specified Taxon
+                    for ( ExpressionExperiment ee : securedEEs ) {
+
+                        Taxon t = expressionExperimentService.getTaxon( ee.getId() );
+
+                        if ( t != null && t.getId().equals( taxon.getId() ) ) {
+                            securedEEsfilteredByTaxon.add( ee );
+                        }
+                    }
+
+                    securedEEs = securedEEsfilteredByTaxon;             
+
+                } 
             } catch ( AccessDeniedException e ) {
                 log.info( "darn" );
                 return new HashSet<ExpressionExperimentValueObject>();
