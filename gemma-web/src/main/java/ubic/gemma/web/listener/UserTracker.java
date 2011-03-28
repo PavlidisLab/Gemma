@@ -31,6 +31,12 @@ public class UserTracker {
     private static AtomicInteger activeSessions = new AtomicInteger( 0 );
 
     public static int decrementSessions() {
+        
+        if (activeSessions.get() < 1){
+            activeSessions.set( 0 );
+            return 0;
+        }
+        
         return activeSessions.decrementAndGet();
     }
 
