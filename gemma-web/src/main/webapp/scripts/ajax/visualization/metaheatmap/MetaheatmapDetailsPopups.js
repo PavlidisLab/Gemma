@@ -31,6 +31,6 @@ Gemma.MetaVisualizationPopups.makeDatasetInfoWindow = function ( datasetName, da
 				       {xtype:'label', ref:'factors', text:"Factors: "},
 				       // analyses?
 				       // experimental design?
-				      ],			      			                                                                     												      	  
+				      ]			      			                                                                     												      	  
 			});		
 };

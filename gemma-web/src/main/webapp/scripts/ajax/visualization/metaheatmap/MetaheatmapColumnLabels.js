@@ -143,7 +143,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 					}
 					xPosition += Gemma.MetaVisualizationConfig.groupSeparatorWidth;
 				}
-			},
+			}
 			
 		});
 		
