@@ -20,12 +20,15 @@ package ubic.gemma.analysis.expression.diff;
 
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -46,6 +49,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 @Service
 public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
+
+    private static Log log = LogFactory.getLog( DifferentialExpressionAnalyzer.class );
 
     private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
 
@@ -281,6 +286,7 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
             /*
              * Candidate for ANOVA
              */
+            boolean okForInteraction = true;
             for ( ExperimentalFactor f : efsToUse ) {
                 Collection<FactorValue> factorValues = f.getFactorValues();
                 if ( factorValues.size() == 1 ) {
@@ -301,9 +307,14 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
 
                     return null;
                 }
+                if ( BatchInfoPopulationService.isBatchFactor( f ) ) {
+                    log.info( "One of the two factors is 'batch', not using it for an interaction" );
+                    okForInteraction = false;
+                }
             }
             /* Check for block design and execute two way anova (with or without interactions). */
-            if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment ) ) {
+            if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment )
+                    || !okForInteraction ) {
                 return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
             }
             return this.applicationContext.getBean( TwoWayAnovaWithInteractionsAnalyzer.class );

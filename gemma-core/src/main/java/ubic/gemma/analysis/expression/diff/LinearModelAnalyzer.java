@@ -43,8 +43,11 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
+import ubic.basecode.math.DesignMatrix;
+import ubic.basecode.math.LeastSquaresFit;
 import ubic.basecode.math.MatrixStats;
 import ubic.basecode.util.r.type.LinearModelSummary;
 import ubic.gemma.analysis.preprocess.filter.ExpressionExperimentFilter;
@@ -68,6 +71,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Handles fitting linear models with continuous or fixed-level covariates. Data are always log-transformed.
@@ -91,7 +95,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     /**
      * Threshold below which contrasts will be stored for a given Result.
      */
-    private final Double PVALUE_CONTRAST_SELECT_THRESHOLD = 0.1;
+    private static final double PVALUE_CONTRAST_SELECT_THRESHOLD = ConfigUtils
+            .getDouble( "gemma.linearmodels.pvaluethresh" );
+
+    private static final boolean USE_R = ConfigUtils.getBoolean( "gemma.linearmodels.useR" );
 
     /**
      * Determine if any factor should be treated as the intercept term.
@@ -160,6 +167,58 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
 
+        ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
+                .getProcessedExpressionDataMatrix( expressionExperiment );
+
+        return run( expressionExperiment, dmatrix, config );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
+     * .ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor[])
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor... experimentalFactors ) {
+
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+        config.setFactorsToInclude( Arrays.asList( experimentalFactors ) );
+
+        return this.run( expressionExperiment, config );
+
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param subsetFactor
+     * @param factors
+     * @return
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
+            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors ) {
+        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+
+        config.setFactorsToInclude( factors );
+
+        config.setSubsetFactor( subsetFactor );
+
+        return this.run( expressionExperiment, config );
+    }
+
+    /**
+     * @param expressionExperiment
+     * @param dmatrix
+     * @param config
+     * @return
+     */
+    @Override
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
+            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config ) {
         try {
 
             /*
@@ -176,14 +235,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
              * By far the most complex is #2 -- it depends on which factors and what kind they are.
              */
 
-            connectToR();
-
             /*
              * Initialize our matrix and factor lists...
              */
-            ExpressionDataDoubleMatrix dmatrix = expressionDataMatrixService
-                    .getProcessedExpressionDataMatrix( expressionExperiment );
-
+            if ( USE_R ) {
+                connectToR();
+            }
             List<ExperimentalFactor> factors = config.getFactorsToInclude();
 
             List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( dmatrix, factors );
@@ -251,43 +308,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         } finally {
             disconnectR();
         }
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer#run(ubic.gemma.model.expression.experiment
-     * .ExpressionExperiment, ubic.gemma.model.expression.experiment.ExperimentalFactor[])
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor... experimentalFactors ) {
-
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( Arrays.asList( experimentalFactors ) );
-
-        return this.run( expressionExperiment, config );
-
-    }
-
-    /**
-     * @param expressionExperiment
-     * @param subsetFactor
-     * @param factors
-     * @return
-     */
-    @Override
-    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
-            ExperimentalFactor subsetFactor, Collection<ExperimentalFactor> factors ) {
-        DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-
-        config.setFactorsToInclude( factors );
-
-        config.setSubsetFactor( subsetFactor );
-
-        return this.run( expressionExperiment, config );
     }
 
     /**
@@ -319,15 +339,23 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         boolean hasInteractionTerms = !config.getInteractionsToInclude().isEmpty();
         if ( hasInteractionTerms ) {
+
+            /*
+             * FIXME: it might be good to check that the batch factor isn't included in interactions - we already do
+             * this earlier too.
+             */
+
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
 
                 List<String> interactionFactorNames = new ArrayList<String>();
                 for ( ExperimentalFactor factor : interactionTerms ) {
+
                     interactionFactorNames.add( ExperimentalDesignUtils.nameForR( factor ) );
                 }
 
                 factTerm = factTerm + " + " + StringUtils.join( interactionFactorNames, "*" ); // in the R
                 // statement
+
                 interactionFactorLists.add( interactionFactorNames.toArray( new String[] {} ) );
 
                 // In the ANOVA table.
@@ -397,10 +425,17 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
 
         /*
-         * Run the analysis in R.
+         * PREPARATION FOR 'NATIVE' FITTING
          */
-        final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, label2Factors, modelFormula,
-                rowNameExtractor );
+        DoubleMatrix<String, String> sNamedMatrix = makeDataMatrix( designMatrix, namedMatrix );
+        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
+
+        /*
+         * Run the analysis NOTE this can be simplified if we strip out R code.
+         */
+        final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, sNamedMatrix, label2Factors,
+                modelFormula, rowNameExtractor, properDesignMatrix, interceptFactor, interactionFactorLists,
+                baselineConditions );
 
         if ( rawResults.size() == 0 ) {
             throw new IllegalStateException( "Got no results from the analysis" );
@@ -425,14 +460,14 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         }
 
         /*
-         * Limma-style consideration of F statistics
+         * Limma-style consideration of F statistics FIXME if switch to java impl there's no need for this.
          */
-        List<Double> overallPs = new ArrayList<Double>( namedMatrix.rows() );
-        for ( CompositeSequence el : namedMatrix.getRowNames() ) {
-
-            LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
-            overallPs.add( lm.getP() ); // FIXME this isn't working for t-tests.
-        }
+        // List<Double> overallPs = new ArrayList<Double>( namedMatrix.rows() );
+        // for ( CompositeSequence el : namedMatrix.getRowNames() ) {
+        //
+        // LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
+        // overallPs.add( lm.getP() ); // FIXME this isn't working for t-tests.
+        // }
         // qvalues for overall p
         // double[] qValues = super.getQValues( overallPs.toArray( new Double[] {} ) );
 
@@ -441,6 +476,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         boolean warned = false;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
+
+            if ( el.getName().equals( "probe_0" ) ) {
+                log.info( "MY GOODNESS" );
+            }
 
             LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
 
@@ -454,16 +493,19 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 continue;
             }
 
-            if ( el.getName().equals( "probe_10" ) ) {
-                log.info( lm );
-            }
-
             for ( String factorName : label2Factors.keySet() ) {
 
                 Double overallPValue = null;
                 ProbeAnalysisResult probeAnalysisResult = ProbeAnalysisResult.Factory.newInstance();
                 probeAnalysisResult.setProbe( el );
                 probeAnalysisResult.setQuantitationType( quantitationType );
+
+                if ( lm.getCoefficients() == null ) {
+                    probeAnalysisResult.setPvalue( null );
+                    pvaluesForQvalue.get( factorName ).add( overallPValue );
+                    resultLists.get( factorName ).add( probeAnalysisResult );
+                    continue;
+                }
 
                 Collection<ExperimentalFactor> factorsForName = label2Factors.get( factorName );
 
@@ -481,7 +523,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     assert factorNames.length == factorsForName.size();
                     overallPValue = lm.getInteractionEffectP( factorNames );
 
-                    if ( overallPValue < PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+                    if ( overallPValue != null && overallPValue <= PVALUE_CONTRAST_SELECT_THRESHOLD ) {
 
                         Map<String, Double> interactionContrastTStats = lm.getContrastTStats( factorName );
                         Map<String, Double> interactionContrastCoeffs = lm.getContrastCoefficients( factorName );
@@ -490,7 +532,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                         for ( String term : interactionContrastPValues.keySet() ) {
                             Double contrastPvalue = interactionContrastPValues.get( term );
 
-                            if ( contrastPvalue < PVALUE_CONTRAST_SELECT_THRESHOLD ) {
+                            if ( contrastPvalue <= PVALUE_CONTRAST_SELECT_THRESHOLD ) {
                                 makeContrast( probeAnalysisResult, factorsForName, term, factorName, contrastPvalue,
                                         interactionContrastTStats, interactionContrastCoeffs );
                             }
@@ -530,6 +572,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                          */
 
                         Map<String, Double> mainEffectContrastTStats = lm.getContrastTStats( factorName );
+
                         Map<String, Double> mainEffectContrastPvalues = lm.getContrastPValues( factorName );
                         Map<String, Double> mainEffectContrastCoeffs = lm.getContrastCoefficients( factorName );
 
@@ -579,6 +622,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             List<Double> pvals = pvaluesForQvalue.get( fName );
 
             Double[] pvalArray = pvals.toArray( new Double[] {} );
+            for ( int i = 0; i < pvalArray.length; i++ ) {
+                if ( pvalArray[i] == null ) pvalArray[i] = Double.NaN;
+            }
+
             // savePvaluesForDebugging( ArrayUtils.toPrimitive( pvalArray ) );
             double[] qvalues = super.getQValues( pvalArray );
             double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvalArray ) );
@@ -684,7 +731,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         contrast.setLogFoldChange( nan2Null( coefficient ) );
 
-        if ( term.contains( ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX ) ) { // otherwise, it's continuous, and
+        if ( term.contains( ExperimentalDesignUtils.FACTOR_VALUE_RNAME_PREFIX ) ) {
+            // otherwise, it's continuous, and
             // we don't put in a
             // factorvalue.
 
@@ -757,6 +805,43 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         probeAnalysisResult.getContrasts().add( contrast );
 
+    }
+
+    private DoubleMatrix<String, String> makeDataMatrix( ObjectMatrix<String, String, Object> designMatrix,
+            DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
+        /*
+         * Convert the data into a string-keyed matrix.
+         */
+        DoubleMatrix<String, String> sNamedMatrix = new DenseDoubleMatrix<String, String>( namedMatrix.asArray() );
+        for ( int i = 0; i < namedMatrix.rows(); i++ ) {
+            sNamedMatrix.addRowName( namedMatrix.getRowName( i ).getId().toString() );
+        }
+        sNamedMatrix.setColumnNames( designMatrix.getRowNames() );
+        return sNamedMatrix;
+    }
+
+    private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
+            List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
+        /*
+         * Determine the factors and interactions to include.
+         */
+        DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
+        /*
+         * FIXME careful, tricky case of one-sided test not handled yet? Actually seems okay ...
+         */
+        if ( !interactionFactorLists.isEmpty() ) {
+            for ( String[] in : interactionFactorLists ) {
+                // we actually only support one
+                properDesignMatrix.addInteraction( in );
+            }
+        }
+
+        for ( ExperimentalFactor ef : baselineConditions.keySet() ) {
+            String factorName = ExperimentalDesignUtils.nameForR( ef );
+            String baselineFactorValue = ExperimentalDesignUtils.nameForR( baselineConditions.get( ef ), true );
+            properDesignMatrix.setBaseline( factorName, baselineFactorValue );
+        }
+        return properDesignMatrix;
     }
 
     /**
@@ -881,28 +966,27 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param factorNameMap
      * @param modelFormula
      * @param rowNameExtractor
+     * @param interactionFactorLists
+     * @param interceptFactor
+     * @param designMatrix
+     * @param baselineConditions
      * @return results
      */
     private Map<String, LinearModelSummary> runAnalysis(
             final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
+            final DoubleMatrix<String, String> sNamedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
-            final Transformer rowNameExtractor ) {
+            final Transformer rowNameExtractor, DesignMatrix designMatrix, ExperimentalFactor interceptFactor,
+            List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
-        final String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
-        ExecutorService service = Executors.newSingleThreadExecutor();
-
-        Future<?> f = service.submit( new Runnable() {
-            public void run() {
-                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
-                        .keySet().toArray( new String[] {} ) );
-                rawResults.putAll( res );
-
-            }
-        } );
-
-        service.shutdown();
+        Future<?> f;
+        if ( USE_R ) {
+            f = runAnalysisFuture( namedMatrix, factorNameMap, modelFormula, rowNameExtractor, rawResults );
+        } else {
+            f = runAnalysisFutureJ( designMatrix, sNamedMatrix, rawResults );
+        }
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -942,6 +1026,65 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         assert rawResults.size() == namedMatrix.rows() : "expected " + namedMatrix.rows() + " results, got "
                 + rawResults.size();
         return rawResults;
+    }
+
+    /**
+     * @param namedMatrix
+     * @param factorNameMap
+     * @param modelFormula
+     * @param rowNameExtractor
+     * @param rawResults
+     * @return
+     */
+    private Future<?> runAnalysisFuture( final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
+            final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
+            final Transformer rowNameExtractor, final Map<String, LinearModelSummary> rawResults ) {
+
+        if ( rc == null || !rc.isConnected() ) {
+            throw new IllegalStateException( "Don't call this method unless R is ready :(" );
+        }
+
+        final String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
+        ExecutorService service = Executors.newSingleThreadExecutor();
+
+        Future<?> f = service.submit( new Runnable() {
+            public void run() {
+                Map<String, LinearModelSummary> res = rc.rowApplyLinearModel( matrixName, modelFormula, factorNameMap
+                        .keySet().toArray( new String[] {} ) );
+                rawResults.putAll( res );
+
+            }
+        } );
+
+        service.shutdown();
+        return f;
+    }
+
+    /**
+     * Linear models solved using native Java implementation
+     * 
+     * @param designMatrix
+     * @param data
+     * @param rawResults
+     * @return
+     */
+    private Future<?> runAnalysisFutureJ( final DesignMatrix designMatrix, final DoubleMatrix<String, String> data,
+            final Map<String, LinearModelSummary> rawResults ) {
+        ExecutorService service = Executors.newSingleThreadExecutor();
+
+        Future<?> f = service.submit( new Runnable() {
+            public void run() {
+                /*
+                 * This part should be straightforward
+                 */
+                LeastSquaresFit fit = new LeastSquaresFit( designMatrix, data );
+                Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
+                rawResults.putAll( res );
+            }
+        } );
+
+        service.shutdown();
+        return f;
     }
 
     /**
@@ -1006,7 +1149,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 for ( int i = 0; i < column.length; i++ ) {
                     colD[i] = ( Double ) column[i];
                 }
-                rc.assign( factorName, colD );
+                if ( USE_R ) rc.assign( factorName, colD );
             } else {
                 String[] colS = new String[column.length];
                 for ( int i = 0; i < column.length; i++ ) {
@@ -1015,20 +1158,22 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 FactorValue baseLineFV = baselineConditions.get( factor );
 
-                String fvName = ExperimentalDesignUtils.nameForR( baseLineFV, true );
+                String baselineFvName = ExperimentalDesignUtils.nameForR( baseLineFV, true );
 
-                rc.assignFactor( factorName, Arrays.asList( colS ) );
-                List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );
+                if ( USE_R ) {
+                    rc.assignFactor( factorName, Arrays.asList( colS ) );
+                    List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );
 
-                /*
-                 * The 'base' is the index of the baseline group in the list of levels: the result of 'levels(factor)'.
-                 * Default base is 1.
-                 */
+                    /*
+                     * The 'base' is the index of the baseline group in the list of levels: the result of
+                     * 'levels(factor)'. Default base is 1.
+                     */
 
-                int indexOfBaseline = stringListEval.indexOf( fvName ) + 1; // R is 1-based.
+                    int indexOfBaseline = stringListEval.indexOf( baselineFvName ) + 1; // R is 1-based.
 
-                rc.voidEval( "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
-                        + indexOfBaseline + ")" );
+                    rc.voidEval( "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
+                            + indexOfBaseline + ")" );
+                }
             }
         }
     }

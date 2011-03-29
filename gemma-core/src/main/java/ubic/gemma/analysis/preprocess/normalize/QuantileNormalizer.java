@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.analysis.preprocess.normalize;
 
 import java.io.IOException;
 
@@ -47,11 +47,15 @@ public class QuantileNormalizer<R, C> extends RCommander implements Normalizer<R
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed)
      */
     public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix ) {
         log.debug( "Normalizing..." );
+        /*
+         * FIXME this will not work correctly with missing values
+         */
         String matrixvar = this.rc.assignMatrix( dataMatrix );
         this.rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );
         DoubleMatrix<String, String> plainResult = rc.retrieveMatrix( "result" );

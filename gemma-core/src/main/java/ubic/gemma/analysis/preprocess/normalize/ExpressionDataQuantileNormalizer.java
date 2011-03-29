@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.analysis.preprocess.normalize;
 
 import java.io.IOException;
 

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.analysis.preprocess.normalize;
 
 import java.io.IOException;
 
@@ -26,9 +26,9 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrix;
  * @author pavlidis
  * @version $Id$
  */
-public class TwoColorArrayLoessNormalizer extends MarrayNormalizer {
+public class TwoColorArrayMedianNormalizer extends MarrayNormalizer {
 
-    public TwoColorArrayLoessNormalizer() throws IOException {
+    public TwoColorArrayMedianNormalizer() throws IOException {
         super();
     }
 
@@ -44,7 +44,7 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer {
             DoubleMatrix<String, String> channelTwoBackground, DoubleMatrix<String, String> weights ) {
         log.debug( "normalizing..." );
         DoubleMatrix<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal,
-                channelOneBackground, channelTwoBackground, weights, "loess" );
+                channelOneBackground, channelTwoBackground, weights, "median" );
         return resultObject;
     }
 
@@ -57,7 +57,8 @@ public class TwoColorArrayLoessNormalizer extends MarrayNormalizer {
     public DoubleMatrix<String, String> normalize( DoubleMatrix<String, String> channelOneSignal,
             DoubleMatrix<String, String> channelTwoSignal ) {
         log.debug( "normalizing..." );
-        DoubleMatrix<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal, "loess" );
+        DoubleMatrix<String, String> resultObject = normalize( channelOneSignal, channelTwoSignal, "median" );
         return resultObject;
     }
+
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.analysis.preprocess.background;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.FastRowAccessDoubleMatrix;
@@ -45,7 +45,7 @@ public class SimpleBackgroundSubtraction<R, C> implements BackgroundAdjuster<R, 
      * The values of the background matrix are subtracted from the signal, element-wise, subject to any constraint
      * supplied by the lowerlimit.
      * 
-     * @see ubic.gemma.analysis.preprocess.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
+     * @see ubic.gemma.analysis.preprocess.background.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
      *      baseCode.dataStructure.matrix.DoubleMatrix)
      * @see #setLowerLimit(double)
      */

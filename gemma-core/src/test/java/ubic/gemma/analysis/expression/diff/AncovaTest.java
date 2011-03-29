@@ -393,13 +393,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 assertNotNull( probe );
 
-                if ( probe.getName().equals( "probe_0" ) ) {
-                    for ( ContrastResult contrast : probeAnalysisResult.getContrasts() ) {
-                        assertEquals( super.factorValueA1, contrast.getFactorValue() );
-                        foundContrast = true;
-                    }
-                }
-
                 Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
                 Double stat = null;
                 if ( !contrasts.isEmpty() ) {
@@ -432,10 +425,11 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                             assertEquals( 0.0048, pvalue, 0.0001 );
                             assertEquals( -125.746, stat, 0.001 );
                         } else if ( probe.getName().equals( "probe_0" ) ) {
-                            for ( ContrastResult contrast : probeAnalysisResult.getContrasts() ) {
-                                assertEquals( super.factorValueA1, contrast.getFactorValue() );
-                                foundContrast = true;
-                            }
+                            assertEquals( 1, probeAnalysisResult.getContrasts().size() );
+                            ContrastResult contrast = probeAnalysisResult.getContrasts().iterator().next();
+                            assertEquals( super.factorValueA1, contrast.getFactorValue() );
+                            assertEquals( 1.5, contrast.getLogFoldChange(), 0.001 );
+                            foundContrast = true;
                         }
 
                     } else {

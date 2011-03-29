@@ -85,6 +85,10 @@ public class PubMedXMLFetcher {
                 PubMedXMLParser pmxp = new PubMedXMLParser();
                 results = pmxp.parse( toBeGotten.openStream() );
                 if ( results != null && results.size() > 0 ) break;
+                try {
+                    Thread.sleep( 500 );
+                } catch ( InterruptedException e ) {
+                }
             }
             if ( results == null || results.size() == 0 ) {
                 return null;

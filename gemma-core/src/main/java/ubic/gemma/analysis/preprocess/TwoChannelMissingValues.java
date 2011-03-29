@@ -113,13 +113,12 @@ public class TwoChannelMissingValues {
     }
 
     /**
-     * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically. If
-     *        you want more control use other computeMissingValues methods.
+     * @param expExp The expression experiment to analyze. The quantitation types to use are selected automatically.
      * @param signalToNoiseThreshold A value such as 1.5 or 2.0; only spots for which at least ONE of the channel signal
      *        is more than signalToNoiseThreshold*background (and the preferred data are not missing) will be considered
      *        present.
-     * @param extraMissingValueIndicators Values that should be considered missing. For example, some data sets use '0'
-     *        (foolish, but true). This can be null or empty and it will be ignored.
+     * @param extraMissingValueIndicators Values that should be considered missing. For example, some data sets use '0'.
+     *        This can be null or empty and it will be ignored.
      * @return DesignElementDataVectors corresponding to a new PRESENTCALL quantitation type for the experiment.
      */
     public Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment expExp,

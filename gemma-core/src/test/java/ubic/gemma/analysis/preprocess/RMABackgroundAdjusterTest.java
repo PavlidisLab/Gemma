@@ -29,6 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.analysis.preprocess.background.RMABackgroundAdjuster;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 
 /**

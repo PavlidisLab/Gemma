@@ -41,6 +41,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav, paul
@@ -76,7 +77,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     public void setup() throws Exception {
 
         try {
-            analyzer.connectToR();
+            if ( ConfigUtils.getBoolean( "gemma.linearmodels.useR" ) ) {
+                analyzer.connectToR();
+            } else {
+                this.rReady = true; // cuz we're not using R, we just make so
+            }
         } catch ( Exception e ) {
             this.rReady = false;
         }

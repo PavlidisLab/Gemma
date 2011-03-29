@@ -67,7 +67,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         System.exit( 0 );
     }
 
-    private DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
+    protected DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService = null;
 
     /*
      * Used when processing a single experiment.
@@ -79,7 +79,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * Whether batch factors should be included (if they exist)
      */
-    private boolean ignoreBatch = false;
+    protected boolean ignoreBatch = false;
 
     /*
      * (non-Javadoc)
@@ -239,7 +239,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * @param ee
      * @return
      */
-    private Collection<ExperimentalFactor> guessFactors( ExpressionExperiment ee ) {
+    protected Collection<ExperimentalFactor> guessFactors( ExpressionExperiment ee ) {
         Collection<ExperimentalFactor> factors = new HashSet<ExperimentalFactor>();
 
         ExperimentalFactorService efs = ( ExperimentalFactorService ) this.getBean( "experimentalFactorService" );

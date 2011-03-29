@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.analysis.preprocess.normalize.TwoColorArrayLoessNormalizer;
 
 /**
  * @author pavlidis

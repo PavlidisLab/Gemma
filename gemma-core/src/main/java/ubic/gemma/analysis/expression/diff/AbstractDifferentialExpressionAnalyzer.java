@@ -31,6 +31,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.math.Rank;
+import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -84,6 +85,17 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      */
     public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             ExperimentalFactor... experimentalFactors );
+
+    /***
+     * Allows entry of modified data matrices into the workflow
+     * 
+     * @param expressionExperiment
+     * @param dmatrix
+     * @param config
+     * @return
+     */
+    public abstract Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
+            ExpressionDataDoubleMatrix dmatrix, DifferentialExpressionAnalysisConfig config );
 
     /**
      * Perform an analysis using the specified factor(s), on subsets of the data as defined by the subsetFactor.
@@ -249,8 +261,8 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         int k = 0;
 
         for ( int i = 0; i < qvalues.length; i++ ) {
-            double pvalue = pvalues[i];
-            if ( pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) {
+            Double pvalue = pvalues[i];
+            if ( pvalue == null || pvalue < 0.0 || pvalue > 1.0 || Double.isNaN( pvalue ) ) {
                 qvalues[i] = Double.NaN;
             } else {
                 qvalues[i] = qvaluesFromR[k];
@@ -276,8 +288,12 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
      * @return
      */
     protected Double nan2Null( Double e ) {
-        return e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY || e == Double.POSITIVE_INFINITY ? null
-                : e;
+        boolean isNaN = e == null || Double.isNaN( e ) || e == Double.NEGATIVE_INFINITY
+                || e == Double.POSITIVE_INFINITY;
+        if ( isNaN ) {
+            return null;
+        }
+        return e;
     }
 
     /**

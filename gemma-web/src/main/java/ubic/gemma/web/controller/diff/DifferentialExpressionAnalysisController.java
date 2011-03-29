@@ -31,6 +31,7 @@ import ubic.gemma.analysis.expression.diff.TTestAnalyzer;
 import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithoutInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
@@ -231,6 +232,17 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
         cmd.setFactors( factors );
         cmd.setSubsetFactor( subsetFactor );
+
+        for ( ExperimentalFactor ef : factors ) {
+            if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
+                /*
+                 * This is a policy and I am pretty sure it makes sense!
+                 */
+                log.warn( "Removing interaction term because it includes 'batch'" );
+                includeInteractions = false;
+            }
+        }
+
         cmd.setIncludeInteractions( includeInteractions );
 
         log.info( "Initializing analysis" );

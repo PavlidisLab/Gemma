@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.analysis.preprocess.background;
 
 import java.io.IOException;
 
@@ -48,7 +48,7 @@ public class RMABackgroundAdjuster extends RCommander implements BackgroundAdjus
      * 
      * @param signal The CEL matrix. The MM values are not changed by this algorithm.
      * @param background - not used by this method.
-     * @see ubic.gemma.analysis.preprocess.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
+     * @see ubic.gemma.analysis.preprocess.background.BackgroundAdjuster#adjust(baseCode.dataStructure.matrix.DoubleMatrix,
      *      baseCode.dataStructure.matrix.DoubleMatrix)
      */
     public DoubleMatrix adjust( DoubleMatrix signal, DoubleMatrix background ) {

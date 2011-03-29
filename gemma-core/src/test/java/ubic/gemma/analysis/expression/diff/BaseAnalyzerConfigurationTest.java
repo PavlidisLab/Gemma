@@ -140,7 +140,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     public void setup() throws Exception {
 
         try {
-            rc = RConnectionFactory.getRConnection( ConfigUtils.getString( "gemma.rserve.hostname", "localhost" ) );
+            if ( ConfigUtils.getBoolean( "gemma.linearmodels.useR" ) ) {
+                rc = RConnectionFactory.getRConnection( ConfigUtils.getString( "gemma.rserve.hostname", "localhost" ) );
+            }
             if ( rc != null && rc.isConnected() ) {
                 connected = true;
                 /*

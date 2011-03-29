@@ -278,9 +278,9 @@ public abstract class AbstractFetcher implements Fetcher {
                 double percent = 100.00 * outputFile.length() / expectedSize;
 
                 // can cause npe error, breaking hot deploy
-                if(log != null && outputFile != null){
-                	log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read ("
-                        + String.format( "%.1f", percent ) + "%)" ) );
+                if ( log != null && log.isInfoEnabled() ) {
+                    log.info( ( outputFile.length() + ( expectedSize > 0 ? "/" + expectedSize : "" ) + " bytes read ("
+                            + String.format( "%.1f", percent ) + "%)" ) );
                 }
             }
 

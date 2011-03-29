@@ -30,10 +30,12 @@ import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyze
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
+import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -118,7 +120,20 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
         config.setFactorsToInclude( command.getFactors() );
         config.setSubsetFactor( command.getSubsetFactor() );
 
+        /*
+         * We only support interactions when there are exactly two factors.
+         */
         if ( command.isIncludeInteractions() && command.getFactors().size() == 2 ) {
+
+            /*
+             * We should not include 'batch' in an interaction. But I don't want to enforce that here.
+             */
+            for ( ExperimentalFactor ef : command.getFactors() ) {
+                if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
+                    log.warn( "Batch is included in the interaction!" );
+                }
+            }
+
             config.addInteractionToInclude( command.getFactors() );
         }
 

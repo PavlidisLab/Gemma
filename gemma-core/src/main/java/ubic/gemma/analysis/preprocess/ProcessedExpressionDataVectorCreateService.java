@@ -90,7 +90,6 @@ public class ProcessedExpressionDataVectorCreateService {
 
     /**
      * @param ee
-     * @param method2
      * @return the vectors that were modified.
      */
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
@@ -109,7 +108,15 @@ public class ProcessedExpressionDataVectorCreateService {
             /*
              * Reorder?...
              */
-
+            /*
+             * Normalize?...
+             */
+            /*
+             * SVD?...
+             */
+            /*
+             * Batch correct?...
+             */
             return result;
         } catch ( Exception e ) {
             auditTrailService.addUpdateEvent( ee, FailedProcessedVectorComputationEvent.Factory.newInstance(),
@@ -117,22 +124,6 @@ public class ProcessedExpressionDataVectorCreateService {
             throw new RuntimeException( e );
         }
 
-    }
-
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
-    public void setDesignElementDataVectorService( DesignElementDataVectorService designElementDataVectorService ) {
-        this.designElementDataVectorService = designElementDataVectorService;
-    }
-
-    public void setEeService( ExpressionExperimentService eeService ) {
-        this.eeService = eeService;
-    }
-
-    public void setProcessedDataService( ProcessedExpressionDataVectorService processedDataService ) {
-        this.processedDataService = processedDataService;
     }
 
     /**

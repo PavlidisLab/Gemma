@@ -80,6 +80,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
+            pvalue = pvalue == null ? Double.NaN : pvalue;
             Double qvalue = probeAnalysisResult.getCorrectedPvalue();
             // Double stat = probeAnalysisResult.getEffectSize();
             // Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
@@ -125,7 +126,7 @@ public class TwoWayAnovaWithInteractionsAnalyzerTest extends BaseAnalyzerConfigu
                 } else if ( probe.getName().equals( "probe_10" ) ) {
                     assertEquals( 0.04514, pvalue, 0.00001 );
                 } else if ( probe.getName().equals( "probe_4" ) ) {
-                    assertEquals( null, pvalue );
+                    assertEquals( Double.NaN, pvalue.doubleValue(), 0.00001 );
                 }
             }
 

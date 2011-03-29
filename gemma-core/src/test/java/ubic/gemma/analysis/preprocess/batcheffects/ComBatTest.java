@@ -42,19 +42,19 @@ public class ComBatTest {
                 "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) );
         ComBat comBat = new ComBat( testMatrix, sampleInfo );
 
-        DoubleMatrix2D X = comBat.designMatrix();
+        DoubleMatrix2D X = comBat.getDesignMatrix();
         assertEquals( 1, X.get( 0, 0 ), 0.001 );
         assertEquals( 0, X.get( 3, 0 ), 0.001 );
         assertEquals( 1, X.get( 4, 2 ), 0.001 );
         DoubleMatrix2D y = new DenseDoubleMatrix2D( testMatrix.asArray() );
-        DoubleMatrix2D sdata = comBat.standardize( y, X );
 
+        DoubleMatrix2D sdata = comBat.standardize( y, X );
         assertEquals( -0.25074, sdata.get( 17, 1 ), 0.0001 );
         assertEquals( 0.54122, sdata.get( 8, 2 ), 0.001 );
         assertEquals( 0.22358, sdata.get( 0, 8 ), 0.001 );
         assertEquals( 0.25211, sdata.get( 3, 7 ), 0.001 );
-        DoubleMatrix2D finalResult = comBat.run();
 
+        DoubleMatrix2D finalResult = comBat.run();
         assertEquals( 10.67558, finalResult.get( 7, 0 ), 0.0001 );
         assertEquals( 11.68505, finalResult.get( 7, 7 ), 0.0001 );
         assertEquals( 6.769583, finalResult.get( 10, 7 ), 0.0001 );
@@ -74,7 +74,7 @@ public class ComBatTest {
                 "/data/analysis/preprocess/batcheffects/example.metadata.small.txt" ) );
         ComBat comBat = new ComBat( testMatrix, sampleInfo );
 
-        DoubleMatrix2D X = comBat.designMatrix();
+        DoubleMatrix2D X = comBat.getDesignMatrix();
         assertEquals( 1, X.get( 0, 0 ), 0.001 );
         assertEquals( 0, X.get( 3, 0 ), 0.001 );
         assertEquals( 1, X.get( 4, 2 ), 0.001 );
@@ -134,7 +134,7 @@ public class ComBatTest {
                 "/data/analysis/preprocess/batcheffects/example.metadata.nocov.small.txt" ) );
         ComBat comBat = new ComBat( testMatrix, sampleInfo );
 
-        DoubleMatrix2D X = comBat.designMatrix();
+        DoubleMatrix2D X = comBat.getDesignMatrix();
         assertEquals( 1, X.get( 0, 0 ), 0.001 );
         assertEquals( 0, X.get( 3, 0 ), 0.001 );
         DoubleMatrix2D y = new DenseDoubleMatrix2D( testMatrix.asArray() );

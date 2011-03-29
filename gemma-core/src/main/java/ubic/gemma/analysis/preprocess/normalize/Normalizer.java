@@ -16,20 +16,21 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.analysis.preprocess;
+package ubic.gemma.analysis.preprocess.normalize;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 
 /**
+ * Represents the process of normalizing arrays.
+ * 
  * @author pavlidis
  * @version $Id$
  */
-public interface BackgroundAdjuster<R, C> {
+public interface Normalizer<R, C> {
 
     /**
-     * @param signal
-     * @param background
+     * @param dataMatrix
      * @return
      */
-    public DoubleMatrix<R, C> adjust( DoubleMatrix<R, C> signal, DoubleMatrix<R, C> background );
+    public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix );
 }
