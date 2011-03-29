@@ -130,7 +130,6 @@ public class ExpressionExperimentBatchCorrectionService {
      * @return
      */
     public ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee ) {
-
         /*
          * is there a batch to use?
          */
@@ -146,6 +145,26 @@ public class ExpressionExperimentBatchCorrectionService {
         Collection<ProcessedExpressionDataVector> vectos = processedExpressionDataVectorService
                 .getProcessedDataVectors( ee );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
+
+        return comBat( ee, mat );
+
+    }
+
+    /**
+     * @param ee
+     * @param mat
+     * @return
+     */
+    public ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
+
+        /*
+         * is there a batch to use?
+         */
+        ExperimentalFactor batch = getBatchFactor( ee );
+        if ( batch == null ) {
+            log.warn( "No batch factor found" );
+            return null;
+        }
 
         ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = getDesign( ee, mat );
 
@@ -165,10 +184,9 @@ public class ExpressionExperimentBatchCorrectionService {
         DoubleMatrix<CompositeSequence, BioMaterial> resultsM = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
                 results.toArray() );
         resultsM.setRowNames( mat.getMatrix().getRowNames() );
-        resultsM.setColumnNames( mat.getMatrix().getColNames() ); 
+        resultsM.setColumnNames( mat.getMatrix().getColNames() );
 
         return new ExpressionDataDoubleMatrix( mat, resultsM );
-
     }
 
     /**

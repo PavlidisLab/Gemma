@@ -311,7 +311,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
-     * Build the formula, omitting the factor taking the place of the intercept, if need be.
+     * Build the formula, omitting the factor taking the place of the intercept, if need be. (Mostly for R but with side
+     * effect of populating the interactionFactorLists and label2Factors)
      * 
      * @param config
      * @param label2Factors
@@ -319,9 +320,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param interactionFactorLists
      * @return
      */
-    private String buildModelFormula( DifferentialExpressionAnalysisConfig config,
-            final Map<String, Collection<ExperimentalFactor>> label2Factors, ExperimentalFactor interceptFactor,
-            List<String[]> interactionFactorLists ) {
+    private String buildModelFormula( final DifferentialExpressionAnalysisConfig config,
+            final Map<String, Collection<ExperimentalFactor>> label2Factors, final ExperimentalFactor interceptFactor,
+            final List<String[]> interactionFactorLists ) {
         String modelFormula;
 
         String factTerm = "";
@@ -339,12 +340,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         boolean hasInteractionTerms = !config.getInteractionsToInclude().isEmpty();
         if ( hasInteractionTerms ) {
-
-            /*
-             * FIXME: it might be good to check that the batch factor isn't included in interactions - we already do
-             * this earlier too.
-             */
-
             for ( Collection<ExperimentalFactor> interactionTerms : config.getInteractionsToInclude() ) {
 
                 List<String> interactionFactorNames = new ArrayList<String>();
@@ -627,7 +622,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             }
 
             // savePvaluesForDebugging( ArrayUtils.toPrimitive( pvalArray ) );
-            double[] qvalues = super.getQValues( pvalArray );
+            // double[] qvalues = super.getQValues( pvalArray );
+            double[] qvalues = super.benjaminiHochberg( pvalArray );
             double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvalArray ) );
 
             int i = 0;
@@ -807,6 +803,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     }
 
+    /**
+     * @param designMatrix
+     * @param namedMatrix
+     * @return
+     */
     private DoubleMatrix<String, String> makeDataMatrix( ObjectMatrix<String, String, Object> designMatrix,
             DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
         /*
@@ -820,6 +821,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         return sNamedMatrix;
     }
 
+    /**
+     * @param designMatrix
+     * @param interactionFactorLists
+     * @param baselineConditions
+     * @return
+     */
     private DesignMatrix makeDesignMatrix( ObjectMatrix<String, String, Object> designMatrix,
             List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
         /*
@@ -831,12 +838,16 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         if ( !interactionFactorLists.isEmpty() ) {
             for ( String[] in : interactionFactorLists ) {
-                // we actually only support one
+                // we actually only support (tested etc.) one interaction at a time, but this should actually work for
+                // multiple
                 properDesignMatrix.addInteraction( in );
             }
         }
 
         for ( ExperimentalFactor ef : baselineConditions.keySet() ) {
+            if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
+                continue;
+            }
             String factorName = ExperimentalDesignUtils.nameForR( ef );
             String baselineFactorValue = ExperimentalDesignUtils.nameForR( baselineConditions.get( ef ), true );
             properDesignMatrix.setBaseline( factorName, baselineFactorValue );

@@ -25,11 +25,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix1D;
+import ubic.basecode.math.MultipleTestCorrection;
 import ubic.basecode.math.Rank;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
@@ -37,6 +40,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import cern.colt.list.DoubleArrayList;
+import cern.colt.matrix.DoubleMatrix1D;
 
 /**
  * An abstract differential expression analyzer to be extended by analyzers which will make use of R. For example, see
@@ -122,6 +126,12 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
             normalizedRanks[i] = ranks.get( i ) / ranks.size();
         }
         return normalizedRanks;
+    }
+
+    protected double[] benjaminiHochberg( Double[] pvalues ) {
+        DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection.benjaminiHochberg( new DenseDoubleMatrix1D(
+                ArrayUtils.toPrimitive( pvalues ) ) );
+        return benjaminiHochberg.toArray();
     }
 
     /**

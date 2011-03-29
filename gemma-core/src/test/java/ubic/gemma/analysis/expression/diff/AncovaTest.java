@@ -428,7 +428,7 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                             assertEquals( 1, probeAnalysisResult.getContrasts().size() );
                             ContrastResult contrast = probeAnalysisResult.getContrasts().iterator().next();
                             assertEquals( super.factorValueA1, contrast.getFactorValue() );
-                            assertEquals( 1.5, contrast.getLogFoldChange(), 0.001 );
+                            assertEquals( -202.5587, contrast.getLogFoldChange(), 0.001 );
                             foundContrast = true;
                         }
 

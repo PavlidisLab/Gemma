@@ -142,15 +142,18 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
         try {
             if ( ConfigUtils.getBoolean( "gemma.linearmodels.useR" ) ) {
                 rc = RConnectionFactory.getRConnection( ConfigUtils.getString( "gemma.rserve.hostname", "localhost" ) );
-            }
-            if ( rc != null && rc.isConnected() ) {
-                connected = true;
-                /*
-                 * We have to disconnect right away for test to work under Windows, where only one connection is allowed
-                 * at a time. The classes under test will get their own connections.
-                 */
-                if ( rc != null && rc.isConnected() && rc instanceof RServeClient )
-                    ( ( RServeClient ) rc ).disconnect();
+
+                if ( rc != null && rc.isConnected() ) {
+                    connected = true;
+                    /*
+                     * We have to disconnect right away for test to work under Windows, where only one connection is
+                     * allowed at a time. The classes under test will get their own connections.
+                     */
+                    if ( rc != null && rc.isConnected() && rc instanceof RServeClient )
+                        ( ( RServeClient ) rc ).disconnect();
+                }
+            } else {
+                connected = true; // not using R
             }
         } catch ( Exception e ) {
             log.warn( e.getMessage() );
