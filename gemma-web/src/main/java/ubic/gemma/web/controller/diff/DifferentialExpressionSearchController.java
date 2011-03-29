@@ -690,11 +690,16 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
 
         Long eeSetId = null;
+        Collection<Long> eeIds = null;
         try {
             eeSetId = Long.parseLong( request.getParameter( "a" ) );
         } catch ( NumberFormatException e ) {
             //
         }
+        if(eeSetId == null){
+            eeIds = extractIds( request.getParameter( "ees" ) );
+        }
+     
 
         String fs = request.getParameter( "fm" );
         Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
@@ -702,6 +707,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
         command.setGeneIds( geneIds );
         command.setEeSetId( eeSetId );
+        command.setEeIds( eeIds );
         command.setSelectedFactors( selectedFactors );
         command.setThreshold( threshold );
 

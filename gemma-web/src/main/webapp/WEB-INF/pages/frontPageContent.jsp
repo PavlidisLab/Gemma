@@ -12,6 +12,7 @@
 	});
 </script>
 
+	<div id="analysis-results-search-form-warnings" align="left" ></div>
 	<div id="analysis-results-search-form" align="center" ></div>
 	<br>
 	<div id="analysis-results-search-form-messages" align="left" ></div>

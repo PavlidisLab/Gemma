@@ -355,6 +355,16 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     @Override
     public int compareTo( SearchResultDisplayObject o ) {
+        // sort GO groups by their text name, not their GO id
+        if(o.getType()=="GOgroup"){
+            int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
+            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;    
+        }
+        // sort experiments by their text name, not their GSE id
+        if(o.getType()=="experiment"){
+            int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
+            return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;    
+        }
         int result = this.name.toLowerCase().compareTo( o.name.toLowerCase() );
         return ( result == 0 ) ? this.description.toLowerCase().compareTo( o.description.toLowerCase() ) : result;
     }

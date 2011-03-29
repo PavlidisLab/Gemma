@@ -80,16 +80,16 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>'+
 					'<tpl if="type==\'usersExperimentSet\'">' +
-					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'userexperimentSetSession\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>:  <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>:  <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'experimentSet\'">' +
-					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'freeText\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +
 					'</tpl>'),
 				store:{

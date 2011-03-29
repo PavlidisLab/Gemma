@@ -35,7 +35,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	loadingText : 'Searching...',
 
 	emptyText : "Search for genes or gene groups",
-	minChars : 3,
+	minChars : 2,
 	selectOnFocus : true,
 	mode : 'remote',
 	queryDelay : 800, // default = 500
@@ -46,22 +46,28 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					// format fields to show in combo, only show size in brakets if the entry is a group
 					tpl: new Ext.XTemplate('<tpl for=".">' +
 					'<tpl if="type==\'gene\'">' +
-						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
+						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" '+
+						'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>'+
 					'<tpl if="type==\'geneSet\'">' +
-					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" '+
+						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +
 					'<tpl if="type==\'usersgeneSet\'">' +
-					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" '+
+						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'usersgeneSetSession\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" '+
+						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +	
 					'<tpl if="type==\'GOgroup\'">' +
-					'	<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" '+
+						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +
 					'<tpl if="type==\'freeText\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" '+
+						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
 					'</tpl>' +
 					'</tpl>'),
 					//tpl: new Ext.XTemplate('<tpl for=".">' +

@@ -36,7 +36,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	bodyStyle:"backgroundColor:white",
 	defaults:{border:false},
 		
-	PREVIEW_SIZE : 10,
+	PREVIEW_SIZE : 5,
 	
 	// defaults for coexpression
 	DEFAULT_STRINGENCY : 2,
@@ -118,13 +118,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		if (this.eeComboSelectedRecord) {
 			newCsc.eeIds = this.getExperimentIds();
 			// only supply eeSetName and eeSetId if eeSet exists in db, otherwise will cause error
-			if(this.eeComboSelectedRecord.get("type").toLowerCase().indexOf("session") < 0 ){
-				newCsc.eeSetName = this.eeComboSelectedRecord.get("name");
-				newCsc.eeSetId = this.eeComboSelectedRecord.get("id");
-			}else{
-				newCsc.eeSetName = null;
-				newCsc.eeSetId = null;
-			}
+			// doesn't look like this is needed, so not setting for simplicity
+			newCsc.eeSetName = null;
+			newCsc.eeSetId = null;
+			
 		}
 		return newCsc;
 	},
@@ -193,19 +190,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		}
 		var queryStart = document.URL.indexOf("?");
 		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
-		url += String.format("?g={0}&s={1}&t={2}", csc.geneIds.join(","), csc.stringency, csc.taxonId);
+		url += String.format("?g={0}&s={1}&t={2}&ee={3}", csc.geneIds.join(","), csc.stringency, csc.taxonId, csc.eeIds);
 		if (csc.queryGenesOnly) {
 			url += "&q";
-		}
-		if (csc.eeSetId >= 0){
-			url += String.format("&a={0}", csc.eeSetId);
-		}
-		if (csc.eeSetName){
-			url += String.format("&an={0}", csc.eeSetName);
 		}
 		if (csc.dirty) {
 			url += "&dirty=1";
 		}
+		url = url.replace("home2","searchCoexpression");
 
 		return url;
 	},
@@ -240,13 +232,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					taxonId : this.getTaxonId()
 				});
 
+
 		if (this.eeComboSelectedRecord) {
 			newDsc.eeIds = this.getExperimentIds();
 			// only supply eeSetName and eeSetId if eeSet exists in db, otherwise will cause error
-			if(this.eeComboSelectedRecord.get("type").toLowerCase().indexOf("session") < 0 ){
-				newCsc.eeSetName = this.eeComboSelectedRecord.get("name");
-				newCsc.eeSetId = this.eeComboSelectedRecord.get("id");
-			}
+			// doesn't look like this is needed, so not setting for simplicity
+			newDsc.eeSetName = null;
+			newDsc.eeSetId = null;
+
 		}
 		return newDsc;
 
@@ -269,15 +262,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		}
 	},
 	doDifferentialExpressionSearch : function(dsc) {
-		if ((dsc && !dsc.selectedFactors) || (!dsc && !this.efChooserPanel.eeFactorsMap)) {
-			this.efChooserPanel.on("factors-chosen", function(efmap){
-				this.doDifferentialExpressionSearch();
-			}, this, {
-				single: true
-			});
-			this.chooseFactors();
-		}
-		else {
+		
+		this.chooseFactors();
+		this.efChooserPanel.on("factors-chosen", function(efmap){
+			this.doDifferentialExpressionSearch();
+
+
 			if (!dsc) {
 				dsc = this.getDiffSearchCommand();
 			}
@@ -296,7 +286,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			if (typeof pageTracker !== 'undefined') {
 				pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
 			}
-		}
+		}, this, {
+			single: true
+			}
+		);
+		
 	},
 	getDiffExBookmarkableLink : function(dsc) {
 		if (!dsc) {
@@ -306,18 +300,19 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
 		url += String.format("?g={0}&thres={1}&t={2}", dsc.geneIds.join(","), dsc.threshold, dsc.taxonId);
 
-		if (dsc.eeSetId >= 0) {
+
+		 //Makes bookmarkable links somewhat unusable (too long)
+		 if (dsc.eeIds) {
+			 url += String.format("&ees={0}", dsc.eeIds.join(","));
+		 }
+
+		// won't always have a set name or set id
+		/*if (dsc.eeSetId >= 0) {
 			url += String.format("&a={0}", dsc.eeSetId);
 		}
-
-		// Makes bookmarkable links somewhat unusable (too long)
-		// if (dsc.eeIds) {
-		// url += String.format("&ees={0}", dsc.eeIds.join(","));
-		// }
-
 		if (dsc.eeSetName) {
 			url += String.format("&setName={0}", dsc.eeSetName);
-		}
+		}*/
 
 		if (dsc.selectedFactors) {
 			url += "&fm=";
@@ -329,6 +324,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				url += o.eeId + "." + o.efId + ",";
 			}
 		}
+		
+		url = url.replace("home2","diff/diffExpressionSearch");
 
 		return url;
 	},
@@ -859,7 +856,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					// update the gene preview panel content
 					this.experimentPreviewContent.update({
 						shortName: record.get("name"),
-						name: record.get("description")
+						name: record.get("description"),
+						id: record.get("id"),
+						taxon: record.get("taxonName")
 					});
 					this.experimentSelectionEditorBtn.setText('0 more');
 					this.experimentSelectionEditorBtn.disable();
@@ -965,7 +964,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					// update the gene preview panel content
 					this.genePreviewContent.update({
 						officialSymbol: record.get("name"),
-						officialName: record.get("description")
+						officialName: record.get("description"),
+						id: record.get("id"),
+						taxonCommonName: record.get("taxonName")
 					});
 					this.geneSelectionEditorBtn.setText('0 more');
 					this.geneSelectionEditorBtn.disable();

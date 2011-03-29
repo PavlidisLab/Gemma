@@ -393,10 +393,13 @@ public class GenePickerController {
             displayResults.addAll( genes );
             displayResults.addAll( geneSets );
 
+            
             /*
              * GET GO GROUPS
              */
+
             List<GeneSet> goSets = new ArrayList<GeneSet>();
+            ArrayList<SearchResultDisplayObject> goSRDOs = new ArrayList<SearchResultDisplayObject>();
 
             if ( query.toUpperCase().startsWith( "GO" ) ) {
                 GeneSet goSet = this.geneSetSearch.findByGoId( query, taxon );
@@ -406,7 +409,7 @@ public class GenePickerController {
                     sdo.setTaxonId( taxonId );
                     sdo.setTaxonName( taxonName );
                     tempId--;
-                    displayResults.add( sdo );
+                    goSRDOs.add( sdo );
                     goSets.add( goSet );
                 }
             } else {
@@ -420,11 +423,15 @@ public class GenePickerController {
                         sdo.setTaxonId( taxonId );
                         sdo.setTaxonName( taxonName );
                         tempId--;
-                        displayResults.add( sdo );
+                        goSRDOs.add( sdo );
                         goSets.add( geneSet );
                     }
                 }
             }
+            
+            Collections.sort( goSRDOs );
+            displayResults.addAll( goSRDOs );
+            
 
             /*
              * GET 'ALL RESULTS' GROUPS
