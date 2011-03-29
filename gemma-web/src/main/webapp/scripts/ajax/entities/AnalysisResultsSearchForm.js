@@ -77,16 +77,28 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			});
 		}
 		
-		// if coexpression button is depressed, do a coexpression search
-		if(this.coexToggle.pressed){
-			this.doCoexpressionSearch();
+		// reset flags marking if searches are done
+		// only used if both searches are run at once
+		this.doneCoex = false;
+		this.doneDiffEx = false;
+		
+		if(this.diffExToggle.pressed && this.coexToggle.pressed){
+			this.doDifferentialExpressionSearch();
+			this.efChooserPanel.on("factors-chosen", function(){
+				this.doCoexpressionSearch();
+			},this);
 		}
 		
 		// if differential expression button is depressed, do a differential search
-		if(this.diffExToggle.pressed){
+		else if(this.diffExToggle.pressed){
 			this.doDifferentialExpressionSearch();
 		}
-
+		
+		// if coexpression button is depressed, do a coexpression search
+		else if(this.coexToggle.pressed){
+			this.doCoexpressionSearch();
+		}
+		
 	},
 
 
@@ -261,13 +273,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			this.efChooserPanel.show(eeIds);
 		}
 	},
+	// need to run chooseFactors() first!
 	doDifferentialExpressionSearch : function(dsc) {
 		
 		this.chooseFactors();
 		this.efChooserPanel.on("factors-chosen", function(efmap){
-			this.doDifferentialExpressionSearch();
-
-
+			
 			if (!dsc) {
 				dsc = this.getDiffSearchCommand();
 			}
@@ -388,11 +399,30 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	},
 	
 	returnFromCoexSearch : function(result) {
+		this.doneCoex = true;
+		// if both coex and diff ex searches were called, don't hide load mask until both have returned
+		if (this.diffExToggle.pressed && this.coexToggle.pressed) {
+			if(!this.doneDiffEx){
+				return;
+			}else{
+				this.fireEvent('showDiffExResults', this, result);		
+			}
+		}
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
 		this.fireEvent('showCoexResults', this, result);
+
 	},
 	returnFromDiffExSearch : function(result) {
+		this.doneDiffEx = true;
+		// if both coex and diff ex searches were called, don't hide load mask until both have returned
+		if (this.diffExToggle.pressed && this.coexToggle.pressed) {
+			if(!this.doneCoex){
+				return;
+			}else{
+				this.fireEvent('showCoexResults', this, result);		
+			}
+		}
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
 		this.fireEvent('showDiffExResults', this, result);
@@ -649,6 +679,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							enableToggle:true,
 							pressed:true
 						});
+		this.coexToggle.on('click', function(){
+			this.diffExToggle.toggle();
+		},this);				
 		this.diffExToggle = new Ext.Button({
 							text: "<span style=\"font-size:1.3em\">Differential Expression</span>",
 							style:'padding-bottom:0.4em',
@@ -656,7 +689,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							width:150,
 							enableToggle:true
 						});
-
+		this.diffExToggle.on('click', function(){
+			this.coexToggle.toggle();
+		},this);	
 
 		/** Display items in form panel **/
 

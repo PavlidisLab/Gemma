@@ -37,6 +37,7 @@ Ext.onReady(function() {
 		style:'text-align:left'
 		//hideMode:'visibility'
 	});
+		
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
 	//Ext.EventManager.onWindowResize(this.resultsPanel.doLayout, this.resultsPanel); 
 
@@ -44,7 +45,7 @@ Ext.onReady(function() {
 	searchPanel.on("beforesearch",function(panel){
 		
 		// before every search, clear the results in preparation for new (possibly blank) results 
-		resultsPanel.removeAll();
+		this.resultsPanel.removeAll();
 		panel.clearError();
 		
 		// once the user performs a search, hide the main page elements 
@@ -56,15 +57,15 @@ Ext.onReady(function() {
 		if (toHide) {
 			toHide.remove();
 		}
-	
-	});
+		
+	},this);
 	
 	searchPanel.on("showCoexResults",function(panel,result){
+		
 		/*
 		 * Report any errors.
 		 */
 		if (result.errorState) {
-			resultsPanel.removeAll();
 			resultsPanel.add({html:"<h2>Coexpression Search Results</h2><br>"+result.errorState+"<br><br><br>", border:false});
 			//Ext.DomHelper.overwrite('analysis-results-search-form-messages', result.errorState);
 			if (knownGeneGrid) {knownGeneGrid.getStore().removeAll();}
@@ -72,7 +73,7 @@ Ext.onReady(function() {
 			resultsPanel.show();
 			return;
 		}
-
+		
 		var summaryPanel = new Ext.Panel({
 				width : 900,
 				id : 'summarypanel',
@@ -149,6 +150,8 @@ Ext.onReady(function() {
 		panel.collapsePreviews();
 		resultsPanel.add({html:"<h2>Coexpression Search Results</h2>", border:false});
 		resultsPanel.add(items);
+		resultsPanel.show();
+		resultsPanel.doLayout();
 
 		//reset coex summary panel
 		//Ext.DomHelper.overwrite('summarypanel', "");
@@ -190,7 +193,7 @@ Ext.onReady(function() {
 
 				
 		resultsPanel.doLayout();
-		resultsPanel.show();
+		//resultsPanel.show();
 
 				
 		var summaryGrid = new Gemma.CoexpressionSummaryGrid({
@@ -224,6 +227,7 @@ Ext.onReady(function() {
 	});
 	
 	searchPanel.on("showDiffExResults",function(panel,result){
+				
 		var diffExResultsGrid = new Gemma.DiffExpressionGrid({
 				//renderTo : "analysis-results-search-form-results",
 				title : "Differentially expressed genes",
