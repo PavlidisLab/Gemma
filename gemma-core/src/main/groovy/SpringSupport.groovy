@@ -1,7 +1,7 @@
 #!/usr/bin/groovy
 package ubic.gemma.script
 import ubic.gemma.util.SpringContextUtil
-import ubic.gemma.security.authentication.ManualAuthenticationProcessing
+import ubic.gemma.security.authentication.ManualAuthenticationService
 import java.util.concurrent.atomic.AtomicBoolean
 
 class SpringSupport {
@@ -27,11 +27,11 @@ class SpringSupport {
 
         t.start();
 
-	ctx = SpringContextUtil.getApplicationContext(false, true, false, false);
+	ctx = SpringContextUtil.getApplicationContext(false, false, false);
         b.set(true)
 	t.join()
 
-	ManualAuthenticationProcessing manAuthentication = ( ManualAuthenticationProcessing ) ctx.getBean( "manualAuthenticationProcessing" );
+	ManualAuthenticationService manAuthentication = ( ManualAuthenticationService ) ctx.getBean( "manualAuthenticationService" );
 
         if (userName == null && password == null) {
                 manAuthentication.anonymousAuthentication()

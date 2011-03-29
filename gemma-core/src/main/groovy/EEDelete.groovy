@@ -1,11 +1,7 @@
 #!/usr/bin/groovy
 import ubic.gemma.script.SpringSupport
 
-def cli = new CliBuilder(usage: 'groovy EEDelete [opts] <eeid>')
-
-cli.h(longOpt: 'help', 'usage information')
-cli.u(argName: 'username', longOpt:'username', args:1, required:true, 'username')
-cli.p(argName: 'password', longOpt:'password', args:1, required:true, 'password')
+def cli = new GemmaCliBuilder(usage: 'groovy EEDelete [opts] <eeid>')
 
 def opt = cli.parse(args)
 if (!opt) return
