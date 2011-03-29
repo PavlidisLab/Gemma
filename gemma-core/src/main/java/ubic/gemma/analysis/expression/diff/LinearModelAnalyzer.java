@@ -1077,8 +1077,15 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 /*
                  * This part should be straightforward
                  */
+                StopWatch timer = new StopWatch();
+                timer.start();
                 LeastSquaresFit fit = new LeastSquaresFit( designMatrix, data );
+                log.info( "Model fit data matrix " + data.rows() + " x " + data.columns() + ": " + timer.getTime()
+                        + "ms" );
+                timer.reset();
+                timer.start();
                 Map<String, LinearModelSummary> res = fit.summarizeByKeys( true );
+                log.info( "Model summarize/ANOVA: " + timer.getTime() + "ms" );
                 rawResults.putAll( res );
             }
         } );
