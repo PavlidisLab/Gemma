@@ -20,6 +20,10 @@
 		<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a> where you can read additional
 		documentation, in addition to the in-line help.
 	</p>
+		<p style="font-size: 0.9em">
+		You can also 
+		<a href="http://chibi.ubc.ca/Gemma/home2.html">preview newer version of Gemma</a> we have been working on.
+	</p>
 </div>
 
 
