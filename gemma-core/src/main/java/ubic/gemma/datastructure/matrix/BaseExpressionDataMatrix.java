@@ -73,7 +73,7 @@ abstract public class BaseExpressionDataMatrix<T> implements ExpressionDataMatri
     protected Map<CompositeSequence, Integer> rowElementMap;
     protected Map<Integer, CompositeSequence> rowDesignElementMapByInteger;
 
-    private Collection<QuantitationType> quantitationTypes;
+    protected Collection<QuantitationType> quantitationTypes;
 
     protected void init() {
         quantitationTypes = new HashSet<QuantitationType>();

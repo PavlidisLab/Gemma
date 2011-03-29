@@ -576,6 +576,7 @@ public class ExpressionDataDoubleMatrix extends BaseExpressionDataMatrix<Double>
         this.columnBioAssayMapByInteger = sourceMatrix.columnBioAssayMapByInteger;
         this.columnBioMaterialMap = sourceMatrix.columnBioMaterialMap;
         this.columnBioMaterialMapByInteger = sourceMatrix.columnBioMaterialMapByInteger;
+        this.quantitationTypes = sourceMatrix.quantitationTypes;
         this.matrix = dataMatrix;
 
         for ( int i = 0; i < dataMatrix.rows(); i++ ) {

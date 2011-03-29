@@ -20,42 +20,24 @@
 package ubic.gemma.analysis.preprocess.batcheffects;
 
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.InputStream;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.apache.commons.lang.time.DateUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.gemma.analysis.expression.diff.BaseAnalyzerConfigurationTest;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
-import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
-import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.model.expression.experiment.FactorType;
-import ubic.gemma.persistence.PersisterHelper;
 
 /**
- * TODO Document Me
- * 
  * @author paul
  * @version $Id$
  */
@@ -65,13 +47,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     ExpressionExperimentBatchCorrectionService correctionService;
 
     @Autowired
-    private BatchInfoPopulationService batchInfoPopulationService;
-
-    @Autowired
     private ExpressionExperimentService expressionExperimentService;
-
-    @Autowired
-    private PersisterHelper persisterHelper;
 
     @Autowired
     protected GeoDatasetService geoService;
@@ -81,39 +57,6 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
 
     @Autowired
     ExperimentalDesignImporter experimentalDesignImporter;
-
-    // @Test
-    // final public void testComBat() throws Exception {
-    //
-    // ExpressionExperiment ee = super.getTestPersistentCompleteExpressionExperiment( false );
-    //
-    // Map<BioMaterial, Date> dates = new HashMap<BioMaterial, Date>();
-    //
-    // Calendar cal = Calendar.getInstance();
-    // cal.set( 2004, 3, 10, 10, 1, 1 );
-    // Date batch1Date = cal.getTime();
-    // Date batch2Date = DateUtils.addHours( batch1Date, 270 );
-    //
-    // int i = 0;
-    // for ( BioAssay ba : ee.getBioAssays() ) {
-    // for ( BioMaterial bm : ba.getSamplesUsed() ) {
-    // if ( i % 2 == 0 ) {
-    // dates.put( bm, batch1Date );
-    // } else {
-    // dates.put( bm, batch2Date );
-    // }
-    // }
-    // i++;
-    // }
-    //
-    // batchInfoPopulationService.convertToFactor( ee, dates );
-    //
-    // ee = this.expressionExperimentService.load( ee.getId() );
-    // ee = this.expressionExperimentService.thawLite( ee );
-    //
-    // ExpressionDataDoubleMatrix comBat = correctionService.comBat( ee );
-    // assertNotNull( comBat );
-    // }
 
     @Test
     public void testComBatOnEE() throws Exception {

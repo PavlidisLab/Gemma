@@ -165,7 +165,7 @@ public class ExpressionExperimentBatchCorrectionService {
         DoubleMatrix<CompositeSequence, BioMaterial> resultsM = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
                 results.toArray() );
         resultsM.setRowNames( mat.getMatrix().getRowNames() );
-        resultsM.setColumnNames( mat.getMatrix().getColNames() );
+        resultsM.setColumnNames( mat.getMatrix().getColNames() ); 
 
         return new ExpressionDataDoubleMatrix( mat, resultsM );
 
