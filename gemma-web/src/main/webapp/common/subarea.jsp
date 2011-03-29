@@ -22,7 +22,7 @@
 	</p>
 		<p style="font-size: 0.9em">
 		You can also 
-		<a href="http://chibi.ubc.ca/Gemma/home2.html">preview newer version of Gemma</a> we have been working on.
+		<a href="http://chibi.ubc.ca/Gemma/home2.html">preview new version of Gemma</a> we have been working on.
 	</p>
 </div>
 
