@@ -1,0 +1,13 @@
+label	Blood flow stress	Age	batch
+GSE13712_Biomat_10	fv_19996_base	fv_34753_base	fv_64006_base
+GSE13712_Biomat_7	fv_19996_base	fv_34753_base	fv_64006_base
+GSE13712_Biomat_9	fv_19996_base	fv_34753_base	fv_64007
+GSE13712_Biomat_4	fv_19996_base	fv_34754	fv_64006_base
+GSE13712_Biomat_5	fv_19996_base	fv_34754	fv_64006_base
+GSE13712_Biomat_6	fv_19996_base	fv_34754	fv_64007
+GSE13712_Biomat_8	fv_19995	fv_34753_base	fv_64006_base
+GSE13712_Biomat_12	fv_19995	fv_34753_base	fv_64006_base
+GSE13712_Biomat_11	fv_19995	fv_34753_base	fv_64007
+GSE13712_Biomat_1	fv_19995	fv_34754	fv_64006_base
+GSE13712_Biomat_2	fv_19995	fv_34754	fv_64006_base
+GSE13712_Biomat_3	fv_19995	fv_34754	fv_64007

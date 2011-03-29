@@ -130,6 +130,18 @@ public class ComBat<R, C> {
         if ( d == null ) {
             throw new IllegalStateException( "No batch factor was found" );
         }
+        ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = getSampleInfoWithoutBatchFactor( batchFactorColumnIndex );
+
+        d.add( sampleInfoWithoutBatchFactor );
+        design = d.getDoubleMatrix();
+        return design;
+    }
+
+    /**
+     * @param batchFactorColumnIndex
+     * @return
+     */
+    private ObjectMatrix<String, String, Object> getSampleInfoWithoutBatchFactor( int batchFactorColumnIndex ) {
         ObjectMatrix<String, String, Object> sampleInfoWithoutBatchFactor = new ObjectMatrixImpl<String, String, Object>(
                 sampleInfo.rows(), sampleInfo.columns() - 1 );
 
@@ -138,14 +150,14 @@ public class ComBat<R, C> {
             int c = 0;
             for ( int j = 0; j < sampleInfo.columns(); j++ ) {
                 if ( j == batchFactorColumnIndex ) continue;
+                if ( i == 0 ) {
+                    sampleInfoWithoutBatchFactor.addColumnName( sampleInfo.getColName( j ) );
+                }
                 sampleInfoWithoutBatchFactor.set( r, c++, sampleInfo.get( i, j ) );
             }
             r++;
         }
-
-        d.add( sampleInfoWithoutBatchFactor );
-        design = d.getDoubleMatrix();
-        return design;
+        return sampleInfoWithoutBatchFactor;
     }
 
     /**

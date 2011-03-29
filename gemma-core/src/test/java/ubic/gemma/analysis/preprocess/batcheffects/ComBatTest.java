@@ -15,6 +15,7 @@
 package ubic.gemma.analysis.preprocess.batcheffects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
@@ -172,5 +173,22 @@ public class ComBatTest {
         // 240254_at 4.106446 3.903017 4.238474 4.121097 4.000663 6.213980 4.057623 3.815918 4.484964
         // 209053_s_at 5.979671 6.378071 6.241459 6.440983 5.946471 6.685171 6.452771 6.374475 5.986512
 
+    }
+
+    /**
+     * Based on GSE13712
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public final void test3() throws Exception {
+        DoubleMatrixReader f = new DoubleMatrixReader();
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass().getResourceAsStream(
+                "/data/analysis/preprocess/batcheffects/comat.test.data.txt" ) );
+        StringMatrixReader of = new StringMatrixReader();
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
+                "/data/analysis/preprocess/batcheffects/combat.test.design.txt" ) );
+        ComBat comBat = new ComBat( testMatrix, sampleInfo );
+        DoubleMatrix2D result = comBat.run();
+        assertNotNull( result );
     }
 }
