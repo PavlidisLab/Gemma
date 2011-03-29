@@ -13,7 +13,7 @@ Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function ( geneName, geneId )
 				       {xtype:'label', ref:'aliases', text:"Aliases: "},
 				       {xtype:'label', ref:'probes', text:"Probes: "},
 				       {xtype:'label', ref:'geneGroups', text:"Gene groups: "},			      	         
-				      ],			      			                                                                     												      	  
+				      ]			      			                                                                     												      	  
 			});		
 };
 
