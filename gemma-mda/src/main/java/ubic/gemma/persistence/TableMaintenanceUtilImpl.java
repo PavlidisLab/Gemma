@@ -133,8 +133,7 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                 Collection<Auditable> updatedObj = auditEventService.getUpdatedSinceDate( status.getLastUpdate() );
                 for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
-                        a = arrayDesignService.thaw( ( ArrayDesign ) a );
-                        for ( AuditEvent ae : a.getAuditTrail().getEvents() ) {
+                        for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
                             if ( ae == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
                             if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
@@ -144,8 +143,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                                 break;
                             }
                         }
-
                     }
+                    if ( needToRefresh == true ) break;
                 }
             }
 
