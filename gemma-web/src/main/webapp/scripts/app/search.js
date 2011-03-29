@@ -108,7 +108,7 @@ Gemma.Search.app = function() {
 					});
 		}
 	};
-};
+}();
 
 Gemma.Search.MAX_AUTO_EXPAND_SIZE = 15;
 
