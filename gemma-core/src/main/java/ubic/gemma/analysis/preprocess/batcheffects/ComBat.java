@@ -52,7 +52,6 @@ public class ComBat<R, C> {
 
     private static final String BATCH_COLUMN_NAME = "batch";
 
-    @SuppressWarnings("unused")
     private static Log log = LogFactory.getLog( ComBat.class );
 
     private final ObjectMatrix<C, String, Object> sampleInfo;
@@ -91,6 +90,11 @@ public class ComBat<R, C> {
     private DoubleMatrix2D X;
 
     public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, Object> sampleInfo ) {
+
+        if ( data.columns() < 4 ) {
+            throw new IllegalArgumentException( "Cannot run ComBat with fewer than 4 samples" );
+        }
+
         this.data = data;
         this.sampleInfo = sampleInfo;
         solver = new Algebra();
@@ -397,6 +401,8 @@ public class ComBat<R, C> {
         double change = 1.0;
         int count = 0;
 
+        int MAXITERS = 200;
+
         while ( change > conv ) {
             DoubleMatrix1D gnew = postMean( gHat, gbar, n, dold, t2 );
             DoubleMatrix1D sum2 = stepSum( matrix, gnew );
@@ -423,6 +429,14 @@ public class ComBat<R, C> {
             gold = gnew;
             dold = dnew;
             count++;
+
+            if ( count > MAXITERS ) {
+                /*
+                 * For certain data sets, we just flail around; for example if there are only two samples. We really
+                 * shouldn't end up running so this is a bailout for exceptional circumstances.
+                 */
+                throw new IllegalStateException( "Failed to converge" );
+            }
         }
 
         return new DoubleMatrix1D[] { gold, dold };
