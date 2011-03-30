@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -167,7 +168,16 @@ public class ComBat<R, C> {
      */
     public DoubleMatrix2D run() {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         DoubleMatrix2D sdata = standardize( y, X );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Standardized" );
+        }
+        timer.reset();
+        timer.start();
 
         DoubleMatrix2D gammaHat = gammaHat( sdata );
 
@@ -190,6 +200,10 @@ public class ComBat<R, C> {
         DoubleArrayList aPrior = aPrior( deltaHat );
         DoubleArrayList bPrior = bPrior( deltaHat );
 
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Computed priors" );
+        }
+
         // assertEquals( 17.4971, aPrior.get( 0 ), 0.0001 );
         // assertEquals( 4.514, bPrior.get( 1 ), 0.0001 );
 
@@ -198,6 +212,8 @@ public class ComBat<R, C> {
         DoubleMatrix2D deltastar = new DenseDoubleMatrix2D( numBatches, numProbes );
 
         for ( String batchId : batches.keySet() ) {
+            timer.reset();
+            timer.start();
             DoubleMatrix2D batchData = this.getBatchData( sdata, batchId );
 
             DoubleMatrix1D[] batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat
@@ -211,7 +227,13 @@ public class ComBat<R, C> {
                 deltastar.set( batchIndex, j, batchResults[1].get( j ) );
             }
             batchIndex++;
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Corrected batch " + batchIndex );
+            }
         }
+
+        timer.reset();
+        timer.start();
 
         DoubleMatrix2D adjustedData = rawAdjust( sdata, gammastar, deltastar );
 
@@ -219,7 +241,11 @@ public class ComBat<R, C> {
         // assertEquals( -0.30273984, adjustedData.get( 14, 6 ), 0.0001 );
         // assertEquals( 0.2097977, adjustedData.get( 7, 3 ), 0.0001 );
         // log.info( adjustedData );
-        return restoreScale( adjustedData );
+        DoubleMatrix2D result = restoreScale( adjustedData );
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Done" );
+        }
+        return result;
     }
 
     /**
