@@ -668,6 +668,17 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							params : [this.taxonid, this.ids, this.limit, this.filterType]
 						});
 			},
+			
+			filterBySearch : function(box, record, index) {
+				this.ids = record.get('memberIds');
+				// if user selected an experiment instead of an experiment set, member ids will be null
+				if(this.ids == null){
+					this.ids = [record.get('id')];
+				}
+				this.store.load({
+							params : [this.taxonid, this.ids, this.limit, this.filterType]
+						});
+			},
 
 			downloadAsText : function() {
 				alert("Sorry, coming soon");
@@ -712,13 +723,20 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							triggerAction : 'all',
 							lazyRender : true,
 							mode : 'local',
+							emptyText : "Filter by property",
 							store : new Ext.data.ArrayStore({
 										id : 0,
 										fields : ['filterType', 'displayText'],
-										data : [[0, 'No filter'], [1, 'Need diff'], [2, 'Need coex'], [3, 'Has diff'],
-												[4, 'Has coex'], [5, 'Troubled'], [6, 'No factors'], [7, 'No tags'],
-												[8, 'Needs batch info'], [9, 'Has batch info'], [10, 'Needs PCA'],
-												[11, 'Has PCA']]
+										data : [[0, 'No filter'], 
+												[1, 'Need diff. expression analysis'], 
+												[2, 'Need coexpression analysis'],
+												[3, 'Has diff. expression analysis'],
+												[4, 'Has coexpression analysis'], 
+												[5, 'Troubled'], 
+												[6, 'No factors'], 
+												[7, 'No tags'],
+												[8, 'Needs batch info'], [9, 'Has batch info'], 
+												[10, 'Needs PCA'],[11, 'Has PCA']]
 									}),
 							valueField : 'filterType',
 							displayField : 'displayText',
@@ -734,6 +752,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							stateId : null, // don't remember taxon value if
 							// user navigates away then comes
 							// back
+							emptyText : "Filter by taxon",
 							allTaxa : true, // want an 'All taxa' option
 							listeners : {
 								scope : this,
@@ -747,6 +766,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							triggerAction : 'all',
 							lazyRender : true,
 							mode : 'local',
+							emptyText : "Number to display",
 							store : new Ext.data.ArrayStore({
 										id : 0,
 										fields : ['count', 'displayText'],
@@ -764,6 +784,16 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 							}
 
 						});
+						
+				this.searchCombo = new Gemma.ExperimentAndExperimentGroupCombo({
+							typeAhead: false,
+							width : 220,
+							emptyText : "Search for experiments",
+							listeners : {
+								scope : this,
+								'select' : this.filterBySearch,
+							}
+						});
 
 				Ext.apply(this, {
 
@@ -776,7 +806,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 													handler : this.refresh,
 													tooltip : "Refresh the table",
 													scope : this
-												}, this.filterCombo, this.taxonCombo, this.limitCombo, '->', {
+												}, this.searchCombo,this.filterCombo, this.taxonCombo, this.limitCombo, '->', {
 													xtype : 'button',
 													minWidth : 20,
 													cls : 'x-btn-icon',
