@@ -260,14 +260,14 @@ public class ExpressionDataMatrixColumnSort {
         dummy.setId( -1L );
 
         for ( BioMaterial bm : bms ) {
-            boolean used = false;
+            // boolean used = false;
             Collection<FactorValue> factorValues = bm.getFactorValues();
             for ( FactorValue fv : factorValues ) {
                 if ( !fv2bms.containsKey( fv ) ) {
                     fv2bms.put( fv, new ArrayList<BioMaterial>() );
                 }
                 fv2bms.get( fv ).add( bm );
-                used = true;
+                // used = true;
             }
             //
             // /*

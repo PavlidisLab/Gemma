@@ -158,7 +158,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         timer.start();
 
         // thaw the bioassaydimensions we saw -- This requires a lot of queries, but there usually aren't very many dims
-        // to do.
+        // to do. Usually one or more rarely two.
         for ( BioAssayDimension bad : dims ) {
             Hibernate.initialize( bad );
             for ( BioAssay ba : bad.getBioAssays() ) {
@@ -194,7 +194,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             }
         }
 
-        if ( timer.getTime() > 100 ) {
+        if ( timer.getTime() > 1000 ) {
             log.info( "Thaw phase 3, " + dims.size() + " vector-associated bioassaydimensions in " + timer.getTime()
                     + "ms " );
         }
