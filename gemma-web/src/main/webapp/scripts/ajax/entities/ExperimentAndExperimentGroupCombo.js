@@ -24,8 +24,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
 	//lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
-	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
-	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
+	//triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
+	//allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
 
 	loadingText : 'Searching...',
 
@@ -34,8 +34,24 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	selectOnFocus : false,
 	autoSelect: false,
 	forceSelection: true,
+	lastQuery: null,
 	mode : 'remote',
 	queryDelay : 800, // default = 500
+	listeners: {
+                specialkey: function(formField, e){  // needed for query queue fix
+                    // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
+                    // e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
+                    if (e.getKey() === e.ENTER || e.getKey() === e.TAB || e.getKey() === e.RIGHT  || e.getKey() === e.DOWN ) {
+                        this.expand();
+                    }
+					if (e.getKey() === e.ESC ) {
+                        this.collapse();
+                    }
+                },
+        		beforequery: function(qe){
+            		delete qe.combo.lastQuery;
+        		}
+    },
 	/*listeners: {
 		beforequery:function(queryEvent){
 			// queryEvent has combo, query, forceAll and cancel fields
@@ -135,10 +151,31 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		Gemma.ExperimentAndExperimentGroupCombo.superclass.initComponent.call(this);
 
 		this.on('select', this.setExpressionExperimentGroup, this);
-
-		this.on('focus', function(){
+		
+		
+		/***** start of query queue fix *****/
+		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
+		// this needs the lastQuery property to be initialised as null
+		this.getStore().on('beforeload', function(store, options){
+			this.records = this.store.getRange();
+		}, this);
+		
+		this.getStore().on('load', function(store, records, options){
+			var query = ( options.params)? options.params[0]: null;
+			if( (query === null && this.lastQuery !== null) || query !== this.lastQuery ){
+				store.removeAll();
+				store.add(this.records);
+				if(this.records === null || this.records.length === 0){
+					this.doQuery(this.lastQuery);
+				}
+			}
+		}, this);
+		/***** end of query queue fix *****/
+		
+		this.on('focus', function(field){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
+				field.lastQuery = null; // needed for query queue fix
 				ExpressionExperimentController.searchExperimentsAndExperimentGroups("",
 					function(records) {
 									this.getStore().loadData(records);

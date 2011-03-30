@@ -276,31 +276,43 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	// need to run chooseFactors() first!
 	doDifferentialExpressionSearch : function(dsc) {
 		
-		this.chooseFactors();
-		this.efChooserPanel.on("factors-chosen", function(efmap){
+		this.clearError();
+		if (!dsc) {
+			dsc = this.getDiffSearchCommand();
+		}
+		var msg = this.validateDiffExSearch(dsc);
+		if (msg.length !== 0) {
+			this.handleError(msg, e);
+			return;
+		}else{
 			
-			if (!dsc) {
-				dsc = this.getDiffSearchCommand();
-			}
-			this.clearError();
-			var msg = this.validateDiffExSearch(dsc);
-			if (msg.length === 0) {
-				this.loadMask.show();
-				var errorHandler = this.handleError.createDelegate(this, [], true);
-				DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
-					callback: this.returnFromDiffExSearch.createDelegate(this),
-					errorHandler: errorHandler
-				});
-			} else {
-				this.handleError(msg, e);
-			}
-			if (typeof pageTracker !== 'undefined') {
-				pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
-			}
-		}, this, {
-			single: true
-			}
-		);
+			this.chooseFactors();
+			this.efChooserPanel.on("factors-chosen", function(efmap){
+				
+				if (!dsc) {
+					dsc = this.getDiffSearchCommand();
+				}
+				this.clearError();
+				var msg = this.validateDiffExSearch(dsc);
+				if (msg.length === 0) {
+					this.loadMask.show();
+					var errorHandler = this.handleError.createDelegate(this, [], true);
+					DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
+						callback: this.returnFromDiffExSearch.createDelegate(this),
+						errorHandler: errorHandler
+					});
+				} else {
+					this.handleError(msg, e);
+				}
+				if (typeof pageTracker !== 'undefined') {
+					pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
+				}
+			}, this, {
+				single: true
+				}
+			);
+		}
+		
 		
 	},
 	getDiffExBookmarkableLink : function(dsc) {

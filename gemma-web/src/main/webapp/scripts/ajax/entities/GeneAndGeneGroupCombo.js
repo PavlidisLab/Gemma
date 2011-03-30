@@ -39,7 +39,21 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	selectOnFocus : true,
 	mode : 'remote',
 	queryDelay : 800, // default = 500
-
+	listeners: {
+                specialkey: function(formField, e){
+                    // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
+                    // e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
+                    if (e.getKey() === e.ENTER || e.getKey() === e.TAB || e.getKey() === e.RIGHT  || e.getKey() === e.DOWN ) {
+                        this.expand();
+                    }
+					if (e.getKey() === e.ESC ) {
+                        this.collapse();
+                    }
+                },
+        		beforequery: function(qe){
+            		delete qe.combo.lastQuery;
+        		}
+    },
 	initComponent : function() {
 
 		Ext.apply(this, {
@@ -118,11 +132,31 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		Gemma.GeneAndGeneGroupCombo.superclass.initComponent.call(this);
 
 		this.on('select', this.setGeneGroup, this);
+				
+		/***** start of query queue fix *****/
+		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
+		// this needs the lastQuery property to be initialised as null
+		this.getStore().on('beforeload', function(store, options){
+			this.records = this.store.getRange();
+		}, this);
+		
+		this.getStore().on('load', function(store, records, options){
+			var query = ( options.params)? options.params[0]: null;
+			if( (query === null && this.lastQuery !== null) || query !== this.lastQuery ){
+				store.removeAll();
+				store.add(this.records);
+				if(this.records === null || this.records.length === 0){
+					this.doQuery(this.lastQuery);
+				}
+			}
+		}, this);
+		/***** end of query queue fix *****/
 		
 		this.on('focus', function(){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
 				if(this.getTaxonId()){
+					field.lastQuery = null; // needed for query queue fix
 					// passing in taxon instead of taxonId breaks this call
 					GenePickerController.searchGenesAndGeneGroups("", this.getTaxonId(),
 						function(records) {

@@ -507,19 +507,20 @@ public class ExpressionExperimentController extends AbstractTaskService {
             Collection<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
                     .convertSearchResults2SearchResultDisplayObjects( eesSR );
 
-            // when searching for an experiment by short name, an experiment set is also returned
+            // when searching for an experiment by short name, one or more experiment set(s) is(are) also returned
             // ex: searching 'GSE2178' gets the experiment and a group called GSE2178 with 1 member
-            // to fix this, if 1 ee and 1 eeSet are returned, and the group only has 1 member and it's member has the
-            // same Id as
-            // the 1 ee returned, then don't return the ee set
-            if ( experiments.size() == 1
-                    && eesSR.size() == 1
-                    && ( ( ExpressionExperimentSet ) eesSR.iterator().next().getResultObject() ).getExperiments()
-                            .size() == 1 ) {
-                // add this if we need to be extra cautious: &&
-                // ((ExpressionExperimentSet)eesSR.iterator().next().getResultObject()).getExperiments().iterator().next().getId()
-                // == experiments.iterator().next().getId()
-                experimentSets.clear();
+            // to fix this, if 1 ee is returned and the group only has 1 member and it's member has the
+            // same Id as the 1 ee returned, then don't return the ee set
+            if ( experiments.size() == 1 && experimentSets.size() > 0){
+                Long eid = experiments.iterator().next().getId();
+                Collection<SearchResultDisplayObject> toRmv = new ArrayList<SearchResultDisplayObject>();
+                for(SearchResultDisplayObject srdo : experimentSets){
+                   if( srdo.getMemberIds().size() == 1 
+                        && (srdo.getMemberIds().toArray())[0].equals( eid ) ){
+                       toRmv.add( srdo );
+                   } 
+                }
+                experimentSets.removeAll( toRmv );
             }
 
             // for each experiment search result display object, set the taxon -- pretty hacky
