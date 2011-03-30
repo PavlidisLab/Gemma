@@ -338,9 +338,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		        		increment: estimatedTime/1000,
 		        		text: 'Building visualization...',
 		        		scope: this,
-		        		fn: function(){
-		        		Ext.fly('status').update('Done!');
-		        	}
+		        		fn: function() { }//Ext.fly('status').update('Done!'); }
 		        	});
 
 		        	DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this._taxonCombo.getSelected().id, datasetGroups, geneGroups, function(data) {
