@@ -296,7 +296,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
     /**
      * @param ee
      */
-    private void processExperiment( ExpressionExperiment ee ) {
+    protected void processExperiment( ExpressionExperiment ee ) {
         Collection<DifferentialExpressionAnalysis> results;
         try {
 
