@@ -436,8 +436,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             throw new IllegalStateException( "Got no results from the analysis" );
         }
 
-        log.info( "Post-processing" );
-
         /*
          * Initialize data structures we need to hold results
          */
@@ -453,18 +451,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             resultLists.put( intF, new ArrayList<DifferentialExpressionAnalysisResult>() );
             pvaluesForQvalue.put( intF, new ArrayList<Double>() );
         }
-
-        /*
-         * Limma-style consideration of F statistics FIXME if switch to java impl there's no need for this.
-         */
-        // List<Double> overallPs = new ArrayList<Double>( namedMatrix.rows() );
-        // for ( CompositeSequence el : namedMatrix.getRowNames() ) {
-        //
-        // LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
-        // overallPs.add( lm.getP() ); // FIXME this isn't working for t-tests.
-        // }
-        // qvalues for overall p
-        // double[] qValues = super.getQValues( overallPs.toArray( new Double[] {} ) );
 
         /*
          * Create result objects for each model fit. Keeping things in order is important.
@@ -546,9 +532,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                     /*
                      * Determine critical F statistic
-                     */
-                    /*
-                     *  
                      */
                     // double
                     // FDistribution f = new FDistributionImpl(/);
