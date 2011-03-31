@@ -23,9 +23,9 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	valueField : 'id',
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
-	//lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
-	//triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
-	//allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
+	lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
+	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
+	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
 
 	loadingText : 'Searching...',
 
@@ -168,6 +168,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				if(this.records === null || this.records.length === 0){
 					this.doQuery(this.lastQuery);
 				}
+			}else{
+				this.records = this.store.getRange();
 			}
 		}, this);
 		/***** end of query queue fix *****/

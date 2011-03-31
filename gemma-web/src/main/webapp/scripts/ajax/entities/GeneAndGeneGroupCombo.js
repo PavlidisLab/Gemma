@@ -136,6 +136,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		/***** start of query queue fix *****/
 		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
 		// this needs the lastQuery property to be initialised as null
+		// note that is some other code in this file requried as well, it is marked
 		this.getStore().on('beforeload', function(store, options){
 			this.records = this.store.getRange();
 		}, this);
@@ -148,11 +149,13 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				if(this.records === null || this.records.length === 0){
 					this.doQuery(this.lastQuery);
 				}
+			}else{
+				this.records = this.store.getRange();
 			}
 		}, this);
 		/***** end of query queue fix *****/
 		
-		this.on('focus', function(){
+		this.on('focus', function(field){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
 				if(this.getTaxonId()){

@@ -188,7 +188,7 @@ Ext.onReady(function() {
 		knownGeneGrid
 				.setTitle(String
 						.format(
-								"Coexpressed genes &nbsp;&nbsp;&nbsp;<a href='{0}' title='bookmarkable link'><img src=\"/Gemma/images/icons/link.png\" alt='bookmark'/></a>&nbsp; <a href='{0}&export' title='download'><img src=\"/Gemma/images/download.gif\" alt='download'/></a>",
+								"Coexpressed genes &nbsp;&nbsp;&nbsp;<a href='{0}' title='bookmarkable link'><img src=\"/Gemma/images/icons/link.png\" alt='bookmark'/></a>&nbsp; <a target='_blank' href='{0}&export' title='download'><img src=\"/Gemma/images/download.gif\" alt='download'/></a>",
 								link));
 
 				
@@ -244,7 +244,7 @@ Ext.onReady(function() {
 		diffExResultsGrid
 				.setTitle(String
 						.format(
-								"Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a href='{0}&export'>(export as text)</a>",
+								"Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a target='_blank' href='{0}&export'>(export as text)</a>",
 								link));
 
 		var resultsP = Ext.get('analysis-results-search-form-results-panel');
