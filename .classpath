@@ -156,7 +156,7 @@
 	<classpathentry kind="var" path="M2_REPO/jfree/jcommon/1.0.16/jcommon-1.0.16.jar"/>
 	<classpathentry kind="var" path="M2_REPO/com/sdicons/jsontools/jsontools-core/1.4/jsontools-core-1.4.jar"/>
 	<classpathentry kind="var" path="M2_REPO/prefuse/prefuse/beta/prefuse-beta.jar"/>
-	<classpathentry kind="var" path="M2_REPO/mtj/mtj/0.9.8/mtj-0.9.8.jar">
+	<classpathentry kind="var" path="M2_REPO/mtj/mtj/0.9.13/mtj-0.9.13.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://ressim.berlios.de/doc/"/>
 		</attributes>
