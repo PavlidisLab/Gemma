@@ -458,9 +458,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         boolean warned = false;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
 
-            if ( el.getName().equals( "probe_0" ) ) {
-                log.info( "MY GOODNESS" );
-            }
+            // if ( el.getName().equals( "probe_0" ) ) {
+            // log.info( "MY GOODNESS" );
+            // }
 
             LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
 
