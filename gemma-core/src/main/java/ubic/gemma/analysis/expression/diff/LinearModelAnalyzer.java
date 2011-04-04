@@ -930,8 +930,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
                 return true;
             } else if ( quantitationType.getScale().equals( ScaleType.LOG10 ) ) {
-                // pretty unlikely
-                throw new UnsupportedOperationException( "Sorry, data on log-10 scale is not supported yet" );
+                // pretty unlikely -- if we see this, it might be a mistake.
+                throw new UnsupportedOperationException(
+                        "Sorry, data on log-10 scale is not supported yet. Please check that it really is on log-10 scale." );
             } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
                 throw new UnsupportedOperationException(
                         "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, and make sure the data is expressed in terms of log2 or un-logged data" );
