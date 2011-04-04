@@ -50,6 +50,7 @@ public class BatchInfoFetchTaskImpl implements BatchInfoFetchTask {
             throw new UnsupportedOperationException(
                     "Doing all Batch fetches in task not implemented, sorry, you must configure one" );
         } else if ( command.getExpressionExperiment() != null ) {
+            command.setMaxRuntime( 30 ); // time to download files etc.
             ser.fillBatchInformation( command.getExpressionExperiment(), true );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
