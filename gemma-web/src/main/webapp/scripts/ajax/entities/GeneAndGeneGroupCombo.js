@@ -25,7 +25,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	listWidth : 450, // ridiculously large so IE displays it properly
 	
 	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
-	allQuery:'', // loading of auto gen and user's sets handled in Controller when query = ''
+	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
 
 	/*
 	 * Whether the user's groups should show up right away.
@@ -37,16 +37,18 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	emptyText : "Search for genes or gene groups",
 	minChars : 2,
 	selectOnFocus : true,
+	typeAhead: false,
 	mode : 'remote',
 	queryDelay : 800, // default = 500
 	listeners: {
                 specialkey: function(formField, e){
                     // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
                     // e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
-                    if (e.getKey() === e.ENTER || e.getKey() === e.TAB || e.getKey() === e.RIGHT  || e.getKey() === e.DOWN ) {
+                    if ( e.getKey() === e.TAB || e.getKey() === e.RIGHT  || e.getKey() === e.DOWN ) {
                         this.expand();
-                    }
-					if (e.getKey() === e.ESC ) {
+                    }else if (e.getKey() === e.ENTER ) {
+                        this.doQuery(this.lastQuery);
+                    }else if (e.getKey() === e.ESC ) {
                         this.collapse();
                     }
                 },
@@ -54,6 +56,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
             		delete qe.combo.lastQuery;
         		}
     },
+	
 	initComponent : function() {
 
 		Ext.apply(this, {
@@ -115,7 +118,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 								name: "taxonName",
 								type: "string",
 								defaultValue: ""
-								
 							},{
 								name: "type",
 								type: "string"
@@ -143,7 +145,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		
 		this.getStore().on('load', function(store, records, options){
 			var query = ( options.params)? options.params[0]: null;
-			if( (query === null && this.lastQuery !== null) || query !== this.lastQuery ){
+			if( (query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery) ){
 				store.removeAll();
 				store.add(this.records);
 				if(this.records === null || this.records.length === 0){
