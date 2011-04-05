@@ -177,6 +177,8 @@ public class ComBat<R, C> {
 
         DoubleMatrix2D sdata = standardize( y, X );
 
+        checkForProblems( sdata );
+
         if ( timer.getTime() > 1000 ) {
             log.info( "Standardized" );
         }
@@ -250,6 +252,27 @@ public class ComBat<R, C> {
             log.info( "Done" );
         }
         return result;
+    }
+
+    /**
+     * Check sdata for problems. If the design is not of full rank, we get NaN in standardized data.
+     */
+    private void checkForProblems( DoubleMatrix2D sdata ) {
+        int numMissing = 0;
+        int total = 0;
+        for ( int i = 0; i < sdata.rows(); i++ ) {
+            DoubleMatrix1D row = sdata.viewRow( i );
+            for ( int j = 0; j < sdata.columns(); j++ ) {
+                if ( Double.isNaN( row.getQuick( j ) ) ) {
+                    numMissing++;
+                }
+                total++;
+            }
+        }
+
+        if ( total == numMissing ) {
+            throw new IllegalStateException( "Could not complete batch correction due, model must not be of full rank." );
+        }
     }
 
     /**
