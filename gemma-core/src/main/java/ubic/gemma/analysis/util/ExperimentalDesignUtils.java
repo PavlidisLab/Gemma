@@ -265,6 +265,9 @@ public class ExperimentalDesignUtils {
             }
         }
         if ( !found ) {
+            /*
+             * TODO: we should detect this and omit such incomplete factors.
+             */
             throw new IllegalStateException( "Biomaterial did not have a matching factor value for: " + factor );
         }
         return value;

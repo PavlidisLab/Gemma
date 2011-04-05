@@ -16,7 +16,11 @@ package ubic.gemma.analysis.preprocess.batcheffects;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -34,12 +38,14 @@ import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
  * Methods for correcting batch effects.
@@ -93,20 +99,53 @@ public class ExpressionExperimentBatchCorrectionService {
      * 
      * @param ee
      */
-    public void checkCorrectability( ExpressionExperiment ee ) {
+    public boolean checkCorrectability( ExpressionExperiment ee ) {
         ExperimentalFactor batch = getBatchFactor( ee );
         if ( batch == null ) {
             log.warn( "No batch factor found" );
-            return;
+            return false;
         }
 
         Collection<BatchConfoundValueObject> test = BatchConfound.test( ee );
         for ( BatchConfoundValueObject batchConfoundValueObject : test ) {
             if ( batchConfoundValueObject.getP() < 0.01 ) {
-                // ...
                 log.info( "Batch confound detected: " + ee );
+                /*
+                 * How bad is it ...
+                 */
             }
         }
+
+        /*
+         * Make sure we have at least two samples per batch.
+         */
+
+        Map<Long, Integer> batches = new HashMap<Long, Integer>();
+        Set<BioMaterial> seen = new HashSet<BioMaterial>();
+        for ( BioAssay ba : ee.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                if ( seen.contains( bm ) ) continue;
+                seen.add( bm );
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( fv.getExperimentalFactor().equals( batch ) ) {
+                        Long batchId = fv.getId();
+                        if ( !batches.containsKey( batchId ) ) batches.put( batchId, 0 );
+
+                        batches.put( batchId, batches.get( batchId ) + 1 );
+
+                    }
+                }
+            }
+        }
+
+        for ( Long batchId : batches.keySet() ) {
+            if ( batches.get( batchId ) < 2 ) {
+                return false;
+            }
+        }
+
+        return true;
+
     }
 
     /**
