@@ -49,6 +49,11 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         super.setSessionFactory( sessionFactory );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#find(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
     @SuppressWarnings("unchecked")
     @Override
     public BioAssay find( BioAssay bioAssay ) {
@@ -73,6 +78,12 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
     @Override
     public BioAssay findOrCreate( BioAssay bioAssay ) {
         if ( bioAssay == null || bioAssay.getName() == null ) {
@@ -87,18 +98,26 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         return create( bioAssay );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#handleThaw(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
     @Override
     public void handleThaw( final BioAssay bioAssay ) throws Exception {
         HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 session.lock( bioAssay, LockMode.NONE );
                 Hibernate.initialize( bioAssay.getArrayDesignUsed() );
                 Hibernate.initialize( bioAssay.getDerivedDataFiles() );
                 for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
+                    session.lock( bm, LockMode.NONE );
                     Hibernate.initialize( bm );
                     Hibernate.initialize( bm.getBioAssaysUsedIn() );
                     Hibernate.initialize( bm.getFactorValues() );
+                    session.evict( bm );
                 }
                 session.evict( bioAssay );
                 return null;
@@ -106,6 +125,11 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         } );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#thaw(java.util.Collection)
+     */
     /*
      * (non-Javadoc)
      * 
@@ -124,6 +148,11 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         return ( Collection<BioAssay> ) thawedBioassays;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#handleCountAll()
+     */
     @Override
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from BioAssayImpl";
