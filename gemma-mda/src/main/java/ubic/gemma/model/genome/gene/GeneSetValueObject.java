@@ -1,4 +1,5 @@
 /*
+
  * The Gemma project
  * 
  * Copyright (c) 2010 University of British Columbia
@@ -29,6 +30,7 @@ import org.apache.commons.lang.RandomStringUtils;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
+import ubic.gemma.model.Reference;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.persistence.GemmaSessionBackedValueObject;
@@ -90,6 +92,7 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     private boolean session;
     private String taxonName;
     private long taxonId;
+    private Reference reference;
     
     /**
      * default constructor to satisfy java bean contract
@@ -121,7 +124,9 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
             // This assumption is used in other parts of the code as well.
             this.setTaxonName ( gs.getMembers().iterator().next().getGene().getTaxon().getCommonName() );
             this.setTaxonId ( gs.getMembers().iterator().next().getGene().getTaxon().getId() );
-        }        
+        }   
+        
+        this.reference = new Reference( gs.getId(), Reference.DATABASE_BACKED_GROUP );
     }
    
     public String getTaxonName() {
@@ -166,6 +171,13 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
      */
     public Long getSessionId() {
         return sessionId;
+    }
+
+    /**
+     * @return
+     */
+    public Reference getReference() {
+        return reference;
     }
 
 
@@ -237,6 +249,13 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
      */
     public void setSessionId( Long sessionId ) {
         this.sessionId = sessionId;
+    }
+    
+    /**
+     * @param sessionId
+     */
+    public void setReference( Reference reference ) {
+        this.reference = reference;
     }
 
     /**

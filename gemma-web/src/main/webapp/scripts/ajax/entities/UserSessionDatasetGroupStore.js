@@ -16,6 +16,8 @@ Gemma.UserSessionDatasetGroupStore = function(config) {
 				name : "id",
 				type : "int"
 			},{
+				name: "reference"
+			},{
 				name : "sessionId",
 				type : "int"
 			},{

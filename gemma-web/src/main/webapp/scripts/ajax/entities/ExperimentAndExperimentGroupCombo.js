@@ -16,17 +16,16 @@
 
 Ext.namespace('Gemma');
 
-Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
+Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {			
 
 	name : 'experimentAndExperimentGroupCombo',
 	displayField : 'name',
-	valueField : 'id',
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
 	lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
 	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
 	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
-
+	
 	loadingText : 'Searching...',
 
 	emptyText : "Select or search for a scope",
@@ -34,17 +33,21 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	selectOnFocus : false,
 	autoSelect: false,
 	forceSelection: true,
-	lastQuery: null,
+	typeAhead: false,
+	
+	lastQuery: null, // used for query queue fix
+	
 	mode : 'remote',
 	queryDelay : 800, // default = 500
 	listeners: {
                 specialkey: function(formField, e){  // needed for query queue fix
                     // e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
                     // e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
-                    if (e.getKey() === e.ENTER || e.getKey() === e.TAB || e.getKey() === e.RIGHT  || e.getKey() === e.DOWN ) {
+                    if ( e.getKey() === e.TAB || e.getKey() === e.RIGHT  || e.getKey() === e.DOWN ) {
                         this.expand();
-                    }
-					if (e.getKey() === e.ESC ) {
+                    }else if (e.getKey() === e.ENTER ) {
+                        this.doQuery(this.lastQuery);
+                    }else if (e.getKey() === e.ESC ) {
                         this.collapse();
                     }
                 },
@@ -109,11 +112,9 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					'</tpl>' +
 					'</tpl>'),
 				store:{
-					reader : new Ext.data.ListRangeReader({
-								id : "id"
-							}, Ext.data.Record.create([{
-								name : "id",
-								type : "int"
+					reader : new Ext.data.ListRangeReader({}, 
+							Ext.data.Record.create([{
+								name : "reference"
 							},{
 								name : "name",
 								type : "string"
@@ -134,7 +135,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 								name: "taxonName",
 								type: "string",
 								defaultValue: ""
-								
 							},{
 								name: "type",
 								type: "string"
@@ -142,7 +142,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 								name: "memberIds",
 								defaultValue: []
 							}])),
-				
 					proxy : new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
 					autoLoad : false
 				}
@@ -162,7 +161,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		
 		this.getStore().on('load', function(store, records, options){
 			var query = ( options.params)? options.params[0]: null;
-			if( (query === null && this.lastQuery !== null) || query !== this.lastQuery ){
+			if( (query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery) ){
 				store.removeAll();
 				store.add(this.records);
 				if(this.records === null || this.records.length === 0){
@@ -178,13 +177,9 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
 				field.lastQuery = null; // needed for query queue fix
-				ExpressionExperimentController.searchExperimentsAndExperimentGroups("",
-					function(records) {
-									this.getStore().loadData(records);
-								}.createDelegate(this)
-					);
+				this.doQuery('',true); 
 			}
-		});
+		},this);
 	},
 
 	reset : function() {
@@ -213,6 +208,10 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			return null;
 		}
 		return this.selectedExpressionExperimentGroup;
+	},
+	
+	getSelected : function() {
+		return this.getExpressionExperimentGroup();
 	},
 
 	setExpressionExperimentGroup : function(combo, expressionExperimentGroup, index) {

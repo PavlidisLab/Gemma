@@ -969,6 +969,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getDiffMetaAnalysisForGenes</value>
 								<value>getFactors</value>
 								<value>differentialExpressionAnalysisVisualizationSearch</value>
+								<value>differentialExpressionAnalysisVisualizationSearchIdBased</value>
 							</list>
 						</property>
 					</bean>
@@ -1153,10 +1154,12 @@ gemma.max.fileupload.size.bytes=
 			</map>
 		</property>
 		<!--
-			**************************************************************************** exporting/importing object definitions:
+			**************************************************************************** 
+			exporting/importing object definitions:
 			Specifications determine what will be marshelled to and from the client
 			***************************************************************************
 		-->
+		
 		<property name="converters">
 			<map>
 				<entry key="ubic.gemma.web.remote.EntityDelegator">
@@ -1265,6 +1268,17 @@ gemma.max.fileupload.size.bytes=
 								<value>ncbiId</value>
 								<!-- needed to make links to ucsc -->
 								<value>externalDatabase</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.Reference">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="includes">
+							<list>
+								<value>id</value>
+								<value>type</value>
 							</list>
 						</property>
 					</bean>

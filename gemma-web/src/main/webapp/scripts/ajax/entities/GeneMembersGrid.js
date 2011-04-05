@@ -479,9 +479,11 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				var description = this.newGroupDescription;
 				var taxonName;
 				var taxonId;
+				var reference = null;
 				if(this.selectedGeneGroup){
 					taxonName = this.selectedGeneGroup.taxonName;
 					taxonId = this.selectedGeneGroup.taxonId;
+					reference = this.selectedGeneGroup.reference;
 				}else{
 					taxonName = this.taxonName;
 					taxonId = this.taxonId;
@@ -494,6 +496,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				var RecType = sessionStore.record;
 				var rec = new RecType();
 				rec.set("geneIds", ids);
+				rec.set("reference", reference);
 				rec.set("size", ids.length);	
 				rec.set("name", name);
 				rec.set("description",description);
@@ -514,6 +517,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		var description = this.newGroupDescription;
 		var taxonName = this.selectedGeneGroup.taxonName;
 		var taxonId = this.selectedGeneGroup.taxonId;
+		var reference = this.selectedGeneGroup.reference;
 
 		var groupStore = new Gemma.GeneGroupStore();		
 		
@@ -522,6 +526,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		var RecType = groupStore.record;
 		var rec = new RecType();
 		rec.set("geneIds", ids);
+		rec.set("reference", reference);
 		rec.set("size", ids.length);	
 		rec.set("name", name);
 		rec.set("description",description);

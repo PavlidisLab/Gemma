@@ -381,6 +381,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				var description = this.newGroupDescription;
 				var taxonName = this.selectedExperimentGroup.taxonName;
 				var taxonId = this.selectedExperimentGroup.taxonId;
+				var reference = this.selectedExperimentGroup.reference;
 			
 				var sessionStore = new Gemma.UserSessionDatasetGroupStore();
 				//sessionStore.purgeListeners();
@@ -388,6 +389,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 				var RecType = sessionStore.record;
 				var rec = new RecType();
+				rec.set("reference", reference);
 				rec.set("expressionExperimentIds", ids);
 				rec.set("size", ids.length);	
 				rec.set("name", name);
@@ -409,6 +411,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		var description = this.newGroupDescription;
 		var taxonName = this.selectedExperimentGroup.taxonName;
 		var taxonId = this.selectedExperimentGroup.taxonId;
+		var reference = this.selectedExperimentGroup.reference;
 
 		var groupStore = new Gemma.DatasetGroupStore();		
 		
@@ -417,6 +420,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		var RecType = groupStore.record;
 		var rec = new RecType();
 		rec.set("expressionExperimentIds", ids);
+		rec.set("reference", reference);
 		rec.set("size", ids.length);	
 		rec.set("name", name);
 		rec.set("description",description);

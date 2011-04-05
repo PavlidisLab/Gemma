@@ -26,6 +26,7 @@ import java.util.Collection;
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
 
+import ubic.gemma.model.Reference;
 import ubic.gemma.persistence.GemmaSessionBackedValueObject;
 
 public abstract class AbstractSetListContainer implements Serializable {
@@ -49,25 +50,30 @@ public abstract class AbstractSetListContainer implements Serializable {
         dbIdToSessionIdMap = new DualHashBidiMap();
     }
 
-    // dbResult should be a set of db backed geneSetValueObjects(they should have non null db ids)
+    /**
+     * dbResult should be a set of db backed geneSetValueObjects(they should have non null db ids) if session objects
+     * are passed in, they must have null ids (otherwise their session ids will be overridden)
+     * 
+     * @param dbResult
+     */
     public void setUniqueSetStoreIds( Collection<GemmaSessionBackedValueObject> dbResult ) {
 
         // give db genesets a unique sessionId so that the javascript widget plays nice
         for ( GemmaSessionBackedValueObject vo : dbResult ) {
 
-            if ( dbIdToSessionIdMap.containsKey( vo.getId() ) ) {
-                vo.setSessionId( ( Long ) dbIdToSessionIdMap.get( vo.getId() ) );
-            } else {
-                Long newSessionId = incrementAndGetLargestSessionId();
-                vo.setSessionId( newSessionId );
-                dbIdToSessionIdMap.put( vo.getId(), newSessionId );
+            if ( vo.getId() != null ) {
+                if ( dbIdToSessionIdMap.containsKey( vo.getId() ) ) {
+                    vo.setSessionId( ( Long ) dbIdToSessionIdMap.get( vo.getId() ) );
+                } else {
+                    Long newSessionId = incrementAndGetLargestSessionId();
+                    vo.setSessionId( newSessionId );
+                    dbIdToSessionIdMap.put( vo.getId(), newSessionId );
+                }
             }
         }
-
     }
 
     public boolean isDbBackedSessionId( Long id ) {
-
         return dbIdToSessionIdMap.containsValue( id );
 
     }
@@ -95,14 +101,17 @@ public abstract class AbstractSetListContainer implements Serializable {
     public GemmaSessionBackedValueObject addSet( GemmaSessionBackedValueObject vo ) {
 
         boolean setExists = false;
-
-        // This case shouldn't happen very often (or at all)
-        if ( vo.getSessionId() != null ) {
+        
+        // check if the set's reference is already in setList, 
+        // if it is, replace the old list with the new one
+        if(vo.getReference() != null){
             for ( int i = 0; i < setList.size(); i++ ) {
 
-                Long sid = setList.get( i ).getSessionId();
+                Reference setRef = setList.get( i ).getReference();
 
-                if ( sid != null && sid.equals( vo.getSessionId() ) ) {
+                System.out.println( "set reference "+i+" : " + setRef.toString() );
+                
+                if ( setRef != null && setRef.equals( vo.getReference() ) ) {
                     setList.remove( i );
                     setList.add( i, vo );
                     setExists = true;
@@ -114,7 +123,11 @@ public abstract class AbstractSetListContainer implements Serializable {
 
         if ( !setExists ) {
 
-            vo.setSessionId( incrementAndGetLargestSessionId() );
+            Long newId = incrementAndGetLargestSessionId();
+            System.out.println( "newid: " + newId );
+            vo.setReference( new Reference( newId, Reference.SESSION_BOUND_GROUP ) );
+            vo.setSessionId( newId );
+            vo.setId( newId );
             vo.setSession( true );// this line may be redundant
 
             setList.add( vo );
@@ -122,7 +135,6 @@ public abstract class AbstractSetListContainer implements Serializable {
                 setList.remove( 0 );
             }
         }
-
         return vo;
 
     }

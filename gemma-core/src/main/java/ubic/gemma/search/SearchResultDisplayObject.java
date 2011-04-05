@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
+import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -35,12 +36,17 @@ import ubic.gemma.search.SearchResult;
 
 /**
  * Object to store search results of different classes in a similar way for displaying to user (ex: enables genes and
- * gene sets to be entries in the same combo box) object types handled are: Gene, GeneSet, GeneSetValueObject,
- * ExpressionExperiment and ExpressionExperimentSet SearchObject is also handled if the object it holds is of any of
- * those types sessionId field is the unique id that a search result is given when session-bound and db-backed entities
+ * gene sets to be entries in the same combo box) 
+ * object types handled are: Gene, GeneSet, GeneSetValueObject, ExpressionExperiment and ExpressionExperimentSet
+ * SearchObject is also handled if the object it holds is of any of those types 
+ * 
+ * sessionId field is the unique id that a search result is given when session-bound and db-backed entities
  * will be displayed together if a geneSet is session-bound (has the type: "usergeneSetSession"), then id=sessionId if a
  * geneSet is db-backed (has the type: "geneSet" or "usergeneSet"), then id is the database id for the set and sessionId
  * is the id used by the store
+ * 
+ * Before using a collection of these objects to feed a store, you must run setStoreIds(Collection<this>)
+ * so that each record will have a unique id for displaying in ext
  * 
  * @author thea
  * @version $Id$
@@ -51,8 +57,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * Method to create a display object from scratch
      * 
      * @param resultClass cannot be null
-     * @param id can be null
-     * @param sessionId can be null
+     * @param reference can be null if result record is temporary (ex GO groups)
      * @param name cannot be null
      * @param description should not be null
      * @param isGroup cannot be null
@@ -62,12 +67,12 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param type can be null
      * @param memberIds can be null
      */
-    public SearchResultDisplayObject( Class<?> resultClass, Long id, String name, String description, Boolean isGroup,
-            int size, Long taxonId, String taxonName,String type, Collection<Long> memberIds ) {
+    public SearchResultDisplayObject( Class<?> resultClass, Reference reference, String name, 
+            String description, Boolean isGroup, int size, Long taxonId, String taxonName,String type, 
+            Collection<Long> memberIds ) {
 
         this.resultClass = resultClass;
-        this.id = id;
-        this.sessionId = id;
+        this.reference = reference;
         this.name = name;
         this.description = description;
         this.isGroup = isGroup;
@@ -100,8 +105,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
             ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) searchResult.getResultObject();
             setValues( eeSet );
         } else {
-            this.id = new Long( -1 );
-            this.sessionId = this.getId();
+            this.reference = null;
+            this.storeId = null;
             this.isGroup = false;
             this.size = -1;
             this.taxonId = new Long( -1 );
@@ -153,8 +158,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param gene
      */
     private void setValues( Gene gene ) {
-        this.id = gene.getId();
-        this.sessionId = this.getId();
+        this.reference = new Reference( gene.getId(), Reference.DB_GENE );
         this.resultClass = Gene.class;
         this.isGroup = false;
         this.size = 1;
@@ -170,8 +174,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param geneSet
      */
     private void setValues( GeneSet geneSet ) {
-        this.id = geneSet.getId();
-        this.sessionId = this.getId();
+        this.reference = new Reference(geneSet.getId(), Reference.DATABASE_BACKED_GROUP);
         this.resultClass = GeneSet.class;
         this.isGroup = true;
         this.size = ( geneSet.getMembers() != null ) ? geneSet.getMembers().size() : null;
@@ -189,8 +192,11 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param geneSet
      */
     private void setValues( GeneSetValueObject geneSet ) {
-        this.id = geneSet.getId();
-        this.sessionId = ( geneSet.getSessionId() != null ) ? geneSet.getSessionId() : geneSet.getId();
+        if(geneSet.isSession()){
+            this.reference = new Reference(geneSet.getId(), Reference.SESSION_BOUND_GROUP) ;
+        }else{
+            this.reference = new Reference(geneSet.getId(), Reference.DATABASE_BACKED_GROUP) ;
+        }
         this.resultClass = GeneSet.class;
         this.isGroup = true;
         this.size = ( geneSet.getGeneIds() != null ) ? geneSet.getGeneIds().size() : null;
@@ -206,8 +212,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param expressionExperiment
      */
     private void setValues( ExpressionExperiment expressionExperiment ) {
-        this.id = expressionExperiment.getId();
-        this.sessionId = this.getId();
+        this.reference = new Reference( expressionExperiment.getId(), Reference.DB_EXPERIMENT ) ;
         this.resultClass = ExpressionExperiment.class;
         this.isGroup = false;
         this.size = 1;
@@ -224,8 +229,8 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param expressionExperimentSet
      */
     private void setValues( ExpressionExperimentSet expressionExperimentSet ) {
-        this.id = expressionExperimentSet.getId();
-        this.sessionId = this.getId();
+ ///       this.id = expressionExperimentSet.getId();
+        this.reference =  new Reference( expressionExperimentSet.getId(), Reference.DATABASE_BACKED_GROUP ) ;
         this.resultClass = ExpressionExperimentSet.class;
         this.isGroup = true;
         this.size = ( expressionExperimentSet.getExperiments() != null ) ? expressionExperimentSet.getExperiments()
@@ -244,9 +249,11 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private Class<?> resultClass;
 
-    private Long id;
+    private Long storeId;
+    
+    private Reference reference;
 
-    private Long sessionId;
+    //private boolean isSession;
 
     private Boolean isGroup; // whether this search result represents a group of entities or not
 
@@ -263,21 +270,25 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private Collection<Long> memberIds = new HashSet<Long>();
 
     private String type;
-
+    
     public Class<?> getResultClass() {
         return this.resultClass;
     }
-
-    public Long getId() {
-        return this.id;
+  
+    public Reference getReference() {
+        return this.reference;
     }
 
-    public void setId( Long id ) {
-        this.id = id;
+    public void setReference( Reference reference ) {
+        this.reference = reference;
     }
 
-    public Long getSessionId() {
-        return this.sessionId;
+    public Long getStoreId() {
+        return this.storeId;
+    }
+
+    public void setStoreId( Long storeId) {
+        this.storeId= storeId;
     }
 
     public Boolean getIsGroup() {
@@ -327,6 +338,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     public void setMemberIds( Collection<Long> memberIds ) {
         this.memberIds = memberIds;
     }
+    
 
     /**
      * Creates a collection of SearchResultDisplayObjects from a collection of objects object types handled are: Gene,

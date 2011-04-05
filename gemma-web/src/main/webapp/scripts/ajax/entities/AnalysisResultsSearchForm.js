@@ -28,13 +28,15 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	width : 900,
 	//height : 200,
 	frame : false,
-	stateful : false,
-	stateEvents : ["beforesearch"],
-	eeSetReady : false,
 	border:true,
 	bodyBorder:false,
 	bodyStyle:"backgroundColor:white",
 	defaults:{border:false},
+	
+	stateful : false,
+	stateEvents : ["beforesearch"],
+	eeSetReady : false,
+	
 		
 	PREVIEW_SIZE : 5,
 	
@@ -524,7 +526,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		this.experimentPreviewContent = new Ext.Panel({
 				width:210,
 				id:'experimentPreview',
-				html:'<div style="padding-bottom:7px;font-weight:bold;">Experiment Selection Preview</div>',
+				//html:'<div style="padding: 7px 0 ;font-weight:bold;">Experiment Selection Preview</div>',
 				tpl: new Ext.XTemplate(
 				'<tpl for="."><div style="padding-bottom:7px;"><a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
 				'{id}"',
@@ -547,9 +549,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		
 		this.experimentPreview = new Ext.Panel({
 				//height:100,
-				width:219,
+				width: 239,//219,
 				frame:true,
-				items:[this.experimentPreviewExpandBtn,this.experimentPreviewContent,this.experimentSelectionEditorBtn]
+				items:[this.experimentCombo,this.experimentPreviewExpandBtn,this.experimentPreviewContent,this.experimentSelectionEditorBtn]
 		});
 		
 		/****** GENE COMBO ******************************************************************************/
@@ -656,7 +658,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				//height:100,
 				width:207,
 				id:'genePreview',
-				html:'<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview</div>',
+				//html:'<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview</div>',
 				tpl: new Ext.Template('<div style="padding-bottom:7px;"><a href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} <span style="color:grey">({taxonCommonName})</span></div>'),
 				tplWriteMode: 'append' // use this to append to content when calling update instead of replacing
 		});
@@ -679,8 +681,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				//height:100,
 				width:219,
 				frame:true,
-				items:[this.genePreviewExpandBtn,this.genePreviewContent,this.geneSelectionEditorBtn]
+				items:[{layout:'hbox',items:[this.geneCombo,this.symbolListButton]},this.genePreviewExpandBtn,this.genePreviewContent,this.geneSelectionEditorBtn]
 		});
+		
 		/******* BUTTONS ********************************************************************************/
 
 		this.coexToggle = new Ext.Button({
@@ -719,16 +722,18 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 					
 					{html:'Search for ', style:'text-align:center;vertical-align:middle;font-size:1.7em;', rowspan:1},
 					{html: ' in ', style:'text-align:center;vertical-align:middle;font-size:1.7em;', rowspan:1},
-					this.experimentCombo,
+					this.experimentPreview,
 					{html: ' based on ', style:'text-align:center;vertical-align:middle;font-size:1.7em;', rowspan:1},
-					this.geneCombo,this.symbolListButton, //,{border:false,html:'<a style="text-align:right">Paste symbol list</a>'}
+					{items: this.genePreview,colspan: 2}, //,{border:false,html:'<a style="text-align:right">Paste symbol list</a>'}
 					new Ext.Button({
 							text: "<span style=\"font-size:1.1em\">Go!</span>",
 							handler: this.doSearch.createDelegate(this, [], false),
 							width:35
 						}),
 					
-					{},{},this.experimentPreview,{},{items: this.genePreview,colspan: 2},{}
+					{},{},{},{},{},{}
+					
+					//,{colspan:3},this.experimentWarning,{},{items: this.geneWarning, colspan:2},{}
 					]
 		});
 		
@@ -781,20 +786,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		this.fireEvent("taxonchanged", taxonId);
 	},
 	collapsePreviews: function(){
-		Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {cn: '<span style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview </span>'});
+		Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {cn: '<span style="padding:7px 0;font-weight:bold;">Gene Selection Preview </span>'});
 		this.genePreviewExpandBtn.enable().show();
 		this.geneSelectionEditorBtn.disable().hide();
-		Ext.DomHelper.overwrite(Ext.getCmp('experimentPreview').body, {cn: '<span style="padding-bottom:7px;font-weight:bold;">Experiment Selection Preview </span>'});
+		Ext.DomHelper.overwrite(Ext.getCmp('experimentPreview').body, {cn: '<span style="padding: 7px 0;font-weight:bold;">Experiment Selection Preview </span>'});
 		this.experimentPreviewExpandBtn.enable().show();		
 		this.experimentSelectionEditorBtn.disable().hide();
 	},
 	resetGenePreview: function(){
-		Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {cn: '<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview </div>'});
+		Ext.DomHelper.overwrite(Ext.getCmp('genePreview').body, {cn: '<div style="padding:7px 0;font-weight:bold;">Gene Selection Preview </div>'});
 		this.genePreviewExpandBtn.disable().hide();
 		this.geneSelectionEditorBtn.disable().hide();
 	},
 	resetExperimentPreview: function(){
-		Ext.DomHelper.overwrite(Ext.getCmp('experimentPreview').body, {cn: '<div style="padding-bottom:7px;font-weight:bold;">Experiment Selection Preview </div>'});
+		Ext.DomHelper.overwrite(Ext.getCmp('experimentPreview').body, {cn: '<div style="padding: 7px 0;font-weight:bold;">Experiment Selection Preview </div>'});
 		this.experimentPreviewExpandBtn.disable().hide();
 		this.experimentSelectionEditorBtn.disable().hide();
 	},
@@ -824,9 +829,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			});
 		}
 		this.experimentPreview.loadMask.show();
-	},
-	getGenesMoreLink: function(size, limit){
-		return '<div style="text-align:right"><a onclick="this.launchGeneSelectionEditor; return false;">' + (size - limit) + ' more<a></div>';
 	},
 	launchGeneSelectionEditor: function(){
 		
@@ -1135,27 +1137,21 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 									}
 								}
 								
-								// reset the gene preview panel content
-								this.resetGenePreview();
-								
-								for ( i=0; i<genesToPreview.length;i++) {
-									this.genePreviewContent.update(genesToPreview[i]);
-								}
-								
-								this.geneSelectionEditorBtn.setText('<a>'+(geneIds.length-genesToPreview.length) + ' more - Edit</a>');
-								this.showGenePreview();
 
 								this.geneIds=geneIds;								
 
+
+								// if some genes weren't found or some gene matches were inexact, 
+								// prepare a msg for the user
+
 								var msgMany =""; var msgNone ="";
-								// if some genes weren't found or some gene matches were inexact, tell the user
 								if(queriesWithMoreThanOneResult.length>0){
-									msgMany = queriesWithMoreThanOneResult.length+((queriesWithMoreThanOneResult.length===1)?" query":" queries")+"  returned more than one gene, all were added to the results: ";
+									msgMany = queriesWithMoreThanOneResult.length+((queriesWithMoreThanOneResult.length===1)?" query":" queries")+"  returned more than one gene, all were added to the results: <br>";
 									// for each query
 									query = '';
 									for ( i = 0; i< queriesWithMoreThanOneResult.length; i++) {
 										query = queriesWithMoreThanOneResult[i];
-										msgMany += "<br> - \""+query+"\" matched: ";
+										msgMany += "<br> - <b>"+query+"</b> matched: ";
 										genes = queryToGenes[query];
 										// for each result of that query
 										for(var j = 0; j<genes.length && j<10; j++){
@@ -1164,10 +1160,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 										}
 										if(genes.length>10){msgMany += "...("+genes.length-20+" more)";}
 									}
-									msgMany+= '<br><br>';
+									msgMany+= '<br><br><br>';
 								}
 								if(queriesWithNoResults.length>0){
-									msgNone = queriesWithNoResults.length+((queriesWithNoResults.length===1)?" query":" queries")+" didn't match any genes in Gemma:<br>";
+									msgNone = queriesWithNoResults.length+((queriesWithNoResults.length===1)?" query":" queries")+" did not match any genes in Gemma:<br><br>";
 									// for each query									
 									query = '';
 									for ( i = 0; i< queriesWithNoResults.length; i++) {
@@ -1175,9 +1171,32 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 										msgNone += " - "+query+"<br>";
 									}
 								}
+								
+								// reset the gene preview panel content
+								this.resetGenePreview();
+								
 								if(queriesWithMoreThanOneResult.length>0 || queriesWithNoResults.length>0){
-									Ext.Msg.alert("Query Result Details","Please note:<br><br>"+msgMany+msgNone);
+									Ext.DomHelper.append(Ext.getCmp('genePreview').body, 
+										{cn: '<div style="padding-bottom:7px;color:red;">Warning: Not all symbols had exact matches ('+
+										 '<a onclick="Ext.Msg.alert(\'Query Result Details\',\'Please note:<br><br>'
+										 +msgMany+msgNone+
+										 '\');" style="color: red; text-decoration: underline;">details</a>)</div>'});
 								}
+								
+								// write to the gene preview panel
+								for ( i=0; i<genesToPreview.length;i++) {
+									this.genePreviewContent.update(genesToPreview[i]);
+								}
+								
+								this.geneSelectionEditorBtn.setText('<a>'+(geneIds.length-genesToPreview.length) + ' more - Edit</a>');
+								this.showGenePreview();
+								
+								if (geneIds.size() <= 1) {
+									this.geneSelectionEditorBtn.setText('0 more');
+									this.geneSelectionEditorBtn.disable();
+									this.geneSelectionEditorBtn.show();
+								}
+								
 								loadMask.hide();
 
 							}.createDelegate(this),

@@ -20,7 +20,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 	name : 'geneAndGeneGroupCombo',
 	displayField : 'name',
-	valueField : 'id',
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
 	
@@ -90,14 +89,9 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					//tpl: new Ext.XTemplate('<tpl for=".">' +
 					//'<div style="font-size:11px" class="x-combo-list-item" ext:qtip="{name} ({size})">{name} - {description}</div></tpl>' ),
 					store:{
-						reader : new Ext.data.ListRangeReader({
-								id : "sessionId"
-							}, Ext.data.Record.create([{
-								name : "sessionId",
-								type : "int"
-							},{
-								name : "id",
-								type : "int"
+						reader : new Ext.data.ListRangeReader({}, 
+							Ext.data.Record.create([{
+								name : "reference"
 							},{
 								name : "name",
 								type : "string"

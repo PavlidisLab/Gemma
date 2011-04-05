@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 
+import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -278,7 +279,8 @@ public class GenePickerController {
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
             }
-
+        }else{
+            throw new IllegalArgumentException( "No taxon supplied");
         }
         String taxonName = taxon.getCommonName();
         boolean privateOnly = true;
@@ -317,12 +319,6 @@ public class GenePickerController {
             // get any session-bound groups
 
             Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets( taxonId );
-
-            // make some unique toss-away ids for session-bound sets
-            for ( GeneSetValueObject sessionSet : sessionResult ) {
-                sessionSet.setId( tempId );
-                tempId--;
-            }
 
             result.addAll( sessionResult );
 
@@ -384,7 +380,7 @@ public class GenePickerController {
                 }
                 // tag search result display objects appropriately
                 for ( SearchResultDisplayObject srdo : geneSets ) {
-                    if ( userSetsIds.contains( srdo.getId() ) ) {
+                    if ( userSetsIds.contains( srdo.getReference().getId() ) ) {
                         srdo.setType( "usersgeneSet" );
                     }
                 }
@@ -405,7 +401,6 @@ public class GenePickerController {
                 GeneSet goSet = this.geneSetSearch.findByGoId( query, taxon );
                 if ( goSet != null ) {
                     SearchResultDisplayObject sdo = new SearchResultDisplayObject( goSet );
-                    sdo.setId( tempId ); // needed for displaying in combo box
                     sdo.setTaxonId( taxonId );
                     sdo.setTaxonName( taxonName );
                     tempId--;
@@ -419,7 +414,6 @@ public class GenePickerController {
                     if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
                         SearchResultDisplayObject sdo = new SearchResultDisplayObject( geneSet );
                         sdo.setType( "GOgroup" );
-                        sdo.setId( tempId ); // needed for displaying in combo box
                         sdo.setTaxonId( taxonId );
                         sdo.setTaxonName( taxonName );
                         tempId--;
@@ -445,7 +439,7 @@ public class GenePickerController {
 
                 // add every individual experiment to the set
                 for ( SearchResultDisplayObject srdo : genes ) {
-                    geneIds.add( srdo.getId() );
+                    geneIds.add( srdo.getReference().getId() );
                 }
 
                 // if there's a group, get the number of members by taxon
@@ -481,9 +475,11 @@ public class GenePickerController {
                     }
                 }
 
+                Reference ref = new Reference( tempId, Reference.SESSION_UNBOUND_GROUP );
                 SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(
-                        ExpressionExperimentSet.class, tempId, "All '" + query + "' results",
-                        "All genes found for your query", true, geneIds.size(), taxonId, taxonName, "freeText", geneIds );
+                        ExpressionExperimentSet.class, ref, "All '" + query + "' results",
+                        "All genes found for your query", true, geneIds.size(), taxonId, taxonName, 
+                        "freeText", geneIds );
                 tempId--;
                 displayResults.add( allResultsGroup );
             }

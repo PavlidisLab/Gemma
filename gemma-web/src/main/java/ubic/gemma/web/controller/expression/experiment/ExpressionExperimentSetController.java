@@ -51,12 +51,14 @@ import ubic.gemma.web.session.SessionListManager;
 public class ExpressionExperimentSetController extends BaseFormController {
     private ExpressionExperimentReportService expressionExperimentReportService;
     private ExpressionExperimentService expressionExperimentService;
-    private ExpressionExperimentSetService expressionExperimentSetService;
     private PersisterHelper persisterHelper;
     private SecurityService securityService;
 
     private TaxonService taxonService;
 
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService = null;
+    
     @Autowired
     private SessionListManager sessionListManager;
 
@@ -146,44 +148,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return result;
     }
 
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSetBySessionId( Long sessionId ) {
+    public Collection<ExpressionExperimentValueObject> getExperimentsInSetBySessionId( Long sessionBoundId ) {
 
-        Collection<ExpressionExperimentValueObject> results = null;
-
-        if ( sessionListManager.isDbBackedExperimentSetSessionId( sessionId ) ) {
-
-            results = getExperimentsInSet( sessionListManager.getDbExperimentSetIdBySessionId( sessionId ) );
-
-        } else {
-
-            Collection<ExpressionExperimentSetValueObject> sessionExperimentSets = sessionListManager
-                    .getRecentExperimentSets();
-
-            Collection<ExpressionExperiment> expressionExperiments = null;
-
-            for ( ExpressionExperimentSetValueObject eesvo : sessionExperimentSets ) {
-                if ( sessionId.equals( eesvo.getSessionId() ) ) {
-                    expressionExperiments = expressionExperimentService.loadMultiple( eesvo
-                            .getExpressionExperimentIds() );
-                    break;
-                }
-            }
-
-            if ( expressionExperiments != null ) {
-
-                results = new HashSet<ExpressionExperimentValueObject>();
-
-                for ( ExpressionExperiment ee : expressionExperiments ) {
-
-                    results.add( new ExpressionExperimentValueObject( ee ) );
-
-                }
-
-            }
-
-        }
-
-        return results;
+        return sessionListManager.getExperimentsInSetBySessionBoundId( sessionBoundId );
     }
 
     /**
@@ -225,6 +192,25 @@ public class ExpressionExperimentSetController extends BaseFormController {
         results.addAll( sessionResults );
 
         return results;
+    }
+    /**
+     * AJAX
+     * 
+     * @return all available sets that have at least 2 experiments (so not really all) from db and also session backed
+     *         sets
+     */
+    public Collection<ExpressionExperimentSetValueObject> loadAllUserOwnedAndSessionGroups() {
+
+        Collection<ExpressionExperimentSet> results = expressionExperimentSetService.loadMySets(); // expressionExperimentSetService is null
+        Collection<ExpressionExperimentSetValueObject> valueObjects = ExpressionExperimentSetValueObject.makeValueObjects( results );
+
+        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
+
+        sessionListManager.setUniqueExperimentSetStoreIds( valueObjects );
+
+        valueObjects.addAll( sessionResults );
+
+        return valueObjects;
     }
 
     /**

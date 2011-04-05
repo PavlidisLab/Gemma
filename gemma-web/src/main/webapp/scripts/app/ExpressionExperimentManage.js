@@ -786,7 +786,6 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 						});
 						
 				this.searchCombo = new Gemma.ExperimentAndExperimentGroupCombo({
-							typeAhead: false,
 							width : 220,
 							emptyText : "Search for experiments",
 							listeners : {

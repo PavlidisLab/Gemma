@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
+import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.persistence.GemmaSessionBackedValueObject;
 import ubic.gemma.util.EntityUtils;
@@ -42,6 +43,27 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
     private boolean shared;
     
     private boolean session;
+    
+    private Reference reference;
+
+    private String description;
+    private Collection<Long> expressionExperimentIds;
+    private Long id;
+    
+    private Long sessionId;
+
+    /**
+     * If modifying the set is constrained by existing analyses.
+     */
+    private boolean modifiable;
+
+    private String name;
+
+    private Integer numExperiments;
+    private Long taxonId;
+
+    private String taxonName;
+
 
     /**
      * @return the publik
@@ -78,25 +100,16 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
     public void setSession( boolean session ) {
         this.session = session;
     }
-
-    private String description;
-    private Collection<Long> expressionExperimentIds;
-    private Long id;
     
-    private Long sessionId;
+    public void setReference( Reference reference) {
+        this.reference = reference;
+    }
+    
+    public Reference getReference(){
+        return this.reference;
+    }
 
-    /**
-     * If modifying the set is constrained by existing analyses.
-     */
-    private boolean modifiable;
-
-    private String name;
-
-    private Integer numExperiments;
-    private Long taxonId;
-
-    private String taxonName;
-
+    
     public static Collection<ExpressionExperimentSetValueObject> makeValueObjects(
             Collection<ExpressionExperimentSet> entities ) {
         Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
@@ -115,6 +128,7 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
         this.taxonId = set.getTaxon().getId();
         this.numExperiments = set.getExperiments().size();
         this.expressionExperimentIds = EntityUtils.getIds( set.getExperiments() );
+        this.reference = new Reference( set.getId(), Reference.DATABASE_BACKED_GROUP );
 
     }
 

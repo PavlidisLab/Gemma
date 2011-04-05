@@ -248,42 +248,9 @@ public class GeneSetController {
      * @param groupId
      * @return
      */
-    public Collection<GeneValueObject> getGenesInGroupBySessionId( Long sessionId ) {
+    public Collection<GeneValueObject> getGenesInGroupBySessionId( Long sessionBoundId ) {
 
-        Collection<GeneValueObject> results = null;
-
-        if ( sessionListManager.isDbBackedGeneSetSessionId( sessionId ) ) {
-
-            results = getGenesInGroup( sessionListManager.getDbGeneSetIdBySessionId( sessionId ) );
-
-        } else {
-
-            Collection<GeneSetValueObject> sessionGeneSets = sessionListManager.getRecentGeneSets();
-
-            Collection<Gene> genes = null;
-
-            for ( GeneSetValueObject gsvo : sessionGeneSets ) {
-                if ( sessionId.equals( gsvo.getSessionId() ) ) {
-                    genes = geneService.loadMultiple( gsvo.getGeneIds() );
-                    break;
-                }
-            }
-
-            if ( genes != null ) {
-
-                results = new HashSet<GeneValueObject>();
-
-                for ( Gene g : genes ) {
-
-                    results.add( new GeneValueObject( g ) );
-
-                }
-
-            }
-
-        }
-
-        return results;
+        return sessionListManager.getGenesInSetBySessionBoundId( sessionBoundId );
 
     }
 
