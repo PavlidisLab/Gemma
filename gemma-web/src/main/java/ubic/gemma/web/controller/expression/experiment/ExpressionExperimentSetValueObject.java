@@ -41,17 +41,13 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
     private boolean publik;
 
     private boolean shared;
-    
-    private boolean session;
-    
+        
     private Reference reference;
 
     private String description;
     private Collection<Long> expressionExperimentIds;
     private Long id;
     
-    private Long sessionId;
-
     /**
      * If modifying the set is constrained by existing analyses.
      */
@@ -93,14 +89,10 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
         this.shared = shared;
     }
     
-    public boolean isSession() {
-        return session;
+    public boolean isSessionBound() {
+        return getReference().isSessionBound();
     }
-    
-    public void setSession( boolean session ) {
-        this.session = session;
-    }
-    
+        
     public void setReference( Reference reference) {
         this.reference = reference;
     }
@@ -170,10 +162,6 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
         return id;
     }
     
-    public Long getSessionId() {
-        return sessionId;
-    }
-
     public String getName() {
         return name;
     }
@@ -227,10 +215,6 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
         this.id = id;
     }
     
-    public void setSessionId( Long sessionId ) {
-        this.sessionId = sessionId;
-    }
-
     public void setModifiable( boolean modifiable ) {
         this.modifiable = modifiable;
     }
@@ -250,5 +234,5 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
     }
-
+    
 }

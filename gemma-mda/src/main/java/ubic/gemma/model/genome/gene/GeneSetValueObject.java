@@ -88,8 +88,6 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     private boolean publik;
     private boolean shared;
     private Integer size;
-    private Long sessionId;
-    private boolean session;
     private String taxonName;
     private long taxonId;
     private Reference reference;
@@ -165,13 +163,7 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     public Long getId() {
         return id;
     }
-    
-    /**
-     * @return
-     */
-    public Long getSessionId() {
-        return sessionId;
-    }
+
 
     /**
      * @return
@@ -180,6 +172,11 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
         return reference;
     }
 
+
+    public boolean isSessionBound() {
+        return getReference().isSessionBound();
+    }
+        
 
     /**
      * @return
@@ -211,10 +208,6 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     public boolean isShared() {
         return this.shared;
     }
-    
-    public boolean isSession() {
-        return this.session;
-    }
 
     /**
      * @param currentUserHasWritePermission the currentUserHasWritePermission to set
@@ -245,14 +238,7 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     }
     
     /**
-     * @param sessionId
-     */
-    public void setSessionId( Long sessionId ) {
-        this.sessionId = sessionId;
-    }
-    
-    /**
-     * @param sessionId
+     * @param reference
      */
     public void setReference( Reference reference ) {
         this.reference = reference;
@@ -271,10 +257,6 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
 
     public void setShared( boolean isShared ) {
         this.shared = isShared;
-    }
-    
-    public void setSession( boolean isSession ) {
-        this.session = isSession;
     }
 
     /**

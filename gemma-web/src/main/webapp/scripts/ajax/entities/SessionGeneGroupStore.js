@@ -1,20 +1,40 @@
 
 
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2008 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ * 
+ */
+
 Ext.namespace('Gemma');
 
 
-
-Gemma.UserSessionGeneGroupStore = function(config) {
+/**
+ * 
+ * @param {}
+ *            config
+ */
+Gemma.SessionGeneGroupStore = function(config) {
 
 	/*
 	 * Leave this here so copies of records can be constructed.
 	 */
 	this.record = Ext.data.Record.create([
 			{
+				name : "reference"
+			},{
 				name : "id",
 				type : "int"
-			},{
-				name : "reference"
 			},{
 				name : "taxonId",
 				type : "int"
@@ -61,23 +81,24 @@ Gemma.UserSessionGeneGroupStore = function(config) {
 
 	// todo replace with JsonReader.
 	this.reader = new Ext.data.ListRangeReader({
+				id : "id"
 			}, this.record);
 
-	Gemma.UserSessionGeneGroupStore.superclass.constructor.call(this, config);
+	Gemma.SessionGeneGroupStore.superclass.constructor.call(this, config);
 
 };
 
 /**
  * 
- * @class Gemma.UserSessionGeneGroupStore
+ * @class Gemma.GeneGroupStore
  * @extends Ext.data.Store
  */
-Ext.extend(Gemma.UserSessionGeneGroupStore, Ext.data.Store, {
+Ext.extend(Gemma.SessionGeneGroupStore, Ext.data.Store, {
 
 			autoLoad : true,
 			autoSave : false,
 			selected : null,
-			name : "geneGroupData-store",
+			name : "geneGroupSessionData-store",
 
 			proxy : new Ext.data.DWRProxy({
 						apiActionToHandlerMap : {
@@ -91,13 +112,13 @@ Ext.extend(Gemma.UserSessionGeneGroupStore, Ext.data.Store, {
 								}
 							},
 							create : {
-								dwrFunction : GeneSetController.addUserAndSessionGroups
+								dwrFunction : GeneSetController.addSessionGroups
 							},
 							update : {
-								dwrFunction : GeneSetController.updateUserAndSessionGroups
+								dwrFunction : GeneSetController.updateSessionGroups
 							},
 							destroy : {
-								dwrFunction : GeneSetController.removeUserAndSessionGroups
+								dwrFunction : GeneSetController.removeSessionGroups
 							}
 						}
 					}),
@@ -105,7 +126,7 @@ Ext.extend(Gemma.UserSessionGeneGroupStore, Ext.data.Store, {
 			writer : new Ext.data.JsonWriter({
 						writeAllFields : true
 					}),
-					
+
 			getSelected : function() {
 				return this.selected;
 			},
@@ -124,8 +145,33 @@ Ext.extend(Gemma.UserSessionGeneGroupStore, Ext.data.Store, {
 			clearSelected : function() {
 				this.selected = null;
 				delete this.selected;
+			},
+
+			listeners : {
+				write : function(store, action, result, res, rs) {
+					// Ext.Msg.show({
+					// title : "Saved",
+					// msg : "Changes were saved",
+					// icon : Ext.MessageBox.INFO
+					// });
+				},
+				exception : function(proxy, type, action, options, res, arg) {
+					console.log(res);
+					if (type === 'remote') {
+						Ext.Msg.show({
+									title : 'Error',
+									msg : res,
+									icon : Ext.MessageBox.ERROR
+								});
+					} else {
+						Ext.Msg.show({
+									title : 'Error',
+									msg : arg,
+									icon : Ext.MessageBox.ERROR
+								});
+					}
+				}
+
 			}
 
 		});
-		
-	

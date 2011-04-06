@@ -326,7 +326,6 @@ public class GenePickerController {
             for ( GeneSetValueObject registeredUserSet : result ) {
                 newSRDO = new SearchResultDisplayObject( registeredUserSet );
                 newSRDO.setType( "users" + newSRDO.getType() ); // will either end up usergeneSet or usergeneSetSession
-                // newSRDO.setId(new Long(registeredUserSet.getSessionId()));
                 displayResults.add( newSRDO );
             }
             Collections.sort( displayResults );

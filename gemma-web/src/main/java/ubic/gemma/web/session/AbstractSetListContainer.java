@@ -36,63 +36,26 @@ public abstract class AbstractSetListContainer implements Serializable {
 	 */
     private static final long serialVersionUID = -7207696842986893748L;
 
-    static final int MAX_SIZE = 100;
+    static final int MAX_SIZE = 3;
 
     Long largestSessionId = 0l;
 
     ArrayList<GemmaSessionBackedValueObject> setList;
 
-    // Map of DB ids to Session Ids (Bidirectional map for one-to-one mappings)
-    BidiMap dbIdToSessionIdMap;
 
     public AbstractSetListContainer() {
         setList = new ArrayList<GemmaSessionBackedValueObject>();
-        dbIdToSessionIdMap = new DualHashBidiMap();
-    }
-
-    /**
-     * dbResult should be a set of db backed geneSetValueObjects(they should have non null db ids) if session objects
-     * are passed in, they must have null ids (otherwise their session ids will be overridden)
-     * 
-     * @param dbResult
-     */
-    public void setUniqueSetStoreIds( Collection<GemmaSessionBackedValueObject> dbResult ) {
-
-        // give db genesets a unique sessionId so that the javascript widget plays nice
-        for ( GemmaSessionBackedValueObject vo : dbResult ) {
-
-            if ( vo.getId() != null ) {
-                if ( dbIdToSessionIdMap.containsKey( vo.getId() ) ) {
-                    vo.setSessionId( ( Long ) dbIdToSessionIdMap.get( vo.getId() ) );
-                } else {
-                    Long newSessionId = incrementAndGetLargestSessionId();
-                    vo.setSessionId( newSessionId );
-                    dbIdToSessionIdMap.put( vo.getId(), newSessionId );
-                }
-            }
-        }
-    }
-
-    public boolean isDbBackedSessionId( Long id ) {
-        return dbIdToSessionIdMap.containsValue( id );
-
-    }
-
-    public Long getDbIdFromSessionId( Long id ) {
-
-        return ( Long ) dbIdToSessionIdMap.getKey( id );
     }
 
     public Long incrementAndGetLargestSessionId() {
         largestSessionId = largestSessionId + 1;
 
-        // unique sessionId for each entry in the user's session(doubt that a user will have over 100000 set session
+        // unique session bound Id for each entry in the user's session(doubt that a user will have over 100000 set session
         // entries
         // so I believe 100000 provides a large enough range to avoid conflicts
         //
         if ( largestSessionId > 100000 ) {
             largestSessionId = 0l;
-            dbIdToSessionIdMap.clear();
         }
 
         return largestSessionId;
@@ -108,8 +71,6 @@ public abstract class AbstractSetListContainer implements Serializable {
             for ( int i = 0; i < setList.size(); i++ ) {
 
                 Reference setRef = setList.get( i ).getReference();
-
-                System.out.println( "set reference "+i+" : " + setRef.toString() );
                 
                 if ( setRef != null && setRef.equals( vo.getReference() ) ) {
                     setList.remove( i );
@@ -124,11 +85,7 @@ public abstract class AbstractSetListContainer implements Serializable {
         if ( !setExists ) {
 
             Long newId = incrementAndGetLargestSessionId();
-            System.out.println( "newid: " + newId );
             vo.setReference( new Reference( newId, Reference.SESSION_BOUND_GROUP ) );
-            vo.setSessionId( newId );
-            vo.setId( newId );
-            vo.setSession( true );// this line may be redundant
 
             setList.add( vo );
             if ( setList.size() > MAX_SIZE ) {
@@ -141,11 +98,11 @@ public abstract class AbstractSetListContainer implements Serializable {
 
     public void removeSet( GemmaSessionBackedValueObject vo ) {
 
-        if ( vo.getSessionId() != null ) {
+        if ( vo.getReference() != null ) {
 
             for ( int i = 0; i < setList.size(); i++ ) {
 
-                if ( setList.get( i ).getSessionId().equals( vo.getSessionId() ) ) {
+                if ( setList.get( i ).getReference().equals( vo.getReference() ) ) {
                     setList.remove( i );
                     break;
                 }
@@ -158,11 +115,11 @@ public abstract class AbstractSetListContainer implements Serializable {
 
     public void updateSet( GemmaSessionBackedValueObject vo ) {
 
-        if ( vo.getSessionId() != null ) {
+        if ( vo.getReference() != null ) {
 
             for ( int i = 0; i < setList.size(); i++ ) {
 
-                if ( setList.get( i ).getSessionId().equals( vo.getSessionId() ) ) {
+                if ( setList.get( i ).getReference().equals( vo.getReference() ) ) {
                     setList.remove( i );
                     setList.add( i, vo );
                     break;

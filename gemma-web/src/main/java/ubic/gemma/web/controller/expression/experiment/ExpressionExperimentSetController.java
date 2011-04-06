@@ -32,7 +32,6 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
@@ -92,7 +91,12 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         return eeSetVos;
     }
-
+    /**
+     * AJAX adds the experiment group to the session
+     * 
+     * @param geneSetVo value object constructed on the client.
+     * @return id of the new gene group
+     */
     public Collection<ExpressionExperimentSetValueObject> addUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> entities ) {
 
@@ -102,7 +106,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         for ( ExpressionExperimentSetValueObject eesvo : entities ) {
 
-            if ( eesvo.isSession() ) {
+            if ( eesvo.isSessionBound() ) {
                 sessionResult.add( eesvo );
             } else {
                 result.add( eesvo );
@@ -111,11 +115,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
         }
 
         result = create( result );
-        // need to give new database entry a session Id so that it will play nice with the extJS combined session/db
-        // backed store
-        for ( ExpressionExperimentSetValueObject eesvo : result ) {
-            eesvo.setSessionId( sessionListManager.incrementAndGetLargestExperimentSetSessionId() );
-        }
 
         result.addAll( addSessionGroups( sessionResult ) );
 
@@ -146,11 +145,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
         Collection<ExpressionExperimentValueObject> result = expressionExperimentService.loadValueObjects( eeids );
         expressionExperimentReportService.fillReportInformation( result );
         return result;
-    }
-
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSetBySessionId( Long sessionBoundId ) {
-
-        return sessionListManager.getExperimentsInSetBySessionBoundId( sessionBoundId );
     }
 
     /**
@@ -187,11 +181,22 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
 
-        sessionListManager.setUniqueExperimentSetStoreIds( results );
-
         results.addAll( sessionResults );
 
         return results;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @return all available sets that have at least 2 experiments (so not really all) from db and also session backed
+     *         sets
+     */
+    public Collection<ExpressionExperimentSetValueObject> loadAllSessionGroups() {
+
+        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
+
+        return sessionResults;
     }
     /**
      * AJAX
@@ -205,8 +210,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
         Collection<ExpressionExperimentSetValueObject> valueObjects = ExpressionExperimentSetValueObject.makeValueObjects( results );
 
         Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
-
-        sessionListManager.setUniqueExperimentSetStoreIds( valueObjects );
 
         valueObjects.addAll( sessionResults );
 
@@ -250,7 +253,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
         Collection<ExpressionExperimentSetValueObject> sessionCollection = new HashSet<ExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
-            if ( experimentSetValueObject.isSession() ) {
+            if ( experimentSetValueObject.isSessionBound() ) {
                 sessionCollection.add( experimentSetValueObject );
             } else {
                 databaseCollection.add( experimentSetValueObject );
@@ -331,7 +334,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
         Collection<ExpressionExperimentSetValueObject> sessionCollection = new HashSet<ExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
-            if ( experimentSetValueObject.isSession() ) {
+            if ( experimentSetValueObject.isSessionBound() ) {
                 sessionCollection.add( experimentSetValueObject );
             } else {
                 databaseCollection.add( experimentSetValueObject );

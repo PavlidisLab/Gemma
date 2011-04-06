@@ -365,7 +365,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 // if the ids being passed in are session ids, use a different method to load them
                 if ( ref.getType() == Reference.SESSION_BOUND_GROUP ) {
                     Collection<GeneValueObject> geneValueObjectsInSet = sessionListManager
-                            .getGenesInSetBySessionBoundId( ref.getId() );
+                            .getGenesInSetByReference( ref );
                     for ( GeneValueObject gsvo : geneValueObjectsInSet ) {
                         Gene gene = geneService.load( gsvo.getId() );
                         if ( gene != null ) {

@@ -1,22 +1,29 @@
 Ext.namespace('Gemma');
 /**
- * Holds the list of available db backed and session backed ExpressionExperiment sets from. This is a separate class so it can be more easily shared
- * between components. It also knows which record is selected, unlike the default store.
  * 
- * @class Gemma.UserSessionDatasetGroupStore
+ * Creates a new session-bound experiment set
+ * 
+ * This store should only be used for creation, use UserSessionDatasetGroupStore for the rest of CRUD
+ * 
+ * Though this should only be used for creation, EXT requires all CRUD operations to be defined:
+ * read: retrieves all session-bound groups
+ * update: uses same method as UserSessionDatasetGroupStore
+ * destroy: uses same method as UserSessionDatasetGroupStore
+ * 
+ * @class Gemma.SessionDatasetGroupStore
  * @extends Ext.data.Store
- * @see DatasetGroupCombo
+ * @see DatasetGroupCombo, UserSessionDatasetGroupStore
  */
-Gemma.UserSessionDatasetGroupStore = function(config) {
+Gemma.SessionDatasetGroupStore = function(config) {
 
 	/*
 	 * Leave this here so copies of records can be constructed.
 	 */
 	this.record = Ext.data.Record.create([{
+				name: "reference"
+			},{
 				name : "id",
 				type : "int"
-			},{
-				name: "reference"
 			},{
 				name : "name",
 				type : "string"
@@ -54,7 +61,7 @@ Gemma.UserSessionDatasetGroupStore = function(config) {
 	this.reader = new Ext.data.ListRangeReader({
 			}, this.record);
 
-	Gemma.UserSessionDatasetGroupStore.superclass.constructor.call(this, config);
+	Gemma.SessionDatasetGroupStore.superclass.constructor.call(this, config);
 
 };
 
@@ -63,25 +70,25 @@ Gemma.UserSessionDatasetGroupStore = function(config) {
  * @class Gemma.DatasetGroupStore
  * @extends Ext.data.Store
  */
-Ext.extend(Gemma.UserSessionDatasetGroupStore, Ext.data.Store, {
+Ext.extend(Gemma.SessionDatasetGroupStore, Ext.data.Store, {
 
 			autoLoad : true,
 			autoSave : false,
 			selected : null,
 
 			proxy : new Ext.data.DWRProxy({
-						apiActionToHandlerMap : {
-							read : {
-								dwrFunction : ExpressionExperimentSetController.loadAllUserAndSessionGroups
+						apiActionToHandlerMap: {
+							read: {
+								dwrFunction: ExpressionExperimentSetController.loadAllSessionGroups
 							},
-							create : {
-								dwrFunction : ExpressionExperimentSetController.addUserAndSessionGroups
+							create: {
+								dwrFunction: ExpressionExperimentSetController.addSessionGroups
 							},
-							update : {
-								dwrFunction : ExpressionExperimentSetController.updateUserAndSessionGroups
+							update: {
+								dwrFunction: ExpressionExperimentSetController.updateUserAndSessionGroups
 							},
-							destroy : {
-								dwrFunction : ExpressionExperimentSetController.removeUserAndSessionGroups
+							destroy: {
+								dwrFunction: ExpressionExperimentSetController.removeUserAndSessionGroups
 							}
 						}
 					}),

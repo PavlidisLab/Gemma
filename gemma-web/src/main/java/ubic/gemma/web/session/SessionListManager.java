@@ -112,59 +112,12 @@ public class SessionListManager {
         return null;
     }
     
-    /**
-     * Get the members of a DB or session-bound group using the group's session-bound id
-     * members are returned as expression experiment value objects
-     * @param groupsSessionId the session-bound id for a group
-     * @return
-     */
-    public Collection<ExpressionExperimentValueObject> getExperimentsInSetBySessionBoundId( Long sessionBoundId ) {
-
-        Collection<ExpressionExperimentValueObject> results = null;
-
-        // if group is db backed
-        if ( isDbBackedExperimentSetSessionId( sessionBoundId ) ) {
-
-            results = getExperimentsInSet( getDbExperimentSetIdBySessionId( sessionBoundId ) );
-
-        }
-        // if group is session bound
-        else {
-
-            Collection<ExpressionExperimentSetValueObject> sessionExperimentSets = getRecentExperimentSets();
-            
-            Collection<ExpressionExperiment> expressionExperiments = null;
-
-            for ( ExpressionExperimentSetValueObject eesvo : sessionExperimentSets ) {
-                if ( sessionBoundId.equals( eesvo.getSessionId() ) ) {
-                    expressionExperiments = expressionExperimentService.loadMultiple( eesvo
-                            .getExpressionExperimentIds() );
-                    break;
-                }
-            }
-
-            if ( expressionExperiments != null ) {
-
-                results = new HashSet<ExpressionExperimentValueObject>();
-
-                for ( ExpressionExperiment ee : expressionExperiments ) {
-
-                    results.add( new ExpressionExperimentValueObject( ee ) );
-
-                }
-
-            }
-
-        }
-
-        return results;
-    }
     
     /**
      * Get the members of session-bound group using the group's reference object
      * if a reference is passed in for a group that isn't session-bound, null is returned
      * members are returned as expression experiment value objects
-     * @param groupsSessionId the session-bound id for a group
+     * @param reference
      * @return
      */
     public Collection<ExpressionExperimentValueObject> getExperimentsInSetByReference( Reference reference ) {
@@ -174,7 +127,6 @@ public class SessionListManager {
         // if group is db backed
         if ( reference.getType() == Reference.DATABASE_BACKED_GROUP ) {
 
-            //results = getExperimentsInSet( getDbExperimentSetIdBySessionId( reference.getId() ) );
             return results;
 
         }
@@ -186,7 +138,7 @@ public class SessionListManager {
             Collection<ExpressionExperiment> expressionExperiments = null;
 
             for ( ExpressionExperimentSetValueObject eesvo : sessionExperimentSets ) {
-                if ( reference.getId().equals( eesvo.getSessionId() ) ) {
+                if ( reference.equals( eesvo.getReference() ) ) {
                     expressionExperiments = expressionExperimentService.loadMultiple( eesvo
                             .getExpressionExperimentIds() );
                     break;
@@ -209,55 +161,12 @@ public class SessionListManager {
 
         return results;
     }
-    
-    /**
-     * Get the members of a DB or session-bound group using the group's session-bound id
-     * members are returned as gene value objects
-     * @param groupsSessionId the session-bound id for a group
-     * @return
-     */
-    public Collection<GeneValueObject> getGenesInSetBySessionBoundId( Long sessionBoundId ) {
 
-        Collection<GeneValueObject> results = null;
-
-        if ( isDbBackedGeneSetSessionId( sessionBoundId ) ) {
-            results = getGenesInGroup( getDbGeneSetIdBySessionId( sessionBoundId ) );
-
-        } else {
-
-            Collection<GeneSetValueObject> sessionGeneSets = getRecentGeneSets();
-
-            Collection<Gene> genes = null;
-
-            for ( GeneSetValueObject gsvo : sessionGeneSets ) {
-                if ( sessionBoundId.equals( gsvo.getSessionId() ) ) {
-                    genes = geneService.loadMultiple( gsvo.getGeneIds() );
-                    break;
-                }
-            }
-
-            if ( genes != null ) {
-
-                results = new HashSet<GeneValueObject>();
-
-                for ( Gene g : genes ) {
-
-                    results.add( new GeneValueObject( g ) );
-
-                }
-
-            }
-
-        }
-
-        return results;
-
-    }
     /**
      * Get the members of session-bound group using the group's reference object
      * if a reference is passed in for a group that isn't session-bound, null is returned
      * members are returned as expression experiment value objects
-     * @param groupsSessionId the session-bound id for a group
+     * @param reference
      * @return
      */
     public Collection<GeneValueObject> getGenesInSetByReference( Reference reference ) {
@@ -265,7 +174,7 @@ public class SessionListManager {
         Collection<GeneValueObject> results = null;
 
         if(reference.getType() == Reference.DATABASE_BACKED_GROUP){
-            results = getGenesInGroup( getDbGeneSetIdBySessionId( reference.getId() ) );
+            return null;
         }
         else if(reference.getType() == Reference.SESSION_BOUND_GROUP) {
 
@@ -274,7 +183,7 @@ public class SessionListManager {
             Collection<Gene> genes = null;
 
             for ( GeneSetValueObject gsvo : sessionGeneSets ) {
-                if ( reference.getId().equals( gsvo.getSessionId() ) ) {
+                if ( reference.equals( gsvo.getReference() ) ) {
                     genes = geneService.loadMultiple( gsvo.getGeneIds() );
                     break;
                 }
@@ -360,28 +269,7 @@ public class SessionListManager {
 
     }
 
-    // this gives result(from the DB) unique Session Ids(used by the front end store) if it doesn't already have one
-    public void setUniqueGeneSetStoreIds( Collection<GeneSetValueObject> result ) {
-
-        // this cast is safe because we know that we are getting a Collection of GeneSetValueObjects(which implements
-        // GemmaSessionBackedValueObject
-        @SuppressWarnings("unchecked")
-        Collection<GemmaSessionBackedValueObject> castedCollection = ( Collection ) result;
-
-        geneSetList.setUniqueSetStoreIds( castedCollection );
-
-    }
     
-    public boolean isDbBackedGeneSetSessionId( Long sessionId ) {
-
-        return geneSetList.isDbBackedSessionId( sessionId );
-
-    }
-
-    public Long getDbGeneSetIdBySessionId( Long sessionId ) {
-        return geneSetList.getDbIdFromSessionId( sessionId );
-    }
-
     public Long incrementAndGetLargestGeneSetSessionId() {
         return geneSetList.incrementAndGetLargestSessionId();
     }
@@ -413,53 +301,8 @@ public class SessionListManager {
 
     }
 
-    public void setUniqueExperimentSetStoreIds( Collection<ExpressionExperimentSetValueObject> result ) {
-
-        // this cast is safe because we know that we are getting a Collection of
-        // ExpressionExperimentSetValueObjects(which implements GemmaSessionBackedValueObject
-        @SuppressWarnings("unchecked")
-        Collection<GemmaSessionBackedValueObject> castedCollection = ( Collection ) result;
-
-        experimentSetList.setUniqueSetStoreIds( castedCollection );
-
-    }
-
     public Long incrementAndGetLargestExperimentSetSessionId() {
         return experimentSetList.incrementAndGetLargestSessionId();
     }
 
-    public boolean isDbBackedExperimentSetSessionId( Long sessionId ) {
-
-        return experimentSetList.isDbBackedSessionId( sessionId );
-
-    }
-
-    public Long getDbExperimentSetIdBySessionId( Long sessionId ) {
-        return experimentSetList.getDbIdFromSessionId( sessionId );
-    }
-
-
-    // this gives result(from the DB) unique Session Ids(used by the front end store) if it doesn't already have one
-    public void setUniqueStoreIdsForSearchResultDisplayObjectsExperiments( List<SearchResultDisplayObject> result ) {
-
-        // this cast is safe because we know that we are getting a Collection of SearchResultDisplayObject(which implements
-        // GemmaSessionBackedValueObject
-        @SuppressWarnings("unchecked")
-        Collection<GemmaSessionBackedValueObject> castedCollection = ( Collection ) result;
-
-        experimentSetList.setUniqueSetStoreIds( castedCollection );
-
-    }    
-
-    // this gives result(from the DB) unique Session Ids(used by the front end store) if it doesn't already have one
-    public void setUniqueStoreIdsForSearchResultDisplayObjectsGenes( List<SearchResultDisplayObject> result ) {
-
-        // this cast is safe because we know that we are getting a Collection of SearchResultDisplayObject(which implements
-        // GemmaSessionBackedValueObject
-        @SuppressWarnings("unchecked")
-        Collection<GemmaSessionBackedValueObject> castedCollection = ( Collection ) result;
-
-        geneSetList.setUniqueSetStoreIds( castedCollection );
-
-    }
 }

@@ -40,13 +40,6 @@ import ubic.gemma.search.SearchResult;
  * object types handled are: Gene, GeneSet, GeneSetValueObject, ExpressionExperiment and ExpressionExperimentSet
  * SearchObject is also handled if the object it holds is of any of those types 
  * 
- * sessionId field is the unique id that a search result is given when session-bound and db-backed entities
- * will be displayed together if a geneSet is session-bound (has the type: "usergeneSetSession"), then id=sessionId if a
- * geneSet is db-backed (has the type: "geneSet" or "usergeneSet"), then id is the database id for the set and sessionId
- * is the id used by the store
- * 
- * Before using a collection of these objects to feed a store, you must run setStoreIds(Collection<this>)
- * so that each record will have a unique id for displaying in ext
  * 
  * @author thea
  * @version $Id$
@@ -106,7 +99,6 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
             setValues( eeSet );
         } else {
             this.reference = null;
-            this.storeId = null;
             this.isGroup = false;
             this.size = -1;
             this.taxonId = new Long( -1 );
@@ -192,7 +184,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param geneSet
      */
     private void setValues( GeneSetValueObject geneSet ) {
-        if(geneSet.isSession()){
+        if(geneSet.isSessionBound()){
             this.reference = new Reference(geneSet.getId(), Reference.SESSION_BOUND_GROUP) ;
         }else{
             this.reference = new Reference(geneSet.getId(), Reference.DATABASE_BACKED_GROUP) ;
@@ -204,7 +196,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.taxonName = geneSet.getTaxonName();
         this.name = geneSet.getName();
         this.description = geneSet.getDescription();
-        this.type = ( geneSet.isSession() ) ? "geneSetSession" : "geneSet";
+        this.type = ( geneSet.isSessionBound() ) ? "geneSetSession" : "geneSet";
         this.memberIds = geneSet.getGeneIds();
     }
 
@@ -248,8 +240,6 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
 
     private Class<?> resultClass;
-
-    private Long storeId;
     
     private Reference reference;
 
@@ -281,14 +271,6 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     public void setReference( Reference reference ) {
         this.reference = reference;
-    }
-
-    public Long getStoreId() {
-        return this.storeId;
-    }
-
-    public void setStoreId( Long storeId) {
-        this.storeId= storeId;
     }
 
     public Boolean getIsGroup() {

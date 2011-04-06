@@ -462,12 +462,20 @@ ExpressionExperimentSetController.addUserAndSessionGroups = function(p0, callbac
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addUserAndSessionGroups', p0,
 			callback);
 }
+ExpressionExperimentSetController.addSessionGroups = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addSessionGroups', p0,
+			callback);
+}
 ExpressionExperimentSetController.updateUserAndSessionGroups = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateUserAndSessionGroups', p0,
 			callback);
 }
 ExpressionExperimentSetController.loadAllUserAndSessionGroups = function(callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAllUserAndSessionGroups',
+			callback);
+}
+ExpressionExperimentSetController.loadAllSessionGroups = function(callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAllSessionGroups',
 			callback);
 }
 ExpressionExperimentSetController.getExperimentsInSet = function(p0, callback) {
@@ -648,9 +656,6 @@ if (GeneSetController == null)
 GeneSetController._path = '/Gemma/dwr';
 GeneSetController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
-}
-GeneSetController.getGenesInGroupBySessionId = function(p0, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroupBySessionId', p0, callback);
 }
 GeneSetController.getGeneSetsByGOId = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGeneSetsByGO', p0, p1, callback);

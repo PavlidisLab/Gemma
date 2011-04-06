@@ -47,7 +47,13 @@ public class Reference implements Serializable {
     public static final int DATABASE_BACKED_GROUP = 3;
     public static final int SESSION_BOUND_GROUP = 4;
     public static final int SESSION_UNBOUND_GROUP = 5; // session group manager doesn't know about it
-
+    
+    public boolean isSessionBound(){
+        if(this.type == SESSION_BOUND_GROUP || this.type == SESSION_UNBOUND_GROUP){
+            return true;
+        }
+        return false;
+    }
     /**
      * default constructor to satisfy java bean contract
      */

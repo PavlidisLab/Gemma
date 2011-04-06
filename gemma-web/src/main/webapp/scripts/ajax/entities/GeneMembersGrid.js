@@ -146,7 +146,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				// function to deal with user choice of what to do after editing an existing group
 				this.editedExistingGroup = function(btn){
 											if (btn === 'no') { // no is don't save
-												this.saveToSession();
+												this.createInSession();
 											}
 											else 
 												if (btn === 'ok') { // ok is save
@@ -386,19 +386,19 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				if(!this.groupName || this.groupName === null || this.groupName === ''){
 					this.newGroupName = "Gene group created: "+(new Date()).toString();
 				} else{
-					this.newGroupName = 'Edited \''+this.groupName+'\' group';
 					// adding time to end of session-bound group titles in case it's not unique
 					var currentTime = new Date();
 					var hours = currentTime.getHours();
 					var minutes = currentTime.getMinutes();
 					if (minutes < 10) {minutes = "0" + minutes;}
-					this.newGroupName += ' ('+hours+':'+minutes+')';
+					this.newGroupName = '('+hours+':'+minutes+')';
+					this.newGroupName += ' Edited \''+this.groupName+'\' group';
 				}
 								
 				// if description for new group wasn't passed from parent component, make one up
 				if(!this.newGroupDescription || this.newGroupDescription === null){
-					this.newGroupDescription = "Temporary gene group saved "+(new Date()).toString(); 
-				} 
+					this.newGroupDescription = "Temporary experiment group saved "+(new Date()).toString(); 
+				} 		
 			},
 
 			/**
@@ -411,7 +411,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					return;
 				}
 				this.createDetails();
-				this.saveToSession();
+				this.createInSession();
 			},
 
 			/**
@@ -432,7 +432,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (!Ext.get('hasUser').getValue()) {
 						Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+
 											" however, your list will be available temporarily.");
-						this.saveToSession();
+						this.createInSession();
 				}else{
 					
 					// if geneGroupId is null, then there was no group to start with
@@ -474,7 +474,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					
 				
 			},
-			saveToSession : function() {
+			createInSession : function() {
 				var name = this.newGroupName;
 				var description = this.newGroupDescription;
 				var taxonName;
@@ -489,7 +489,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					taxonId = this.taxonId;
 				}
 			
-				var sessionStore = new Gemma.UserSessionGeneGroupStore();		
+				//var sessionStore = new Gemma.UserSessionGeneGroupStore();
+				var sessionStore = new Gemma.SessionGeneGroupStore();		
 		
 				var ids = this.getGeneIds();
 		
@@ -497,12 +498,12 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				var rec = new RecType();
 				rec.set("geneIds", ids);
 				rec.set("reference", reference);
+				rec.set("id", "-1");
 				rec.set("size", ids.length);	
 				rec.set("name", name);
 				rec.set("description",description);
 				rec.set("taxonName",taxonName);
 				rec.set("taxonId",taxonId);
-				rec.set("session", true);
 				
 				sessionStore.add(rec);
 				
@@ -532,7 +533,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		rec.set("description",description);
 		rec.set("taxonName",taxonName);
 		rec.set("taxonId",taxonId);
-		rec.set("session", false);
 		
 		groupStore.add(rec);
 		
