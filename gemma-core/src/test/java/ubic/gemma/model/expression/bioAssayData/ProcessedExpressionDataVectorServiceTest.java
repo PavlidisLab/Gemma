@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,15 +73,32 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
     @Autowired
     private CompositeSequenceService compositeSequenceService;
 
+    Collection<ExpressionExperiment> ees;
+
+    @After
+    public void after() {
+        if ( ees.isEmpty() ) return;
+        try {
+            for ( ExpressionExperiment ee : ees ) {
+                expressionExperimentService.delete( ee );
+            }
+        } catch ( Exception e ) {
+
+        }
+    }
+
+    @Before
+    public void before() throws Exception {
+        ees = getDataset();
+    }
+
     /**
      * Test method for
      * {@link ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDaoImpl#getProcessedDataArrays(java.util.Collection, java.util.Collection)}
      * .
      */
     @Test
-    @Before
     public void testGetProcessedDataMatrices() throws Exception {
-        Collection<ExpressionExperiment> ees = getDataset();
 
         if ( ees == null ) {
             log.error( "Test skipped because of failure to fetch data." );
@@ -99,6 +117,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         Collection<Gene> genes = getGeneAssociatedWithEe( ee );
         v = processedDataVectorService.getProcessedDataArrays( ees, genes );
         assertTrue( "got " + v.size() + ", expected at least 40", 40 <= v.size() );
+
     }
 
     /**

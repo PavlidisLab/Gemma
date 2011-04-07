@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,18 @@ public class DesignElementDataVectorServiceTest extends BaseSpringContextTest {
     @Before
     public void setup() throws Exception {
         dedv = RawExpressionDataVector.Factory.newInstance();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        try {
+            if ( newee != null && newee.getId() != null ) {
+                expressionExperimentService.delete( newee );
+            }
+        } catch ( Exception e ) {
+
+        }
+
     }
 
     @Test

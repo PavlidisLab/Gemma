@@ -322,12 +322,16 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
 
     @After
     public void tearDown() throws Exception {
-        // if ( ee != null && ee.getId() != null ) {
-        // expressionExperimentService.delete( ee );
-        // }
-        // if ( newee != null && newee.getId() != null ) {
-        // expressionExperimentService.delete( newee );
-        // }
+        try {
+            if ( ee != null && ee.getId() != null ) {
+                expressionExperimentService.delete( ee );
+            }
+            if ( newee != null && newee.getId() != null ) {
+                expressionExperimentService.delete( newee );
+            }
+        } catch ( Exception e ) {
+
+        }
 
     }
 }
