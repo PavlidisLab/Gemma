@@ -55,13 +55,14 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
             // occurs in a "accessioned in GEO as..."
             assertFalse( details.contains( "<strong>GPL8321" ) );
         } catch ( Exception e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" )
-                    || e.getMessage().contains( "GEO returned an error" ) ) {
+            if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" )
+                    || e.getMessage().contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
-            if ( e.getCause() instanceof UnknownHostException ) {
-                log.warn( "UnknownHostException, skipping test" );
+            if ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
+                    || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage().contains( "503" ) ) {
+                log.warn( "NCBI returned error, skipping test" );
                 return;
             }
             throw e;
@@ -109,13 +110,14 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
             assertEquals( oldCount + 1, newCount );
         } catch ( Exception e ) {
-            if ( e.getMessage().contains( "502" ) || e.getMessage().contains( "503" )
-                    || e.getMessage().contains( "GEO returned an error" ) ) {
+            if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" )
+                    || e.getMessage().contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
-            if ( e.getCause() instanceof UnknownHostException ) {
-                log.warn( "UnknownHostException, skipping test" );
+            if ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
+                    || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage().contains( "503" ) ) {
+                log.warn( "NCBI returned error, skipping test" );
                 return;
             }
             throw e;
