@@ -37,6 +37,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	stateEvents : ["beforesearch"],
 	eeSetReady : false,
 	
+	
+	// share state with differential visualization page
+	stateId : "Gemma.AnalysisResultsSearchForm",
+	
 		
 	PREVIEW_SIZE : 5,
 	
@@ -50,8 +54,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	// using Gemma.DEFAULT_THRESHOLD, Gemma.MIN_THRESHOLD, Gemma.MAX_THRESHOLD
 	
 
-	// share state with main page...
-	stateId : "Gemma.CoexpressionSearch",
 	geneIds : [],
 	geneGroupId : null, // keep track of what gene group has been selected
 	experimentIds : [],
@@ -284,7 +286,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		}
 		var msg = this.validateDiffExSearch(dsc);
 		if (msg.length !== 0) {
-			this.handleError(msg, e);
+			this.handleError(msg);
 			return;
 		}else{
 			
@@ -293,6 +295,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				
 				if (!dsc) {
 					dsc = this.getDiffSearchCommand();
+				}else{
+					dsc.selectedFactors = efmap;
 				}
 				this.clearError();
 				var msg = this.validateDiffExSearch(dsc);
@@ -1221,3 +1225,5 @@ Ext.LinkButton = Ext.extend(Ext.Button, {
     buttonSelector : 'a:first',
 	ctCls: "transparent-btn" // no button image
 });
+
+Ext.reg('analysisResultsSearchForm', Gemma.AnalysisResultsSearchForm);
