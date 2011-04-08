@@ -411,7 +411,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         /*
          * Log transform, if necessary
          */
-        if ( !onLogScale( quantitationType, namedMatrix ) ) {
+        if ( !config.isOnLogScale() && !onLogScale( quantitationType, namedMatrix ) ) {
             MatrixStats.logTransform( namedMatrix );
         }
 

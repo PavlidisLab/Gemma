@@ -16,6 +16,12 @@ package ubic.gemma.analysis.preprocess.batcheffects;
 
 //import static org.junit.Assert.assertEquals;
 
+import java.awt.Color;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,13 +32,22 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartUtilities;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.dataStructure.matrix.MatrixUtil;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.basecode.math.DesignMatrix;
 import ubic.basecode.math.LeastSquaresFit;
+import ubic.basecode.math.distribution.Histogram;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
@@ -40,6 +55,9 @@ import cern.colt.matrix.impl.DenseDoubleMatrix1D;
 import cern.colt.matrix.impl.DenseDoubleMatrix2D;
 import cern.colt.matrix.linalg.Algebra;
 import cern.jet.math.Functions;
+import cern.jet.random.Gamma;
+import cern.jet.random.Normal;
+import cern.jet.random.engine.MersenneTwister;
 
 /**
  * An implementation of the ComBat algorithm described by Johson et al ({@link http://jlab.byu.edu/ComBat/Download.html}
@@ -77,17 +95,27 @@ public class ComBat<R, C> {
     /**
      * Prior distribution
      */
-    private DoubleMatrix2D deltaHat;
+    private DoubleMatrix2D deltaHat = null;
 
     /**
      * The data matrix
      */
-    private DoubleMatrix2D y;
+    private DoubleMatrix2D y = null;
 
     /**
      * The design matrix
      */
-    private DoubleMatrix2D X;
+    private DoubleMatrix2D X = null;
+
+    private DoubleArrayList aPrior = null;
+
+    private DoubleArrayList bPrior = null;
+
+    private DoubleMatrix2D gammaHat = null;
+
+    private DoubleArrayList t2 = null;
+
+    private DoubleArrayList gammaBar = null;
 
     public ComBat( DoubleMatrix<R, C> data, ObjectMatrix<C, String, Object> sampleInfo ) {
 
@@ -107,6 +135,257 @@ public class ComBat<R, C> {
 
     public DoubleMatrix2D getDesignMatrix() {
         return this.X;
+    }
+
+    /**
+     * Make diagnostic plots
+     * 
+     * @param filePrefix
+     */
+    public void plot( String filePrefix ) {
+
+        if ( this.gammaHat == null ) throw new IllegalArgumentException( "You must call 'run' first" );
+
+        /*
+         * View the distribution of gammaHat, which we assume will have a normal distribution
+         */
+        DoubleMatrix1D ghr = gammaHat.viewRow( 0 );
+        int NUM_HIST_BINS = 100;
+        Histogram gammaHatHist = new Histogram( "GammaHat", NUM_HIST_BINS, ghr );
+        XYSeries ghplot = gammaHatHist.plot();
+
+        Normal rn = new Normal( this.gammaBar.get( 0 ), Math.sqrt( this.t2.get( 0 ) ), new MersenneTwister() );
+
+        Histogram ghtheoryT = new Histogram( "Gamma", NUM_HIST_BINS, gammaHatHist.min(), gammaHatHist.max() );
+        for ( int i = 0; i < 10000; i++ ) {
+            double n = rn.nextDouble();
+            ghtheoryT.fill( n );
+        }
+        XYSeries ghtheory = ghtheoryT.plot();
+
+        OutputStream os = null;
+
+        try {
+            File tmpfile = File.createTempFile( filePrefix + ".gammahat.histogram.", ".png" );
+            log.info( tmpfile );
+            os = new FileOutputStream( tmpfile );
+        } catch ( FileNotFoundException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+
+        writePlot( os, ghplot, ghtheory );
+
+        /*
+         * View the distribution of deltaHat, which we assume has an inverse gamma distribution
+         */
+        DoubleMatrix1D dhr = deltaHat.viewRow( 0 );
+        Histogram deltaHatHist = new Histogram( "DeltaHat", NUM_HIST_BINS, dhr );
+        XYSeries dhplot = deltaHatHist.plot();
+        Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
+
+        Histogram deltaHatT = new Histogram( "Gamma", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
+
+        for ( int i = 0; i < 10000; i++ ) {
+            double invg = 1.0 / g.nextDouble();
+            deltaHatT.fill( invg );
+        }
+        XYSeries dhtheory = deltaHatT.plot();
+
+        os = null;
+
+        try {
+            File tmpfile = File.createTempFile( filePrefix + ".deltahat.histogram.", ".png" );
+            log.info( tmpfile );
+            os = new FileOutputStream( tmpfile );
+        } catch ( FileNotFoundException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+        writePlot( os, dhplot, dhtheory );
+    }
+
+    /**
+     * @param os
+     * @param empirical
+     * @param theory
+     */
+    private void writePlot( OutputStream os, XYSeries empirical, XYSeries theory ) {
+        // ChartFactory.setChartTheme( StandardChartTheme.createLegacyTheme() );
+        XYSeriesCollection xySeriesCollection = new XYSeriesCollection();
+        xySeriesCollection.addSeries( empirical );
+        xySeriesCollection.addSeries( theory );
+        JFreeChart chart = ChartFactory.createXYLineChart( "", "Magnitude", "Density", xySeriesCollection,
+                PlotOrientation.VERTICAL, false, false, false );
+        chart.getXYPlot().setRangeGridlinesVisible( false );
+        chart.getXYPlot().setDomainGridlinesVisible( false );
+        XYItemRenderer renderer = chart.getXYPlot().getRenderer();
+        renderer.setBasePaint( Color.white );
+
+        try {
+            int size = 500;
+            ChartUtilities.writeChartAsPNG( os, chart, 500, size );
+            os.close();
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        }
+    }
+
+    /**
+     * @return parametric fit
+     */
+    public DoubleMatrix2D run() {
+        return this.run( true );
+    }
+
+    /**
+     * @param parametric if false, use the non-parametric (slower) method for estimating the priors.
+     * @return
+     */
+    public DoubleMatrix2D run( boolean parametric ) {
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        DoubleMatrix2D sdata = standardize( y, X );
+
+        checkForProblems( sdata );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Standardized" );
+        }
+        timer.reset();
+        timer.start();
+
+        gammaHat( sdata );
+
+        deltaHat( sdata );
+        // assertEquals( 1.618, deltaHat.get( 0, 0 ), 0.001 );
+
+        // gamma.bar <- apply(gamma.hat, 1, mean)
+        gammaBar = new DoubleArrayList();
+        t2 = new DoubleArrayList();
+        for ( int batchIndex = 0; batchIndex < gammaHat.rows(); batchIndex++ ) {
+            double mean = DescriptiveWithMissing.mean( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ) );
+            gammaBar.add( mean );
+            t2.add( DescriptiveWithMissing.sampleVariance( new DoubleArrayList( gammaHat.viewRow( batchIndex )
+                    .toArray() ), mean ) );
+        }
+
+        // assertEquals( -0.092144, gammaBar.get( 0 ), 0.001 );
+        // assertEquals( 0.2977, t2.get( 1 ), 0.001 );
+
+        aPrior = aPrior( deltaHat );
+        bPrior = bPrior( deltaHat );
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Computed priors" );
+        }
+
+        // assertEquals( 17.4971, aPrior.get( 0 ), 0.0001 );
+        // assertEquals( 4.514, bPrior.get( 1 ), 0.0001 );
+
+        int batchIndex = 0;
+        DoubleMatrix2D gammastar = new DenseDoubleMatrix2D( numBatches, numProbes );
+        DoubleMatrix2D deltastar = new DenseDoubleMatrix2D( numBatches, numProbes );
+
+        for ( String batchId : batches.keySet() ) {
+            timer.reset();
+            timer.start();
+            DoubleMatrix2D batchData = this.getBatchData( sdata, batchId );
+
+            DoubleMatrix1D[] batchResults;
+
+            if ( parametric ) {
+                batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ),
+                        gammaBar.get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ), bPrior
+                                .get( batchIndex ) );
+            } else {
+                batchResults = nonParametricFit( batchData, gammaHat.viewRow( batchIndex ), deltaHat
+                        .viewRow( batchIndex ) );
+            }
+
+            for ( int j = 0; j < batchResults[0].size(); j++ ) {
+                gammastar.set( batchIndex, j, batchResults[0].get( j ) );
+            }
+            for ( int j = 0; j < batchResults[1].size(); j++ ) {
+                deltastar.set( batchIndex, j, batchResults[1].get( j ) );
+            }
+            batchIndex++;
+            if ( timer.getTime() > 1000 ) {
+                log.info( "Corrected batch " + batchIndex );
+            }
+        }
+
+        timer.reset();
+        timer.start();
+
+        DoubleMatrix2D adjustedData = rawAdjust( sdata, gammastar, deltastar );
+
+        // assertEquals( -0.95099, adjustedData.get( 18, 0 ), 0.0001 );
+        // assertEquals( -0.30273984, adjustedData.get( 14, 6 ), 0.0001 );
+        // assertEquals( 0.2097977, adjustedData.get( 7, 3 ), 0.0001 );
+        // log.info( adjustedData );
+        DoubleMatrix2D result = restoreScale( adjustedData );
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Done" );
+        }
+        return result;
+    }
+
+    /**
+     * @param d
+     * @return
+     */
+    private DoubleArrayList aPrior( DoubleMatrix2D d ) {
+        DoubleArrayList result = new DoubleArrayList();
+        for ( int i = 0; i < d.rows(); i++ ) {
+            DoubleArrayList dd = new DoubleArrayList( d.viewRow( i ).toArray() );
+            double mean = DescriptiveWithMissing.mean( dd );
+            double var = DescriptiveWithMissing.sampleVariance( dd, mean );
+
+            result.add( ( 2.0 * var + Math.pow( mean, 2 ) ) / var );
+        }
+        return result;
+    }
+
+    /**
+     * @param d
+     * @return
+     */
+    private DoubleArrayList bPrior( DoubleMatrix2D d ) {
+        DoubleArrayList result = new DoubleArrayList();
+        for ( int i = 0; i < d.rows(); i++ ) {
+            DoubleArrayList dd = new DoubleArrayList( d.viewRow( i ).toArray() );
+            double mean = DescriptiveWithMissing.mean( dd );
+
+            double var = DescriptiveWithMissing.sampleVariance( dd, mean );
+            result.add( ( mean * var + Math.pow( mean, 3 ) ) / var );
+        }
+        return result;
+    }
+
+    /**
+     * Check sdata for problems. If the design is not of full rank, we get NaN in standardized data.
+     */
+    private void checkForProblems( DoubleMatrix2D sdata ) {
+        int numMissing = 0;
+        int total = 0;
+        for ( int i = 0; i < sdata.rows(); i++ ) {
+            DoubleMatrix1D row = sdata.viewRow( i );
+            for ( int j = 0; j < sdata.columns(); j++ ) {
+                if ( Double.isNaN( row.getQuick( j ) ) ) {
+                    numMissing++;
+                }
+                total++;
+            }
+        }
+
+        if ( total == numMissing ) {
+            throw new IllegalStateException( "Could not complete batch correction due, model must not be of full rank." );
+        }
     }
 
     /**
@@ -143,6 +422,58 @@ public class ComBat<R, C> {
     }
 
     /**
+     * @param sdata
+     * @return
+     */
+    private void gammaHat( DoubleMatrix2D sdata ) {
+        DoubleMatrix2D Xb = X.viewPart( 0, 0, X.rows(), numBatches );
+        gammaHat = new LeastSquaresFit( Xb, sdata ).getCoefficients();
+    }
+
+    /**
+     * @param sdata data to be sliced
+     * @param batchId which batch
+     */
+    private DoubleMatrix2D getBatchData( DoubleMatrix2D sdata, String batchId ) {
+        Collection<C> sampleNames = batches.get( batchId );
+
+        DoubleMatrix2D result = new DenseDoubleMatrix2D( sdata.rows(), sampleNames.size() );
+
+        int i = 0;
+        for ( C sname : sampleNames ) {
+            DoubleMatrix1D colInBatch = sdata.viewColumn( data.getColIndexByName( sname ) );
+            for ( int k = 0; k < colInBatch.size(); k++ ) {
+                result.set( k, i, colInBatch.get( k ) );
+            }
+            i++;
+        }
+        // log.info( result );
+        return result;
+    }
+
+    /**
+     * @param batchId
+     * @return
+     */
+    private DoubleMatrix2D getBatchDesign( String batchId ) {
+        Collection<C> sampleNames = batches.get( batchId );
+
+        DoubleMatrix2D result = new DenseDoubleMatrix2D( sampleNames.size(), batches.keySet().size() );
+
+        for ( int j = 0; j < batches.keySet().size(); j++ ) {
+            int i = 0;
+
+            for ( C sname : sampleNames ) {
+                DoubleMatrix1D rowInBatch = X.viewRow( data.getColIndexByName( sname ) );
+                result.set( i, j, rowInBatch.get( j ) );
+                i++;
+            }
+        }
+        // log.info( result );
+        return result;
+    }
+
+    /**
      * @param batchFactorColumnIndex
      * @return
      */
@@ -163,210 +494,6 @@ public class ComBat<R, C> {
             r++;
         }
         return sampleInfoWithoutBatchFactor;
-    }
-
-    /**
-     * @param data
-     * @param sampleInfo
-     * @return
-     */
-    public DoubleMatrix2D run() {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        DoubleMatrix2D sdata = standardize( y, X );
-
-        checkForProblems( sdata );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Standardized" );
-        }
-        timer.reset();
-        timer.start();
-
-        DoubleMatrix2D gammaHat = gammaHat( sdata );
-
-        deltaHat( sdata );
-        // assertEquals( 1.618, deltaHat.get( 0, 0 ), 0.001 );
-
-        // gamma.bar <- apply(gamma.hat, 1, mean)
-        DoubleArrayList gammaBar = new DoubleArrayList();
-        DoubleArrayList t2 = new DoubleArrayList();
-        for ( int batchIndex = 0; batchIndex < gammaHat.rows(); batchIndex++ ) {
-            double mean = DescriptiveWithMissing.mean( new DoubleArrayList( gammaHat.viewRow( batchIndex ).toArray() ) );
-            gammaBar.add( mean );
-            t2.add( DescriptiveWithMissing.sampleVariance( new DoubleArrayList( gammaHat.viewRow( batchIndex )
-                    .toArray() ), mean ) );
-        }
-
-        // assertEquals( -0.092144, gammaBar.get( 0 ), 0.001 );
-        // assertEquals( 0.2977, t2.get( 1 ), 0.001 );
-
-        DoubleArrayList aPrior = aPrior( deltaHat );
-        DoubleArrayList bPrior = bPrior( deltaHat );
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Computed priors" );
-        }
-
-        // assertEquals( 17.4971, aPrior.get( 0 ), 0.0001 );
-        // assertEquals( 4.514, bPrior.get( 1 ), 0.0001 );
-
-        int batchIndex = 0;
-        DoubleMatrix2D gammastar = new DenseDoubleMatrix2D( numBatches, numProbes );
-        DoubleMatrix2D deltastar = new DenseDoubleMatrix2D( numBatches, numProbes );
-
-        for ( String batchId : batches.keySet() ) {
-            timer.reset();
-            timer.start();
-            DoubleMatrix2D batchData = this.getBatchData( sdata, batchId );
-
-            DoubleMatrix1D[] batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat
-                    .viewRow( batchIndex ), gammaBar.get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ),
-                    bPrior.get( batchIndex ) );
-
-            for ( int j = 0; j < batchResults[0].size(); j++ ) {
-                gammastar.set( batchIndex, j, batchResults[0].get( j ) );
-            }
-            for ( int j = 0; j < batchResults[1].size(); j++ ) {
-                deltastar.set( batchIndex, j, batchResults[1].get( j ) );
-            }
-            batchIndex++;
-            if ( timer.getTime() > 1000 ) {
-                log.info( "Corrected batch " + batchIndex );
-            }
-        }
-
-        timer.reset();
-        timer.start();
-
-        DoubleMatrix2D adjustedData = rawAdjust( sdata, gammastar, deltastar );
-
-        // assertEquals( -0.95099, adjustedData.get( 18, 0 ), 0.0001 );
-        // assertEquals( -0.30273984, adjustedData.get( 14, 6 ), 0.0001 );
-        // assertEquals( 0.2097977, adjustedData.get( 7, 3 ), 0.0001 );
-        // log.info( adjustedData );
-        DoubleMatrix2D result = restoreScale( adjustedData );
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Done" );
-        }
-        return result;
-    }
-
-    /**
-     * Check sdata for problems. If the design is not of full rank, we get NaN in standardized data.
-     */
-    private void checkForProblems( DoubleMatrix2D sdata ) {
-        int numMissing = 0;
-        int total = 0;
-        for ( int i = 0; i < sdata.rows(); i++ ) {
-            DoubleMatrix1D row = sdata.viewRow( i );
-            for ( int j = 0; j < sdata.columns(); j++ ) {
-                if ( Double.isNaN( row.getQuick( j ) ) ) {
-                    numMissing++;
-                }
-                total++;
-            }
-        }
-
-        if ( total == numMissing ) {
-            throw new IllegalStateException( "Could not complete batch correction due, model must not be of full rank." );
-        }
-    }
-
-    /**
-     * @param d
-     * @return
-     */
-    private DoubleArrayList aPrior( DoubleMatrix2D d ) {
-        DoubleArrayList result = new DoubleArrayList();
-        for ( int i = 0; i < d.rows(); i++ ) {
-            DoubleArrayList dd = new DoubleArrayList( d.viewRow( i ).toArray() );
-            double mean = DescriptiveWithMissing.mean( dd );
-            double var = DescriptiveWithMissing.sampleVariance( dd, mean );
-
-            result.add( ( 2.0 * var + Math.pow( mean, 2 ) ) / var );
-        }
-        return result;
-    }
-
-    /**
-     * @param d
-     * @return
-     */
-    private DoubleArrayList bPrior( DoubleMatrix2D d ) {
-        DoubleArrayList result = new DoubleArrayList();
-        for ( int i = 0; i < d.rows(); i++ ) {
-            DoubleArrayList dd = new DoubleArrayList( d.viewRow( i ).toArray() );
-            double mean = DescriptiveWithMissing.mean( dd );
-
-            double var = DescriptiveWithMissing.sampleVariance( dd, mean );
-            result.add( ( mean * var + Math.pow( mean, 3 ) ) / var );
-        }
-        return result;
-    }
-
-    /**
-     * @param X
-     * @param sdata
-     * @return
-     */
-    private DoubleMatrix2D gammaHat( DoubleMatrix2D sdata ) {
-
-        DoubleMatrix2D Xb = X.viewPart( 0, 0, X.rows(), numBatches );
-        DoubleMatrix2D gammaHat = new LeastSquaresFit( Xb, sdata ).getCoefficients();
-
-        // assertEquals( -0.6671, gammaHat.get( 0, 0 ), 0.0001 );
-        return gammaHat;
-    }
-
-    /**
-     * @param sdata data to be sliced
-     * @param batchId which batch
-     * @param testMatrix needed to figure out which rows we need -- assumes sdata is in same order.
-     * @param batches batch information
-     */
-    private DoubleMatrix2D getBatchData( DoubleMatrix2D sdata, String batchId ) {
-        Collection<C> sampleNames = batches.get( batchId );
-
-        DoubleMatrix2D result = new DenseDoubleMatrix2D( sdata.rows(), sampleNames.size() );
-
-        int i = 0;
-        for ( C sname : sampleNames ) {
-            DoubleMatrix1D colInBatch = sdata.viewColumn( data.getColIndexByName( sname ) );
-            for ( int k = 0; k < colInBatch.size(); k++ ) {
-                result.set( k, i, colInBatch.get( k ) );
-            }
-            i++;
-        }
-        // log.info( result );
-        return result;
-    }
-
-    /**
-     * @param X
-     * @param batchId
-     * @param testMatrix
-     * @param batches
-     * @return
-     */
-    private DoubleMatrix2D getBatchDesign( String batchId ) {
-        Collection<C> sampleNames = batches.get( batchId );
-
-        DoubleMatrix2D result = new DenseDoubleMatrix2D( sampleNames.size(), batches.keySet().size() );
-
-        for ( int j = 0; j < batches.keySet().size(); j++ ) {
-            int i = 0;
-
-            for ( C sname : sampleNames ) {
-                DoubleMatrix1D rowInBatch = X.viewRow( data.getColIndexByName( sname ) );
-                result.set( i, j, rowInBatch.get( j ) );
-                i++;
-            }
-        }
-        // log.info( result );
-        return result;
     }
 
     /**
@@ -419,13 +546,13 @@ public class ComBat<R, C> {
      * @param gHat
      * @param dHat
      * @param gbar
-     * @param t2
+     * @param t2b
      * @param a
      * @param b
      * @return
      */
     private DoubleMatrix1D[] itSol( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat, double gbar,
-            double t2, double a, double b ) {
+            double t2b, double a, double b ) {
 
         DoubleMatrix1D n = rowNonMissingCounts( matrix );
         DoubleMatrix1D gold = gHat;
@@ -437,7 +564,7 @@ public class ComBat<R, C> {
         int MAXITERS = 200;
 
         while ( change > conv ) {
-            DoubleMatrix1D gnew = postMean( gHat, gbar, n, dold, t2 );
+            DoubleMatrix1D gnew = postMean( gHat, gbar, n, dold, t2b );
             DoubleMatrix1D sum2 = stepSum( matrix, gnew );
             DoubleMatrix1D dnew = postVar( sum2, n, a, b );
 
@@ -476,17 +603,63 @@ public class ComBat<R, C> {
     }
 
     /**
-     * The method used by ComBat is veerrryyy slow, and I don't know how many cases it will prove to be necessary.
-     * Probably it can be sped up computing corrections for each batch in parallel, and maybe Java is just plain faster.
-     * 
      * @param matrix
      * @param gHat
      * @param dHat
      * @return
      */
-    @SuppressWarnings("unused")
     private DoubleMatrix1D[] nonParametricFit( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat ) {
-        throw new UnsupportedOperationException( "This is too slow to want to implement yet." );
+        DoubleMatrix1D gstar = new DenseDoubleMatrix1D( matrix.rows() );
+        DoubleMatrix1D dstar = new DenseDoubleMatrix1D( matrix.rows() );
+        double twopi = 2.0 * Math.PI;
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+
+            DoubleMatrix1D x = MatrixUtil.removeMissing( matrix.viewRow( i ) );
+            int n = x.size();
+            double no2 = n / 2.0;
+
+            /*
+             * Vectorized schmectorized. In R you end up looping over the data many times. It's slow here too... but not
+             * too horrible. 1000 rows of a 10k probe data set takes about 10 seconds -- but this has to be done for
+             * each batch.
+             */
+            double sumLH = 0.0;
+            double sumgLH = 0.0;
+            double sumdLH = 0.0;
+            for ( int j = 0; j < matrix.rows(); j++ ) {
+
+                if ( j == i ) continue;
+                double g = gHat.getQuick( j );
+                double d = dHat.getQuick( j );
+
+                // compute the sum of squares of the difference between gHat[j] and the current data row.
+                double sum2 = x.copy().assign( Functions.minus( g ) ).aggregate( Functions.plus, Functions.square );
+
+                double LH = ( 1.0 / Math.pow( twopi * d, no2 ) ) * Math.exp( -sum2 / ( 2 * d ) );
+
+                if ( Double.isNaN( LH ) ) continue;
+
+                double gLH = g * LH;
+                double dLH = d * LH;
+
+                sumLH += LH;
+                sumgLH += gLH;
+                sumdLH += dLH;
+            }
+
+            gstar.set( i, sumgLH / sumLH );
+            dstar.set( i, sumdLH / sumLH );
+
+            if ( i % 1000 == 0 ) {
+                log.info( i + String.format( " rows done, %.1fs elapsed", timer.getTime() / 1000.00 ) );
+            }
+        }
+
+        return new DoubleMatrix1D[] { gstar, dstar };
     }
 
     /**
@@ -494,14 +667,15 @@ public class ComBat<R, C> {
      * @param gbar
      * @param n
      * @param dstar
-     * @param t2
+     * @param t2b
      * @return
      */
-    private DoubleMatrix1D postMean( DoubleMatrix1D ghat, double gbar, DoubleMatrix1D n, DoubleMatrix1D dstar, double t2 ) {
+    private DoubleMatrix1D postMean( DoubleMatrix1D ghat, double gbar, DoubleMatrix1D n, DoubleMatrix1D dstar,
+            double t2b ) {
         DoubleMatrix1D result = new DenseDoubleMatrix1D( ghat.size() );
         for ( int i = 0; i < ghat.size(); i++ ) {
-            result.set( i, ( t2 * n.get( i ) * ghat.get( i ) + dstar.get( i ) * gbar )
-                    / ( t2 * n.get( i ) + dstar.get( i ) ) );
+            result.set( i, ( t2b * n.get( i ) * ghat.get( i ) + dstar.get( i ) * gbar )
+                    / ( t2b * n.get( i ) + dstar.get( i ) ) );
         }
         return result;
     }
@@ -521,6 +695,12 @@ public class ComBat<R, C> {
         return result;
     }
 
+    /**
+     * @param sdata
+     * @param gammastar
+     * @param deltastar
+     * @return
+     */
     private DoubleMatrix2D rawAdjust( DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
         int batchIndex;
         int batchNum = 0;
@@ -562,6 +742,10 @@ public class ComBat<R, C> {
         return adjustedData;
     }
 
+    /**
+     * @param adjustedData
+     * @return
+     */
     private DoubleMatrix2D restoreScale( DoubleMatrix2D adjustedData ) {
         DoubleMatrix2D ones = new DenseDoubleMatrix2D( 1, numSamples );
         ones.assign( 1.0 );

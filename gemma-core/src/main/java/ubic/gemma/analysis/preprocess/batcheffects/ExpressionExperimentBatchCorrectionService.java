@@ -33,11 +33,13 @@ import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
+import ubic.basecode.math.MatrixStats;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisService;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -208,24 +210,63 @@ public class ExpressionExperimentBatchCorrectionService {
         ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = getDesign( ee, mat );
 
         ObjectMatrix<BioMaterial, String, Object> designU = convertFactorValuesToStrings( design );
+        DoubleMatrix<CompositeSequence, BioMaterial> matrix = mat.getMatrix();
+
+        DoubleMatrix<CompositeSequence, BioMaterial> omatrix = orderMatrix( matrix, designU );
+
+        ScaleType scale = mat.getQuantitationTypes().iterator().next().getScale();
+
+        if ( scale.equals( ScaleType.LOG2 ) || scale.equals( ScaleType.LOG10 )
+                || scale.equals( ScaleType.LOGBASEUNKNOWN ) || scale.equals( ScaleType.LN ) ) {
+            // ok, already on a log scale.
+        } else {
+            // log transform it.... hope for the best.
+            MatrixStats.logTransform( omatrix );
+        }
 
         /*
          * Process
          */
-        ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<CompositeSequence, BioMaterial>( mat.getMatrix(),
-                designU );
 
-        DoubleMatrix2D results = comBat.run();
+        ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<CompositeSequence, BioMaterial>( omatrix, designU );
+
+        DoubleMatrix2D results = comBat.run( true ); // false: NONPARAMETRIC
+
+        // note these plots always reflect the parametric setup.
+        comBat.plot( ee.getId() + "." + ee.getShortName().replaceAll( "[\\W\\s]+", "_" ) ); // TEMPORARY?
 
         /*
          * Postprocess. Results is a raw matrix/
          */
         DoubleMatrix<CompositeSequence, BioMaterial> resultsM = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
                 results.toArray() );
-        resultsM.setRowNames( mat.getMatrix().getRowNames() );
-        resultsM.setColumnNames( mat.getMatrix().getColNames() );
+        resultsM.setRowNames( omatrix.getRowNames() );
+        resultsM.setColumnNames( omatrix.getColNames() );
 
         return new ExpressionDataDoubleMatrix( mat, resultsM );
+    }
+
+    /**
+     * @param matrix
+     * @param designU
+     * @return
+     */
+    private DoubleMatrix<CompositeSequence, BioMaterial> orderMatrix(
+            DoubleMatrix<CompositeSequence, BioMaterial> matrix, ObjectMatrix<BioMaterial, String, Object> designU ) {
+
+        DoubleMatrix<CompositeSequence, BioMaterial> result = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                matrix.rows(), matrix.columns() );
+
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            List<BioMaterial> rowNames = designU.getRowNames();
+            for ( int j = 0; j < matrix.columns(); j++ ) {
+                result.set( i, j, matrix.get( i, matrix.getColIndexByName( rowNames.get( j ) ) ) );
+            }
+        }
+        result.setRowNames( matrix.getRowNames() );
+        result.setColumnNames( designU.getRowNames() );
+        return result;
+
     }
 
     /**
@@ -270,6 +311,7 @@ public class ExpressionExperimentBatchCorrectionService {
         List<BioMaterial> orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, factors );
         ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = ExperimentalDesignUtils.sampleInfoMatrix(
                 factors, orderedSamples, ExperimentalDesignUtils.getBaselineConditions( orderedSamples, factors ) );
+
         return design;
     }
 

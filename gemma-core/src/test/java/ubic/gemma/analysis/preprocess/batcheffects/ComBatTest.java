@@ -17,6 +17,8 @@ package ubic.gemma.analysis.preprocess.batcheffects;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -31,6 +33,9 @@ import cern.colt.matrix.impl.DenseDoubleMatrix2D;
  * @version $Id$
  */
 public class ComBatTest {
+
+    @SuppressWarnings("unused")
+    private static Log log = LogFactory.getLog( ComBatTest.class );
 
     @SuppressWarnings("unchecked")
     @Test
@@ -60,6 +65,7 @@ public class ComBatTest {
         assertEquals( 11.68505, finalResult.get( 7, 7 ), 0.0001 );
         assertEquals( 6.769583, finalResult.get( 10, 7 ), 0.0001 );
 
+        // comBat.plot("test");
         // log.info( finalResult );
 
     }
@@ -120,6 +126,23 @@ public class ComBatTest {
     }
 
     /**
+     * Based on GSE13712
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public final void test3() throws Exception {
+        DoubleMatrixReader f = new DoubleMatrixReader();
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass().getResourceAsStream(
+                "/data/analysis/preprocess/batcheffects/comat.test.data.txt" ) );
+        StringMatrixReader of = new StringMatrixReader();
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
+                "/data/analysis/preprocess/batcheffects/combat.test.design.txt" ) );
+        ComBat comBat = new ComBat( testMatrix, sampleInfo );
+        DoubleMatrix2D result = comBat.run();
+        assertNotNull( result );
+    }
+
+    /**
      * Case where we only have batch, no other covariates
      * 
      * @throws Exception
@@ -175,20 +198,69 @@ public class ComBatTest {
 
     }
 
-    /**
-     * Based on GSE13712
-     */
     @SuppressWarnings("unchecked")
     @Test
-    public final void test3() throws Exception {
+    public void test4() throws Exception {
         DoubleMatrixReader f = new DoubleMatrixReader();
         DoubleMatrix<String, String> testMatrix = f.read( this.getClass().getResourceAsStream(
-                "/data/analysis/preprocess/batcheffects/comat.test.data.txt" ) );
+                "/data/analysis/preprocess/batcheffects/GSE492.test.dat.txt" ) );
         StringMatrixReader of = new StringMatrixReader();
         StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
-                "/data/analysis/preprocess/batcheffects/combat.test.design.txt" ) );
+                "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) );
         ComBat comBat = new ComBat( testMatrix, sampleInfo );
-        DoubleMatrix2D result = comBat.run();
-        assertNotNull( result );
+
+        DoubleMatrix2D X = comBat.getDesignMatrix();
+
+        // log.info( X );
+
+        assertEquals( 1, X.get( 0, 0 ), 0.001 );
+        assertEquals( 0, X.get( 1, 0 ), 0.001 );
+        assertEquals( 0, X.get( 4, 3 ), 0.001 );
+        DoubleMatrix2D y = new DenseDoubleMatrix2D( testMatrix.asArray() );
+
+        DoubleMatrix2D sdata = comBat.standardize( y, X );
+        // log.info( sdata.viewPart( 0, 0, 10, 12 ) );
+        assertEquals( -1.85175902, sdata.get( 7, 1 ), 0.0001 );
+        assertEquals( 0.2479669, sdata.get( 8, 2 ), 0.001 );
+        assertEquals( -0.56259384, sdata.get( 0, 8 ), 0.001 );
+        assertEquals( 1.07168246, sdata.get( 3, 11 ), 0.001 );
+
+        DoubleMatrix2D finalResult = comBat.run();
+        assertEquals( 12.026468, finalResult.get( 7, 0 ), 0.0001 );
+        assertEquals( 11.640057, finalResult.get( 7, 7 ), 0.0001 );
+        assertEquals( 12.932352, finalResult.get( 9, 7 ), 0.0001 );
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void test5NonParametric() throws Exception {
+        DoubleMatrixReader f = new DoubleMatrixReader();
+        DoubleMatrix<String, String> testMatrix = f.read( this.getClass().getResourceAsStream(
+                "/data/analysis/preprocess/batcheffects/GSE492.test.dat.txt" ) );
+        StringMatrixReader of = new StringMatrixReader();
+        StringMatrix<String, String> sampleInfo = of.read( this.getClass().getResourceAsStream(
+                "/data/analysis/preprocess/batcheffects/100_GSE492_expdesign.data.txt" ) );
+        ComBat comBat = new ComBat( testMatrix, sampleInfo );
+
+        DoubleMatrix2D X = comBat.getDesignMatrix();
+
+        // log.info( X );
+
+        assertEquals( 1, X.get( 0, 0 ), 0.001 );
+        assertEquals( 0, X.get( 1, 0 ), 0.001 );
+        assertEquals( 0, X.get( 4, 3 ), 0.001 );
+        DoubleMatrix2D y = new DenseDoubleMatrix2D( testMatrix.asArray() );
+
+        DoubleMatrix2D sdata = comBat.standardize( y, X );
+        // log.info( sdata.viewPart( 0, 0, 10, 12 ) );
+        assertEquals( -1.85175902, sdata.get( 7, 1 ), 0.0001 );
+        assertEquals( 0.2479669, sdata.get( 8, 2 ), 0.001 );
+        assertEquals( -0.56259384, sdata.get( 0, 8 ), 0.001 );
+        assertEquals( 1.07168246, sdata.get( 3, 11 ), 0.001 );
+
+        DoubleMatrix2D finalResult = comBat.run( false );
+        assertEquals( 12.026930, finalResult.get( 7, 0 ), 0.001 );
+        assertEquals( 11.635157, finalResult.get( 7, 7 ), 0.01 );
+        assertEquals( 12.930425, finalResult.get( 9, 7 ), 0.01 );
     }
 }
