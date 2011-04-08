@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -57,7 +58,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
     @Autowired
     private ExpressionExperimentSetService expressionExperimentSetService = null;
-    
+
     @Autowired
     private SessionListManager sessionListManager;
 
@@ -78,6 +79,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * AJAX adds the Expression Experiment group to the session
      * 
      * @param eeSetVos value object constructed on the client.
+     * @return collection of added session groups (with updated reference.id etc)
      */
     public Collection<ExpressionExperimentSetValueObject> addSessionGroups(
             Collection<ExpressionExperimentSetValueObject> eeSetVos ) {
@@ -85,12 +87,32 @@ public class ExpressionExperimentSetController extends BaseFormController {
         Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject eesvo : eeSetVos ) {
-            results.add( sessionListManager.addExperimentSet( eesvo ) );
 
+            results.add( sessionListManager.addExperimentSet( eesvo ) );
         }
 
-        return eeSetVos;
+        return results;
     }
+
+    /**
+     * AJAX adds the Expression Experiment group to the session
+     * 
+     * @param eeSetVos value object constructed on the client.
+     * @return collection of added session groups (with updated reference.id etc)
+     */
+    public Collection<ExpressionExperimentSetValueObject> addNonModificationBasedSessionBoundGroups(
+            Collection<ExpressionExperimentSetValueObject> eeSetVos ) {
+
+        Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
+
+        for ( ExpressionExperimentSetValueObject eesvo : eeSetVos ) {
+
+            results.add( sessionListManager.addExperimentSet( eesvo, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
+        }
+
+        return results;
+    }
+
     /**
      * AJAX adds the experiment group to the session
      * 
@@ -179,7 +201,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         Collection<ExpressionExperimentSetValueObject> results = loadAll();
 
-        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
+        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
 
         results.addAll( sessionResults );
 
@@ -194,10 +216,11 @@ public class ExpressionExperimentSetController extends BaseFormController {
      */
     public Collection<ExpressionExperimentSetValueObject> loadAllSessionGroups() {
 
-        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
+        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
 
         return sessionResults;
     }
+
     /**
      * AJAX
      * 
@@ -206,10 +229,12 @@ public class ExpressionExperimentSetController extends BaseFormController {
      */
     public Collection<ExpressionExperimentSetValueObject> loadAllUserOwnedAndSessionGroups() {
 
-        Collection<ExpressionExperimentSet> results = expressionExperimentSetService.loadMySets(); // expressionExperimentSetService is null
-        Collection<ExpressionExperimentSetValueObject> valueObjects = ExpressionExperimentSetValueObject.makeValueObjects( results );
+        Collection<ExpressionExperimentSet> results = expressionExperimentSetService.loadMySets(); // expressionExperimentSetService
+                                                                                                   // is null
+        Collection<ExpressionExperimentSetValueObject> valueObjects = ExpressionExperimentSetValueObject
+                .makeValueObjects( results );
 
-        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getRecentExperimentSets();
+        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
 
         valueObjects.addAll( sessionResults );
 

@@ -176,7 +176,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Gene g = geneService.load( geneId );
         Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
-                .getDifferentialExpression( g, threshold, factorMap );
+        .getDifferentialExpression( g, threshold, factorMap );
 
         return result;
     }
@@ -251,9 +251,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     Double correctedPvalue = resultsForGene.get( 0 );
                     log.info( "pValue: " + correctedPvalue );
                     vizColumn.setNumberOfProbes( geneGroupIndex, geneIndex, resultsForGene.size() ); // show that there
-                                                                                                     // are multiple
-                                                                                                     // probes for the
-                                                                                                     // gene
+                    // are multiple
+                    // probes for the
+                    // gene
                     vizColumn.setPvalue( geneGroupIndex, geneIndex, correctedPvalue );
                     vizColumn.setVisualizationValue( geneGroupIndex, geneIndex,
                             calculateVisualizationValueBasedOnPvalue( correctedPvalue ) );
@@ -325,28 +325,38 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         List<Collection<BioAssaySet>> experiments = new ArrayList<Collection<BioAssaySet>>();
         for ( Reference ref : datasetGroupReferences ) {
             if ( ref != null ) {
-                // if the ids being passed in are session ids, use a different method to load them
-                if ( ref.getType() == Reference.SESSION_BOUND_GROUP ) {
-                    Collection<ExpressionExperimentValueObject> eevos = sessionListManager
-                            .getExperimentsInSetByReference( ref );
-                    Collection<Long> ids = new ArrayList<Long>();
-                    for ( ExpressionExperimentValueObject eevo : eevos ) {
-                        ids.add( eevo.getId() );
-                    }
-                    Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
-                            .loadMultiple( ids );
-                    Collection<BioAssaySet> bioAssaySetsInsideGroup = new ArrayList<BioAssaySet>();
-                    for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
-                        bioAssaySetsInsideGroup.add( ( BioAssaySet ) experiment );
-                    }
+                // if a single experiment was selected
+                if(ref.isNotGroup() && ref.isDatabaseBacked()){
+                    ExpressionExperiment dataset = expressionExperimentService.load( ref.getId() );
+                    Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
+                    bioAssaySetsInsideGroup.add( ( BioAssaySet ) dataset );
                     experiments.add( bioAssaySetsInsideGroup );
-                } else if ( ref.getType() == Reference.DATABASE_BACKED_GROUP ) {
-                    ExpressionExperimentSet datasetGroup = expressionExperimentSetService.load( ref.getId() );
-                    Collection<BioAssaySet> experimentsInsideGroup = datasetGroup.getExperiments();
-                    experiments.add( experimentsInsideGroup );
+                }
+                // if a group of experiments was selected
+                else{
+                    // if the ids being passed in are session ids, use a different method to load them
+                    if ( ref.isSessionBound() ) {
+                        Collection<ExpressionExperimentValueObject> eevos = sessionListManager
+                        .getExperimentsInSetByReference( ref );
+                        Collection<Long> ids = new ArrayList<Long>();
+                        for ( ExpressionExperimentValueObject eevo : eevos ) {
+                            ids.add( eevo.getId() );
+                        }
+                        Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
+                        .loadMultiple( ids );
+                        Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
+                        for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
+                            bioAssaySetsInsideGroup.add( ( BioAssaySet ) experiment );
+                        }
+                        experiments.add( bioAssaySetsInsideGroup );
+
+                    } else if ( ref.isDatabaseBacked() ) {
+                        ExpressionExperimentSet datasetGroup = expressionExperimentSetService.load( ref.getId() );
+                        Collection<BioAssaySet> experimentsInsideGroup = datasetGroup.getExperiments();
+                        experiments.add( experimentsInsideGroup );
+                    } 
                 }
             }
-
         }
 
         // Load genes
@@ -362,28 +372,39 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 List<String> geneNamesInsideSet = new ArrayList<String>();
                 List<Long> geneIdsInsideSet = new ArrayList<Long>();
 
-                // if the ids being passed in are session ids, use a different method to load them
-                if ( ref.getType() == Reference.SESSION_BOUND_GROUP ) {
-                    Collection<GeneValueObject> geneValueObjectsInSet = sessionListManager
-                            .getGenesInSetByReference( ref );
-                    for ( GeneValueObject gsvo : geneValueObjectsInSet ) {
-                        Gene gene = geneService.load( gsvo.getId() );
-                        if ( gene != null ) {
-                            genesInsideSet.add( gene );
-                            geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                            geneIdsInsideSet.add( gene.getId() );
-                        }
+                if(ref.isNotGroup() && ref.isDatabaseBacked()){
+                    Gene gene = geneService.load( ref.getId() );
+                    if ( gene != null ) {
+                        genesInsideSet.add( gene );
+                        geneNamesInsideSet.add( gene.getOfficialSymbol() );
+                        geneIdsInsideSet.add( gene.getId() );
                     }
-                } else if ( ref.getType() == Reference.DATABASE_BACKED_GROUP ) {
-                    GeneSet geneSet = geneSetService.load( ref.getId() );
-                    for ( GeneSetMember memberGene : geneSet.getMembers() ) {
-                        if ( memberGene.getGene() != null ) {
-                            genesInsideSet.add( memberGene.getGene() );
-                            geneNamesInsideSet.add( memberGene.getGene().getOfficialSymbol() );
-                            geneIdsInsideSet.add( memberGene.getGene().getId() );
+                }else{
+                    // if the reference being passed in for a session bound group, use a different method to load it
+                    if ( ref.isSessionBound() ) {
+                        Collection<GeneValueObject> geneValueObjectsInSet = sessionListManager
+                        .getGenesInSetByReference( ref );
+                        for ( GeneValueObject gsvo : geneValueObjectsInSet ) {
+                            Gene gene = geneService.load( gsvo.getId() );
+                            if ( gene != null ) {
+                                genesInsideSet.add( gene );
+                                geneNamesInsideSet.add( gene.getOfficialSymbol() );
+                                geneIdsInsideSet.add( gene.getId() );
+                            }
                         }
-                    }
+
+                    } else if ( ref.isDatabaseBacked() ) {
+                        GeneSet geneSet = geneSetService.load( ref.getId() );
+                        for ( GeneSetMember memberGene : geneSet.getMembers() ) {
+                            if ( memberGene.getGene() != null ) {
+                                genesInsideSet.add( memberGene.getGene() );
+                                geneNamesInsideSet.add( memberGene.getGene().getOfficialSymbol() );
+                                geneIdsInsideSet.add( memberGene.getGene().getId() );
+                            }
+                        }
+                    } 
                 }
+                
                 genes.add( genesInsideSet );
                 geneNames.add( geneNamesInsideSet );
                 geneIds.add( geneIdsInsideSet );
@@ -421,7 +442,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( List<Long> experimentIds : experimentIdsByGroup ) {
 
             Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
-                    .loadMultiple( experimentIds );
+            .loadMultiple( experimentIds );
             Collection<BioAssaySet> bioAssaySetsInsideGroup = new ArrayList<BioAssaySet>();
             for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
                 bioAssaySetsInsideGroup.add( ( BioAssaySet ) experiment );
@@ -485,7 +506,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             for ( BioAssaySet experiment : groupExperiemnts ) {
                 Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                        .getAnalyses( ( ExpressionExperiment ) experiment );
+                .getAnalyses( ( ExpressionExperiment ) experiment );
 
                 for ( DifferentialExpressionAnalysis analysis : analyses ) {
                     ExpressionExperiment e = ( ExpressionExperiment ) experiment;
@@ -688,7 +709,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<Long> filteredEeIds = new HashSet<Long>();
 
         Map<Long, DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-                .findByInvestigationIds( securityFilteredIds );
+        .findByInvestigationIds( securityFilteredIds );
 
         if ( diffAnalyses.isEmpty() ) {
             log.debug( "No differential expression analyses for given ids: " + StringUtils.join( filteredEeIds, ',' ) );
@@ -696,7 +717,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
-                .loadValueObjects( diffAnalyses.keySet() );
+        .loadValueObjects( diffAnalyses.keySet() );
 
         Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<Long, ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
@@ -722,7 +743,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             eeefvo.setNumFactors( factors.size() );
             for ( ExperimentalFactor ef : factors ) {
                 ExperimentalFactorValueObject efvo = geneDifferentialExpressionService
-                        .configExperimentalFactorValueObject( ef );
+                .configExperimentalFactorValueObject( ef );
                 eeefvo.getExperimentalFactors().add( efvo );
             }
 
@@ -775,7 +796,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+    throws Exception {
 
         if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
 
@@ -879,7 +900,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         /* find experiments that have had the diff cli run on it and have the gene g (analyzed) - security filtered. */
         Collection<BioAssaySet> experimentsAnalyzed = differentialExpressionAnalysisService
-                .findExperimentsWithAnalyses( g );
+        .findExperimentsWithAnalyses( g );
 
         if ( experimentsAnalyzed.size() == 0 ) {
             log.warn( "No experiments analyzed for that gene: " + g );
@@ -911,7 +932,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
-                .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
+        .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
 
         return mavo;
     }

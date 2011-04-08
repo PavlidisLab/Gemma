@@ -31,6 +31,7 @@ import org.springframework.stereotype.Controller;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
+import ubic.gemma.model.Reference;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -95,19 +96,13 @@ public class GeneSetController {
         }
         return results;
     }
+    
+    private Collection<GeneSetValueObject> setSessionGroupTaxonValues( Collection<GeneSetValueObject> geneSetVos ){
 
-    /**
-     * AJAX adds the gene group to the session
-     * 
-     * @param geneSetVo value object constructed on the client.
-     * @return id of the new gene group
-     */
-    public Collection<GeneSetValueObject> addSessionGroups( Collection<GeneSetValueObject> geneSetVos ) {
-
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
-
+        
         for ( GeneSetValueObject gsvo : geneSetVos ) {
             
+            // get taxon from members
             for (Long l : gsvo.getGeneIds()){
                 Gene gene = geneService.load( l );
                 
@@ -116,13 +111,58 @@ public class GeneSetController {
                     gsvo.setTaxonName( gene.getTaxon().getCommonName() );
                     break;//assuming that the taxon will be the same for all genes in the set so no need to load all genes from set
                 }
-                
             }
+        }
+        
+        return geneSetVos;
+    }
+
+    /**
+     * AJAX adds the gene group to the session, used by SessionGeneGroupStore and SessionDatasetGroupStore
+     * 
+     * sets the groups taxon value and reference
+     * 
+     * @param geneSetVo value object constructed on the client.
+     * @return collection of added session groups (with updated reference.id etc)
+     */
+    public Collection<GeneSetValueObject> addSessionGroups( Collection<GeneSetValueObject> geneSetVos ) {
+
+        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        
+        geneSetVos = setSessionGroupTaxonValues( geneSetVos );
+
+        for ( GeneSetValueObject gsvo : geneSetVos ) {
+                        
+            // sets the reference and stores the group
             results.add( sessionListManager.addGeneSet( gsvo ) );
 
         }
 
-        return geneSetVos;
+        return results;
+    }
+
+    /**
+     * AJAX adds these gene groups to the session-bound list for groups that have been modified by the user
+     * 
+     * sets the groups taxon value and reference.id
+     * 
+     * @param geneSetVo value object constructed on the client.
+     * @return collection of added session groups (with updated reference.id etc)
+     */
+    public Collection<GeneSetValueObject> addNonModificationBasedSessionBoundGroups( Collection<GeneSetValueObject> geneSetVos ) {
+
+        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+
+        geneSetVos = setSessionGroupTaxonValues( geneSetVos );
+        
+        for ( GeneSetValueObject gsvo : geneSetVos ) {
+
+            // sets the reference and stores the group
+            results.add( sessionListManager.addGeneSet( gsvo , Reference.UNMODIFIED_SESSION_BOUND_GROUP) );
+
+        }
+
+        return results;
     }
 
     /**
@@ -281,7 +321,7 @@ public class GeneSetController {
         Collection<GeneSetValueObject> result = getUsersGeneGroups( privateOnly, taxonId );
 
         // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-        Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets(taxonId);
+        Collection<GeneSetValueObject> sessionResult = sessionListManager.getAllGeneSets(taxonId);
 
         result.addAll( sessionResult );
 
@@ -298,7 +338,7 @@ public class GeneSetController {
     public Collection<GeneSetValueObject> getUserSessionGeneGroups( boolean privateOnly, Long taxonId ) {
 
         // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-        Collection<GeneSetValueObject> result = sessionListManager.getRecentGeneSets(taxonId);
+        Collection<GeneSetValueObject> result = sessionListManager.getAllGeneSets(taxonId);
         return result;
     }
 

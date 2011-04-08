@@ -403,12 +403,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
         List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
 
-        /*
-         * Arbitrary id values for temporary groups (only needed so when displayed in a combo box, the selected entry's
-         * name will appear in the field after being selected)
-         */
-        Long tempId = new Long( -3 );
-
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
         if ( query.equals( "" ) ) {
@@ -453,14 +447,18 @@ public class ExpressionExperimentController extends AbstractTaskService {
                             .convertSearchResults2SearchResultDisplayObjects( autoGenSetsSearchResults ) );
 
             // get any session-bound groups
-            Collection<ExpressionExperimentSetValueObject> sessionResult = sessionListManager.getRecentExperimentSets();
+            Collection<ExpressionExperimentSetValueObject> sessionResult = sessionListManager.getModifiedExperimentSets();
 
             List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
             if ( sessionResult != null && sessionResult.size() > 0 ) {
                 // for every object passed in, create a SearchResultDisplayObject
                 for ( ExpressionExperimentSetValueObject eevo : sessionResult ) {
-                    Reference ref = new Reference( eevo.getId(), Reference.SESSION_BOUND_GROUP );
+                    Reference ref = eevo.getReference();
+                    if(ref == null){
+                        ref = new Reference( eevo.getId(), Reference.SESSION_BOUND_GROUP );   
+                    }
+                    
                     SearchResultDisplayObject srdo = new SearchResultDisplayObject( ExpressionExperimentSet.class, ref,
                             eevo.getName(), eevo.getDescription(), true, eevo.getExpressionExperimentIds().size(), eevo
                                     .getTaxonId(), eevo.getTaxonName(), "userexperimentSetSession", eevo
@@ -601,13 +599,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 for ( Map.Entry<Long, HashSet<Long>> entry : eeIdsByTaxonId.entrySet() ) {
                     taxonId = entry.getKey();
                     taxon = taxonService.load( taxonId );
-                    Reference ref = new Reference( tempId, Reference.SESSION_UNBOUND_GROUP );
+                    Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
                     if ( taxon != null && entry.getValue().size() > 0 ) {
                         displayResults.add( new SearchResultDisplayObject( ExpressionExperimentSet.class, ref, "All "
                                 + taxon.getCommonName() + " results for '" + query + "'", "All "
                                 + taxon.getCommonName() + " experiments found for your query", true, entry.getValue()
                                 .size(), taxon.getId(), taxon.getCommonName(), "freeText", entry.getValue() ) );
-                        tempId--;
                     }
                 }
             }

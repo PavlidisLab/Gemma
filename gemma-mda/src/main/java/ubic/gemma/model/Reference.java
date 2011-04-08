@@ -40,16 +40,33 @@ public class Reference implements Serializable {
 
     private Long id;
 
-    private Integer type;
+    private String type;
 
-    public static final int DB_GENE = 1;
-    public static final int DB_EXPERIMENT = 2;
-    public static final int DATABASE_BACKED_GROUP = 3;
-    public static final int SESSION_BOUND_GROUP = 4;
-    public static final int SESSION_UNBOUND_GROUP = 5; // session group manager doesn't know about it
+    /*IMPORTANT: when adding a type value, be sure to add it to isSession() or isDatabase() as appropriate*/
+    public static final String DB_GENE = "databaseBackedGene";
+    public static final String DB_EXPERIMENT = "databaseBackedExperiment";
+    public static final String DATABASE_BACKED_GROUP = "databaseBackedGroup";
+    public static final String SESSION_BOUND_GROUP = "SessionBoundGroup";
+    public static final String MODIFIED_SESSION_BOUND_GROUP = "activeSessionBoundGroup";
+    // session group created just to store a recent search selection like a GO group
+    public static final String UNMODIFIED_SESSION_BOUND_GROUP = "recentSearchsessionBoundGroup"; 
     
     public boolean isSessionBound(){
-        if(this.type == SESSION_BOUND_GROUP || this.type == SESSION_UNBOUND_GROUP){
+        if(this.type.equals( SESSION_BOUND_GROUP ) || this.type.equals( MODIFIED_SESSION_BOUND_GROUP ) || this.type.equals( UNMODIFIED_SESSION_BOUND_GROUP )){
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean isDatabaseBacked(){
+        if(this.type.equals( DB_EXPERIMENT )|| this.type.equals( DB_GENE ) || this.type.equals( DATABASE_BACKED_GROUP )){
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean isNotGroup(){
+        if(this.type.equals( DB_EXPERIMENT )|| this.type.equals( DB_GENE ) ){
             return true;
         }
         return false;
@@ -61,7 +78,7 @@ public class Reference implements Serializable {
         super();
     }
 
-    public Reference( Long id, int type ) {
+    public Reference( Long id, String type ) {
         this.id = id;
         this.type = type;
     }
@@ -74,26 +91,18 @@ public class Reference implements Serializable {
         return this.id;
     }
 
-    public void setType( int type ) {
+    /**
+     * @return the type
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * @param type the type to set
+     */
+    public void setType( String type ) {
         this.type = type;
-    }
-
-    public int getType() {
-        return this.type;
-    }
-
-    public String getTypeString() {
-        switch ( this.type ) {
-            case 1:
-                return "database_backed_gene";
-            case 2:
-                return "database_backed_experiment";
-            case 3:
-                return "database_backed_group";
-            case 4:
-                return "session_bound_group";
-        }
-        return Integer.toString( this.type );
     }
 
     /**
@@ -110,73 +119,15 @@ public class Reference implements Serializable {
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         Reference other = ( Reference ) obj;
-        if ( this.id == other.getId() && this.type == other.getType() ) return true;
+        if ( (this.id.equals( other.getId())) && (this.type.equals( other.getType()) )) {
+            return true;
+        }
         return false;
     }
 
     @Override
     public String toString() {
-        return "{ id: " + this.id + ", type: " + this.getTypeString() + "}";
-    }
-
-    /**
-     * transform the reference object into a string for easy passing to and from EXT
-     * 
-     * @return the code for this reference object
-     */
-    public String encode() {
-        return this.id + "_" + this.type;
-    }
-
-    /**
-     * transform the reference object into a string for easy passing to and from EXT
-     * 
-     * @return the code for this reference object
-     */
-    public static String encode( Reference ref ) {
-        return ref.id + "_" + ref.type;
-    }
-
-    /**
-     * After having encoded a reference object as a string for passing to and from EXT using the encode() method, decode
-     * the string to create a new reference object as specified
-     * 
-     * @param code a specification for the fields of the reference object
-     * @return a new reference object with values as specified by the code
-     */
-    public static Reference decode( String code ) {
-        if ( code == null ) return null;
-        String[] arr = code.split( "_" );
-        Long id = null;
-        Integer type = null;
-        try {
-            id = new Long( arr[0] );
-            type = new Integer( arr[1] );
-        } catch ( NumberFormatException e ) {
-            return null;
-        }
-        if ( id == null || type == null ) return null;
-        return new Reference( id, type );
-    }
-
-    /**
-     * After having encoded a reference object as a string for passing to and from EXT using the encode() method, this
-     * method decodes the string to create a new reference object as specified
-     * 
-     * @param a collection of codes specifying the field values for a collection of references
-     * @return a collection of new reference object with values as specified by the code if no codes were of the right
-     *         format, an empty collection is returned
-     */
-    public static Collection<Reference> decode( Collection<String> codes ) {
-        Collection<Reference> refs = new ArrayList<Reference>();
-        Reference newRef = null;
-        for ( String code : codes ) {
-            newRef = decode( code );
-            if ( newRef != null ) {
-                refs.add( newRef );
-            }
-        }
-        return refs;
+        return "{ id: " + this.id + ", type: " + this.getType() + "}";
     }
 
 }

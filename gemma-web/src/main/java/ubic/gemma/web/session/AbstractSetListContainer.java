@@ -36,15 +36,21 @@ public abstract class AbstractSetListContainer implements Serializable {
 	 */
     private static final long serialVersionUID = -7207696842986893748L;
 
-    static final int MAX_SIZE = 3;
+    static final int MAX_MODIFIED_GROUPS = 3;
+
+    static final int MAX_TOTAL = 1000;
+
 
     Long largestSessionId = 0l;
 
-    ArrayList<GemmaSessionBackedValueObject> setList;
+    ArrayList<GemmaSessionBackedValueObject> allSessionBoundGroups;
+
+    ArrayList<GemmaSessionBackedValueObject> sessionBoundModifiedGroups;
 
 
     public AbstractSetListContainer() {
-        setList = new ArrayList<GemmaSessionBackedValueObject>();
+        allSessionBoundGroups = new ArrayList<GemmaSessionBackedValueObject>();
+        sessionBoundModifiedGroups = new ArrayList<GemmaSessionBackedValueObject>();
     }
 
     public Long incrementAndGetLargestSessionId() {
@@ -61,20 +67,38 @@ public abstract class AbstractSetListContainer implements Serializable {
         return largestSessionId;
     }
 
+    /**
+     * Sets the reference (generates an id and assumes this group was made as a result of a modification for the type value) 
+     * for the group then adds it to the session-bound list(s) for session-bound groups
+     * @param vo
+     * @return
+     */
     public GemmaSessionBackedValueObject addSet( GemmaSessionBackedValueObject vo ) {
+
+        return addSet(vo, Reference.MODIFIED_SESSION_BOUND_GROUP);
+
+    }
+
+    /**
+     * Sets the reference (id and type) for the group then adds it to the session-bound list or session-bound groups
+     * @param vo
+     * @param referenceType
+     * @return
+     */
+    public GemmaSessionBackedValueObject addSet( GemmaSessionBackedValueObject vo , String referenceType) {
 
         boolean setExists = false;
         
         // check if the set's reference is already in setList, 
         // if it is, replace the old list with the new one
         if(vo.getReference() != null){
-            for ( int i = 0; i < setList.size(); i++ ) {
+            for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
 
-                Reference setRef = setList.get( i ).getReference();
+                Reference setRef = allSessionBoundGroups.get( i ).getReference();
                 
                 if ( setRef != null && setRef.equals( vo.getReference() ) ) {
-                    setList.remove( i );
-                    setList.add( i, vo );
+                    allSessionBoundGroups.remove( i );
+                    allSessionBoundGroups.add( i, vo );
                     setExists = true;
                     break;
                 }
@@ -85,12 +109,20 @@ public abstract class AbstractSetListContainer implements Serializable {
         if ( !setExists ) {
 
             Long newId = incrementAndGetLargestSessionId();
-            vo.setReference( new Reference( newId, Reference.SESSION_BOUND_GROUP ) );
+            vo.setReference( new Reference( newId, referenceType ) );
 
-            setList.add( vo );
-            if ( setList.size() > MAX_SIZE ) {
-                setList.remove( 0 );
+            // add it to the special list of groups the user has modified
+            if(referenceType.equals( Reference.MODIFIED_SESSION_BOUND_GROUP )){
+                sessionBoundModifiedGroups.add( vo );
+                if ( sessionBoundModifiedGroups.size() > MAX_MODIFIED_GROUPS ) {
+                    sessionBoundModifiedGroups.remove( 0 );
+                }
             }
+            allSessionBoundGroups.add( vo );
+            if ( allSessionBoundGroups.size() > MAX_TOTAL ) {
+                allSessionBoundGroups.remove( 0 );
+            }
+            
         }
         return vo;
 
@@ -100,10 +132,22 @@ public abstract class AbstractSetListContainer implements Serializable {
 
         if ( vo.getReference() != null ) {
 
-            for ( int i = 0; i < setList.size(); i++ ) {
+            for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
 
-                if ( setList.get( i ).getReference().equals( vo.getReference() ) ) {
-                    setList.remove( i );
+                if ( allSessionBoundGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                    allSessionBoundGroups.remove( i );
+                    break;
+                }
+
+            }
+
+        }
+        if ( vo.getReference() != null ) {
+
+            for ( int i = 0; i < sessionBoundModifiedGroups.size(); i++ ) {
+
+                if ( sessionBoundModifiedGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                    sessionBoundModifiedGroups.remove( i );
                     break;
                 }
 
@@ -117,11 +161,24 @@ public abstract class AbstractSetListContainer implements Serializable {
 
         if ( vo.getReference() != null ) {
 
-            for ( int i = 0; i < setList.size(); i++ ) {
+            for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
 
-                if ( setList.get( i ).getReference().equals( vo.getReference() ) ) {
-                    setList.remove( i );
-                    setList.add( i, vo );
+                if ( allSessionBoundGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                    allSessionBoundGroups.remove( i );
+                    allSessionBoundGroups.add( i, vo );
+                    break;
+                }
+
+            }
+
+        }
+        if ( vo.getReference() != null ) {
+
+            for ( int i = 0; i < sessionBoundModifiedGroups.size(); i++ ) {
+
+                if ( sessionBoundModifiedGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                    sessionBoundModifiedGroups.remove( i );
+                    sessionBoundModifiedGroups.add( i, vo );
                     break;
                 }
 
@@ -131,10 +188,17 @@ public abstract class AbstractSetListContainer implements Serializable {
 
     }
 
-    public Collection<GemmaSessionBackedValueObject> getRecentSets() {
+    public Collection<GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
 
-        return setList;
+        return allSessionBoundGroups;
 
     }
+    
+    public Collection<GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
+
+        return sessionBoundModifiedGroups;
+
+    }
+
 
 }

@@ -40,8 +40,6 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.persistence.GemmaSessionBackedValueObject;
-import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 
 @Service
@@ -68,16 +66,16 @@ public class SessionListManager {
     @Autowired
     GeneSetService geneSetService;
 
-    public Collection<GeneSetValueObject> getRecentGeneSets() {
-        return getRecentGeneSets( null );
+    public Collection<GeneSetValueObject> getAllGeneSets() {
+        return getAllGeneSets( null );
     }
 
-    public Collection<GeneSetValueObject> getRecentGeneSets( Long taxonId ) {
+    public Collection<GeneSetValueObject> getAllGeneSets( Long taxonId ) {
 
         // We know that geneSetList will only contain GeneSetValueObjects (via
         // SessionListManager.addGeneSet(GeneSetValueObject) so this cast is okay
         @SuppressWarnings("unchecked")
-        List<GeneSetValueObject> castedCollection = ( List ) geneSetList.getRecentSets();
+        List<GeneSetValueObject> castedCollection = ( List ) geneSetList.getAllSessionBoundGroups();
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
@@ -95,23 +93,33 @@ public class SessionListManager {
         return castedCollection;
     }
 
-    public GeneSetValueObject getGeneSetBySessionBoundId( Long sessionBoundId ) {
+    public Collection<GeneSetValueObject> getModifiedGeneSets() {
+        return getAllGeneSets( null );
+    }
+    
+    public Collection<GeneSetValueObject> getModifiedGeneSets( Long taxonId ) {
 
         // We know that geneSetList will only contain GeneSetValueObjects (via
         // SessionListManager.addGeneSet(GeneSetValueObject) so this cast is okay
         @SuppressWarnings("unchecked")
-        List<GeneSetValueObject> castedCollection = ( List ) geneSetList.getRecentSets();
+        List<GeneSetValueObject> castedCollection = ( List ) geneSetList.getSessionBoundModifiedGroups();
 
         // filter collection if taxonId is specified
-       for ( GeneSetValueObject gsvo : castedCollection ) {
-                if ( gsvo.getTaxonId() == sessionBoundId ) {
-                    return gsvo;
+        if ( taxonId != null ) {
+            List<GeneSetValueObject> taxonFilteredCollection = new ArrayList<GeneSetValueObject>();
+            for ( GeneSetValueObject gsvo : castedCollection ) {
+                if ( gsvo.getTaxonId() == taxonId ) {
+                    taxonFilteredCollection.add( gsvo );
                 }
+            }
+
+            castedCollection = taxonFilteredCollection;
+
         }
 
-        return null;
+        return castedCollection;
     }
-    
+
     
     /**
      * Get the members of session-bound group using the group's reference object
@@ -125,15 +133,15 @@ public class SessionListManager {
         Collection<ExpressionExperimentValueObject> results = null;
 
         // if group is db backed
-        if ( reference.getType() == Reference.DATABASE_BACKED_GROUP ) {
+        if ( reference.isDatabaseBacked() ) {
 
             return results;
 
         }
         // if group is session bound
-        else if (reference.getType() == Reference.SESSION_BOUND_GROUP){
+        else if (reference.isSessionBound()){
 
-            Collection<ExpressionExperimentSetValueObject> sessionExperimentSets = getRecentExperimentSets();
+            Collection<ExpressionExperimentSetValueObject> sessionExperimentSets = getAllExperimentSets();
             
             Collection<ExpressionExperiment> expressionExperiments = null;
 
@@ -173,12 +181,12 @@ public class SessionListManager {
 
         Collection<GeneValueObject> results = null;
 
-        if(reference.getType() == Reference.DATABASE_BACKED_GROUP){
+        if(reference.isDatabaseBacked()){
             return null;
         }
-        else if(reference.getType() == Reference.SESSION_BOUND_GROUP) {
+        else if(reference.isSessionBound()) {
 
-            Collection<GeneSetValueObject> sessionGeneSets = getRecentGeneSets();
+            Collection<GeneSetValueObject> sessionGeneSets = getAllGeneSets();
 
             Collection<Gene> genes = null;
 
@@ -256,6 +264,12 @@ public class SessionListManager {
         return ( GeneSetValueObject ) geneSetList.addSet( gsvo );
 
     }
+    
+    public GeneSetValueObject addGeneSet( GeneSetValueObject gsvo, String referenceType ) {
+
+        return ( GeneSetValueObject ) geneSetList.addSet( gsvo , referenceType );
+
+    }
 
     public void removeGeneSet( GeneSetValueObject gsvo ) {
 
@@ -274,10 +288,19 @@ public class SessionListManager {
         return geneSetList.incrementAndGetLargestSessionId();
     }
 
-    public Collection<ExpressionExperimentSetValueObject> getRecentExperimentSets() {
+    public Collection<ExpressionExperimentSetValueObject> getAllExperimentSets() {
 
         @SuppressWarnings("unchecked")
-        List<ExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList.getRecentSets();
+        List<ExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList.getAllSessionBoundGroups();
+
+        return castedCollection;
+
+    }
+
+    public Collection<ExpressionExperimentSetValueObject> getModifiedExperimentSets() {
+
+        @SuppressWarnings("unchecked")
+        List<ExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList.getSessionBoundModifiedGroups();
 
         return castedCollection;
 
@@ -286,6 +309,12 @@ public class SessionListManager {
     public ExpressionExperimentSetValueObject addExperimentSet( ExpressionExperimentSetValueObject eesvo ) {
 
         return ( ExpressionExperimentSetValueObject ) experimentSetList.addSet( eesvo );
+
+    }
+
+    public ExpressionExperimentSetValueObject addExperimentSet( ExpressionExperimentSetValueObject eesvo , String referenceType) {
+
+        return ( ExpressionExperimentSetValueObject ) experimentSetList.addSet( eesvo, referenceType );
 
     }
 

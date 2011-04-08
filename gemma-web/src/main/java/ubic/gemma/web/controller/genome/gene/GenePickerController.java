@@ -285,12 +285,6 @@ public class GenePickerController {
         String taxonName = taxon.getCommonName();
         boolean privateOnly = true;
 
-        /*
-         * Arbitrary id values for temporary groups (GO groups and 'all results' groups) (only needed so when displayed
-         * in a combo box, the selected entry's name will appear in the field after being selected)
-         */
-        Long tempId = new Long( -3 );
-
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
@@ -318,7 +312,7 @@ public class GenePickerController {
             }
             // get any session-bound groups
 
-            Collection<GeneSetValueObject> sessionResult = sessionListManager.getRecentGeneSets( taxonId );
+            Collection<GeneSetValueObject> sessionResult = sessionListManager.getModifiedGeneSets( taxonId );
 
             result.addAll( sessionResult );
 
@@ -400,9 +394,9 @@ public class GenePickerController {
                 GeneSet goSet = this.geneSetSearch.findByGoId( query, taxon );
                 if ( goSet != null ) {
                     SearchResultDisplayObject sdo = new SearchResultDisplayObject( goSet );
+                    sdo.setReference( new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
                     sdo.setTaxonId( taxonId );
                     sdo.setTaxonName( taxonName );
-                    tempId--;
                     goSRDOs.add( sdo );
                     goSets.add( goSet );
                 }
@@ -412,10 +406,10 @@ public class GenePickerController {
                     // (should probably do this check elsewhere in case it speeds things up)
                     if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
                         SearchResultDisplayObject sdo = new SearchResultDisplayObject( geneSet );
+                        sdo.setReference( new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
                         sdo.setType( "GOgroup" );
                         sdo.setTaxonId( taxonId );
                         sdo.setTaxonName( taxonName );
-                        tempId--;
                         goSRDOs.add( sdo );
                         goSets.add( geneSet );
                     }
@@ -474,12 +468,11 @@ public class GenePickerController {
                     }
                 }
 
-                Reference ref = new Reference( tempId, Reference.SESSION_UNBOUND_GROUP );
+                Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
                 SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(
                         ExpressionExperimentSet.class, ref, "All '" + query + "' results",
                         "All genes found for your query", true, geneIds.size(), taxonId, taxonName, 
                         "freeText", geneIds );
-                tempId--;
                 displayResults.add( allResultsGroup );
             }
 

@@ -341,7 +341,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 
 		if (dsc.selectedFactors) {
 			url += "&fm=";
-			for (var i in dsc.selectedFactors) {
+			var i;
+			for ( i in dsc.selectedFactors) {
 				var o = dsc.selectedFactors[i];
 				if (!o.eeId) {
 					continue;

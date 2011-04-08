@@ -466,6 +466,10 @@ ExpressionExperimentSetController.addSessionGroups = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addSessionGroups', p0,
 			callback);
 }
+ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addNonModificationBasedSessionBoundGroups', p0,
+			callback);
+}
 ExpressionExperimentSetController.updateUserAndSessionGroups = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateUserAndSessionGroups', p0,
 			callback);
@@ -680,6 +684,9 @@ GeneSetController.addSessionGroups = function(p0, callback) {
 }
 GeneSetController.addUserAndSessionGroups = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addUserAndSessionGroups', p0, callback);
+}
+GeneSetController.addNonModificationBasedSessionBoundGroups = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addNonModificationBasedSessionBoundGroups', p0, callback);
 }
 GeneSetController.remove = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'remove', p0, callback);

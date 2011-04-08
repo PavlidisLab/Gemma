@@ -950,6 +950,9 @@ gemma.max.fileupload.size.bytes=
 								<value>updateUserAndSessionGroups</value>
 								<value>addUserAndSessionGroups</value>
 								<value>removeUserAndSessionGroups</value>
+								<value>loadAllSessionGroups</value>
+								<value>addSessionGroups</value>
+								<value>addNonModificationBasedSessionBoundGroups</value>
 							</list>
 						</property>
 					</bean>
@@ -1131,6 +1134,7 @@ gemma.max.fileupload.size.bytes=
 							<list>
 								<value>create</value>
 								<value>addSessionGroups</value>
+								<value>addNonModificationBasedSessionBoundGroups</value>
 								<value>addUserAndSessionGroups</value>
 								<value>remove</value>
 								<value>removeSessionGroups</value>
@@ -1139,7 +1143,6 @@ gemma.max.fileupload.size.bytes=
 								<value>getUserSessionGeneGroups</value>
 								<value>getUserAndSessionGeneGroups</value>
 								<value>getGenesInGroup</value>
-								<value>getGenesInGroupBySessionId</value>
 								<value>getGeneSetByGOId</value>
 								<value>update</value>
 								<value>updateMembers</value>

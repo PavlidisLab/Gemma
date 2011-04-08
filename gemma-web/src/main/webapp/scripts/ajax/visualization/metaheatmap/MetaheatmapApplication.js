@@ -207,7 +207,7 @@ Gemma.MetaHeatmapControlWindow = Ext.extend(Ext.Window, {
 	initComponent: function() {
 	Ext.apply(this, {
 		title: 'Visualization settings',
-		height: 600,
+		height: 400,
 		width: 300,
 		layout: 'accordion',
 		layoutConfig: {
@@ -244,126 +244,114 @@ onRender: function() {
 Ext.reg('metaVizSortFilter', Gemma.MetaHeatmapSortFilter);
 
 
-Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {	
-	initComponent: function() {
-	Ext.apply(this, {
-		_selectedGeneGroups: [],
-		_selectedDatasetGroups: [],
-		_metaVizApp: null,
-		_sortPanel: null,
-		height: 450,
-		layout: 'fit',
-		items: [
-		        {
-		        	xtype: 'taxonCombo',
-		        	width: 200,
-		        	ref: '_taxonCombo'
-		        },
-		        {
-		        	xtype: 'panel',
-		        	width: 200,
-		        	height: 100,			
-		        	ref: 'genePickerPanel',
-		        	items: [{
-		        		xtype: 'button',
-		        		text: 'Add gene group',
-		        		width: 200,
-		        		ref: 'addNewGeneGroupButton',					
-		        		listeners: {
-		        		click: {fn: function(target) {
-		        		//var genePicker = new Gemma.GeneGroupCombo({width : 200});
-		        		//genePicker.setTaxon(this._taxonCombo.getTaxon());		
-						var genePicker = new Gemma.GeneAndGeneGroupCombo({width:200});
-						genePicker.setTaxonId(this._taxonCombo.getTaxon().id);			
-		        		this._selectedGeneGroups.push(genePicker);
-		        		this.genePickerPanel.add(genePicker);
-		        		this.genePickerPanel.doLayout();
-		        	}, scope: this
-		        	}
-		        	}
-		        	}]
-
-		        },{
-		        	xtype: 'panel',
-		        	width: 200,
-		        	height: 100,			
-		        	ref: 'datasetPickerPanel',
-		        	items: [{
-		        		xtype: 'button',
-		        		text: 'Add dataset group',
-		        		width: 200,
-		        		ref: 'addNewDatasetGroupButton',					
-		        		listeners: {
-		        		click : {fn : function(target) {
-		        		//var datasetPicker = new Gemma.DatasetGroupCombo({width : 200});
-						var datasetPicker = new Gemma.ExperimentAndExperimentGroupCombo({width : 200});
-		        		this._selectedDatasetGroups.push(datasetPicker);
-		        		this.datasetPickerPanel.add(datasetPicker);
-		        		this.datasetPickerPanel.doLayout();
-		        	}, scope : this }
-		        	}
-		        	}]
-		        },
-		        {
-		        	xtype: 'button',
-		        	text: 'Visualize!',
-		        	ref: 'goButton',
-		        	width: 50,
-		        	height: 30,			
-		        	listeners: {
-		        	click: function(target) {
-		        	var geneGroups = [];
-		        	var geneGroupNames = [];
-		        	var geneGroupReferences = [];
-		        	var geneGroupReference;
-		        	var i;
-					var geneGroupIdsAreSessionBound = false;
-					var datasetGroupIdsAreSessionBound = false;
+Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
+	_selectedDatasetGroups : [],
+	_selectedGeneGroups : [],
+	waitingForGeneSessionGroupBinding : false,
+	waitingForDatasetSessionGroupBinding : false,
+	geneGroupNames : [],
+	geneGroupReferences : [],
+	datasetGroupNames : [],
+	datasetGroupReferences : [],
+	prepareVisualization : function(target) {
+		
+		this.geneGroupNames = [];
+		this.geneGroupReferences = [];
+		this.datasetGroupNames = [];
+		this.datasetGroupReferences = [];
+		this._selectedGeneGroups = [];
+		this._selectedDatasetGroups = [];
+					// control variables used if asynchronous session group creation is performed
+					this.waitingForGeneSessionGroupBinding = false;
+					this.waitingForDatasetSessionGroupBinding = false;
 					
+					var i;
+					// populate list of selected groups
+					for (i = 0; i < this._geneCombos.length; i++) {
+							this._selectedGeneGroups.push(this._geneCombos[i].getGeneGroup());
+					}
+					
+					for (i = 0; i < this._datasetCombos.length; i++) {
+							this._selectedDatasetGroups.push(this._datasetCombos[i].getSelected());
+					}
+
+					var geneGroupsToBindToSession = [];
+		        	
 		        	for (i = 0; i < this._selectedGeneGroups.length; i++) {
-						if(this._selectedGeneGroups[i].getGeneGroup()!==null){
-							
-							// if one group has a non-null session-bound id, then they all should 
-							// because that's the way the combobox store is populated
-							if (this._selectedGeneGroups[i].getGeneGroup().sessionId !== null
-								  && this._selectedGeneGroups[i].getGeneGroup().sessionId !== '') {
-								geneGroupIdsAreSessionBound = true;
-								geneGroups.push(this._selectedGeneGroups[i].getGeneGroup().sessionId);
+												
+						if(this._selectedGeneGroups[i] && this._selectedGeneGroups[i]!==null){
+							// if the group has a null value for reference.id, then it hasn't been
+							// created as a group in the database nor session
+							if(this._selectedGeneGroups[i].reference.id === null){
+								this._selectedGeneGroups[i].geneIds = this._selectedGeneGroups[i].memberIds;
+								geneGroupsToBindToSession.push(this._selectedGeneGroups[i]);
 							}else{
-								geneGroups.push(this._selectedGeneGroups[i].getGeneGroup().id);
+								this.geneGroupReferences.push(this._selectedGeneGroups[i].reference);
+			        			this.geneGroupNames.push(this._selectedGeneGroups[i].name);
 							}
-							
-		        			geneGroupReference = this._selectedGeneGroups[i].getGeneGroup().reference;
-		        			geneGroupReferences.push(this._selectedGeneGroups[i].getGeneGroup().reference);
-		        			geneGroupNames.push(this._selectedGeneGroups[i].getGeneGroup().name);
 						}
-		        		
+					}
+					var j;
+					if(geneGroupsToBindToSession.length !== 0){
+						this.waitingForGeneSessionGroupBinding = true;
+						GeneSetController.addNonModificationBasedSessionBoundGroups(geneGroupsToBindToSession,
+							function(geneSets){
+								// should be at least one geneset
+								if(geneSets === null || geneSets.length === 0 ){
+									// TODO error message
+									return;
+								}else{
+									for(j = 0; j< geneSets.length; j++){
+										this.geneGroupReferences.push(geneSets[j].reference);
+        								this.geneGroupNames.push(geneSets[j].name);
+									}
+								}
+								this.waitingForGeneSessionGroupBinding = false;
+								this.fireEvent('geneGroupsReadyForVisualization');
+							}.createDelegate(this));
 		        	}
 
-		        	var datasetGroups = [];
-		        	var datasetGroupNames = [];
-		        	var datasetGroupReferences = [];
-		        	var datasetGroupReference;
+					var datasetGroupsToBindToSession = [];
 		        	for (i = 0; i < this._selectedDatasetGroups.length; i++) {
-						if (this._selectedDatasetGroups[i].getSelected() !== null) {
-						
-							// if one group has a non-null session-bound id, then they all should 
-							// because that's the way the combobox store is populated
-							if (this._selectedDatasetGroups[i].getSelected().sessionId !== null
-							     && this._selectedDatasetGroups[i].getSelected().sessionId !== '') {
-								datasetGroupIdsAreSessionBound = true;
-								datasetGroups.push(this._selectedDatasetGroups[i].getSelected().sessionId);
+						if (this._selectedDatasetGroups[i] && this._selectedDatasetGroups[i] !== null) {
+							// if the group has a null value for reference.id, then it hasn't been
+							// created as a group in the database nor session
+							if(this._selectedDatasetGroups[i].reference.id === null){
+								this._selectedDatasetGroups[i].expressionExperimentIds = this._selectedDatasetGroups[i].memberIds;
+								datasetGroupsToBindToSession.push(this._selectedDatasetGroups[i]);
+							}else{
+								this.datasetGroupReferences.push(this._selectedDatasetGroups[i].reference);
+								this.datasetGroupNames.push(this._selectedDatasetGroups[i].name);
 							}
-							else {
-								datasetGroups.push(this._selectedDatasetGroups[i].getSelected().id);
-							}
-							datasetGroupReferences.push(this._selectedDatasetGroups[i].getSelected().reference);
-							datasetGroupReference = this._selectedDatasetGroups[i].getSelected().reference;
-							datasetGroupNames.push(this._selectedDatasetGroups[i].getSelected().name);
 						}
 		        	}
+					if(datasetGroupsToBindToSession.length !== 0){
+						this.waitingForDatasetSessionGroupBinding = true;
+						ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups(datasetGroupsToBindToSession,
+							function(datasetSets){
+								// should be at least one datasetSet
+								if(datasetSets === null || datasetSets.length === 0 ){
+									// TODO error message
+									return;
+								}else{
+									for(j = 0; j< datasetSets.length; j++){
+										this.datasetGroupReferences.push(datasetSets[j].reference);
+        								this.datasetGroupNames.push(datasetSets[j].name);
+									}
+								}
+								this.waitingForDatasetSessionGroupBinding = false;
+								this.fireEvent('datasetGroupsReadyForVisualization');
+							}.createDelegate(this));
+		        	}
 
-		        	var estimatedTime = 15 * this._selectedGeneGroups[0].getGeneGroup().size * this._selectedDatasetGroups[0].getSelected().size;
+					// if no asynchronous calls were made, run visualization right away
+					// otherwise, doVisualization will be triggered by events
+					if(!this.waitingForDatasetSessionGroupBinding && !this.waitingForGeneSessionGroupBinding){
+						this.doVisualization();
+					}
+	},
+	doVisualization : function() {
+		        	var estimatedTime = 15 * this._geneCombos[0].getGeneGroup().size * this._datasetCombos[0].getSelected().size;
 
 		        	var progressWindow = new Ext.Window({ width: 400,
 		        		height: 55,
@@ -377,16 +365,18 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		        		increment: estimatedTime/1000,
 		        		text: 'Building visualization...',
 		        		scope: this,
-		        		fn: function() { }//Ext.fly('status').update('Done!'); }
+		        		fn: function() { }
 		        	});
+					//this._selectedDatasetGroups = [];
+					this._selectedGeneGroups = [];
 
-	//	        	DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearchIdBased(this._taxonCombo.getSelected().id, datasetIdsByGroup, geneIdsByGroup, function(data) {
 		        	DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this._taxonCombo.getSelected().id, 
-							datasetGroupReferences, geneGroupReferences, function(data) {
+							this.datasetGroupReferences, this.geneGroupReferences, function(data) {
+								
 		        		progressWindow.hide();
 
-		        		data.geneGroupNames = geneGroupNames;
-		        		data.datasetGroupNames = datasetGroupNames;
+		        		data.geneGroupNames = this.geneGroupNames;
+		        		data.datasetGroupNames = this.datasetGroupNames;
 
 		        		_metaVizApp = new Gemma.MetaHeatmapApp({visualizationData: data, applyTo:'meta-heatmap-div'});
 		        		_metaVizApp.doLayout();
@@ -478,9 +468,90 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
 		        		}); 
 
-		        	});
-		        }, scope: this
-		        }
+		        	}.createDelegate(this));
+		        },	
+	initComponent: function() {
+	this.on('geneGroupsReadyForVisualization', function(geneReferences, geneNames){
+		if(!this.waitingForDatasetSessionGroupBinding){
+			this.doVisualization();
+		}
+	}, this);
+	this.on('datasetGroupsReadyForVisualization', function(){
+		if(!this.waitingForGeneSessionGroupBinding){
+			this.doVisualization();
+		}
+	}, this);
+	Ext.apply(this, {
+		_geneCombos: [],
+		_datasetCombos: [],
+		_selectedDatasetGroups: [],
+		_metaVizApp: null,
+		_sortPanel: null,
+		height: 450,
+		layout: 'fit',
+		items: [
+		        {
+		        	xtype: 'taxonCombo',
+		        	width: 200,
+		        	ref: '_taxonCombo'
+		        },
+		        {
+		        	xtype: 'panel',
+		        	width: 200,
+		        	height: 100,			
+		        	ref: 'genePickerPanel',
+		        	items: [{
+		        		xtype: 'button',
+		        		text: 'Add gene group',
+		        		width: 200,
+		        		ref: 'addNewGeneGroupButton',					
+		        		listeners: {
+		        		click: {fn: function(target) {
+		        		//var genePicker = new Gemma.GeneGroupCombo({width : 200});
+		        		//genePicker.setTaxon(this._taxonCombo.getTaxon());		
+						var genePicker = new Gemma.GeneAndGeneGroupCombo({width:200});
+						genePicker.setTaxonId(this._taxonCombo.getTaxon().id);			
+		        		this._geneCombos.push(genePicker);
+		        		this.genePickerPanel.add(genePicker);
+		        		this.genePickerPanel.doLayout();
+		        	}, scope: this
+		        	}
+		        	}
+		        	}]
+
+		        },{
+		        	xtype: 'panel',
+		        	width: 200,
+		        	height: 100,			
+		        	ref: 'datasetPickerPanel',
+		        	items: [{
+		        		xtype: 'button',
+		        		text: 'Add dataset group',
+		        		width: 200,
+		        		ref: 'addNewDatasetGroupButton',					
+		        		listeners: {
+		        		click : {fn : function(target) {
+		        		//var datasetPicker = new Gemma.DatasetGroupCombo({width : 200});
+						var datasetPicker = new Gemma.ExperimentAndExperimentGroupCombo({width : 200});
+		        		this._datasetCombos.push(datasetPicker);
+		        		this.datasetPickerPanel.add(datasetPicker);
+		        		this.datasetPickerPanel.doLayout();
+		        	}, scope : this }
+		        	}
+		        	}]
+		        },
+		        {
+		        	xtype: 'button',
+		        	text: 'Visualize!',
+		        	ref: 'goButton',
+		        	width: 50,
+		        	height: 30,			
+		        	listeners: {
+		        		click: {
+							fn: this.prepareVisualization,
+							scope: this
+						}
+		        	}
 		        }]			
 	});
 
