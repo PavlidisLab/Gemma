@@ -443,6 +443,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
         ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
         vo.setName( set.getName() );
         vo.setId( set.getId() );
+        vo.setReference( new Reference(set.getId(), Reference.DATABASE_BACKED_GROUP) );
         Taxon taxon = set.getTaxon();
         if ( taxon == null ) {
             // happens in test databases that aren't properly populated.
