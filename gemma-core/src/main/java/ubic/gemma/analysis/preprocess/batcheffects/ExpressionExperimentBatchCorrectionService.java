@@ -47,6 +47,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -65,6 +66,9 @@ public class ExpressionExperimentBatchCorrectionService {
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
+
+    @Autowired
+    private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
     private SVDService svdService;
@@ -211,6 +215,8 @@ public class ExpressionExperimentBatchCorrectionService {
     public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix, boolean parametric ) {
 
         ExpressionExperiment ee = originalDataMatrix.getExpressionExperiment();
+
+        ee = this.expressionExperimentService.thawLite( ee );
 
         /*
          * is there a batch to use?
