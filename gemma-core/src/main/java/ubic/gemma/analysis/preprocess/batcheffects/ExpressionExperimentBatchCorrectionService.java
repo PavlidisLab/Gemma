@@ -187,16 +187,30 @@ public class ExpressionExperimentBatchCorrectionService {
                 .getProcessedDataVectors( ee );
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
 
-        return comBat( ee, mat );
+        return comBat( mat );
 
     }
 
     /**
+     * Run ComBat using default settings (parametric)
+     * 
      * @param ee
      * @param mat
      * @return
      */
-    public ExpressionDataDoubleMatrix comBat( ExpressionExperiment ee, ExpressionDataDoubleMatrix mat ) {
+    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat ) {
+        return this.comBat( mat, true );
+    }
+
+    /**
+     * @param ee
+     * @param originalDataMatrix
+     * @param parametric if false, the non-parametric (slow) ComBat estimation will be used.
+     * @return corrected data.
+     */
+    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix, boolean parametric ) {
+
+        ExpressionExperiment ee = originalDataMatrix.getExpressionExperiment();
 
         /*
          * is there a batch to use?
@@ -207,30 +221,33 @@ public class ExpressionExperimentBatchCorrectionService {
             return null;
         }
 
-        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = getDesign( ee, mat );
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = getDesign( ee, originalDataMatrix );
 
         ObjectMatrix<BioMaterial, String, Object> designU = convertFactorValuesToStrings( design );
-        DoubleMatrix<CompositeSequence, BioMaterial> matrix = mat.getMatrix();
+        DoubleMatrix<CompositeSequence, BioMaterial> matrix = originalDataMatrix.getMatrix();
 
-        DoubleMatrix<CompositeSequence, BioMaterial> omatrix = orderMatrix( matrix, designU );
+        designU = orderMatrix( matrix, designU );
 
-        ScaleType scale = mat.getQuantitationTypes().iterator().next().getScale();
+        ScaleType scale = originalDataMatrix.getQuantitationTypes().iterator().next().getScale();
 
+        boolean transformed = false;
         if ( scale.equals( ScaleType.LOG2 ) || scale.equals( ScaleType.LOG10 )
                 || scale.equals( ScaleType.LOGBASEUNKNOWN ) || scale.equals( ScaleType.LN ) ) {
             // ok, already on a log scale.
         } else {
             // log transform it.... hope for the best.
-            MatrixStats.logTransform( omatrix );
+            log.info( " *** COMBAT: LOG TRANSFORMING ***" );
+            transformed = true;
+            MatrixStats.logTransform( matrix );
         }
 
         /*
          * Process
          */
 
-        ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<CompositeSequence, BioMaterial>( omatrix, designU );
+        ComBat<CompositeSequence, BioMaterial> comBat = new ComBat<CompositeSequence, BioMaterial>( matrix, designU );
 
-        DoubleMatrix2D results = comBat.run( true ); // false: NONPARAMETRIC
+        DoubleMatrix2D results = comBat.run( parametric ); // false: NONPARAMETRIC
 
         // note these plots always reflect the parametric setup.
         comBat.plot( ee.getId() + "." + ee.getShortName().replaceAll( "[\\W\\s]+", "_" ) ); // TEMPORARY?
@@ -238,33 +255,49 @@ public class ExpressionExperimentBatchCorrectionService {
         /*
          * Postprocess. Results is a raw matrix/
          */
-        DoubleMatrix<CompositeSequence, BioMaterial> resultsM = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+        DoubleMatrix<CompositeSequence, BioMaterial> correctedDataMatrix = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
                 results.toArray() );
-        resultsM.setRowNames( omatrix.getRowNames() );
-        resultsM.setColumnNames( omatrix.getColNames() );
+        correctedDataMatrix.setRowNames( matrix.getRowNames() );
+        correctedDataMatrix.setColumnNames( matrix.getColNames() );
 
-        return new ExpressionDataDoubleMatrix( mat, resultsM );
+        if ( transformed ) {
+            MatrixStats.unLogTransform( correctedDataMatrix );
+        }
+
+        ExpressionDataDoubleMatrix correctedExpressionDataMatrix = new ExpressionDataDoubleMatrix( originalDataMatrix,
+                correctedDataMatrix );
+
+        // Sanity check...
+        for ( int i = 0; i < correctedExpressionDataMatrix.columns(); i++ ) {
+            assert correctedExpressionDataMatrix.getBioMaterialForColumn( i ).equals(
+                    originalDataMatrix.getBioMaterialForColumn( i ) );
+        }
+
+        return correctedExpressionDataMatrix;
     }
 
     /**
+     * Reorder the design matrix so its rows are in the same order as the columns of the data matrix.
+     * 
      * @param matrix
      * @param designU
-     * @return
+     * @return updated designU
      */
-    private DoubleMatrix<CompositeSequence, BioMaterial> orderMatrix(
-            DoubleMatrix<CompositeSequence, BioMaterial> matrix, ObjectMatrix<BioMaterial, String, Object> designU ) {
+    private ObjectMatrix<BioMaterial, String, Object> orderMatrix( DoubleMatrix<CompositeSequence, BioMaterial> matrix,
+            ObjectMatrix<BioMaterial, String, Object> designU ) {
 
-        DoubleMatrix<CompositeSequence, BioMaterial> result = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
-                matrix.rows(), matrix.columns() );
+        ObjectMatrix<BioMaterial, String, Object> result = new ObjectMatrixImpl<BioMaterial, String, Object>( designU
+                .rows(), designU.columns() );
 
-        for ( int i = 0; i < matrix.rows(); i++ ) {
-            List<BioMaterial> rowNames = designU.getRowNames();
-            for ( int j = 0; j < matrix.columns(); j++ ) {
-                result.set( i, j, matrix.get( i, matrix.getColIndexByName( rowNames.get( j ) ) ) );
+        List<BioMaterial> rowNames = matrix.getColNames();
+
+        for ( int j = 0; j < designU.columns(); j++ ) {
+            for ( int i = 0; i < designU.rows(); i++ ) {
+                result.set( i, j, designU.get( designU.getRowIndexByName( rowNames.get( i ) ), j ) );
             }
         }
-        result.setRowNames( matrix.getRowNames() );
-        result.setColumnNames( designU.getRowNames() );
+        result.setRowNames( matrix.getColNames() );
+        result.setColumnNames( designU.getColNames() );
         return result;
 
     }

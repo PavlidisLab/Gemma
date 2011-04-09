@@ -28,6 +28,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
@@ -138,7 +142,12 @@ public class ComBat<R, C> {
     }
 
     /**
-     * Make diagnostic plots
+     * Make diagnostic plots.
+     * <p>
+     * TODO: save somewhere more reasonable than in the tmp directory.
+     * <p>
+     * FIXME: As in the original ComBat, this only graphs the first batch's statistics. In principle we can (and perhaps
+     * should) examine these plots for all the batches.
      * 
      * @param filePrefix
      */
@@ -185,7 +194,7 @@ public class ComBat<R, C> {
         XYSeries dhplot = deltaHatHist.plot();
         Gamma g = new Gamma( aPrior.get( 0 ), bPrior.get( 0 ), new MersenneTwister() );
 
-        Histogram deltaHatT = new Histogram( "Gamma", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
+        Histogram deltaHatT = new Histogram( "Delta", NUM_HIST_BINS, deltaHatHist.min(), deltaHatHist.max() );
 
         for ( int i = 0; i < 10000; i++ ) {
             double invg = 1.0 / g.nextDouble();
@@ -249,7 +258,7 @@ public class ComBat<R, C> {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        DoubleMatrix2D sdata = standardize( y, X );
+        final DoubleMatrix2D sdata = standardize( y, X );
 
         checkForProblems( sdata );
 
@@ -287,40 +296,14 @@ public class ComBat<R, C> {
         // assertEquals( 17.4971, aPrior.get( 0 ), 0.0001 );
         // assertEquals( 4.514, bPrior.get( 1 ), 0.0001 );
 
-        int batchIndex = 0;
         DoubleMatrix2D gammastar = new DenseDoubleMatrix2D( numBatches, numProbes );
         DoubleMatrix2D deltastar = new DenseDoubleMatrix2D( numBatches, numProbes );
 
-        for ( String batchId : batches.keySet() ) {
-            timer.reset();
-            timer.start();
-            DoubleMatrix2D batchData = this.getBatchData( sdata, batchId );
-
-            DoubleMatrix1D[] batchResults;
-
-            if ( parametric ) {
-                batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ),
-                        gammaBar.get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ), bPrior
-                                .get( batchIndex ) );
-            } else {
-                batchResults = nonParametricFit( batchData, gammaHat.viewRow( batchIndex ), deltaHat
-                        .viewRow( batchIndex ) );
-            }
-
-            for ( int j = 0; j < batchResults[0].size(); j++ ) {
-                gammastar.set( batchIndex, j, batchResults[0].get( j ) );
-            }
-            for ( int j = 0; j < batchResults[1].size(); j++ ) {
-                deltastar.set( batchIndex, j, batchResults[1].get( j ) );
-            }
-            batchIndex++;
-            if ( timer.getTime() > 1000 ) {
-                log.info( "Corrected batch " + batchIndex );
-            }
+        if ( !parametric ) {
+            runNonParametric( sdata, gammastar, deltastar );
+        } else {
+            runParametric( sdata, gammastar, deltastar );
         }
-
-        timer.reset();
-        timer.start();
 
         DoubleMatrix2D adjustedData = rawAdjust( sdata, gammastar, deltastar );
 
@@ -333,6 +316,100 @@ public class ComBat<R, C> {
             log.info( "Done" );
         }
         return result;
+    }
+
+    /**
+     * @param sdata
+     * @param gammastar
+     * @param deltastar
+     */
+    private void runParametric( final DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
+        int batchIndex = 0;
+        for ( String batchId : batches.keySet() ) {
+
+            DoubleMatrix2D batchData = this.getBatchData( sdata, batchId );
+
+            DoubleMatrix1D[] batchResults;
+
+            batchResults = itSol( batchData, gammaHat.viewRow( batchIndex ), deltaHat.viewRow( batchIndex ), gammaBar
+                    .get( batchIndex ), t2.get( batchIndex ), aPrior.get( batchIndex ), bPrior.get( batchIndex ) );
+
+            for ( int j = 0; j < batchResults[0].size(); j++ ) {
+                gammastar.set( batchIndex, j, batchResults[0].get( j ) );
+            }
+            for ( int j = 0; j < batchResults[1].size(); j++ ) {
+                deltastar.set( batchIndex, j, batchResults[1].get( j ) );
+            }
+            batchIndex++;
+        }
+    }
+
+    /**
+     * Multithreaded
+     * 
+     * @param sdata
+     * @param gammastar
+     * @param deltastar
+     */
+    private void runNonParametric( final DoubleMatrix2D sdata, DoubleMatrix2D gammastar, DoubleMatrix2D deltastar ) {
+        final ConcurrentHashMap<String, DoubleMatrix1D[]> results = new ConcurrentHashMap<String, DoubleMatrix1D[]>();
+        int numThreads = Math.min( batches.size(), Runtime.getRuntime().availableProcessors() );
+
+        log.info( "Runing nonparametric estimation on " + numThreads + " threads" );
+
+        Future<?>[] futures = new Future[numThreads];
+        ExecutorService service = Executors.newCachedThreadPool();
+
+        /*
+         * Divvy up batches over threads.
+         */
+
+        int batchesPerThread = batches.size() / numThreads;
+
+        final String[] batchIds = batches.keySet().toArray( new String[] {} );
+
+        for ( int i = 0; i < numThreads; i++ ) {
+
+            final int firstBatch = i * batchesPerThread;
+            final int lastBatch = i == ( numThreads - 1 ) ? batches.size() : firstBatch + batchesPerThread;
+
+            futures[i] = service.submit( new Runnable() {
+                @Override
+                public void run() {
+                    for ( int k = firstBatch; k < lastBatch; k++ ) {
+                        String batchId = batchIds[k];
+                        DoubleMatrix2D batchData = getBatchData( sdata, batchId );
+                        DoubleMatrix1D[] batchResults = nonParametricFit( batchData, gammaHat.viewRow( k ), deltaHat
+                                .viewRow( k ) );
+                        results.put( batchId, batchResults );
+                    }
+                }
+            } );
+        }
+
+        service.shutdown();
+
+        boolean allDone = false;
+        do {
+            for ( Future<?> f : futures ) {
+                allDone = true;
+                if ( !f.isDone() && !f.isCancelled() ) {
+                    allDone = false;
+                    break;
+                }
+            }
+        } while ( !allDone );
+
+        for ( int i = 0; i < batchIds.length; i++ ) {
+            String batchId = batchIds[i];
+            DoubleMatrix1D[] batchResults = results.get( batchId );
+            for ( int j = 0; j < batchResults[0].size(); j++ ) {
+                gammastar.set( i, j, batchResults[0].get( j ) );
+            }
+            for ( int j = 0; j < batchResults[1].size(); j++ ) {
+                deltastar.set( i, j, batchResults[1].get( j ) );
+            }
+        }
     }
 
     /**
@@ -502,6 +579,10 @@ public class ComBat<R, C> {
     private void initPartA() {
         numSamples = sampleInfo.rows();
 
+        /*
+         * TODO: remove rows that have too many missing values, or do that earlier.
+         */
+
         for ( int i = 0; i < data.rows(); i++ ) {
             for ( int j = 0; j < data.columns(); j++ ) {
                 if ( data.isMissing( i, j ) ) {
@@ -557,11 +638,11 @@ public class ComBat<R, C> {
         DoubleMatrix1D n = rowNonMissingCounts( matrix );
         DoubleMatrix1D gold = gHat;
         DoubleMatrix1D dold = dHat;
-        double conv = 0.0001;
+        final double conv = 0.0001;
         double change = 1.0;
         int count = 0;
 
-        int MAXITERS = 200;
+        int MAXITERS = 500;
 
         while ( change > conv ) {
             DoubleMatrix1D gnew = postMean( gHat, gbar, n, dold, t2b );
@@ -584,18 +665,17 @@ public class ComBat<R, C> {
             }
 
             change = Math.max( gnewmax, dnewmax );
-            // System.err.println( count + " " + gnewmax + " " + dnewmax + " " + change );
 
             gold = gnew;
             dold = dnew;
-            count++;
 
-            if ( count > MAXITERS ) {
+            if ( count++ > MAXITERS ) {
                 /*
-                 * For certain data sets, we just flail around; for example if there are only two samples. We really
-                 * shouldn't end up running so this is a bailout for exceptional circumstances.
+                 * For certain data sets, we just flail around; for example if there are only two samples. This is a
+                 * bailout for exceptional circumstances.
                  */
-                throw new IllegalStateException( "Failed to converge" );
+                throw new IllegalStateException( "Failed to converge within " + MAXITERS
+                        + " iterations, last delta was " + String.format( "%.2g", change ) );
             }
         }
 
@@ -603,6 +683,8 @@ public class ComBat<R, C> {
     }
 
     /**
+     * Estimation of parameters for one batch.
+     * 
      * @param matrix
      * @param gHat
      * @param dHat
@@ -616,17 +698,18 @@ public class ComBat<R, C> {
         StopWatch timer = new StopWatch();
         timer.start();
 
+        /*
+         * Vectorized schmectorized. In R you end up looping over the data many times. It's slow here too... but not too
+         * horrible. 1000 rows of a 10k probe data set with 10 samples takes about 7.5 seconds on my laptop -- but this
+         * has to be done for each batch. It's O( M*N^2 )
+         */
+        int c = 1;
         for ( int i = 0; i < matrix.rows(); i++ ) {
 
             DoubleMatrix1D x = MatrixUtil.removeMissing( matrix.viewRow( i ) );
             int n = x.size();
             double no2 = n / 2.0;
 
-            /*
-             * Vectorized schmectorized. In R you end up looping over the data many times. It's slow here too... but not
-             * too horrible. 1000 rows of a 10k probe data set takes about 10 seconds -- but this has to be done for
-             * each batch.
-             */
             double sumLH = 0.0;
             double sumgLH = 0.0;
             double sumdLH = 0.0;
@@ -637,7 +720,13 @@ public class ComBat<R, C> {
                 double d = dHat.getQuick( j );
 
                 // compute the sum of squares of the difference between gHat[j] and the current data row.
-                double sum2 = x.copy().assign( Functions.minus( g ) ).aggregate( Functions.plus, Functions.square );
+                // this is slower, though it's the "colt api" way.
+                // double sum2 = x.copy().assign( Functions.minus( g ) ).aggregate( Functions.plus, Functions.square );
+
+                double sum2 = 0.0;
+                for ( int k = 0; k < n; k++ ) {
+                    sum2 += Math.pow( x.getQuick( k ) - g, 2 );
+                }
 
                 double LH = ( 1.0 / Math.pow( twopi * d, no2 ) ) * Math.exp( -sum2 / ( 2 * d ) );
 
@@ -654,7 +743,7 @@ public class ComBat<R, C> {
             gstar.set( i, sumgLH / sumLH );
             dstar.set( i, sumdLH / sumLH );
 
-            if ( i % 1000 == 0 ) {
+            if ( c++ % 1000 == 0 ) {
                 log.info( i + String.format( " rows done, %.1fs elapsed", timer.getTime() / 1000.00 ) );
             }
         }

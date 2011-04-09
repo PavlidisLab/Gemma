@@ -53,8 +53,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
     private ExperimentalFactor subsetFactor;
 
-    private boolean isOnLogScale = false;
-
     public AnalysisType getAnalysisType() {
         return analysisType;
     }
@@ -171,21 +169,6 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
 
         return buf.toString();
 
-    }
-
-    /**
-     * @return true if the data is definitely on a log scale; false otherwise (e.g., if this has not been set), in which
-     *         case the scale should be inferred from the experiment QuantitationType.
-     */
-    public boolean isOnLogScale() {
-        return isOnLogScale;
-    }
-
-    /**
-     * Use to override the settings that might be found in the quantitation types. The default is FALSE.
-     */
-    public void setOnLogScale( boolean isOnLogScale ) {
-        this.isOnLogScale = isOnLogScale;
     }
 
 }
