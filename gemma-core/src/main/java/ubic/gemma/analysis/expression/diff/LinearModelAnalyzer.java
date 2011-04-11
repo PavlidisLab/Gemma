@@ -365,12 +365,12 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
-     * @param bioAssaySet
+     * @param bioAssaySet source data
      * @param config
-     * @param dmatrix
-     * @param samplesUsed
-     * @param factors
-     * @param subsetFactorValue
+     * @param dmatrix data
+     * @param samplesUsed analyzed
+     * @param factors included in the model
+     * @param subsetFactorValue null unless analyzing a subset
      * @return
      */
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
@@ -458,10 +458,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         boolean warned = false;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
-
-            // if ( el.getName().equals( "probe_0" ) ) {
-            // log.info( "MY GOODNESS" );
-            // }
 
             LinearModelSummary lm = rawResults.get( rowNameExtractor.transform( el ).toString() );
 

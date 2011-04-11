@@ -128,6 +128,10 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
         return normalizedRanks;
     }
 
+    /**
+     * @param pvalues
+     * @return
+     */
     protected double[] benjaminiHochberg( Double[] pvalues ) {
         DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection.benjaminiHochberg( new DenseDoubleMatrix1D(
                 ArrayUtils.toPrimitive( pvalues ) ) );

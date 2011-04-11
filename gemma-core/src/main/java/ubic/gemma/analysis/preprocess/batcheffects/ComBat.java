@@ -706,8 +706,8 @@ public class ComBat<R, C> {
         int c = 1;
         for ( int i = 0; i < matrix.rows(); i++ ) {
 
-            DoubleMatrix1D x = MatrixUtil.removeMissing( matrix.viewRow( i ) );
-            int n = x.size();
+            double[] x = MatrixUtil.removeMissing( matrix.viewRow( i ) ).toArray();
+            int n = x.length;
             double no2 = n / 2.0;
 
             double sumLH = 0.0;
@@ -725,7 +725,7 @@ public class ComBat<R, C> {
 
                 double sum2 = 0.0;
                 for ( int k = 0; k < n; k++ ) {
-                    sum2 += Math.pow( x.getQuick( k ) - g, 2 );
+                    sum2 += Math.pow( x[k] - g, 2 );
                 }
 
                 double LH = ( 1.0 / Math.pow( twopi * d, no2 ) ) * Math.exp( -sum2 / ( 2 * d ) );
