@@ -490,8 +490,6 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			Ext.Msg.alert('imma','test func!');
 		},
 	initComponent: function() {
-		
-	this.restoreState();
 	
 	this.on('geneGroupsReadyForVisualization', function(geneReferences, geneNames){
 		if(!this.waitingForDatasetSessionGroupBinding){
