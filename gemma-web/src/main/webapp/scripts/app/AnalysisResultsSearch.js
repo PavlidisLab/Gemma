@@ -20,6 +20,10 @@ Ext.onReady(function() {
 	
 	// panel for performing search, appears on load
 	var searchPanel = new Gemma.AnalysisResultsSearchForm();
+	
+	// window that controls diff visualizer; 
+	// it's not part of the results panel so need to keep track separately to be able to delete it
+	this.diffVisualizer = null;
 
 	searchPanel.render("analysis-results-search-form");
 	
@@ -45,7 +49,7 @@ Ext.onReady(function() {
 	searchPanel.on("beforesearch",function(panel){
 		
 		// before every search, clear the results in preparation for new (possibly blank) results 
-		this.resultsPanel.removeAll();
+		this.resultsPanel.removeAll(); 
 		panel.clearError();
 		
 		// once the user performs a search, hide the main page elements 
@@ -226,7 +230,13 @@ Ext.onReady(function() {
 		}
 	});
 	
-	searchPanel.on("showDiffExResults",function(panel,result){
+	searchPanel.on("showDiffExResults",function(panel,result, data){
+		
+		console.log('data.paramGeneReferences[0]'+ data.geneReferences[0].id);
+		
+		// show metaheatmap viewer (but not control panel)
+		// control panel is responsible for creating the visualisation view space
+		this.diffVisualizer = new Gemma.MetaHeatmapControlWindow(data); 
 				
 		var diffExResultsGrid = new Gemma.DiffExpressionGrid({
 				//renderTo : "analysis-results-search-form-results",
@@ -254,6 +264,7 @@ Ext.onReady(function() {
 		resultsPanel.show();
 		resultsPanel.doLayout();
 		diffExResultsGrid.loadData(result);
+		//this.diffVisualizer.show();
 	});
 	
 	var visualizationPanel;

@@ -11,7 +11,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 
 	Ext.apply(this, {
 		width: 1700,
-		height: 3000,
+		height: 2000,
 		_visualizationData : this.visualizationData,
 		geneScores: this.visualizationData.geneScores,
 		geneOrdering: null,
@@ -204,6 +204,7 @@ Ext.reg('metaVizScrollableArea', Gemma.MetaHeatmapScrollableArea);
 Ext.reg('taxonCombo', Gemma.TaxonCombo);
 
 Gemma.MetaHeatmapControlWindow = Ext.extend(Ext.Window, {	
+
 	initComponent: function() {
 	Ext.apply(this, {
 		title: 'Visualization settings',
@@ -215,10 +216,10 @@ Gemma.MetaHeatmapControlWindow = Ext.extend(Ext.Window, {
 		animate: true,
 		activeOnTop: true
 	},
+	
 	items: [{title: 'Data selection', xtype: 'metaVizDataSelection', ref:'selectionPanel'},
 	        {title: 'Filter/Sort', xtype: 'metaVizSortFilter', ref:'sortPanel'}]
 	});
-
 	Gemma.MetaHeatmapControlWindow.superclass.initComponent.apply(this, arguments);
 },
 onRender: function() {
@@ -245,6 +246,14 @@ Ext.reg('metaVizSortFilter', Gemma.MetaHeatmapSortFilter);
 
 
 Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
+	
+	constructor : function(searchCommand) {
+		Ext.apply(this,{
+			param: searchCommand.ownerCt
+		});
+		Gemma.MetaHeatmapDataSelection.superclass.constructor.call(this);
+	},
+	
 	_selectedDatasetGroups : [],
 	_selectedGeneGroups : [],
 	waitingForGeneSessionGroupBinding : false,
@@ -253,6 +262,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 	geneGroupReferences : [],
 	datasetGroupNames : [],
 	datasetGroupReferences : [],
+	taxonId: null,
+
 	prepareVisualization : function(target) {
 		
 		this.geneGroupNames = [];
@@ -351,7 +362,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					}
 	},
 	doVisualization : function() {
-		        	var estimatedTime = 15 * this._geneCombos[0].getGeneGroup().size * this._datasetCombos[0].getSelected().size;
+		        	var estimatedTime = 15 * this.geneGroupReferences.length * this.datasetGroupReferences.length;
 
 		        	var progressWindow = new Ext.Window({ width: 400,
 		        		height: 55,
@@ -367,10 +378,14 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		        		scope: this,
 		        		fn: function() { }
 		        	});
-					//this._selectedDatasetGroups = [];
+					this._selectedDatasetGroups = [];
 					this._selectedGeneGroups = [];
+					
+					if(!this.taxonId || this.taxonId === null){
+						this.taxonId = this._taxonCombo.getSelected().id;
+					}
 
-		        	DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this._taxonCombo.getSelected().id, 
+		        	DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId, 
 							this.datasetGroupReferences, this.geneGroupReferences, function(data) {
 								
 		        		progressWindow.hide();
@@ -381,7 +396,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		        		_metaVizApp = new Gemma.MetaHeatmapApp({visualizationData: data, applyTo:'meta-heatmap-div'});
 		        		_metaVizApp.doLayout();
 		        		_metaVizApp.refreshVisualization();
-		        		_sortPanel.add({xtype:'checkbox',
+		       /* 		
+						_sortPanel.add({xtype:'checkbox',
 		        			boxLabel:'Sort by gene score.',
 		        			listeners: {
 		        			check : function(target, checked) {
@@ -467,10 +483,16 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
 
 		        		}); 
-
+	*/					
 		        	}.createDelegate(this));
 		        },	
+			testfunc : function(){
+			Ext.Msg.alert('imma','test func!');
+		},
 	initComponent: function() {
+		
+	this.restoreState();
+	
 	this.on('geneGroupsReadyForVisualization', function(geneReferences, geneNames){
 		if(!this.waitingForDatasetSessionGroupBinding){
 			this.doVisualization();
@@ -484,12 +506,17 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 	Ext.apply(this, {
 		_geneCombos: [],
 		_datasetCombos: [],
-		_selectedDatasetGroups: [],
 		_metaVizApp: null,
 		_sortPanel: null,
 		height: 450,
 		layout: 'fit',
-		items: [
+		items:/* {
+			xtype: 'analysisResultsSearchForm',
+			ref: '_analysisResultsSearchForm',
+			stateful: true
+		}*/
+		
+		[
 		        {
 		        	xtype: 'taxonCombo',
 		        	width: 200,
@@ -554,8 +581,28 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		        	}
 		        }]			
 	});
-
+		
+	if(this.param.geneReferences){
+		this.geneGroupReferences = this.param.geneReferences;
+	}
+	if(this.param.geneNames){
+		this.geneGroupNames = this.param.geneNames;
+	}
+	if(this.param.datasetReferences){
+		this.datasetGroupReferences = this.param.datasetReferences;
+	}
+	if(this.param.datasetNames){
+		this.datasetGroupNames = this.param.datasetNames;
+	}
+	if(this.param.taxonId){
+		this.taxonId = this.param.taxonId;
+	}
 	Gemma.MetaHeatmapDataSelection.superclass.initComponent.apply(this, arguments);
+	
+	if(this.param.geneReferences && this.param.geneNames && 
+		this.param.datasetReferences && this.param.datasetNames && this.param.taxonId){
+		this.doVisualization();
+	}
 },
 onRender: function() {
 	Gemma.MetaHeatmapDataSelection.superclass.onRender.apply(this, arguments);

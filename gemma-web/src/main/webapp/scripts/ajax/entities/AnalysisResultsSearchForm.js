@@ -37,11 +37,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	stateEvents : ["beforesearch"],
 	eeSetReady : false,
 	
-	
-	// share state with differential visualization page
-	stateId : "Gemma.AnalysisResultsSearchForm",
-	
-		
 	PREVIEW_SIZE : 5,
 	
 	// defaults for coexpression
@@ -67,6 +62,16 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		}
 	},
 
+	// share state with differential visualization page
+	stateId : "Gemma.AnalysisResultsSearchForm",
+	stateful:true,
+	stateEvents : ["beforesearch"],
+
+	getState: function(){
+		return { 	geneIds : this.geneIds,
+					experimentIds : this.experimentIds};
+			
+	},
 
 	/**************************************************************
 	 **                          SEARCH							 **
@@ -424,7 +429,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			if(!this.doneDiffEx){
 				return;
 			}else{
-				this.fireEvent('showDiffExResults', this, result);		
+				var data = {
+					geneReferences : [this.geneReference],
+					datasetReferences : [this.experimentReference],
+					geneNames : [this.geneName],
+					datasetNames : [this.experimentName],
+					taxonId : this.getTaxonId()
+				};
+				this.fireEvent('showDiffExResults', this, result, data);		
 			}
 		}
 		this.loadMask.hide();
@@ -444,7 +456,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 		}
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
-		this.fireEvent('showDiffExResults', this, result);
+		var data = {
+					geneReferences : [this.geneReference],
+					datasetReferences : [this.experimentReference],
+					geneNames : [this.geneName],
+					datasetNames : [this.experimentName],
+					taxonId : this.getTaxonId()
+				};
+		this.fireEvent('showDiffExResults', this, result, data);
 	},
 
 	getExperimentIds : function() {
@@ -536,7 +555,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				'<tpl for="."><div style="padding-bottom:7px;"><a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
 				'{id}"',
 				' ext:qtip="{shortName}">{shortName}</a>&nbsp; {name} <span style="color:grey">({taxon})</span></div></tpl>'),
-				tplWriteMode: 'append'
+				tplWriteMode: 'append',
+				style:'padding-top:7px;'
 		});	
 		this.experimentPreviewExpandBtn = new Ext.Button({
 							handler:function(){
@@ -665,7 +685,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 				id:'genePreview',
 				//html:'<div style="padding-bottom:7px;font-weight:bold;">Gene Selection Preview</div>',
 				tpl: new Ext.Template('<div style="padding-bottom:7px;"><a href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} <span style="color:grey">({taxonCommonName})</span></div>'),
-				tplWriteMode: 'append' // use this to append to content when calling update instead of replacing
+				tplWriteMode: 'append', // use this to append to content when calling update instead of replacing
+				style:'padding-top:7px;'
 		});
 		
 		this.genePreviewExpandBtn = new Ext.Button({
@@ -697,7 +718,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							scale: 'medium',
 							width:150,
 							enableToggle:true,
-							pressed:true
+							pressed:false
 						});
 		this.coexToggle.on('click', function(){
 			this.diffExToggle.toggle();
@@ -707,7 +728,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 							style:'padding-bottom:0.4em',
 							scale: 'medium',
 							width:150,
-							enableToggle:true
+							enableToggle:true,
+							pressed:true
 						});
 		this.diffExToggle.on('click', function(){
 			this.coexToggle.toggle();
@@ -882,9 +904,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 	 */
 	loadExperimentOrGroup : function(record, query) {
 				
-				var id = record.get("id");
+				var id = record.data.reference.id;
 				var isGroup = record.get("isGroup");
 				var type = record.get("type");
+				var reference = record.get("reference");
+				this.experimentReference = reference;
+				var name = record.get("name");
+				this.experimentName = name;
 				
 				var taxonId = record.get("taxonId");
 				this.setTaxonId(taxonId);
@@ -979,11 +1005,15 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 			},
 			
 		loadGeneOrGroup : function(record, query) {
-				var id = record.get("id");
-				var sessionId = record.get("sessionId");
+				var id = record.data.reference.id;
 				var isGroup = record.get("isGroup");
 				var type = record.get("type");
 				var size = record.get("size");
+				var reference = record.get("reference");
+				this.geneReference = reference;
+				var name = record.get("name");
+				this.geneName = name;
+				
 				var taxonId = this.getTaxonId();
 				var geneIds = [];
 								
@@ -1141,7 +1171,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.Panel, {
 										geneIds.push(genes[i].id);
 									}
 								}
-								
 
 								this.geneIds=geneIds;								
 

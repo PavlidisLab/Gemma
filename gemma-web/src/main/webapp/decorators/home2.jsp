@@ -35,11 +35,8 @@
 	<%@ include file="/common/messages.jsp"%>
 </div>
 	
-<div align="center">
-	<div style="width:900px">
-		<%@ include file="/WEB-INF/pages/frontPageContent.jsp"%>
-	</div>
-</div>
+<%@ include file="/WEB-INF/pages/frontPageContent.jsp"%>
+
 				<div id="nav" style="top: -105px; left: 150px; width:85%">
 					<div class="wrapper" style="float:right; position:relative; right:35px; top:0px">
 						<h2 class="accessibility">
