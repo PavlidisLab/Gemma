@@ -41,6 +41,7 @@ import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.Auditable;
@@ -252,6 +253,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setCacheable( true );
+            queryObject.setReadOnly( true );
             queryObject.setParameter( "trail", auditTrail );
             queryObject.setMaxResults( 1 );
 
@@ -287,29 +289,62 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         List<String> classes = getClassHierarchy( type );
 
-        final String queryString = "select trail, event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
-                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
+        final String queryString = "select trail, ae from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
+                + "inner join trail.events ae inner join ae.eventType et inner join fetch ae.performer where trail in (:trails) "
+                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by ae.date desc ";
 
         StopWatch timer = new StopWatch();
         timer.start();
-        // note: this is fast.
 
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-        queryObject.setParameterList( "trails", atmap.keySet() );
+        Collection<AuditTrail> batch = new ArrayList<AuditTrail>();
+        int BATCHSIZE = 100;
 
-        List qr = queryObject.list();
-        if ( qr == null || qr.isEmpty() ) return result;
+        for ( AuditTrail at : atmap.keySet() ) {
+            batch.add( at );
 
-        for ( Object o : qr ) {
-            Object[] ar = ( Object[] ) o;
-            AuditTrail t = ( AuditTrail ) ar[0];
-            AuditEvent e = ( AuditEvent ) ar[1];
+            if ( batch.size() == BATCHSIZE ) {
+                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+                queryObject.setParameterList( "trails", batch );
+                queryObject.setReadOnly( true );
 
-            // only one event per object, please - the most recent.
-            if ( result.containsKey( atmap.get( t ) ) ) continue;
+                List qr = queryObject.list();
+                if ( qr == null || qr.isEmpty() ) {
+                    batch.clear();
+                    continue;
+                }
 
-            result.put( atmap.get( t ), e );
+                for ( Object o : qr ) {
+                    Object[] ar = ( Object[] ) o;
+                    AuditTrail t = ( AuditTrail ) ar[0];
+                    AuditEvent e = ( AuditEvent ) ar[1];
+
+                    // only one event per object, please - the most recent.
+                    if ( result.containsKey( atmap.get( t ) ) ) continue;
+
+                    result.put( atmap.get( t ), e );
+                }
+                batch.clear();
+            }
+        }
+
+        if ( !batch.isEmpty() ) {
+            org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+            queryObject.setParameterList( "trails", batch ); // if too many will fail.
+            queryObject.setReadOnly( true );
+
+            List qr = queryObject.list();
+            if ( qr == null || qr.isEmpty() ) return result;
+
+            for ( Object o : qr ) {
+                Object[] ar = ( Object[] ) o;
+                AuditTrail t = ( AuditTrail ) ar[0];
+                AuditEvent e = ( AuditEvent ) ar[1];
+
+                // only one event per object, please - the most recent.
+                if ( result.containsKey( atmap.get( t ) ) ) continue;
+
+                result.put( atmap.get( t ), e );
+            }
         }
 
         timer.stop();
@@ -579,11 +614,13 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         StopWatch timer = new StopWatch();
         timer.start();
 
+        HibernateTemplate template = new HibernateTemplate( this.getSessionFactory() );
+        template.setCacheQueries( true );
+        template.setQueryCacheRegion( "org.hibernate.cache.StandardQueryCache" );
+
         for ( String clazz : clazzmap.keySet() ) {
             final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
-            this.getHibernateTemplate().setCacheQueries( true );
-            this.getHibernateTemplate().setQueryCacheRegion( "org.hibernate.cache.StandardQueryCache" );
-            List res = this.getHibernateTemplate().findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
+            List res = template.findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
             for ( Object o : res ) {
                 Object[] ar = ( Object[] ) o;
                 AuditTrail t = ( AuditTrail ) ar[1];
@@ -616,10 +653,12 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     @Override
     public void retainHavingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
 
+        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
+
         CollectionUtils.filter( a, new Predicate() {
             @Override
             public boolean evaluate( Object arg0 ) {
-                return hasEvent( ( Auditable ) arg0, type );
+                return events.containsKey( arg0 );
             }
         } );
 
@@ -627,12 +666,33 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     @Override
     public void retainLackingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
+        log.info( "Phase I: " + timer.getTime() + "ms" );
+
         CollectionUtils.filter( a, new Predicate() {
             @Override
             public boolean evaluate( Object arg0 ) {
-                return !hasEvent( ( Auditable ) arg0, type );
+                return !events.containsKey( arg0 );
             }
         } );
+
     }
+
+    // not implemented yet.
+    // @Override
+    // public <T extends Auditable> Collection<T> getHavingEvent( Class<T> clazz, Class<? extends AuditEventType> type,
+    // int limit ) {
+    // // TODO Auto-generated method stub
+    // return null;
+    // }
+    //
+    // @Override
+    // public <T extends Auditable> Collection<T> getLackingEvent( Class<T> clazz, Class<? extends AuditEventType> type,
+    // int limit ) {
+    // // TODO Auto-generated method stub
+    // return null;
+    // }
 
 }

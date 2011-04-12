@@ -316,7 +316,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             timer.start();
             ees = queryObject.list();
             if ( timer.getTime() > 1000 ) {
-                log.info( "EEs loaded in " + timer.getTime() + "ms" );
+                log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
             }
             this.releaseSession( session );
         } catch ( org.hibernate.HibernateException ex ) {
@@ -1458,7 +1458,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             throw super.convertHibernateAccessException( ex );
         }
         if ( timer.getTime() > 1000 ) {
-            log.info( "EEs loaded in " + timer.getTime() + "ms" );
+            log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
         }
         return ees;
     }

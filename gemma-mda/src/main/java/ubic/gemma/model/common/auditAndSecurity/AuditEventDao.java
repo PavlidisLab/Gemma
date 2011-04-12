@@ -29,6 +29,8 @@ import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see AuditEvent
+ * @see AuditEventService
+ * @version $Id$
  */
 public interface AuditEventDao extends BaseDao<AuditEvent> {
     /**
@@ -93,6 +95,28 @@ public interface AuditEventDao extends BaseDao<AuditEvent> {
      */
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
             Collection<? extends Auditable> auditables );
+
+    // not implementing yet.
+    //
+    // /**
+    // * @param <T>
+    // * @param clazz
+    // * @param type
+    // * @param limit
+    // * @return
+    // */
+    // public <T extends Auditable> java.util.Collection<T> getHavingEvent( Class<T> clazz,
+    // Class<? extends AuditEventType> type, int limit );
+    //
+    // /**
+    // * @param <T>
+    // * @param clazz
+    // * @param type
+    // * @param limit
+    // * @return
+    // */
+    // public <T extends Auditable> java.util.Collection<T> getLackingEvent( Class<T> clazz,
+    // Class<? extends AuditEventType> type, int limit );
 
     /**
      * @param events
