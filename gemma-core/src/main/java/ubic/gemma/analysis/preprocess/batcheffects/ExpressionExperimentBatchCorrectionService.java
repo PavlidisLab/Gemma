@@ -49,6 +49,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Methods for correcting batch effects.
@@ -101,7 +102,7 @@ public class ExpressionExperimentBatchCorrectionService {
     }
 
     /**
-     * Is there a confound problem?
+     * Is there a confound problem? Do we have at least two samples per batch?
      * 
      * @param ee
      */
@@ -143,6 +144,10 @@ public class ExpressionExperimentBatchCorrectionService {
                 }
             }
         }
+
+        /*
+         * TODO consider merging batches.
+         */
 
         for ( Long batchId : batches.keySet() ) {
             if ( batches.get( batchId ) < 2 ) {
@@ -203,16 +208,20 @@ public class ExpressionExperimentBatchCorrectionService {
      * @return
      */
     public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix mat ) {
-        return this.comBat( mat, true );
+        return this.comBat( mat, true, null );
     }
 
     /**
      * @param ee
      * @param originalDataMatrix
      * @param parametric if false, the non-parametric (slow) ComBat estimation will be used.
+     * @param importanceThreshold a p-value threshold used to select covariates. Covariates which are not associated
+     *        with one of the first three principal components of the data at this level of significance will be removed
+     *        from the correction model fitting.
      * @return corrected data.
      */
-    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix, boolean parametric ) {
+    public ExpressionDataDoubleMatrix comBat( ExpressionDataDoubleMatrix originalDataMatrix, boolean parametric,
+            Double importanceThreshold ) {
 
         ExpressionExperiment ee = originalDataMatrix.getExpressionExperiment();
 
@@ -227,8 +236,52 @@ public class ExpressionExperimentBatchCorrectionService {
             return null;
         }
 
-        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = getDesign( ee, originalDataMatrix );
+        ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = getDesign( ee, originalDataMatrix,
+                importanceThreshold );
 
+        return doComBat( ee, originalDataMatrix, design, parametric );
+
+    }
+
+    /**
+     * @param ee
+     * @param experimentalFactors
+     * @param importanceThreshold threshold for pvalue of association with factor. Suggested value might be 0.01.
+     * @return factors which are "significantly" associated with PC (excluding 'batch')
+     */
+    private Set<ExperimentalFactor> getFactorPCAssociations( ExpressionExperiment ee,
+            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
+        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
+        Set<ExperimentalFactor> associatedWithPC = new HashSet<ExperimentalFactor>();
+        SVDValueObject svdFactorAnalysis = svdService.svdFactorAnalysis( ee );
+        Map<Integer, Map<Long, Double>> factorPvals = svdFactorAnalysis.getFactorPvals();
+        for ( Integer cmp : factorPvals.keySet() ) {
+            Map<Long, Double> factorPv = factorPvals.get( cmp );
+            for ( Long efId : factorPv.keySet() ) {
+                Double pvalue = factorPv.get( efId );
+                if ( pvalue < importanceThreshold ) {
+                    assert factors.containsKey( efId );
+                    ExperimentalFactor ef = factors.get( efId );
+                    if ( ExperimentalDesignUtils.isBatch( ef ) ) continue;
+
+                    log.info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
+                    associatedWithPC.add( ef );
+                }
+            }
+        }
+        return associatedWithPC;
+    }
+
+    /**
+     * @param ee
+     * @param originalDataMatrix
+     * @param design
+     * @param parametric
+     * @return
+     */
+    private ExpressionDataDoubleMatrix doComBat( ExpressionExperiment ee,
+            ExpressionDataDoubleMatrix originalDataMatrix,
+            ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design, boolean parametric ) {
         ObjectMatrix<BioMaterial, String, Object> designU = convertFactorValuesToStrings( design );
         DoubleMatrix<CompositeSequence, BioMaterial> matrix = originalDataMatrix.getMatrix();
 
@@ -340,13 +393,28 @@ public class ExpressionExperimentBatchCorrectionService {
      * 
      * @param ee
      * @param mat
+     * @param importanceThreshold
      * @return
      */
     private ObjectMatrix<BioMaterial, ExperimentalFactor, Object> getDesign( ExpressionExperiment ee,
-            ExpressionDataDoubleMatrix mat ) {
+            ExpressionDataDoubleMatrix mat, Double importanceThreshold ) {
 
         List<ExperimentalFactor> factors = new ArrayList<ExperimentalFactor>();
-        factors.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+
+        Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+
+        if ( importanceThreshold != null ) {
+            Set<ExperimentalFactor> importantFactors = getFactorPCAssociations( ee, experimentalFactors,
+                    importanceThreshold );
+            log.info( importantFactors.size() + " covariates out of " + ( experimentalFactors.size() - 1 )
+                    + " considered important to include in batch correction" );
+            ExperimentalFactor batch = getBatchFactor( ee );
+            factors.add( batch );
+            factors.addAll( importantFactors );
+        } else {
+            factors.addAll( experimentalFactors );
+        }
+
         List<BioMaterial> orderedSamples = ExperimentalDesignUtils.getOrderedSamples( mat, factors );
         ObjectMatrix<BioMaterial, ExperimentalFactor, Object> design = ExperimentalDesignUtils.sampleInfoMatrix(
                 factors, orderedSamples, ExperimentalDesignUtils.getBaselineConditions( orderedSamples, factors ) );

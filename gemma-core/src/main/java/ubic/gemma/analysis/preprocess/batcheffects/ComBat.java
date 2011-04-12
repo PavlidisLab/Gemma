@@ -243,17 +243,19 @@ public class ComBat<R, C> {
     }
 
     /**
-     * @return parametric fit
+     * @return data corrected using parametric prior estimator
+     * @throws ComBatException
      */
-    public DoubleMatrix2D run() {
+    public DoubleMatrix2D run() throws ComBatException {
         return this.run( true );
     }
 
     /**
      * @param parametric if false, use the non-parametric (slower) method for estimating the priors.
-     * @return
+     * @return corrected data
+     * @throws ComBatException
      */
-    public DoubleMatrix2D run( boolean parametric ) {
+    public DoubleMatrix2D run( boolean parametric ) throws ComBatException {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -446,8 +448,11 @@ public class ComBat<R, C> {
 
     /**
      * Check sdata for problems. If the design is not of full rank, we get NaN in standardized data.
+     * 
+     * @param sdata
+     * @throws ComBatException
      */
-    private void checkForProblems( DoubleMatrix2D sdata ) {
+    private void checkForProblems( DoubleMatrix2D sdata ) throws ComBatException {
         int numMissing = 0;
         int total = 0;
         for ( int i = 0; i < sdata.rows(); i++ ) {
@@ -461,7 +466,12 @@ public class ComBat<R, C> {
         }
 
         if ( total == numMissing ) {
-            throw new IllegalStateException( "Could not complete batch correction due, model must not be of full rank." );
+            /*
+             * Alternative that can help in some cases: back out and drop factors. There are definitely strategies for
+             * doing this (drop factors that have no major PC loadings, for example), but it might be bad to do this
+             * "automagically".
+             */
+            throw new ComBatException( "Could not complete batch correction: model must not be of full rank." );
         }
     }
 
@@ -631,9 +641,10 @@ public class ComBat<R, C> {
      * @param a
      * @param b
      * @return
+     * @thrwos ComBatException if convergence fails.
      */
     private DoubleMatrix1D[] itSol( DoubleMatrix2D matrix, DoubleMatrix1D gHat, DoubleMatrix1D dHat, double gbar,
-            double t2b, double a, double b ) {
+            double t2b, double a, double b ) throws ComBatException {
 
         DoubleMatrix1D n = rowNonMissingCounts( matrix );
         DoubleMatrix1D gold = gHat;
@@ -674,8 +685,8 @@ public class ComBat<R, C> {
                  * For certain data sets, we just flail around; for example if there are only two samples. This is a
                  * bailout for exceptional circumstances.
                  */
-                throw new IllegalStateException( "Failed to converge within " + MAXITERS
-                        + " iterations, last delta was " + String.format( "%.2g", change ) );
+                throw new ComBatException( "Failed to converge within " + MAXITERS + " iterations, last delta was "
+                        + String.format( "%.2g", change ) );
             }
         }
 

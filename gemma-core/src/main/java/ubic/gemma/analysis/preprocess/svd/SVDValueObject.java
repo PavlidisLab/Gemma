@@ -163,13 +163,16 @@ public class SVDValueObject implements Serializable {
     }
 
     /**
-     * @return map of component to a map of ExperimentalFactors to correlations of that factor with the component. Only
-     *         used for factors which are continuous or which have only two categorical levels.
+     * @return map of component to a map of ExperimentalFactor IDs to correlations of that factor with the component.
      */
     public Map<Integer, Map<Long, Double>> getFactorCorrelations() {
         return factorCorrelations;
     }
 
+    /**
+     * @return map of component to map of ExperimentalFactor IDs to pvalues for the association of that factor with the
+     *         component.
+     */
     public Map<Integer, Map<Long, Double>> getFactorPvals() {
         return factorPvals;
     }
@@ -231,11 +234,16 @@ public class SVDValueObject implements Serializable {
         this.factorCorrelations.get( componentNumber ).put( ef.getId(), factorCorrelation );
     }
 
-    public void setPCFactorCorrelationPval( int componentNumber, ExperimentalFactor ef, double spearmanPvalue ) {
+    /**
+     * @param componentNumber
+     * @param ef
+     * @param pvalue
+     */
+    public void setPCFactorCorrelationPval( int componentNumber, ExperimentalFactor ef, double pvalue ) {
         if ( !this.factorPvals.containsKey( componentNumber ) ) {
             this.factorPvals.put( componentNumber, new HashMap<Long, Double>() );
         }
-        this.factorPvals.get( componentNumber ).put( ef.getId(), spearmanPvalue );
+        this.factorPvals.get( componentNumber ).put( ef.getId(), pvalue );
     }
 
     public void setVariances( Double[] variances ) {

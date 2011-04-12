@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -362,8 +363,8 @@ public class BatchInfoPopulationService {
 
     /**
      * Apply some heuristics to condense the dates down to batches. For example, we might assume dates very close
-     * together (same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH) are to be treated as the same batch (see
-     * implementation for details).
+     * together (for example, in the same day or within MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH, and we avoid singleton
+     * batches) are to be treated as the same batch (see implementation for details).
      * 
      * @param allDates
      * @return
@@ -371,51 +372,135 @@ public class BatchInfoPopulationService {
     protected Map<String, Collection<Date>> convertDatesToBatches( Collection<Date> allDates ) {
         List<Date> lDates = new ArrayList<Date>( allDates );
         Collections.sort( lDates );
-        Map<String, Collection<Date>> result = new HashMap<String, Collection<Date>>();
+        Map<String, Collection<Date>> result = new LinkedHashMap<String, Collection<Date>>();
 
         int batchNum = 1;
         DateFormat df = DateFormat.getDateInstance( DateFormat.SHORT );
 
         String batchDateString = "";
 
+        // apply sanity limit on number of batches. Completely arbitrary but guards against possible errors in getting
+        // the dates in the first place.
         if ( lDates.size() > 99 ) {
             throw new IllegalStateException( "There are too many batches: " + lDates.size() );
         }
 
+        boolean mergedAnySingletons = false;
+
+        /*
+         * Iterate over dates
+         */
         Date lastDate = null;
-        for ( Date d : lDates ) {
+        Date nextDate = null;
+        for ( int i = 0; i < lDates.size(); i++ ) {
+            Date currentDate = lDates.get( i );
+
+            if ( i < lDates.size() - 1 ) {
+                nextDate = lDates.get( i + 1 );
+            } else {
+                nextDate = null;
+            }
 
             if ( lastDate == null ) {
-                batchDateString = formatBatchName( batchNum, df, d );
+                // Start our first batch.
+                batchDateString = formatBatchName( batchNum, df, currentDate );
                 result.put( batchDateString, new HashSet<Date>() );
+                result.get( batchDateString ).add( currentDate );
+                lastDate = currentDate;
+                continue;
+            }
 
-                lastDate = d;
+            /*
+             * Decide whether we have entered a new batch.
+             * 
+             * Rules:
+             * 
+             * - Processing on the same day is always considered the same batch.
+             * 
+             * - Gaps of less then MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH hours are considered the same batch even if
+             * the day is different. Allows for "overnight running" of batches.
+             * 
+             * And then two rules that keep us from having batches with just one sample. Such batches buy us nothing at
+             * all.
+             * 
+             * - A "singleton" batch at the end of the series is always combined with the last batch.
+             * 
+             * - A "singleton" batch in the middle is combined with either the next or previous batch, whichever is
+             * nearer in time.
+             */
+            if ( gapIsLarge( lastDate, currentDate ) && result.get( batchDateString ).size() > 1 ) {
 
-            } else {
+                if ( nextDate == null ) {
+                    /*
+                     * We're at the last sample, and it's a singleton. We fall through and allow adding it to the end of
+                     * the last batch.
+                     */
+                    log.warn( "Singleton at the end of the series, combining with the last batch: gap is "
+                            + String.format( "%.2f", ( currentDate.getTime() - lastDate.getTime() )
+                                    / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
+                    mergedAnySingletons = true;
+                } else if ( gapIsLarge( currentDate, nextDate ) ) {
+                    /*
+                     * Then we have a singleton that will be stranded when we go to the next date. Do we combine it
+                     * forwards or backwards? We choose the smaller gap.
+                     */
+                    long backwards = currentDate.getTime() - lastDate.getTime();
+                    long forwards = nextDate.getTime() - currentDate.getTime();
 
-                /*
-                 * Decide whether we have entered a new batch.
-                 * 
-                 * Rules:
-                 * 
-                 * - Processing on the same day is always considered the same batch.
-                 * 
-                 * - Gaps of less then MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH hours are considered the same batch even
-                 * if the day is different. Allows for "overnight running" of batches.
-                 */
-                if ( !DateUtils.isSameDay( d, lastDate )
-                        && DateUtils.addHours( lastDate, MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH ).before( d ) ) {
+                    if ( forwards < backwards ) {
+                        // Start a new batch.
+                        log.warn( "Singleton resolved by waiting for the next batch: gap is "
+                                + String.format( "%.2f", ( nextDate.getTime() - currentDate.getTime() )
+                                        / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
+                        batchNum++;
+                        batchDateString = formatBatchName( batchNum, df, currentDate );
+                        result.put( batchDateString, new HashSet<Date>() );
+                        mergedAnySingletons = true;
+                    } else {
+                        log.warn( "Singleton resolved by adding to the last batch: gap is "
+                                + String.format( "%.2f", ( currentDate.getTime() - lastDate.getTime() )
+                                        / ( double ) ( 1000 * 60 * 60 * 24 ) ) + " hours." );
+                        // don't start a new batch, fall through.
+                    }
+
+                } else {
                     batchNum++;
-                    batchDateString = formatBatchName( batchNum, df, d );
+                    batchDateString = formatBatchName( batchNum, df, currentDate );
                     result.put( batchDateString, new HashSet<Date>() );
                 }
+
             }
-            result.get( batchDateString ).add( d );
-            lastDate = d;
+            // else we fall through and add the current date to the current batch.
+
+            // express the constraint that we don't allow batches of size 1, even if we would have normally left it in
+            // its own batch.
+            if ( result.get( batchDateString ).size() == 1 && gapIsLarge( lastDate, currentDate ) ) {
+                mergedAnySingletons = true;
+                log.warn( "Stranded singleton automatically being merged into a larger batch" );
+            }
+
+            result.get( batchDateString ).add( currentDate );
+            lastDate = currentDate;
+        }
+
+        if ( mergedAnySingletons && result.size() == 1 ) {
+            // The implication is that if we didn't have the singleton merging, we would have more than one batch.
+            log.warn( "Singleton merging resulted in all batches being combined" );
         }
 
         return result;
 
+    }
+
+    /**
+     * @param earlierDate
+     * @param date
+     * @return false if 'date' is considered to be in the same batch as 'earlierDate', true if we should treat it as a
+     *         separate batch.
+     */
+    private boolean gapIsLarge( Date earlierDate, Date date ) {
+        return !DateUtils.isSameDay( date, earlierDate )
+                && DateUtils.addHours( earlierDate, MAX_GAP_BETWEEN_SAMPLES_TO_BE_SAME_BATCH ).before( date );
     }
 
     /**

@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 
 /**
@@ -33,6 +35,8 @@ import org.junit.Test;
  * @version $Id$
  */
 public class BatchInfoPopulationServiceTest {
+
+    private static Log log = LogFactory.getLog( BatchInfoPopulationServiceTest.class );
 
     @Test
     public void testDatesToBatchA() throws Exception {
@@ -45,13 +49,13 @@ public class BatchInfoPopulationServiceTest {
         Collection<Date> dates = new HashSet<Date>();
 
         dates.add( d );
-        dates.add( DateUtils.addHours( d, 1 ) );
-        dates.add( DateUtils.addHours( d, 2 ) );
-        dates.add( DateUtils.addHours( d, 3 ) );
-        dates.add( DateUtils.addHours( d, 24 ) );
-        dates.add( DateUtils.addHours( d, 25 ) );
-        dates.add( DateUtils.addHours( d, 26 ) );
-        dates.add( DateUtils.addHours( d, 27 ) );
+        dates.add( DateUtils.addHours( d, 1 ) ); // first batch
+        dates.add( DateUtils.addHours( d, 2 ) ); // first batch
+        dates.add( DateUtils.addHours( d, 3 ) ); // first batch
+        dates.add( DateUtils.addHours( d, 24 ) ); // second batch
+        dates.add( DateUtils.addHours( d, 25 ) );// second batch
+        dates.add( DateUtils.addHours( d, 26 ) );// second batch
+        dates.add( DateUtils.addHours( d, 27 ) );// second batch
 
         Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
 
@@ -73,13 +77,15 @@ public class BatchInfoPopulationServiceTest {
         Collection<Date> dates = new HashSet<Date>();
 
         dates.add( d );
-        dates.add( DateUtils.addSeconds( d, 3500 ) );
-        dates.add( DateUtils.addSeconds( d, 7000 ) );
+
+        dates.add( DateUtils.addSeconds( d, 3500 ) );// first batch, all within two hours of each other.
+        dates.add( DateUtils.addSeconds( d, 7000 ) );// first batch, all within two hours of each other.
         dates.add( DateUtils.addSeconds( d, 8000 ) );// first batch, all within two hours of each other.
-        dates.add( DateUtils.addHours( d, 11124 ) );
-        dates.add( DateUtils.addHours( d, 11125 ) );// third batch
-        dates.add( DateUtils.addHours( d, 2226 ) );// second batch
-        dates.add( DateUtils.addHours( d, 11189 ) ); // fourth batch
+        dates.add( DateUtils.addHours( d, 2226 ) );// second batch, but singleton merged backwards
+
+        dates.add( DateUtils.addHours( d, 11124 ) );// third batch , but second was a singleton so we're only on #2.
+        dates.add( DateUtils.addHours( d, 11125 ) );// third batch, but gets merged in with second.
+        dates.add( DateUtils.addHours( d, 11189 ) ); // fourth batch, but gets merged in with second.
 
         Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
 
@@ -87,7 +93,72 @@ public class BatchInfoPopulationServiceTest {
          * How many unique values?
          */
         Set<String> s = new HashSet<String>( actual.keySet() );
-        assertEquals( 4, s.size() );
+        assertEquals( 2, s.size() );
+
+        debug( actual );
+    }
+
+    @Test
+    public void testDatesToBatchC() throws Exception {
+        BatchInfoPopulationService ser = new BatchInfoPopulationService();
+
+        Calendar cal = Calendar.getInstance();
+        cal.set( 2004, 3, 10, 10, 1, 1 );
+        Date d = cal.getTime();
+
+        Collection<Date> dates = new HashSet<Date>();
+
+        dates.add( d );
+        dates.add( DateUtils.addHours( d, 2 ) ); // should be merged back.
+        dates.add( DateUtils.addHours( d, 3 ) ); // merged back.
+        dates.add( DateUtils.addHours( d, 4 ) ); // merged back.
+        dates.add( DateUtils.addHours( d, 5 ) ); // merged back.
+        dates.add( DateUtils.addHours( d, 6 ) ); // merged back.
+        dates.add( DateUtils.addHours( d, 7 ) ); // merged back.
+        dates.add( DateUtils.addHours( d, 8 ) ); // merged back.
+
+        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
+        debug( actual );
+        Set<String> s = new HashSet<String>( actual.keySet() );
+        assertEquals( 1, s.size() );
+
+    }
+
+    @Test
+    public void testDatesToBatchD() throws Exception {
+        BatchInfoPopulationService ser = new BatchInfoPopulationService();
+
+        Calendar cal = Calendar.getInstance();
+        cal.set( 2004, 3, 10, 10, 1, 1 );
+        Date d = cal.getTime();
+
+        Collection<Date> dates = new HashSet<Date>();
+
+        dates.add( d );
+        dates.add( DateUtils.addHours( d, 200 ) ); // merged back, even though gap is big.
+        dates.add( DateUtils.addHours( d, 201 ) ); // merge back
+        dates.add( DateUtils.addHours( d, 202 ) ); // merge back
+        dates.add( DateUtils.addHours( d, 203 ) ); // merge back
+        dates.add( DateUtils.addHours( d, 301 ) ); // new batch
+        dates.add( DateUtils.addHours( d, 302 ) ); // merge back
+        dates.add( DateUtils.addHours( d, 402 ) ); // singleton merged.
+
+        Map<String, Collection<Date>> actual = ser.convertDatesToBatches( dates );
+        debug( actual );
+        Set<String> s = new HashSet<String>( actual.keySet() );
+        assertEquals( 2, s.size() );
+
+    }
+
+    private void debug( Map<String, Collection<Date>> actual ) {
+        if ( log.isDebugEnabled() ) {
+            for ( String st : actual.keySet() ) {
+                log.debug( st + " " + actual.get( st ).size() + " members." );
+                for ( Date da : actual.get( st ) ) {
+                    log.debug( da );
+                }
+            }
+        }
     }
 
 }
