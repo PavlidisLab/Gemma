@@ -120,9 +120,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         addOption( expOption );
 
-        Option eeFileListOption = OptionBuilder.hasArg().withArgName( "Expression experiment list file" )
+        Option eeFileListOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Expression experiment list file" )
                 .withDescription(
-                        "File with list of short names of expression experiments (one per line; use instead of '-e')" )
+                        "File with list of short names or IDs of expression experiments (one per line; use instead of '-e')" )
                 .withLongOpt( "eeListfile" ).create( 'f' );
         addOption( eeFileListOption );
 
@@ -248,9 +250,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
             if ( expressionExperiments.size() > 1 ) log.info( "Thawing experiments ..." );
+            int count = 0;
             for ( BioAssaySet ee : expressionExperiments ) {
                 if ( ee instanceof ExpressionExperiment ) {
                     ee = eeService.thawLite( ( ExpressionExperiment ) ee );
+                    if ( ++count % 25 == 0 ) {
+                        log.info( "Thawed: " + count );
+                    }
                 } else {
                     throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
                 }
@@ -383,7 +389,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     }
 
     /**
-     * Load expression experiments based on a list of short names in a file.
+     * Load expression experiments based on a list of short names or IDs in a file.
      * 
      * @param fileName
      * @return
@@ -394,8 +400,20 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         for ( String eeName : readExpressionExperimentListFileToStrings( fileName ) ) {
             ExpressionExperiment ee = eeService.findByShortName( eeName );
             if ( ee == null ) {
-                log.error( "No experiment " + eeName + " found" );
-                continue;
+
+                try {
+                    Long id = Long.parseLong( eeName );
+                    ee = eeService.load( id );
+                    if ( ee == null ) {
+                        log.error( "No experiment " + eeName + " found" );
+                        continue;
+                    }
+                } catch ( NumberFormatException e ) {
+                    log.error( "No experiment " + eeName + " found" );
+                    continue;
+
+                }
+
             }
             ees.add( ee );
         }
