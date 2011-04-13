@@ -18,7 +18,6 @@
  */
 package ubic.gemma.web.controller.diff;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,22 +37,14 @@ import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
-import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.Reference;
-import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -62,9 +53,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
@@ -74,6 +63,7 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.session.SessionListManager;
+import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 import ubic.gemma.web.visualization.DifferentialExpressionAnalysisResultSetVisualizationValueObject;
 import ubic.gemma.web.visualization.DifferentialExpressionVisualizationValueObject;
@@ -103,22 +93,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private GeneSetService geneSetService;
 
     @Autowired
-    private TaxonService taxonService;
-
-    @Autowired
-    private ExpressionExperimentReportService expressionExperimentReportService;
-
-    @Autowired
-    private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao differentialExpressionAnalysisResultDao;
-
-    @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Autowired
     private SessionListManager sessionListManager;
@@ -176,11 +151,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         Gene g = geneService.load( geneId );
         Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
-        .getDifferentialExpression( g, threshold, factorMap );
+                .getDifferentialExpression( g, threshold, factorMap );
 
         return result;
     }
-
 
     // So that we're consistent throughout this visualization code...
     private static final double VISUALIZATION_P_VALUE_THRESHOLD = 0.9;
@@ -310,8 +284,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * Ajax.
      * 
      * @param taxonId
-     * @param datasetGroupReferences 
-     * @param geneGroupReferences 
+     * @param datasetGroupReferences
+     * @param geneGroupReferences
      * @return
      */
     public DifferentialExpressionVisualizationValueObject differentialExpressionAnalysisVisualizationSearch(
@@ -326,27 +300,27 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( Reference ref : datasetGroupReferences ) {
             if ( ref != null ) {
                 // if a single experiment was selected
-                if(ref.isNotGroup() && ref.isDatabaseBacked()){
+                if ( ref.isNotGroup() && ref.isDatabaseBacked() ) {
                     ExpressionExperiment dataset = expressionExperimentService.load( ref.getId() );
                     Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
-                    bioAssaySetsInsideGroup.add( ( BioAssaySet ) dataset );
+                    bioAssaySetsInsideGroup.add( dataset );
                     experiments.add( bioAssaySetsInsideGroup );
                 }
                 // if a group of experiments was selected
-                else{
+                else {
                     // if the ids being passed in are session ids, use a different method to load them
                     if ( ref.isSessionBound() ) {
                         Collection<ExpressionExperimentValueObject> eevos = sessionListManager
-                        .getExperimentsInSetByReference( ref );
+                                .getExperimentsInSetByReference( ref );
                         Collection<Long> ids = new ArrayList<Long>();
                         for ( ExpressionExperimentValueObject eevo : eevos ) {
                             ids.add( eevo.getId() );
                         }
                         Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
-                        .loadMultiple( ids );
+                                .loadMultiple( ids );
                         Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
                         for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
-                            bioAssaySetsInsideGroup.add( ( BioAssaySet ) experiment );
+                            bioAssaySetsInsideGroup.add( experiment );
                         }
                         experiments.add( bioAssaySetsInsideGroup );
 
@@ -354,7 +328,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         ExpressionExperimentSet datasetGroup = expressionExperimentSetService.load( ref.getId() );
                         Collection<BioAssaySet> experimentsInsideGroup = datasetGroup.getExperiments();
                         experiments.add( experimentsInsideGroup );
-                    } 
+                    }
                 }
             }
         }
@@ -372,18 +346,18 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 List<String> geneNamesInsideSet = new ArrayList<String>();
                 List<Long> geneIdsInsideSet = new ArrayList<Long>();
 
-                if(ref.isNotGroup() && ref.isDatabaseBacked()){
+                if ( ref.isNotGroup() && ref.isDatabaseBacked() ) {
                     Gene gene = geneService.load( ref.getId() );
                     if ( gene != null ) {
                         genesInsideSet.add( gene );
                         geneNamesInsideSet.add( gene.getOfficialSymbol() );
                         geneIdsInsideSet.add( gene.getId() );
                     }
-                }else{
+                } else {
                     // if the reference being passed in for a session bound group, use a different method to load it
                     if ( ref.isSessionBound() ) {
                         Collection<GeneValueObject> geneValueObjectsInSet = sessionListManager
-                        .getGenesInSetByReference( ref );
+                                .getGenesInSetByReference( ref );
                         for ( GeneValueObject gsvo : geneValueObjectsInSet ) {
                             Gene gene = geneService.load( gsvo.getId() );
                             if ( gene != null ) {
@@ -402,9 +376,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                                 geneIdsInsideSet.add( memberGene.getGene().getId() );
                             }
                         }
-                    } 
+                    }
                 }
-                
+
                 genes.add( genesInsideSet );
                 geneNames.add( geneNamesInsideSet );
                 geneIds.add( geneIdsInsideSet );
@@ -442,10 +416,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( List<Long> experimentIds : experimentIdsByGroup ) {
 
             Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
-            .loadMultiple( experimentIds );
+                    .loadMultiple( experimentIds );
             Collection<BioAssaySet> bioAssaySetsInsideGroup = new ArrayList<BioAssaySet>();
             for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
-                bioAssaySetsInsideGroup.add( ( BioAssaySet ) experiment );
+                bioAssaySetsInsideGroup.add( experiment );
             }
             experiments.add( bioAssaySetsInsideGroup );
         }
@@ -506,7 +480,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
             for ( BioAssaySet experiment : groupExperiemnts ) {
                 Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                .getAnalyses( ( ExpressionExperiment ) experiment );
+                        .getAnalyses( ( ExpressionExperiment ) experiment );
 
                 for ( DifferentialExpressionAnalysis analysis : analyses ) {
                     ExpressionExperiment e = ( ExpressionExperiment ) experiment;
@@ -517,11 +491,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     log.info( "Call to get number of probes on the array for 1 experiment took : " + timer.getTime()
                             + " ms" );
 
-                    Collection<Long> arrayDesignIds = new ArrayList<Long>();
-                    for ( ArrayDesign arrayDesign : expressionExperimentService.getArrayDesignsUsed( e ) ) {
-                        arrayDesignIds.add( e.getId() );
-                    }
-
+                    Collection<Long> arrayDesignIds = EntityUtils.getIds( expressionExperimentService
+                            .getArrayDesignsUsed( e ) );
                     timer.reset();
                     timer.start();
                     List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> analysisColumns = buildVisualizationColumnsFromAnalysis(
@@ -574,34 +545,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         else if ( pValue < 0.0001 && pValue >= 0.00001 )
             visualizationValue = 0.7;
         else if ( pValue < 0.00001 ) visualizationValue = 1;
-        return visualizationValue;
-    }
-
-    // 0 - 2?
-    private double calculateVisualizationValueBasedOnFoldChange( double foldChange ) {
-        double visualizationValue = 0.0;
-        double absFoldChange = Math.abs( foldChange - 1 );
-        if ( absFoldChange >= 0 && absFoldChange < 0.05 )
-            visualizationValue = 0.1;
-        else if ( absFoldChange >= 0.05 && absFoldChange < 0.1 )
-            visualizationValue = 0.2;
-        else if ( absFoldChange >= 0.1 && absFoldChange < 0.2 )
-            visualizationValue = 0.3;
-        else if ( absFoldChange >= 0.2 && absFoldChange < 0.3 )
-            visualizationValue = 0.4;
-        else if ( absFoldChange >= 0.3 && absFoldChange < 0.4 )
-            visualizationValue = 0.5;
-        else if ( absFoldChange >= 0.4 && absFoldChange < 0.5 )
-            visualizationValue = 0.6;
-        else if ( absFoldChange >= 0.5 && absFoldChange < 0.6 )
-            visualizationValue = 0.7;
-        else if ( absFoldChange >= 0.6 && absFoldChange < 0.7 )
-            visualizationValue = 0.8;
-        else if ( absFoldChange >= 0.7 && absFoldChange < 0.8 )
-            visualizationValue = 0.9;
-        else if ( absFoldChange >= 0.8 ) visualizationValue = 1;
-
-        if ( foldChange < 0 ) visualizationValue = ( -1 ) * visualizationValue;
         return visualizationValue;
     }
 
@@ -709,7 +652,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         Collection<Long> filteredEeIds = new HashSet<Long>();
 
         Map<Long, DifferentialExpressionAnalysis> diffAnalyses = differentialExpressionAnalysisService
-        .findByInvestigationIds( securityFilteredIds );
+                .findByInvestigationIds( securityFilteredIds );
 
         if ( diffAnalyses.isEmpty() ) {
             log.debug( "No differential expression analyses for given ids: " + StringUtils.join( filteredEeIds, ',' ) );
@@ -717,7 +660,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         Collection<ExpressionExperimentValueObject> eevos = this.expressionExperimentService
-        .loadValueObjects( diffAnalyses.keySet() );
+                .loadValueObjects( diffAnalyses.keySet() );
 
         Map<Long, ExpressionExperimentValueObject> eevoMap = new HashMap<Long, ExpressionExperimentValueObject>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
@@ -743,7 +686,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             eeefvo.setNumFactors( factors.size() );
             for ( ExperimentalFactor ef : factors ) {
                 ExperimentalFactorValueObject efvo = geneDifferentialExpressionService
-                .configExperimentalFactorValueObject( ef );
+                        .configExperimentalFactorValueObject( ef );
                 eeefvo.getExperimentalFactors().add( efvo );
             }
 
@@ -796,7 +739,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     @Override
     protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-    throws Exception {
+            throws Exception {
 
         if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
 
@@ -900,11 +843,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         /* find experiments that have had the diff cli run on it and have the gene g (analyzed) - security filtered. */
         Collection<BioAssaySet> experimentsAnalyzed = differentialExpressionAnalysisService
-        .findExperimentsWithAnalyses( g );
+                .findExperimentsWithAnalyses( g );
 
         if ( experimentsAnalyzed.size() == 0 ) {
-            log.warn( "No experiments analyzed for that gene: " + g );
-            return null;
+            throw new EntityNotFoundException( "No results were found: no experiment analyzed those genes" );
         }
 
         /* the 'chosen' factors (and their associated experiments) */
@@ -931,8 +873,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             }
         }
 
+        if ( activeExperiments.isEmpty() ) {
+            throw new EntityNotFoundException(
+                    "No results were found: none of the experiments selected analyzed those genes" );
+        }
+
         DifferentialExpressionMetaAnalysisValueObject mavo = geneDifferentialExpressionService
-        .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
+                .getDifferentialExpressionMetaAnalysis( threshold, g, eeFactorsMap, activeExperiments );
 
         return mavo;
     }
