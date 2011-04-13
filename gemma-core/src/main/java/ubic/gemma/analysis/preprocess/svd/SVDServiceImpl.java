@@ -337,6 +337,11 @@ public class SVDServiceImpl implements SVDService {
             }
             initializingDates = false;
 
+            if ( eigenGene.size() != dates.length ) {
+                log.warn( "Could not compute correlation, dates and eigenGene had different lengths." );
+                return;
+            }
+
             double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
 
             svo.setPCDateCorrelation( componentNumber, dateCorrelation );
