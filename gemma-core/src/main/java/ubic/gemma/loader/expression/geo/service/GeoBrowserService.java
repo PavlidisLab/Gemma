@@ -29,14 +29,26 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Set;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hsqldb.lib.StringInputStream;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
@@ -62,115 +74,54 @@ import ubic.gemma.util.ConfigUtils;
 public class GeoBrowserService implements InitializingBean {
     private static final int MIN_SAMPLES = 5;
     private static final String GEO_DATA_STORE_FILE_NAME = "GEODataStore";
-    @Autowired
-    ExpressionExperimentService expressionExperimentService;
-    @Autowired
-    TaxonService taxonService;
-    @Autowired
-    ExternalDatabaseService externalDatabaseService;
-    @Autowired
-    ArrayDesignService arrayDesignService;
-    @Autowired
-    AuditTrailService auditTrailService;
 
     @Autowired
-    BioAssayService bioAssayService;
+    private ExpressionExperimentService expressionExperimentService;
 
-    Map<String, GeoRecord> localInfo;
+    @Autowired
+    private TaxonService taxonService;
+
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    private ArrayDesignService arrayDesignService;
+
+    @Autowired
+    private AuditTrailService auditTrailService;
+
+    @Autowired
+    private BioAssayService bioAssayService;
+
+    private Map<String, GeoRecord> localInfo;
+
+    private XPathExpression xgds;
+    private XPathExpression xgse;
+    private XPathExpression xtitle;
+    private XPathExpression xgpls;
+    private XPathExpression xsummary;
+    private XPathExpression xsamples;
 
     private static Log log = LogFactory.getLog( GeoBrowserService.class.getName() );
 
+    static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
     public void afterPropertiesSet() throws Exception {
         initializeLocalInfo();
-    }
 
-    /**
-     * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
-     * 
-     * @param details
-     * @return
-     */
-    private String formatDetails( String details ) {
-
-        // log.info( "====\n" + details + "\n======" );
-
-        /*
-         * Remove redundant information about the series that is listed with the dataset.
-         */
-        Pattern refPattern = Pattern.compile( "(Reference Series: GSE.+)(?=GSE)" );
-        Matcher m = refPattern.matcher( details );
-        details = m.replaceAll( "" );
-
-        details = details.replaceFirst( "(Samples: [0-9]+)", "<p>$1&nbsp&nbsp" );
-
-        // replace 1: ; leave GSM12114: alone.
-        Pattern recordPattern = Pattern.compile( "(?<!GSM)(?<![0-9])[0-9]+:" );
-        m = recordPattern.matcher( details );
-        details = m.replaceAll( "" );
-
-        Pattern accPatt = Pattern.compile( "(?<!Parent Platform: )(?<!accessioned in GEO as )(G(PL|SE|SM|DS)[0-9]+)" );
-        Matcher matcher = accPatt.matcher( details );
-
-        boolean result = matcher.find();
-        if ( result ) {
-            StringBuffer sb = new StringBuffer();
-            sb.append( "<div class=\"small\">" );
-            do {
-
-                String match = matcher.group();
-
-                if ( match.startsWith( "GPL" ) ) {
-                    ArrayDesign arrayDesign = arrayDesignService.findByShortName( match );
-
-                    if ( arrayDesign != null ) {
-
-                        String trouble = "";
-                        AuditEvent lastTroubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
-                        if ( lastTroubleEvent != null ) {
-                            trouble = "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
-                                    + lastTroubleEvent.getNote() + "\"/>";
-                        }
-
-                        matcher.appendReplacement( sb,
-                                "<p><strong><a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
-                                        + arrayDesign.getId() + "\">" + match + "</a></strong>" + trouble );
-                    } else {
-                        matcher.appendReplacement( sb, "<p><strong>$1 [New to Gemma]</strong>" );
-                    }
-
-                } else if ( match.startsWith( "GSM" ) ) {
-
-                    /*
-                     * TODO: perhaps check if sample is already in the system. NOte that we only get a partial list of
-                     * the samples anyway.
-                     */
-
-                    matcher.appendReplacement( sb, "\n&nbsp;&nbsp;&nbsp;$1" );
-                } else if ( match.startsWith( "GSE" ) ) {
-                    ExpressionExperiment ee = this.expressionExperimentService.findByShortName( match );
-
-                    if ( ee != null ) {
-                        matcher.appendReplacement( sb,
-                                "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                                        + ee.getId() + "\">" + match + "</a></strong>" );
-                    } else {
-                        matcher.appendReplacement( sb, "\n<p><strong>$1 [new to Gemma]</strong>" );
-                    }
-                } else {
-                    // GDS, etc.
-                    matcher.appendReplacement( sb, "\n<p><strong>$1</strong>" );
-                }
-
-                result = matcher.find();
-            } while ( result );
-
-            matcher.appendTail( sb );
-            sb.append( "</div>" );
-            details = sb.toString();
-
-        }
-
-        return details;
+        XPathFactory xf = XPathFactory.newInstance();
+        XPath xpath = xf.newXPath();
+        xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
+        xgse = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GSE\"][1]/text()" );
+        xtitle = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"title\"][1]/text()" );
+        xgpls = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GPL\"]/text()" );
+        xsummary = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"summary\"][1]/text()" );
+        xsamples = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"Samples\"]/text()" );
     }
 
     /**
@@ -197,12 +148,6 @@ public class GeoBrowserService implements InitializingBean {
 
         return formatDetails( details );
 
-    }
-
-    private File getInfoStoreFile() {
-        String path = ConfigUtils.getDownloadPath();
-        File f = new File( path + File.separatorChar + GEO_DATA_STORE_FILE_NAME );
-        return f;
     }
 
     /**
@@ -265,47 +210,6 @@ public class GeoBrowserService implements InitializingBean {
         return records;
     }
 
-    @SuppressWarnings("unchecked")
-    private void initializeLocalInfo() {
-        File f = getInfoStoreFile();
-        try {
-            if ( f.exists() ) {
-                FileInputStream fis = new FileInputStream( f );
-                ObjectInputStream ois = new ObjectInputStream( fis );
-                this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
-                ois.close();
-                fis.close();
-            } else {
-                this.localInfo = new HashMap<String, GeoRecord>();
-            }
-        } catch ( Exception e ) {
-            log.error( "Failed to load local GEO info, reinitializing..." );
-            this.localInfo = new HashMap<String, GeoRecord>();
-        }
-        assert this.localInfo != null;
-    }
-
-    private void initLocalRecord( String accession ) {
-        assert localInfo != null;
-        if ( !localInfo.containsKey( accession ) ) {
-            localInfo.put( accession, new GeoRecord() );
-            localInfo.get( accession ).setGeoAccession( accession );
-        }
-    }
-
-    private void saveLocalInfo() {
-        if ( this.localInfo == null ) return;
-        try {
-            FileOutputStream fos = new FileOutputStream( getInfoStoreFile() );
-            ObjectOutputStream oos = new ObjectOutputStream( fos );
-            oos.writeObject( this.localInfo );
-            oos.flush();
-            oos.close();
-        } catch ( Exception e ) {
-            log.error( "Failed to save local GEO info", e );
-        }
-    }
-
     public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
         this.arrayDesignService = arrayDesignService;
     }
@@ -343,6 +247,153 @@ public class GeoBrowserService implements InitializingBean {
         saveLocalInfo();
 
         return localInfo.get( accession ).isUsable();
+    }
+
+    /**
+     * @param gpls
+     * @param buf
+     */
+    private void formatArrayDetails( NodeList gpls, StringBuilder buf ) {
+        Set<String> seenGpl = new HashSet<String>();
+        for ( int i = 0; i < gpls.getLength(); i++ ) {
+            String gpl = "GPL" + gpls.item( i ).getNodeValue();
+            if ( gpl.contains( ";" ) ) continue;
+            if ( seenGpl.contains( gpl ) ) continue;
+            seenGpl.add( gpl );
+            ArrayDesign arrayDesign = arrayDesignService.findByShortName( gpl );
+            if ( arrayDesign != null ) {
+                String trouble = "";
+                AuditEvent lastTroubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
+                if ( lastTroubleEvent != null ) {
+                    trouble = "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
+                            + lastTroubleEvent.getNote() + "\"/>";
+                }
+                buf
+                        .append( "<p><strong>Array design in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
+                                + arrayDesign.getId() + "\">" + gpl + "</a></strong>" + trouble );
+            } else {
+                buf.append( "<p><strong>" + gpl + " [New to Gemma]</strong>" );
+            }
+        }
+    }
+
+    /**
+     * @return
+     */
+    private File getInfoStoreFile() {
+        String path = ConfigUtils.getDownloadPath();
+        File f = new File( path + File.separatorChar + GEO_DATA_STORE_FILE_NAME );
+        return f;
+    }
+
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    private void initializeLocalInfo() {
+        File f = getInfoStoreFile();
+        try {
+            if ( f.exists() ) {
+                FileInputStream fis = new FileInputStream( f );
+                ObjectInputStream ois = new ObjectInputStream( fis );
+                this.localInfo = ( Map<String, GeoRecord> ) ois.readObject();
+                ois.close();
+                fis.close();
+            } else {
+                this.localInfo = new HashMap<String, GeoRecord>();
+            }
+        } catch ( Exception e ) {
+            log.error( "Failed to load local GEO info, reinitializing..." );
+            this.localInfo = new HashMap<String, GeoRecord>();
+        }
+        assert this.localInfo != null;
+    }
+
+    /**
+     * @param accession
+     */
+    private void initLocalRecord( String accession ) {
+        assert localInfo != null;
+        if ( !localInfo.containsKey( accession ) ) {
+            localInfo.put( accession, new GeoRecord() );
+            localInfo.get( accession ).setGeoAccession( accession );
+        }
+    }
+
+    /**
+     * 
+     */
+    private void saveLocalInfo() {
+        if ( this.localInfo == null ) return;
+        try {
+            FileOutputStream fos = new FileOutputStream( getInfoStoreFile() );
+            ObjectOutputStream oos = new ObjectOutputStream( fos );
+            oos.writeObject( this.localInfo );
+            oos.flush();
+            oos.close();
+        } catch ( Exception e ) {
+            log.error( "Failed to save local GEO info", e );
+        }
+    }
+
+    /**
+     * Take the details string from GEO and make it nice. Add links to series and platforms that are already in gemma.
+     * 
+     * @param details XML from eSummary
+     * @return HTML-formatted
+     */
+    protected String formatDetails( String details ) {
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            StringInputStream is = new StringInputStream( details );
+            Document document = builder.parse( is );
+
+            NodeList samples = ( NodeList ) xsamples.evaluate( document, XPathConstants.NODESET );
+
+            String gds = ( String ) xgds.evaluate( document, XPathConstants.STRING ); // FIXME, use this.
+            String gse = "GSE" + ( String ) xgse.evaluate( document, XPathConstants.STRING );
+            String title = ( String ) xtitle.evaluate( document, XPathConstants.STRING );
+            NodeList gpls = ( NodeList ) xgpls.evaluate( document, XPathConstants.NODESET ); // FIXME get description.
+            String summary = ( String ) xsummary.evaluate( document, XPathConstants.STRING );
+
+            StringBuilder buf = new StringBuilder();
+            buf.append( "<div class=\"small\">" );
+
+            ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
+
+            if ( ee != null ) {
+                buf
+                        .append( "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                                + ee.getId() + "\">" + gse + "</a></strong>" );
+            } else {
+                buf.append( "\n<p><strong>" + gse + " [new to Gemma]</strong>" );
+            }
+
+            buf.append( "<p>" + title + "</p>\n" );
+            buf.append( "<p>" + summary + "</p>\n" );
+
+            formatArrayDetails( gpls, buf );
+
+            for ( int i = 0; i < samples.getLength(); i++ ) {
+                // samples.item( i )
+                // FIXME use this.
+            }
+
+            buf.append( "</div>" );
+            details = buf.toString();
+
+            // }
+        } catch ( ParserConfigurationException e ) {
+            throw new RuntimeException( e );
+        } catch ( SAXException e ) {
+            throw new RuntimeException( e );
+        } catch ( IOException e ) {
+            throw new RuntimeException( e );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( e );
+        }
+
+        return details;
     }
 
 }

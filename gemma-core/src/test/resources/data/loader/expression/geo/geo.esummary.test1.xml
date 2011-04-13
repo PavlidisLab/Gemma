@@ -1,0 +1,387 @@
+<?xml version="1.0"?> <!DOCTYPE eSummaryResult PUBLIC "-//NLM//DTD eSummaryResult, 29 October 2004//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd">
+<eSummaryResult>
+	<DocSum>
+		<Id>200027128</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Expression levels in strained vs. non-strained Calu-3 lung epithelial cells</Item>
+		<Item Name="summary" Type="String">Ventilator induced lung injury can lead to serious conditions like ARDS which are
+			associated with a high mortality (around 30%, Stapleton et al., Chest, 2005). We hypothesized that changes of
+			expression levels of different genes would lead us to the identification of critical target genes, which might
+			influence the inflammation and outcome associated with this condition. We used human whole genome U133 Plus 2.0
+			microarrays to detail the changes of gene expression and identified distinct classes of up-regulated genes during
+			this process.</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">27128</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSE</Item>
+		<Item Name="gdsType" Type="String">Expression profiling by array</Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/12</Item>
+		<Item Name="suppFile" Type="String">CEL CHP</Item>
+		<Item Name="Samples" Type="List">
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM670191</Item>
+				<Item Name="Title" Type="String">Calu3_24hSt_1</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM670192</Item>
+				<Item Name="Title" Type="String">Calu3_24hSt_2</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM670195</Item>
+				<Item Name="Title" Type="String">Calu3_NSt_2</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM670194</Item>
+				<Item Name="Title" Type="String">Calu3_NSt_1</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM670193</Item>
+				<Item Name="Title" Type="String">Calu3_24hSt_3</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM670196</Item>
+				<Item Name="Title" Type="String">Calu3_NSt_3</Item>
+			</Item>
+		</Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">6</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>100000570</Id>
+		<Item Name="GDS" Type="String">651;1237;1249;1269;1344;1369;1411;1413;1427;1439;1553;1579;1580;1604;1617;1665;1667;1673;1685;1732;1779;1807;1812;1869;1917;1962;1973;1989;2010;2023;2046;2052;2083;2088;2089;2118;2125;2154;2164;2189;2204;2213;2215;2216;2221;2250;2251;2307;2339;2374;2414;2416;2418;2426;2431;2432;2453;2470;2471;2484;2486;2491;2495;2499;2526;2534;2548;2565;2604;2609;2611;2615;2628;2635;2652;2653;2657;2697;2724;2728;2737;2749;2750;2755;2760;2772;2779;2782;2789;2794;2795;2819;2821;2822;2832;2835;2838;2856;2860;2866;2867;2883;2887;2892;2902;2919;2935;2947;2958;2959;2963;2966;2970;2975;2990;3003;3007;3041;3060;3062;3071;3073;3082;3104;3105;3111;3119;3127;3138;3141;3182;3191;3193;3217;3220;3223;3256;3258;3274;3282;3283;3285;3290;3298;3300;3313;3315;3318;3329;3330;3342;3356;3367;3388;3399;3416;3423;3424;3463;3467;3469;3481;3482;3487;3492;3493;3494;3496;3499;3500;3501;3510;3516;3534;3537;3539;3554;3556;3557;3558;3567;3571;3573;3578;3580;3592;3600;3615;3627;3630;3635;3668;3669;3676;3688;3706;3709;3710;3717
+		</Item>
+		<Item Name="title" Type="String">[HG-U133_Plus_2] Affymetrix Human Genome U133 Plus 2.0 Array</Item>
+		<Item Name="summary" Type="String">Affymetrix submissions are typically submitted to GEO using the GEOarchive method
+			described at http://www.ncbi.nlm.nih.gov/projects/geo/info/geo_affy.html Complete coverage of the Human Genome U133
+			Set plus 6,500 additional genes for analysis of over 47,000 transcripts All probe sets represented on the GeneChip
+			Human Genome U133 Set are identically replicated on the GeneChip Human Genome U133 Plus 2.0 Array. The sequences from
+			which these probe sets were derived were selected from GenBankÂ®, dbEST, and RefSeq. The sequence clusters were
+			created from the UniGene database (Build 133, April 20, 2001) and then refined by analysis and comparison with a
+			number of other publicly available databases, including the Washington University EST trace repository and the
+			University of California, Santa Cruz Golden-Path human genome database (April 2001 release). In addition, there are
+			9,921 new probe sets representing approximately 6,500 new genes. These gene sequences were selected from GenBank,
+			dbEST, and RefSeq. Sequence clusters were created from the UniGene database (Build 159, January 25, 2003) and refined
+			by analysis and comparison with a number of other publicly available databases, including the Washington University
+			EST trace repository and the NCBI human genome assembly (Build 31). Protocol: see manufacturer's web site</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">2435;2634;2817;2833;3045;3151;3280;3325;3678;4064;4183;4218;4250;4289;4302;4459;4488;4498;4527;4536;4549;4581;4588;4607;4610;4655;4748;4845;4883;5060;5079;5086;5102;5105;5224;5230;5237;5372;5741;5764;5809;5838;5883;6021;6034;6088;6140;6207;6233;6281;6368;6400;6406;6451;6519;6532;6548;6551;6561;6728;6798;6863;6869;6872;6885;6962;6969;6972;7014;7036;7084;7152;7158;7181;7213;7216;7345;7364;7451;7454;7476;7486;7515;7586;7621;7624;7637;7708;7753;7788;7807;7846;7868;7888;7904;8023;8045;8167;8289;8302;8331;8437;8514;8527;8537;8588;8646;8665;8694;8717;8742;8762;8784;8823;8832;8884;8961;8977;9086;9089;9093;9234;9250;9253;9350;9440;9481;9510;9517;9520;9526;9600;9613;9677;9758;9761;9764;9819;9832;9835;9899;9941;9960;9973;10021;10063;10233;10317;10410;10445;10580;10609;10683;10696;10715;10738;10767;10792;10799;10821;10831;10847;10879;10927;10934;10943;10979;11001;11078;11281;11345;11348;11499;11506;11551;11618;11673;11798;11869;11882;11917;11952;11959;11981;12113;12155;12161;12187;12251;12254;12261;12264;12267;12274;12277;12293;12444;12460;12486;12524;12621;12646;12650;12711;12720;12846;13067;13122;13141;13218;13273;13315;13353;13376;13434;13475;13501;13504;13604;13639;13662;13710;13726;13736;13787;13806;13816;13887;13896;13906;13909;14054;14083;14108;14333;14340;14378;14385;14407;14465;14468;14491;14507;14526;14642;14671;14680;14825;14841;14844;14883;14886;14905;14973;14986;15047;15072;15098;15101;15162;15175;15214;15220;15323;15368;15400;15455;15464;15471;15477;15490;15583;15615;15744;15773;15792;15811;15824;15921;15969;16020;16059;16097;16149;16155;16194;16226;16451;16464;16515;16547;16589;16615;16650;16759;16798;16836;16856;16910;16962;17007;17061;17090;17119;17129;17187;17251;17254;17347;17386;17476;17482;17537;17540;17543;17624;17714;17768;17855;17906;17913;17951;17987;18070;18144;18147;18350;18462;18498;18501;18504;18520;18552;18565;18681;18739;18809;18864;18877;18906;18912;18973;19018;19060;19201;19240;19243;19246;19317;19330;19352;19420;19449;19471;19510;19638;19667;19680;19690;19693;19728;19735;19902;19963;19982;20011;20037;20114;20146;20297;20300;20307;20361;20538;20596;20641;20689;20708;21039;21261;21293;21306;21354;21422;21483;21521;21547;21550;21589;21653;22035;22045;22061;22103;22106;22109;22132;22138;22148;22167;22183;22331;22334;22337;22373;22392;22501;22572;22842;22919;22974;23035;23073;23205;23295;23343;23366;23629;23687;23764;23806;23973;24182;24259;24265;24362;24468;24487;24522;24612;24783;25085;25146;25155;25191;25332;25425;25547;25634;25743;26312;26386;26495;26511;26569;26672;26682;26868;26884;26910;27128;27160;27244;27318;27414;27562;27678;27838;27909;27973;28327;28359;28462;2328;2672;2842;2964;3051;3061;3077;3141;3202;3292;3369;3485;3629;3893;4060;4086;4172;4182;4217;4237;4246;4452;4465;4526;4587;4600;4619;4751;4754;4757;4773;4780;5040;5059;5111;5143;5281;5679;5827;5840;5850;6004;6075;6338;6351;6364;6460;6489;6518;6521;6550;6560;6566;6573;6653;6679;6695;6743;6791;6817;6833;6878;6891;6920;6965;7116;7161;7177;7305;7382;7392;7434;7440;7508;7553;7556;7562;7578;7678;7832;7845;7874;7890;7964;7967;8141;8157;8166;8192;8353;8507;8565;8581;8597;8658;8668;8671;8687;8764;8928;9008;9015;9031;9150;9159;9169;9195;9339;9452;9593;9648;9709;9731;9747;9757;9770;9834;9844;9921;9927;9940;9988;10046;10139;10178;10245;10258;10281;10300;10313;10316;10358;10406;10586;10592;10650;10718;10737;10843;10846;10856;10946;11058;11100;11103;11135;11142;11190;11238;11309;11367;11373;11418;11428;11450;11524;11540;11550;11791;11839;11881;11916;11942;12090;12141;12199;12205;12276;12305;12366;12408;12427;12446;12453;12485;12488;12504;12662;12710;12777;12790;12806;12838;13002;13041;13054;13070;13073;13124;13205;13234;13285;13314;13330;13378;13401;13433;13471;13491;13494;13606;13671;13712;13732;13738;13828;13899;14011;14278;14390;14429;14461;14464;14474;14503;14509;14519;14538;14580;14596;14615;14827;14834;14879;14901;14924;14956;14975;14988;15043;15065;15091;15174;15181;15239;15258;15271;15322;15329;15367;15396;15460;15499;15602;15695;15743;15949;16032;16093;16119;16161;16193;16219;16354;16357;16363;16386;16395;16447;16450;16524;16694;16755;16797;16906;17009;17032;17054;17170;17183;17186;17189;17269;17340;17353;17372;17385;17440;17459;17491;17536;17539;17549;17636;17639;17700;17777;17832;17861;17938;18015;18018;18047;18105;18111;18140;18150;18182;18195;18198;18269;18285;18323;18349;18391;18497;18571;18590;18625;18632;18680;18696;18728;18773;18850;18866;18931;18934;18947;18969;18995;19069;19072;19098;19123;19136;19188;19197;19249;19332;19345;19348;19393;19406;19429;19445;19519;19599;19615;19625;19650;19670;19686;19737;19882;19959;20033;20036;20081;20126;20193;20499;20505;20508;20569;20585;20589;20666;20891;20916;20923;21029;21132;21138;21154;21164;21222;21225;21382;21569;21575;21578;21668;21723;21774;21826;21832;21887;22160;22166;22224;22256;22282;22356;22459;22513;22552;22664;22783;22973;23583;23593;23741;24091;24223;24277;24422;24473;24493;24743;24795;24824;25087;25090;25119;25145;25148;25518;25550;25987;25990;26077;26440;26453;26459;26462;26594;26713;26787;26890;26906;27018;27291;27333;27651;27931;28326;28413;1145;1643;2109;2125;2298;2327;2478;2555;2600;2658;2706;2735;2748;2816;2864;3156;3188;3397;3413;3526;3744;3834;3998;4030;4107;4204;4316;4406;4483;4554;4567;4602;4737;4750;4785;4824;4843;4888;4975;4981;5023;5081;5110;5116;5145;5206;5261;5264;5460;5486;5547;5563;5579;5675;5682;5823;5868;5900;5968;6013;6022;6090;6222;6241;6257;6276;6283;6379;6495;6575;6800;6803;6816;6819;6890;7047;7179;7224;7234;7247;7327;7462;7510;7513;7568;7700;7745;7754;7835;7896;8050;8056;8066;8121;8140;8442;8471;8545;8590;8596;8699;8702;8837;8840;8853;8866;9091;9101;9171;9200;9348;9361;9390;9419;9438;9451;9493;9531;9576;9586;9599;9624;9647;9666;9692;9759;9843;9865;9891;9894;9984;10026;10135;10196;10232;10270;10299;10309;10315;10437;10444;10453;10463;10479;10508;10524;10537;10585;10595;10685;10714;10739;10746;10791;10810;10820;10890;10916;10961;10971;11045;11083;11151;11199;11279;11318;11324;11327;11350;11430;11440;11462;11504;11552;11581;11626;11710;11729;11755;11761;11854;11864;11877;11883;11906;11919;11941;11951;11954;12034;12079;12086;12102;12108;12121;12131;12195;12198;12253;12266;12320;12417;12452;12507;12510;12548;12606;12667;12709;12764;12767;12773;12854;12886;12889;12902;12963;12992;13027;13059;13159;13204;13210;13284;13294;13300;13307;13313;13355;13400;13458;13477;13487;13503;13506;13525;13548;13564;13577;13670;13715;13763;13811;13818;13827;13837;13904;13911;13917;13933;13975;13985;14001;14017;14020;14062;14245;14280;14380;14383;14386;14537;14618;14701;14711;14746;14801;14807;14897;14926;14955;14987;15026;15061;15080;15090;15132;15148;15151;15154;15209;15235;15238;15389;15392;15395;15431;15434;15495;15537;15543;15553;15575;15636;15659;15893;15903;15913;15935;16028;16051;16054;16070;16080;16089;16118;16134;16157;16176;16237;16356;16382;16385;16391;16446;16581;16584;16655;16674;16677;16716;16745;16748;16870;16963;17044;17307;17368;17375;17400;17407;17551;17612;17625;18043;18088;18139;18146;18226;18239;18265;18290;18313;18454;18486;18557;18618;18637;18679;18811;18914;18959;18997;19203;19238;19293;19315;19383;19495;19592;19627;19643;19672;19688;19743;19797;19804;19810;19826;20058;20125;20141;20196;20504;20540;20543;20559;20565;20578;20697;20710;20736;20745;20752;20948;20986;21092;21105;21243;21327;21349;21369;21452;21497;21510;21574;21610;21687;21912;21989;22002;22056;22246;22259;22336;22490;22580;22606;22779;22840;22853;22872;22927;23120;23293;23332;23396;23399;23579;23586;23618;23631;23640;23849;23878;23952;23968;23984;23994;24042;24132;24235;24338;24598;24733;24736;24739;24810;24897;25147;25311;25414;25427;25462;25986;26224;26272;26378;26455;26471;26603;26661;26725;26760;26828;26863;26966;26969;27220;27313;27567;27718;27850;27914;28177;28274;28335;28415;28460;28476;28553;2397;2677;3059;3062;3229;3284;3364;3467;4036;4039;4100;4110;4219;4290;4386;4608;4772;4984;5058;5080;5109;5144;5225;5231;5350;5504;5556;5716;5787;5790;5816;5993;6054;6092;6269;6369;6465;6494;6565;6629;6751;6764;6767;6960;6982;7011;7117;7127;7153;7178;7214;7223;7268;7307;7368;7400;7500;7509;7538;7554;7696;7741;7757;7808;7821;7824;7869;7879;8049;8052;8059;8139;8316;8332;8438;8586;8608;8615;8640;8685;8730;8772;8859;8894;9055;9077;9090;9103;9119;9151;9196;9212;9254;9264;9437;9489;9492;9511;9649;9762;9768;9807;9826;9829;9890;9916;9951;9974;9987;10006;10041;10070;10138;10147;10183;10234;10282;10289;10311;10327;10334;10520;10575;10591;10700;10780;10809;10832;10880;10896;10960;11050;11057;11092;11118;11166;11185;11208;11227;11285;11330;11336;11352;11375;11407;11510;11622;11670;11683;11783;11831;11886;11940;11956;12056;12098;12172;12265;12278;12287;12326;12345;12355;12368;12390;12400;12583;12631;12644;12679;12734;12763;12814;12843;12875;12891;12917;12949;13136;13139;13142;13155;13274;13296;13309;13319;13351;13367;13396;13576;13637;13640;13727;13762;13785;13791;13849;13987;14000;14103;14231;14257;14302;14315;14328;14334;14405;14434;14479;14668;14842;14845;14858;14880;14951;14964;14970;14990;15083;15176;15192;15205;15237;15240;15372;15385;15398;15459;15481;15491;15520;15578;15619;15645;15658;15709;15735;15799;15918;15947;15960;16015;16024;16066;16082;16085;16098;16130;16191;16214;16236;16249;16355;16387;16452;16455;16461;16538;16625;16648;16654;16683;16715;16728;16837;16844;16879;16924;16969;17014;17300;17306;17351;17480;17483;17538;17708;17718;17743;17763;17772;17891;17907;17920;17939;17968;18000;18090;18113;18161;18180;18206;18235;18277;18309;18370;18373;18476;18521;18608;18640;18736;18781;18791;18810;18826;18842;18897;18903;18913;18990;19067;19128;19234;19350;19475;19578;19639;19665;19681;19697;19703;19713;19777;19784;19816;19829;19864;19899;20070;20086;20089;20115;20124;20153;20211;20266;20272;20285;20433;20436;20484;20677;20719;20847;20854;20876;20915;20928;20950;21050;21066;21095;21262;21374;21477;21496;21541;21567;21570;21577;21612;21654;21760;21779;21834;21901;21930;22004;22036;22065;22152;22229;22242;22467;22483;22499;22541;22544;22560;22563;22589;22859;22968;23103;23177;23183;23206;23376;23402;23405;23501;23604;23614;23627;23704;23720;23906;23935;23980;24080;24089;24147;24170;24224;24244;24584;24742;25330;25407;25429;25436;25458;25471;25619;25725;26104;26146;26332;26339;26451;26525;26567;26599;26673;26862;26994;27187;27280;27328;27505;27659;28167;28331;28414
+		</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GPL</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String">in situ oligonucleotide</Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2003/11/07</Item>
+		<Item Name="suppFile" Type="String"></Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List">
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL4454</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL4866</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL5760</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL6671</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL6732</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL6791</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL6879</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL7567</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL8019</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL8542</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL8715</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL8712</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL9102</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL9099</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL9101</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL9324</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL9486</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL9987</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL10175</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL10335</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL10371</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL10526</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL10881</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL10925</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL11084</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL11433</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL11670</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL13232</Item>
+			</Item>
+			<Item Name="Relation" Type="Structure">
+				<Item Name="RelationType" Type="String">Alternative to</Item>
+				<Item Name="TargetObject" Type="String">GPL13303</Item>
+			</Item>
+		</Item>
+		<Item Name="n_samples" Type="Integer">51374</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300670196</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Calu3_NSt_3</Item>
+		<Item Name="summary" Type="String">Human airway epithelial Calu-3 cells, non strained</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">27128</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/12</Item>
+		<Item Name="suppFile" Type="String">CEL CHP</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300670195</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Calu3_NSt_2</Item>
+		<Item Name="summary" Type="String">Human airway epithelial Calu-3 cells, non strained</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">27128</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/12</Item>
+		<Item Name="suppFile" Type="String">CEL CHP</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300670194</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Calu3_NSt_1</Item>
+		<Item Name="summary" Type="String">Human airway epithelial Calu-3 cells, non strained</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">27128</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/12</Item>
+		<Item Name="suppFile" Type="String">CEL CHP</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300670193</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Calu3_24hSt_3</Item>
+		<Item Name="summary" Type="String">Human airway epithelial Calu-3 cells, strained for 24h at 30%</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">27128</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/12</Item>
+		<Item Name="suppFile" Type="String">CEL CHP</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300670192</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Calu3_24hSt_2</Item>
+		<Item Name="summary" Type="String">Human airway epithelial Calu-3 cells, strained for 24h at 30%</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">27128</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/12</Item>
+		<Item Name="suppFile" Type="String">CEL CHP</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300670191</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Calu3_24hSt_1</Item>
+		<Item Name="summary" Type="String">Human airway epithelial Calu-3 cells, strained for 24h at 30%</Item>
+		<Item Name="GPL" Type="String">570</Item>
+		<Item Name="GSE" Type="String">27128</Item>
+		<Item Name="taxon" Type="String">Homo sapiens</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/12</Item>
+		<Item Name="suppFile" Type="String">CEL CHP</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+</eSummaryResult> 

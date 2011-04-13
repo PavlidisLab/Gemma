@@ -1,0 +1,843 @@
+<?xml version="1.0"?> <!DOCTYPE eSummaryResult PUBLIC "-//NLM//DTD eSummaryResult, 29 October 2004//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd">
+<eSummaryResult>
+	<DocSum>
+		<Id>200021230</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">Different isoforms of MaxwellÂ´s Demon, a conserved cell membrane protein, mediate
+			lose/win decisions during cell competition</Item>
+		<Item Name="summary" Type="String">Cell competition promotes the elimination of weaker cells from a growing population.
+			Here we investigate how cells of Drosophila wing imaginal discs distinguish â€œwinnersâ€? from â€œlosersâ€? during
+			cell competition. Using genomic and functional assays we have identified Maxwell`s Demon (Mwd), a cell membrane
+			protein conserved in multicellular animals. Our results suggest that the membrane protein Mwd is a dedicated
+			component of the cell competition response that is required and sufficient to label cells as â€œwinnersâ€? or
+			â€œlosersâ€?. In Drosophila, the mwd locus produces three isoforms, mwdubi, mwdLose-A and mwdLose-B. Basal levels of
+			mwdubi are constantly produced. During competition the mwdLose isoforms are upregulated in prospective loser cells.
+			Cell-cell comparison of relative mwdLose and mwdubi levels ultimately determine which cell undergoes apoptosis. This
+			â€œextracellular codeâ€? may constitute an ancient mechanism to terminate competitive conflicts among cells.</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSE</Item>
+		<Item Name="gdsType" Type="String">Expression profiling by array</Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List">
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530816</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-0h-rep3</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530819</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-0h-rep6</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530826</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-24h-rep1</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530829</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-24h-rep4</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530832</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-48h-rep1</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530814</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-0h-rep1</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530817</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-0h-rep4</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530820</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-12h-rep1</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530823</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-12h-rep4</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530830</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-24h-rep5</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530833</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-48h-rep2</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530836</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-48h-rep5</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530818</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-0h-rep5</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530821</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-12h-rep2</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530824</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-12h-rep5</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530827</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-24h-rep2</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530831</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-24h-rep6</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530834</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-48h-rep3</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530837</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-48h-rep6</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530815</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-0h-rep2</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530822</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-12h-rep3</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530825</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-12h-rep6</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530828</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-24h-rep3</Item>
+			</Item>
+			<Item Name="Sample" Type="Structure">
+				<Item Name="Accession" Type="String">GSM530835</Item>
+				<Item Name="Title" Type="String">dmyc_vs_cd2-48h-rep4</Item>
+			</Item>
+		</Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">24</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List">
+			<Item Name="int" Type="Integer">20951347</Item>
+		</Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>100003829</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">DGRC-D. melanogaster-DGRC1-15552-v4</Item>
+		<Item Name="summary" Type="String">DGRC-1 amplicon transcriptome microarrays are spotted with DNA fragments amplified from
+			genomic DNA of the Oregon R strain of Drosophila melanogaster using gene-specific oligonucleotide primer pairs made
+			by Incyte Genomics. The primers were designed against release 1 of the annotated genome sequence and were selected to
+			amplify fragments which have minimal sequence similarity to other genes, size range between 100-600 bp, and location
+			biased towards the 3'-end of transcripts. The array also contains the following controls: a ubiquitously expressed
+			gene (actin 5C), a spotting buffer-only control (3XSSC plus 1.5M Betaine), exogenous(non-Drosophila) probes (7 from
+			Arabidopsis and 8 Ambion array control PCR spots from bacteria that can be used with spiking RNAs), and three
+			exogenous markers: GAL4, lacZ, and FLP. The DGRC arrays are printed using an Omnigrid 300 contact-printing instrument
+			and 48 silicon split-pins on Corning GAPS II slides. Protocol:
+			http://dgrc.cgb.indiana.edu/microarrays/support/protocols.html</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">13789;5601;5607;5655;13778;21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GPL</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String">spotted DNA/cDNA</Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2006/06/02</Item>
+		<Item Name="suppFile" Type="String"></Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">96</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530837</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-48h-rep6</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530836</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-48h-rep5</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530835</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-48h-rep4</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530834</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-48h-rep3</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530833</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-48h-rep2</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530832</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-48h-rep1</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530831</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-24h-rep6</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530830</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-24h-rep5</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530829</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-24h-rep4</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530828</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-24h-rep3</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530827</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-24h-rep2</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530826</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-24h-rep1</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530825</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-12h-rep6</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530824</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-12h-rep5</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530823</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-12h-rep4</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530822</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-12h-rep3</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530821</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-12h-rep2</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530820</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-12h-rep1</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530819</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-0h-rep6</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530818</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-0h-rep5</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530817</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-0h-rep4</Item>
+		<Item Name="summary" Type="String">tub&gt;dmyc&gt;Gal4 transgene cells (channel 1) tub&gt;cd2&gt;Gal4 control cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530816</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-0h-rep3</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+	<DocSum>
+		<Id>300530815</Id>
+		<Item Name="GDS" Type="String"></Item>
+		<Item Name="title" Type="String">dmyc_vs_cd2-0h-rep2</Item>
+		<Item Name="summary" Type="String">tub&gt;cd2&gt;Gal4 control cells (channel 1) tub&gt;dmyc&gt;Gal4 transgene cells
+			(channel 2)</Item>
+		<Item Name="GPL" Type="String">3829</Item>
+		<Item Name="GSE" Type="String">21230</Item>
+		<Item Name="taxon" Type="String">Drosophila melanogaster</Item>
+		<Item Name="GSM_L" Type="String"></Item>
+		<Item Name="GSM_titles_L" Type="String"></Item>
+		<Item Name="entryType" Type="String">GSM</Item>
+		<Item Name="gdsType" Type="String"></Item>
+		<Item Name="ptechType" Type="String"></Item>
+		<Item Name="valType" Type="String"></Item>
+		<Item Name="SSInfo" Type="String"></Item>
+		<Item Name="subsetInfo" Type="String"></Item>
+		<Item Name="PDAT" Type="String">2011/02/09</Item>
+		<Item Name="suppFile" Type="String">GPR</Item>
+		<Item Name="Samples" Type="List"></Item>
+		<Item Name="Relations" Type="List"></Item>
+		<Item Name="n_samples" Type="Integer">0</Item>
+		<Item Name="SeriesTitle" Type="String"></Item>
+		<Item Name="PlatformTitle" Type="String"></Item>
+		<Item Name="PlatformTaxa" Type="String"></Item>
+		<Item Name="SamplesTaxa" Type="String"></Item>
+		<Item Name="PubMedIds" Type="List"></Item>
+		<Item Name="Projects" Type="List"></Item>
+	</DocSum>
+</eSummaryResult> 

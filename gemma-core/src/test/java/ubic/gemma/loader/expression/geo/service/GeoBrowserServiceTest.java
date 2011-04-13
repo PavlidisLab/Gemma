@@ -42,18 +42,18 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
 
         try {
             String details = gbs.getDetails( "GSE15904" );
-            assertTrue( details.contains( "GSE15904" ) );
+            assertTrue( "Got: " + details, details.contains( "GSE15904" ) );
 
             details = gbs.getDetails( "GSE1295" );
-            assertTrue( details.contains( "GSE1295" ) );
+            assertTrue( "Got: " + details, details.contains( "GSE1295" ) );
 
             // log.info( details );
 
             details = gbs.getDetails( "GSE2565" );
-            assertTrue( details.contains( "GSE2565" ) );
+            assertTrue( "Got: " + details, details.contains( "GSE2565" ) );
 
             // occurs in a "accessioned in GEO as..."
-            assertFalse( details.contains( "<strong>GPL8321" ) );
+            assertFalse( "Got: " + details, details.contains( "<strong>GPL8321" ) );
         } catch ( Exception e ) {
             if ( e.getMessage().contains( "500" ) || e.getMessage().contains( "502" )
                     || e.getMessage().contains( "503" ) || e.getMessage().contains( "GEO returned an error" ) ) {

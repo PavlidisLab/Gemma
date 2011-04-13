@@ -41,7 +41,8 @@ import ubic.gemma.loader.entrez.pubmed.XMLUtils;
 public class EutilFetch {
 
     private static String ESEARCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=";
-    private static String EFETCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
+    // private static String EFETCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=";
+    private static String EFETCH = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=";
 
     public enum Mode {
         HTML, TEXT, XML
@@ -62,9 +63,10 @@ public class EutilFetch {
     /**
      * @param db e.g., gds.
      * @param searchString
-     * @param mode HTML,TEXT or XML
+     * @param mode HTML,TEXT or XML FIXME only provides XML.
      * @param limit - Maximum number of records to return.
-     * @return
+     * @see {@link http://www.ncbi.nlm.nih.gov/corehtml/query/static/esummary_help.html}
+     * @return XML
      */
     public static String fetch( String db, String searchString, Mode mode, int limit ) {
         try {
@@ -77,7 +79,6 @@ public class EutilFetch {
             factory.setValidating( false );
 
             DocumentBuilder builder = factory.newDocumentBuilder();
-            builder = factory.newDocumentBuilder();
             Document document = builder.parse( is );
 
             NodeList countNode = document.getElementsByTagName( "Count" );
@@ -102,12 +103,13 @@ public class EutilFetch {
             String queryId = XMLUtils.getTextValue( queryIdEl );
             String cookie = XMLUtils.getTextValue( cookieEl );
 
-            URL fetchUrl = new URL( EFETCH + db + "&report=docsum&mode=" + mode.toString().toLowerCase()
-                    + "&query_key=" + queryId + "&WebEnv=" + cookie + "&retmax=" + limit );
+            URL fetchUrl = new URL( EFETCH + db + "&mode=" + mode.toString().toLowerCase() + "&query_key=" + queryId
+                    + "&WebEnv=" + cookie + "&retmax=" + limit );
 
             conn = fetchUrl.openConnection();
             conn.connect();
             is = conn.getInputStream();
+
             BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
             StringBuilder buf = new StringBuilder();
             String line = null;
