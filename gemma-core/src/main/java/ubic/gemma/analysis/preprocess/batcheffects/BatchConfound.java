@@ -105,7 +105,7 @@ public class BatchConfound {
         Map<Long, Long> batchMembership = new HashMap<Long, Long>();
         ExperimentalFactor batchFactor = null;
         Map<Long, Integer> batchIndexes = new HashMap<Long, Integer>();
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
             if ( ExperimentalDesignUtils.isBatch( ef ) ) {
                 batchFactor = ef;
 
@@ -137,7 +137,7 @@ public class BatchConfound {
          * Compare other factors to batches to look for confounds.
          */
 
-        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+        for ( ExperimentalFactor ef : bioMaterialFactorMap.keySet() ) {
 
             if ( ef.equals( batchFactor ) ) continue;
 
