@@ -18,17 +18,20 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
+import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -45,6 +48,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.CommonQueries;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.analysis.DifferentialExpressionAnalysis
@@ -337,72 +341,86 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         timer.start();
 
         /*
-         * The constraint on taxon is required because of the potential for array designs that use sequences from the
-         * "wrong" taxon, like GPL560. This way we ensure that we only get expression experiments for the same taxon as
-         * the gene.
+         * Note: this query misses ExpressionExperimentSubSets. The native query was implemented because HQL was always
+         * constructing a constraint on SubSets. See bug 2173.
          */
-        final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a "
-                + " join a.experimentAnalyzed e inner join e.bioAssays ba"
-                + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon = :taxon";
+        final String nativeQuery = "select e.ID from ANALYSIS a inner join INVESTIGATION e ON a.EXPERIMENT_ANALYZED_FK = e.ID "
+                + "inner join BIO_ASSAY ba ON ba.EXPRESSION_EXPERIMENT_FK=e.ID inner join SAMPLES_USED sa ON ba.ID=sa.BIO_ASSAYS_USED_IN_FK "
+                + " inner join BIO_MATERIAL bm ON bm.ID=sa.SAMPLES_USED_FK inner join TAXON t ON bm.SOURCE_TAXON_FK=t.ID "
+                + " inner join COMPOSITE_SEQUENCE cs ON ba.ARRAY_DESIGN_USED_FK =cs.ARRAY_DESIGN_FK where cs.ID in "
+                + " (:probes) ";
 
-        // if parent taxon make sure get children - the conditional logic for species should be moved to calling class
-        final String queryStringParentTaxon = "select distinct e from DifferentialExpressionAnalysisImpl a "
-                + " join a.experimentAnalyzed e inner join e.bioAssays ba"
-                + " inner join ba.samplesUsed sa inner join ba.arrayDesignUsed ad"
-                + " inner join ad.compositeSequences cs"
-                + " inner join sa.sourceTaxon childtaxon where cs in (:probes) and childtaxon.parentTaxon in (:parentTaxon) ";
+        final String speciesConstraint = " and t.ID = :taxon";
+        final String parentTaxonConstraint = " and t.PARENT_TAXON_FK = :taxon";
+
+        // final String revisedQueryString = "select distinct e from ProbeAnalysisResultImpl, "
+        // + "ExpressionAnalysisResultSetImpl "
+        // + "par join par.analysis a join a.experimentAnalyzed  e join e.bioAssays ba"
+        // + " join ba.samplesUsed sa  join par.results r where "
+        // +
+        // "r.probe in (:probes) and a.class='DifferentialExpressionAnalysisImpl'  and sa.sourceTaxon = :taxon and e.class='ExpressionExperimentImpl'";
+        //
+        // /*
+        // * The constraint on taxon is required because of the potential for experiments to use samples for the "wrong"
+        // * taxon for the array. In other words we really need to check the samples used in the experiment, not just
+        // the
+        // * array design.
+        // */
+        // final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a"
+        // + " join a.experimentAnalyzed e join e.bioAssays ba"
+        // + " join ba.samplesUsed sa join ba.arrayDesignUsed ad"
+        // + " join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon = :taxon";
+        //
+        // // if parent taxon make sure get children
+        // final String queryStringParentTaxon = "select distinct e from DifferentialExpressionAnalysisImpl a"
+        // + " join a.experimentAnalyzed e join e.bioAssays ba"
+        // + " join ba.samplesUsed sa join ba.arrayDesignUsed ad" + " join ad.compositeSequences cs"
+        // + " join sa.sourceTaxon childtaxon where cs in (:probes) and childtaxon.parentTaxon = :taxon";
+
+        Taxon taxon = gene.getTaxon();
+        String taxonConstraint = taxon.getIsSpecies() ? speciesConstraint : parentTaxonConstraint;
+
+        String queryToUse = nativeQuery + taxonConstraint;
 
         int batchSize = 1000;
-
-        /*
-         * If 'probes' is too large, query will fail so we have to batch. Yes, it can happen!
-         */
-
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
-        Taxon taxon = gene.getTaxon();
-        String[] paramNames = { "probes", "parentTaxon" };
-
         for ( CompositeSequence probe : probes ) {
             batch.add( probe );
 
             if ( batch.size() == batchSize ) {
-
-                if ( !taxon.getIsSpecies() ) {
-                    log.debug( "Finding children taxa experiments" );
-                    Object[] values = { batch, taxon };
-                    result.addAll( this.getHibernateTemplate().findByNamedParam( queryStringParentTaxon, paramNames,
-                            values ) );
-                } else {
-                    // most common case.
-                    result.addAll( this.getHibernateTemplate().findByNamedParam( queryString,
-                            new String[] { "probes", "taxon" }, new Object[] { batch, taxon } ) );
-                }
+                // result.addAll( this.getHibernateTemplate().findByNamedParam( queryToUse,
+                // new String[] { "probes", "taxon" }, new Object[] { batch, taxon } ) );
+                fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
                 batch.clear();
             }
-
         }
 
         if ( !batch.isEmpty() ) {
-            if ( !taxon.getIsSpecies() ) {
-                log.debug( "Finding children taxa experiments" );
-                Object[] values = { batch, taxon };
-                result.addAll( this.getHibernateTemplate()
-                        .findByNamedParam( queryStringParentTaxon, paramNames, values ) );
-            } else {
-                // most common case.
-                result.addAll( this.getHibernateTemplate().findByNamedParam( queryString,
-                        new String[] { "probes", "taxon" }, new Object[] { batch, gene.getTaxon() } ) );
-            }
+            // result.addAll( this.getHibernateTemplate().findByNamedParam( queryToUse,
+            // new String[] { "probes", "taxon" }, new Object[] { batch, taxon } ) );
+            fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
         }
 
         if ( timer.getTime() > 1000 ) {
             log.info( "Find experiments: " + timer.getTime() + " ms" );
         }
-        timer.reset();
-        timer.start();
 
         return result;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void fetchExperimentsTestingGeneNativeQuery( Collection<CompositeSequence> probes,
+            Collection<BioAssaySet> result, final String nativeQuery, Taxon taxon ) {
+        SQLQuery nativeQ = this.getSession().createSQLQuery( nativeQuery );
+        nativeQ.setParameterList( "probes", EntityUtils.getIds( probes ) );
+        nativeQ.setParameter( "taxon", taxon );
+        List list = nativeQ.list();
+        Set<Long> ids = new HashSet<Long>();
+        for ( Object o : list ) {
+            ids.add( ( ( BigInteger ) o ).longValue() );
+        }
+        result.addAll( this.getHibernateTemplate().findByNamedParam(
+                "from ExpressionExperimentImpl e where e.id in (:ids)", "ids", ids ) );
     }
 
     /*
