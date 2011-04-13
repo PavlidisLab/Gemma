@@ -186,8 +186,7 @@ public class DEDVController {
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
 
-        // FIXME: Commented out for performance and factor info not displayed on front end yet anyway.
-        // layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
         Long time = watch.getTime();
@@ -261,7 +260,6 @@ public class DEDVController {
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
 
-        // Could be performance problem, and factor info not displayed on front end yet anyway.
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
@@ -323,7 +321,6 @@ public class DEDVController {
         dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // Could be performance problem, and factor info not displayed on front end yet anyway.
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
@@ -347,8 +344,6 @@ public class DEDVController {
         log.info( "Retrieved " + validatedProbes.size() + " valid probes in " + time + " ms." );
 
         return makeDiffVisCollection( dedvs, new ArrayList<Gene>( genes ), validatedProbes, layouts );
-
-        // return makeVisCollection( dedvs, new ArrayList<Gene>( genes ), null, null );
 
     }
 
@@ -378,7 +373,6 @@ public class DEDVController {
         List<DoubleVectorValueObject> dedvs = getDiffExVectors( resultSetId, threshold );
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // Could be performance problem, and factor info not displayed on front end yet anyway.
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         return makeVisCollection( dedvs, null, null, layouts );
@@ -461,7 +455,6 @@ public class DEDVController {
                 ees, probes, false );
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        // Could be performance problem, and factor info not displayed on front end yet anyway.
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
@@ -541,6 +534,13 @@ public class DEDVController {
 
         Collection<Long> geneIds = extractIds( request.getParameter( "g" ) ); // might not be any
         Collection<Long> eeIds = extractIds( request.getParameter( "ee" ) ); // might not be there
+
+        ModelAndView mav = new ModelAndView( new TextView() );
+        if ( eeIds == null || eeIds.isEmpty() ) {
+            mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
+            return mav;
+        }
+
         String threshSt = request.getParameter( "thresh" );
         String resultSetIdSt = request.getParameter( "rs" );
 
@@ -563,9 +563,7 @@ public class DEDVController {
             Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( ee,
                     component, thresh.intValue() );
 
-            ModelAndView mav = new ModelAndView( new TextView() );
             mav.addObject( "text", format4File( topLoadedVectors.values() ) );
-
             return mav;
         }
 
@@ -576,14 +574,6 @@ public class DEDVController {
         Long resultSetId = null;
         if ( StringUtils.isNumeric( resultSetIdSt ) ) {
             resultSetId = Long.parseLong( resultSetIdSt );
-        }
-
-        ModelAndView mav = new ModelAndView( new TextView() );
-
-        if ( eeIds == null || eeIds.isEmpty() ) {
-            mav.addObject( "text", "Input empty for finding DEDVs: " + geneIds + " and " + eeIds );
-            return mav;
-
         }
 
         if ( thresh != null && resultSetId != null ) {
@@ -619,14 +609,12 @@ public class DEDVController {
 
             result.put( ee, gmap );
 
-        } else if ( geneIds != null && !geneIds.isEmpty() ) {
-            result = getDEDV( eeIds, geneIds );
         } else {
-
+            result = getDEDV( eeIds, geneIds );
         }
 
         if ( result == null || result.isEmpty() ) {
-            mav.addObject( "text", " No DEDV results for genes: " + geneIds + " and datasets: " + eeIds );
+            mav.addObject( "text", "No results" );
             return mav;
         }
 
@@ -1079,6 +1067,10 @@ public class DEDVController {
 
     }
 
+    /**
+     * @param dedv
+     * @return
+     */
     private String makeHeader( DoubleVectorValueObject dedv ) {
         StringBuilder buf = new StringBuilder();
         ExpressionExperiment ee = dedv.getExpressionExperiment();
