@@ -1251,6 +1251,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         for ( BioAssay ba : ee.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                this.bioMaterialService.thaw( bm );
                 Collection<BioAssay> bioAssaysUsedIn = bm.getBioAssaysUsedIn();
                 if ( bioAssaysUsedIn.size() > 1 ) {
                     needToProcess.add( bm );
@@ -1263,6 +1264,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             for ( BioAssay baU : bm.getBioAssaysUsedIn() ) {
                 if ( i > 0 ) {
                     BioMaterial newMaterial = bioMaterialService.copy( bm );
+                    this.bioMaterialService.thaw( newMaterial );
                     newMaterial.setName( "Modeled after " + bm.getName() );
                     newMaterial.getFactorValues().clear();
                     newMaterial.getBioAssaysUsedIn().add( baU );

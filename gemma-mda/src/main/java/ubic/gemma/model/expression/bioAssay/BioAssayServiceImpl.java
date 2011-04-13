@@ -138,6 +138,8 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     @Override
     protected void handleRemoveBioMaterialAssociation( BioAssay bioAssay, BioMaterial bioMaterial ) throws Exception {
         // remove bioMaterial from bioAssay
+        this.getBioAssayDao().thaw( bioAssay );
+
         Collection<BioMaterial> currentBioMaterials = bioAssay.getSamplesUsed();
         currentBioMaterials.remove( bioMaterial );
         bioAssay.setSamplesUsed( currentBioMaterials );
