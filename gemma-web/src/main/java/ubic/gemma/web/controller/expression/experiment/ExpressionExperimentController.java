@@ -81,6 +81,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -817,6 +818,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         ee = expressionExperimentService.thawLite( ee );
+        
+   
 
         Collection<Long> ids = new HashSet<Long>();
         ids.add( ee.getId() );
@@ -829,8 +832,26 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         getReportData( initialResults );
 
+        /*
+         * Check for multiple "preferred" qts.
+         */
+        int countPreferred = 0;
+        for ( QuantitationType qt : ee.getQuantitationTypes() ) {
+            if ( qt.getIsPreferred() ) {
+                countPreferred++;
+            }
+        }
+
         ExpressionExperimentValueObject initialResult = initialResults.iterator().next();
         ExpressionExperimentDetailsValueObject finalResult = new ExpressionExperimentDetailsValueObject( initialResult );
+        finalResult.setHasMultiplePreferredQuantitationTypes( countPreferred > 1 );
+        
+        Collection<TechnologyType> techTypes = new HashSet<TechnologyType>();
+        for(ArrayDesign ad : expressionExperimentService.getArrayDesignsUsed( ee )) {
+            techTypes.add( ad.getTechnologyType() );
+        }
+        
+        finalResult.setHasMultipleTechnologyTypes(techTypes.size() > 1);
 
         // Set the parent taxon
         Taxon taxon = taxonService.load( initialResult.getTaxonId() );
@@ -1176,6 +1197,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
         mav.addObject( "quantitationTypes", quantitationTypes );
         mav.addObject( "qtCount", quantitationTypes.size() );
 
+        /*
+         * Check for multiple "preferred" qts.
+         */
+        int countPreferred = 0;
+        for ( QuantitationType qt : quantitationTypes ) {
+            if ( qt.getIsPreferred() ) {
+                countPreferred++;
+            }
+        }
+        mav.addObject( "hasMoreThanOnePreferredQt", countPreferred > 0 );
+
         AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expExp, null );
         mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
 
@@ -1476,6 +1508,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
                 SVDValueObject svd = svdService.svdFactorAnalysis( ee );
+                if ( svd == null ) break;
                 for ( Integer component : svd.getFactorPvals().keySet() ) {
                     Map<Long, Double> cmpEffects = svd.getFactorPvals().get( component );
 

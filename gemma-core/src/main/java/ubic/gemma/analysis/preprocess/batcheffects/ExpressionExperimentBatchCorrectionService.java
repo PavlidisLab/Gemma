@@ -49,7 +49,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * Methods for correcting batch effects.
@@ -245,35 +244,6 @@ public class ExpressionExperimentBatchCorrectionService {
 
     /**
      * @param ee
-     * @param experimentalFactors
-     * @param importanceThreshold threshold for pvalue of association with factor. Suggested value might be 0.01.
-     * @return factors which are "significantly" associated with PC (excluding 'batch')
-     */
-    private Set<ExperimentalFactor> getFactorPCAssociations( ExpressionExperiment ee,
-            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
-        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
-        Set<ExperimentalFactor> associatedWithPC = new HashSet<ExperimentalFactor>();
-        SVDValueObject svdFactorAnalysis = svdService.svdFactorAnalysis( ee );
-        Map<Integer, Map<Long, Double>> factorPvals = svdFactorAnalysis.getFactorPvals();
-        for ( Integer cmp : factorPvals.keySet() ) {
-            Map<Long, Double> factorPv = factorPvals.get( cmp );
-            for ( Long efId : factorPv.keySet() ) {
-                Double pvalue = factorPv.get( efId );
-                if ( pvalue < importanceThreshold ) {
-                    assert factors.containsKey( efId );
-                    ExperimentalFactor ef = factors.get( efId );
-                    if ( ExperimentalDesignUtils.isBatch( ef ) ) continue;
-
-                    log.info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
-                    associatedWithPC.add( ef );
-                }
-            }
-        }
-        return associatedWithPC;
-    }
-
-    /**
-     * @param ee
      * @param originalDataMatrix
      * @param design
      * @param parametric
@@ -404,8 +374,10 @@ public class ExpressionExperimentBatchCorrectionService {
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
 
         if ( importanceThreshold != null ) {
-            Set<ExperimentalFactor> importantFactors = getFactorPCAssociations( ee, experimentalFactors,
+            Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee, experimentalFactors,
                     importanceThreshold );
+            importantFactors.remove( getBatchFactor( ee ) );
+
             log.info( importantFactors.size() + " covariates out of " + ( experimentalFactors.size() - 1 )
                     + " considered important to include in batch correction" );
             ExperimentalFactor batch = getBatchFactor( ee );

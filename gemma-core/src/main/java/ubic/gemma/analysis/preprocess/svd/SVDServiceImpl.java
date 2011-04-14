@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
@@ -52,6 +53,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.util.EntityUtils;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.IntArrayList;
 
@@ -248,7 +250,8 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject svdFactorAnalysis( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) {
-            throw new IllegalArgumentException( "SVD must already be run" );
+            log.warn( "PCA not available for this experiment" );
+            return null;
         }
         return svdFactorAnalysis( pca );
     }
@@ -520,6 +523,36 @@ public class SVDServiceImpl implements SVDService {
 
             }
         }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.analysis.preprocess.svd.SVDService#getImportantFactors(ubic.gemma.model.expression.experiment.
+     * ExpressionExperiment, java.util.Collection, java.lang.Double)
+     */
+    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
+            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold ) {
+        Set<ExperimentalFactor> importantFactors = new HashSet<ExperimentalFactor>();
+
+        if ( experimentalFactors.isEmpty() ) return importantFactors;
+        Map<Long, ExperimentalFactor> factors = EntityUtils.getIdMap( experimentalFactors );
+        SVDValueObject svdFactorAnalysis = this.svdFactorAnalysis( ee );
+        Map<Integer, Map<Long, Double>> factorPvals = svdFactorAnalysis.getFactorPvals();
+        for ( Integer cmp : factorPvals.keySet() ) {
+            Map<Long, Double> factorPv = factorPvals.get( cmp );
+            for ( Long efId : factorPv.keySet() ) {
+                Double pvalue = factorPv.get( efId );
+                if ( pvalue < importanceThreshold ) {
+                    assert factors.containsKey( efId );
+                    ExperimentalFactor ef = factors.get( efId );
+
+                    log.info( ef + " retained at p=" + String.format( "%.2g", pvalue ) + " for PC" + cmp );
+                    importantFactors.add( ef );
+                }
+            }
+        }
+        return importantFactors;
     }
 
     /**

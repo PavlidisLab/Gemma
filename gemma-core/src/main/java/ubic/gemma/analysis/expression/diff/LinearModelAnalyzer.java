@@ -43,6 +43,8 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import cern.colt.matrix.DoubleMatrix2D;
+
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
@@ -365,6 +367,65 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
+     * @param matrix on which to perform regression.
+     * @param config containing configuration of factors to include. Any subset configuration is ignored.
+     * @return residuals from the regression. Note that the data will be log transformed (even if they were not in the
+     *         first place), so these residuals are based on the log-transformed data.
+     */
+    public ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
+            DifferentialExpressionAnalysisConfig config ) {
+
+        if ( config.getFactorsToInclude().isEmpty() ) {
+            log.warn( "No factors" );
+            return matrix; // FIXME perhaps return a copy instead. OR throw an ex.
+        }
+
+        /*
+         * Note that this method relies on similar code to doAnalysis, for the setup stages.
+         */
+
+        List<ExperimentalFactor> factors = config.getFactorsToInclude();
+
+        List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( matrix, factors );
+
+        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, matrix );
+
+        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils.getBaselineConditions(
+                samplesUsed, factors );
+
+        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
+
+        /*
+         * Build our factor terms, with interactions handled specially
+         */
+        List<String[]> interactionFactorLists = new ArrayList<String[]>();
+        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils.buildDesignMatrix( factors,
+                samplesUsed, baselineConditions );
+
+        setupFactors( designMatrix, baselineConditions );
+
+        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
+
+        if ( !onLogScale( quantitationType, namedMatrix ) ) {
+            log.info( " **** LOG TRANSFORMING **** " );
+            MatrixStats.logTransform( namedMatrix );
+        }
+
+        DoubleMatrix<String, String> sNamedMatrix = makeDataMatrix( designMatrix, namedMatrix );
+        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
+        LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
+
+        DoubleMatrix2D residuals = fit.getResiduals();
+
+        DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                residuals.toArray() );
+        f.setRowNames( dmatrix.getMatrix().getRowNames() );
+        f.setColumnNames( dmatrix.getMatrix().getColNames() );
+        return new ExpressionDataDoubleMatrix( dmatrix, f );
+
+    }
+
+    /**
      * @param bioAssaySet source data
      * @param config
      * @param dmatrix data
@@ -393,7 +454,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          * Build our factor terms, with interactions handled specially
          */
         List<String[]> interactionFactorLists = new ArrayList<String[]>();
-        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils.buildFactorsForR( factors,
+        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils.buildDesignMatrix( factors,
                 samplesUsed, baselineConditions );
 
         setupFactors( designMatrix, baselineConditions );
@@ -418,8 +479,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         if ( log.isDebugEnabled() ) outputForDebugging( dmatrix, designMatrix );
 
-        final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
-
         /*
          * PREPARATION FOR 'NATIVE' FITTING
          */
@@ -430,8 +489,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          * Run the analysis NOTE this can be simplified if we strip out R code.
          */
         final Map<String, LinearModelSummary> rawResults = runAnalysis( namedMatrix, sNamedMatrix, label2Factors,
-                modelFormula, rowNameExtractor, properDesignMatrix, interceptFactor, interactionFactorLists,
-                baselineConditions );
+                modelFormula, properDesignMatrix, interceptFactor, interactionFactorLists, baselineConditions );
 
         if ( rawResults.size() == 0 ) {
             throw new IllegalStateException( "Got no results from the analysis" );
@@ -456,6 +514,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         /*
          * Create result objects for each model fit. Keeping things in order is important.
          */
+        final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
         boolean warned = false;
         for ( CompositeSequence el : namedMatrix.getRowNames() ) {
 
@@ -957,7 +1016,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param namedMatrix
      * @param factorNameMap
      * @param modelFormula
-     * @param rowNameExtractor
      * @param interactionFactorLists
      * @param interceptFactor
      * @param designMatrix
@@ -968,14 +1026,14 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
             final DoubleMatrix<String, String> sNamedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
-            final Transformer rowNameExtractor, DesignMatrix designMatrix, ExperimentalFactor interceptFactor,
-            List<String[]> interactionFactorLists, Map<ExperimentalFactor, FactorValue> baselineConditions ) {
+            DesignMatrix designMatrix, ExperimentalFactor interceptFactor, List<String[]> interactionFactorLists,
+            Map<ExperimentalFactor, FactorValue> baselineConditions ) {
 
         final Map<String, LinearModelSummary> rawResults = new ConcurrentHashMap<String, LinearModelSummary>();
 
         Future<?> f;
         if ( USE_R ) {
-            f = runAnalysisFuture( namedMatrix, factorNameMap, modelFormula, rowNameExtractor, rawResults );
+            f = runAnalysisFuture( namedMatrix, factorNameMap, modelFormula, rawResults );
         } else {
             f = runAnalysisFutureJ( designMatrix, sNamedMatrix, rawResults );
         }
@@ -1024,17 +1082,17 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param namedMatrix
      * @param factorNameMap
      * @param modelFormula
-     * @param rowNameExtractor
      * @param rawResults
      * @return
      */
     private Future<?> runAnalysisFuture( final DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix,
             final Map<String, Collection<ExperimentalFactor>> factorNameMap, final String modelFormula,
-            final Transformer rowNameExtractor, final Map<String, LinearModelSummary> rawResults ) {
+            final Map<String, LinearModelSummary> rawResults ) {
 
         if ( rc == null || !rc.isConnected() ) {
             throw new IllegalStateException( "Don't call this method unless R is ready :(" );
         }
+        final Transformer rowNameExtractor = TransformerUtils.invokerTransformer( "getId" );
 
         final String matrixName = rc.assignMatrix( namedMatrix, rowNameExtractor );
         ExecutorService service = Executors.newSingleThreadExecutor();

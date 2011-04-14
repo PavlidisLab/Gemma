@@ -239,8 +239,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					readMethod : DEDVController.getDEDVForDiffExVisualizationByThreshold,
 					title : "Top diff. ex. probes for " + factorDetails,
 					showLegend : false,
-					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid,
-							diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
+					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1",
+							eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
 				});
 		this.visDiffWindow.show({
 					params : [eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
@@ -259,8 +259,8 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 					readMethod : DEDVController.getDEDVForPcaVisualization,
 					title : "Top loaded probes for PC" + component,
 					showLegend : false,
-					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&component={1}&thresh={2}&pca=1", eeid,
-							component, count)
+					downloadLink : String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&component={1}&thresh={2}&pca=1",
+							eeid, component, count)
 				});
 		this.vispcaWindow.show({
 					params : [eeid, component, count]
@@ -320,8 +320,18 @@ Gemma.EEPanel = Ext.extend(Ext.Component, {
 		}
 
 		if (ee.troubleFlag) {
-
 			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" title="trouble"/>';
+		}
+
+		if (ee.hasMultiplePreferredQuantitationTypes) {
+			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" '
+					+ 'title="This experiment has multiple \'preferred\' quantitation types. '
+					+ 'This isn\'t necessarily a problem but is suspicious."/>';
+		}
+
+		if (ee.hasMultipleTechnologyTypes) {
+			result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" '
+					+ 'title="This experiment seems to mix array designs with different technology types."/>';
 		}
 
 		if (this.editable) {

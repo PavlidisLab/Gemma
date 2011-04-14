@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.io.ByteArrayConverter;
+import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -66,7 +67,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * <li>Persist the new vectors, which are now tied to a <em>single DesignElement</em>. This is, strictly speaking,
  * incorrect, but because the design elements used in the vector all point to the same sequence, there is no major
  * problem in analyzing this. However, there is a potential loss of information.
- * <li>Cleanup: remove old vectors and BioAssayDimensions.
+ * <li>Cleanup: remove old vectors, analyses, and BioAssayDimensions.
+ * <li>Postprocess: Recreate the processed datavectors, including masking missing values if necesssary.
  * </ol>
  * <p>
  * Vectors which are empty (all missing values) are not persisted. If problems are found during merging, an exception
@@ -100,6 +102,9 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
     @Autowired
     private TwoChannelMissingValues twoChannelMissingValueService;
+
+    @Autowired
+    private AnalysisUtilService analysisUtilService;
 
     /**
      * A main entry point for this class.
@@ -155,6 +160,10 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
                 + " but new bioassaydimension has " + totalBioAssays;
 
         Map<QuantitationType, Collection<DesignElementDataVector>> qt2Vec = getVectors( expExp, qts, allOldBioAssayDims );
+
+        /*
+         * This will run into problems if there are excess quantitation types
+         */
 
         for ( QuantitationType type : qt2Vec.keySet() ) {
 
@@ -225,12 +234,7 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
 
         } // for each quantitation type
 
-        // remove the old BioAssayDimensions
-        for ( BioAssayDimension oldDim : allOldBioAssayDims ) {
-            // careful, the 'new' bioassaydimension might be one of the old ones that we're reusing.
-            if ( oldDim.equals( newBioAd ) ) continue;
-            bioAssayDimensionService.remove( oldDim );
-        }
+        cleanUp( expExp, allOldBioAssayDims, newBioAd );
 
         audit( expExp, "Vector merging peformed, merged " + allOldBioAssayDims + " old bioassay dimensions for "
                 + qts.size() + " quantitation types." );
@@ -244,6 +248,32 @@ public class VectorMergingService extends ExpressionExperimentVectorManipulating
     private void audit( ExpressionExperiment ee, String note ) {
         AuditEventType eventType = ExpressionExperimentVectorMergeEvent.Factory.newInstance();
         auditTrailService.addUpdateEvent( ee, eventType, note );
+    }
+
+    /**
+     * @param expExp
+     * @param allOldBioAssayDims
+     * @param newBioAd
+     */
+    private void cleanUp( ExpressionExperiment expExp, Collection<BioAssayDimension> allOldBioAssayDims,
+            BioAssayDimension newBioAd ) {
+        // Clean up old crap.
+        analysisUtilService.deleteOldAnalyses( expExp );
+
+        /*
+         * Delete the experimental design? Actually it _should_ be okay, since the association is with biomaterials.
+         */
+
+        // remove the old BioAssayDimensions
+        for ( BioAssayDimension oldDim : allOldBioAssayDims ) {
+            // careful, the 'new' bioassaydimension might be one of the old ones that we're reusing.
+            if ( oldDim.equals( newBioAd ) ) continue;
+            try {
+                bioAssayDimensionService.remove( oldDim );
+            } catch ( Exception e ) {
+                log.warn( "Could not delete an old bioAssayDimension with ID=" + oldDim.getId() );
+            }
+        }
     }
 
     /**

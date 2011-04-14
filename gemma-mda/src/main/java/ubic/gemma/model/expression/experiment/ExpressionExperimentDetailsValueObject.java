@@ -28,9 +28,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
  */
 public class ExpressionExperimentDetailsValueObject extends
         ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject {
-    /**
-     * The serial version UID of this class. Needed for serialization.
-     */
+
     private static final long serialVersionUID = -1219449523930648392L;
 
     private java.lang.String description;
@@ -44,10 +42,30 @@ public class ExpressionExperimentDetailsValueObject extends
     private String primaryCitation;
 
     private Collection<ArrayDesignValueObject> arrayDesigns;
-    
+
     private String parentTaxon;
-    
+
     private Long parentTaxonId;
+
+    private Boolean hasMultiplePreferredQuantitationTypes = false;
+
+    private Boolean hasMultipleTechnologyTypes = false;
+
+    public Boolean getHasMultipleTechnologyTypes() {
+        return hasMultipleTechnologyTypes;
+    }
+
+    public void setHasMultipleTechnologyTypes( Boolean hasMultipleTechnologyTypes ) {
+        this.hasMultipleTechnologyTypes = hasMultipleTechnologyTypes;
+    }
+
+    public Boolean getHasMultiplePreferredQuantitationTypes() {
+        return hasMultiplePreferredQuantitationTypes;
+    }
+
+    public void setHasMultiplePreferredQuantitationTypes( Boolean hasMultiplePreferredQuantitationTypes ) {
+        this.hasMultiplePreferredQuantitationTypes = hasMultiplePreferredQuantitationTypes;
+    }
 
     public ExpressionExperimentDetailsValueObject() {
         super();

@@ -16,12 +16,14 @@ package ubic.gemma.analysis.preprocess.svd;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
+import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -51,6 +53,16 @@ public interface SVDService {
 
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public boolean hasPca( ExpressionExperiment ee );
+
+    /**
+     * @param ee
+     * @param experimentalFactors to consider
+     * @param importanceThreshold threshold for pvalue of association with factor. Suggested value might be 0.01.
+     * @return factors which are "significantly" associated with one of the first three PCs
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    public Set<ExperimentalFactor> getImportantFactors( ExpressionExperiment ee,
+            Collection<ExperimentalFactor> experimentalFactors, Double importanceThreshold );
 
     /**
      * Compare ExperimentalFactors and BioAssay.processingDates to the PCs.

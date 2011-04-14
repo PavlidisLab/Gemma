@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.expression.AnalysisUtilService;
 import ubic.gemma.analysis.service.ExpressionExperimentVectorManipulatingService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -54,6 +55,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * <li>where more than one occurrence of each sequence is found.
  * <li>all DEDVs must be switched to use the new AD's design elements
  * <li>all bioassays must be switched to the new AD.
+ * <li>Delete old analyses of this experiment
  * <li>update the EE description
  * <li>commit changes.
  * </ul>
@@ -89,27 +91,23 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
     @Autowired
     private AuditTrailService auditTrailService;
 
+    @Autowired
+    private AnalysisUtilService analysisUtilService;
+
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
         this.auditTrailService = auditTrailService;
     }
 
-    /**
-     * @param arrayDesign
-     */
-    private void audit( ExpressionExperiment ee, String note ) {
-        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
-        auditTrailService.addUpdateEvent( ee, eventType, note );
+    public void setBioAssayService( BioAssayService bioAssayService ) {
+        this.bioAssayService = bioAssayService;
     }
 
-    /**
-     * @param expExp
-     * @param arrayDesign
-     */
-    public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
-        ArrayDesign arrayDesign = locateMergedDesign( expExp );
-        if ( arrayDesign == null )
-            throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
-        this.switchExperimentToArrayDesign( expExp, arrayDesign );
+    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
+        this.expressionExperimentService = expressionExperimentService;
     }
 
     /**
@@ -235,9 +233,31 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName()
                 + " by Gemma]" );
         expressionExperimentService.update( expExp );
+
+        analysisUtilService.deleteOldAnalyses( expExp );
+
         log.info( "Done switching " + expExp );
 
         audit( expExp, "Switch to use " + arrayDesign.getShortName() );
+    }
+
+    /**
+     * @param expExp
+     * @param arrayDesign
+     */
+    public void switchExperimentToMergedPlatform( ExpressionExperiment expExp ) {
+        ArrayDesign arrayDesign = locateMergedDesign( expExp );
+        if ( arrayDesign == null )
+            throw new IllegalArgumentException( "Experiment has no merged design to switch to" );
+        this.switchExperimentToArrayDesign( expExp, arrayDesign );
+    }
+
+    /**
+     * @param arrayDesign
+     */
+    private void audit( ExpressionExperiment ee, String note ) {
+        AuditEventType eventType = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
+        auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 
     /**
@@ -353,17 +373,5 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
         }
 
         return true;
-    }
-
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
-    }
-
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
-    }
-
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 }

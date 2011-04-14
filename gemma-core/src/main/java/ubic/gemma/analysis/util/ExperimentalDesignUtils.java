@@ -57,7 +57,7 @@ public class ExperimentalDesignUtils {
      * @param baselines
      * @return a design matrix
      */
-    public static ObjectMatrix<String, String, Object> buildFactorsForR( List<ExperimentalFactor> factors,
+    public static ObjectMatrix<String, String, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
             List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines ) {
 
         ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<String, String, Object>( samplesUsed

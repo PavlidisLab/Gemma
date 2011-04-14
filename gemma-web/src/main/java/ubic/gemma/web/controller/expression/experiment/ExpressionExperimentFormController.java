@@ -325,6 +325,8 @@ public class ExpressionExperimentFormController extends BaseFormController {
         // set the bioMaterial - bioAssay associations if they are different
         Set<Entry<String, JSONValue>> bioAssays = bioAssayMap.entrySet();
 
+        boolean anyChanges = false;
+
         int newBioMaterialCount = 0;
 
         for ( Entry<String, JSONValue> entry : bioAssays ) {
@@ -380,7 +382,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
                 } else {
                     newMaterial = bioMaterialService.load( newBioMaterialId );
                 }
-
+                anyChanges = true;
                 bioAssayService.addBioMaterialAssociation( bioAssay, newMaterial );
 
             }
@@ -398,6 +400,16 @@ public class ExpressionExperimentFormController extends BaseFormController {
 
             }
 
+        }
+
+        if ( anyChanges ) {
+            /*
+             * TODO Decide if we need to delete the biomaterial -> factor value associations, it could be completely
+             * fouled up.
+             */
+            log.info( "There were changes to the BioMaterial -> BioAssay map" );
+        } else {
+            log.info( "There were NO changes to the BioMaterial -> BioAssay map" );
         }
 
         // remove unnecessary biomaterial associations
