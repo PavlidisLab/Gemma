@@ -38,7 +38,7 @@ public class EutilFetchTest extends TestCase {
         try {
             String result = EutilFetch.fetch( "gds", "GSE4595", 2 );
             assertNotNull( result );
-            assertTrue( "Got " + result, result.startsWith( " 1: GSE4595 record:" ) );
+            assertTrue( "Got " + result, result.startsWith( "<?xml" ) );
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
                 log.warn( "Error 502 from NCBI, skipping test" );
