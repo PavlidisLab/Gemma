@@ -287,8 +287,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * Persist an entirely new array design, including composite sequences and any associated new sequences. Reporters
-     * are not persisted.
+     * Persist an entirely new array design, including composite sequences and any associated new sequences.
      * 
      * @param arrayDesign
      * @return
