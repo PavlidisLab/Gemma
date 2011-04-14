@@ -84,7 +84,7 @@ public class OutlierDetectionService {
         /*
          * Optional: Regress out any 'major' factors; work with residuals only.
          */
-        if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+        if ( useRegression && !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
             double importanceThreshold = 0.01;
             Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee, ee.getExperimentalDesign()
                     .getExperimentalFactors(), importanceThreshold );
