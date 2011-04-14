@@ -101,8 +101,6 @@ public class OutlierDetectionService {
          */
         DoubleMatrix<BioAssay, BioAssay> cormat = ExpressionDataSampleCorrelation.getMatrix( mat );
 
-        ExpressionDataSampleCorrelation.process( mat, ee );
-
         /*
          * Raymond's algorithm: "A sample which has a correlation of less than a threshold with more than 80% of the
          * other samples. The threshold is just the first quartile of sample correlations."
