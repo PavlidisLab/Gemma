@@ -43,7 +43,9 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import cern.colt.matrix.DoubleMatrix1D;
 import cern.colt.matrix.DoubleMatrix2D;
+import cern.jet.math.Functions;
 
 import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -368,12 +370,13 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
     /**
      * @param matrix on which to perform regression.
-     * @param config containing configuration of factors to include. Any subset configuration is ignored.
-     * @return residuals from the regression. Note that the data will be log transformed (even if they were not in the
-     *         first place), so these residuals are based on the log-transformed data.
+     * @param config containing configuration of factors to include. Any interactions or subset configuration is
+     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way.
+     * @param retainScale if true, the data retain the global mean (intercept)
+     * @return residuals from the regression.
      */
     public ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
-            DifferentialExpressionAnalysisConfig config ) {
+            DifferentialExpressionAnalysisConfig config, boolean retainScale ) {
 
         if ( config.getFactorsToInclude().isEmpty() ) {
             log.warn( "No factors" );
@@ -388,34 +391,28 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( matrix, factors );
 
-        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, matrix );
-
         Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils.getBaselineConditions(
                 samplesUsed, factors );
 
-        QuantitationType quantitationType = dmatrix.getQuantitationTypes().iterator().next();
-
-        /*
-         * Build our factor terms, with interactions handled specially
-         */
-        List<String[]> interactionFactorLists = new ArrayList<String[]>();
         ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils.buildDesignMatrix( factors,
                 samplesUsed, baselineConditions );
 
-        setupFactors( designMatrix, baselineConditions );
+        DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
 
+        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, matrix );
         DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
 
-        if ( !onLogScale( quantitationType, namedMatrix ) ) {
-            log.info( " **** LOG TRANSFORMING **** " );
-            MatrixStats.logTransform( namedMatrix );
-        }
-
         DoubleMatrix<String, String> sNamedMatrix = makeDataMatrix( designMatrix, namedMatrix );
-        DesignMatrix properDesignMatrix = makeDesignMatrix( designMatrix, interactionFactorLists, baselineConditions );
         LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
 
         DoubleMatrix2D residuals = fit.getResiduals();
+
+        if ( retainScale ) {
+            DoubleMatrix1D intercept = fit.getCoefficients().viewRow( 0 );
+            for ( int i = 0; i < residuals.rows(); i++ ) {
+                residuals.viewRow( i ).assign( Functions.plus( intercept.get( i ) ) );
+            }
+        }
 
         DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
                 residuals.toArray() );
@@ -875,7 +872,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         /*
          * FIXME careful, tricky case of one-sided test not handled yet? Actually seems okay ...
          */
-        if ( !interactionFactorLists.isEmpty() ) {
+        if ( !( interactionFactorLists == null ) && !interactionFactorLists.isEmpty() ) {
             for ( String[] in : interactionFactorLists ) {
                 // we actually only support (tested etc.) one interaction at a time, but this should actually work for
                 // multiple

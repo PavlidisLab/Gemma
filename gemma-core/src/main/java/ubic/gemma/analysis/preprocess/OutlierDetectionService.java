@@ -63,9 +63,10 @@ public class OutlierDetectionService {
 
     /**
      * @param ee
+     * @param useRegression whether the experimental design should be accounted for
      * @return
      */
-    public Collection<BioAssay> identifyOutliers( ExpressionExperiment ee ) {
+    public Collection<BioAssay> identifyOutliers( ExpressionExperiment ee, boolean useRegression ) {
 
         /*
          * Get the experimental design
@@ -80,32 +81,34 @@ public class OutlierDetectionService {
 
         ExpressionDataDoubleMatrix mat = new ExpressionDataDoubleMatrix( vectos );
 
-//        /*
-//         * Optional: Regress out any 'major' factors; work with residuals only. FIXME: this could fail...
-//         */
-//        if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
-//            double importanceThreshold = 0.01;
-//            Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee, ee.getExperimentalDesign()
-//                    .getExperimentalFactors(), importanceThreshold );
-//            if ( !importantFactors.isEmpty() ) {
-//                log.info( "Regressing out covariates" );
-//                DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-//                config.setFactorsToInclude( importantFactors );
-//                mat = lma.regressionResiduals( mat, config );
-//            }
-//        }
+        /*
+         * Optional: Regress out any 'major' factors; work with residuals only.
+         */
+        if ( !ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
+            double importanceThreshold = 0.01;
+            Set<ExperimentalFactor> importantFactors = svdService.getImportantFactors( ee, ee.getExperimentalDesign()
+                    .getExperimentalFactors(), importanceThreshold );
+            if ( !importantFactors.isEmpty() ) {
+                log.info( "Regressing out covariates" );
+                DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
+                config.setFactorsToInclude( importantFactors );
+                mat = lma.regressionResiduals( mat, config, true );
+            }
+        }
 
         /*
          * Determine the correlation of samples.
          */
         DoubleMatrix<BioAssay, BioAssay> cormat = ExpressionDataSampleCorrelation.getMatrix( mat );
 
+        ExpressionDataSampleCorrelation.process( mat, ee );
+
         /*
          * Raymond's algorithm: "A sample which has a correlation of less than a threshold with more than 80% of the
          * other samples. The threshold is just the first quartile of sample correlations."
          */
-        double threshold = 0.8;
-        int quantile = 25;
+        double threshold = 0.9;
+        int quantile = 15;
 
         /*
          * First pass: Determine the threshold (quartile?)
