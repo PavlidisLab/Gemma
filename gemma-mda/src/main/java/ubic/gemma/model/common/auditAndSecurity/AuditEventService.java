@@ -81,6 +81,7 @@ public interface AuditEventService {
     /**
      * 
      */
+    @Deprecated
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
     public void thaw( ubic.gemma.model.common.auditAndSecurity.AuditEvent auditEvent );
 

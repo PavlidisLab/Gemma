@@ -128,23 +128,31 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         return result;
     }
 
+    @Deprecated
     @Override
-    protected void handleThaw( final AuditEvent auditEvent ) throws Exception {
+    protected void handleThaw( AuditEvent auditEvent ) throws Exception {
         if ( auditEvent == null ) return;
-        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
-            public Object doInHibernate( Session session ) throws HibernateException {
-                /*
-                 * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already
-                 * associated with the session.
-                 */
-                if ( session.get( AuditEventImpl.class, auditEvent.getId() ) == null ) {
-                    session.lock( auditEvent, LockMode.NONE );
-                }
-                Hibernate.initialize( auditEvent );
-                Hibernate.initialize( auditEvent.getPerformer() );
-                return null;
-            }
-        } );
+
+        auditEvent = ( AuditEvent ) this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select a from AuditEventImpl a fetch all properties join fetch a.performer fetch all properties where a = :ae ",
+                        "ae", auditEvent ).iterator().next();
+
+        // this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
+        // public Object doInHibernate( Session session ) throws HibernateException {
+        // /*
+        // * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already
+        // * associated with the session.
+        // */
+        // if ( session.get( AuditEventImpl.class, auditEvent.getId() ) == null ) {
+        // session.lock( auditEvent, LockMode.NONE );
+        // }
+        // Hibernate.initialize( auditEvent );
+        // Hibernate.initialize( auditEvent.getPerformer() );
+        // return null;
+        // }
+        // } );
 
     }
 
@@ -206,9 +214,11 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 Hibernate.initialize( auditable.getAuditTrail() );
                 Hibernate.initialize( auditable.getAuditTrail().getEvents() );
                 for ( AuditEvent ae : auditable.getAuditTrail().getEvents() ) {
-                    if ( ae == null ) continue;
                     // legacy of ordered-list which could end up with gaps; should not be needed any more
-                    thaw( ae );
+                    if ( ae == null ) continue;
+                    Hibernate.initialize( ae );
+                    Hibernate.initialize( ae.getPerformer() );
+                    // thaw( ae );
                 }
                 return null;
             }
@@ -247,7 +257,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         final String queryString = "select event from AuditTrailImpl trail "
                 + "inner join trail.events event inner join event.eventType et inner join fetch event.performer "
-                + "where trail = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
+                + "fetch all properties where trail = :trail " + "and et.class in (" + StringUtils.join( classes, "," )
                 + ") order by event.date desc ";
 
         try {
@@ -262,7 +272,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             if ( results == null || results.isEmpty() ) return null;
 
             AuditEvent result = results.iterator().next();
-            result.getPerformer(); // Hit performer to make hibernate initialize it.
+            Hibernate.initialize( result.getPerformer() ); // Hit performer to make hibernate initialize it.
             return result;
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -640,16 +650,35 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         return atmap;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetLastEvent(ubic.gemma.model.common.Auditable,
+     * java.lang.Class)
+     */
     @Override
     protected AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
         return this.handleGetLastEvent( auditable.getAuditTrail(), type );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#hasEvent(ubic.gemma.model.common.Auditable,
+     * java.lang.Class)
+     */
     @Override
     public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
         return this.getLastEvent( a, type ) != null;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#retainHavingEvent(java.util.Collection,
+     * java.lang.Class)
+     */
     @Override
     public void retainHavingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
 
@@ -664,6 +693,12 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#retainLackingEvent(java.util.Collection,
+     * java.lang.Class)
+     */
     @Override
     public void retainLackingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
         StopWatch timer = new StopWatch();

@@ -591,13 +591,11 @@ public class ArrayDesignController extends AbstractTaskService {
 
         AuditEvent troubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
         if ( troubleEvent != null ) {
-            // auditEventService.thaw( troubleEvent );
             mav.addObject( "troubleEvent", troubleEvent );
             mav.addObject( "troubleEventDescription", StringEscapeUtils.escapeHtml( troubleEvent.toString() ) );
         }
         AuditEvent validatedEvent = auditTrailService.getLastValidationEvent( arrayDesign );
         if ( validatedEvent != null ) {
-            // auditEventService.thaw( validatedEvent );
             mav.addObject( "validatedEvent", validatedEvent );
             mav.addObject( "validatedEventDescription", StringEscapeUtils.escapeHtml( validatedEvent.toString() ) );
         }

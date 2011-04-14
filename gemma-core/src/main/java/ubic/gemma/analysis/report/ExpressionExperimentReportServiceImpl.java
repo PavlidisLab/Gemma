@@ -344,7 +344,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             if ( validationEvents.containsKey( ee ) ) {
                 AuditEvent validated = validationEvents.get( ee );
-                auditEventService.thaw( validated );
+                // auditEventService.thaw( validated );
 
                 if ( validated.getDate().after( mostRecentDate ) ) {
                     mostRecentDate = validated.getDate();
@@ -359,7 +359,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
                 if ( validated != null ) {
 
-                    auditEventService.thaw( validated );
+                    // auditEventService.thaw( validated );
 
                     if ( validated.getDate().after( mostRecentDate ) ) {
                         mostRecentDate = validated.getDate();
@@ -371,7 +371,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             if ( autotaggerEvents.containsKey( ee ) ) {
                 AuditEvent taggerEvent = autotaggerEvents.get( ee );
-                auditEventService.thaw( taggerEvent );
+                // auditEventService.thaw( taggerEvent );
 
                 if ( taggerEvent.getDate().after( mostRecentDate ) ) {
                     mostRecentDate = taggerEvent.getDate();
