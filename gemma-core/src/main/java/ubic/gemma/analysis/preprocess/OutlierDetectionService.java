@@ -47,6 +47,10 @@ import cern.colt.list.DoubleArrayList;
 @Service
 public class OutlierDetectionService {
 
+    private static final int DEFAULT_QUANTILE = 15;
+
+    private static final double DEFAULT_FRACTION = 0.9;
+
     private static Log log = LogFactory.getLog( OutlierDetectionService.class );
 
     @Autowired
@@ -62,11 +66,25 @@ public class OutlierDetectionService {
     private SVDService svdService;
 
     /**
+     * Use default settings.
+     * 
      * @param ee
-     * @param useRegression whether the experimental design should be accounted for
      * @return
      */
-    public Collection<BioAssay> identifyOutliers( ExpressionExperiment ee, boolean useRegression ) {
+    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee ) {
+        return this.identifyOutliers( ee, false, DEFAULT_QUANTILE, DEFAULT_FRACTION );
+    }
+
+    /**
+     * @param ee
+     * @param useRegression whether the experimental design should be accounted for
+     * @param which quantile the correlation has to be in before it's considered potentially outlying (suggestion: 15)
+     * @param what fraction of samples have to have a correlation lower than the quantile for a sample, for that sample
+     *        to be considered an outlier (suggestion: 0.9)
+     * @return
+     */
+    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee, boolean useRegression,
+            int quantileThreshold, double fractionThreshold ) {
 
         /*
          * Get the experimental design
@@ -105,8 +123,6 @@ public class OutlierDetectionService {
          * Raymond's algorithm: "A sample which has a correlation of less than a threshold with more than 80% of the
          * other samples. The threshold is just the first quartile of sample correlations."
          */
-        double threshold = 0.9;
-        int quantile = 15;
 
         /*
          * First pass: Determine the threshold (quartile?)
@@ -125,7 +141,7 @@ public class OutlierDetectionService {
          */
 
         DoubleArrayList ranks = Rank.rankTransform( cors );
-        int desiredQuantileIndex = ( int ) Math.ceil( cors.size() * ( quantile / 100.0 ) );
+        int desiredQuantileIndex = ( int ) Math.ceil( cors.size() * ( quantileThreshold / 100.0 ) );
         double valueAtDesiredQuantile = Double.MIN_VALUE;
         for ( int i = 0; i < ranks.size(); i++ ) {
             if ( ranks.get( i ) == desiredQuantileIndex ) {
@@ -140,7 +156,7 @@ public class OutlierDetectionService {
         log.info( "Threshold correlation is " + String.format( "%.2f", valueAtDesiredQuantile ) );
 
         // second pass; for each sample, how many correlations does it have which are below the selected quantile.
-        Collection<BioAssay> outliers = new HashSet<BioAssay>();
+        Collection<OutlierDetails> outliers = new HashSet<OutlierDetails>();
         for ( int i = 0; i < cormat.rows(); i++ ) {
             BioAssay ba = cormat.getRowName( i );
             int countBelow = 0;
@@ -152,8 +168,10 @@ public class OutlierDetectionService {
             }
 
             // if it has more than the threshold fraction of low correlations, we flag it.
-            if ( countBelow > threshold * cormat.columns() ) {
-                outliers.add( ba );
+            if ( countBelow > fractionThreshold * cormat.columns() ) {
+                OutlierDetails outlier = new OutlierDetails( ba, countBelow / ( double ) cormat.columns(),
+                        valueAtDesiredQuantile );
+                outliers.add( outlier );
             }
         }
 

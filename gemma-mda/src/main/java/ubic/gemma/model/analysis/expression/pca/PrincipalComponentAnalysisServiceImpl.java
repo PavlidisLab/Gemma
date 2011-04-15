@@ -81,7 +81,7 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         /*
          * deal with U. We keep only the first numComponentsToStore components for the first numLoadingsToStore genes.
          */
-        for ( int i = 0; i < actualNumberOfComponentsStored; i++ ) { 
+        for ( int i = 0; i < actualNumberOfComponentsStored; i++ ) {
             List<CompositeSequence> inOrder = u.sortByColumnAbsoluteValues( i, true );
 
             for ( int j = 0; j < Math.min( u.rows(), numLoadingsToStore ) - 1; j++ ) {
@@ -159,7 +159,7 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         QuantitationType loadingQt = QuantitationType.Factory.newInstance( "Loading",
                 "Loading of a feature on an eigenvector", Boolean.FALSE, PrimitiveType.DOUBLE,
                 GeneralType.QUANTITATIVE, StandardQuantitationType.CORRELATION, ScaleType.LINEAR, false, false, false,
-                false, false );
+                false, false, false );
         return quantitationTypeDao.findOrCreate( loadingQt );
     }
 
