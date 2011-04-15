@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_11_5_e240333_1154527189593_272453_14" name="xml" metamodelReference="_11_5_e240333_1154527189593_272453_14_packageImportcreatedOnLoad">
-  <eAnnotations xmi:id="_KiK7NmeSEeCnzsA5F-msJA" source="attributes">
-    <details xmi:id="_KiK7N2eSEeCnzsA5F-msJA" key="version" value="0"/>
+  <eAnnotations xmi:id="_IzawmGerEeCPMcEiZQQYLg" source="attributes">
+    <details xmi:id="_IzawmWerEeCPMcEiZQQYLg" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_KiK7OGeSEeCnzsA5F-msJA" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_KiK7OWeSEeCnzsA5F-msJA" name="xml_0" nsURI="http:///xml_0_Kh9e4WeSEeCnzsA5F-msJA.profile.uml2" nsPrefix="xml_0">
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_KiK7OmeSEeCnzsA5F-msJA" name="xml__XmlSchemaType">
-        <eAnnotations xmi:id="_KiK7O2eSEeCnzsA5F-msJA" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_KiK7PGeSEeCnzsA5F-msJA" key="documentation" value="Represents an XML Schema type."/>
+  <eAnnotations xmi:id="_IzawmmerEeCPMcEiZQQYLg" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_Izawm2erEeCPMcEiZQQYLg" name="xml_0" nsURI="http:///xml_0_IzC8oWerEeCPMcEiZQQYLg.profile.uml2" nsPrefix="xml_0">
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_IzawnGerEeCPMcEiZQQYLg" name="xml__XmlSchemaType">
+        <eAnnotations xmi:id="_IzawnWerEeCPMcEiZQQYLg" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_IzawnmerEeCPMcEiZQQYLg" key="documentation" value="Represents an XML Schema type."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_KiK7PWeSEeCnzsA5F-msJA" source="stereotype" references="_9_0_1fe00f9_1119337628453_799302_4"/>
+        <eAnnotations xmi:id="_Izawn2erEeCPMcEiZQQYLg" source="stereotype" references="_9_0_1fe00f9_1119337628453_799302_4"/>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_KiK7PmeSEeCnzsA5F-msJA" name="xml__XmlAttribute">
-        <eAnnotations xmi:id="_KiK7P2eSEeCnzsA5F-msJA" source="http://www.eclipse.org/emf/2002/GenModel">
-          <details xmi:id="_KiK7QGeSEeCnzsA5F-msJA" key="documentation" value="Defines whether or not an attribute should be represented as an XML Schema attribute during generation time, if its either false, or not defined, then it will be assumed that the UML attribute should be represented as an XML Schema element instead."/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_IzawoGerEeCPMcEiZQQYLg" name="xml__XmlAttribute">
+        <eAnnotations xmi:id="_IzawoWerEeCPMcEiZQQYLg" source="http://www.eclipse.org/emf/2002/GenModel">
+          <details xmi:id="_IzawomerEeCPMcEiZQQYLg" key="documentation" value="Defines whether or not an attribute should be represented as an XML Schema attribute during generation time, if its either false, or not defined, then it will be assumed that the UML attribute should be represented as an XML Schema element instead."/>
         </eAnnotations>
-        <eAnnotations xmi:id="_KiK7QWeSEeCnzsA5F-msJA" source="stereotype" references="_9_0_1fe00f9_1119337628453_454940_3"/>
+        <eAnnotations xmi:id="_Izawo2erEeCPMcEiZQQYLg" source="stereotype" references="_9_0_1fe00f9_1119337628453_454940_3"/>
       </eClassifiers>
     </contents>
   </eAnnotations>
@@ -46,7 +46,7 @@
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527167968_478072_7"/>
     </ownedEnd>
   </ownedMember>
-  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527167984_795070_9" memberEnd="_11_5_e240333_1154527167984_233984_11 _11_5_e240333_1154527167984_917636_10">
+  <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_e240333_1154527167984_795070_9" memberEnd="_11_5_e240333_1154527167984_917636_10 _11_5_e240333_1154527167984_233984_11">
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_e240333_1154527167984_233984_11" name="extension_XmlSchemaType" visibility="private" type="_9_0_1fe00f9_1119337628453_799302_4" association="_11_5_e240333_1154527167984_795070_9" aggregation="composite">
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_e240333_1154527167984_57697_13" value="1"/>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_e240333_1154527167984_203837_12"/>
