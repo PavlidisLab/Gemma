@@ -159,7 +159,7 @@ public class PrincipalComponentAnalysisServiceImpl implements PrincipalComponent
         QuantitationType loadingQt = QuantitationType.Factory.newInstance( "Loading",
                 "Loading of a feature on an eigenvector", Boolean.FALSE, PrimitiveType.DOUBLE,
                 GeneralType.QUANTITATIVE, StandardQuantitationType.CORRELATION, ScaleType.LINEAR, false, false, false,
-                false, false, false, false );
+                false, false, false );
         return quantitationTypeDao.findOrCreate( loadingQt );
     }
 
