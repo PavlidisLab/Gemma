@@ -141,6 +141,11 @@ public class GeneCoexpressionService {
     public CoexpressionMetaValueObject coexpressionSearch( Collection<Long> inputEeIds, Collection<Gene> genes,
             int stringency, int maxResults, boolean queryGenesOnly, boolean forceProbeLevelSearch ) {
 
+        if ( genes.isEmpty() ) {
+            CoexpressionMetaValueObject r = new CoexpressionMetaValueObject();
+            r.setErrorState( "No genes selected" );
+            return r;
+        }
         Collection<Long> eeIds = inputEeIds;
 
         if ( inputEeIds == null ) eeIds = new HashSet<Long>();

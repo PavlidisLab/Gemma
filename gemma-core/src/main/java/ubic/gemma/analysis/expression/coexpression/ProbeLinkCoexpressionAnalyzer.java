@@ -521,9 +521,13 @@ public class ProbeLinkCoexpressionAnalyzer {
             cacheEesGeneTestedIn( ees, eeIdOrder );
         }
 
+        assert eeIdOrder.size() == ees.size();
+
         assert genesTestedIn.containsKey( geneId );
 
         List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
+
+        assert eesTestingGene.size() == ees.size();
 
         // initialize.
         byte[] result = new byte[( int ) Math.ceil( eeIdOrder.size() / ( double ) Byte.SIZE )];
