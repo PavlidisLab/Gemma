@@ -565,8 +565,18 @@ public class ProbeLinkCoexpressionAnalyzer {
      */
     private void cacheEesGeneTestedIn( Collection<BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
 
+        assert ees != null;
+        assert eeIndexMap != null;
+        assert !ees.isEmpty();
+        assert !eeIndexMap.isEmpty();
+
         for ( BioAssaySet ee : ees ) {
             Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
+
+            if ( genes.isEmpty() ) {
+                log.warn( "No genes were tested by " + ee );
+                continue;
+            }
 
             // inverted map of gene -> ees tested in.
             Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
