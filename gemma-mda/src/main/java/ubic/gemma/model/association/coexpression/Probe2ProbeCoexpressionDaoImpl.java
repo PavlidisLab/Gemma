@@ -498,12 +498,10 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         }
 
         // this is _much_ faster than going through blatassociation.
-        final String nativeQueryString = "SELECT gc.GENE FROM "
-                + " EXPERIMENTS2EXPRESSION_EXPERIMENT_SETS e2ees INNER JOIN INVESTIGATION e ON e.ID=e2ees.EXPERIMENTS_FK "
-                + "INNER JOIN EXPRESSION_EXPERIMENT_SET eeset ON eeset.ID=e2ees.EXPRESSION_EXPERIMENT_SETS_FK "
-                + "INNER JOIN ANALYSIS a ON a.EXPRESSION_EXPERIMENT_SET_ANALYZED_FK=eeset.ID "
+        final String nativeQueryString = "SELECT gc.GENE FROM " + "ANALYSIS a  "
                 + "INNER JOIN COEXPRESSION_PROBE pu ON pu.PROBE_COEXPRESSION_ANALYSIS_FK=a.ID "
-                + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBE_FK WHERE a.class='ProbeCoexpressionAnalysisImpl' AND e.ID= :eeid ";
+                + "INNER JOIN GENE2CS gc ON gc.CS=pu.PROBE_FK WHERE"
+                + " a.class='ProbeCoexpressionAnalysisImpl' AND a.EXPERIMENT_ANALYZED_FK = :eeid ";
 
         List<BigInteger> r = NativeQueryUtils.findByNamedParam( this.getHibernateTemplate(), nativeQueryString, "eeid",
                 ee.getId() );

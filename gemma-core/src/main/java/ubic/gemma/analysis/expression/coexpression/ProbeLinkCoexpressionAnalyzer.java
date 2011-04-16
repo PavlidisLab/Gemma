@@ -118,6 +118,11 @@ public class ProbeLinkCoexpressionAnalyzer {
             Collection<BioAssaySet> eesQueryTestedIn = probe2ProbeCoexpressionService
                     .getExpressionExperimentsLinkTestedIn( gene, ees, false );
 
+            if ( eesQueryTestedIn.isEmpty() ) {
+                log.warn( "Query gene: " + gene + " not tested in any experiments" );
+                continue;
+            }
+
             /*
              * Finish the postprocessing.
              */
