@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2007 University of British Columbia
+ * Copyright (c) 2007-2011 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -117,11 +117,6 @@ public class ProbeLinkCoexpressionAnalyzer {
              */
             Collection<BioAssaySet> eesQueryTestedIn = probe2ProbeCoexpressionService
                     .getExpressionExperimentsLinkTestedIn( gene, ees, false );
-
-            if ( eesQueryTestedIn.isEmpty() ) {
-                log.warn( "Query gene: " + gene + " not tested in any experiments" );
-                continue;
-            }
 
             /*
              * Finish the postprocessing.
@@ -408,7 +403,7 @@ public class ProbeLinkCoexpressionAnalyzer {
         /*
          * Note: we assume this is actually constant as we build a cache based on it. Small risk.
          */
-        Map<Long, Integer> eeIndexMap = ProbeLinkCoexpressionAnalyzer.getOrderingMap( ees );
+        Map<Long, Integer> eeIndexMap = getOrderingMap( ees );
         assert eeIndexMap.size() == ees.size();
 
         /*
@@ -420,10 +415,7 @@ public class ProbeLinkCoexpressionAnalyzer {
         Boolean[] queryGeneEETestStatus = getEETestedForGeneVector( queryGeneId, ees, eeIndexMap );
 
         if ( queryGeneEETestStatus == null ) {
-            /*
-             * OK, this is bizarre. We shouldn't have any coexpression data and shouldn't be here.
-             */
-            return;
+            throw new IllegalStateException( "Query gene 'ees tested in' information was missing" );
         }
 
         geneTestStatusCache.put( queryGeneId, queryGeneEETestStatus );
@@ -471,24 +463,6 @@ public class ProbeLinkCoexpressionAnalyzer {
             }
 
             cvo.setDatasetsTestedInBytes( answer );
-
-            // That there is no easy way to avoid this inner loop - however, in this batch processing case where this is
-            // used, we end up with a bit vector later, so we could consider constructing that now instead.
-            // for ( BioAssaySet ee : ees ) {
-            // /*
-            // * Both the query and the target have to have been tested in the given experiment.
-            // */
-            // if ( queryGeneEETestStatus[i] && targetGeneEETestStatus[i] ) {
-            // Long eeid = ee.getId();
-            // cvo.getDatasetsTestedIn().add( eeid );
-            // }
-            // loopcount++;
-            // i++;
-            // }
-
-            // sanity check.
-            // assert cvo.getDatasetsTestedIn().size() > 0 : "No data sets tested in for : " + cvo;
-
         }
 
         if ( timer.getTime() > 100 ) {
@@ -515,10 +489,7 @@ public class ProbeLinkCoexpressionAnalyzer {
         }
         List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
 
-        if ( eesTestingGene == null ) {
-            log.info( "No data set tested gene: " + geneId );
-            return null;
-        }
+        assert eesTestingGene != null;
 
         Boolean[] queryGeneEETestStatus = new Boolean[ees.size()];
         int i = 0;
@@ -589,11 +560,6 @@ public class ProbeLinkCoexpressionAnalyzer {
 
         for ( BioAssaySet ee : ees ) {
             Collection<Long> genes = probe2ProbeCoexpressionService.getGenesTestedBy( ee, false );
-
-            if ( genes.isEmpty() ) {
-                log.warn( "No genes were tested by " + ee );
-                continue;
-            }
 
             // inverted map of gene -> ees tested in.
             Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
