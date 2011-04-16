@@ -414,6 +414,13 @@ public class ProbeLinkCoexpressionAnalyzer {
 
         Boolean[] queryGeneEETestStatus = getEETestedForGeneVector( queryGeneId, ees, eeIndexMap );
 
+        if ( queryGeneEETestStatus == null ) {
+            /*
+             * OK, this is bizarre. We shouldn't have any coexpression data and shouldn't be here.
+             */
+            return;
+        }
+
         geneTestStatusCache.put( queryGeneId, queryGeneEETestStatus );
 
         byte[] queryGeneEETestStatusBytes;
@@ -502,7 +509,12 @@ public class ProbeLinkCoexpressionAnalyzer {
             cacheEesGeneTestedIn( ees, eeIndexMap );
         }
         List<Boolean> eesTestingGene = genesTestedIn.get( geneId );
-        assert eesTestingGene != null;
+
+        if ( eesTestingGene == null ) {
+            log.info( "No data set tested gene: " + geneId );
+            return null;
+        }
+
         Boolean[] queryGeneEETestStatus = new Boolean[ees.size()];
         int i = 0;
         // note: we assume that this collection does not change iteration order.
@@ -580,6 +592,9 @@ public class ProbeLinkCoexpressionAnalyzer {
 
             // inverted map of gene -> ees tested in.
             Integer indexOfEEInAr = eeIndexMap.get( ee.getId() );
+
+            assert indexOfEEInAr != null : "No index for EEID=" + ee.getId() + " in the eeIndexMap";
+
             for ( Long geneId : genes ) {
                 if ( !genesTestedIn.containsKey( geneId ) ) {
 
