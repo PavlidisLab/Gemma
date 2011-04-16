@@ -272,16 +272,19 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                 continue;
             }
 
-            if ( ad.getSubsumingArrayDesign() != null ) {
-                log.info( "Skipping  " + ad.getName() + "  because it is subsumed by "
-                        + ad.getSubsumingArrayDesign().getName() );
-                continue;
-            }
-
-            if ( ad.getMergedInto() != null ) {
-                log.info( "Skipping  " + ad.getName() + "  because it was merged into " + ad.getMergedInto().getName() );
-                continue;
-            }
+            /*
+             * Change in policy due to bug 2176 -- always generate the files.
+             */
+            // if ( ad.getSubsumingArrayDesign() != null ) {
+            // log.info( "Skipping  " + ad.getName() + "  because it is subsumed by "
+            // + ad.getSubsumingArrayDesign().getName() );
+            // continue;
+            // }
+            //
+            // if ( ad.getMergedInto() != null ) {
+            // log.info( "Skipping  " + ad.getName() + "  because it was merged into " + ad.getMergedInto().getName() );
+            // continue;
+            // }
 
             processOneAD( ad );
 
@@ -488,6 +491,9 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
+    /**
+     * 
+     */
     private void processGenesForTaxon() {
         GeneService geneService = ( GeneService ) getBean( "geneService" );
         TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
@@ -517,11 +523,14 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( "Processing AD: " + ad.getName() );
 
-        String shortFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
+        String shortFileBaseName = ArrayDesignAnnotationService.mungeFileName( ad.getShortName() )
+                + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX;
         File sf = ArrayDesignAnnotationService.getFileName( shortFileBaseName );
-        String biocFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
+        String biocFileBaseName = ArrayDesignAnnotationService.mungeFileName( ad.getShortName() )
+                + ArrayDesignAnnotationService.BIO_PROCESS_FILE_SUFFIX;
         File bf = ArrayDesignAnnotationService.getFileName( biocFileBaseName );
-        String allparFileBaseName = ad.getShortName() + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
+        String allparFileBaseName = ArrayDesignAnnotationService.mungeFileName( ad.getShortName() )
+                + ArrayDesignAnnotationService.STANDARD_FILE_SUFFIX;
         File af = ArrayDesignAnnotationService.getFileName( allparFileBaseName );
 
         if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
@@ -530,14 +539,14 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
-        log.info( "Starting genes specificity" );
+        log.info( "Starting getting probe specificity" );
 
         // lmd test
 
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
                 .getGenesWithSpecificity( compositeSequences );
 
-        log.info( "Ending genes specificity" );
+        log.info( "Done getting probe specificity" );
 
         if ( overWrite || !sf.exists() ) {
             processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
