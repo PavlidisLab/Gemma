@@ -256,6 +256,14 @@ public class ExpressionExperimentQCController extends BaseController {
         } else {
             DoubleMatrixReader r = new DoubleMatrixReader();
             DoubleMatrix<String, String> matrix = r.read( f.getAbsolutePath() );
+
+            /*
+             * Blank out the diagonal so it doesn't affect the colour scale.
+             */
+            for ( int i = 0; i < matrix.rows(); i++ ) {
+                matrix.set( i, i, Double.NaN );
+            }
+
             ColorMatrix<String, String> cm = new ColorMatrix<String, String>( matrix );
 
             cleanNames( matrix );
@@ -270,6 +278,7 @@ public class ExpressionExperimentQCController extends BaseController {
                                                                                                 * minimum size for text
                                                                                                 * to show up
                                                                                                 */;
+
             writer.setCellSize( new Dimension( cellsize, cellsize ) );
             writer.writeToPng( cm, os, reallyShowLabels, reallyShowLabels /* show scale if we show labels */);
         }
@@ -366,7 +375,7 @@ public class ExpressionExperimentQCController extends BaseController {
         int i = 0;
         Pattern p = Pattern.compile( "^.*?ID=([0-9]+).*$", Pattern.CASE_INSENSITIVE );
         Pattern bipattern = Pattern.compile( "BioAssayImpl Id=[0-9]+ Name=", Pattern.CASE_INSENSITIVE );
-        int MAX_BIO_ASSAY_NAME_LEN = 20;
+        int MAX_BIO_ASSAY_NAME_LEN = 30;
 
         for ( String rn : rawRowNames ) {
             Matcher matcher = p.matcher( rn );
