@@ -169,7 +169,7 @@ public class OutlierDetectionService {
 
             // if it has more than the threshold fraction of low correlations, we flag it.
             if ( countBelow > fractionThreshold * cormat.columns() ) {
-                OutlierDetails outlier = new OutlierDetails( ba, countBelow / ( double ) cormat.columns(),
+                OutlierDetails outlier = new OutlierDetails( ba, countBelow / ( double ) ( cormat.columns() - 1 ),
                         valueAtDesiredQuantile );
                 outliers.add( outlier );
             }
@@ -185,9 +185,6 @@ public class OutlierDetectionService {
          * residuals)
          */
 
-        /*
-         * We may want to return a more detailed value object with the results of the assessment.
-         */
         return outliers;
 
     }
