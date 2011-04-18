@@ -696,7 +696,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				var foundGene = record.data.foundGene;
 				var activeExperiments = record.data.supportingExperiments;
 				// destroy if already open???
-				if (this.coexpVisWindow !== null) {
+				if (this.coexpVisWindow !== undefined && this.coexpVisWindow !== null) {
 					this.coexpVisWindow.close();
 					this.coexpVisWindow = null;
 				}
