@@ -339,6 +339,7 @@ public class GeneDifferentialExpressionService {
             ProbeAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
 
             Double p = res.getPvalue();
+            if ( p == null ) continue;
 
             /*
              * Moderate the pvalues by setting all values to be no smaller than PVALUE_CLIP_THRESHOLD
