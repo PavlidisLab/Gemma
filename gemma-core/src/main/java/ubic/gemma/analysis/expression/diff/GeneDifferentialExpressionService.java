@@ -450,6 +450,7 @@ public class GeneDifferentialExpressionService {
              */
             r.getContrasts();
 
+            if (r.getPvalue() == null) continue;
             /* penalize pvals */
             double pval = r.getPvalue() * numProbesForGene;
             if ( pval > MAX_PVAL ) pval = MAX_PVAL;
