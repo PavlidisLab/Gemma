@@ -69,7 +69,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
      * The maximum number of coexpression results to return per input gene; a value of zero will return all possible
      * results (ie. max is infinity). We limit this to avoid results sets from blowing up ridiculously.
      */
-    public static final int MAX_RESULTS = 20;
+    public static final int MAX_RESULTS = 100;
 
     public void setgeneCoexpressionService( GeneCoexpressionService geneCoexpressionService ) {
         this.geneCoexpressionService = geneCoexpressionService;
