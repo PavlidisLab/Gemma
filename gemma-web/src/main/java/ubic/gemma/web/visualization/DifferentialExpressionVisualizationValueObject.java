@@ -51,6 +51,7 @@ public class DifferentialExpressionVisualizationValueObject {
     private List<List<String>> analysisLabels;        
     // geneGroup / geneIndex
     private List<List<String>> geneNames;
+    private List<List<String>> geneFullNames;
     private List<List<Long>> geneIds;
 
     //dsGroup geneGroup geneIndex // FOR NOW JUST ONE METRIC
@@ -93,6 +94,14 @@ public class DifferentialExpressionVisualizationValueObject {
 
     public void setGeneNames( List<List<String>> geneNames ) {
         this.geneNames = geneNames;
+    }
+
+    public List<List<String>> getGeneFullNames() {
+        return geneFullNames;
+    }
+
+    public void setGeneFullNames( List<List<String>> geneFullNames ) {
+        this.geneFullNames = geneFullNames;
     }
 
     public List<List<DifferentialExpressionAnalysisResultSetVisualizationValueObject>> getResultSetValueObjects() {

@@ -1,7 +1,7 @@
 Ext.namespace('Gemma');
 
 Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {	
-	
+
 	initComponent: function() {
 		Ext.apply(this, {
 			border: false,
@@ -11,7 +11,8 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 				defaultMargins: {top:0, right: 0, bottom: 0, left:0}
 			},
 						
-			_hidden: false,
+			_hidden: false,		
+			_columnsHidden : 0,
 			applicationRoot: this.applicationRoot,		// root of metaheatmap app. Usefull to access various components.
 			
 			//
@@ -43,13 +44,17 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 	
 	
 	filterColumns: function( filteringFn ) {
-		var newWidth = 0;				
+		var newWidth = 0;	
+		var numberHidden = 0;			
 		this.items.each( function() {
-			this.filterColumns( filteringFn );		  	
+			numberHidden = numberHidden + this.filterColumns( filteringFn );		  	
 			newWidth = newWidth + this.getWidth(); 
 		} );
+		this._columnsHidden = numberHidden; // this is stored at the experiment group level
 		this.setWidth( newWidth );
 		if ( newWidth === 0 ) {this._hidden = true;}
+		else {this._hidden = false;}
+		return numberHidden;
 	},						
 
 	refresh: function() {
@@ -63,6 +68,8 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 // There could be multiple analyses associated with each experiment.
 //
 Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePanelBase, {	
+
+
 	initComponent: function() {
 		Ext.apply(this, {
 			dataColumns : this.dataColumns,
@@ -73,7 +80,8 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 			analysisId: this.analysisId,
 			
 			overallDifferentialExpressionScore: null,
-			specificityScore: null															
+			specificityScore: null,		
+			_columnsHidden : 0									
 		});
 
 		Gemma.MetaHeatmapAnalysisColumnGroup.superclass.initComponent.apply(this, arguments);
@@ -95,25 +103,51 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 		Gemma.MetaHeatmapAnalysisColumnGroup.superclass.onRender.apply(this, arguments);				
 	}, 
 	
-	filterColumns: function ( filteringFn ) {
-		var numberHidden = 0;
 	
+	filterColumns: function ( filteringFn ) {
+		
+		var myNumberHidden = 0;
 		this.items.each( function() { 
-			if ( filteringFn( this ) ) {
-				this.setWidth(0);
-				this.hide();
-				this.updateParentsScores();
-				numberHidden++;
-			}					
+			if(this.getWidth() === 0){
+					myNumberHidden++; // if a column is already hidden
+				}
+			if(filteringFn( this ) === null){ // not affected
+				
+			}else{
+				if ( filteringFn( this ) ) { // hide
+					if(this.getWidth() !== 0){// if not already hidden
+						this.setWidth(0);
+						this.hide();
+						this._columnHidden = true;
+						this.updateParentsScores();
+						myNumberHidden++;
+					}
+				}else{ // show
+					if(this.getWidth() === 0){// if not already shown
+						this.setWidth(Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);
+						this.show();
+						this._columnHidden = false;
+						this.updateParentsScores();
+						myNumberHidden--;
+					}
+				}
+			}
+			
 		});
 		//	TODO: any better way to get newWidth??
-		var newWidth = (this.dataColumns.length - numberHidden) * (Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);		
+		var newWidth = (this.dataColumns.length - myNumberHidden) * (Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);		
 		this.setWidth( newWidth );
-		if (numberHidden == this.dataColumns.length) {
+		
+		this._numberOfColumnsHidden111 = myNumberHidden;
+		if (myNumberHidden == this.dataColumns.length) {
 			this.setWidth(0);
 			this.hide();
 			this._hidden = true;
+		}else{
+			this.show();
+			this._hidden = false;			
 		}
+		return myNumberHidden;
 	}							
 });
 
@@ -124,7 +158,8 @@ Gemma.MetaHeatmapDatasetColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePan
 	initComponent: function() {
 		Ext.apply(this, {
 			
-			dataColumns : this.dataColumns,
+			dataColumns : this.dataColumns,		
+			_columnsHidden : 0,
 			
 			datasetGroupIndex : this.datasetGroupIndex,
 			

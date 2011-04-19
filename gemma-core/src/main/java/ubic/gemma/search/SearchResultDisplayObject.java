@@ -186,9 +186,9 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     private void setValues( GeneSetValueObject geneSet ) {
         if(geneSet.getReference() == null){
             if(geneSet.isSessionBound()){
-                this.reference = new Reference(geneSet.getId(), Reference.SESSION_BOUND_GROUP) ;
+                this.reference = new Reference(geneSet.getReference().getId(), Reference.SESSION_BOUND_GROUP) ;
             }else{
-                this.reference = new Reference(geneSet.getId(), Reference.DATABASE_BACKED_GROUP) ;
+                this.reference = new Reference(geneSet.getReference().getId(), Reference.DATABASE_BACKED_GROUP) ;
             }
         }else{
             this.reference = geneSet.getReference();

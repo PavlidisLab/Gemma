@@ -81,7 +81,7 @@ Gemma.SessionGeneGroupStore = function(config) {
 
 	// todo replace with JsonReader.
 	this.reader = new Ext.data.ListRangeReader({
-				id : "id"
+				//id : "id"
 			}, this.record);
 
 	Gemma.SessionGeneGroupStore.superclass.constructor.call(this, config);

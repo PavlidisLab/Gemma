@@ -27,6 +27,7 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionV
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
  * <p>
@@ -789,6 +790,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         target.setOfficialSymbol( source.getOfficialSymbol() );
         target.setOfficialName( source.getOfficialName() );
         target.setDescription( source.getDescription() );
+        target.setAliases( GeneValueObject.getAliasStrings( source.getAliases()) );
     }
 
     /**

@@ -1,18 +1,3 @@
-/*
- * The Gemma project
- * 
- * Copyright (c) 2008 University of British Columbia
- * 
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
- * the License. You may obtain a copy of the License at
- * 
- * http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
- * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
- * specific language governing permissions and limitations under the License.
- * 
- */
 
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
@@ -142,13 +127,15 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					else {
 						root.appendChild(parentNode);
 					}
-					
+					var resultSet = null;
+					var analysisName = null;
+					var nodeText= '';
 					// if analysis has only one result set, don't give it children and put all info in parent node
 					if(analysis.resultSets.size()===1){
-						var resultSet = analysis.resultSets[0];
+						resultSet = analysis.resultSets[0];
 							// get experimental factor string and build analysis parent node text
-							var analysisName = this.getFactorNameText(resultSet);
-							var nodeText= '';
+							analysisName = this.getFactorNameText(resultSet);
+							nodeText= '';
 							//if there's subset text, add baseline and links to it to maintain order
 							if(subsetText!==''){
 								subsetText += this.getBaseline(resultSet);
@@ -165,10 +152,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					else{
 						for (var i = 0; i < analysis.resultSets.size(); i++) {
 							//console.log("RESULT SET " + (i + 1) + " of " + analysis.resultSets.size());
-							var resultSet = analysis.resultSets[i];
+							resultSet = analysis.resultSets[i];
 							
 							// get experimental factor string and build analysis parent node text
-							var analysisName = this.getFactorNameText(resultSet);
+							analysisName = this.getFactorNameText(resultSet);
 							var factor = '<b>'+analysisName[0]+'</b>';
 							interaction += analysisName[1];
 							
@@ -178,7 +165,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 								parentText = (!parentText) ? factor : (factor<parentText)?( factor + " & " + parentText):( parentText + " & " + factor);
 							}
 
-							var nodeText= '';
+							nodeText= '';
 							nodeText += this.getBaseline(resultSet);
 							nodeText += this.getActionLinks(resultSet,factor,this.ee.id,(nodeId+1));
 														
@@ -201,8 +188,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 					}
 					// figure out type of a ANOVA
 					var numberOfFactors = 0;
-					for (var i = 0; i < analysis.resultSets.size(); i++) {
-						var resultSet = analysis.resultSets[i];
+					for (i = 0; i < analysis.resultSets.size(); i++) {
+						resultSet = analysis.resultSets[i];
 						// ignore the result sets where interactions are being looked at
 						if(resultSet.experimentalFactors.size()===1){
 							numberOfFactors++;} 

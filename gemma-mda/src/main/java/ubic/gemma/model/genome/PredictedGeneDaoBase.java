@@ -567,6 +567,7 @@ public abstract class PredictedGeneDaoBase extends ubic.gemma.model.genome.Chrom
         target.setOfficialSymbol( source.getOfficialSymbol() );
         target.setOfficialName( source.getOfficialName() );
         target.setDescription( source.getDescription() );
+        target.setAliases( GeneValueObject.getAliasStrings( source.getAliases()) );
     }
 
     /**

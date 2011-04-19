@@ -34,29 +34,29 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 					for ( var currentDatasetColumnGroupIndex = 0; currentDatasetColumnGroupIndex < dsPanel.items.getCount(); currentDatasetColumnGroupIndex++ ) {
 						var datasetColumnGroupPanel = dsPanel.items.get( currentDatasetColumnGroupIndex ); 						
 						
-						if (datasetColumnGroupPanel._hidden == false) {
+						if (datasetColumnGroupPanel._hidden === false) {
 							if (alternateColors == 1 ) {
-								MiniPieLib.drawFilledRotatedRectangle( ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth, 246,
+								MiniPieLib.drawFilledRotatedRectangle( ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 																	datasetColumnGroupPanel.getWidth(), 300,
 																	Gemma.MetaVisualizationConfig.labelAngle,
 																	Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor1);		                     
 		                        alternateColors = 0;
 		                    } else {
-		                    	MiniPieLib.drawFilledRotatedRectangle( ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth, 246,
+		                    	MiniPieLib.drawFilledRotatedRectangle( ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 		                    										datasetColumnGroupPanel.getWidth(), 300,
 		                    										Gemma.MetaVisualizationConfig.labelAngle,
 		                    										Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor2);
 		                        alternateColors = 1;                        
 		                    }            							
-							if ( hiDatasetGroup == currentDatasetGroupIndex 
-									&& hiColumnGroup == datasetColumnGroupPanel._columnGroupIndex ) {
-								ctx.drawRotatedText( xPosition, 246,
+							if ( hiDatasetGroup === currentDatasetGroupIndex &&
+									 hiColumnGroup == datasetColumnGroupPanel._columnGroupIndex ) {
+								ctx.drawRotatedText( xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 													 Gemma.MetaVisualizationConfig.labelAngle,
 													 Gemma.MetaVisualizationConfig.columnLabelFontSize,
 													 Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
 													 "                          "+datasetColumnGroupPanel.datasetName);
 							} else {
-								ctx.drawRotatedText( xPosition, 246,
+								ctx.drawRotatedText( xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 													 Gemma.MetaVisualizationConfig.labelAngle,
 													 Gemma.MetaVisualizationConfig.columnLabelFontSize,
 													 this._fontColor,
@@ -67,13 +67,13 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 						var alternateColorsAnalysis = 0;
 						for ( var currentAnalysisColumnGroupIndex = 0; currentAnalysisColumnGroupIndex < datasetColumnGroupPanel.items.getCount(); currentAnalysisColumnGroupIndex++ ) {
 							var analysisColumnGroupPanel = datasetColumnGroupPanel.items.get( currentAnalysisColumnGroupIndex ); 						
-							if (analysisColumnGroupPanel._hidden == true) continue;
+							if (analysisColumnGroupPanel._hidden === true) {continue;}
 								if (alternateColorsAnalysis == 1 ) {
-									MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth + 2, 246,
+									MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth + 2, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 																analysisColumnGroupPanel.getWidth() - 2, 3, 'rgba(10,100,10, 0.9)');		                     
 									alternateColorsAnalysis = 0;
 								} else {
-									MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth+2, 246,
+									MiniPieLib.drawFilledRectangle( ctx, xPosition-Gemma.MetaVisualizationConfig.cellWidth+2, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 		                    									analysisColumnGroupPanel.getWidth() - 2, 3, 'rgba(10,100,100, 0.9)');
 									alternateColorsAnalysis = 1;                        
 								}            							
@@ -82,13 +82,13 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 									var dColumn = analysisColumnGroupPanel.items.get( currentColumn );
 									if ( dColumn._expandButton.pressed ) {
 										for (var i = 0; i < dColumn._factorValueNames.length; i++) {
-											if (i == 0) MiniPieLib.drawMiniPie( ctx, xPosition-4, 255, 9,
+											if (i === 0) {MiniPieLib.drawMiniPie( ctx, xPosition-4, 255, 9,
 																			Gemma.MetaVisualizationConfig.miniPieColor,
-																			dColumn.miniPieValue );
-											if ( hiDatasetGroup == currentDatasetGroupIndex 
-											 && hiColumnGroup == datasetColumnGroupPanel._columnGroupIndex											 
-											 && i == hiFactorValue 
-											 && currentColumn == hiColumn )
+											dColumn.miniPieValue );}
+											if ( hiDatasetGroup === currentDatasetGroupIndex &&
+											     hiColumnGroup === datasetColumnGroupPanel._columnGroupIndex	&&									 
+											     i === hiFactorValue &&
+											     currentColumn === hiColumn )
 											{
 												ctx.drawRotatedText( xPosition, 246,
 																	 Gemma.MetaVisualizationConfig.labelAngle, 
@@ -117,17 +117,17 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 											MiniPieLib.drawMiniPie( ctx, xPosition-4, 255, 9,
 																Gemma.MetaVisualizationConfig.miniPieColor,
 																dColumn.miniPieValue);
-											if (hiDatasetGroup == currentDatasetGroupIndex 
-												&& hiColumnGroup == columnGroup._columnGroupIndex
-												&& hiColumn == currentColumn )
+											if (hiDatasetGroup === currentDatasetGroupIndex &&
+												 hiColumnGroup === columnGroup._columnGroupIndex &&
+												 hiColumn === currentColumn )
 											{
-												ctx.drawRotatedText( xPosition, 246,
+												ctx.drawRotatedText( xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 																	 Gemma.MetaVisualizationConfig.labelAngle,
 																	 Gemma.MetaVisualizationConfig.columnLabelFontSize,
 																	 Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
 																	 dColumn.factorName );										
 											} else {									
-												ctx.drawRotatedText( xPosition, 246,
+												ctx.drawRotatedText( xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 																	 Gemma.MetaVisualizationConfig.labelAngle,
 																	 Gemma.MetaVisualizationConfig.columnLabelFontSize,
 																	 Gemma.MetaVisualizationConfig.defaultLabelColor,
@@ -149,17 +149,96 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 		
 		Gemma.MetaHeatmapRotatedLabels.superclass.initComponent.apply(this, arguments);		
 	},
+	__calculateIndexFromXY: function(x,y) {
+		var columnWidth =  Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth;	// shorter name to simplify access
+		var adjustedx = x - 2;
+		var adjustedY = y*-1 + Gemma.MetaVisualizationConfig.labelBaseYCoor;
+		var lamda = Math.floor(adjustedY / Math.tan((360-Gemma.MetaVisualizationConfig.labelAngle)*Math.PI/180));
+		var column = Math.floor((adjustedx*1 - lamda)/columnWidth);
+    	return column;
+    },
+	getAnalysisObject: function(e, t){
+		var rawColumnNumber = this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY() - Ext.get(t).getY());					
+		
+		// if mouse is outside heatmap area, return null
+		if(rawColumnNumber >= (this.applicationRoot.TOTAL_NUMBER_OF_COLUMNS - this.applicationRoot.TOTAL_NUMBER_OF_HIDDEN_COLUMNS)){
+			return null;
+		}
+					  
+		var columnGroups = this.applicationRoot._heatmapArea.items.items; // for ease of access
 	
+		// get [column group number] and [experiment index within the group]
+		var columnGroupIndex = 0;
+		var columnWithinGroup = rawColumnNumber;
+		var experimentWithinGroupIndex = 0;
+		var columnWithinExperiment = 0;
+		var prevColSum = 0;
+		
+		
+		// get the group index and the column index within the group
+		while(columnWithinGroup >= (columnGroups[columnGroupIndex].dataColumns.length - columnGroups[columnGroupIndex]._columnsHidden) ){
+			columnWithinGroup = columnWithinGroup - (columnGroups[columnGroupIndex].dataColumns.length - columnGroups[columnGroupIndex]._columnsHidden);
+			columnGroupIndex++;
+		}
+		
+		var colSum = columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length - columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden; 
+		
+		// get the experiment index within the group
+		while(columnWithinGroup >= colSum){
+			prevColSum = colSum;
+			experimentWithinGroupIndex++;
+			colSum = colSum + columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length - columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden;
+		}
+		// get the column number within the experiment
+		columnWithinExperiment = columnWithinGroup - prevColSum;
+		
+		analysisObj = this.applicationRoot._heatmapArea.items.items[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns[columnWithinExperiment];
+		return analysisObj;
+			
+	},
 	onRender: function() {		
 		Gemma.MetaHeatmapRotatedLabels.superclass.onRender.apply(this, arguments);
 		this.syncSize();
 		
+		
 		this.el.on('click', function(e,t) {
-			var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(datasetName, datasetId);
-			popup.show();
-		}, this);		
+			var analysisObj = this.getAnalysisObject(e,t);
+
+			if(analysisObj !== null  && analysisObj !== undefined){
+				var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(analysisObj.datasetName, analysisObj.datasetShortName, analysisObj.datasetId);
+				//popup.show();
+			}
+			
+		}, this);	
+		
+		this.el.on('mousemove', function(e,t) { 	
+			
+			var analysisObj = this.getAnalysisObject(e,t);
+			
+			if(analysisObj !== null && analysisObj !== undefined){
+				
+				// get the factor values into a readable form
+                var factorValues = [];
+                for (k = 0; k < analysisObj.contrastsFactorValueIds.length; k++) {
+                    factorValues.push(
+                       analysisObj.contrastsFactorValues[analysisObj.contrastsFactorValueIds[k]]);
+                }
+				
+				this.applicationRoot._hoverDetailsPanel.update({
+					type: 'experiment',
+					datasetName: analysisObj.datasetName,
+					datasetShortName: analysisObj.datasetShortName,
+					datasetId: analysisObj.datasetId,
+					factorName: analysisObj.factorName,
+					baseline: analysisObj.baselineFactorValue,
+					factorValues: factorValues
+				
+				});
+			}
+			
+		}, this );		
 	},
-	
+		
 	refresh: function() {
 		this._drawTopLabels();
 	}

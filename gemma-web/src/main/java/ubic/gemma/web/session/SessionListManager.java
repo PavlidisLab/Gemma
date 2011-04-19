@@ -148,7 +148,7 @@ public class SessionListManager {
             for ( ExpressionExperimentSetValueObject eesvo : sessionExperimentSets ) {
                 if ( reference.equals( eesvo.getReference() ) ) {
                     expressionExperiments = expressionExperimentService.loadMultiple( eesvo
-                            .getExpressionExperimentIds() );
+                            .getMemberIds() );
                     break;
                 }
             }
@@ -192,7 +192,7 @@ public class SessionListManager {
 
             for ( GeneSetValueObject gsvo : sessionGeneSets ) {
                 if ( reference.equals( gsvo.getReference() ) ) {
-                    genes = geneService.loadMultiple( gsvo.getGeneIds() );
+                    genes = geneService.loadMultiple( gsvo.getMemberIds() );
                     break;
                 }
             }

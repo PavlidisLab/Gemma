@@ -349,7 +349,7 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> remove( Collection<GeneSetValueObject> vos ) {
         for ( GeneSetValueObject geneSetValueObject : vos ) {
-            GeneSet gset = geneSetService.load( geneSetValueObject.getId() );
+            GeneSet gset = geneSetService.load( geneSetValueObject.getReference().getId() );
             if ( gset != null ) geneSetService.remove( gset );
         }
         return new HashSet<GeneSetValueObject>();
@@ -446,7 +446,7 @@ public class GeneSetController {
         Collection<GeneSet> updated = new HashSet<GeneSet>();
         for ( GeneSetValueObject geneSetVo : geneSetVos ) {
 
-            Long groupId = geneSetVo.getId();
+            Long groupId = geneSetVo.getReference().getId();
             GeneSet gset = geneSetService.load( groupId );
             if ( gset == null ) {
                 throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );

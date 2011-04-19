@@ -158,6 +158,10 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
         return expressionExperimentIds;
     }
 
+    public Collection<Long> getMemberIds() {
+        return expressionExperimentIds;
+    }
+
     public Long getId() {
         return id;
     }

@@ -160,6 +160,13 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     /**
      * @return
      */
+    public Collection<Long> getMemberIds() {
+        return geneIds;
+    }
+
+    /**
+     * @return
+     */
     public Long getId() {
         return id;
     }

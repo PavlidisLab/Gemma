@@ -599,6 +599,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
         target.setOfficialSymbol( source.getOfficialSymbol() );
         target.setOfficialName( source.getOfficialName() );
         target.setDescription( source.getDescription() );
+        target.setAliases( GeneValueObject.getAliasStrings( source.getAliases()) );
     }
 
     /**

@@ -21,6 +21,7 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     //private List<List<Long>> geneIds;
     
     private String datasetName;
+    private String datasetShortName;
     private String datasetLink;
     private Long datasetId;
     private Long analysisId;
@@ -205,6 +206,14 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
 
     public void setDatasetName( String datasetName ) {
         this.datasetName = datasetName;
+    }
+
+    public String getDatasetShortName() {
+        return datasetShortName;
+    }
+
+    public void setDatasetShortName( String datasetShortName ) {
+        this.datasetShortName = datasetShortName;
     }
 
     public String getDatasetLink() {

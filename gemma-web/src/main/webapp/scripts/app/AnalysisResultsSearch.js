@@ -62,6 +62,10 @@ Ext.onReady(function() {
 			toHide.remove();
 		}
 		
+		
+		// remove previous diff visualization result
+		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
+		
 	},this);
 	
 	searchPanel.on("showCoexResults",function(panel,result){
@@ -232,12 +236,13 @@ Ext.onReady(function() {
 	
 	searchPanel.on("showDiffExResults",function(panel,result, data){
 		
-		console.log('data.paramGeneReferences[0]'+ data.geneReferences[0].id);
 		
 		// show metaheatmap viewer (but not control panel)
 		// control panel is responsible for creating the visualisation view space
 		this.diffVisualizer = new Gemma.MetaHeatmapControlWindow(data); 
-				
+		panel.collapsePreviews();
+		
+		/*		
 		var diffExResultsGrid = new Gemma.DiffExpressionGrid({
 				//renderTo : "analysis-results-search-form-results",
 				title : "Differentially expressed genes",
@@ -265,8 +270,8 @@ Ext.onReady(function() {
 		resultsPanel.doLayout();
 		diffExResultsGrid.loadData(result);
 		//this.diffVisualizer.show();
+		*/
 	});
 	
-	var visualizationPanel;
 
 });

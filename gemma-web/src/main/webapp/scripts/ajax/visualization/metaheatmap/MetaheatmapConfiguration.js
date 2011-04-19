@@ -12,6 +12,7 @@ Gemma.MetaVisualizationConfig.geneLabelFontSize = 9;
 Gemma.MetaVisualizationConfig.columnLabelFontSize = 9;
 
 Gemma.MetaVisualizationConfig.labelAngle = 315.0;
+Gemma.MetaVisualizationConfig.labelBaseYCoor = 246;
 
 
 //Colors

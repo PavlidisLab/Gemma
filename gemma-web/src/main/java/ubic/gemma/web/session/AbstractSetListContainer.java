@@ -23,9 +23,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.commons.collections.BidiMap;
-import org.apache.commons.collections.bidimap.DualHashBidiMap;
-
 import ubic.gemma.model.Reference;
 import ubic.gemma.persistence.GemmaSessionBackedValueObject;
 
@@ -91,7 +88,7 @@ public abstract class AbstractSetListContainer implements Serializable {
         
         // check if the set's reference is already in setList, 
         // if it is, replace the old list with the new one
-        if(vo.getReference() != null){
+        if(vo.getReference() != null && vo.getReference().getId() != null && vo.getReference().isSessionBound()){
             for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
 
                 Reference setRef = allSessionBoundGroups.get( i ).getReference();
@@ -110,7 +107,7 @@ public abstract class AbstractSetListContainer implements Serializable {
 
             Long newId = incrementAndGetLargestSessionId();
             vo.setReference( new Reference( newId, referenceType ) );
-
+            
             // add it to the special list of groups the user has modified
             if(referenceType.equals( Reference.MODIFIED_SESSION_BOUND_GROUP )){
                 sessionBoundModifiedGroups.add( vo );
@@ -191,6 +188,7 @@ public abstract class AbstractSetListContainer implements Serializable {
     public Collection<GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
 
         return allSessionBoundGroups;
+        
 
     }
     

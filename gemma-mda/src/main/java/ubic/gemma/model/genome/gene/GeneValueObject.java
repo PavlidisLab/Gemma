@@ -19,6 +19,7 @@
 
 package ubic.gemma.model.genome.gene;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -41,7 +42,7 @@ public class GeneValueObject implements java.io.Serializable {
 
         for ( Gene g : genes ) {
             if ( g == null ) continue;
-            converted.add( new GeneValueObject( g.getId(), g.getName(), g.getNcbiId(), g.getOfficialSymbol(), g
+            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g.getAliases()), g.getNcbiId(), g.getOfficialSymbol(), g
                     .getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g.getTaxon()
                     .getScientificName(), g.getTaxon().getCommonName() ) );
         }
@@ -74,6 +75,8 @@ public class GeneValueObject implements java.io.Serializable {
 
     private java.lang.String name;
 
+    private Collection<java.lang.String> aliases;
+    
     private java.lang.String ncbiId;
 
     private java.lang.String officialName;
@@ -87,6 +90,7 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.Long taxonId;
 
     private java.lang.String taxonScientificName;
+    
 
     public GeneValueObject() {
     }
@@ -101,6 +105,7 @@ public class GeneValueObject implements java.io.Serializable {
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
+        this.aliases = getAliasStrings( gene.getAliases() );
     }
 
     /**
@@ -109,7 +114,10 @@ public class GeneValueObject implements java.io.Serializable {
      * @param otherBean
      */
     public GeneValueObject( GeneSetMember otherBean ) {
-        this( otherBean.getGene().getId(), otherBean.getGene().getName(), otherBean.getGene().getNcbiId(), otherBean
+
+
+        this( otherBean.getGene().getId(), otherBean.getGene().getName(), getAliasStrings( otherBean.getGene().getAliases() ), 
+                otherBean.getGene().getNcbiId(), otherBean
                 .getGene().getOfficialSymbol(), otherBean.getGene().getOfficialName(), otherBean.getGene()
                 .getDescription(), otherBean.getScore(), otherBean.getGene().getTaxon().getId(), otherBean.getGene()
                 .getTaxon().getScientificName(), otherBean.getGene().getTaxon().getCommonName() );
@@ -122,12 +130,13 @@ public class GeneValueObject implements java.io.Serializable {
      * @throws java.lang.NullPointerException if the argument is <code>null</code>
      */
     public GeneValueObject( GeneValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
+        this( otherBean.getId(), otherBean.getName(), otherBean.getAliases(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
                 .getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(), otherBean
                 .getTaxonScientificName(), otherBean.getTaxonCommonName() );
     }
 
-    public GeneValueObject( java.lang.Long id, java.lang.String name, java.lang.String ncbiId,
+    public GeneValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
+            java.lang.String ncbiId,
             java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score,
             Long taxonId, String taxonScientificName, String taxonCommonName ) {
         this.id = id;
@@ -140,6 +149,7 @@ public class GeneValueObject implements java.io.Serializable {
         this.taxonId = taxonId;
         this.taxonScientificName = taxonScientificName;
         this.taxonCommonName = taxonCommonName;
+        this.aliases = aliases;
     }
 
     /**
@@ -154,7 +164,22 @@ public class GeneValueObject implements java.io.Serializable {
             this.setOfficialName( otherBean.getOfficialName() );
             this.setDescription( otherBean.getDescription() );
             this.setScore( otherBean.getScore() );
+            this.setAliases( otherBean.getAliases() );
         }
+    }
+    
+
+    public static Collection<String> getAliasStrings(Collection<GeneAlias> aliasObjs){
+        Collection<java.lang.String> aliases = new ArrayList<String>();
+        try{
+           for(GeneAlias alias : aliasObjs){
+               aliases.add( alias.getAlias() );
+           }
+        }catch(org.hibernate.LazyInitializationException e){
+            return aliases;
+        }
+        return aliases;
+
     }
 
     /**
@@ -177,6 +202,14 @@ public class GeneValueObject implements java.io.Serializable {
      */
     public java.lang.String getName() {
         return this.name;
+    }
+
+    public Collection<java.lang.String> getAliases() {
+        return aliases;
+    }
+
+    public void setAliases( Collection<java.lang.String> aliases ) {
+        this.aliases = aliases;
     }
 
     /**

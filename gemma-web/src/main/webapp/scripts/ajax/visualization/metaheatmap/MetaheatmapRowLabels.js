@@ -9,7 +9,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 			geneNames: this.labels,
 			autoEl: { tag: 'canvas',
 			  		  width: 80,
-			  		  height: this.labels.length*10,
+			  		  height: this.labels.length*10
 			},
 			
 			geneGroupName: this.geneGroupName,
@@ -41,7 +41,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 											geneName);						
 					}					
 				}									
-			},
+			}
 		});
 		Gemma.MetaHeatmapLabelGroup.superclass.initComponent.apply ( this, arguments );		
 		
@@ -54,14 +54,22 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 		this.el.on('mousemove', function(e,t) { 						
 			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
 			this._drawLabels(index);
+			
+			this.applicationRoot._hoverDetailsPanel.update({
+				type: 'gene',
+				geneSymbol: this.geneNames[this.applicationRoot.geneOrdering[this.geneGroupId][index]],
+				geneId: this.applicationRoot.geneOrdering[this.geneGroupId][index],
+				geneFullName: this.applicationRoot.visualizationData.geneFullNames[this.geneGroupId][index]
+			});
 		}, this );		
 		
 		this.el.on('click', function(e,t) {
 			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
 			var geneId = this.applicationRoot.geneOrdering[this.geneGroupId][index];
 			var geneName = this.geneNames[geneId];
-			var popup = Gemma.MetaVisualizationPopups.makeGeneInfoWindow(geneName, geneId);
-			popup.show();
+			var	realGeneId = this.applicationRoot._visualizationData.geneIds[this.geneGroupId][geneId];
+			var popup = Gemma.MetaVisualizationPopups.makeGeneInfoWindow(geneName, realGeneId);
+			//popup.show();
 		}, this);		
 	},
 	refresh: function() {
@@ -84,7 +92,7 @@ Gemma.MetaHeatmapLabelsColumn = Ext.extend(Ext.Panel, {
 			geneGroupNames: this.geneGroupNames,
 			highlightGene: function (geneGroup, row) {
 				this.items.get(geneGroup)._drawLabels(row);
-			},			
+			}			
 		});
 						
 		Gemma.MetaHeatmapLabelsColumn.superclass.initComponent.apply(this, arguments);		

@@ -38,13 +38,13 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisVal
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.model.Reference;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -336,6 +336,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         // Load genes
         List<List<Gene>> genes = new ArrayList<List<Gene>>();
         List<List<String>> geneNames = new ArrayList<List<String>>();
+        List<List<String>> geneFullNames = new ArrayList<List<String>>();
         List<List<Long>> geneIds = new ArrayList<List<Long>>();
 
         int geneGroupIndex = 0;
@@ -344,6 +345,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             if ( ref != null ) {
                 List<Gene> genesInsideSet = new ArrayList<Gene>();
                 List<String> geneNamesInsideSet = new ArrayList<String>();
+                List<String> geneFullNamesInsideSet = new ArrayList<String>();
                 List<Long> geneIdsInsideSet = new ArrayList<Long>();
 
                 if ( ref.isNotGroup() && ref.isDatabaseBacked() ) {
@@ -357,12 +359,14 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     // if the reference being passed in for a session bound group, use a different method to load it
                     if ( ref.isSessionBound() ) {
                         Collection<GeneValueObject> geneValueObjectsInSet = sessionListManager
-                                .getGenesInSetByReference( ref );
-                        for ( GeneValueObject gsvo : geneValueObjectsInSet ) {
-                            Gene gene = geneService.load( gsvo.getId() );
+                        .getGenesInSetByReference( ref );
+                        for ( GeneValueObject gvo : geneValueObjectsInSet ) {
+                            Gene gene = geneService.load( gvo.getId() );
+
                             if ( gene != null ) {
                                 genesInsideSet.add( gene );
                                 geneNamesInsideSet.add( gene.getOfficialSymbol() );
+                                geneFullNamesInsideSet.add( gene.getOfficialName());
                                 geneIdsInsideSet.add( gene.getId() );
                             }
                         }
@@ -373,6 +377,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                             if ( memberGene.getGene() != null ) {
                                 genesInsideSet.add( memberGene.getGene() );
                                 geneNamesInsideSet.add( memberGene.getGene().getOfficialSymbol() );
+                                geneFullNamesInsideSet.add( memberGene.getGene().getOfficialName());
                                 geneIdsInsideSet.add( memberGene.getGene().getId() );
                             }
                         }
@@ -381,6 +386,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
                 genes.add( genesInsideSet );
                 geneNames.add( geneNamesInsideSet );
+                geneFullNames.add( geneFullNamesInsideSet );
                 geneIds.add( geneIdsInsideSet );
                 geneGroupIndex++;
             }
@@ -396,68 +402,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         return buildDifferentialExpressionVisualizationValueObject( geneGroupSizes, experiments.size(), genes,
-                geneNames, geneIds, experiments );
-    }
+                geneNames, geneFullNames, geneIds, experiments );
 
-    /**
-     * Ajax. the same as differentialExpressionAnalysisVisualizationSearch but takes a collection of id lists instead of
-     * a collection of set ids (for both genes and experiments)
-     * 
-     * @param taxonId
-     * @param experimentIdsByGroup
-     * @param geneIdsByGroup
-     * @return
-     */
-    public DifferentialExpressionVisualizationValueObject differentialExpressionAnalysisVisualizationSearchIdBased(
-            Long taxonId, Collection<List<Long>> experimentIdsByGroup, Collection<List<Long>> geneIdsByGroup ) {
-
-        // We get ids from the UI. First step is to load associated genes and experiments.
-        List<Collection<BioAssaySet>> experiments = new ArrayList<Collection<BioAssaySet>>();
-        for ( List<Long> experimentIds : experimentIdsByGroup ) {
-
-            Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
-                    .loadMultiple( experimentIds );
-            Collection<BioAssaySet> bioAssaySetsInsideGroup = new ArrayList<BioAssaySet>();
-            for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
-                bioAssaySetsInsideGroup.add( experiment );
-            }
-            experiments.add( bioAssaySetsInsideGroup );
-        }
-
-        // Load genes
-        List<List<Gene>> genes = new ArrayList<List<Gene>>();
-        List<List<String>> geneNames = new ArrayList<List<String>>();
-        List<List<Long>> geneIds = new ArrayList<List<Long>>();
-
-        int geneGroupIndex = 0;
-
-        for ( List<Long> geneGroupIds : geneIdsByGroup ) {
-
-            List<Gene> genesInsideSet = ( List<Gene> ) geneService.loadMultiple( geneGroupIds );
-            List<String> geneNamesInsideSet = new ArrayList<String>();
-            List<Long> geneIdsInsideSet = new ArrayList<Long>();
-            for ( Gene gene : genesInsideSet ) {
-                if ( gene != null ) {
-                    geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                    geneIdsInsideSet.add( gene.getId() );
-                }
-            }
-            genes.add( genesInsideSet );
-            geneNames.add( geneNamesInsideSet );
-            geneIds.add( geneIdsInsideSet );
-            geneGroupIndex++;
-        }
-
-        int numberOfGeneGroups = genes.size();
-        int[] geneGroupSizes = new int[numberOfGeneGroups];
-        int i = 0;
-        for ( List<Gene> geneGroup : genes ) {
-            geneGroupSizes[i] = geneGroup.size();
-            i++;
-        }
-
-        return buildDifferentialExpressionVisualizationValueObject( geneGroupSizes, experiments.size(), genes,
-                geneNames, geneIds, experiments );
     }
 
     /**
@@ -468,6 +414,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     public DifferentialExpressionVisualizationValueObject buildDifferentialExpressionVisualizationValueObject(
             int[] geneGroupSizes, int numberOfDatasets, List<List<Gene>> genes, List<List<String>> geneNames,
+            List<List<String>> geneFullNames,
             List<List<Long>> geneIds, List<Collection<BioAssaySet>> experiments ) {
         DifferentialExpressionVisualizationValueObject mainVisuzalizationDataObject = new DifferentialExpressionVisualizationValueObject(
                 numberOfDatasets, geneGroupSizes );
@@ -484,6 +431,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
                 for ( DifferentialExpressionAnalysis analysis : analyses ) {
                     ExpressionExperiment e = ( ExpressionExperiment ) experiment;
+                    String datasetShortName = e.getShortName();
                     StopWatch timer = new StopWatch();
                     timer.start();
                     int numberOfProbesOnArray = expressionExperimentDao.getProcessedExpressionVectorCount( e );
@@ -505,6 +453,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     // Set common properties for all columns in this dataset.
                     for ( DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn : analysisColumns ) {
                         vizColumn.setDatasetName( experiment.getName() );
+                        vizColumn.setDatasetShortName( datasetShortName );
                         vizColumn.setDatasetId( experiment.getId() );
                         vizColumn.setNumberOfProbesTotal( numberOfProbesOnArray );
                     }
@@ -517,6 +466,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         }
 
         mainVisuzalizationDataObject.setGeneNames( geneNames );
+        mainVisuzalizationDataObject.setGeneFullNames( geneFullNames );
         mainVisuzalizationDataObject.setGeneIds( geneIds );
 
         return mainVisuzalizationDataObject;
