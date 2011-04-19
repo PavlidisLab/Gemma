@@ -247,7 +247,32 @@ public abstract class AbstractGemmaEndpoint extends AbstractDomPayloadEndpoint {
         }
         return value;
     }
+    
 
+    protected String getNodeValue( Element requestElement, String tagName ) {
+        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
+        authenticate();
+        
+        Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
+        String value = node.getTextContent();//  .getNodeValue();        
+        
+        return value;
+    }    
+    
+    protected String getOptionalNodeValue( Element requestElement, String tagName ) {
+        Assert.isTrue( NAMESPACE_URI.equals( requestElement.getNamespaceURI() ), "Invalid namespace" );
+        Assert.isTrue( localName.equals( requestElement.getLocalName() ), "Invalid local name" );
+        authenticate();
+        
+        Node node = requestElement.getElementsByTagName( tagName ).item( 0 );
+        if (node == null) return null;
+        String value = node.getTextContent();//  .getNodeValue();        
+        
+        return value;
+    }    
+    
+    
     /**
      * basically Delegates to getSingleNodeValue and returns the just the last value. 
      * @param requestElement

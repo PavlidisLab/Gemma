@@ -1,866 +1,850 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<wsdl:definitions 
-	xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
-	xmlns:schema="http://chibi.ubc.ca/Gemma/ws" 
-	xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" 
+	xmlns:tns="http://chibi.ubc.ca/Gemma/ws" 
 	xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
 	targetNamespace="http://chibi.ubc.ca/Gemma/ws">
-	<wsdl:types>
-		<schema xmlns="http://www.w3.org/2001/XMLSchema" 
-			xmlns:tns="http://chibi.ubc.ca/Gemma/ws" 
+ 
+ 	<types>
+		<xs:schema
+			xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" 
+			xmlns:tns="http://chibi.ubc.ca/Gemma/ws"
+			xmlns:xs="http://www.w3.org/2001/XMLSchema"			 
 			attributeFormDefault="qualified" 
-			elementFormDefault="qualified" 
-			targetNamespace="http://chibi.ubc.ca/Gemma/ws">
-			<xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
-    
-    
-    
-			<complexType name="ArrayOfIDs">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="xsd:integer[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			targetNamespace="http://chibi.ubc.ca/Gemma/ws">			 
+ 			<xs:import namespace="http://schemas.xmlsoap.org/soap/encoding/" />
+
+				<xs:complexType name="GeneCoexpressionSearchParams">
+					<xs:sequence>
+ 						<xs:element name="query_gene_id" type="xs:integer" />
+						<xs:element name="pair_query_gene_id" type="xs:integer" minOccurs="0" maxOccurs="1" />
+						<xs:element name="stringency" type="xs:integer" />
+					</xs:sequence>
+				</xs:complexType>
+
+				<xs:complexType name="GeneCoexpressionSearchResponse">
+					<xs:sequence>
+						<xs:element name="CoexpressionSearchResult" type="tns:CoexpressionSearchResult" minOccurs="0" maxOccurs="2000" />
+					</xs:sequence>				
+				</xs:complexType>
+	
+			<xs:complexType name="CoexpressionSearchResult" >
+	 			<xs:sequence>
+					<xs:element name="found_gene_id" type="xs:string" />
+					<xs:element name="num_experiments_tested" type="xs:integer" />
+					<xs:element name="num_experiments_coexpressed" type="xs:integer" />	
+					<xs:element name="gemma_details_url" type="xs:string" />
+				</xs:sequence>		
+			</xs:complexType>
       
-			<complexType name="ArrayOfStrings">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="xsd:string[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="ArrayOfIDs">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="xs:integer[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
+      
+			<xs:complexType name="ArrayOfStrings">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="xs:string[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
      
-			<complexType name="dedv2gene">
-				<sequence>
-					<element name="dedv" type="xsd:string" />
-					<element name="geneIdList" type="xsd:string" />   			 
-				</sequence>
-			</complexType>
+			<xs:complexType name="dedv2gene">
+				<xs:sequence>
+					<xs:element name="dedv" type="xs:string" />
+					<xs:element name="geneIdList" type="xs:string" />   			 
+				</xs:sequence>
+			</xs:complexType>
 	         	     
-			<complexType name="ArrayOfDEDV2GeneIDs">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:dedv2gene[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="ArrayOfDEDV2GeneIDs">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:dedv2gene[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
     
-			<complexType name="dedv2eegene">
-				<sequence>
-					<element name="dedv" type="xsd:string" />
-					<element name="geneIdList" type="xsd:string" />
-					<element name="eeIdList" type="xsd:string" />      			 
-				</sequence>
-			</complexType>
+			<xs:complexType name="dedv2eegene">
+				<xs:sequence>
+					<xs:element name="dedv" type="xs:string" />
+					<xs:element name="geneIdList" type="xs:string" />
+					<xs:element name="eeIdList" type="xs:string" />      			 
+				</xs:sequence>
+			</xs:complexType>
 	     
-			<complexType name="ArrayOfCoexpressionResult">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:CoexpressionResult[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="ArrayOfCoexpressionResult">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:CoexpressionResult[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
     
-			<complexType name="CoexpressionResult">
-				<sequence>
-					<element name="query_gene" type="xsd:string" />
-					<element name="query_id" type="xsd:string" />
-					<element name="found_gene" type="xsd:string" />
-					<element name="found_id" type="xsd:string" />
-					<element name="support" type="xsd:string" />
-					<element name="sign" type="xsd:string" />
-					<element name="eeIdList" type="xsd:string" />      			 
-				</sequence>
-			</complexType>
+			<xs:complexType name="CoexpressionResult">
+				<xs:sequence>
+					<xs:element name="query_gene" type="xs:string" />
+					<xs:element name="query_id" type="xs:string" />
+					<xs:element name="found_gene" type="xs:string" />
+					<xs:element name="found_id" type="xs:string" />
+					<xs:element name="support" type="xs:string" />
+					<xs:element name="sign" type="xs:string" />
+					<xs:element name="eeIdList" type="xs:string" />      			 
+				</xs:sequence>
+			</xs:complexType>
 	         	     
-			<complexType name="ArrayOfDEDV2EEGeneIDs">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:dedv2eegene[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="ArrayOfDEDV2EEGeneIDs">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:dedv2eegene[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="geneLocation">
-				<sequence>
-					<element name="chromId" type="xsd:string" />
-					<element name="minNT" type="xsd:string" />
-					<element name="maxNT" type="xsd:string" />
-				</sequence>
-			</complexType>
+			<xs:complexType name="geneLocation">
+				<xs:sequence>
+					<xs:element name="chromId" type="xs:string" />
+					<xs:element name="minNT" type="xs:string" />
+					<xs:element name="maxNT" type="xs:string" />
+				</xs:sequence>
+			</xs:complexType>
 	     
-			<complexType name="gene2goID">
-				<sequence>
-					<element name="gene_id" type="xsd:string" />
-					<element name="goIdList" type="xsd:string" />      			    			 
-				</sequence>
-			</complexType>
+			<xs:complexType name="gene2goID">
+				<xs:sequence>
+					<xs:element name="gene_id" type="xs:string" />
+					<xs:element name="goIdList" type="xs:string" />      			    			 
+				</xs:sequence>
+			</xs:complexType>
 	     
 	            
-			<complexType name="gene2GOdescriptionResult">
-				<sequence>
-					<element name="gene_id" type="xsd:string" />
-					<element name="go_id" type="xsd:string" />
-					<element name="go_description" type="xsd:string" />      			    			 
-				</sequence>
-			</complexType>
+			<xs:complexType name="gene2GOdescriptionResult">
+				<xs:sequence>
+					<xs:element name="gene_id" type="xs:string" />
+					<xs:element name="go_id" type="xs:string" />
+					<xs:element name="go_description" type="xs:string" />      			    			 
+				</xs:sequence>
+			</xs:complexType>
 	     
-			<complexType name="ArrayOfgene2GOdescriptionResult">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:gene2GOdescriptionResult[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="ArrayOfgene2GOdescriptionResult">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:gene2GOdescriptionResult[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
 	     
-			<complexType name="gene2overlapMap">
-				<sequence>
-					<element name="gene" type="xsd:string" />
-					<element name="overlap_GO_terms" type="xsd:string" />      		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfgene2overlapMap">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:gene2overlapMap[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="gene2overlapMap">
+				<xs:sequence>
+					<xs:element name="gene" type="xs:string" />
+					<xs:element name="overlap_GO_terms" type="xs:string" />      		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfgene2overlapMap">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:gene2overlapMap[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="ee2annotations">
-				<sequence>
-					<element name="ee_id" type="xsd:string" />
-					<element name="Category" type="xsd:string" />
-					<element name="Terms" type="xsd:string" /> 
-					<element name="GoEvidenceCode" type="xsd:string" />       		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfee2annotations">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:ee2annotations[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="ee2annotations">
+				<xs:sequence>
+					<xs:element name="ee_id" type="xs:string" />
+					<xs:element name="Category" type="xs:string" />
+					<xs:element name="Terms" type="xs:string" /> 
+					<xs:element name="GoEvidenceCode" type="xs:string" />       		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfee2annotations">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:ee2annotations[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
 	   
-			<complexType name="probe2AD">
-				<sequence>
-					<element name="probe_id" type="xsd:string" />
-					<element name="array_design_identifier" type="xsd:string" />      		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfprobe2AD">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:probe2AD[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="probe2AD">
+				<xs:sequence>
+					<xs:element name="probe_id" type="xs:string" />
+					<xs:element name="array_design_identifier" type="xs:string" />      		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfprobe2AD">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:probe2AD[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="eeNames">
-				<sequence>
-					<element name="ee_id" type="xsd:string" />
-					<element name="ee_short_name" type="xsd:string" /> 
-					<element name="ee_name" type="xsd:string" />       		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfeeNames">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:eeNames[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="eeNames">
+				<xs:sequence>
+					<xs:element name="ee_id" type="xs:string" />
+					<xs:element name="ee_short_name" type="xs:string" /> 
+					<xs:element name="ee_name" type="xs:string" />       		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfeeNames">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:eeNames[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="geneNames">
-				<sequence>
-					<element name="gene_id" type="xsd:string" /> 
-					<element name="gene_official_symbol" type="xsd:string" />       		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfgeneNames">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:geneNames[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="geneNames">
+				<xs:sequence>
+					<xs:element name="gene_id" type="xs:string" /> 
+					<xs:element name="gene_official_symbol" type="xs:string" />       		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfgeneNames">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:geneNames[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="EESResult">
-				<sequence>
-					<element name="expression_experiment_set_id" type="xsd:string" /> 
-					<element name="ees_name" type="xsd:string" />  
-					<element name="datasets" type="xsd:string" />      
-    		  		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfEESResult">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:EESResult[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="EESResult">
+				<xs:sequence>
+					<xs:element name="expression_experiment_set_id" type="xs:string" /> 
+					<xs:element name="ees_name" type="xs:string" /> 
+					<xs:element name="datasets" type="xs:string" />    		  		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfEESResult">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:EESResult[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="dedvResult">
-				<sequence>
-					<element name="gene_ids" type="xsd:string" /> 
-					<element name="ee_ids" type="xsd:string" /> 
-					<element name="ranks" type="xsd:string" />     		      		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfDEDVRankResult">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:dedvResult[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="dedvResult">
+				<xs:sequence>
+					<xs:element name="gene_ids" type="xs:string" /> 
+					<xs:element name="ee_ids" type="xs:string" /> 
+					<xs:element name="ranks" type="xs:string" />     		      		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfDEDVRankResult">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:dedvResult[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="ncbiResult">
-				<sequence>
-					<element name="gene_id" type="xsd:string" />
-					<element name="ncbi_id" type="xsd:string" />
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfncbiResult">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:ncbiResult[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="ncbiResult">
+				<xs:sequence>
+					<xs:element name="gene_id" type="xs:string" />
+					<xs:element name="ncbi_id" type="xs:string" />
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfncbiResult">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:ncbiResult[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
 			
-			<complexType name="geneDetailsResult">
-				<sequence>
-					<element name="gene_id" type="xsd:string" />
-					<element name="ncbi_id" type="xsd:string" />
-					<element name="official_symbol" type="xsd:string"></element>
-					<element name="official_name" type="xsd:string"></element>
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfGeneDeatilsResult">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:geneDetailsResult[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
+			<xs:complexType name="geneDetailsResult">
+				<xs:sequence>
+					<xs:element name="gene_id" type="xs:string" />
+					<xs:element name="ncbi_id" type="xs:string" />
+					<xs:element name="official_symbol" type="xs:string" />
+					<xs:element name="official_name" type="xs:string" />
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfGeneDeatilsResult">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:geneDetailsResult[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
       
-			<complexType name="differentialExpressionResult">
-				<sequence>
-					<element name="gene_id" type="xsd:string" />
-					<element name="ee_id" type="xsd:string" /> 
-					<element name="probe" type="xsd:string" />
-					<element name="q_value" type="xsd:string" />		     			 
-				</sequence>
-			</complexType>
-			<complexType name="ArrayOfdifferentialExpressionResult">
-				<complexContent>
-					<restriction base="soapenc:Array">
-						<attribute ref="soapenc:arrayType" wsdl:arrayType="schema:differentialExpressionResult[]"/>
-					</restriction>
-				</complexContent>
-			</complexType>
-      
-      
-	     
-		</schema>
+			<xs:complexType name="differentialExpressionResult">
+				<xs:sequence>
+					<xs:element name="gene_id" type="xs:string" />
+					<xs:element name="ee_id" type="xs:string" /> 
+					<xs:element name="probe" type="xs:string" />
+					<xs:element name="q_value" type="xs:string" />		     			 
+				</xs:sequence>
+			</xs:complexType>
+			<xs:complexType name="ArrayOfdifferentialExpressionResult">
+				<xs:complexContent>
+					<xs:restriction base="soapenc:Array">
+						<xs:attribute ref="soapenc:arrayType" wsdl:arrayType="tns:differentialExpressionResult[]"/>
+					</xs:restriction>
+				</xs:complexContent>
+			</xs:complexType>
+		</xs:schema>
+	</types>
 
+	<message name="geneNameResponse">
+		<part name="gene_name_results" type="tns:ArrayOfgeneNames" />
+	</message>
+	<message name="experimentIDbyTaxonRequest">
+		<part name="taxon_id" type="xs:integer" />
+	</message>
+	<message name="geneIDbyTaxonResponse">
+		<part name="gene_ids" type="tns:ArrayOfStrings" />
+	</message>
+	<message name="arrayDesignUsedResponse">
+		<part name="arrayDesign_short_names" type="tns:ArrayOfStrings" />
+	</message>
+	<message name="experimentIDbyTaxonResponse">
+		<part name="ee_ids" type="tns:ArrayOfStrings" />
+	</message>
+	<message name="dEDVfromEEIDGeneIDRequest">
+		<part name="gene_ids" type="tns:ArrayOfIDs" />
+		<part name="ee_ids" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="gene2GoResponse">
+		<part name="gene2goids" type="tns:gene2goID" />     
+	</message>
+	<message name="arrayDesignUsedRequest">
+		<part name="ee_id" type="xs:integer" />
+	</message>
+	<message name="experimentIdRequest">
+		<part name="ee_short_name" type="xs:string" />    
+	</message>
+	<message name="experimentNameResponse">
+		<part name="eeName" type="tns:ArrayOfeeNames" />      
+	</message>
+	<message name="arrayDesignIdentifierByNameRequest">
+		<part name="ad_name" type="xs:string" /> 
+	</message>
+	<message name="goTerm2GeneResponse">
+		<part name="gene_ids" type="tns:ArrayOfStrings" />
+	</message>
+	<message name="experimentIdResponse">
+		<part name="ee_id" type="xs:string" />
+	</message>
+	<message name="experimentDEDVRequest">
+		<part name="ee_id" type="xs:integer" />
+	</message>
+	<message name="dEDVfromEEIDGeneIDResponse">
+		<part name="dedv2eeGenemap" type="tns:ArrayOfDEDV2EEGeneIDs" />
+	</message>
+	<message name="experimentDEDVResponse">
+		<part name="dedv2GeneMap" type="tns:ArrayOfDEDV2GeneIDs" />
+	</message>
+	<message name="geneIDbyTaxonRequest">
+		<part name="taxon_id" type="xs:integer" />
+	</message>
+	<message name="physicalLocationResponse">
+		<part name="physical_location" type="tns:geneLocation" />
+	</message>
+		<message name="genesAtPhysicalLocationResponse">
+		<part name="genesAtPhysical_location" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="experimentNumSamplesResponse">
+		<part name="eeNumSample_id" type="xs:string" />
+	</message>
+	<message name="experimentNameRequest">
+		<part name="ee_ids" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="geneIdRequest">
+		<part name="gene_official_symbol" type="xs:string" />
+		<part name="taxon_id" type="xs:integer" />
+	</message>
+	<message name="geneNameRequest">
+		<part name="gene_ids" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="experimentNumSamplesRequest">
+		<part name="ee_id" type="xs:integer" />
+	</message>
+	<message name="physicalLocationRequest">
+		<part name="gene_id" type="xs:integer" />
+	</message>
+	<message name="genesAtPhysicalLocationRequest">
+		<part name="startNucleotide" type="xs:integer" />			
+		<part name="endNucleotide" type="xs:integer" />			
+		<part name="chromosome" type="xs:string" />			
+		<part name="taxon_id" type="xs:integer" />			
+	</message>
+	<message name="goTerm2GeneRequest">
+		<part name="go_id" type="xs:string" />
+		<part name="taxon_id" type="xs:integer" /> 
+	</message>
+	<message name="geneIdResponse">
+		<part name="gene_ids" type="tns:ArrayOfStrings" />
+	</message>
+	<message name="gene2GoRequest">
+		<part name="gene_ids" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="arrayDesignIdentifierByNameResponse">
+		<part name="arrayDesign_ids" type="tns:ArrayOfStrings" />
+	</message>
+	<message name="geneOverlapRequest">
+		<part name="query_gene_id" type="xs:integer" />
+		<part name="gene_ids" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="geneOverlapResponse">
+		<part name="gene2overlap" type="tns:ArrayOfgene2overlapMap" />
+	</message>
+	<message name="geneCoexpressionRequest">
+		<part name="expression_experiment_set_id" type="xs:integer" />
+		<part name="gene_ids" type="tns:ArrayOfIDs" />
+		<part name="taxon_id" type="xs:integer" />
+		<part name="stringency" type="xs:integer" />
+		<part name="queryGenesOnly" type="xs:boolean" />
+		<part name="specificProbesOnly" type="xs:boolean" />
+	</message>
+	<message name="geneCoexpressionResponse">
+		<part name="coexpressed_genes" type="tns:ArrayOfCoexpressionResult" />
+	</message>
+	<message name="experimentAnnotationRequest">
+		<part name="ee_ids" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="experimentAnnotationResponse">
+		<part name="annotations" type="tns:ArrayOfee2annotations" />
+	</message>
+	<message name="probe2GeneRequest">
+		<part name="probe_name" type="xs:integer" />
+		<part name="array_design_identifier" type="xs:integer" />
+	</message>
+	<message name="probe2GeneResponse">
+		<part name="gene_ids" type="tns:ArrayOfIDs" />
+	</message>
+	<message name="gene2ProbeRequest">
+		<part name="gene_official_symbol" type="xs:string" />
+		<part name="taxon_id" type="xs:integer" />
+	</message>
+	<message name="gene2ProbeResponse">
+		<part name="probe_arrayDesign_info" type="tns:ArrayOfprobe2AD" />
+	</message>  
+	<message name="expressionExperimentSetIDsRequest">
+	</message>
+	<message name="expressionExperimentSetIDsResponse">
+		<part name="expression_experiment_set_ids" type="tns:ArrayOfEESResult" />
+	</message>
+	<message name="dEDVRankRequest">
+		<part name="gene_ids" type="tns:ArrayOfIDs" />
+		<part name="ee_ids" type="tns:ArrayOfIDs" />
+		<part name="method" type="xs:string" />
+	</message>
+	<message name="dEDVRankResponse">
+		<part name="dEDVRank_results" type="tns:ArrayOfDEDVRankResult" />
+	</message>
+	<message name="geneByNCBIIdRequest">
+		<part name="ncbi_ids" type="tns:ArrayOfIDs" />  
+	</message>
+	<message name="geneByNCBIIdResponse">
+		<part name="gene_ncbi_results" type="tns:ArrayOfncbiResult" />
+	</message>
+	<message name="geneDetailsByGeneIDRequest">
+		<part name="gene_ids" type="tns:ArrayOfIDs" />   
+	</message>
+	<message name="geneDetailsByGeneIDResponse">
+		<part name="gene_details_results" type="tns:ArrayOfGeneDeatilsResult" />
+	</message>
+	<message name="differentialExpressionProbeResultRequest">
+		<part name="expression_experiment_set_id" type="xs:integer" /> 
+		<part name="gene_ids" type="tns:ArrayOfIDs" /> 
+		<part name="taxon_id" type="xs:integer" />  
+		<part name="threshold" type="xs:integer" /> 
+	</message>
+	<message name="differentialExpressionProbeResultResponse">
+		<part name="differentialExpression_results" type="tns:ArrayOfdifferentialExpressionResult" />
+	</message>
+	<message name="gene2GOdescriptionRequest">
+		<part name="gene_id" type="tns:ArrayOfIDs" />   
+	</message>
+	<message name="gene2GOdescriptionResponse">
+		<part name="gene2GOdescription_results" type="tns:ArrayOfgene2GOdescriptionResult" />
+	</message>
 
-	</wsdl:types>
-	<wsdl:message name="geneNameResponse">
-		<wsdl:part name="gene_name_results" type="schema:ArrayOfgeneNames" />
-	</wsdl:message>
-	<wsdl:message name="experimentIDbyTaxonRequest">
-		<wsdl:part name="taxon_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="geneIDbyTaxonResponse">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfStrings" />
-	</wsdl:message>
-	<wsdl:message name="arrayDesignUsedResponse">
-		<wsdl:part name="arrayDesign_short_names" type="schema:ArrayOfStrings" />
-	</wsdl:message>
-	<wsdl:message name="experimentIDbyTaxonResponse">
-		<wsdl:part name="ee_ids" type="schema:ArrayOfStrings" />
-	</wsdl:message>
-	<wsdl:message name="dEDVfromEEIDGeneIDRequest">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
-		<wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="gene2GoResponse">
-		<wsdl:part name="gene2goids" type="schema:gene2goID" />     
-	</wsdl:message>
-	<wsdl:message name="arrayDesignUsedRequest">
-		<wsdl:part name="ee_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="experimentIdRequest">
-		<wsdl:part name="ee_short_name" type="xsd:string" />    
-	</wsdl:message>
-	<wsdl:message name="experimentNameResponse">
-		<wsdl:part name="eeName" type="schema:ArrayOfeeNames" />      
-	</wsdl:message>
-	<wsdl:message name="arrayDesignIdentifierByNameRequest">
-		<wsdl:part name="ad_name" type="xsd:string" /> 
-	</wsdl:message>
-	<wsdl:message name="goTerm2GeneResponse">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfStrings" />
-	</wsdl:message>
-	<wsdl:message name="experimentIdResponse">
-		<wsdl:part name="ee_id" type="xsd:string" />
-	</wsdl:message>
-	<wsdl:message name="experimentDEDVRequest">
-		<wsdl:part name="ee_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="dEDVfromEEIDGeneIDResponse">
-		<wsdl:part name="dedv2eeGenemap" type="schema:ArrayOfDEDV2EEGeneIDs" />
-	</wsdl:message>
-	<wsdl:message name="experimentDEDVResponse">
-		<wsdl:part name="dedv2GeneMap" type="schema:ArrayOfDEDV2GeneIDs" />
-	</wsdl:message>
-	<wsdl:message name="geneIDbyTaxonRequest">
-		<wsdl:part name="taxon_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="physicalLocationResponse">
-		<wsdl:part name="physical_location" type="schema:geneLocation" />
-	</wsdl:message>
-		<wsdl:message name="genesAtPhysicalLocationResponse">
-		<wsdl:part name="genesAtPhysical_location" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="experimentNumSamplesResponse">
-		<wsdl:part name="eeNumSample_id" type="xsd:string" />
-	</wsdl:message>
-	<wsdl:message name="experimentNameRequest">
-		<wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="geneIdRequest">
-		<wsdl:part name="gene_official_symbol" type="xsd:string" />
-		<wsdl:part name="taxon_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="geneNameRequest">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="experimentNumSamplesRequest">
-		<wsdl:part name="ee_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="physicalLocationRequest">
-		<wsdl:part name="gene_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="genesAtPhysicalLocationRequest">
-		<wsdl:part name="startNucleotide" type="xsd:integer" />			
-		<wsdl:part name="endNucleotide" type="xsd:integer" />			
-		<wsdl:part name="chromosome" type="xsd:string" />			
-		<wsdl:part name="taxon_id" type="xsd:integer" />			
+ 	<message name="geneCoexpressionSearchRequestMsg">
+ 		<part name="geneCoexpressionSearchRequest" type="tns:GeneCoexpressionSearchParams" /> 		
+ 	</message>
 
-	</wsdl:message>
-	<wsdl:message name="goTerm2GeneRequest">
-		<wsdl:part name="go_id" type="xsd:string" />
-		<wsdl:part name="taxon_id" type="xsd:integer" /> 
-	</wsdl:message>
-	<wsdl:message name="geneIdResponse">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfStrings" />
-	</wsdl:message>
-	<wsdl:message name="gene2GoRequest">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="arrayDesignIdentifierByNameResponse">
-		<wsdl:part name="arrayDesign_ids" type="schema:ArrayOfStrings" />
-	</wsdl:message>
-	<wsdl:message name="geneOverlapRequest">
-		<wsdl:part name="query_gene_id" type="xsd:integer" />
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="geneOverlapResponse">
-		<wsdl:part name="gene2overlap" type="schema:ArrayOfgene2overlapMap" />
-	</wsdl:message>
-	<wsdl:message name="geneCoexpressionRequest">
-		<wsdl:part name="expression_experiment_set_id" type="xsd:integer" />
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
-		<wsdl:part name="taxon_id" type="xsd:integer" />
-		<wsdl:part name="stringency" type="xsd:integer" />
-		<wsdl:part name="queryGenesOnly" type="xsd:boolean" />
-		<wsdl:part name="specificProbesOnly" type="xsd:boolean" />
-	</wsdl:message>
-	<wsdl:message name="geneCoexpressionResponse">
-		<wsdl:part name="coexpressed_genes" type="schema:ArrayOfCoexpressionResult" />
-	</wsdl:message>
-	<wsdl:message name="experimentAnnotationRequest">
-		<wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="experimentAnnotationResponse">
-		<wsdl:part name="annotations" type="schema:ArrayOfee2annotations" />
-	</wsdl:message>
-	<wsdl:message name="probe2GeneRequest">
-		<wsdl:part name="probe_name" type="xsd:integer" />
-		<wsdl:part name="array_design_identifier" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="probe2GeneResponse">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
-	</wsdl:message>
-	<wsdl:message name="gene2ProbeRequest">
-		<wsdl:part name="gene_official_symbol" type="xsd:string" />
-		<wsdl:part name="taxon_id" type="xsd:integer" />
-	</wsdl:message>
-	<wsdl:message name="gene2ProbeResponse">
-		<wsdl:part name="probe_arrayDesign_info" type="schema:ArrayOfprobe2AD" />
-	</wsdl:message>  
-	<wsdl:message name="expressionExperimentSetIDsRequest">
-	</wsdl:message>
-	<wsdl:message name="expressionExperimentSetIDsResponse">
-		<wsdl:part name="expression_experiment_set_ids" type="schema:ArrayOfEESResult" />
-	</wsdl:message>
-	<wsdl:message name="dEDVRankRequest">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />
-		<wsdl:part name="ee_ids" type="schema:ArrayOfIDs" />
-		<wsdl:part name="method" type="xsd:string" />
-	</wsdl:message>
-	<wsdl:message name="dEDVRankResponse">
-		<wsdl:part name="dEDVRank_results" type="schema:ArrayOfDEDVRankResult" />
-	</wsdl:message>
-	<wsdl:message name="geneByNCBIIdRequest">
-		<wsdl:part name="ncbi_ids" type="schema:ArrayOfIDs" />  
-	</wsdl:message>
-	<wsdl:message name="geneByNCBIIdResponse">
-		<wsdl:part name="gene_ncbi_results" type="schema:ArrayOfncbiResult" />
-	</wsdl:message>
-	<wsdl:message name="geneDetailsByGeneIDRequest">
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" />   
-	</wsdl:message>
-	<wsdl:message name="geneDetailsByGeneIDResponse">
-		<wsdl:part name="gene_details_results" type="schema:ArrayOfGeneDeatilsResult" />
-	</wsdl:message>
-	<wsdl:message name="differentialExpressionProbeResultRequest">
-		<wsdl:part name="expression_experiment_set_id" type="xsd:integer" /> 
-		<wsdl:part name="gene_ids" type="schema:ArrayOfIDs" /> 
-		<wsdl:part name="taxon_id" type="xsd:integer" />  
-		<wsdl:part name="threshold" type="xsd:integer" /> 
-	</wsdl:message>
-	<wsdl:message name="differentialExpressionProbeResultResponse">
-		<wsdl:part name="differentialExpression_results" type="schema:ArrayOfdifferentialExpressionResult" />
-	</wsdl:message>
-	<wsdl:message name="gene2GOdescriptionRequest">
-		<wsdl:part name="gene_id" type="schema:ArrayOfIDs" />   
-	</wsdl:message>
-	<wsdl:message name="gene2GOdescriptionResponse">
-		<wsdl:part name="gene2GOdescription_results" type="schema:ArrayOfgene2GOdescriptionResult" />
-	</wsdl:message>
+	<message name="geneCoexpressionSearchResponseMsg">
+		<part name="geneCoexpressionSearchResponse" type="tns:GeneCoexpressionSearchResponse" />
+	</message>
   
-  
-  
-	<wsdl:portType name="gemma">
-		<wsdl:operation name="experimentIDbyTaxon">
-			<wsdl:input message="schema:experimentIDbyTaxonRequest" name="experimentIDbyTaxonRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:experimentIDbyTaxonResponse" name="experimentIDbyTaxonResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="dEDVfromEEIDGeneID">
-			<wsdl:input message="schema:dEDVfromEEIDGeneIDRequest" name="dEDVfromEEIDGeneIDRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:dEDVfromEEIDGeneIDResponse" name="dEDVfromEEIDGeneIDResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="arrayDesignUsed">
-			<wsdl:input message="schema:arrayDesignUsedRequest" name="arrayDesignUsedRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:arrayDesignUsedResponse" name="arrayDesignUsedResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentId">
-			<wsdl:input message="schema:experimentIdRequest" name="experimentIdRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:experimentIdResponse" name="experimentIdResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="arrayDesignIdentifierByName">
-			<wsdl:input message="schema:arrayDesignIdentifierByNameRequest" name="arrayDesignIdentifierByNameRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:arrayDesignIdentifierByNameResponse" name="arrayDesignIdentifierByNameResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentDEDV">
-			<wsdl:input message="schema:experimentDEDVRequest" name="experimentDEDVRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:experimentDEDVResponse" name="experimentDEDVResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneIDbyTaxon">
-			<wsdl:input message="schema:geneIDbyTaxonRequest" name="geneIDbyTaxonRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:geneIDbyTaxonResponse" name="geneIDbyTaxonResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentName">
-			<wsdl:input message="schema:experimentNameRequest" name="experimentNameRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:experimentNameResponse" name="experimentNameResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneId">
-			<wsdl:input message="schema:geneIdRequest" name="geneIdRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:geneIdResponse" name="geneIdResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneName">
-			<wsdl:input message="schema:geneNameRequest" name="geneNameRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:geneNameResponse" name="geneNameResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentNumSamples">
-			<wsdl:input message="schema:experimentNumSamplesRequest" name="experimentNumSamplesRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:experimentNumSamplesResponse" name="experimentNumSamplesResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="physicalLocation">
-			<wsdl:input message="schema:physicalLocationRequest" name="physicalLocationRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:physicalLocationResponse" name="physicalLocationResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="genesAtPhysicalLocation">
-			<wsdl:input message="schema:genesAtPhysicalLocationRequest" name="genesAtPhysicalLocationRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:genesAtPhysicalLocationResponse" name="genesAtPhysicalLocationResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="goTerm2Gene">
-			<wsdl:input message="schema:goTerm2GeneRequest" name="goTerm2GeneRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:goTerm2GeneResponse" name="goTerm2GeneResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="gene2Go">
-			<wsdl:input message="schema:gene2GoRequest" name="gene2GoRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:gene2GoResponse" name="gene2GoResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneOverlap">
-			<wsdl:input message="schema:geneOverlapRequest" name="geneOverlapRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:geneOverlapResponse" name="geneOverlapResponse">
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneCoexpression">
-			<wsdl:input message="schema:geneCoexpressionRequest" name="geneCoexpressionRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:geneCoexpressionResponse" name="geneCoexpressionResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="experimentAnnotation">
-			<wsdl:input message="schema:experimentAnnotationRequest" name="experimentAnnotationRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:experimentAnnotationResponse" name="experimentAnnotationResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="probe2Gene">
-			<wsdl:input message="schema:probe2GeneRequest" name="probe2GeneRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:probe2GeneResponse" name="probe2GeneResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="gene2Probe">
-			<wsdl:input message="schema:gene2ProbeRequest" name="gene2ProbeRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:gene2ProbeResponse" name="gene2ProbeResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="expressionExperimentSetIDs">
-			<wsdl:input message="schema:expressionExperimentSetIDsRequest" name="expressionExperimentSetIDsRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:expressionExperimentSetIDsResponse" name="expressionExperimentSetIDsResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="dEDVRank">
-			<wsdl:input message="schema:dEDVRankRequest" name="dEDVRankRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:dEDVRankResponse" name="dEDVRankResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="geneByNCBIId">
-			<wsdl:input message="schema:geneByNCBIIdRequest" name="geneByNCBIIdRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:geneByNCBIIdResponse" name="geneByNCBIIdResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="geneDetailsByGeneID">
-			<wsdl:input message="schema:geneDetailsByGeneIDRequest" name="geneDetailsByGeneIDRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:geneDetailsByGeneIDResponse" name="geneDetailsByGeneIDResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="differentialExpressionProbeResult">
-			<wsdl:input message="schema:differentialExpressionProbeResultRequest" name="differentialExpressionProbeResultRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:differentialExpressionProbeResultResponse" name="differentialExpressionProbeResultResponse">
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="gene2GOdescription">
-			<wsdl:input message="schema:gene2GOdescriptionRequest" name="gene2GOdescriptionRequest">
-			</wsdl:input>
-			<wsdl:output message="schema:gene2GOdescriptionResponse" name="gene2GOdescriptionResponse">
-			</wsdl:output>
-		</wsdl:operation> 
+	<portType name="gemma">
+		<operation name="experimentIDbyTaxon">
+			<input message="tns:experimentIDbyTaxonRequest" name="experimentIDbyTaxonRequest" />			
+			<output message="tns:experimentIDbyTaxonResponse" name="experimentIDbyTaxonResponse" />
+		</operation>
+		<operation name="dEDVfromEEIDGeneID">
+			<input message="tns:dEDVfromEEIDGeneIDRequest" name="dEDVfromEEIDGeneIDRequest" />
+			<output message="tns:dEDVfromEEIDGeneIDResponse" name="dEDVfromEEIDGeneIDResponse" />
+		</operation>
+		<operation name="arrayDesignUsed">
+			<input message="tns:arrayDesignUsedRequest" name="arrayDesignUsedRequest" />
+			<output message="tns:arrayDesignUsedResponse" name="arrayDesignUsedResponse" />
+		</operation>
+		<operation name="experimentId">
+			<input message="tns:experimentIdRequest" name="experimentIdRequest" />
+			<output message="tns:experimentIdResponse" name="experimentIdResponse" />
+		</operation>
+		<operation name="arrayDesignIdentifierByName">
+			<input message="tns:arrayDesignIdentifierByNameRequest" name="arrayDesignIdentifierByNameRequest" />
+			<output message="tns:arrayDesignIdentifierByNameResponse" name="arrayDesignIdentifierByNameResponse" />
+		</operation>
+		<operation name="experimentDEDV">
+			<input message="tns:experimentDEDVRequest" name="experimentDEDVRequest" />
+			<output message="tns:experimentDEDVResponse" name="experimentDEDVResponse" />
+		</operation>
+		<operation name="geneIDbyTaxon">
+			<input message="tns:geneIDbyTaxonRequest" name="geneIDbyTaxonRequest" />
+			<output message="tns:geneIDbyTaxonResponse" name="geneIDbyTaxonResponse" />
+		</operation>
+		<operation name="experimentName">
+			<input message="tns:experimentNameRequest" name="experimentNameRequest" />
+			<output message="tns:experimentNameResponse" name="experimentNameResponse" />
+		</operation>
+		<operation name="geneId">
+			<input message="tns:geneIdRequest" name="geneIdRequest" />
+			<output message="tns:geneIdResponse" name="geneIdResponse" />
+		</operation>
+		<operation name="geneName">
+			<input message="tns:geneNameRequest" name="geneNameRequest" />
+			<output message="tns:geneNameResponse" name="geneNameResponse" />
+		</operation>
+		<operation name="experimentNumSamples">
+			<input message="tns:experimentNumSamplesRequest" name="experimentNumSamplesRequest" />
+			<output message="tns:experimentNumSamplesResponse" name="experimentNumSamplesResponse" />
+		</operation>
+		<operation name="physicalLocation">
+			<input message="tns:physicalLocationRequest" name="physicalLocationRequest" />
+			<output message="tns:physicalLocationResponse" name="physicalLocationResponse" />
+		</operation>
+		<operation name="genesAtPhysicalLocation">
+			<input message="tns:genesAtPhysicalLocationRequest" name="genesAtPhysicalLocationRequest" />
+			<output message="tns:genesAtPhysicalLocationResponse" name="genesAtPhysicalLocationResponse" />
+		</operation>
+		<operation name="goTerm2Gene">
+			<input message="tns:goTerm2GeneRequest" name="goTerm2GeneRequest" />
+			<output message="tns:goTerm2GeneResponse" name="goTerm2GeneResponse" />
+		</operation>
+		<operation name="gene2Go">
+			<input message="tns:gene2GoRequest" name="gene2GoRequest" />
+			<output message="tns:gene2GoResponse" name="gene2GoResponse" />
+		</operation>
+		<operation name="geneOverlap">
+			<input message="tns:geneOverlapRequest" name="geneOverlapRequest" />
+			<output message="tns:geneOverlapResponse" name="geneOverlapResponse" />
+		</operation>
+		<operation name="geneCoexpression">
+			<input message="tns:geneCoexpressionRequest" name="geneCoexpressionRequest" />
+			<output message="tns:geneCoexpressionResponse" name="geneCoexpressionResponse" />
+		</operation> 
+		<operation name="experimentAnnotation">
+			<input message="tns:experimentAnnotationRequest" name="experimentAnnotationRequest" />
+			<output message="tns:experimentAnnotationResponse" name="experimentAnnotationResponse" />
+		</operation> 
+		<operation name="probe2Gene">
+			<input message="tns:probe2GeneRequest" name="probe2GeneRequest" />
+			<output message="tns:probe2GeneResponse" name="probe2GeneResponse" />
+		</operation> 
+		<operation name="gene2Probe">
+			<input message="tns:gene2ProbeRequest" name="gene2ProbeRequest" />
+			<output message="tns:gene2ProbeResponse" name="gene2ProbeResponse" />
+		</operation> 
+		<operation name="expressionExperimentSetIDs">
+			<input message="tns:expressionExperimentSetIDsRequest" name="expressionExperimentSetIDsRequest" />
+			<output message="tns:expressionExperimentSetIDsResponse" name="expressionExperimentSetIDsResponse" />
+		</operation> 
+		<operation name="dEDVRank">
+			<input message="tns:dEDVRankRequest" name="dEDVRankRequest" />
+			<output message="tns:dEDVRankResponse" name="dEDVRankResponse" />
+		</operation> 
+		<operation name="geneByNCBIId">
+			<input message="tns:geneByNCBIIdRequest" name="geneByNCBIIdRequest" />
+			<output message="tns:geneByNCBIIdResponse" name="geneByNCBIIdResponse" />
+		</operation> 
+		<operation name="geneDetailsByGeneID">
+			<input message="tns:geneDetailsByGeneIDRequest" name="geneDetailsByGeneIDRequest" />
+			<output message="tns:geneDetailsByGeneIDResponse" name="geneDetailsByGeneIDResponse" />
+		</operation> 
+		<operation name="differentialExpressionProbeResult">
+			<input message="tns:differentialExpressionProbeResultRequest" name="differentialExpressionProbeResultRequest" />
+			<output message="tns:differentialExpressionProbeResultResponse" name="differentialExpressionProbeResultResponse" />
+		</operation> 
+		<operation name="gene2GOdescription">
+			<input message="tns:gene2GOdescriptionRequest" name="gene2GOdescriptionRequest" />
+			<output message="tns:gene2GOdescriptionResponse" name="gene2GOdescriptionResponse" />
+		</operation> 
+		<operation name="geneCoexpressionSearch">
+			<input message="tns:geneCoexpressionSearchRequestMsg" />
+			<output message="tns:geneCoexpressionSearchResponseMsg" />
+		</operation> 
    
-	</wsdl:portType>
-	<wsdl:binding name="gemmaBinding" type="schema:gemma">
-		<soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
-		<wsdl:operation name="experimentIDbyTaxon">
+	</portType>
+	
+	<binding name="gemmaBinding" type="tns:gemma">
+		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="experimentIDbyTaxon">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="experimentIDbyTaxonRequest">
+			<input name="experimentIDbyTaxonRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="experimentIDbyTaxonResponse">
+			</input>
+			<output name="experimentIDbyTaxonResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="dEDVfromEEIDGeneID">
+			</output>
+		</operation>
+		<operation name="dEDVfromEEIDGeneID">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="dEDVfromEEIDGeneIDRequest">
+			<input name="dEDVfromEEIDGeneIDRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="dEDVfromEEIDGeneIDResponse">
+			</input>
+			<output name="dEDVfromEEIDGeneIDResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="arrayDesignUsed">
+			</output>
+		</operation>
+		<operation name="arrayDesignUsed">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="arrayDesignUsedRequest">
+			<input name="arrayDesignUsedRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="arrayDesignUsedResponse">
+			</input>
+			<output name="arrayDesignUsedResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentId">
+			</output>
+		</operation>
+		<operation name="experimentId">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="experimentIdRequest">
+			<input name="experimentIdRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="experimentIdResponse">
+			</input>
+			<output name="experimentIdResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="arrayDesignIdentifierByName">
+			</output>
+		</operation>
+		<operation name="arrayDesignIdentifierByName">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="arrayDesignIdentifierByNameRequest">
+			<input name="arrayDesignIdentifierByNameRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="arrayDesignIdentifierByNameResponse">
+			</input>
+			<output name="arrayDesignIdentifierByNameResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentDEDV">
+			</output>
+		</operation>
+		<operation name="experimentDEDV">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="experimentDEDVRequest">
+			<input name="experimentDEDVRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="experimentDEDVResponse">
+			</input>
+			<output name="experimentDEDVResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneIDbyTaxon">
+			</output>
+		</operation>
+		<operation name="geneIDbyTaxon">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="geneIDbyTaxonRequest">
+			<input name="geneIDbyTaxonRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="geneIDbyTaxonResponse">
+			</input>
+			<output name="geneIDbyTaxonResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentName">
+			</output>
+		</operation>
+		<operation name="experimentName">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="experimentNameRequest">
+			<input name="experimentNameRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="experimentNameResponse">
+			</input>
+			<output name="experimentNameResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneId">
+			</output>
+		</operation>
+		<operation name="geneId">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="geneIdRequest">
+			<input name="geneIdRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="geneIdResponse">
+			</input>
+			<output name="geneIdResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneName">
+			</output>
+		</operation>
+		<operation name="geneName">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="geneNameRequest">
+			<input name="geneNameRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="geneNameResponse">
+			</input>
+			<output name="geneNameResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentNumSamples">
+			</output>
+		</operation>
+		<operation name="experimentNumSamples">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="experimentNumSamplesRequest">
+			<input name="experimentNumSamplesRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="experimentNumSamplesResponse">
+			</input>
+			<output name="experimentNumSamplesResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="physicalLocation">
+			</output>
+		</operation>
+		<operation name="physicalLocation">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="physicalLocationRequest">
+			<input name="physicalLocationRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="physicalLocationResponse">
+			</input>
+			<output name="physicalLocationResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="genesAtPhysicalLocation">
+			</output>
+		</operation> 
+		<operation name="genesAtPhysicalLocation">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="genesAtPhysicalLocationRequest">
+			<input name="genesAtPhysicalLocationRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="genesAtPhysicalLocationResponse">
+			</input>
+			<output name="genesAtPhysicalLocationResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation> 
-		<wsdl:operation name="goTerm2Gene">
+			</output>
+		</operation> 
+		<operation name="goTerm2Gene">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="goTerm2GeneRequest">
+			<input name="goTerm2GeneRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="goTerm2GeneResponse">
+			</input>
+			<output name="goTerm2GeneResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>   
-		</wsdl:operation>
-		<wsdl:operation name="gene2Go">
+			</output>   
+		</operation>
+		<operation name="gene2Go">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="gene2GoRequest">
+			<input name="gene2GoRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="gene2GoResponse">
+			</input>
+			<output name="gene2GoResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneOverlap">
+			</output>
+		</operation>
+		<operation name="geneOverlap">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="geneOverlapRequest">
+			<input name="geneOverlapRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="geneOverlapResponse">
+			</input>
+			<output name="geneOverlapResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneCoexpression">
+			</output>
+		</operation>
+		<operation name="geneCoexpression">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="geneCoexpressionRequest">
+			<input name="geneCoexpressionRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="geneCoexpressionResponse">
+			</input>
+			<output name="geneCoexpressionResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="experimentAnnotation">
+			</output>
+		</operation>
+		<operation name="experimentAnnotation">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="experimentAnnotationRequest">
+			<input name="experimentAnnotationRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="experimentAnnotationResponse">
+			</input>
+			<output name="experimentAnnotationResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="probe2Gene">
+			</output>
+		</operation>
+		<operation name="probe2Gene">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="probe2GeneRequest">
+			<input name="probe2GeneRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="probe2GeneResponse">
+			</input>
+			<output name="probe2GeneResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="gene2Probe">
+			</output>
+		</operation>
+		<operation name="gene2Probe">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="gene2ProbeRequest">
+			<input name="gene2ProbeRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="gene2ProbeResponse">
+			</input>
+			<output name="gene2ProbeResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="expressionExperimentSetIDs">
+			</output>
+		</operation>
+		<operation name="expressionExperimentSetIDs">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="expressionExperimentSetIDsRequest">
+			<input name="expressionExperimentSetIDsRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="expressionExperimentSetIDsResponse">
+			</input>
+			<output name="expressionExperimentSetIDsResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="dEDVRank">
+			</output>
+		</operation>
+		<operation name="dEDVRank">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="dEDVRankRequest">
+			<input name="dEDVRankRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="dEDVRankResponse">
+			</input>
+			<output name="dEDVRankResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneByNCBIId">
+			</output>
+		</operation>
+		<operation name="geneByNCBIId">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="geneByNCBIIdRequest">
+			<input name="geneByNCBIIdRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="geneByNCBIIdResponse">
+			</input>
+			<output name="geneByNCBIIdResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="geneDetailsByGeneID">
+			</output>
+		</operation>
+		<operation name="geneDetailsByGeneID">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="geneDetailsByGeneIDRequest">
+			<input name="geneDetailsByGeneIDRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="geneDetailsByGeneIDResponse">
+			</input>
+			<output name="geneDetailsByGeneIDResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="differentialExpressionProbeResult">
+			</output>
+		</operation>
+		<operation name="differentialExpressionProbeResult">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="differentialExpressionProbeResultRequest">
+			<input name="differentialExpressionProbeResultRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="differentialExpressionProbeResultResponse">
+			</input>
+			<output name="differentialExpressionProbeResultResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-		<wsdl:operation name="gene2GOdescription">
+			</output>
+		</operation>
+		<operation name="gene2GOdescription">
 			<soap:operation soapAction=""/>
-			<wsdl:input name="gene2GOdescriptionRequest">
+			<input name="gene2GOdescriptionRequest">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:input>
-			<wsdl:output name="gene2GOdescriptionResponse">
+			</input>
+			<output name="gene2GOdescriptionResponse">
 				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-			</wsdl:output>
-		</wsdl:operation>
-     
-	</wsdl:binding>
-	<wsdl:service name="gemmaService">
-		<wsdl:port binding="schema:gemmaBinding" name="gemmaPort">
-    
+			</output>
+		</operation>
 		
-
+     	<operation name="geneCoexpressionSearch">
+			<soap:operation soapAction=""/>
+			<input>
+				<soap:body use="encoded" namespace="http://chibi.ubc.ca/Gemma/ws" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" />
+			</input>
+			<output>
+				<soap:body use="literal" namespace="http://chibi.ubc.ca/Gemma/ws" />
+			</output>
+		</operation>     	
+		
+	</binding>
+	
+		
+	<service name="gemmaService">
+		<port binding="tns:gemmaBinding" name="gemmaPort">
+    
+	
 			<!-- <soap:address location="http://137.82.157.182:8080/Gemma/ws"/> -->
 
 			<!-- for production, use http://chibi.ubc.ca/Gemma/ws -->
 
 				<soap:address location="http://chibi.ubc.ca/Gemma/ws"/>  
-    
-			<!-- for local machine  
+<!--  for local machine  
 				<soap:address location="http://137.82.157.72:8080/Gemma/ws"/>
-  			-->
-  			
-		</wsdl:port>
-	</wsdl:service>
-</wsdl:definitions>
+--> 			
+		</port>		
+	</service>
+</definitions>

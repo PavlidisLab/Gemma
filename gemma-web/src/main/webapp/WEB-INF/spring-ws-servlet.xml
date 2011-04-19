@@ -65,7 +65,7 @@
 				
 				<prop key="{http://chibi.ubc.ca/Gemma/ws}genesAtPhysicalLocation">genesAtPhysicalLocationEndpoint</prop>
 				
-
+				<prop key="{http://chibi.ubc.ca/Gemma/ws}geneCoexpressionSearch">geneCoexpressionSearchEndpoint</prop>
 
 			</props>
 		</property>
@@ -243,6 +243,17 @@
 		<property name="geneService" ref="geneService" />
 		<property name="geneCoexpressionService" ref="geneCoexpressionService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
+	</bean>
+
+	<bean id="geneCoexpressionSearchEndpoint" class="ubic.gemma.web.services.GeneCoexpressionSearchEndpoint">
+		<description>
+			returns gene coexpression 
+		</description>
+		<property name="taxonService" ref="taxonService" />
+		<property name="geneService" ref="geneService" />
+		<property name="geneCoexpressionService" ref="geneCoexpressionService" />
+		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
+		<property name="expressionExperimentSetService" ref="expressionExperimentSetService" />		
 	</bean>
 
 	<bean id="experimentAnnotationEndpoint" class="ubic.gemma.web.services.ExperimentAnnotationEndpoint">
