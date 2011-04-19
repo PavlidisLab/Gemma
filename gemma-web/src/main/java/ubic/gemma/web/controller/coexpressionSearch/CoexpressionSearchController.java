@@ -310,6 +310,19 @@ public class CoexpressionSearchController extends BaseFormController {
                 for ( BioAssaySet b : eeSet.getExperiments() ) {
                     eeIds.add( b.getId() );
                 }
+            } else if ( StringUtils.isNotBlank( request.getParameter( "an" ) ) ) {
+                Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( request.getParameter( "an" ) );
+                if ( eeSets.size() == 1 ) {
+                    eeSetId = eeSets.iterator().next().getId();
+                    
+                    ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
+                    for ( BioAssaySet b : eeSet.getExperiments() ) {
+                        eeIds.add( b.getId() );
+                    }                    
+                } else {
+                    log.warn( "Unknown or ambiguous set name: : " + request.getParameter( "an" ) );
+                    return new ModelAndView( this.getFormView() );
+                }                
             } else {
                 eeIds = extractIds( request.getParameter( "ee" ) );
             }
