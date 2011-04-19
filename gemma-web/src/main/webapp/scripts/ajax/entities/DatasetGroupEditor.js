@@ -198,7 +198,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 
 			showEEDetails : function(model, rowindex, record) {
 
-				if (this.detailsmask === null) {
+				if (typeof this.detailsmask == 'undefined' || this.detailsmask === null) {
 					this.detailsmask = new Ext.LoadMask(this.dataSetDetailsPanel.body, {
 								msg : "Loading details ..."
 							});
