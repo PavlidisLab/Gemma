@@ -24,7 +24,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
@@ -34,6 +33,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -48,6 +50,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
@@ -81,15 +84,19 @@ public class DatabaseViewGenerator {
     private static final String DATASET_DIFFEX_VIEW_BASENAME = "DatasetDiffEx";
 
     @Autowired
-    ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentService expressionExperimentService;
+
     @Autowired
-    CompositeSequenceService compositeSequenceService;
+    private CompositeSequenceService compositeSequenceService;
+
     @Autowired
-    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
     @Autowired
-    DifferentialExpressionResultService differentialExpressionResultService;
+    private DifferentialExpressionResultService differentialExpressionResultService;
+
     @Autowired
-    ArrayDesignService arrayDesignService;
+    private ArrayDesignService arrayDesignService;
 
     /**
      * @param limit if null will run against every dataset in Gemma else will only do the 1st to the given limit
@@ -124,6 +131,7 @@ public class DatabaseViewGenerator {
          * Get handle to output file
          */
         File file = getViewFile( DATASET_SUMMARY_VIEW_BASENAME );
+        log.info( "Writing to " + file );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
 
         /*
@@ -183,6 +191,11 @@ public class DatabaseViewGenerator {
         writer.close();
     }
 
+    /**
+     * @param limit
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
     public void generateDatasetTissueView( Integer limit ) throws FileNotFoundException, IOException {
         log.info( "Generating dataset tissue view" );
 
@@ -190,6 +203,7 @@ public class DatabaseViewGenerator {
          * Get handle to output file
          */
         File file = getViewFile( DATASET_TISSUE_VIEW_BASENAME );
+        log.info( "Writing to " + file );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
 
         /*
@@ -241,41 +255,61 @@ public class DatabaseViewGenerator {
         writer.close();
     }
 
-    public void generateDifferentialExpressionView( Integer limit ) throws FileNotFoundException, IOException {
+    /**
+     * @param limit how many experiments to use
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    public void generateDifferentialExpressionView( int limit ) throws FileNotFoundException, IOException {
         log.info( "Generating dataset diffex view" );
 
         /*
          * Get handle to output file
          */
         File file = getViewFile( DATASET_DIFFEX_VIEW_BASENAME );
+        log.info( "Writing to " + file );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
 
         /*
          * Load all the data sets
-         */Collection<ExpressionExperiment> vos = expressionExperimentService.loadAll();
+         */Collection<ExpressionExperiment> experiments = expressionExperimentService.loadAll();
 
         /*
-         * For each gene that is differentially expressed, print out a line.
+         * For each gene that is differentially expressed, print out a line per contrast
          */
-        writer.write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\n" );
+        writer
+                .write( "GemmaDsId\tEEShortName\tGeneNCBIId\tGemmaGeneId\tFactor\tFactorURI\tBaseline\tContrasting\tDirection\n" );
         int i = 0;
-        for ( ExpressionExperiment vo : vos ) {
-            vo = expressionExperimentService.thawLite( vo );
+        for ( ExpressionExperiment ee : experiments ) {
+            ee = expressionExperimentService.thawLite( ee );
 
-            log.info( "Processing: " + vo.getShortName() );
-
-            Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( vo );
+            Collection<ExpressionAnalysisResultSet> results = differentialExpressionAnalysisService.getResultSets( ee );
             if ( results == null || results.isEmpty() ) {
-                log.warn( "No differential expression results found for " + vo );
+                log.warn( "No differential expression results found for " + ee );
                 continue;
             }
 
+            log.info( "Processing: " + ee.getShortName() );
+
             for ( ExpressionAnalysisResultSet ears : results ) {
                 if ( ears == null ) {
-                    log.warn( "No  expression analysis results found for " + vo );
+                    log.warn( "No  expression analysis results found for " + ee );
                     continue;
                 }
                 differentialExpressionResultService.thaw( ears );
+
+                FactorValue baselineGroup = ears.getBaselineGroup();
+
+                if ( baselineGroup == null ) {
+                    // log.warn( "No baseline defined for " + ee ); // interaction
+                    continue;
+                }
+
+                if ( ExperimentalDesignUtils.isBatch( baselineGroup.getExperimentalFactor() ) ) {
+                    continue;
+                }
+
+                String baselineDescription = ExperimentalDesignUtils.prettyString( baselineGroup );
 
                 // Get the factor category name
                 String factorName = "";
@@ -291,75 +325,80 @@ public class DatabaseViewGenerator {
                 factorURI = StringUtils.chomp( factorURI, "," );
 
                 if ( ears.getResults() == null || ears.getResults().isEmpty() ) {
-                    log.warn( "No  differential expression analysis results found for " + vo );
+                    log.warn( "No  differential expression analysis results found for " + ee );
                     continue;
                 }
 
-                // Better to thaw the cs's together, much faster.
-                Collection<CompositeSequence> csList = new ArrayList<CompositeSequence>();
                 // Generate probe details
                 for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
 
                     if ( dear == null ) {
-                        log.warn( "Missing results for " + vo + " skipping to next. " );
+                        log.warn( "Missing results for " + ee + " skipping to next. " );
                         continue;
                     }
-                    if ( dear instanceof ProbeAnalysisResult ) {
-                        CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
-
-                        // If p-value didn't make cut off then don't bother putting in file
-                        // TODO This is a slow way to do this. Would be better to use a query to get only the
-                        // thresholded data needed.
-                        if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
-                        csList.add( cs );
-                    } else {
+                    if ( !( dear instanceof ProbeAnalysisResult ) ) {
                         log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                                 + dear.getClass() + " with id: " + dear.getId() );
+                        continue;
                     }
+
+                    if ( dear.getCorrectedPvalue() == null || dear.getCorrectedPvalue() > THRESH_HOLD ) continue;
+
+                    String formatted = formatDiffExResult( ee, ( ProbeAnalysisResult ) dear, factorName, factorURI,
+                            baselineDescription );
+
+                    if ( StringUtils.isNotBlank( formatted ) ) writer.write( formatted );
+
                 } // dear loop
-
-                writeDiffExpressedGenes2File( csList, vo, factorName, factorURI, writer );
-
             } // ears loop
 
-            if ( limit != null ) {
-                if ( ++i > limit ) break;
-            }
+            if ( limit > 0 && ++i > limit ) break;
+
         }// EE loop
         writer.close();
     }
 
-    private void writeDiffExpressedGenes2File( Collection<CompositeSequence> csList, ExpressionExperiment vo,
-            String factorName, String factorURI, Writer writer ) throws IOException {
+    /**
+     * @param probeAnalysisResult
+     * @return
+     */
+    private String formatDiffExResult( ExpressionExperiment ee, ProbeAnalysisResult probeAnalysisResult,
+            String factorName, String factorURI, String baselineDescription ) {
 
-        // Figure out what gene is associated with the expressed probe.
-        Map<CompositeSequence, Collection<Gene>> cs2genes = compositeSequenceService.getGenes( csList );
+        CompositeSequence cs = probeAnalysisResult.getProbe();
 
-        for ( CompositeSequence cs : csList ) {
+        Collection<Gene> genes = compositeSequenceService.getGenes( cs );
 
-            Collection<Gene> genes = cs2genes.get( cs );
-            if ( genes == null || genes.isEmpty() ) {
-                log.debug( "Probe: " + cs.getName() + " met threshold but no genes associated with probe so skipping" );
-                continue;
-            } else if ( genes.size() > 1 ) {
-                log.debug( "Probe: " + cs.getName() + " has " + genes.size()
-                        + " assoicated with it. Skipping because not specific." );
-                continue;
-            } else if ( genes.iterator().next().getNcbiId() == null ) {
-                log.debug( "Probe: " + cs.getName() + " has " + genes.iterator().next().getOfficialSymbol()
-                        + " assoicated with it. This gene has no NCBI id so skipping" );
-                continue;
-            }
-
-            // Write data to file.
-            Gene gene = genes.iterator().next();
-            writer.write( String.format( "%d\t%s\t%s\t%d\t%s\t%s\n", vo.getId(), vo.getShortName(), gene.getNcbiId(),
-                    gene.getId(), factorName, factorURI ) );
-
+        if ( genes.isEmpty() || genes.size() > 1 ) {
+            return null;
         }
 
+        Gene g = genes.iterator().next();
+
+        if ( StringUtils.isBlank( g.getNcbiId() ) ) return null;
+
+        Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+
+        StringBuilder buf = new StringBuilder();
+        for ( ContrastResult cr : contrasts ) {
+            FactorValue factorValue = cr.getFactorValue();
+
+            String direction = cr.getLogFoldChange() < 0 ? "-" : "+";
+
+            String factorValueDescription = ExperimentalDesignUtils.prettyString( factorValue );
+
+            buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(), g
+                    .getNcbiId(), g.getId(), factorName, factorURI, baselineDescription, factorValueDescription,
+                    direction ) );
+        }
+
+        return buf.toString();
     }
 
+    /**
+     * @param datasetDiffexViewBasename
+     * @return
+     */
     private File getViewFile( String datasetDiffexViewBasename ) {
         return getOutputFile( datasetDiffexViewBasename + VIEW_FILE_SUFFIX );
     }

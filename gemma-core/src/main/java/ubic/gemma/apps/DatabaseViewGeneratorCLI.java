@@ -28,7 +28,7 @@ import ubic.gemma.analysis.report.DatabaseViewGenerator;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * Simple driver of DatabaseViewGenerator.
+ * Simple driver of DatabaseViewGenerator. Developed to support NIF and other external data consumers.
  * 
  * @author paul
  * @version $Id$
@@ -48,7 +48,7 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
     private boolean generateDatasetSummary = false;
     private boolean generateTissueSummary = false;
 
-    private Integer limit = null;
+    private int limit = 0;
 
     /*
      * (non-Javadoc)
@@ -127,8 +127,8 @@ public class DatabaseViewGeneratorCLI extends AbstractSpringAwareCLI {
             try {
                 this.limit = Integer.parseInt( this.getOptionValue( 'l' ) );
             } catch ( NumberFormatException nfe ) {
-                log.warn( "Unable to process limit paraemter.  Processing all availiable experiments." );
-                this.limit = null;
+                log.warn( "Unable to process limit parameter. Processing all availiable experiments." );
+                this.limit = 0;
             }
         }
 

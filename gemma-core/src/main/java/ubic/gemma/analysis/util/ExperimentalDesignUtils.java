@@ -220,6 +220,26 @@ public class ExperimentalDesignUtils {
     }
 
     /**
+     * @param fv
+     * @return
+     */
+    public static String prettyString( FactorValue fv ) {
+
+        if ( fv.getMeasurement() != null ) {
+            return fv.getMeasurement().getValue();
+        } else if ( fv.getCharacteristics().isEmpty() ) {
+            return fv.getValue();
+        }
+        StringBuilder buf = new StringBuilder();
+        for ( Characteristic c : fv.getCharacteristics() ) {
+            buf.append( c.getValue() );
+            if ( fv.getCharacteristics().size() > 1 ) buf.append( " | " );
+        }
+        return buf.toString();
+
+    }
+
+    /**
      * @param baselines
      * @param samp
      * @param factor
