@@ -68,7 +68,6 @@ import org.compass.core.CompassCallback;
 import org.compass.core.CompassException;
 import org.compass.core.CompassHighlightedText;
 import org.compass.core.CompassHighlighter;
-import org.compass.core.CompassHit;
 import org.compass.core.CompassHits;
 import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
@@ -170,7 +169,7 @@ public class SearchService implements InitializingBean {
 
     private static final int MINIMUM_EE_QUERY_LENGTH = 3;
 
-    private static final int MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH = 3;
+    private static final int MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH = 2;
 
     private static final String NCBI_GENE = "ncbi_gene";
 
@@ -258,6 +257,8 @@ public class SearchService implements InitializingBean {
 
     @Autowired
     private TaxonService taxonService;
+
+    private static final int MAX_LUCENE_HITS = 750;
 
     /*
      * (non-Javadoc)
@@ -435,115 +436,6 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * Makes no attempt at resolving the search query as a URI. Will tokenize the search query if there are control
-     * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
-     * 
-     * @param settings Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
-     *        objects tagged with those terms (if isUseCharacte = true)
-     * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
-     *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
-     *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
-     *        false can be an optimization if all you need is the id. * @return
-     */
-    protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects ) {
-        String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
-        settings.setQuery( searchString );
-
-        // If nothing to search return nothing.
-        if ( StringUtils.isBlank( searchString ) ) {
-            return new HashMap<Class<?>, List<SearchResult>>();
-        }
-
-        List<SearchResult> rawResults = new ArrayList<SearchResult>();
-
-        if ( settings.isSearchExperiments() ) {
-            Collection<SearchResult> foundEEs = expressionExperimentSearch( settings );
-            rawResults.addAll( foundEEs );
-        }
-
-        Collection<SearchResult> genes = null;
-        if ( settings.isSearchGenes() ) {
-            genes = geneSearch( settings );
-            accreteResults( rawResults, genes );
-        }
-
-        Collection<SearchResult> compositeSequences = null;
-        if ( settings.isSearchProbes() ) {
-            compositeSequences = compositeSequenceSearch( settings );
-            accreteResults( rawResults, compositeSequences );
-        }
-
-        if ( settings.isSearchArrays() ) {
-            Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
-            accreteResults( rawResults, foundADs );
-        }
-
-        if ( settings.isSearchBioSequences() ) {
-            Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
-            accreteResults( rawResults, bioSequences );
-        }
-
-        if ( settings.isSearchGenesByGO() ) {
-            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult( gene2GOAssociationService.findByGOTerm(
-                    searchString, settings.getTaxon() ) );
-            accreteResults( rawResults, ontologyGenes );
-        }
-
-        if ( settings.isSearchBibrefs() ) {
-            Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
-            accreteResults( rawResults, bibliographicReferences );
-        }
-
-        if ( settings.isSearchGeneSets() ) {
-            // todo
-            Collection<SearchResult> geneSets = geneSetSearch( settings );
-            accreteResults( rawResults, geneSets );
-        }
-
-        if ( settings.isSearchExperimentSets() ) {
-            Collection<SearchResult> experimentSets = experimentSetSearch( settings );
-            accreteResults( rawResults, experimentSets );
-        }
-
-        Map<Class<?>, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
-                fillObjects );
-
-        log.info( "search for: " + settings.getQuery() + " " + rawResults.size()
-                + " raw results (final tally may be filtered)" );
-
-        return sortedLimitedResults;
-    }
-
-    /**
-     * Runs inside Compass transaction
-     * 
-     * @param query
-     * @param session
-     * @return
-     */
-    Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
-        StopWatch watch = startTiming();
-
-        String query = settings.getQuery().trim();
-        if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
-                || query.equals( "*" ) ) return new ArrayList<SearchResult>();
-
-        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
-        CompassHits hits = compassQuery.hits();
-
-        watch.stop();
-        if ( watch.getTime() > 1000 ) {
-            log.info( "Getting " + hits.getLength() + " hits for " + query + " took " + watch.getTime() + " ms" );
-        }
-
-        cacheHighlightedText( hits );
-
-        Collection<SearchResult> searchResults = getSearchResults( hits );
-
-        return searchResults;
-    }
-
-    /**
      * Add results.
      * 
      * @param rawResults To add to
@@ -675,26 +567,6 @@ public class SearchService implements InitializingBean {
                     + searchResults.size() + " results." );
 
         return searchResults;
-    }
-
-    /**
-     * This is needed to unpack the highlighted text from the index. Or something like that. If we don't do this the
-     * highlighted text is always empty (last time I checked...)
-     * 
-     * @param hits
-     */
-    private Map<CompassHit, String> cacheHighlightedText( CompassHits hits ) {
-        Map<CompassHit, String> textMap = new HashMap<CompassHit, String>();
-        for ( int i = 0; i < hits.getLength(); i++ ) {
-            CompassHit hit = hits.hit( i );
-
-            // if you skip this, we get nothing for highlighted text later.
-            String text = getHighlightedText( hits, i );
-            if ( text != null ) {
-                textMap.put( hit, text );
-            }
-        }
-        return textMap;
     }
 
     /**
@@ -971,23 +843,6 @@ public class SearchService implements InitializingBean {
         return results;
     }
 
-    private List<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults(
-            Collection<SearchResult> searchResults ) {
-        List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
-        for ( SearchResult searchResult : searchResults ) {
-            if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
-                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
-                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
-                        searchResult.getScore(), searchResult.getHighlightedText() );
-                convertedSearchResults.add( convertedSearchResult );
-            } // else if ...
-            else {
-                convertedSearchResults.add( searchResult );
-            }
-        }
-        return convertedSearchResults;
-    }
-
     /**
      * @param settings
      * @return
@@ -1073,6 +928,23 @@ public class SearchService implements InitializingBean {
             log.info( "Composite sequence search for '" + settings + "' took " + watch.getTime() + " ms, "
                     + finalResults.size() + " results." );
         return finalResults;
+    }
+
+    private List<SearchResult> convertEntitySearchResutsToValueObjectsSearchResults(
+            Collection<SearchResult> searchResults ) {
+        List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
+        for ( SearchResult searchResult : searchResults ) {
+            if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
+                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
+                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
+                        searchResult.getScore(), searchResult.getHighlightedText() );
+                convertedSearchResults.add( convertedSearchResult );
+            } // else if ...
+            else {
+                convertedSearchResults.add( searchResult );
+            }
+        }
+        return convertedSearchResults;
     }
 
     /**
@@ -1835,24 +1707,37 @@ public class SearchService implements InitializingBean {
      * @return
      */
     private Collection<SearchResult> getSearchResults( CompassHits hits ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
         Collection<SearchResult> results = new HashSet<SearchResult>();
-        for ( int i = 0, len = hits.getLength(); i < len; i++ ) {
+        /*
+         * Note that hits come in decreasing score order.
+         */
+        for ( int i = 0, len = Math.min( MAX_LUCENE_HITS, hits.getLength() ); i < len; i++ ) {
 
             SearchResult r = new SearchResult( hits.data( i ) );
+
             /*
              * Always give compass hits a lower score so they can be differentiated from exact database hits.
              */
             r.setScore( new Double( hits.score( i ) * COMPASS_HIT_SCORE_PENALTY_FACTOR ) );
-
             CompassHighlightedText highlightedText = hits.highlightedText( i );
             if ( highlightedText != null && highlightedText.getHighlightedText() != null ) {
                 r.setHighlightedText( "... " + highlightedText.getHighlightedText() + " ..." );
             } else {
-                log.debug( "No highlighted text for " + r );
+                if ( log.isDebugEnabled() ) log.debug( "No highlighted text for " + r );
             }
+
+            if ( log.isDebugEnabled() ) log.debug( i + " " + hits.score( i ) + " " + r );
+
             results.add( r );
-            i++;
         }
+
+        if ( timer.getTime() > 100 ) {
+            log.info( results.size() + " hits retrieved (out of " + Math.min( MAX_LUCENE_HITS, hits.getLength() )
+                    + " raw hits tested) in " + timer.getTime() + "ms" );
+        }
+
         return results;
     }
 
@@ -2077,6 +1962,111 @@ public class SearchService implements InitializingBean {
         StopWatch watch = new StopWatch();
         watch.start();
         return watch;
+    }
+
+    /**
+     * Makes no attempt at resolving the search query as a URI. Will tokenize the search query if there are control
+     * characters in the String. URI's will get parsed into multiple query terms and lead to bad results.
+     * 
+     * @param settings Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
+     *        objects tagged with those terms (if isUseCharacte = true)
+     * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
+     *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
+     *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
+     *        false can be an optimization if all you need is the id. * @return
+     */
+    protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects ) {
+        String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
+        settings.setQuery( searchString );
+
+        // If nothing to search return nothing.
+        if ( StringUtils.isBlank( searchString ) ) {
+            return new HashMap<Class<?>, List<SearchResult>>();
+        }
+
+        List<SearchResult> rawResults = new ArrayList<SearchResult>();
+
+        if ( settings.isSearchExperiments() ) {
+            Collection<SearchResult> foundEEs = expressionExperimentSearch( settings );
+            rawResults.addAll( foundEEs );
+        }
+
+        Collection<SearchResult> genes = null;
+        if ( settings.isSearchGenes() ) {
+            genes = geneSearch( settings );
+            accreteResults( rawResults, genes );
+        }
+
+        Collection<SearchResult> compositeSequences = null;
+        if ( settings.isSearchProbes() ) {
+            compositeSequences = compositeSequenceSearch( settings );
+            accreteResults( rawResults, compositeSequences );
+        }
+
+        if ( settings.isSearchArrays() ) {
+            Collection<SearchResult> foundADs = arrayDesignSearch( settings, compositeSequences );
+            accreteResults( rawResults, foundADs );
+        }
+
+        if ( settings.isSearchBioSequences() ) {
+            Collection<SearchResult> bioSequences = bioSequenceSearch( settings, genes );
+            accreteResults( rawResults, bioSequences );
+        }
+
+        if ( settings.isSearchGenesByGO() ) {
+            Collection<SearchResult> ontologyGenes = dbHitsToSearchResult( gene2GOAssociationService.findByGOTerm(
+                    searchString, settings.getTaxon() ) );
+            accreteResults( rawResults, ontologyGenes );
+        }
+
+        if ( settings.isSearchBibrefs() ) {
+            Collection<SearchResult> bibliographicReferences = compassBibliographicReferenceSearch( settings );
+            accreteResults( rawResults, bibliographicReferences );
+        }
+
+        if ( settings.isSearchGeneSets() ) {
+            // todo
+            Collection<SearchResult> geneSets = geneSetSearch( settings );
+            accreteResults( rawResults, geneSets );
+        }
+
+        if ( settings.isSearchExperimentSets() ) {
+            Collection<SearchResult> experimentSets = experimentSetSearch( settings );
+            accreteResults( rawResults, experimentSets );
+        }
+
+        Map<Class<?>, List<SearchResult>> sortedLimitedResults = getSortedLimitedResults( settings, rawResults,
+                fillObjects );
+
+        log.info( "search for: " + settings.getQuery() + " " + rawResults.size()
+                + " raw results (final tally may be filtered)" );
+
+        return sortedLimitedResults;
+    }
+
+    /**
+     * Runs inside Compass transaction
+     * 
+     * @param query
+     * @param session
+     * @return
+     */
+    Collection<SearchResult> performSearch( SearchSettings settings, CompassSession session ) {
+        StopWatch watch = startTiming();
+
+        String query = settings.getQuery().trim();
+        if ( StringUtils.isBlank( query ) || query.length() < MINIMUM_STRING_LENGTH_FOR_FREE_TEXT_SEARCH
+                || query.equals( "*" ) ) return new ArrayList<SearchResult>();
+
+        CompassQuery compassQuery = session.queryBuilder().queryString( query.trim() ).toQuery();
+        CompassHits hits = compassQuery.hits();
+
+        watch.stop();
+        if ( watch.getTime() > 100 ) {
+            log.info( "Getting " + hits.getLength() + " lucene hits for " + query + " took " + watch.getTime() + " ms" );
+        }
+
+        return getSearchResults( hits );
     }
 
 }
