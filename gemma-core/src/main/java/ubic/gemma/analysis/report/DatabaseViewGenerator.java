@@ -123,7 +123,7 @@ public class DatabaseViewGenerator {
      * @throws IOException
      * @throws FileNotFoundException
      */
-    public void generateDatasetView( Integer limit ) throws FileNotFoundException, IOException {
+    public void generateDatasetView( int limit ) throws FileNotFoundException, IOException {
 
         log.info( "Generating dataset summary view" );
 
@@ -183,9 +183,8 @@ public class DatabaseViewGenerator {
             writer.write( String.format( "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", gemmaId, source, acc, shortName, name,
                     description, taxon.getCommonName(), StringUtils.chomp( manufacturers.toString(), "," ) ) );
 
-            if ( limit != null ) {
-                if ( ++i > limit ) break;
-            }
+            if ( limit > 0 && ++i > limit ) break;
+
         }
 
         writer.close();
@@ -196,7 +195,7 @@ public class DatabaseViewGenerator {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public void generateDatasetTissueView( Integer limit ) throws FileNotFoundException, IOException {
+    public void generateDatasetTissueView( int limit ) throws FileNotFoundException, IOException {
         log.info( "Generating dataset tissue view" );
 
         /*
@@ -247,9 +246,9 @@ public class DatabaseViewGenerator {
                 }
 
             }
-            if ( limit != null ) {
-                if ( ++i > limit ) break;
-            }
+
+            if ( limit > 0 && ++i > limit ) break;
+
         }
 
         writer.close();
