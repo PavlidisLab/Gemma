@@ -410,7 +410,8 @@ public class DEDVController {
 
             genes = geneService.loadMultiple( geneIds );
             if ( genes.size() == 0 ) {
-                throw new IllegalArgumentException( "No genes found matching the given ids" );
+                throw new IllegalArgumentException( "No genes found matching the given ids (" + geneIds.size()
+                        + ", first one was " + geneIds.iterator().next() + ")" );
             }
 
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, true );
