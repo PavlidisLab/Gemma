@@ -259,8 +259,9 @@ public class GenePickerController {
          * "Gene search result: " + ((Gene)sr.getResultObject()).getOfficialSymbol() ); }
          */
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
-        Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( geneService
-                .loadMultiple( EntityUtils.getIds( geneSearchResults ) ) );
+        Collection<Gene> genes = geneService.loadMultiple( EntityUtils.getIds( geneSearchResults ) );
+        genes = geneService.thawLite( genes );
+        Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
     }
@@ -279,8 +280,8 @@ public class GenePickerController {
             if ( taxon == null ) {
                 throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
             }
-        }else{
-            throw new IllegalArgumentException( "No taxon supplied");
+        } else {
+            throw new IllegalArgumentException( "No taxon supplied" );
         }
         String taxonName = taxon.getCommonName();
         boolean privateOnly = true;
@@ -382,7 +383,6 @@ public class GenePickerController {
             displayResults.addAll( genes );
             displayResults.addAll( geneSets );
 
-            
             /*
              * GET GO GROUPS
              */
@@ -415,10 +415,9 @@ public class GenePickerController {
                     }
                 }
             }
-            
+
             Collections.sort( goSRDOs );
             displayResults.addAll( goSRDOs );
-            
 
             /*
              * GET 'ALL RESULTS' GROUPS
@@ -471,8 +470,7 @@ public class GenePickerController {
                 Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
                 SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(
                         ExpressionExperimentSet.class, ref, "All '" + query + "' results",
-                        "All genes found for your query", true, geneIds.size(), taxonId, taxonName, 
-                        "freeText", geneIds );
+                        "All genes found for your query", true, geneIds.size(), taxonId, taxonName, "freeText", geneIds );
                 displayResults.add( allResultsGroup );
             }
 
@@ -630,8 +628,8 @@ public class GenePickerController {
             line = StringUtils.strip( line );
             SearchSettings settings = SearchSettings.geneSearch( line, taxon );
             List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class ); // drops
-                                                                                                       // predicted gene
-                                                                                                       // results
+            // predicted gene
+            // results
 
             // FIXME inform the user (on the client!) if there are some that don't have results.
             if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
