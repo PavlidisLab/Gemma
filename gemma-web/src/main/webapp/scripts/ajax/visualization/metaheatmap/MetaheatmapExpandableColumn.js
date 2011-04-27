@@ -144,7 +144,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			var eeId = this.ownerCt._dataColumn.datasetId;
 			var _datasetGroupPanel = this.ownerCt.ownerCt.ownerCt;
 			vizWindow.show({
-				params : [[eeId], [ this.applicationRoot._imageArea._heatmapArea.geneIds[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]] ] ]
+				params : [[eeId], [ this.applicationRoot._imageArea._heatmapArea.geneIds[this.rowGroup][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]] ] ]
 			});	
 		}, this);
 		
