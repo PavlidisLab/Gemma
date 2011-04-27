@@ -102,7 +102,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var i;
 		for( i = 0; i < geneRecords.length; i++){
 			var record = geneRecords[i]; 
-			if ( !record.reference || record.reference.id === null ){
+			if ( typeof record !== 'undefined' && (!record.reference || record.reference.id === null) ){
 				//addNonModificationBasedSessionBoundGroups() takes a genesetvalueobject, so add needed field
 				record.geneIds = record.memberIds;
 				geneGroupsToMake.push(record);
@@ -138,7 +138,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			var record = experimentRecords[i];
 			// if the group has a null value for reference.id, then it hasn't been
 			// created as a group in the database nor session
-			if ( !record.reference || record.reference.id === null ){
+			if ( typeof record !== 'undefined' && ( !record.reference || record.reference.id === null ) ){
 				//addNonModificationBasedSessionBoundGroups() takes an experimentSetValueObject, so add needed field
 				record.expressionExperimentIds = record.memberIds;
 				experimentGroupsToMake.push(record);
@@ -567,7 +567,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getSelectedGeneRecords: function(){
 		var selectedGeneRecords = [];
 		this.geneChoosers.items.each(function(){
-			if(this.xtype === 'geneSearchAndPreview'){
+			if(this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined'){
 				selectedGeneRecords.push(this.selectedGeneOrGroupRecord);
 			}
 		});
@@ -577,7 +577,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getSelectedExperimentRecords: function(){
 		var selectedExperimentRecords = [];
 		this.experimentChoosers.items.each(function(){
-			if(this.xtype === 'experimentSearchAndPreview'){
+			if(this.xtype === 'experimentSearchAndPreview' && typeof this.selectedExperimentOrGroupRecord !== 'undefined'){
 				selectedExperimentRecords.push(this.selectedExperimentOrGroupRecord);
 			}
 		});
