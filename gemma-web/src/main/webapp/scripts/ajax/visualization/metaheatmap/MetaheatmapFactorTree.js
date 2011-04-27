@@ -40,7 +40,6 @@ Gemma.SelectTree = Ext.extend(Ext.tree.TreePanel, {
 			Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent.call(this);
 			this.build();
 			var sorter = new Ext.tree.TreeSorter(this,{});
-			
 		},
 		build: function(){
 			var root = new Ext.tree.TreeNode({
@@ -85,7 +84,7 @@ Gemma.SelectTree = Ext.extend(Ext.tree.TreePanel, {
 				}
 				
 				if (hasChildren) {
-					var child = this.buildNodes(node, nodeParam.children);
+					this.buildNodes(node, nodeParam.children);
 				}
 				parent.appendChild(node);
 			}
@@ -120,6 +119,15 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 	
 		lines:true,
 		rootVisible: true,
+		
+		initComponent : function(){
+			Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent.call(this);
+			this.build();
+			var sorter = new Ext.tree.TreeSorter(this,{sortType: function(node){
+				return node.text.toLowerCase().replace(" ","");// so that "deseaseState" and "Disease State" are always adjacent
+			}});
+		},
+		
 		build: function(){
 			var root = new Ext.tree.TreeNode({
 					expanded: true,
@@ -144,15 +152,17 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 				}
 				// if node already exists in tree with same text, get that node and have the children assigned to that node
 				// will this confuse recursion? if multi-leveled?
-				node = this.getNodeById(nodeParam.text.toLowerCase());
-				if (node && node !== null){ // if node exists in tree already
+				node = this.getNodeById(parent.text+nodeParam.text.toLowerCase());
+				
+				if (!typeof node !== 'undefined' && node && node !== null){ // if node exists in tree already
+				
 				}
 				else { // if node doen't exist in tree already
 					if (haveCheck) {
 						node = new Ext.tree.TreeNode({
 							expanded: false,
 							singleClickExpand: true,
-							id: nodeParam.text.toLowerCase(), // so that multiple nodes with same text aren't created
+							id: parent.text+nodeParam.text.toLowerCase(), // so that multiple nodes with same text aren't created
 							text: nodeParam.text,
 							checked: true
 						});
@@ -161,16 +171,19 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 						node = new Ext.tree.TreeNode({
 							expanded: false,
 							singleClickExpand: true,
-							id: nodeParam.text.toLowerCase(), // so that multiple nodes with same text aren't created
+							id: parent.text+nodeParam.text.toLowerCase(), // so that multiple nodes with same text aren't created
 							text: nodeParam.text
 						});
 					}
 				}
 				
 				if (hasChildren) {
-					var child = this.buildNodes(node, nodeParam.children, false);
+					this.buildNodes(node, nodeParam.children, false);
 				}
-				parent.appendChild(node);
+				var testNode = this.getNodeById(parent.text+nodeParam.text.toLowerCase());
+				if(typeof testNode === 'undefined'){// don't need to re-add it if it's already there
+					parent.appendChild(node);
+				}
 			}
 		}
 });

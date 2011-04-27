@@ -6,8 +6,8 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 	initComponent: function() {
 		Ext.apply(this, {
 			autoEl: { tag: 'canvas',
-				  width: 1200,
-			          height: 260
+					width: this.applicationRoot._heatMapWidth*1+Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / Math.tan((360-Gemma.MetaVisualizationConfig.labelAngle)*Math.PI/180)) + 80,
+			        height: 260
 			},			
 			_data: this.visualizationData,			
 			_datasetGroupNames: this.datasetGroupNames,			
@@ -26,10 +26,8 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 				
 				for ( var currentDatasetGroupIndex = 0; currentDatasetGroupIndex < this._heatmapContainer.items.getCount(); currentDatasetGroupIndex++ ) {
 					var dsPanel = this._heatmapContainer.items.get(currentDatasetGroupIndex);
-					ctx.drawText('', Gemma.MetaVisualizationConfig.columnLabelFontSize,
-								 xPosition, Gemma.MetaVisualizationConfig.columnLabelFontSize + 2,
-								 this._datasetGroupNames[currentDatasetGroupIndex]);
-
+					var startPosition = xPosition;
+					
 					var alternateColors = 0;					
 					for ( var currentDatasetColumnGroupIndex = 0; currentDatasetColumnGroupIndex < dsPanel.items.getCount(); currentDatasetColumnGroupIndex++ ) {
 						var datasetColumnGroupPanel = dsPanel.items.get( currentDatasetColumnGroupIndex ); 						
@@ -141,8 +139,45 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 							
 						}						
 					}
+					
+
+
+					
+					// get the x coordinate of the middle of the experiment group's labels (not columns)
+					var columnCentre = Math.floor( startPosition + (xPosition - startPosition)/2 ) ;
+					var lamda = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / Math.tan((360-Gemma.MetaVisualizationConfig.labelAngle)*Math.PI/180));
+					var labelCentre = Math.floor(columnCentre + lamda);
+
+					// line to mark end of group
+                	MiniPieLib.drawFilledRotatedRectangle( ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth , Gemma.MetaVisualizationConfig.labelBaseYCoor + 2,
+                										2, 340,
+                										Gemma.MetaVisualizationConfig.labelAngle,
+                										'rgba(10,100,100, 0.9)');
+					
+					//console.log("columnCentre: "+columnCentre+" lamda: "+lamda+" centre: "+labelCentre);	
+					
+					// draw background for titles
+					ctx.fillStyle = 'white';
+					ctx.fillRect(startPosition + lamda - 3*Gemma.MetaVisualizationConfig.cellWidth, 0, 
+									(xPosition - startPosition)*2 + Gemma.MetaVisualizationConfig.columnSeparatorWidth, 260 - Gemma.MetaVisualizationConfig.labelBaseYCoor + 15)
+					
+					//ctx.font = (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2) + "px sans-serif";
+					//var name = this._datasetGroupNames[currentDatasetGroupIndex];
+					//var metrics = ctx.measureText(name);
+					//labelCentre = labelCentre - metrics.width/2;
+					
+					// adjust for text width
+					var textStart = labelCentre - (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2)*this._datasetGroupNames[currentDatasetGroupIndex].length/2;
+					
+					// draw experiment group titles
+					ctx.drawText('', Gemma.MetaVisualizationConfig.columnLabelFontSize,
+									textStart, Gemma.MetaVisualizationConfig.columnLabelFontSize + 2,
+								 	this._datasetGroupNames[currentDatasetGroupIndex]);	
+									
+																								
 					xPosition += Gemma.MetaVisualizationConfig.groupSeparatorWidth;
 				}
+				this._widthOfColumns = xPosition - Gemma.MetaVisualizationConfig.cellWidth - Gemma.MetaVisualizationConfig.groupSeparatorWidth;
 			}
 			
 		});
@@ -165,7 +200,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 			return null;
 		}
 					  
-		var columnGroups = this.applicationRoot._heatmapArea.items.items; // for ease of access
+		var columnGroups = this.applicationRoot._imageArea._heatmapArea.items.items; // for ease of access
 	
 		// get [column group number] and [experiment index within the group]
 		var columnGroupIndex = 0;
@@ -192,7 +227,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 		// get the column number within the experiment
 		columnWithinExperiment = columnWithinGroup - prevColSum;
 		
-		analysisObj = this.applicationRoot._heatmapArea.items.items[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns[columnWithinExperiment];
+		analysisObj = this.applicationRoot._imageArea._heatmapArea.items.items[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns[columnWithinExperiment];
 		return analysisObj;
 			
 	},
@@ -211,29 +246,48 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 			
 		}, this);	
 		
-		this.el.on('mousemove', function(e,t) { 	
-			
-			var analysisObj = this.getAnalysisObject(e,t);
-			
-			if(analysisObj !== null && analysisObj !== undefined){
+		this.el.on('mouseover', function(e,t) {
+			document.body.style.cursor = 'pointer';
+		});
+		this.el.on('mouseout', function(e,t) {
+			document.body.style.cursor = 'default';
+		});
+		this.el.on('mousemove', function(e,t) { 
+					
+			// if mouse is in non-label area of component, don't show pointer cursor
+			var x = e.getPageX() - Ext.get(t).getX();
+			var y = e.getPageY() - Ext.get(t).getY();
+			if (y > 20  &&
+				(x < Gemma.MetaVisualizationConfig.labelBaseYCoor * Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) &&
+					(Gemma.MetaVisualizationConfig.labelBaseYCoor - y) > Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) * x) ||
+				(x > this._widthOfColumns &&
+					(Gemma.MetaVisualizationConfig.labelBaseYCoor - y) < (Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) * (x - this._widthOfColumns)))) {
+					document.body.style.cursor = 'default';
+			}
+			else {
+				document.body.style.cursor = 'pointer';
 				
-				// get the factor values into a readable form
-                var factorValues = [];
-                for (k = 0; k < analysisObj.contrastsFactorValueIds.length; k++) {
-                    factorValues.push(
-                       analysisObj.contrastsFactorValues[analysisObj.contrastsFactorValueIds[k]]);
-                }
+				var analysisObj = this.getAnalysisObject(e, t);
 				
-				this.applicationRoot._hoverDetailsPanel.update({
-					type: 'experiment',
-					datasetName: analysisObj.datasetName,
-					datasetShortName: analysisObj.datasetShortName,
-					datasetId: analysisObj.datasetId,
-					factorName: analysisObj.factorName,
-					baseline: analysisObj.baselineFactorValue,
-					factorValues: factorValues
+				if (analysisObj !== null && analysisObj !== undefined) {
 				
-				});
+					// get the factor values into a readable form
+					var factorValues = [];
+					for (k = 0; k < analysisObj.contrastsFactorValueIds.length; k++) {
+						factorValues.push(" "+analysisObj.contrastsFactorValues[analysisObj.contrastsFactorValueIds[k]]);
+					}
+					
+					this.applicationRoot._hoverDetailsPanel.update({
+						type: 'experiment',
+						datasetName: analysisObj.datasetName,
+						datasetShortName: analysisObj.datasetShortName,
+						datasetId: analysisObj.datasetId,
+						factorName: analysisObj.factorName,
+						baseline: analysisObj.baselineFactorValue,
+						factorValues: factorValues
+					
+					});
+				}
 			}
 			
 		}, this );		

@@ -6,7 +6,11 @@ Ext.namespace('Gemma');
 //- anlaysis labels
 //- main visualization area
 //It is controlled by window that allows sorting/filtering and choosing data.
+
+
+	
 Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
+	autoScroll:false,
     initComponent: function(){
     
         // build data structure for filtering factor tree
@@ -35,6 +39,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
         }
         // display the tree
         var tree = new Gemma.FactorSelectTree(this.treeData);
+		Ext.apply(tree,{autoScroll:true, bodyStyle: 'padding-bottom:5px'});
         tree.on('checkchange', function(node, checked){ // fired every time a checkbox changes state{
             var filteringFn = function(o){
                 if (o.factorName.toLowerCase() === node.text.toLowerCase()) {
@@ -48,57 +53,34 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
             this.refreshVisualization();
         }, this);
 		
-		// a panel for displaying details as elements of the image are hovered over
-        this._hoverDetailsPanel = new Ext.Panel({
-			style:'padding: 7px',
-			border: false,
-			html:'<span style="color:grey;">Hover over the visualisation for quick details or click for more information.</span>',
-			tpl: new Ext.XTemplate(
-				'<span style="font-size: 12px ">',
-				
-				'<tpl for=".">',
-					'<tpl if="type==\'experiment\'">',
-							'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-								'{datasetId}"',
-								' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
-							'<b>Factor</b>: {factorName}<br> <br>',
-							'<b>Factor Values</b>: {factorValues}<br><br> ',
-							'<b>Baseline</b>: {baseline}<br><br>',
-					'</tpl>',
-					'<tpl if="type==\'gene\'">',
-							'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
-					'</tpl>',
-					'<tpl if="type==\'cell\'">',
-							'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
-							'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-								'{datasetId}"',
-								' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
-							'<b>Factor</b>: {factorName}<br><br> ',
-							'<b>p Value</b>: {pvalue}',
-					'</tpl>',
-				'</tpl></span>'),
-				tplWriteMode: 'overwrite'
-		});
+		        
+        this.TOTAL_NUMBER_OF_COLUMNS = 0;
+        var datasetGroupIndex;
+        for (datasetGroupIndex = 0; datasetGroupIndex < this.visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
+            this.TOTAL_NUMBER_OF_COLUMNS = this.TOTAL_NUMBER_OF_COLUMNS + this.visualizationData.resultSetValueObjects[datasetGroupIndex].length;
+        }
+		this._heatMapWidth = this.TOTAL_NUMBER_OF_COLUMNS*1*(Gemma.MetaVisualizationConfig.cellWidth*1 + Gemma.MetaVisualizationConfig.columnSeparatorWidth*1)*1 + 
+						Gemma.MetaVisualizationConfig.groupSeparatorWidth*(this.visualizationData.resultSetValueObjects.length - 1)*1;
 		
         Ext.apply(this, {
-            width: 1700,
-            height: 2000,
+            width: Gemma.MetaVisualizationConfig.panelWidth,
+            height: Gemma.MetaVisualizationConfig.panelHeight,
+            layout: 'absolute',
             _visualizationData: this.visualizationData,
             geneScores: this.visualizationData.geneScores,
             geneOrdering: null,
-            
+            			
             visibleMissingValuesGeneScore: null,
             
-            TOTAL_NUMBER_OF_COLUMNS: null,
+            //TOTAL_NUMBER_OF_COLUMNS: null,
             TOTAL_NUMBER_OF_ROWS: null,
 			TOTAL_NUMBER_OF_HIDDEN_COLUMNS: 0,
             
-            layout: 'absolute',
             filterColumns: function(filteringFn){
-                return this._heatmapArea.filterColumns(filteringFn);
+                return this._imageArea._heatmapArea.filterColumns(filteringFn);
             },
             _sortColumns: function(asc_desc, sortingFn){
-                this._heatmapArea._sortColumns(asc_desc, sortingFn);
+                this._imageArea._heatmapArea._sortColumns(asc_desc, sortingFn);
             },
             tbar: ['Differential Expression Visualization','->',{
                 xtype: 'button',
@@ -124,24 +106,68 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                     scope: this
                 }
             }],
-            items: [{
-                height: 1000,
-                width: 250,
-                x: 1450,
-                y: 0,
-                border: false,
-                applicationRoot: this,
-                ref: '_factorSelectTree',
-                items: [{
-					title: 'Details',
+            items: [{		
+					// a window for displaying details as elements of the image are hovered over
+					title: 'Details <span style="color:grey">(Drag me!)</span>',
+					ref:'_hoverDetailsPanel',
+					xtype:'window',
 					height: 200,
+					width: 300,
+					x: Gemma.MetaVisualizationConfig.panelWidth - 650,
+                	y: 20,
+					autoScroll: true,
                     collapsible: true,
+					closable: false,
+					shadow: false,
                     border: true,
                     bodyBorder: true,
-					items: this._hoverDetailsPanel
-				},{
+			bodyStyle:'padding: 7px',
+			html:'<span style="color:grey;font-size:1.3em">Hover over the visualisation for quick details or click for more information.</span>',
+			tpl: new Ext.XTemplate(
+				'<span style="font-size: 12px ">',
+				
+				'<tpl for=".">',
+					'<tpl if="type==\'experiment\'">',
+							'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+								'{datasetId}"',
+								' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
+							'<b>Factor</b>: {factorName}<br> <br>',
+							'<b>Factor Values</b>: {factorValues}<br><br> ',
+							'<b>Baseline</b>: {baseline}<br><br>',
+					'</tpl>',
+					'<tpl if="type==\'gene\'">',
+							'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
+					'</tpl>',
+					'<tpl if="type==\'cell\'">',
+							'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
+							'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+								'{datasetId}"',
+								' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
+							'<b>Factor</b>: {factorName}<br><br> ',
+							'<b>p Value</b>: {pvalue}',
+					'</tpl>',
+				'</tpl></span>'),
+				tplWriteMode: 'overwrite'
+		},{
+                ref: '_toolPanels',
+                height: Gemma.MetaVisualizationConfig.panelHeight - 30,
+                width: 300,
+                x: Gemma.MetaVisualizationConfig.panelWidth-300,
+                y: 0,
+				//layout: 'accordion',
+				/*layoutConfig:{
+					fill: true,
+					titleCollapse: true,
+					//activeOnTop: true
+					animate: true
+				},*/
+                border: true,
+                applicationRoot: this,
+                items: [ 
+				{
                     title: 'Sort',
                     collapsible: true,
+					//collapsed:true,
                     border: true,
                     bodyBorder: true,
 					layout:'form',
@@ -202,9 +228,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                                                 return o2.score - o1.score;
                                             });
                                         }
-                                        for (geneGroupIndex = 0; geneGroupIndex < this._heatmapArea.geneNames.length; geneGroupIndex++) {
+                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
                                             this.geneOrdering[geneGroupIndex] = [];
-                                            for (i = 0; i < this._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
                                                 if (this.geneScores[0][geneGroupIndex][i].score !== 0) {
                                                     this.geneOrdering[geneGroupIndex].push(this.geneScores[0][geneGroupIndex][i].index);
                                                 }
@@ -213,9 +239,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                                     }
                                     else {
                                         // Default geneOrdering
-                                        for (geneGroupIndex = 0; geneGroupIndex < this._heatmapArea.geneNames.length; geneGroupIndex++) {
+                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
                                             this.geneOrdering[geneGroupIndex] = [];
-                                            for (i = 0; i < this._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
                                                 this.geneOrdering[geneGroupIndex].push(i);
                                             }
                                         }
@@ -228,9 +254,10 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                 }, {
                     title: 'Filter',
                     collapsible: true,
+					collapsed:false,
                     border: true,
                     bodyBorder: true,
-                    layout: 'form', // to get font sizes mathcing
+                    layout: 'form', // to get font sizes matching
                     items: [{
                         xtype: 'checkbox',
                         hideLabel: true,
@@ -278,44 +305,53 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                     }, tree]
                 }]
             }, {
-                xtype: 'metaVizGeneLabels',
-                height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
-                width: 80,
-                x: 0,
-                y: 272,
-                labels: this.visualizationData.geneNames,
-                geneGroupNames: this.visualizationData.geneGroupNames,
-                border: false,
-                bodyBorder: false,
-                applicationRoot: this,
-                ref: '_geneLabels'
-            }, {
-                xtype: 'metaVizRotatedLabels',
-                width: 1300,
-                height: 260,
-                x: 80,
-                y: 0,
-                applicationRoot: this,
-                visualizationData: this.visualizationData.resultSetValueObjects,
-                datasetGroupNames: this.visualizationData.datasetGroupNames,
-                ref: 'topLabelsPanel'
-            }, {
-                xtype: 'metaVizScrollableArea',
-                height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
-                width: 1300,
-                x: 80,
-                y: 262,
-                dataDatasetGroups: this.visualizationData.resultSetValueObjects,
-                geneNames: this.visualizationData.geneNames,
-                geneIds: this.visualizationData.geneIds,
-                applicationRoot: this,
-                ref: '_heatmapArea'
-            }]
+				ref:'_imageArea',
+				autoScroll: true,
+				layout:'absolute',
+				frame:false,
+				border:false,
+				width:   Gemma.MetaVisualizationConfig.panelWidth -300,
+				height: Gemma.MetaVisualizationConfig.panelHeight - 30 ,
+				items:[{
+	                xtype: 'metaVizGeneLabels',
+	                height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
+	                width: 80,
+	                x: 0,
+	                y: 272,
+	                labels: this.visualizationData.geneNames,
+	                geneGroupNames: this.visualizationData.geneGroupNames,
+	                border: false,
+	                bodyBorder: false,
+	                applicationRoot: this,
+	                ref: '_geneLabels'
+	            }, {
+	                xtype: 'metaVizRotatedLabels',
+	                width: this._heatMapWidth+Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / Math.tan((360-Gemma.MetaVisualizationConfig.labelAngle)*Math.PI/180)),
+	                height: 260,
+	                x: 80,
+	                y: 0,
+	                applicationRoot: this,
+	                visualizationData: this.visualizationData.resultSetValueObjects,
+	                datasetGroupNames: this.visualizationData.datasetGroupNames,
+	                ref: 'topLabelsPanel'
+	            }, {
+	                xtype: 'metaVizScrollableArea',
+	                height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
+	                width: this._heatMapWidth, 
+	                x: 80,
+	                y: 262,
+	                dataDatasetGroups: this.visualizationData.resultSetValueObjects,
+	                geneNames: this.visualizationData.geneNames,
+	                geneIds: this.visualizationData.geneIds,
+	                applicationRoot: this,
+	                ref: '_heatmapArea'
+	            }]
+			}]
         });
         Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
-        
-        this.topLabelsPanel._setHeatmapContainer(this._heatmapArea);
-        this._heatmapArea._setTopLabelsBox(this._rotatedLabelsBox);
+        		
+        this._imageArea.topLabelsPanel._setHeatmapContainer(this._imageArea._heatmapArea);
+        this._imageArea._heatmapArea._setTopLabelsBox(this._rotatedLabelsBox);
         
         this.TOTAL_NUMBER_OF_ROWS = 0;
         // Default geneOrdering
@@ -327,13 +363,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                 this.geneOrdering[geneGroupIndex].push(i);
                 this.TOTAL_NUMBER_OF_ROWS++;
             }
-        }
-        
-        
-        this.TOTAL_NUMBER_OF_COLUMNS = 0;
-        var datasetGroupIndex;
-        for (datasetGroupIndex = 0; datasetGroupIndex < this._visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
-            this.TOTAL_NUMBER_OF_COLUMNS = this.TOTAL_NUMBER_OF_COLUMNS + this._visualizationData.resultSetValueObjects[datasetGroupIndex].length;
         }
         
         this.MiniWindowTool = new Ext.Window({
@@ -359,6 +388,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
     onRender: function(){
         Gemma.MetaHeatmapApp.superclass.onRender.apply(this, arguments);
         
+		this._hoverDetailsPanel.show();
         // this.MiniWindowTool.show();
         //	this.el.on('mousemove', function(event,target) {
         //	if (this.miniWindowButton.pressed == true) {
@@ -370,9 +400,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
     
     },
     refreshVisualization: function(){
-        this.topLabelsPanel.refresh();
-        this._heatmapArea.refresh();
-        this._geneLabels.refresh();
+        this._imageArea.topLabelsPanel.refresh();
+        this._imageArea._heatmapArea.refresh();
+        this._imageArea._geneLabels.refresh();
     }
 });
 
@@ -453,6 +483,7 @@ Ext.reg('taxonCombo', Gemma.TaxonCombo);
 Gemma.MetaHeatmapControlWindow = Ext.extend(Ext.Window, {
 	
 	hidden: true,
+	shadow: false,
     initComponent: function(){
         Ext.apply(this, {
             title: 'Visualization settings',
@@ -646,6 +677,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
         DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId, this.datasetGroupReferences, this.geneGroupReferences, function(data){
         
             progressWindow.hide();
+			this.fireEvent('visualizationLoaded');
             
             data.geneGroupNames = this.geneGroupNames;
             data.datasetGroupNames = this.datasetGroupNames;

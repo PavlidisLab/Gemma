@@ -242,7 +242,20 @@ Ext.onReady(function() {
 		this.diffVisualizer = new Gemma.MetaHeatmapControlWindow(data); 
 		panel.collapsePreviews();
 		
-		/*		
+		/* doesn't work
+		this.relayEvents(this.diffVisualizer, ['visualizationLoaded']);
+		this.on('visualizationLoaded', function(){
+			panel.loadMask.hide()
+		}, this);
+		*/
+		
+		/* doesn't work either
+		 * this.diffVisualizer.on('visualizationLoaded', function(){
+			panel.loadMask.hide()
+		}, this);
+		*/
+		
+		/*	old way	
 		var diffExResultsGrid = new Gemma.DiffExpressionGrid({
 				//renderTo : "analysis-results-search-form-results",
 				title : "Differentially expressed genes",

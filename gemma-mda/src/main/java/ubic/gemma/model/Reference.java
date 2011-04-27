@@ -21,8 +21,6 @@
 package ubic.gemma.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Encapsulates all the information required to identify an object Used currently for GeneSetValueObjects and
@@ -52,7 +50,7 @@ public class Reference implements Serializable {
     public static final String UNMODIFIED_SESSION_BOUND_GROUP = "recentSearchsessionBoundGroup"; 
     
     public boolean isSessionBound(){
-        if(this.type.equals( SESSION_BOUND_GROUP ) || this.type.equals( MODIFIED_SESSION_BOUND_GROUP ) || this.type.equals( UNMODIFIED_SESSION_BOUND_GROUP )){
+        if(this.type == null || this.type.equals( SESSION_BOUND_GROUP ) || this.type.equals( MODIFIED_SESSION_BOUND_GROUP ) || this.type.equals( UNMODIFIED_SESSION_BOUND_GROUP )){
             return true;
         }
         return false;

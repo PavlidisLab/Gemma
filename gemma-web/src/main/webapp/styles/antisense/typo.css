@@ -585,6 +585,27 @@ a.tooltip:hover .tooltiptext {
 .right-align-btn .x-btn-mc{
  	text-align: right;
  }
+ 
+ .unstyledTitle .x-panel-header{
+ 	background: none repeat-x scroll 0 -1px transparent;
+	color:black;
+	border: 0px solid;
+ }
+ /*
+ .unstyledTitle .x-tool-toggle{
+	background-position: 0 -255px;
+ }
+   
+ .unstyledTitle .x-tool-toggle-over{
+	background-position: -15px -255px;
+ }
+   .unstyledTitle .x-panel-collapsed .x-tool-toggle{
+	background-position: 0 -240px;
+ }
+  
+  .unstyledTitle .x-panel-collapsed .x-tool-toggle-over{
+	background-position: -15px -240px;
+ }*/
 
 #fi-button-msg {
 	border: 2px solid #ccc;

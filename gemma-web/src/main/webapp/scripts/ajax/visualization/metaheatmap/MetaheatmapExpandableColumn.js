@@ -144,10 +144,17 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			var eeId = this.ownerCt._dataColumn.datasetId;
 			var _datasetGroupPanel = this.ownerCt.ownerCt.ownerCt;
 			vizWindow.show({
-				params : [[eeId], [ this.applicationRoot._heatmapArea.geneIds[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]] ] ]
+				params : [[eeId], [ this.applicationRoot._imageArea._heatmapArea.geneIds[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]] ] ]
 			});	
 		}, this);
 		
+		this.el.on('mouseover', function(e,t) {
+			document.body.style.cursor = 'pointer';
+		});
+		this.el.on('mouseout', function(e,t) {
+			document.body.style.cursor = 'default';
+			this.applicationRoot._imageArea._geneLabels.unhighlightGene( this.rowGroup);
+		}, this);
 		this.el.on('mousemove', function(e,t) { 						
 			var index = this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY() - Ext.get(t).getY());
 			if ( this._isExpanded ) {
@@ -165,7 +172,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				this.applicationRoot.MiniWindowTool.pValue.setText("pValue: " +  this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]);
 				//this.applicationRoot.MiniWindowTool.foldChange.setText("Fold change: " +  this._contrastsVisualizationValues[index.row][index.column]);			      	         				
 			}
-			this.applicationRoot._geneLabels.highlightGene( this.rowGroup, index.row ); // highlights the gene symbol in red	
+			this.applicationRoot._imageArea._geneLabels.highlightGene( this.rowGroup, index.row ); // highlights the gene symbol in red	
 
 			// format p value
 			formatPVal = function(p) {
@@ -178,22 +185,22 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 
 			this.applicationRoot._hoverDetailsPanel.update({
 				type:'cell',
-				row: index.row,
-				column: this.rowGroup,
-				specificity: 100 * this.ownerCt.miniPieValue / 360,
+				//row: index.row,
+				//column: this.rowGroup,
+				//specificity: 100 * this.ownerCt.miniPieValue / 360,
 				pvalue: formatPVal(this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
-				baselineFactorValue: this.ownerCt.baselineFactorValue,
+				//baselineFactorValue: this.ownerCt.baselineFactorValue,
 				factorName: this.ownerCt._dataColumn.factorName, // can also get factor values, using this.ownerCt.contrastsFactorValues and this.ownerCt.contrastsFactorValueIds
 				datasetId: this.ownerCt._dataColumn.datasetId,
 				datasetName: this.ownerCt._dataColumn.datasetName,
 				datasetShortName: this.ownerCt._dataColumn.datasetShortName,
-				numberOfProbes: this.ownerCt.numberOfProbes,
-				numberOfProbesDiffExpressed: this.ownerCt.numberOfProbesDiffExpressed,
-				numberOfProbesDownRegulated: this.ownerCt.numberOfProbesDownRegulated,
-				numberOfProbesUpRegulated: this.ownerCt.numberOfProbesUpRegulated,
-				numberOfProbesTotal: this.ownerCt.numberOfProbesTotal,
-				geneSymbol: this.applicationRoot._geneLabels.labels[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]],
-				geneId: this.applicationRoot._heatmapArea.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]],
+				//numberOfProbes: this.ownerCt.numberOfProbes,
+				//numberOfProbesDiffExpressed: this.ownerCt.numberOfProbesDiffExpressed,
+				//numberOfProbesDownRegulated: this.ownerCt.numberOfProbesDownRegulated,
+				//numberOfProbesUpRegulated: this.ownerCt.numberOfProbesUpRegulated,
+				//numberOfProbesTotal: this.ownerCt.numberOfProbesTotal,
+				geneSymbol: this.applicationRoot._imageArea._geneLabels.labels[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]],
+				geneId: this.applicationRoot._imageArea._heatmapArea.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]],
 				geneFullName: this.applicationRoot.visualizationData.geneFullNames[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]
 			});
 		}, this );
@@ -213,7 +220,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			} else {
 				this._drawHeatmapColumn( false );
 			}
-			//this.applicationRoot._geneLabels.highlightGene ( this.rowGroup, -1 );
+			//this.applicationRoot._imageArea._geneLabels.highlightGene ( this.rowGroup, -1 );
 			//this.applicationRoot._rotatedLabelsBox._drawTopLabels ( this._datasetGroupIndex );
 		}, this );
 	}
@@ -341,8 +348,8 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend ( Ext.Panel, {
 										doResize = false;
 									}
 								}
-								this.applicationRoot.topLabelsPanel._drawTopLabels();
-								this.applicationRoot._heatmapArea.doLayout();							
+								this.applicationRoot._imageArea.topLabelsPanel._drawTopLabels();
+								this.applicationRoot._imageArea._heatmapArea.doLayout();							
 							}, scope: this
 					  }
 				    }]

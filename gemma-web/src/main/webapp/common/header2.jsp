@@ -24,5 +24,34 @@
 
 </div>
 
+	<script type="text/javascript">
+	/*var menu = new Ext.Toolbar({
+	renderTo: document.body,
+	width:500,
+	floating:false,
+	items:[
+	{
+		xtype: 'button',
+		text:'Home'
+	},{
+		    xtype: 'button',
+            text: 'Browse',
+			menu: [{text: 'Genes'},{text: 'Gene Groups'},{text: 'Experiments'},{text: 'Experiment Groups'},{text: 'Arrays'}]
+	},{
+		    xtype: 'button',
+            text: 'Tools',
+			menu: [{text: 'Load data'},{text: 'Edit Profile'}]
+	},{
+		    xtype: 'button',
+            text: 'Manage Groups',
+			menu: [{text: 'Gene Groups'},{text: 'Experiment Groups'},{text: 'User Groups'}]
+	}]
+	});
+	*/
+
+	</script>
+
+
+
 <%-- Put constants into request scope --%>
 <Gemma:constants scope="request" />

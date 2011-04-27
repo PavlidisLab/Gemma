@@ -14,6 +14,10 @@ Gemma.MetaVisualizationConfig.columnLabelFontSize = 9;
 Gemma.MetaVisualizationConfig.labelAngle = 315.0;
 Gemma.MetaVisualizationConfig.labelBaseYCoor = 246;
 
+Gemma.MetaVisualizationConfig.panelWidth = (Ext.getBody().getViewSize().width > 1000)? 
+												Ext.getBody().getViewSize().width*.95 : 1000;									
+Gemma.MetaVisualizationConfig.panelHeight = 600;//(Ext.getBody().getViewSize().height > 500)? 
+												//Ext.getBody().getViewSize().height*.90 : 500;
 
 //Colors
 Gemma.MetaVisualizationConfig.cellHighlightColor = 'yellow';
