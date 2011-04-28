@@ -426,9 +426,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> dataColumnsDatasetGroup = new ArrayList<DifferentialExpressionAnalysisResultSetVisualizationValueObject>();
 
             for ( BioAssaySet experiment : groupExperiemnts ) {
+                try{
                 Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
                         .getAnalyses( ( ExpressionExperiment ) experiment );
-
+                
                 for ( DifferentialExpressionAnalysis analysis : analyses ) {
                     ExpressionExperiment e = ( ExpressionExperiment ) experiment;
                     String datasetShortName = e.getShortName();
@@ -459,6 +460,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     }
 
                     dataColumnsDatasetGroup.addAll( analysisColumns );
+                }
+                }catch(org.springframework.security.access.AccessDeniedException ade){
+                    log.error( "AccessDeniedException for experiment: Id:"+experiment.getId()+" Name: "+experiment.getName());
                 }
             }
             mainVisuzalizationDataObject.addDatasetGroup( dataColumnsDatasetGroup );
