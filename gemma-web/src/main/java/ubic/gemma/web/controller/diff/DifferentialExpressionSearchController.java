@@ -302,6 +302,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 // if a single experiment was selected
                 if ( ref.isNotGroup() && ref.isDatabaseBacked() ) {
                     ExpressionExperiment dataset = expressionExperimentService.load( ref.getId() );
+                    if ( dataset == null ) {
+                        throw new EntityNotFoundException( "Could not access experiment with id=" + ref.getId() );
+                    }
                     Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
                     bioAssaySetsInsideGroup.add( dataset );
                     experiments.add( bioAssaySetsInsideGroup );
@@ -318,6 +321,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         }
                         Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
                                 .loadMultiple( ids );
+
+                        if ( experimentsInsideGroup.isEmpty() ) {
+                            throw new EntityNotFoundException( "Could not access any experiments." );
+                        }
+
                         Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
                         for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
                             bioAssaySetsInsideGroup.add( experiment );
@@ -359,14 +367,14 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     // if the reference being passed in for a session bound group, use a different method to load it
                     if ( ref.isSessionBound() ) {
                         Collection<GeneValueObject> geneValueObjectsInSet = sessionListManager
-                        .getGenesInSetByReference( ref );
+                                .getGenesInSetByReference( ref );
                         for ( GeneValueObject gvo : geneValueObjectsInSet ) {
                             Gene gene = geneService.load( gvo.getId() );
 
                             if ( gene != null ) {
                                 genesInsideSet.add( gene );
                                 geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                                geneFullNamesInsideSet.add( gene.getOfficialName());
+                                geneFullNamesInsideSet.add( gene.getOfficialName() );
                                 geneIdsInsideSet.add( gene.getId() );
                             }
                         }
@@ -377,7 +385,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                             if ( memberGene.getGene() != null ) {
                                 genesInsideSet.add( memberGene.getGene() );
                                 geneNamesInsideSet.add( memberGene.getGene().getOfficialSymbol() );
-                                geneFullNamesInsideSet.add( memberGene.getGene().getOfficialName());
+                                geneFullNamesInsideSet.add( memberGene.getGene().getOfficialName() );
                                 geneIdsInsideSet.add( memberGene.getGene().getId() );
                             }
                         }
@@ -414,8 +422,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      */
     public DifferentialExpressionVisualizationValueObject buildDifferentialExpressionVisualizationValueObject(
             int[] geneGroupSizes, int numberOfDatasets, List<List<Gene>> genes, List<List<String>> geneNames,
-            List<List<String>> geneFullNames,
-            List<List<Long>> geneIds, List<Collection<BioAssaySet>> experiments ) {
+            List<List<String>> geneFullNames, List<List<Long>> geneIds, List<Collection<BioAssaySet>> experiments ) {
         DifferentialExpressionVisualizationValueObject mainVisuzalizationDataObject = new DifferentialExpressionVisualizationValueObject(
                 numberOfDatasets, geneGroupSizes );
 
