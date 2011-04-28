@@ -95,19 +95,20 @@ public interface DifferentialExpressionAnalysisService extends
      * @param expressionExperiment
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     public Collection<DifferentialExpressionAnalysis> getAnalyses( ExpressionExperiment expressionExperiment );
 
     /**
      * @param resultSetIds
      * @return
      */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionAnalysisResultSet> getResultSets( Collection<Long> resultSetIds );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionAnalysisResultSet> getResultSets( ExpressionExperiment expressionExperiment );
 
     /**
