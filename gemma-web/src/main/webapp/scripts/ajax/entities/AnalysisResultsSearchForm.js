@@ -178,7 +178,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			
 			//this.doDifferentialExpressionSearch();
 			var data = this.getDataForDiffVisualization(geneRecords, experimentRecords);
-			console.log(data);
+			//console.log(data);
 			this.fireEvent('showDiffExResults', this, null, data);
 			//this.loadMask.show(); // can't get it to hide
 		}
