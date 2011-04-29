@@ -313,6 +313,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					
 		/****** GENE COMBO ******************************************************************************/
 		/*this.geneCombo = new Gemma.MyEXTGeneAndGeneGroupCombo;*/
+		this.newBoxTriggered = false;
 		this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
 					width:282,
 					hideTrigger: false,
@@ -324,12 +325,14 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 									var query = combo.store.baseParams.query;
 									this.loadGeneOrGroup(record, query);
 									this.genePreviewContent.show();
+									this.genePreviewContent.expand();
 									
 									// if this was the first time a selection was made using this box
-									if(combo.startValue===''){
+									if(combo.startValue==='' && this.newBoxTriggered === false){
 										this.fireEvent('madeFirstSelection');
-											this.helpBtn.hide();
-											this.removeBtn.show();
+										this.newBoxTriggered = true;
+										this.helpBtn.hide();
+										this.removeBtn.show();
 										//this.relayEvents(this.experimentCombo, ['select']);
 									}
 							},

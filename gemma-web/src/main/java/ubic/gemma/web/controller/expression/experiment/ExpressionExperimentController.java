@@ -482,7 +482,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
             return displayResults;
 
-        }
+        } // end of query = ''
 
         Taxon taxon = null;
         /*
@@ -549,9 +549,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
 
-        displayResults.addAll( experiments );
-        displayResults.addAll( experimentSets );
-
         /*
          * ALL RESULTS BY TAXON GROUPS
          */
@@ -611,8 +608,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
 
-        // get all the groups and give them session-bound ids so they work coexist uniquely
-
+        displayResults.addAll( experimentSets );
+        displayResults.addAll( experiments );
+        
         if ( displayResults.isEmpty() ) {
             log.info( "No results for search: " + query );
         } else {

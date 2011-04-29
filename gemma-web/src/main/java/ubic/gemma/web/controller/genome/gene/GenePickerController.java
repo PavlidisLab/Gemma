@@ -330,13 +330,26 @@ public class GenePickerController {
             /*
              * GET GENES AND GENESETS
              */
-            SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-            settings.setGeneralSearch( true ); // add a general search
+           // SearchSettings settings = SearchSettings.geneSearch( query, taxon );
+            SearchSettings settings =  new SearchSettings( query );
+            settings.noSearches();
+            settings.setGeneralSearch( true ); // add a general search, needed for finding GO groups
+            settings.setSearchGenes( true ); // add searching for genes
             settings.setSearchGeneSets( true ); // add searching for geneSets
+            settings.setTaxon( taxon ); // causes no genes to be returned
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
             List<SearchResult> geneSetSearchResults = results.get( GeneSet.class );
-
+            List<SearchResult> geneSearchResults = results.get( Gene.class );
+            
             // filter results by taxon
+            List<SearchResult> taxonCheckedGenes = new ArrayList<SearchResult>();
+            for ( SearchResult sr : geneSearchResults ) {
+                Gene gene = ( Gene ) sr.getResultObject();
+                if ( gene.getTaxon() != null && gene.getTaxon().getId().equals(taxonId) ) {
+                    taxonCheckedGenes.add( sr );
+                }
+            }
+            
             List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
             for ( SearchResult sr : geneSetSearchResults ) {
                 GeneSet gs = ( GeneSet ) sr.getResultObject();
@@ -347,7 +360,7 @@ public class GenePickerController {
             }
 
             Collection<SearchResultDisplayObject> genes = SearchResultDisplayObject
-                    .convertSearchResults2SearchResultDisplayObjects( results.get( Gene.class ) );
+                    .convertSearchResults2SearchResultDisplayObjects( taxonCheckedGenes );
             Collection<SearchResultDisplayObject> geneSets = SearchResultDisplayObject
                     .convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
 
@@ -380,8 +393,6 @@ public class GenePickerController {
                 }
             }
 
-            displayResults.addAll( genes );
-            displayResults.addAll( geneSets );
 
             /*
              * GET GO GROUPS
@@ -417,7 +428,6 @@ public class GenePickerController {
             }
 
             Collections.sort( goSRDOs );
-            displayResults.addAll( goSRDOs );
 
             /*
              * GET 'ALL RESULTS' GROUPS
@@ -473,6 +483,10 @@ public class GenePickerController {
                         "All genes found for your query", true, geneIds.size(), taxonId, taxonName, "freeText", geneIds );
                 displayResults.add( allResultsGroup );
             }
+
+            displayResults.addAll( geneSets );
+            displayResults.addAll( goSRDOs );
+            displayResults.addAll( genes );
 
         }
 

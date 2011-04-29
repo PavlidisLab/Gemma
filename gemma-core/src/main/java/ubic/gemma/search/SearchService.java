@@ -1195,7 +1195,7 @@ public class SearchService implements InitializingBean {
             }
         }
         if ( results.size() > 0 ) {
-            filterByTaxon( settings, results );
+            filterByTaxon( settings, results, true );
             watch.stop();
             if ( watch.getTime() > 1000 )
                 log.info( "Gene DB search for " + searchString + " took " + watch.getTime() + " ms and found "
@@ -1260,7 +1260,7 @@ public class SearchService implements InitializingBean {
                     + geneSet.size() + " genes" );
 
         results = dbHitsToSearchResult( geneSet );
-        filterByTaxon( settings, results );
+        filterByTaxon( settings, results, true );
         return results;
     }
 
@@ -1360,18 +1360,26 @@ public class SearchService implements InitializingBean {
          * This is purely debugging.
          */
         if ( parentMap.size() > 0 ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + " owners for    characteristics:" );
-            // for ( Object obj : parentMap.values() ) {
-            // if ( obj instanceof Auditable ) {
-            // if ( log.isDebugEnabled() ) {
-            // log.debug( " Owner Id: " + ( ( Auditable ) obj ).getId() + " Owner Class: " + obj.getClass() );
-            // }
-            // } else {
-            // if ( log.isDebugEnabled() ) {
-            // log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
-            // }
-            // }
-            // }
+            if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + " owners for " + parentMap.keySet().size()+ " characteristics:" );
+//            int maxPrint = 10; int i = 0;
+//            for ( Map.Entry<Characteristic, Object> entry : parentMap.entrySet()) {
+//            	if(i < maxPrint){
+//            		Object obj = entry.getValue();
+//            		Characteristic charac = entry.getKey();
+//            		if ( obj instanceof Auditable ) {
+//            			if ( log.isDebugEnabled() ) {
+//            				log.debug("Key: Characteristic Name: " + charac.getName() +" Characteristic Desc: " + charac.getDescription()  +" Characteristic Category: " + charac.getCategory() );
+//            				log.debug("Val: Owner Class: " + obj.getClass() 
+//            						+" Owner Name: " + ( ( Auditable ) obj ).getName() +" Owner Desc: " + ( ( Auditable ) obj ).getDescription() );
+//            			}
+//            		} else {
+//            			if ( log.isDebugEnabled() ) {
+//            				log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+//            			}
+//            		}
+//            		i++;
+//            	}
+//            }
         }
     }
 
@@ -1468,6 +1476,7 @@ public class SearchService implements InitializingBean {
                 results.addAll( compassExpressionSearch( settings ) );
             }
 
+            // a submethod of this one (ontologySearchAnnotatedObject) takes a long time
             if ( settings.isUseCharacteristics() ) {
                 results.addAll( characteristicExpressionExperimentSearch( settings ) );
             }
@@ -1521,13 +1530,15 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * If the SearchResults have no "getTaxon" method then the results will get filtered out Results with no taxon
-     * assoiciated will also get removed.
+     * 
      * 
      * @param settings
-     * @param geneSet
+     * @param results
+     * @param excludeWithoutTaxon if true: If the SearchResults have no "getTaxon" method then the results 
+     *          will get filtered out Results with no taxon
+     *          associated will also get removed.
      */
-    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results ) {
+    private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results, boolean excludeWithoutTaxon ) {
         if ( settings.getTaxon() == null ) {
             return;
         }
@@ -1559,7 +1570,9 @@ public class SearchService implements InitializingBean {
                  * In case of a programming error where the results don't have a taxon at all, we assume we should
                  * filter them out but issue a warning.
                  */
-                toRemove.add( sr );
+                if(excludeWithoutTaxon){
+                    toRemove.add( sr );
+                }
                 log.warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: " + e );
             } catch ( IllegalArgumentException e ) {
                 throw new RuntimeException( e );
@@ -1624,8 +1637,8 @@ public class SearchService implements InitializingBean {
             }
         }
 
-        filterByTaxon( settings, combinedGeneList );
-
+        //filterByTaxon( settings, combinedGeneList); // compass doesn't return filled gene objects, just ids, so do this after objects have been filled
+        
         if ( watch.getTime() > 1000 )
             log.info( "Gene search for " + searchString + " took " + watch.getTime() + " ms; "
                     + combinedGeneList.size() + " results." );
@@ -1637,8 +1650,13 @@ public class SearchService implements InitializingBean {
      * @return
      */
     private Collection<SearchResult> geneSetSearch( SearchSettings settings ) {
-        Collection<SearchResult> hits = this
-                .dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ) );
+    	Collection<SearchResult> hits;
+    	if(settings.getTaxon() != null){
+    		hits= this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ) );
+    	}else{
+    		hits= this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ) );
+    	}
+         
         hits.addAll( compassSearch( compassGeneSet, settings ) );
         return hits;
     }
@@ -1807,6 +1825,9 @@ public class SearchService implements InitializingBean {
                     keeper.setResultObject( entity );
                     filteredResults.add( keeper );
                 }
+                
+                filterByTaxon( settings, filteredResults, false );
+                
                 results.put( clazz, filteredResults );
 
             }
@@ -1970,10 +1991,13 @@ public class SearchService implements InitializingBean {
      * 
      * @param settings Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
      *        objects tagged with those terms (if isUseCharacte = true)
+     *       
      * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
      *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
      *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
-     *        false can be an optimization if all you need is the id. * @return
+     *        false can be an optimization if all you need is the id. 
+     *        Note: filtering by taxon will not be done unless objects are filled
+     * @return
      */
     protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects ) {
         String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );

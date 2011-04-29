@@ -724,7 +724,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						items: [{
 							html: 'these experiments',
 							style: 'text-align:center;font-size:1.4em;'
-						}, this.experimentChoosers]
+						}, this.experimentChoosers
+						,{	width: 340,
+							html:'Example: search for Parkinson\'s and select all human experiments <br> '+
+								'<span style="color:red">Note: using more than 50 experiments '+
+								'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)'}
+						]
 					}, {
 						html: ' based on ',
 						style: 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top: 32px;margin-left: -11px;margin-right: -10px;'
@@ -735,7 +740,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						items: [{
 							html: 'these genes',
 							style: 'text-align:center;font-size:1.4em;padding:0px'
-						}, this.geneChoosers]
+						}, this.geneChoosers
+						,{html:'Example: search for hippocampus and select "all results"'}
+						]
 					}, {
 						style: 'padding-top:30px',
 						items: new Ext.Button({
