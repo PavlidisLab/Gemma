@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2006-2008 University of British Columbia
+ * Copyright (c) 2006-2011 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,81 +98,79 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     @Autowired
     private SessionListManager sessionListManager;
 
-    /**
-     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
-     * the gene with the id, geneId, are returned.
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
-     */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
-
-        return this.getDifferentialExpression( geneId, threshold, null );
-    }
-
-    /**
-     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
-     * the gene with the id, geneId, are returned.
-     * 
-     * @param geneId
-     * @param threshold
-     * @return
-     */
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
-            Integer limit ) {
-
-        Gene g = geneService.thaw( geneService.load( geneId ) );
-
-        if ( g == null ) {
-            return new ArrayList<DifferentialExpressionValueObject>();
-        }
-
-        return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
-    }
-
-    /**
-     * AJAX entry which returns differential expression results for the gene with the given id, in the selected factors,
-     * at the given significance threshold.
-     * 
-     * @param geneId
-     * @param threshold corrected pvalue threshold (normally this means FDR)
-     * @param factorMap
-     * @deprecated as far as I can tell this is not used.
-     * @return
-     */
-    @Deprecated
-    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Long geneId,
-            double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
-
-        if ( factorMap.isEmpty() || geneId == null ) {
-            return null;
-        }
-
-        Gene g = geneService.load( geneId );
-        Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
-                .getDifferentialExpression( g, threshold, factorMap );
-
-        return result;
-    }
-
     // So that we're consistent throughout this visualization code...
     private static final double VISUALIZATION_P_VALUE_THRESHOLD = 0.9;
 
-    /*
-     * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first place.
+    /**
+     * @param taxonId
+     * @param datasetGroupIds
+     * @param geneGroupIds
+     * @return
      */
-    private String getFactorValueString( FactorValue fv ) {
-        if ( fv == null ) return "null";
+    public DifferentialExpressionVisualizationValueObject buildDifferentialExpressionVisualizationValueObject(
+            int[] geneGroupSizes, int numberOfDatasets, List<List<Gene>> genes, List<List<String>> geneNames,
+            List<List<String>> geneFullNames, List<List<Long>> geneIds, List<Collection<BioAssaySet>> experiments ) {
+        DifferentialExpressionVisualizationValueObject mainVisuzalizationDataObject = new DifferentialExpressionVisualizationValueObject(
+                numberOfDatasets, geneGroupSizes );
 
-        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-            return fv.getCharacteristics().iterator().next().getValue();
-        } else if ( fv.getMeasurement() != null ) {
-            return fv.getMeasurement().getValue();
-        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
-            return fv.getValue();
-        } else
-            return "absent ";
+        // Iterates through dataset groups....
+
+        int datasetGroupIndex = 0;
+        for ( Collection<BioAssaySet> groupExperiemnts : experiments ) {
+            List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> dataColumnsDatasetGroup = new ArrayList<DifferentialExpressionAnalysisResultSetVisualizationValueObject>();
+
+            for ( BioAssaySet experiment : groupExperiemnts ) {
+                try {
+                    Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+                            .getAnalyses( ( ExpressionExperiment ) experiment );
+
+                    for ( DifferentialExpressionAnalysis analysis : analyses ) {
+                        ExpressionExperiment e = ( ExpressionExperiment ) experiment;
+                        String datasetShortName = e.getShortName();
+                        StopWatch timer = new StopWatch();
+                        timer.start();
+                        int numberOfProbesOnArray = expressionExperimentDao.getProcessedExpressionVectorCount( e );
+                        timer.stop();
+                        log.info( "Call to get number of probes on the array for 1 experiment took : "
+                                + timer.getTime() + " ms" );
+
+                        Collection<Long> arrayDesignIds = EntityUtils.getIds( expressionExperimentService
+                                .getArrayDesignsUsed( e ) );
+                        timer.reset();
+                        timer.start();
+                        List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> analysisColumns = buildVisualizationColumnsFromAnalysis(
+                                geneGroupSizes, genes, datasetGroupIndex, analysis, mainVisuzalizationDataObject,
+                                arrayDesignIds );
+
+                        timer.stop();
+                        log
+                                .info( "Call to constructVisualizationColumnsFromAnalysis took : " + timer.getTime()
+                                        + " ms" );
+
+                        // Set common properties for all columns in this dataset.
+                        for ( DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn : analysisColumns ) {
+                            vizColumn.setDatasetName( experiment.getName() );
+                            vizColumn.setDatasetShortName( datasetShortName );
+                            vizColumn.setDatasetId( experiment.getId() );
+                            vizColumn.setNumberOfProbesTotal( numberOfProbesOnArray );
+                        }
+
+                        dataColumnsDatasetGroup.addAll( analysisColumns );
+                    }
+                } catch ( org.springframework.security.access.AccessDeniedException ade ) {
+                    log.error( "AccessDeniedException for experiment: Id:" + experiment.getId() + " Name: "
+                            + experiment.getName() );
+                }
+            }
+            mainVisuzalizationDataObject.addDatasetGroup( dataColumnsDatasetGroup );
+            datasetGroupIndex++;
+        }
+
+        mainVisuzalizationDataObject.setGeneNames( geneNames );
+        mainVisuzalizationDataObject.setGeneFullNames( geneFullNames );
+        mainVisuzalizationDataObject.setGeneIds( geneIds );
+
+        return mainVisuzalizationDataObject;
     }
 
     /**
@@ -241,46 +239,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * @param geneGroupSizes
-     * @param genes
-     * @param datasetGroupIndex
-     * @param analysis
-     * @param deaValueObject
-     * @param theResult
-     * @return
-     */
-    private List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> buildVisualizationColumnsFromAnalysis(
-            int[] geneGroupSizes, List<List<Gene>> genes, int datasetGroupIndex,
-            DifferentialExpressionAnalysis analysis, DifferentialExpressionVisualizationValueObject theResult,
-            Collection<Long> arrayDesignIds ) {
-        List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> analysisColumns = new ArrayList<DifferentialExpressionAnalysisResultSetVisualizationValueObject>();
-
-        if ( analysis == null ) return analysisColumns; // Analysis was not run
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        differentialExpressionAnalysisService.thaw( analysis );
-        timer.stop();
-        log.info( "Thawing analysis took :" + timer.getTime() );
-
-        for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
-            // Currently, we skip result sets containing interactions.
-            if ( resultSet.getExperimentalFactors().size() != 1 ) continue;
-
-            DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn = buildVisualizationColumn(
-                    geneGroupSizes, datasetGroupIndex, genes, resultSet, theResult, arrayDesignIds );
-
-            // Common properties for result sets in this analysis.
-            vizColumn.setAnalysisId( analysis.getId() );
-
-            // Done with constructing visualization column.
-            analysisColumns.add( vizColumn );
-        }
-
-        return analysisColumns;
-    }
-
-    /**
      * Ajax.
      * 
      * @param taxonId
@@ -295,51 +253,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         // Collection<Reference> geneGroupReferences = Reference.decode( encodedGeneGroupReferences );
         // Collection<Reference> datasetGroupReferences = Reference.decode( encodedDatasetGroupReferences );
 
-        // We get ids from the UI. First step is to load associated genes and experiments.
-        List<Collection<BioAssaySet>> experiments = new ArrayList<Collection<BioAssaySet>>();
-        for ( Reference ref : datasetGroupReferences ) {
-            if ( ref != null ) {
-                // if a single experiment was selected
-                if ( ref.isNotGroup() && ref.isDatabaseBacked() ) {
-                    ExpressionExperiment dataset = expressionExperimentService.load( ref.getId() );
-                    if ( dataset == null ) {
-                        throw new EntityNotFoundException( "Could not access experiment with id=" + ref.getId() );
-                    }
-                    Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
-                    bioAssaySetsInsideGroup.add( dataset );
-                    experiments.add( bioAssaySetsInsideGroup );
-                }
-                // if a group of experiments was selected
-                else {
-                    // if the ids being passed in are session ids, use a different method to load them
-                    if ( ref.isSessionBound() ) {
-                        Collection<ExpressionExperimentValueObject> eevos = sessionListManager
-                                .getExperimentsInSetByReference( ref );
-                        Collection<Long> ids = new ArrayList<Long>();
-                        for ( ExpressionExperimentValueObject eevo : eevos ) {
-                            ids.add( eevo.getId() );
-                        }
-                        Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService
-                                .loadMultiple( ids );
-
-                        if ( experimentsInsideGroup.isEmpty() ) {
-                            throw new EntityNotFoundException( "Could not access any experiments." );
-                        }
-
-                        Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
-                        for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
-                            bioAssaySetsInsideGroup.add( experiment );
-                        }
-                        experiments.add( bioAssaySetsInsideGroup );
-
-                    } else if ( ref.isDatabaseBacked() ) {
-                        ExpressionExperimentSet datasetGroup = expressionExperimentSetService.load( ref.getId() );
-                        Collection<BioAssaySet> experimentsInsideGroup = datasetGroup.getExperiments();
-                        experiments.add( experimentsInsideGroup );
-                    }
-                }
-            }
-        }
+        List<Collection<BioAssaySet>> experiments = getExperiments( datasetGroupReferences );
 
         // Load genes
         List<List<Gene>> genes = new ArrayList<List<Gene>>();
@@ -415,98 +329,61 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * @param taxonId
-     * @param datasetGroupIds
-     * @param geneGroupIds
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned.
+     * 
+     * @param geneId
+     * @param threshold
      * @return
      */
-    public DifferentialExpressionVisualizationValueObject buildDifferentialExpressionVisualizationValueObject(
-            int[] geneGroupSizes, int numberOfDatasets, List<List<Gene>> genes, List<List<String>> geneNames,
-            List<List<String>> geneFullNames, List<List<Long>> geneIds, List<Collection<BioAssaySet>> experiments ) {
-        DifferentialExpressionVisualizationValueObject mainVisuzalizationDataObject = new DifferentialExpressionVisualizationValueObject(
-                numberOfDatasets, geneGroupSizes );
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold ) {
 
-        // Iterates through dataset groups....
-
-        int datasetGroupIndex = 0;
-        for ( Collection<BioAssaySet> groupExperiemnts : experiments ) {
-            List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> dataColumnsDatasetGroup = new ArrayList<DifferentialExpressionAnalysisResultSetVisualizationValueObject>();
-
-            for ( BioAssaySet experiment : groupExperiemnts ) {
-                try{
-                Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                        .getAnalyses( ( ExpressionExperiment ) experiment );
-                
-                for ( DifferentialExpressionAnalysis analysis : analyses ) {
-                    ExpressionExperiment e = ( ExpressionExperiment ) experiment;
-                    String datasetShortName = e.getShortName();
-                    StopWatch timer = new StopWatch();
-                    timer.start();
-                    int numberOfProbesOnArray = expressionExperimentDao.getProcessedExpressionVectorCount( e );
-                    timer.stop();
-                    log.info( "Call to get number of probes on the array for 1 experiment took : " + timer.getTime()
-                            + " ms" );
-
-                    Collection<Long> arrayDesignIds = EntityUtils.getIds( expressionExperimentService
-                            .getArrayDesignsUsed( e ) );
-                    timer.reset();
-                    timer.start();
-                    List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> analysisColumns = buildVisualizationColumnsFromAnalysis(
-                            geneGroupSizes, genes, datasetGroupIndex, analysis, mainVisuzalizationDataObject,
-                            arrayDesignIds );
-
-                    timer.stop();
-                    log.info( "Call to constructVisualizationColumnsFromAnalysis took : " + timer.getTime() + " ms" );
-
-                    // Set common properties for all columns in this dataset.
-                    for ( DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn : analysisColumns ) {
-                        vizColumn.setDatasetName( experiment.getName() );
-                        vizColumn.setDatasetShortName( datasetShortName );
-                        vizColumn.setDatasetId( experiment.getId() );
-                        vizColumn.setNumberOfProbesTotal( numberOfProbesOnArray );
-                    }
-
-                    dataColumnsDatasetGroup.addAll( analysisColumns );
-                }
-                }catch(org.springframework.security.access.AccessDeniedException ade){
-                    log.error( "AccessDeniedException for experiment: Id:"+experiment.getId()+" Name: "+experiment.getName());
-                }
-            }
-            mainVisuzalizationDataObject.addDatasetGroup( dataColumnsDatasetGroup );
-            datasetGroupIndex++;
-        }
-
-        mainVisuzalizationDataObject.setGeneNames( geneNames );
-        mainVisuzalizationDataObject.setGeneFullNames( geneFullNames );
-        mainVisuzalizationDataObject.setGeneIds( geneIds );
-
-        return mainVisuzalizationDataObject;
+        return this.getDifferentialExpression( geneId, threshold, null );
     }
 
-    /*
-     * Computes visualization value (0..1) from pValue. Paul suggested using probit transform to help emphasize
-     * differences in small to modest p-values range and to de-emphasize differences in medium to large p-values. TODO:
-     * Tweak this if necessary.
+    /**
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned.
+     * 
+     * @param geneId
+     * @param threshold
+     * @return
      */
-    private double calculateVisualizationValueBasedOnPvalue( double pValue ) {
-        double visualizationValue = 0.0;
-        pValue = Math.abs( pValue );
-        if ( pValue < 0.5 && pValue >= 0.25 )
-            visualizationValue = 0.1;
-        else if ( pValue < 0.25 && pValue >= 0.1 )
-            visualizationValue = 0.2;
-        else if ( pValue < 0.1 && pValue >= 0.05 )
-            visualizationValue = 0.3;
-        else if ( pValue < 0.05 && pValue >= 0.01 )
-            visualizationValue = 0.4;
-        else if ( pValue < 0.01 && pValue >= 0.001 )
-            visualizationValue = 0.5;
-        else if ( pValue < 0.001 && pValue >= 0.0001 )
-            visualizationValue = 0.6;
-        else if ( pValue < 0.0001 && pValue >= 0.00001 )
-            visualizationValue = 0.7;
-        else if ( pValue < 0.00001 ) visualizationValue = 1;
-        return visualizationValue;
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpression( Long geneId, double threshold,
+            Integer limit ) {
+
+        Gene g = geneService.thaw( geneService.load( geneId ) );
+
+        if ( g == null ) {
+            return new ArrayList<DifferentialExpressionValueObject>();
+        }
+
+        return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
+    }
+
+    /**
+     * AJAX entry which returns differential expression results for the gene with the given id, in the selected factors,
+     * at the given significance threshold.
+     * 
+     * @param geneId
+     * @param threshold corrected pvalue threshold (normally this means FDR)
+     * @param factorMap
+     * @deprecated as far as I can tell this is not used.
+     * @return
+     */
+    @Deprecated
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionForFactors( Long geneId,
+            double threshold, Collection<DiffExpressionSelectedFactorCommand> factorMap ) {
+
+        if ( factorMap.isEmpty() || geneId == null ) {
+            return null;
+        }
+
+        Gene g = geneService.load( geneId );
+        Collection<DifferentialExpressionValueObject> result = geneDifferentialExpressionService
+                .getDifferentialExpression( g, threshold, factorMap );
+
+        return result;
     }
 
     /**
@@ -692,66 +569,70 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         this.geneService = geneService;
     }
 
-    /*
-     * Handles the case exporting results as text.
-     * 
-     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
-     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
+    /**
+     * @param geneGroupSizes
+     * @param genes
+     * @param datasetGroupIndex
+     * @param analysis
+     * @param deaValueObject
+     * @param theResult
+     * @return
      */
-    @Override
-    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
-            throws Exception {
+    private List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> buildVisualizationColumnsFromAnalysis(
+            int[] geneGroupSizes, List<List<Gene>> genes, int datasetGroupIndex,
+            DifferentialExpressionAnalysis analysis, DifferentialExpressionVisualizationValueObject theResult,
+            Collection<Long> arrayDesignIds ) {
+        List<DifferentialExpressionAnalysisResultSetVisualizationValueObject> analysisColumns = new ArrayList<DifferentialExpressionAnalysisResultSetVisualizationValueObject>();
 
-        if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
+        if ( analysis == null ) return analysisColumns; // Analysis was not run
 
-        // -------------------------
-        // Download diff expression data for a specific diff expresion search
+        StopWatch timer = new StopWatch();
+        timer.start();
+        differentialExpressionAnalysisService.thaw( analysis );
+        timer.stop();
+        log.info( "Thawing analysis took :" + timer.getTime() );
 
-        double threshold = DEFAULT_THRESHOLD;
-        try {
-            threshold = Double.parseDouble( request.getParameter( "t" ) );
-        } catch ( NumberFormatException e ) {
-            log.warn( "invalid threshold; using default " + threshold );
+        for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
+            // Currently, we skip result sets containing interactions.
+            if ( resultSet.getExperimentalFactors().size() != 1 ) continue;
+
+            DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn = buildVisualizationColumn(
+                    geneGroupSizes, datasetGroupIndex, genes, resultSet, theResult, arrayDesignIds );
+
+            // Common properties for result sets in this analysis.
+            vizColumn.setAnalysisId( analysis.getId() );
+
+            // Done with constructing visualization column.
+            analysisColumns.add( vizColumn );
         }
 
-        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+        return analysisColumns;
+    }
 
-        Long eeSetId = null;
-        Collection<Long> eeIds = null;
-        try {
-            eeSetId = Long.parseLong( request.getParameter( "a" ) );
-        } catch ( NumberFormatException e ) {
-            //
-        }
-        if ( eeSetId == null ) {
-            eeIds = extractIds( request.getParameter( "ees" ) );
-        }
-
-        String fs = request.getParameter( "fm" );
-        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
-
-        DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
-        command.setGeneIds( geneIds );
-        command.setEeSetId( eeSetId );
-        command.setEeIds( eeIds );
-        command.setSelectedFactors( selectedFactors );
-        command.setThreshold( threshold );
-
-        Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
-
-        ModelAndView mav = new ModelAndView( new TextView() );
-
-        StringBuilder buf = new StringBuilder();
-
-        for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
-            buf.append( demavo );
-        }
-
-        String output = buf.toString();
-
-        mav.addObject( "text", output.length() > 0 ? output : "no results" );
-        return mav;
-
+    /*
+     * Computes visualization value (0..1) from pValue. Paul suggested using probit transform to help emphasize
+     * differences in small to modest p-values range and to de-emphasize differences in medium to large p-values. TODO:
+     * Tweak this if necessary.
+     */
+    private double calculateVisualizationValueBasedOnPvalue( double pValue ) {
+        double visualizationValue = 0.0;
+        pValue = Math.abs( pValue );
+        if ( pValue < 0.5 && pValue >= 0.25 )
+            visualizationValue = 0.1;
+        else if ( pValue < 0.25 && pValue >= 0.1 )
+            visualizationValue = 0.2;
+        else if ( pValue < 0.1 && pValue >= 0.05 )
+            visualizationValue = 0.3;
+        else if ( pValue < 0.05 && pValue >= 0.01 )
+            visualizationValue = 0.4;
+        else if ( pValue < 0.01 && pValue >= 0.001 )
+            visualizationValue = 0.5;
+        else if ( pValue < 0.001 && pValue >= 0.0001 )
+            visualizationValue = 0.6;
+        else if ( pValue < 0.0001 && pValue >= 0.00001 )
+            visualizationValue = 0.7;
+        else if ( pValue < 0.00001 ) visualizationValue = 1;
+        return visualizationValue;
     }
 
     /**
@@ -846,6 +727,81 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
+     * @param datasetGroupReferences
+     * @return
+     */
+    private List<Collection<BioAssaySet>> getExperiments( Collection<Reference> datasetGroupReferences ) {
+        // We get ids from the UI. First step is to load associated genes and experiments.
+        List<Collection<BioAssaySet>> experiments = new ArrayList<Collection<BioAssaySet>>();
+        for ( Reference ref : datasetGroupReferences ) {
+            if ( ref != null ) {
+                // if a single experiment was selected
+                if ( ref.isNotGroup() && ref.isDatabaseBacked() ) {
+                    ExpressionExperiment dataset = expressionExperimentService.load( ref.getId() );
+                    if ( dataset == null ) {
+                        throw new EntityNotFoundException( "Could not access experiment with id=" + ref.getId() );
+                    }
+                    Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
+                    bioAssaySetsInsideGroup.add( dataset );
+                    experiments.add( bioAssaySetsInsideGroup );
+                }
+                // if a group of experiments was selected
+                else {
+                    // if the ids being passed in are session ids, use a different method to load them
+                    if ( ref.isSessionBound() ) {
+                        Collection<ExpressionExperimentValueObject> eevos = sessionListManager
+                                .getExperimentsInSetByReference( ref );
+                        Collection<Long> ids = EntityUtils.getIds( eevos );
+                        experiments = loadExperimentsByIds( ids );
+
+                    } else if ( ref.isDatabaseBacked() ) {
+                        ExpressionExperimentSet datasetGroup = expressionExperimentSetService.load( ref.getId() );
+                        Collection<Long> ids = EntityUtils.getIds( datasetGroup.getExperiments() );
+                        experiments = loadExperimentsByIds( ids );
+                    }
+                }
+            }
+        }
+        return experiments;
+    }
+
+    /*
+     * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first place.
+     */
+    private String getFactorValueString( FactorValue fv ) {
+        if ( fv == null ) return "null";
+
+        if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
+            return fv.getCharacteristics().iterator().next().getValue();
+        } else if ( fv.getMeasurement() != null ) {
+            return fv.getMeasurement().getValue();
+        } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
+            return fv.getValue();
+        } else
+            return "absent ";
+    }
+
+    /**
+     * @param ids
+     * @return
+     */
+    private List<Collection<BioAssaySet>> loadExperimentsByIds( Collection<Long> ids ) {
+        List<Collection<BioAssaySet>> experiments = new ArrayList<Collection<BioAssaySet>>();
+        Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService.loadMultiple( ids );
+
+        if ( experimentsInsideGroup.isEmpty() ) {
+            throw new EntityNotFoundException( "Could not access any experiments." );
+        }
+
+        Collection<BioAssaySet> bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>();
+        for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
+            bioAssaySetsInsideGroup.add( experiment );
+        }
+        experiments.add( bioAssaySetsInsideGroup );
+        return experiments;
+    }
+
+    /**
      * @param ids
      * @return
      */
@@ -860,6 +816,68 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             filteredIds.add( ee.getId() );
         }
         return filteredIds;
+    }
+
+    /*
+     * Handles the case exporting results as text.
+     * 
+     * @seeorg.springframework.web.servlet.mvc.AbstractFormController#handleRequestInternal(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse)
+     */
+    @Override
+    protected ModelAndView handleRequestInternal( HttpServletRequest request, HttpServletResponse response )
+            throws Exception {
+
+        if ( request.getParameter( "export" ) == null ) return new ModelAndView( this.getFormView() );
+
+        // -------------------------
+        // Download diff expression data for a specific diff expresion search
+
+        double threshold = DEFAULT_THRESHOLD;
+        try {
+            threshold = Double.parseDouble( request.getParameter( "t" ) );
+        } catch ( NumberFormatException e ) {
+            log.warn( "invalid threshold; using default " + threshold );
+        }
+
+        Collection<Long> geneIds = extractIds( request.getParameter( "g" ) );
+
+        Long eeSetId = null;
+        Collection<Long> eeIds = null;
+        try {
+            eeSetId = Long.parseLong( request.getParameter( "a" ) );
+        } catch ( NumberFormatException e ) {
+            //
+        }
+        if ( eeSetId == null ) {
+            eeIds = extractIds( request.getParameter( "ees" ) );
+        }
+
+        String fs = request.getParameter( "fm" );
+        Collection<DiffExpressionSelectedFactorCommand> selectedFactors = extractFactorInfo( fs );
+
+        DiffExpressionSearchCommand command = new DiffExpressionSearchCommand();
+        command.setGeneIds( geneIds );
+        command.setEeSetId( eeSetId );
+        command.setEeIds( eeIds );
+        command.setSelectedFactors( selectedFactors );
+        command.setThreshold( threshold );
+
+        Collection<DifferentialExpressionMetaAnalysisValueObject> result = getDiffExpressionForGenes( command );
+
+        ModelAndView mav = new ModelAndView( new TextView() );
+
+        StringBuilder buf = new StringBuilder();
+
+        for ( DifferentialExpressionMetaAnalysisValueObject demavo : result ) {
+            buf.append( demavo );
+        }
+
+        String output = buf.toString();
+
+        mav.addObject( "text", output.length() > 0 ? output : "no results" );
+        return mav;
+
     }
 
     // public DifferentialExpressionAnalysisResultSetVisualizationValueObject
