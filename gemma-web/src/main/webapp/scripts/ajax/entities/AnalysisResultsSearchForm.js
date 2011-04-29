@@ -23,7 +23,7 @@ Gemma.MAX_GENES_PER_QUERY = 20; // this is the value used for coexpression and d
 
 Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
-	collapsible:true,
+	//collapsible:true,
 	layout : 'table',
 	layoutConfig:{ columns:5},
 	width : 900,
