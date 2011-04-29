@@ -109,7 +109,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		}.createDelegate(this));
 						
 	},
-		launchExperimentSelectionEditor: function(){
+	launchExperimentSelectionEditor: function(){
 				
 		this.searchForm.getEl().mask();
 
@@ -125,7 +125,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			groupName: this.experimentCombo.getExpressionExperimentGroup().name
 		});
 		this.experimentSelectionEditor.loadExperiments(this.experimentIds, 
-				function(){Ext.getCmp('experimentSelectionEditor').loadMask.hide();});
+				function(){
+					this.experimentSelectionEditor.loadMask.hide();
+					//Ext.getCmp('experimentSelectionEditor').loadMask.hide();
+				}.createDelegate(this, [], false));
 	},
 
 		
