@@ -154,6 +154,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                 width: 300,
                 x: Gemma.MetaVisualizationConfig.panelWidth-300,
                 y: 0,
+				layout:'vbox',
 				//layout: 'accordion',
 				/*layoutConfig:{
 					fill: true,
@@ -166,6 +167,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                 items: [ 
 				{
                     title: 'Sort',
+					flex:0,
+					width:300,
                     collapsible: true,
 					//collapsed:true,
                     border: true,
@@ -253,10 +256,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                     }]
                 }, {
                     title: 'Filter',
+					flex:1,
                     collapsible: true,
 					collapsed:false,
                     border: true,
                     bodyBorder: true,
+					autoScroll:true,
                     layout: 'form', // to get font sizes matching
                     items: [{
                         xtype: 'checkbox',

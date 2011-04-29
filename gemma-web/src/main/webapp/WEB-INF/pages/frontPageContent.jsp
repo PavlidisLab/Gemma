@@ -12,6 +12,17 @@ Ext.onReady(function() {
 });
 </script>
 
+		<div style="
+		background-color: #FFFFCC;
+border: 1px solid #FFCC66;
+float: left;
+margin-left: 150px;
+margin-top: -70px;
+padding: 5px;
+width: 84%;
+text-align:center;">
+			Welcome to the cutting edge of Gemma! Please remember this is a work in progress.
+		</div>	
 <div align="center">
 	<div style="width: 900px">
 

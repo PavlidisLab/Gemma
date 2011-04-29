@@ -15,14 +15,14 @@
 		<a href="<c:url value="/diff/diffExpressionSearch.html"/>">differential expression</a> results.
 	</p>
 	<p style="font-size: 0.9em">
-		More information about the project is
+		More information about the project is available
 		<a href="<c:url value="/static/about.html"/>">here</a>. Gemma also has a
-		<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a> where you can read additional
+		<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a> where you can read
 		documentation, in addition to the in-line help.
 	</p>
 		<p style="font-size: 0.9em">
-		You can also 
-		<a href="http://chibi.ubc.ca/Gemma/home2.html">preview new version of Gemma</a> we have been working on.
+		Want to see what we're working on? Check out our work in progress for the 
+		<a href="/Gemma/home2.html">latest version of Gemma</a>.
 	</p>
 </div>
 
