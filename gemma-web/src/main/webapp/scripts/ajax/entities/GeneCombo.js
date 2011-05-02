@@ -25,6 +25,8 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	selectOnFocus : true,
 	mode : 'remote', // default = remote
 	queryDelay : 800, // default = 500
+	
+	lastQuery : null,
 
 	record : Ext.data.Record.create([{
 				name : "id",
@@ -68,6 +70,29 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 						this.fireEvent("invalid", "No matching genes");
 					}
 				}, this);
+				
+				
+		/***** start of query queue fix *****/
+		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
+		// this needs the lastQuery property to be initialised as null
+		// note that is some other code in this file requried as well, it is marked
+		this.getStore().on('beforeload', function(store, options){
+			this.records = this.store.getRange();
+		}, this);
+		
+		this.getStore().on('load', function(store, records, options){
+			var query = ( options.params)? options.params[0]: null;
+			if( (query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery) ){
+				store.removeAll();
+				store.add(this.records);
+				if(this.records === null || this.records.length === 0){
+					this.doQuery(this.lastQuery);
+				}
+			}else{
+				this.records = this.store.getRange();
+			}
+		}, this);
+		/***** end of query queue fix *****/
 	},
 
 	onSelect : function(record, index) {
@@ -78,7 +103,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			this.fireEvent('select', this, this.selectedGene); 
 			// use event 'selectSingle' to get event as fired by super
 			this.fireEvent('selectSingle', this, record); 
-		}
+		}	
 	},
 
 	reset : function() {
