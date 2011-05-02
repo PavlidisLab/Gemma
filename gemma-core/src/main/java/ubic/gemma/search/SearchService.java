@@ -1755,6 +1755,10 @@ public class SearchService implements InitializingBean {
             log.info( results.size() + " hits retrieved (out of " + Math.min( MAX_LUCENE_HITS, hits.getLength() )
                     + " raw hits tested) in " + timer.getTime() + "ms" );
         }
+        if ( timer.getTime() > 5000 ) {
+            log.info( "****Extremely long Lucene Search processing!" +results.size() + " hits retrieved (out of " + Math.min( MAX_LUCENE_HITS, hits.getLength() )
+                    + " raw hits tested) in " + timer.getTime() + "ms" );
+        }
 
         return results;
     }
@@ -2088,6 +2092,9 @@ public class SearchService implements InitializingBean {
         watch.stop();
         if ( watch.getTime() > 100 ) {
             log.info( "Getting " + hits.getLength() + " lucene hits for " + query + " took " + watch.getTime() + " ms" );
+        }
+        if ( watch.getTime() > 5000 ) {
+            log.info( "*****Extremely long Lucene Index Search!  " + hits.getLength() + " lucene hits for " + query + " took " + watch.getTime() + " ms" );
         }
 
         return getSearchResults( hits );
