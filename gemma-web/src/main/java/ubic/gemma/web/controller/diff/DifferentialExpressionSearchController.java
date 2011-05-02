@@ -159,7 +159,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     }
                 } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                     log.error( "AccessDeniedException for experiment: Id:" + experiment.getId() + " Name: "
-                            + experiment.getName() );
+                            + experiment.getName());
+                    log.error(ade.getLocalizedMessage() );
+                    
+                    
                 }
             }
             mainVisuzalizationDataObject.addDatasetGroup( dataColumnsDatasetGroup );

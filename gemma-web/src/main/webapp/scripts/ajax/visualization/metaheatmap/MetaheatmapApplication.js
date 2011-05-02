@@ -22,19 +22,18 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
             for (j = 0; j < this.visualizationData.resultSetValueObjects[i].length; j++) {
             
                 var factorName = this.visualizationData.resultSetValueObjects[i][j].factorName;
-                
-                var values = [];
-                for (k = 0; k < this.visualizationData.resultSetValueObjects[i][j].contrastsFactorValueIds.length; k++) {
-                    values.push({
-                        text: this.visualizationData.resultSetValueObjects[i][j].contrastsFactorValues[this.visualizationData.resultSetValueObjects[i][j].contrastsFactorValueIds[k]],
-                        children: []
-                    });
-                }
-                
-                this.treeData.push({
-                    text: factorName,
-                    children: values
-                });
+					var values = [];
+	                for (k = 0; k < this.visualizationData.resultSetValueObjects[i][j].contrastsFactorValueIds.length; k++) {
+	                    values.push({
+	                        text: this.visualizationData.resultSetValueObjects[i][j].contrastsFactorValues[this.visualizationData.resultSetValueObjects[i][j].contrastsFactorValueIds[k]],
+	                        children: []
+	                    });
+	                }
+	                
+	                this.treeData.push({
+	                    text: factorName,
+	                    children: values
+	                });
             }
         }
         // display the tree
@@ -679,7 +678,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
             this.taxonId = this._taxonCombo.getSelected().id;
         }
         
-        DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId, this.datasetGroupReferences, this.geneGroupReferences, function(data){
+        DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(
+			this.taxonId, this.datasetGroupReferences, this.geneGroupReferences, function(data){
         
             progressWindow.hide();
 			this.fireEvent('visualizationLoaded');
@@ -687,6 +687,21 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
             data.geneGroupNames = this.geneGroupNames;
             data.datasetGroupNames = this.datasetGroupNames;
             
+			/**
+			 * The 'batch' factor should always be excluded as it is a technical artifact not of actual interest. 
+			 */
+			var i; var j;
+			var filteredResultSetValueObjects = [];
+			for (i = 0; i < data.resultSetValueObjects.length; i++) {
+				filteredResultSetValueObjects[i] = [];
+				for (j = 0; j < data.resultSetValueObjects[i].length; j++) {
+					if (data.resultSetValueObjects[i][j].factorName.toLowerCase() !== 'batch') {
+						filteredResultSetValueObjects[i].push(data.resultSetValueObjects[i][j]);
+					}
+				}
+			}
+			data.resultSetValueObjects = filteredResultSetValueObjects;
+			
             _metaVizApp = new Gemma.MetaHeatmapApp({
                 visualizationData: data,
                 applyTo: 'meta-heatmap-div',

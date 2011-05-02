@@ -20,9 +20,9 @@
 		<a href="<c:url value='/home2.html'/>"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" />
 		</a>
 	</div>
-
-
 </div>
+
+
 
 	<script type="text/javascript">
 	/*var menu = new Ext.Toolbar({

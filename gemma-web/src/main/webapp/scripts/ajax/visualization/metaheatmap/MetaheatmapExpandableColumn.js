@@ -138,7 +138,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			 *    
 			 */						
 			var vizWindow = new Gemma.VisualizationWithThumbsWindow({
-				title : 'Gene expression',
+				title : 'Gene Expression',
 				thumbnails : false
 			});
 			var eeId = this.ownerCt._dataColumn.datasetId;
