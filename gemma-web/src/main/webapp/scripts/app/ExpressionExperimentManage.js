@@ -6,6 +6,7 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * 
  * @see EEManager
  */
+Gemma.DEFAULT_NUMBER_EXPERIMENTS = 50;
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
@@ -513,7 +514,7 @@ Ext.onReady(function() {
 				width : 60
 			}];
 
-	var limit = 100;
+	var limit = Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 
 	var tpl = new Ext.XTemplate('<tpl for="."><div class="itemwrap" id="{shortName}">',
 			'<p>{id} {name} {shortName} {externalUri} {[this.log(values.id)]}</p>', "</div></tpl>", {
@@ -533,7 +534,7 @@ Ext.onReady(function() {
 		var urlParams = Ext.urlDecode(document.URL.substr(queryStart + 1));
 		ids = urlParams.ids ? urlParams.ids.split(',') : null;
 		taxonid = urlParams.taxon ? urlParams.taxon : null;
-		limit = urlParams.taxon ? urlParams.limit : 100;
+		limit = urlParams.taxon ? urlParams.limit : Gemma.DEFAULT_NUMBER_EXPERIMENTS;
 		filterMode = urlParams.filter ? urlParams.filter : null;
 	}
 
@@ -635,7 +636,15 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 			},
 
 			refresh : function() {
-				this.store.reload();
+				//this.store.reload();
+				this.store.load({
+							params : [null, null, Gemma.DEFAULT_NUMBER_EXPERIMENTS, null]
+						});
+				this.filterCombo.clearValue();
+				this.taxonCombo.clearValue();
+				//this.limitCombo.clearValue();
+				this.searchCombo.clearValue();
+				
 			},
 
 			filterType : null,
@@ -664,19 +673,23 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 
 			filterByLimit : function(box, record, index) {
 				this.limit = record.get('count');
+				// can't do "50 recently updated" and search results
+				this.searchCombo.clearValue();
 				this.store.load({
-							params : [this.taxonid, this.ids, this.limit, this.filterType]
+							params : [this.taxonid, null, this.limit, this.filterType]
 						});
 			},
 			
 			filterBySearch : function(box, record, index) {
 				this.ids = record.get('memberIds');
 				// if user selected an experiment instead of an experiment set, member ids will be null
-				if(this.ids == null){
-					this.ids = [record.get('id')];
+				if(this.ids === null){
+					this.ids = [record.data.reference.id];
 				}
+				// can't do "50 recently updated" and search results
+				this.limitCombo.clearValue();
 				this.store.load({
-							params : [this.taxonid, this.ids, this.limit, this.filterType]
+							params : [this.taxonid, this.ids, Gemma.DEFAULT_NUMBER_EXPERIMENTS, this.filterType]
 						});
 			},
 
@@ -803,7 +816,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 													cls : 'x-btn-icon',
 													icon : '/Gemma/images/icons/arrow_refresh_small.png',
 													handler : this.refresh,
-													tooltip : "Refresh the table",
+													tooltip : "Clear filters",
 													scope : this
 												}, this.searchCombo,this.filterCombo, this.taxonCombo, this.limitCombo, '->', {
 													xtype : 'button',
