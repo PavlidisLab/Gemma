@@ -171,13 +171,14 @@ public class GeneValueObject implements java.io.Serializable {
 
     public static Collection<String> getAliasStrings(Collection<GeneAlias> aliasObjs){
         Collection<java.lang.String> aliases = new ArrayList<String>();
-        try{
-           for(GeneAlias alias : aliasObjs){
-               aliases.add( alias.getAlias() );
-           }
-        }catch(org.hibernate.LazyInitializationException e){
-            return aliases;
-        }
+        // catch doesn't prevent error messages in logs
+//        try{
+//           for(GeneAlias alias : aliasObjs){
+//               aliases.add( alias.getAlias() );
+//           }
+//        }catch(org.hibernate.LazyInitializationException e){
+//            return aliases;
+//        }
         return aliases;
 
     }
