@@ -513,11 +513,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		var experimentRecordReferences = [];
 		var experimentNames = [];
+		var experimentCount = 0;
 		if (experimentRecords.length > 0) {
 			var i;
 			for(i = 0; i < experimentRecords.length; i++){
 				experimentRecordReferences.push(experimentRecords[i].reference);
 				experimentNames.push(experimentRecords[i].name);
+				experimentCount += experimentRecords[i].memberIds.size;
 			}
 		}
 		var data = {
@@ -526,7 +528,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					geneNames : geneNames,
 					datasetNames : experimentNames,
 					taxonId : this.getTaxonId(),
-					pvalue: Gemma.DEFAULT_THRESHOLD
+					pvalue: Gemma.DEFAULT_THRESHOLD,
+					datasetCount: experimentCount
 				};
 		return data;
 	},
@@ -726,9 +729,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							style: 'text-align:center;font-size:1.4em;'
 						}, this.experimentChoosers
 						,{	width: 340,
-							html:'Example: search for Parkinson\'s and select all human experiments <br> '+
-								'<span style="color:red">Note: using more than 50 experiments '+
-								'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)'}
+							html:'Example: search for Parkinson\'s and select all human experiments <br> '
+								+'<span style="color:red">Note: using more than 50 experiments '+
+								'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)'
+								}
 						]
 					}, {
 						html: ' based on ',

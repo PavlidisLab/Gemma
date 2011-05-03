@@ -47,6 +47,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				id: record.get("id"),
 				taxon: record.get("taxonName")
 			});
+			this.experimentPreviewContent.setTitle("Experiment Selection Preview (1)");
 			this.experimentSelectionEditorBtn.setText('0 more');
 			this.experimentSelectionEditorBtn.disable();
 			this.experimentSelectionEditorBtn.show();
@@ -97,6 +98,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			for (var j = 0; j < ees.size(); j++) {
 				this.experimentPreviewContent.update(ees[j]);
 			}
+			this.experimentPreviewContent.setTitle("Experiment Selection Preview ("+ees.size()+")");
 			this.experimentSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - Edit</a>');
 			this.showExperimentPreview();
 			

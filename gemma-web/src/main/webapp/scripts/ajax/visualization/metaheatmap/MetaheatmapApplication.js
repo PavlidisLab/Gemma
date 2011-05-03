@@ -81,7 +81,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
             _sortColumns: function(asc_desc, sortingFn){
                 this._imageArea._heatmapArea._sortColumns(asc_desc, sortingFn);
             },
-            tbar: ['Differential Expression Visualization','->',{
+            tbar: [this.tbarTitle
+				,'->',{
                 xtype: 'button',
                 x: 5,
                 y: 5,
@@ -150,7 +151,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 								'{datasetId}"',
 								' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
 							'<b>Factor</b>: {factorName}<br><br> ',
-							'<b>p Value</b>: {pvalue}',
+							'<b>q Value</b>: {pvalue}',
 					'</tpl>',
 				'</tpl></span>'),
 				tplWriteMode: 'overwrite'
@@ -230,8 +231,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                                     var geneGroupIndex;
                                     var i;
                                     if (checked) {
-                                        // Sort genes : changes
-                                        // gene order
+                                        // Sort genes : changes gene order
                                         for (i = 0; i < this.geneScores[0].length; i++) {
                                             this.geneScores[0][i].sort(function(o1, o2){
                                                 return o2.score - o1.score;
@@ -653,7 +653,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
         // if no asynchronous calls were made, run visualization right away
         // otherwise, doVisualization will be triggered by events
         if (!this.waitingForDatasetSessionGroupBinding && !this.waitingForGeneSessionGroupBinding) {
-            this.doVisualization();
+            this.doVisualization(null);
         }
     },
     doVisualization: function(){
@@ -694,7 +694,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
             
             data.geneGroupNames = this.geneGroupNames;
             data.datasetGroupNames = this.datasetGroupNames;
-            
+            var experimentCount = 0;
+			var lastDatasetId = null;
 			/**
 			 * The 'batch' factor should always be excluded as it is a technical artifact not of actual interest. 
 			 */
@@ -706,11 +707,19 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					if (data.resultSetValueObjects[i][j].factorName.toLowerCase() !== 'batch') {
 						filteredResultSetValueObjects[i].push(data.resultSetValueObjects[i][j]);
 					}
+					
+					// get the number of experiments, they should be grouped by datasetId
+					if(data.resultSetValueObjects[i][j].datasetId != lastDatasetId){
+						experimentCount++;
+					}
+					lastDatasetId = data.resultSetValueObjects[i][j].datasetId;
 				}
 			}
+			
 			data.resultSetValueObjects = filteredResultSetValueObjects;
 			
             _metaVizApp = new Gemma.MetaHeatmapApp({
+				tbarTitle: '<b>Differential Expression Visualisation</b> (Data available for '+experimentCount+' of '+this.param.datasetCount+' experiments)',
                 visualizationData: data,
                 applyTo: 'meta-heatmap-div',
                 pvalue: this.param.pvalue
@@ -849,6 +858,9 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
             }
             if (this.param.datasetNames) {
                 this.datasetGroupNames = this.param.datasetNames;
+            }
+            if (this.param.datasetCount) {
+                this.datasetsSelectedCount = this.param.datasetCount;
             }
             if (this.param.taxonId) {
                 this.taxonId = this.param.taxonId;

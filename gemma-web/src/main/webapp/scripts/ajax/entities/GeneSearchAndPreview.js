@@ -43,12 +43,12 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			geneGroupId: this.geneGroupId,
 			selectedGeneGroup: this.geneCombo.selectedGeneGroup, 
 			groupName: (this.geneCombo.selectedGeneGroup)? this.geneCombo.selectedGeneGroup.name : null,
-			taxonId: this.getTaxonId(),
-			taxonName: this.getTaxonName()
+			taxonId: this.searchForm.getTaxonId(),
+			taxonName: this.searchForm.getTaxonName()
 		});
 		this.geneSelectionEditor.loadGenes(this.geneIds, function(){
-			Ext.getCmp('geneSelectionEditor').loadMask.hide();
-		});
+				this.geneSelectionEditor.loadMask.hide();
+			}.createDelegate(this, [], false));
 	},
 
 	loadGeneOrGroup : function(record, query) {
@@ -103,6 +103,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					id: record.get("id"),
 					taxonCommonName: record.get("taxonName")
 				});
+				this.genePreviewContent.setTitle("Gene Selection Preview (1)");
 				this.geneSelectionEditorBtn.setText('0 more');
 				this.geneSelectionEditorBtn.disable();
 				this.geneSelectionEditorBtn.show();
@@ -146,6 +147,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						for (var i = 0; i < genes.size(); i++) {
 							this.genePreviewContent.update(genes[i]);
 						}
+						this.genePreviewContent.setTitle("Gene Selection Preview ("+genes.size()+")");
 						this.geneSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - Edit</a>');
 						this.showGenePreview();
 						
@@ -286,7 +288,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 							for ( i=0; i<genesToPreview.length;i++) {
 								this.genePreviewContent.update(genesToPreview[i]);
 							}
-							
+							this.genePreviewContent.setTitle("Gene Selection Preview ("+genesToPreview.length+")");
 							this.geneSelectionEditorBtn.setText('<a>'+(geneIds.length-genesToPreview.length) + ' more - Edit</a>');
 							this.showGenePreview();
 							this.genePreviewContent.show();
@@ -319,6 +321,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					hideTrigger: false,
 					typeAhead: false,
 					taxonId: this.taxonId,
+					listEmptyText: 'Enter text to search for genes',
 					listeners : {
 						'select' : {
 							fn : function(combo, record, index) {
