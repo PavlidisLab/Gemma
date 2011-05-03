@@ -85,8 +85,14 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                 xtype: 'button',
                 x: 5,
                 y: 5,
-                text: 'Settings'
-            }, {
+                text: '<b>Download</b>',
+				icon: '/Gemma/images/download.gif',
+				cls:'x-btn-text-icon',
+				//ctCls: 'purple-btn',
+				handler: function(){
+					Ext.Msg.alert("Download Results","Coming soon!");
+				}
+            }/*, {
                 xtype: 'button',
                 x: 5,
                 y: 29,
@@ -104,7 +110,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                     },
                     scope: this
                 }
-            }],
+            }*/
+			],
             items: [{		
 					// a window for displaying details as elements of the image are hovered over
 					title: 'Details <span style="color:grey">(Drag me!)</span>',
@@ -180,7 +187,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                         items: [{
                             xtype: 'radio',
                             name: 'bbb',
-                            boxLabel: 'Sort columns by sum of pValues.',
+                            boxLabel: 'Sort conditions by sum of pValues.',
                             listeners: {
                                 check: function(target, checked){
                                 
@@ -198,7 +205,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                         }, {
                             xtype: 'radio',
                             name: 'bbb',
-                            boxLabel: 'Sort columns by specificity.',
+                            boxLabel: 'Sort conditions by specificity.',
                             listeners: {
                                 check: function(target, checked){
                                 
@@ -217,7 +224,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                         
                         }]}, {
                             xtype: 'checkbox',
-                            boxLabel: 'Sort rows by gene score.',
+                            boxLabel: 'Sort genes by gene score.',
                             listeners: {
                                 check: function(target, checked){
                                     var geneGroupIndex;
@@ -655,8 +662,9 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
         var progressWindow = new Ext.Window({
             width: 400,
             height: 55,
-            title: "Estimated time: " + (estimatedTime / 1000) + "s",
-            items: [{
+            //title: "Estimated time: " + (estimatedTime / 1000) + "s",
+            title: "Loading",
+			items: [{
                 xtype: 'progress',
                 ref: 'progress_bar'
             }]
@@ -809,17 +817,20 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
             geneReferences: [{
                 id: 97,
                 type: "databaseBackedGroup"
-            },{
+            }/*,{
                 id: 75,
                 type: "databaseBackedGroup"
-            }],
+            }*/
+			],
             datasetReferences: [{
                 id: 6110,
                 type: "databaseBackedGroup"
-            },{
+            }
+			/*,{
                 id: 6107,
                 type: "databaseBackedGroup"
-            }],
+            }*/
+            ],
             geneNames: ["gene TEST", "gene TEST 2"],
             datasetNames: ["dataset TEST","dataset TEST2"],
             taxonId: 2,
