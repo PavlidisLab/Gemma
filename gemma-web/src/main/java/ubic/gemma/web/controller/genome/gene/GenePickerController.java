@@ -249,18 +249,16 @@ public class GenePickerController {
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
         List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
 
-        // Collection<Gene> genes = new HashSet<Gene>();
+        Collection<Gene> genes = new HashSet<Gene>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
             log.info( "No Genes for search: " + query + " taxon=" + taxonId );
             return new HashSet<GeneValueObject>();
         }
-        /*
-         * for ( SearchResult sr : geneSearchResults ) { genes.add( ( Gene ) sr.getResultObject() ); log.debug(
-         * "Gene search result: " + ((Gene)sr.getResultObject()).getOfficialSymbol() ); }
-         */
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
-        Collection<Gene> genes = geneService.loadMultiple( EntityUtils.getIds( geneSearchResults ) );
-        genes = geneService.thawLite( genes );
+        
+        for ( SearchResult sr : geneSearchResults ) { genes.add( ( Gene ) sr.getResultObject() ); log.debug(
+         "Gene search result: " + ((Gene)sr.getResultObject()).getOfficialSymbol() ); }         
+        
         Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
