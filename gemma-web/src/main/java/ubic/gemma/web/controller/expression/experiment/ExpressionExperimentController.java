@@ -400,14 +400,27 @@ public class ExpressionExperimentController extends AbstractTaskService {
      */
     public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query ) {
 
+
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
         List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
         List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
-
+                
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
         if ( query.equals( "" ) ) {
-
+            
+            // FOR TESTING UNTIL SCALING ISSUES ARE WORKED OUT
+            // propmt with all groups, just limit by size for now
+            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered by security.
+            for ( ExpressionExperimentSet set : sets) {
+                if(set.getExperiments().size() < 50){
+                    expressionExperimentSetService.thaw( set );
+                    displayResults.add( new SearchResultDisplayObject( set ) );
+                }
+            }
+            Collections.sort( displayResults );
+           /* USE THIS CODE WHEN SCALING ISSUES ARE RESOLVED
+            * 
             // get authenticated user's sets
             Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
             if ( SecurityService.isUserLoggedIn() ) {
@@ -421,7 +434,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
                     // if set was automatically generated, don't label as user-created (technically was created by admin
                     // user)
-                    if ( newSRDO.getDescription().indexOf( "Automatically generated" ) < 0 ) {
+                    if ( newSRDO.getName().indexOf( "All" ) != 0 ) {
                         newSRDO.setType( "usersExperimentSet" );
                         usersResults.add( newSRDO );
                     } else {
@@ -429,23 +442,21 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     }
                 }
             }
+            
 
             // get auto generated sets
-            // FIXME this should be replaced with a query for all lists where 'modifiable = false' (?)
-            SearchSettings settings = new SearchSettings( "Automatically generated" );
-            settings.noSearches();
-            settings.setSearchExperimentSets( true ); // add searching for experimentSets
-            settings.setGeneralSearch( true ); // add searching for experimentSets
-            List<SearchResult> autoGenSetsSearchResults = searchService.search( settings ).get(
-                    ExpressionExperimentSet.class );
-
-            for ( SearchResult sr : autoGenSetsSearchResults ) {
-                ExpressionExperimentSet ees = ( ExpressionExperimentSet ) sr.getResultObject();
-                expressionExperimentSetService.thaw( ees );
+            // NOTE: assumption made here that total number of groups is small
+            // If this changes, may want to use searching instead of filtering
+            // search would be for all lists where 'modifiable = false' (?)
+            
+            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered by security.
+            List<SearchResultDisplayObject> autoGenSets = new ArrayList<SearchResultDisplayObject>();
+            for ( ExpressionExperimentSet set : sets) {
+                if(set.getName().indexOf( "All" ) == 0 ){
+                    expressionExperimentSetService.thaw( set );
+                    autoGenSets.add( new SearchResultDisplayObject( set ) );
+                }
             }
-            List<SearchResultDisplayObject> autoGenSets = new ArrayList<SearchResultDisplayObject>(
-                    SearchResultDisplayObject
-                            .convertSearchResults2SearchResultDisplayObjects( autoGenSetsSearchResults ) );
 
             // get any session-bound groups
             Collection<ExpressionExperimentSetValueObject> sessionResult = sessionListManager
@@ -479,7 +490,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
             autoGenResults.addAll( autoGenSets );
             Collections.sort( autoGenResults );
             displayResults.addAll( autoGenResults );
-
+            
+*/
             return displayResults;
 
         } // end of query = ''
