@@ -415,10 +415,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
             for ( ExpressionExperimentSet set : sets) {
                 if(set.getExperiments().size() < 50){
                     expressionExperimentSetService.thaw( set );
-                    displayResults.add( new SearchResultDisplayObject( set ) );
+                    autoGenResults.add( new SearchResultDisplayObject( set ) );
                 }
             }
-            Collections.sort( displayResults );
+            Collections.sort( autoGenResults );
+            
            /* USE THIS CODE WHEN SCALING ISSUES ARE RESOLVED
             * 
             // get authenticated user's sets
@@ -457,7 +458,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     autoGenSets.add( new SearchResultDisplayObject( set ) );
                 }
             }
-
+*/
             // get any session-bound groups
             Collection<ExpressionExperimentSetValueObject> sessionResult = sessionListManager
                     .getModifiedExperimentSets();
@@ -483,15 +484,15 @@ public class ExpressionExperimentController extends AbstractTaskService {
             // keep sets in proper order (user's groups first, then public ones)
             Collections.sort( sessionSets );
             displayResults.addAll( sessionSets );
-
+/*
             Collections.sort( usersResults );
             displayResults.addAll( usersResults );
 
             autoGenResults.addAll( autoGenSets );
             Collections.sort( autoGenResults );
-            displayResults.addAll( autoGenResults );
-            
-*/
+ */           displayResults.addAll( autoGenResults );
+         
+
             return displayResults;
 
         } // end of query = ''
