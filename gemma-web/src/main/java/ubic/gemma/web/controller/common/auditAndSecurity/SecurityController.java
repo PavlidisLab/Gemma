@@ -716,15 +716,15 @@ public class SecurityController {
     private Collection<Securable> getUsersExperimentSets( boolean privateOnly ) {
         Collection<Securable> secs = new HashSet<Securable>();
 
-        Collection<ExpressionExperimentSet> analyses = expressionExperimentSetService.loadMySharedSets();
+        Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.loadMySets();
         if ( privateOnly ) {
             try {
-                secs.addAll( securityService.choosePrivate( analyses ) );
+                secs.addAll( securityService.choosePrivate( eeSets ) );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
         } else {
-            secs.addAll( analyses );
+            secs.addAll( eeSets );
         }
         return secs;
     }

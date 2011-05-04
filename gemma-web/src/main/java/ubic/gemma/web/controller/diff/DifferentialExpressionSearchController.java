@@ -131,8 +131,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         timer.start();
                         int numberOfProbesOnArray = expressionExperimentDao.getProcessedExpressionVectorCount( e );
                         timer.stop();
-                        log.info( "Call to get number of probes on the array for 1 experiment took : "
-                                + timer.getTime() + " ms" );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Call to get number of probes on the array for 1 experiment took : "
+                                    + timer.getTime() + " ms" );
 
                         Collection<Long> arrayDesignIds = EntityUtils.getIds( expressionExperimentService
                                 .getArrayDesignsUsed( e ) );
@@ -143,9 +144,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                                 arrayDesignIds );
 
                         timer.stop();
-                        log
-                                .info( "Call to constructVisualizationColumnsFromAnalysis took : " + timer.getTime()
-                                        + " ms" );
+                        if ( log.isDebugEnabled() )
+                            log.debug( "Call to constructVisualizationColumnsFromAnalysis took : " + timer.getTime()
+                                    + " ms" );
 
                         // Set common properties for all columns in this dataset.
                         for ( DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn : analysisColumns ) {
@@ -159,10 +160,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     }
                 } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                     log.error( "AccessDeniedException for experiment: Id:" + experiment.getId() + " Name: "
-                            + experiment.getName());
-                    log.error(ade.getLocalizedMessage() );
-                    
-                    
+                            + experiment.getName() );
+                    log.error( ade.getLocalizedMessage() );
+
                 }
             }
             mainVisuzalizationDataObject.addDatasetGroup( dataColumnsDatasetGroup );
@@ -195,13 +195,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         // resultSet.getId(),
         // VISUALIZATION_P_VALUE_THRESHOLD );
         timer.stop();
-        log.info( "DiffEx probes: " + numberDiffExpressedProbes + ", call took :" + timer.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "DiffEx probes: " + numberDiffExpressedProbes + ", call took :" + timer.getTime() + " ms" );
 
         vizColumn.setNumberOfProbesDiffExpressed( numberDiffExpressedProbes );
 
         ExperimentalFactor factor = resultSet.getExperimentalFactors().iterator().next();
-        log.info( "Factor description: " + factor.getDescription() + ", number of factor values: "
-                + factor.getFactorValues().size() );
+        if ( log.isDebugEnabled() )
+            log.debug( "Factor description: " + factor.getDescription() + ", number of factor values: "
+                    + factor.getFactorValues().size() );
 
         vizColumn.setBaselineFactorValue( getFactorValueString( resultSet.getBaselineGroup() ) );
         vizColumn.setFactorName( factor.getName() );
@@ -209,7 +211,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         for ( FactorValue fvalue : factor.getFactorValues() ) {
             vizColumn.addContrastsFactorValue( fvalue.getId(), getFactorValueString( fvalue ) );
-            log.info( "Factor value: " + getFactorValueString( fvalue ) );
+            if ( log.isDebugEnabled() ) log.debug( "Factor value: " + getFactorValueString( fvalue ) );
         }
 
         for ( int geneGroupIndex = 0; geneGroupIndex < genes.size(); geneGroupIndex++ ) {
@@ -224,7 +226,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     vizColumn.setNumberOfProbes( geneGroupIndex, geneIndex, 0 );
                 } else {
                     Double correctedPvalue = resultsForGene.get( 0 );
-                    log.info( "pValue: " + correctedPvalue );
+                    if ( log.isDebugEnabled() ) log.debug( "pValue: " + correctedPvalue );
                     vizColumn.setNumberOfProbes( geneGroupIndex, geneIndex, resultsForGene.size() ); // show that there
                     // are multiple
                     // probes for the
@@ -593,7 +595,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         timer.start();
         differentialExpressionAnalysisService.thaw( analysis );
         timer.stop();
-        log.info( "Thawing analysis took :" + timer.getTime() );
+        if ( log.isDebugEnabled() ) log.debug( "Thawing analysis took :" + timer.getTime() );
 
         for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
             // Currently, we skip result sets containing interactions.

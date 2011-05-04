@@ -94,11 +94,16 @@ public class DifferentialExpressionResultDaoImpl extends
             + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private static final String fetchResultsByResultSetAndGeneQuery = "select dear.CORRECTED_PVALUE "
-        + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par " //, COMPOSITE_SEQUENCE cs "
-        + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
-        + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id " // and g2s.CS=cs.ID and cs.ARRAY_DESIGN_FK = :array_ids"
-        + " order by dear.CORRECTED_P_VALUE_BIN DESC";
-            
+            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par " // ,
+                                                                                                                            // COMPOSITE_SEQUENCE
+                                                                                                                            // cs
+                                                                                                                            // "
+            + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
+            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id " // and g2s.CS=cs.ID and
+                                                                                          // cs.ARRAY_DESIGN_FK =
+                                                                                          // :array_ids"
+            + " order by dear.CORRECTED_P_VALUE_BIN DESC";
+
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -407,9 +412,9 @@ public class DifferentialExpressionResultDaoImpl extends
         }
         return results;
     }
-      
-    public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds,
-            Integer limit ) {
+
+    public List<Double> findGeneInResultSets( Gene gene, ExpressionAnalysisResultSet resultSet,
+            Collection<Long> arrayDesignIds, Integer limit ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -422,13 +427,13 @@ public class DifferentialExpressionResultDaoImpl extends
 
             queryObject.setLong( "gene_id", gene.getId() );
             queryObject.setLong( "rs_id", resultSet.getId() );
-            //queryObject.setParameterList( "array_ids", arrayDesignIds );
-            //queryObject.setLong( "array_ids", arrayDesignIds.iterator().next() );
-            
+            // queryObject.setParameterList( "array_ids", arrayDesignIds );
+            // queryObject.setLong( "array_ids", arrayDesignIds.iterator().next() );
+
             if ( limit != null ) {
                 queryObject.setMaxResults( limit );
             }
-            
+
             queryObject.addScalar( "CORRECTED_PVALUE", new DoubleType() );
             results = queryObject.list();
 
@@ -437,12 +442,13 @@ public class DifferentialExpressionResultDaoImpl extends
         }
 
         timer.stop();
-        log.info( "Fetching probeResults from resultSet "+resultSet.getId() +" for gene "+ gene.getId() +"and "+arrayDesignIds.size()+ "arrays took : " + timer.getTime() + " ms" );
+        if ( log.isDebugEnabled() )
+            log.debug( "Fetching probeResults from resultSet " + resultSet.getId() + " for gene " + gene.getId()
+                    + "and " + arrayDesignIds.size() + "arrays took : " + timer.getTime() + " ms" );
 
         return results;
     }
-        
-    
+
     public Collection<ProbeAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
@@ -562,9 +568,8 @@ public class DifferentialExpressionResultDaoImpl extends
         return this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
 
     }
-    
-    
-    public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold ) {
+
+    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
         DetachedCriteria criteria = DetachedCriteria.forClass( HitListSize.class );
 
         criteria.add( Restrictions.eq( "id", resultSetId ) );
@@ -582,8 +587,7 @@ public class DifferentialExpressionResultDaoImpl extends
                 result = results.iterator().next();
             }
         }
-        return (( HitListSize ) result ).getNumberOfProbes();        
+        return ( ( HitListSize ) result ).getNumberOfProbes();
     }
 
-    
 }

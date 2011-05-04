@@ -76,17 +76,13 @@ public interface DifferentialExpressionAnalysisService extends
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef );
 
     /**
-     * <p>
      * Given a collection of ids, return a map of id -> differential expression analysis (one per id).
-     * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
     public Map<Long, DifferentialExpressionAnalysis> findByInvestigationIds( Collection<Long> investigationIds );
 
     /**
-     * <p>
      * Return a collection of experiments in which the given gene was analyzed.
-     * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioAssaySet> findExperimentsWithAnalyses( ubic.gemma.model.genome.Gene gene );
