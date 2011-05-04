@@ -407,31 +407,34 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				
 			},
 		createInDatabase : function() {
-		var name = this.newGroupName;
-		var description = this.newGroupDescription;
-		var taxonName = this.selectedExperimentGroup.taxonName;
-		var taxonId = this.selectedExperimentGroup.taxonId;
-		var reference = this.selectedExperimentGroup.reference;
-
-		var groupStore = new Gemma.DatasetGroupStore();		
+			if(typeof this.selectedExperimentGroup !== 'undefined'){
+				var name = this.newGroupName;
+				var description = this.newGroupDescription;
+				var taxonName = this.selectedExperimentGroup.taxonName;
+				var taxonId = this.selectedExperimentGroup.taxonId;
+				var reference = this.selectedExperimentGroup.reference;
 		
-		var ids = this.getEEIds();
+				var groupStore = new Gemma.DatasetGroupStore();		
+				
+				var ids = this.getEEIds();
+				
+				var RecType = groupStore.record;
+				var rec = new RecType();
+				rec.set("expressionExperimentIds", ids);
+				rec.set("reference", reference);
+				rec.set("size", ids.length);	
+				rec.set("name", name);
+				rec.set("description",description);
+				rec.set("taxonName",taxonName);
+				rec.set("taxonId",taxonId);
+				
+				groupStore.add(rec);
+				
+				groupStore.save();
+									
+				this.fireEvent('experimentListModified', this.getEEIds(), this.newGroupName);
+			}
 		
-		var RecType = groupStore.record;
-		var rec = new RecType();
-		rec.set("expressionExperimentIds", ids);
-		rec.set("reference", reference);
-		rec.set("size", ids.length);	
-		rec.set("name", name);
-		rec.set("description",description);
-		rec.set("taxonName",taxonName);
-		rec.set("taxonId",taxonId);
-		
-		groupStore.add(rec);
-		
-		groupStore.save();
-							
-		this.fireEvent('experimentListModified', this.getEEIds(), this.newGroupName);
 		this.fireEvent('doneModification');
 		
 	},

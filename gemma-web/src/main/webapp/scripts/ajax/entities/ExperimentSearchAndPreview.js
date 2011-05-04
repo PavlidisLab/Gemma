@@ -182,6 +182,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		/****** EE COMBO ****************************************************************************/
 		
 		// Shows the combo box for EE groups 
+		this.newBoxTriggered = false;
 		this.experimentCombo = new Gemma.ExperimentAndExperimentGroupCombo({
 							typeAhead: false,
 							width : 300
@@ -204,8 +205,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 										//this.searchForm.eeComboSelectedRecord=record; // needed?
 										
 										// if this was the first time a selection was made using this box
-										if(combo.startValue===''){
+										if(combo.startValue==='' && this.newBoxTriggered === false){
 											this.fireEvent('madeFirstSelection');
+											this.newBoxTriggered = true;
 											this.helpBtn.hide();
 											this.removeBtn.show();
 											//this.relayEvents(this.experimentCombo, ['select']);
