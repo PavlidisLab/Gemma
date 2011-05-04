@@ -10,21 +10,23 @@
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">
 		<script type="text/javascript">
-	Ext.namespace('Gemma');
-	Ext.onReady(function() {
-		Ext.QuickTips.init();
-		var id = dwr.util.getValue("auditableId");
- 		if (!id) { return; }
-		var clazz = dwr.util.getValue("auditableClass");
-		var auditable = {
-			id : id,
-			classDelegatingFor : clazz
-		};
-		var grid = new Gemma.AuditTrailGrid({
-			renderTo : 'auditTrail',
-			auditable : auditable
-		});
+Ext.namespace('Gemma');
+Ext.onReady(function() {
+	Ext.QuickTips.init();
+	var id = dwr.util.getValue("auditableId");
+	if (!id) {
+		return;
+	}
+	var clazz = dwr.util.getValue("auditableClass");
+	var auditable = {
+		id : id,
+		classDelegatingFor : clazz
+	};
+	var grid = new Gemma.AuditTrailGrid( {
+		renderTo : 'auditTrail',
+		auditable : auditable
 	});
+});
 </script>
 	</security:authorize>
 
@@ -60,19 +62,19 @@
 			</td>
 			<td valign="top">
 				<%
-			    if ( gene.getAliases().size() > 0 ) {
-			        java.util.Collection<ubic.gemma.model.genome.gene.GeneAlias> aliasObjects = gene.getAliases();
-			        String[] aliases = new String[aliasObjects.size()];
-			        int i = 0;
-			        for ( ubic.gemma.model.genome.gene.GeneAlias a : aliasObjects ) {
-			            aliases[i] = a.getAlias();
-			            i++;
-			        }
-			        out.print( org.apache.commons.lang.StringUtils.join( aliases, ", " ) );
-			    } else {
-			        out.print( "No aliases defined" );
-			    }
-			%>
+				    if ( gene.getAliases().size() > 0 ) {
+				        java.util.Collection<ubic.gemma.model.genome.gene.GeneAlias> aliasObjects = gene.getAliases();
+				        String[] aliases = new String[aliasObjects.size()];
+				        int i = 0;
+				        for ( ubic.gemma.model.genome.gene.GeneAlias a : aliasObjects ) {
+				            aliases[i] = a.getAlias();
+				            i++;
+				        }
+				        out.print( org.apache.commons.lang.StringUtils.join( aliases, ", " ) );
+				    } else {
+				        out.print( "No aliases defined" );
+				    }
+				%>
 
 				<c:if test="${not empty gene.ncbiId}">
 				&nbsp;&nbsp;
@@ -88,10 +90,8 @@
 		</tr>
 		<tr>
 			<td>
-				<div class="clearfix"/>
-					<b>
-						<fmt:message key="gene.group" />
-					</b>
+				<div class="clearfix" />
+					<b> <fmt:message key="gene.group" /> </b>
 			</td>
 			<td>
 				<div id="gene-group-grid"></div>
@@ -155,9 +155,9 @@
 	<div id="coexpression-grid">
 	</div>
 
-	<c:if test="${not empty representativeImages}">
+	<c:if test="${not empty abaImages}">
 		<h3>
-			Allen Brain Atlas Expression Images
+			Allen Brain Atlas expression pattern
 
 			<a class="helpLink" href="?"
 				onclick="showHelpTip(event, 'Below is a sampling of expression profile pictures from the allen brain atlas. Beside is a link to the allen brain atlas'); return false"><img
@@ -176,7 +176,7 @@
 			</p>
 		</c:if>
 		<div style="valign: top" class="clearfix">
-			<c:forEach var="img" items="${representativeImages}">
+			<c:forEach var="img" items="${abaImages}">
 				<div style="cursor: pointer; float: left; padding: 8px">
 					<a
 						title='Allen Brain Atlas Image for <c:out value="${gene.officialSymbol}"/>, click to enlarge '

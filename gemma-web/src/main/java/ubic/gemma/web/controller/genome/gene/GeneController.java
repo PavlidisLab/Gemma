@@ -300,11 +300,10 @@ public class GeneController extends BaseController {
      * @param mav
      */
     private void getAllenBrainImages( Gene gene, ModelAndView mav ) {
-        final Taxon mouseTaxon = this.taxonService.findByCommonName( "mouse" );
+        final Taxon mouse = this.taxonService.findByCommonName( "mouse" );
         Gene mouseGene = gene;
-        // Get alan brain atalas represntative images
-        if ( gene.getTaxon().getId().equals( mouseTaxon.getId() ) ) {
-            mouseGene = this.homologeneService.getHomologue( gene, mouseTaxon );
+        if ( !gene.getTaxon().equals( mouse ) ) {
+            mouseGene = this.homologeneService.getHomologue( gene, mouse );
         }
 
         if ( mouseGene != null ) {
@@ -317,7 +316,7 @@ public class GeneController extends BaseController {
                 Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
 
                 if ( !representativeImages.isEmpty() ) {
-                    mav.addObject( "representativeImages", representativeImages );
+                    mav.addObject( "abaImages", representativeImages );
                     mav.addObject( "abaGeneUrl", abaGeneUrl );
                     mav.addObject( "homologousMouseGene", mouseGene );
                 }
