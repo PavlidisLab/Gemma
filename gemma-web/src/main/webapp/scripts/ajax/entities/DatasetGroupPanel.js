@@ -538,7 +538,6 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 					return;
 				} else {
 					this.hide();
-					Ext.Msg.alert("Duplicate name", "Please provide a previously unused name for the set");
 
 					return this.fireEvent("commit", {
 								name : values.newEesetName,
