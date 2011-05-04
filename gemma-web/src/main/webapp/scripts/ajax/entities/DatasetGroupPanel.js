@@ -401,15 +401,13 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						var v = "";
 						if (!value) {
 							v = "<img src='/Gemma/images/icons/shield.png' height='16' width='16' ext:qtip='Protected; cannot have members changed, usually applies to automatically generated groups.' />";
-						} else {
-							v = ""; // it's not protected.
 						}
-						var sl = Gemma.SecurityManager.getSecurityLink(
-								"ubic.gemma.model.genome.gene.ExpressionExperimentSetImpl", record.get('id'), record
-										.get('publik'), record.get('shared'), record
-										.get('currentUserHasWritePermission'));
+						var sl = Gemma.SecurityManager
+								.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl",
+										record.get('id'), record.get('publik'), record.get('shared'), record
+												.get('currentUserHasWritePermission'));
 
-						v = "&nbsp;" + sl;
+						v = v + "&nbsp;" + sl;
 						return v;
 					},
 					// fixed : true,
