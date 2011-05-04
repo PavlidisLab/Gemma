@@ -132,10 +132,11 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 			var root = new Ext.tree.TreeNode({
 					expanded: true,
 					id: 'selectTreeRoot',
-					text: 'Filter Experiments by Factor'
+					text:''
 				});
 			this.setRootNode(root);
 			this.buildNodes(root, this.nodeParams, true);
+			root.setText('Filter Experiments by Factor'); // title it after so title of tree isn't in node ids
 		},
 		/**
 		 * return nodes

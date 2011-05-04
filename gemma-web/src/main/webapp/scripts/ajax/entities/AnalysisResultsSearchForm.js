@@ -519,7 +519,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			for(i = 0; i < experimentRecords.length; i++){
 				experimentRecordReferences.push(experimentRecords[i].reference);
 				experimentNames.push(experimentRecords[i].name);
-				experimentCount += experimentRecords[i].memberIds.size;
+				experimentCount += experimentRecords[i].memberIds.size();
 			}
 		}
 		var data = {
@@ -812,23 +812,18 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (typeof this.geneChoosers.items !== 'undefined') {
 			this.geneChoosers.items.each(function(){
 					if (this.xtype === 'geneSearchAndPreview') {
-						//Ext.DomHelper.overwrite(this.genePreviewContent.body, {cn: '<div style="font-weight:bold;">Gene Selection Preview </div>'});
-						//this.genePreviewExpandBtn.enable().show();
-						//this.geneSelectionEditorBtn.disable().hide();
+						this.geneSelectionEditorBtn.hide(); // needed here in case 'go' is pressed before preview is done loading
 						this.genePreviewContent.collapse();
+						
 					}
 			});
 		}
 	},
 	collapseExperimentPreviews: function(){
-
 		if(typeof this.experimentChoosers.items !== 'undefined'){
 			this.experimentChoosers.items.each(function(){
 					if (this.xtype === 'experimentSearchAndPreview') {
-						//Ext.DomHelper.overwrite(this.experimentPreviewContent.body, {cn: '<div style="font-weight:bold;">Experiment Selection Preview </div>'});
 						this.experimentPreviewContent.collapse();
-						//this.experimentPreviewExpandBtn.enable().show();
-						//this.experimentSelectionEditorBtn.disable().hide();
 					}
 			});
 		}

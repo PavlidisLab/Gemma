@@ -147,7 +147,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						for (var i = 0; i < genes.size(); i++) {
 							this.genePreviewContent.update(genes[i]);
 						}
-						this.genePreviewContent.setTitle("Gene Selection Preview ("+genes.size()+")");
+						this.genePreviewContent.setTitle("Gene Selection Preview ("+ids.size()+")");
 						this.geneSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - Edit</a>');
 						this.showGenePreview();
 						
@@ -288,7 +288,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 							for ( i=0; i<genesToPreview.length;i++) {
 								this.genePreviewContent.update(genesToPreview[i]);
 							}
-							this.genePreviewContent.setTitle("Gene Selection Preview ("+genesToPreview.length+")");
+							this.genePreviewContent.setTitle("Gene Selection Preview ("+geneIds.length+")");
 							this.geneSelectionEditorBtn.setText('<a>'+(geneIds.length-genesToPreview.length) + ' more - Edit</a>');
 							this.showGenePreview();
 							this.genePreviewContent.show();

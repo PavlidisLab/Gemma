@@ -98,7 +98,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			for (var j = 0; j < ees.size(); j++) {
 				this.experimentPreviewContent.update(ees[j]);
 			}
-			this.experimentPreviewContent.setTitle("Experiment Selection Preview ("+ees.size()+")");
+			this.experimentPreviewContent.setTitle("Experiment Selection Preview ("+ids.size()+")");
 			this.experimentSelectionEditorBtn.setText('<a>'+(ids.size() - limit) + ' more - Edit</a>');
 			this.showExperimentPreview();
 			

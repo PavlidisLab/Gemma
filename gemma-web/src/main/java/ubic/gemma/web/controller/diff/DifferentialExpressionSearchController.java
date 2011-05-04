@@ -20,6 +20,7 @@ package ubic.gemma.web.controller.diff;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -64,6 +65,7 @@ import ubic.gemma.web.controller.BaseFormController;
 import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentExperimentalFactorValueObject;
 import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
+import ubic.gemma.web.util.GeneSymbolComparator;
 import ubic.gemma.web.view.TextView;
 import ubic.gemma.web.visualization.DifferentialExpressionAnalysisResultSetVisualizationValueObject;
 import ubic.gemma.web.visualization.DifferentialExpressionVisualizationValueObject;
@@ -254,10 +256,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public DifferentialExpressionVisualizationValueObject differentialExpressionAnalysisVisualizationSearch(
             Long taxonId, Collection<Reference> datasetGroupReferences, Collection<Reference> geneGroupReferences ) {
 
-        // decode the encoded references
-        // Collection<Reference> geneGroupReferences = Reference.decode( encodedGeneGroupReferences );
-        // Collection<Reference> datasetGroupReferences = Reference.decode( encodedDatasetGroupReferences );
-
         List<Collection<BioAssaySet>> experiments = getExperiments( datasetGroupReferences );
 
         // Load genes
@@ -279,8 +277,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     Gene gene = geneService.load( ref.getId() );
                     if ( gene != null ) {
                         genesInsideSet.add( gene );
-                        geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                        geneIdsInsideSet.add( gene.getId() );
                     }
                 } else {
                     // if the reference being passed in for a session bound group, use a different method to load it
@@ -292,9 +288,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
                             if ( gene != null ) {
                                 genesInsideSet.add( gene );
-                                geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                                geneFullNamesInsideSet.add( gene.getOfficialName() );
-                                geneIdsInsideSet.add( gene.getId() );
                             }
                         }
 
@@ -303,12 +296,18 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         for ( GeneSetMember memberGene : geneSet.getMembers() ) {
                             if ( memberGene.getGene() != null ) {
                                 genesInsideSet.add( memberGene.getGene() );
-                                geneNamesInsideSet.add( memberGene.getGene().getOfficialSymbol() );
-                                geneFullNamesInsideSet.add( memberGene.getGene().getOfficialName() );
-                                geneIdsInsideSet.add( memberGene.getGene().getId() );
                             }
                         }
                     }
+                }
+                
+                // sort genes alphabetically
+                Collections.sort( genesInsideSet, new GeneSymbolComparator() );
+                
+                for(Gene gene : genesInsideSet){
+                  geneNamesInsideSet.add( gene.getOfficialSymbol() );
+                  geneFullNamesInsideSet.add( gene.getOfficialName() );
+                  geneIdsInsideSet.add( gene.getId() );  
                 }
 
                 genes.add( genesInsideSet );

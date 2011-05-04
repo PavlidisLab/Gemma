@@ -78,7 +78,7 @@ Ext.ux.data.DwrProxy = function(configOrMethod) {
 		upconf.api = this.apiActionToHandlerMap;
 		Ext.ux.data.DwrProxy.superclass.constructor.call(this, upconf);
 	} else {
-		throw "OH no!";
+		throw "OH no! + configOrMethod: "+configOrMethod;
 	}
 };
 

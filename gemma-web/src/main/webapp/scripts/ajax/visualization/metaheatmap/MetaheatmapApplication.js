@@ -37,9 +37,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
             }
         }
         // display the tree
-        var tree = new Gemma.FactorSelectTree(this.treeData);
-		Ext.apply(tree,{autoScroll:true, bodyStyle: 'padding-bottom:5px'});
-        tree.on('checkchange', function(node, checked){ // fired every time a checkbox changes state{
+        this.tree = new Gemma.FactorSelectTree(this.treeData);
+		Ext.apply(this.tree,{autoScroll:true, bodyStyle: 'padding-bottom:5px'});
+        this.tree.on('checkchange', function(node, checked){ // fired every time a checkbox changes state{
             var filteringFn = function(o){
                 if (o.factorName.toLowerCase() === node.text.toLowerCase()) {
                     return !checked; // should return true if you want to filter
@@ -223,8 +223,45 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                                 scope: this
                             }
                         
-                        }]}, {
-                            xtype: 'checkbox',
+                        }]},{
+                            xtype: 'radio',
+							name:'geneSortRadios',
+							checked: true,
+                            boxLabel: 'Sort genes alphabetically.',
+                            listeners: {
+                                check: function(target, checked){
+                                    var geneGroupIndex;
+                                    var i;
+                                    if (!checked) {
+                                        // Sort genes : changes gene order
+                                        for (i = 0; i < this.geneScores[0].length; i++) {
+                                            this.geneScores[0][i].sort(function(o1, o2){
+                                                return o2.score - o1.score;
+                                            });
+                                        }
+                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
+                                            this.geneOrdering[geneGroupIndex] = [];
+                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+                                                    this.geneOrdering[geneGroupIndex].push(this.geneScores[0][geneGroupIndex][i].index);
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        // Default geneOrdering
+                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
+                                            this.geneOrdering[geneGroupIndex] = [];
+                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+                                                this.geneOrdering[geneGroupIndex].push(i);
+                                            }
+                                        }
+                                    }
+                                    this.refreshVisualization();
+                                },
+                                scope: this
+                            }
+                    }, {
+                            xtype: 'radio',
+							name:'geneSortRadios',
                             boxLabel: 'Sort genes by gene score.',
                             listeners: {
                                 check: function(target, checked){
@@ -240,9 +277,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                                         for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
                                             this.geneOrdering[geneGroupIndex] = [];
                                             for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
-                                                if (this.geneScores[0][geneGroupIndex][i].score !== 0) {
+                                                //if (this.geneScores[0][geneGroupIndex][i].score !== 0) {
                                                     this.geneOrdering[geneGroupIndex].push(this.geneScores[0][geneGroupIndex][i].index);
-                                                }
+                                                //}
                                             }
                                         }
                                     }
@@ -294,9 +331,11 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 										return null;
 									};
 								}else{ // show columns without results but respect filtering by factor
-									var checkedNodeIds = tree.getChecked('id');
+									var checkedNodeIds = this.tree.getChecked('id');
+									console.log("checkedNodeIds: "+checkedNodeIds);
 									// if column has same factor name as checked node, show it, otherwise hide it
 									filteringFn = function(o){
+										console.log("o.factorName.toLowerCase(): "+o.factorName.toLowerCase());
 										if (checkedNodeIds.indexOf(o.factorName.toLowerCase()) > -1) {
 											return false; // don't filter it
 										}
@@ -313,7 +352,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                             },
                             scope: this
                         }
-                    }, tree]
+                    }, this.tree]
                 }]
             }, {
 				ref:'_imageArea',
@@ -468,14 +507,17 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Ext.Panel, {
         Gemma.MetaHeatmapScrollableArea.superclass.onRender.apply(this, arguments);
         var i;
         for (i = 0; i < this.dataDatasetGroups.length; i++) {
-            this.add(new Gemma.MetaHeatmapDatasetGroupPanel({
-                applicationRoot: this.applicationRoot,
-                height: this.height,
-                dataFactorColumns: this.dataDatasetGroups[i],
-                datasetGroupIndex: i,
-                geneNames: this.geneNames[i],
-                geneIds: this.geneIds[i]
-            }));
+			if(this.dataDatasetGroups[i].length > 0){
+				this.add(new Gemma.MetaHeatmapDatasetGroupPanel({
+	                applicationRoot: this.applicationRoot,
+	                height: this.height,
+	                dataFactorColumns: this.dataDatasetGroups[i],
+	                datasetGroupIndex: i,
+	                geneNames: this.geneNames[i],
+	                geneIds: this.geneIds[i]
+	            }));
+			}
+            
         }
         
     },
@@ -696,6 +738,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
             data.datasetGroupNames = this.datasetGroupNames;
             var experimentCount = 0;
 			var lastDatasetId = null;
+			
 			/**
 			 * The 'batch' factor should always be excluded as it is a technical artifact not of actual interest. 
 			 */
@@ -718,14 +761,23 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			
 			data.resultSetValueObjects = filteredResultSetValueObjects;
 			
-            _metaVizApp = new Gemma.MetaHeatmapApp({
-				tbarTitle: '<b>Differential Expression Visualisation</b> (Data available for '+experimentCount+' of '+this.param.datasetCount+' experiments)',
-                visualizationData: data,
-                applyTo: 'meta-heatmap-div',
-                pvalue: this.param.pvalue
-            });
-            _metaVizApp.doLayout();
-            _metaVizApp.refreshVisualization();
+			// if no experiments were returned, don't show visualizer
+			if(experimentCount == 0){
+				Ext.DomHelper.overwrite('meta-heatmap-div', {
+					html: '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
+				});
+			}else{
+				_metaVizApp = new Gemma.MetaHeatmapApp({
+					tbarTitle: '<b>Differential Expression Visualisation</b> (Data available for '+experimentCount+' of '+this.param.datasetCount+' experiments)',
+	                visualizationData: data,
+	                applyTo: 'meta-heatmap-div',
+	                pvalue: this.param.pvalue
+	            });
+	            _metaVizApp.doLayout();
+	            _metaVizApp.refreshVisualization();
+			}
+			
+            
             
         }
 .createDelegate(this));
