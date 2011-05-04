@@ -1,13 +1,15 @@
 Ext.namespace('Gemma');
 /**
- * Grid of expression experiment sets (data set groups) with a toolbar for doing basic operations.
+ * Grid of expression experiment sets (data set groups) with a toolbar for doing
+ * basic operations.
  * 
  * @version $Id$
  * @see DatasetGroupEditor
  */
 
 /**
- * Toolbar for CUD on expressionExperimentSet. Attach to the DatasetGroupGridPanel if you want editing.
+ * Toolbar for CUD on expressionExperimentSet. Attach to the
+ * DatasetGroupGridPanel if you want editing.
  */
 Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 
@@ -222,7 +224,8 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			},
 
 			/**
-			 * Handler. Remove a dataset group. If it is persistent, you need to have permission to do this.
+			 * Handler. Remove a dataset group. If it is persistent, you need to
+			 * have permission to do this.
 			 */
 			remove : function() {
 				var rec = this.getCurrentSet();
@@ -278,7 +281,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 				 * 
 				 */
 				this.ownerCt.loadMask.show();
-				this.ownerCt.getStore().save();					
+				this.ownerCt.getStore().save();
 			},
 
 			/**
@@ -288,7 +291,10 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 				var rec = this.getCurrentSet();
 				var Constr = this.ownerCt.getStore().record;
 				var newRec = new Constr({
-							name : "Copy of " + rec.get("name"), // indicate they should edit it.
+							name : "Copy of " + rec.get("name"), // indicate
+							// they
+							// should
+							// edit it.
 							description : rec.get("description"),
 							modifiable : true,
 							expressionExperimentIds : rec.get("expressionExperimentIds"),
@@ -354,7 +360,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					tooltip : 'The unique name of this group',
 					sortable : true,
 					editable : true,
-					width: 0.17,
+					width : 0.17,
 					editor : new Ext.form.TextField({
 								allowBlank : false
 							})
@@ -363,7 +369,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					dataIndex : "description",
 					sortable : true,
 					editable : true,
-					width: 0.3,
+					width : 0.3,
 					editor : new Ext.form.TextField({
 								allowBlank : true
 							})
@@ -373,32 +379,40 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					dataIndex : "numExperiments",
 					sortable : true,
 					editable : false,
-					//width : 60,
-					width: 0.09
-					//fixed : true
-				}, {
+					// width : 60,
+					width : 0.09
+					// fixed : true
+			}	, {
 					header : "Taxon",
 					dataIndex : "taxonName",
 					sortable : true,
 					editable : false,
-					//width : 100
-					width: 0.125
+					// width : 100
+					width : 0.125
 				}, {
-					header : "Locked",
+					header : "Flags",
 					dataIndex : "modifiable",
 					sortable : true,
 					editable : false,
-					tooltip : 'A locked group cannot have its members changed by anybody',
-					width : 60,
-					width: 0.12,
+					tooltip : 'Status including security',
+					// width : 60,
+					width : 0.12,
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
+						var v = "";
 						if (!value) {
-							return "<img src='/Gemma/images/icons/lock.png' height='16' width='16' ext:qtip='Cannot have members changed, usually applies to automatically generated groups.' />";
+							v = "<img src='/Gemma/images/icons/shield.png' height='16' width='16' ext:qtip='Protected; cannot have members changed, usually applies to automatically generated groups.' />";
 						} else {
-							return " ";
+							v = ""; // it's not protected.
 						}
+						var sl = Gemma.SecurityManager.getSecurityLink(
+								"ubic.gemma.model.genome.gene.ExpressionExperimentSetImpl", record.get('id'), record
+										.get('publik'), record.get('shared'), record
+										.get('currentUserHasWritePermission'));
+
+						v = "&nbsp;" + sl;
+						return v;
 					},
-					//fixed : true,
+					// fixed : true,
 					scope : this
 				}, {
 					header : "Editable",
@@ -406,8 +420,8 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					sortable : true,
 					editable : false,
 					tooltip : 'Do you have permission to edit this group?',
-					//width : 60,
-					width: 0.12,
+					// width : 60,
+					width : 0.12,
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
 						if (value) {
 							return "<img src='/Gemma/images/icons/ok.png' height='16' width='16' ext:qtip='You can edit this group' />";
@@ -415,7 +429,7 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 							return " ";
 						}
 					},
-					//fixed : true,
+					// fixed : true,
 					scope : this
 				}]
 	}),
@@ -489,7 +503,8 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 });
 
 /**
- * Dialog to ask user for information about a new set (or potentially modifications to an existing one)
+ * Dialog to ask user for information about a new set (or potentially
+ * modifications to an existing one)
  * <p>
  * Must provide a store, used during validation.
  * 
@@ -517,8 +532,9 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 
 				if (indexOfExisting >= 0) {
 					/*
-					 * This might not be good enough, since sets they don't own won't be listed - but we'll figure it
-					 * out on the server side.
+					 * This might not be good enough, since sets they don't own
+					 * won't be listed - but we'll figure it out on the server
+					 * side.
 					 */
 					Ext.Msg.alert("Duplicate name", "Please provide a previously unused name for the set");
 					return;
