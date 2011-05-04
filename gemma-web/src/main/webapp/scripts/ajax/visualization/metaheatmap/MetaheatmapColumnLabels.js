@@ -171,7 +171,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend( Ext.BoxComponent, {
 					
 					// draw experiment group titles
 					ctx.drawText('', Gemma.MetaVisualizationConfig.columnLabelFontSize,
-									textStart, Gemma.MetaVisualizationConfig.columnLabelFontSize + 2,
+									startPosition + lamda - Gemma.MetaVisualizationConfig.cellWidth, Gemma.MetaVisualizationConfig.columnLabelFontSize + 2,
 								 	this._datasetGroupNames[currentDatasetGroupIndex]);	
 									
 																								

@@ -202,7 +202,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 										Ext.get(this.searchForm.geneChoosers.items.items[0].geneCombo.id).setStyle('background','white');
 										//Ext.apply(this.searchForm.geneChoosers.items.items[0].items.items[1].geneCombo, {style:'background:white;'}); // doesn't work
 										//this.eeComboSelectedRecord=record;
-										//this.searchForm.eeComboSelectedRecord=record; // needed?
 										
 										// if this was the first time a selection was made using this box
 										if(combo.startValue==='' && this.newBoxTriggered === false){

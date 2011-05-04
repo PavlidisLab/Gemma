@@ -756,12 +756,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         Collection<ExpressionExperimentValueObject> eevos = sessionListManager
                                 .getExperimentsInSetByReference( ref );
                         Collection<Long> ids = EntityUtils.getIds( eevos );
-                        experiments = loadExperimentsByIds( ids );
+                        experiments.add( loadExperimentsByIds( ids ));
 
                     } else if ( ref.isDatabaseBacked() ) {
                         ExpressionExperimentSet datasetGroup = expressionExperimentSetService.load( ref.getId() );
                         Collection<Long> ids = EntityUtils.getIds( datasetGroup.getExperiments() );
-                        experiments = loadExperimentsByIds( ids );
+                        experiments.add( loadExperimentsByIds( ids ));
                     }
                 }
             }
@@ -789,8 +789,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * @param ids
      * @return
      */
-    private List<Collection<BioAssaySet>> loadExperimentsByIds( Collection<Long> ids ) {
-        List<Collection<BioAssaySet>> experiments = new ArrayList<Collection<BioAssaySet>>();
+    private Collection<BioAssaySet> loadExperimentsByIds( Collection<Long> ids ) {
         Collection<ExpressionExperiment> experimentsInsideGroup = expressionExperimentService.loadMultiple( ids );
 
         if ( experimentsInsideGroup.isEmpty() ) {
@@ -801,8 +800,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( ExpressionExperiment experiment : experimentsInsideGroup ) {
             bioAssaySetsInsideGroup.add( experiment );
         }
-        experiments.add( bioAssaySetsInsideGroup );
-        return experiments;
+        return bioAssaySetsInsideGroup;
     }
 
     /**
