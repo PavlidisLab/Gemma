@@ -242,6 +242,10 @@ Ext.onReady(function() {
 		this.diffVisualizer = new Gemma.MetaHeatmapControlWindow(data); 
 		panel.collapsePreviews();
 		
+		this.diffVisualizer.on('visualizationLoaded', function(){
+			panel.loadMask.hide()
+		}, this);
+		
 		/* doesn't work
 		this.relayEvents(this.diffVisualizer, ['visualizationLoaded']);
 		this.on('visualizationLoaded', function(){

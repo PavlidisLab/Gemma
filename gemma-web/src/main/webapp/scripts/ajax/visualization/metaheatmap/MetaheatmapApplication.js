@@ -711,7 +711,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
                 ref: 'progress_bar'
             }]
         });
-        progressWindow.show();
+        //progressWindow.show();
         progressWindow.progress_bar.wait({
             interval: 1000,
             duration: estimatedTime,
@@ -732,8 +732,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			this.taxonId, this.datasetGroupReferences, this.geneGroupReferences, function(data){
         
             progressWindow.hide();
-			this.fireEvent('visualizationLoaded');
-            
+			this.ownerCt.fireEvent('visualizationLoaded'); // to trigger loadmask on search form to hide
+			
             data.geneGroupNames = this.geneGroupNames;
             data.datasetGroupNames = this.datasetGroupNames;
             var experimentCount = 0;

@@ -89,6 +89,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				msg: "Searching for analysis results ..."
 			});
 		}
+		this.loadMask.show();
 		
 		// reset flags marking if searches are done
 		// only used if both searches are run at once
@@ -259,7 +260,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			return "There are no datasets that match your search terms";
 		} else if (!csc.eeIds && !csc.eeSetId) {
 			return "Please select an analysis. Taxon, gene(s), and scope must be specified.";
-		} else if(csc.geneIds.length > Gemma.MAX_GENES_PER_QUERY){
+		} 
+		/* COMMENTED OUT LIMITATION ON NUMBER OF GENES
+		 * else if(csc.geneIds.length > Gemma.MAX_GENES_PER_QUERY){
 			// if trying to search for more than the allowed limit of genes, show error
 			
 			// prune the gene Ids
@@ -271,7 +274,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					"Press 'Go' again to run the search with this trimmed list or re-enter your gene query and "+
 					"use the edit tool to manually trim your selection.";
 										
-		} else {
+		}*/ else {
 			return "";
 		}
 	},

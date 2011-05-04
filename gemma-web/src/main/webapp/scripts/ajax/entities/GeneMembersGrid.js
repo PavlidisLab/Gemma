@@ -514,31 +514,34 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				
 			},
 		createInDatabase : function() {
-		var name = this.newGroupName;
-		var description = this.newGroupDescription;
-		var taxonName = this.selectedGeneGroup.taxonName;
-		var taxonId = this.selectedGeneGroup.taxonId;
-		var reference = this.selectedGeneGroup.reference;
-
-		var groupStore = new Gemma.GeneGroupStore();		
+			if (typeof this.selectedGeneGroup !== 'undefined') {
+				var name = this.newGroupName;
+				var description = this.newGroupDescription;
+				var taxonName = this.selectedGeneGroup.taxonName;
+				var taxonId = this.selectedGeneGroup.taxonId;
+				var reference = this.selectedGeneGroup.reference;
+				
+				var groupStore = new Gemma.GeneGroupStore();
+				
+				var ids = this.getGeneIds();
+				
+				var RecType = groupStore.record;
+				var rec = new RecType();
+				rec.set("geneIds", ids);
+				rec.set("reference", reference);
+				rec.set("size", ids.length);
+				rec.set("name", name);
+				rec.set("description", description);
+				rec.set("taxonName", taxonName);
+				rec.set("taxonId", taxonId);
+				
+				groupStore.add(rec);
+				
+				groupStore.save();
+				
+				this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
+			}
 		
-		var ids = this.getGeneIds();
-		
-		var RecType = groupStore.record;
-		var rec = new RecType();
-		rec.set("geneIds", ids);
-		rec.set("reference", reference);
-		rec.set("size", ids.length);	
-		rec.set("name", name);
-		rec.set("description",description);
-		rec.set("taxonName",taxonName);
-		rec.set("taxonId",taxonId);
-		
-		groupStore.add(rec);
-		
-		groupStore.save();
-							
-		this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
 		this.fireEvent('doneModification');
 		
 	},

@@ -150,7 +150,7 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
-            result.setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY );
+            result.setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY +" genes");
             return result;
         }
 
