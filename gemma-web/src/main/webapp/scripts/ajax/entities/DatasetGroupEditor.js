@@ -17,10 +17,10 @@
 /* 
  * get width and height of viewport to use for sizing the parent and children panels 
  */
-var windowWidth = Ext.getBody().getViewSize().width * 0.9;
-var westWidth = windowWidth* 0.33;
-var eastWidth = windowWidth* 0.33;
-var centreWidth = windowWidth-westWidth-eastWidth;
+var windowWidthData = Ext.getBody().getViewSize().width * 0.9;
+var westWidthData = windowWidthData* 0.33;
+var eastWidthData = windowWidthData* 0.33;
+var centreWidthData = windowWidthData-westWidthData-eastWidthData;
 
 
 Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
@@ -28,7 +28,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 			id : 'dataset-chooser',
 			name : 'datasetchooser',
 			layout : 'border',
-			width : windowWidth,
+			width : windowWidthData,
 			height : 500,
 			closeAction : 'hide',
 			constrainHeader : false,
@@ -77,7 +77,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 									}],
 							split : true,
 							height : 200,
-							width : eastWidth,
+							width : eastWidthData,
 							minWidth : 200
 						});
 
@@ -105,7 +105,8 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							loadMask : {
 								msg : 'Searching ...'
 							},
-							minWidth : centreWidth,
+							width: centreWidthData,
+							minWidth : 200,
 							tbar : new Gemma.DataSetSearchAndGrabToolbar({
 										taxonSearch : true,
 										targetGrid : this.datasetGroupMembersGrid
@@ -125,7 +126,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							collapsible : true,
 							collapseMode : 'mini',
 							height : 200,
-							width : westWidth,
+							width : westWidthData,
 							title : "Available expression experiment sets",
 							displayGrid : this.datasetGroupMembersGrid,
 							tbar : new Gemma.DatasetGroupEditToolbar()
