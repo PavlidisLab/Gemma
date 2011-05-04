@@ -89,6 +89,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				msg: "Searching for analysis results ..."
 			});
 		}
+		this.collapsePreviews();
 		this.loadMask.show();
 		
 		// reset flags marking if searches are done
@@ -649,7 +650,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							scale: 'medium',
 							width:150,
 							enableToggle:true,
-							pressed:false
+							pressed:true
 						});
 		this.coexToggle.on('click', function(){
 			this.diffExToggle.toggle();
@@ -660,7 +661,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							scale: 'medium',
 							width:150,
 							enableToggle:true,
-							pressed:true
+							pressed:false
 						});
 		this.diffExToggle.on('click', function(){
 			this.coexToggle.toggle();
