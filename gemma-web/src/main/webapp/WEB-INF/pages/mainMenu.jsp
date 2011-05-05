@@ -10,7 +10,8 @@
 
 		// gene form.
 			var searchForm = new Gemma.GeneSearch( {
-				renderTo : "gene-query-form"
+				renderTo : "gene-query-form",
+				stickyTaxon: false
 			});
 
 			var feed = new Gemma.NewsDisplay( {

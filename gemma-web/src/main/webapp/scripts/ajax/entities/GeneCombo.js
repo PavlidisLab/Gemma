@@ -13,7 +13,7 @@ Ext.namespace('Gemma');
 Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 
 	name : 'genecombo',
-	displayField : 'officialSymbol',
+	displayField : 'comboText',
 	valueField : 'id',
 	width : 140,// default.
 	listWidth : 450, // ridiculously large so IE displays it properly
@@ -25,8 +25,10 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	selectOnFocus : true,
 	mode : 'remote', // default = remote
 	queryDelay : 800, // default = 500
-	
 	lastQuery : null,
+	
+	stickyTaxon: false, // this controls whether the taxon of the first selection 
+	// from this box should be remembered for subsequent searches 
 
 	record : Ext.data.Record.create([{
 				name : "id",
@@ -41,6 +43,12 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			}, {
 				name : "officialName",
 				type : "string"
+			}, {
+				name: "comboText",
+				type: "string",
+				convert: function(v, record){
+							return record.officialSymbol+" ("+record.taxonScientificName+")";
+					}
 			}]),
 
 	initComponent : function() {
@@ -124,7 +132,13 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	 * @return {}
 	 */
 	getParams : function(query) {
-		return [query, this.taxon ? this.taxon.id : -1];
+		if(this.stickyTaxon){
+			return [query, this.taxon ? this.taxon.id : -1];
+		}else{
+			return [query, -1];
+			this.taxon = false;
+		}
+		
 	},
 
 	getGene : function() {
@@ -191,6 +205,7 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 			height : 30,
 			buttonAlign : 'right',
 			layout : 'fit',
+			stickyTaxon: true,
 
 			initComponent : function() {
 
@@ -200,7 +215,8 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 							hiddenName : 'g',
 							id : 'gene-combo',
 							fieldLabel : 'Select a gene',
-							enableKeyEvents : true
+							enableKeyEvents : true,
+							stickyTaxon: this.stickyTaxon
 						});
 
 				this.geneCombo.on("focus", this.clearMessages, this);
