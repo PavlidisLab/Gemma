@@ -344,8 +344,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     public Collection<Gene> loadThawed( Collection<Long> ids ) {
         Collection<Gene> result = new HashSet<Gene>();
+
+        if ( ids.isEmpty() ) return result;
+
         Collection<Long> batch = new HashSet<Long>();
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         for ( Long g : ids ) {
             batch.add( g );
             if ( batch.size() == BATCH_SIZE ) {
@@ -357,6 +362,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( !batch.isEmpty() ) {
             result.addAll( doLoadThawed( batch ) );
         }
+
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Load+thaw " + ids.size() + " genes: " + timer.getTime() + "ms" );
+        }
+
         return result;
     }
 
