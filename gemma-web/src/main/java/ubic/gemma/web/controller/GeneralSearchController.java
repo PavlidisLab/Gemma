@@ -136,9 +136,7 @@ public class GeneralSearchController extends BaseFormController {
             return mav;
         }
 
-        log.info( "General search for " + settings );
-
-        // Need this infor for the bookmarkable links
+        // Need this for the bookmarkable links
         mav.addObject( "SearchString", settings.getQuery() );
         if ( ( settings.getTaxon() != null ) && ( settings.getTaxon().getId() != null ) )
             mav.addObject( "searchTaxon", settings.getTaxon().getScientificName() );
@@ -308,9 +306,10 @@ public class GeneralSearchController extends BaseFormController {
     @RequestMapping(value = "/searcher.html", method = RequestMethod.GET)
     protected ModelAndView showForm( HttpServletRequest request, HttpServletResponse response, BindException errors )
             throws Exception {
-        if ( request.getParameter( "query" ) != null ) {
+        if ( request.getParameter( "query" ) != null || request.getParameter( "termUri" ) != null ) {
             SearchSettings csc = ( SearchSettings ) this.formBackingObject( request );
             csc.setQuery( request.getParameter( "query" ) );
+            csc.setTermUri( request.getParameter( "termUri" ) );
             String taxon = request.getParameter( "taxon" );
             if ( taxon != null ) csc.setTaxon( taxonService.findByScientificName( taxon ) );
 

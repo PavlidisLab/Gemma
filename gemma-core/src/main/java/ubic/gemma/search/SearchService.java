@@ -32,11 +32,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -67,15 +69,14 @@ import org.compass.core.Compass;
 import org.compass.core.CompassCallback;
 import org.compass.core.CompassException;
 import org.compass.core.CompassHighlightedText;
-import org.compass.core.CompassHighlighter;
 import org.compass.core.CompassHits;
 import org.compass.core.CompassQuery;
 import org.compass.core.CompassSession;
 import org.compass.core.CompassTemplate;
-import org.compass.core.engine.SearchEngineException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -331,39 +332,44 @@ public class SearchService implements InitializingBean {
      */
     public Map<Class<?>, List<SearchResult>> search( SearchSettings settings, boolean fillObjects ) {
 
+        if ( StringUtils.isBlank( settings.getTermUri() ) && !settings.getQuery().startsWith( "http://" ) ) {
+            return generalSearch( settings, fillObjects );
+        }
+
+        // we only attempt an ontology search if the uri looks remotely like a url.
+        return ontologyUriSearch( settings );
+
+    }
+
+    /**
+     * @param settings
+     * @return results, if the settings.termUri is populated. This includes gene uris.
+     */
+    private Map<Class<?>, List<SearchResult>> ontologyUriSearch( SearchSettings settings ) {
+        Map<Class<?>, List<SearchResult>> sortedFilteredResults = new HashMap<Class<?>, List<SearchResult>>();
+
         // 1st check to see if the query is a URI (from an ontology).
         // Do this by seeing if we can find it in the loaded ontologies.
         // Escape with general utilities because might not be doing a lucene backed search. (just a hibernate one).
-        String uriString = StringEscapeUtils.escapeJava( StringUtils.strip( settings.getQuery() ) );
-        OntologyTerm matchingTerm = this.ontologyService.getTerm( uriString );
+        String termUri = settings.getTermUri();
 
-        if ( matchingTerm != null && matchingTerm.getUri() != null ) {
-            // Was a URI from a loaded ontology soo get the children.
-            Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
-            terms2Search4.add( matchingTerm );
+        if ( StringUtils.isBlank( termUri ) ) {
+            termUri = settings.getQuery();
+        }
 
-            Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
-            classesToSearch.add( ExpressionExperiment.class );
-            classesToSearch.add( BioMaterial.class );
-
-            Collection<SearchResult> matchingResults = this.databaseCharacteristicExactUriSearchForOwners(
-                    classesToSearch, terms2Search4 );
-            Map<Class<?>, List<SearchResult>> sortedFilteredResults = new HashMap<Class<?>, List<SearchResult>>();
-
-            for ( SearchResult searchR : matchingResults ) {
-                if ( sortedFilteredResults.containsKey( searchR.getResultClass() ) ) {
-                    sortedFilteredResults.get( searchR.getResultClass() ).add( searchR );
-                } else {
-                    List<SearchResult> rs = new ArrayList<SearchResult>();
-                    rs.add( searchR );
-                    sortedFilteredResults.put( searchR.getResultClass(), rs );
-                }
-            }
-
+        if ( !termUri.startsWith( "http://" ) ) {
             return sortedFilteredResults;
+        }
 
-        }// Perhaps is a valid gene URL. Want to search for the gene in gemma.
-        else if ( StringUtils.containsIgnoreCase( uriString, NCBI_GENE ) ) {
+        OntologyTerm matchingTerm = null;
+        String uriString = null;
+
+        uriString = StringEscapeUtils.escapeJava( StringUtils.strip( termUri ) );
+
+        log.info( "URI converted to " + uriString );
+
+        if ( StringUtils.containsIgnoreCase( uriString, NCBI_GENE ) ) {
+            // Perhaps is a valid gene URL. Want to search for the gene in gemma.
             // 1st get objects tagged with the given gene identifier
             Collection<Class<?>> classesToFilterOn = new HashSet<Class<?>>();
             classesToFilterOn.add( ExpressionExperiment.class );
@@ -386,15 +392,38 @@ public class SearchService implements InitializingBean {
             }
 
             settings.setQuery( g.getOfficialSymbol() );
-            Map<Class<?>, List<SearchResult>> genResults = this.search( settings );
-            genResults.get( ExpressionExperiment.class ).addAll( characteriticOwnerResults );
-            return genResults;
+            sortedFilteredResults = this.search( settings );
+            sortedFilteredResults.get( ExpressionExperiment.class ).addAll( characteriticOwnerResults );
+        } else {
 
+            matchingTerm = this.ontologyService.getTerm( uriString );
+            if ( matchingTerm == null || matchingTerm.getUri() == null ) return sortedFilteredResults;
+
+            log.info( "Found ontology term: " + matchingTerm );
+
+            // Was a URI from a loaded ontology soo get the children.
+            Collection<OntologyTerm> terms2Search4 = matchingTerm.getChildren( true );
+            terms2Search4.add( matchingTerm );
+
+            Collection<Class<?>> classesToSearch = new HashSet<Class<?>>();
+            classesToSearch.add( ExpressionExperiment.class );
+            classesToSearch.add( BioMaterial.class );
+
+            Collection<SearchResult> matchingResults = this.databaseCharacteristicExactUriSearchForOwners(
+                    classesToSearch, terms2Search4 );
+
+            for ( SearchResult searchR : matchingResults ) {
+                if ( sortedFilteredResults.containsKey( searchR.getResultClass() ) ) {
+                    sortedFilteredResults.get( searchR.getResultClass() ).add( searchR );
+                } else {
+                    List<SearchResult> rs = new ArrayList<SearchResult>();
+                    rs.add( searchR );
+                    sortedFilteredResults.put( searchR.getResultClass(), rs );
+                }
+            }
         }
 
-        // Not an valid ontology term or a gene.
-        // Proceed with general query parsing and searching.
-        return generalSearch( settings, fillObjects );
+        return sortedFilteredResults;
     }
 
     /**
@@ -1360,26 +1389,30 @@ public class SearchService implements InitializingBean {
          * This is purely debugging.
          */
         if ( parentMap.size() > 0 ) {
-            if ( log.isDebugEnabled() ) log.debug( "Found " + parentMap.size() + " owners for " + parentMap.keySet().size()+ " characteristics:" );
-//            int maxPrint = 10; int i = 0;
-//            for ( Map.Entry<Characteristic, Object> entry : parentMap.entrySet()) {
-//            	if(i < maxPrint){
-//            		Object obj = entry.getValue();
-//            		Characteristic charac = entry.getKey();
-//            		if ( obj instanceof Auditable ) {
-//            			if ( log.isDebugEnabled() ) {
-//            				log.debug("Key: Characteristic Name: " + charac.getName() +" Characteristic Desc: " + charac.getDescription()  +" Characteristic Category: " + charac.getCategory() );
-//            				log.debug("Val: Owner Class: " + obj.getClass() 
-//            						+" Owner Name: " + ( ( Auditable ) obj ).getName() +" Owner Desc: " + ( ( Auditable ) obj ).getDescription() );
-//            			}
-//            		} else {
-//            			if ( log.isDebugEnabled() ) {
-//            				log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
-//            			}
-//            		}
-//            		i++;
-//            	}
-//            }
+            if ( log.isDebugEnabled() )
+                log.debug( "Found " + parentMap.size() + " owners for " + parentMap.keySet().size()
+                        + " characteristics:" );
+            // int maxPrint = 10; int i = 0;
+            // for ( Map.Entry<Characteristic, Object> entry : parentMap.entrySet()) {
+            // if(i < maxPrint){
+            // Object obj = entry.getValue();
+            // Characteristic charac = entry.getKey();
+            // if ( obj instanceof Auditable ) {
+            // if ( log.isDebugEnabled() ) {
+            // log.debug("Key: Characteristic Name: " + charac.getName() +" Characteristic Desc: " +
+            // charac.getDescription() +" Characteristic Category: " + charac.getCategory() );
+            // log.debug("Val: Owner Class: " + obj.getClass()
+            // +" Owner Name: " + ( ( Auditable ) obj ).getName() +" Owner Desc: " + ( ( Auditable ) obj
+            // ).getDescription() );
+            // }
+            // } else {
+            // if ( log.isDebugEnabled() ) {
+            // log.debug( " Owner : " + obj.toString() + " Owner Class: " + obj.getClass() );
+            // }
+            // }
+            // i++;
+            // }
+            // }
         }
     }
 
@@ -1530,13 +1563,10 @@ public class SearchService implements InitializingBean {
     }
 
     /**
-     * 
-     * 
      * @param settings
      * @param results
-     * @param excludeWithoutTaxon if true: If the SearchResults have no "getTaxon" method then the results 
-     *          will get filtered out Results with no taxon
-     *          associated will also get removed.
+     * @param excludeWithoutTaxon if true: If the SearchResults have no "getTaxon" method then the results will get
+     *        filtered out Results with no taxon associated will also get removed.
      */
     private void filterByTaxon( SearchSettings settings, Collection<SearchResult> results, boolean excludeWithoutTaxon ) {
         if ( settings.getTaxon() == null ) {
@@ -1570,7 +1600,7 @@ public class SearchService implements InitializingBean {
                  * In case of a programming error where the results don't have a taxon at all, we assume we should
                  * filter them out but issue a warning.
                  */
-                if(excludeWithoutTaxon){
+                if ( excludeWithoutTaxon ) {
                     toRemove.add( sr );
                 }
                 log.warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: " + e );
@@ -1637,8 +1667,9 @@ public class SearchService implements InitializingBean {
             }
         }
 
-        //filterByTaxon( settings, combinedGeneList); // compass doesn't return filled gene objects, just ids, so do this after objects have been filled
-        
+        // filterByTaxon( settings, combinedGeneList); // compass doesn't return filled gene objects, just ids, so do
+        // this after objects have been filled
+
         if ( watch.getTime() > 1000 )
             log.info( "Gene search for " + searchString + " took " + watch.getTime() + " ms; "
                     + combinedGeneList.size() + " results." );
@@ -1650,13 +1681,14 @@ public class SearchService implements InitializingBean {
      * @return
      */
     private Collection<SearchResult> geneSetSearch( SearchSettings settings ) {
-    	Collection<SearchResult> hits;
-    	if(settings.getTaxon() != null){
-    		hits= this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ) );
-    	}else{
-    		hits= this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ) );
-    	}
-         
+        Collection<SearchResult> hits;
+        if ( settings.getTaxon() != null ) {
+            hits = this
+                    .dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery(), settings.getTaxon() ) );
+        } else {
+            hits = this.dbHitsToSearchResult( this.geneSetService.findByName( settings.getQuery() ) );
+        }
+
         hits.addAll( compassSearch( compassGeneSet, settings ) );
         return hits;
     }
@@ -1677,35 +1709,6 @@ public class SearchService implements InitializingBean {
             debugParentFetch( characterstic2entity );
         }
         return matchedEntities;
-    }
-
-    /**
-     * @param hits
-     * @param i
-     */
-    private String getHighlightedText( CompassHits hits, int i ) {
-
-        CompassHighlighter highlighter = hits.highlighter( i );
-
-        for ( String p : propertiesToSearch ) {
-            try {
-                String text = highlighter.fragmentsWithSeparator( p );
-                if ( text != null && StringUtils.isNotBlank( text ) ) {
-                    return text + " (" + p + ")"; // note we don't actually use this.
-                }
-            } catch ( SearchEngineException e ) {
-                // no big deal - we asked for a property it doesn't have. Must be a
-                // better way...
-                // log.debug( e );
-            } catch ( IllegalArgumentException e ) {
-                // log.debug( e ); // can be useful for debugging properties searched.
-                // again, the property isn't in the compass bean, ignore.
-            }
-        }
-
-        // Explanation exp = LuceneHelper.getLuceneSearchEngineHits( hits ).explain( i );
-        // log.info( hits.data( i ) + " " + exp.toString() );
-        return null;
     }
 
     /**
@@ -1756,8 +1759,8 @@ public class SearchService implements InitializingBean {
                     + " raw hits tested) in " + timer.getTime() + "ms" );
         }
         if ( timer.getTime() > 5000 ) {
-            log.info( "****Extremely long Lucene Search processing!" +results.size() + " hits retrieved (out of " + Math.min( MAX_LUCENE_HITS, hits.getLength() )
-                    + " raw hits tested) in " + timer.getTime() + "ms" );
+            log.info( "****Extremely long Lucene Search processing!" + results.size() + " hits retrieved (out of "
+                    + Math.min( MAX_LUCENE_HITS, hits.getLength() ) + " raw hits tested) in " + timer.getTime() + "ms" );
         }
 
         return results;
@@ -1829,9 +1832,9 @@ public class SearchService implements InitializingBean {
                     keeper.setResultObject( entity );
                     filteredResults.add( keeper );
                 }
-                
+
                 filterByTaxon( settings, filteredResults, false );
-                
+
                 results.put( clazz, filteredResults );
 
             }
@@ -1995,12 +1998,11 @@ public class SearchService implements InitializingBean {
      * 
      * @param settings Will try to resolve general terms like brain --> to appropriate OntologyTerms and search for
      *        objects tagged with those terms (if isUseCharacte = true)
-     *       
      * @param fillObjects If false, the entities will not be filled in inside the searchsettings; instead, they will be
      *        nulled (for security purposes). You can then use the id and Class stored in the SearchSettings to load the
      *        entities at your leisure. If true, the entities are loaded in the usual secure fashion. Setting this to
-     *        false can be an optimization if all you need is the id. 
-     *        Note: filtering by taxon will not be done unless objects are filled
+     *        false can be an optimization if all you need is the id. Note: filtering by taxon will not be done unless
+     *        objects are filled
      * @return
      */
     protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects ) {
@@ -2094,7 +2096,8 @@ public class SearchService implements InitializingBean {
             log.info( "Getting " + hits.getLength() + " lucene hits for " + query + " took " + watch.getTime() + " ms" );
         }
         if ( watch.getTime() > 5000 ) {
-            log.info( "*****Extremely long Lucene Index Search!  " + hits.getLength() + " lucene hits for " + query + " took " + watch.getTime() + " ms" );
+            log.info( "*****Extremely long Lucene Index Search!  " + hits.getLength() + " lucene hits for " + query
+                    + " took " + watch.getTime() + " ms" );
         }
 
         return getSearchResults( hits );

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.search;
 
+import org.apache.commons.lang.StringUtils;
+
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.genome.Taxon;
 
@@ -29,6 +31,9 @@ public class SearchSettings {
 
     @Override
     public String toString() {
+        if ( !StringUtils.isBlank( this.termUri ) ) {
+            return this.termUri;
+        }
         return query;
     }
 
@@ -36,7 +41,7 @@ public class SearchSettings {
     private Taxon taxon;
     private int maxResults = 500;
     private String query;
-    private String uri;
+    private String termUri;
 
     private boolean searchGenes = true;
     private boolean searchExperiments = true;
@@ -144,13 +149,13 @@ public class SearchSettings {
      */
     public static SearchSettings expressionExperimentSearch( String query ) {
         SearchSettings s = new SearchSettings( query );
-        s.setSearchGenes(false);
+        s.setSearchGenes( false );
         s.setGeneralSearch( false );
         s.noSearches();
         s.setSearchExperiments( true );
         return s;
     }
-    
+
     /**
      * Convenience method to get pre-configured settings.
      * 
@@ -309,12 +314,12 @@ public class SearchSettings {
         this.useCharacteristics = useCharacteristics;
     }
 
-    public void setUri( String uri ) {
-        this.uri = uri;
+    public void setTermUri( String termUri ) {
+        this.termUri = termUri;
     }
 
-    public String getUri() {
-        return uri;
+    public String getTermUri() {
+        return termUri;
     }
 
 }
