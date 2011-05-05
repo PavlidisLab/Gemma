@@ -91,7 +91,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		}
 		var subsetTracker = {}; // used to keep subset nodes adjacent
 		var nodeId = 0; // used to keep track of nodes and give each a specific
-						// div in which to draw a pie chart
+		// div in which to draw a pie chart
 		for (var j = 0; j < analyses.size(); j++) {
 			var analysis = analyses[j];
 			// console.log(analysis.protocol);
@@ -306,8 +306,11 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		// (but not 0),
 		// then insert text to highlight this
 
-		var percentDifferentiallyExpressed = (resultSet.upregulatedCount + resultSet.downregulatedCount)
-				/ this.totalProbes;
+		var percentDifferentiallyExpressed = resultSet.upregulatedCount + resultSet.downregulatedCount;
+		percentDifferentiallyExpressed /= this.totalProbes; // avoid "/" at line
+															// start!! Causes
+															// compression
+															// problems.
 
 		if ((percentDifferentiallyExpressed < 0.05 && percentDifferentiallyExpressed > 0)) {
 			linkText += " ["
