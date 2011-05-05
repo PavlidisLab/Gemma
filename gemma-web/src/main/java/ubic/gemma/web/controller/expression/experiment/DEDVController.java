@@ -776,8 +776,8 @@ public class DEDVController {
         } );
 
         if ( watch.getTime() > 1000 )
-            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ar.getId() + " ResultSetId and " + probes.size()
-                    + " genes in " + watch.getTime() + " ms." );
+            log.info( "Retrieved " + dedvs.size() + " DEDVs for " + probes.size() + " genes in " + watch.getTime()
+                    + " ms. (result set=" + ar.getId() );
         return dedvs;
 
     }
