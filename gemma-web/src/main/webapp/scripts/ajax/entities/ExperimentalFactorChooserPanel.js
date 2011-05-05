@@ -7,7 +7,8 @@ Ext.namespace('Gemma');
  * @extends Ext.Window
  * 
  * @author keshav
- * @version $Id$
+ * @version $Id: ExperimentalFactorChooserPanel.js,v 1.38 2011/03/24 23:16:47
+ *          tvrossum Exp $
  */
 
 // state when data is not filtered, button press will filter.
@@ -98,18 +99,18 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		Ext.Msg
 				.alert(
 						"Help for factor choose",
-						"The meta-analysis can only use one factor per study. Experiments that have more" +
-								" than one factor will be shown here (or view all experiments)." +
-								" Click on the factor field to get a menu for choosing among multiple possibilities. Use the 'hinting' " +
-								"button to choose the type of factor most useful to you, to save manual work. For more help see <a target='_blank' " +
-								"href='" + Gemma.WIKI +
-								"Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
+						"The meta-analysis can only use one factor per study. Experiments that have more"
+								+ " than one factor will be shown here (or view all experiments)."
+								+ " Click on the factor field to get a menu for choosing among multiple possibilities. Use the 'hinting' "
+								+ "button to choose the type of factor most useful to you, to save manual work. For more help see <a target='_blank' "
+								+ "href='" + Gemma.WIKI
+								+ "Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
 
 	},
 
 	/*
-	 * initialize this panel by adding 'things' to it, like the data-store, columns, buttons (and events for buttons),
-	 * etc.
+	 * initialize this panel by adding 'things' to it, like the data-store,
+	 * columns, buttons (and events for buttons), etc.
 	 */
 	initComponent : function() {
 
@@ -163,8 +164,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	},
 
 	/**
-	 * Show a window with radio buttons to choose between OrganismPart, DiseaseState, SamplingTimePoint, Treatment;
-	 * others can be added.
+	 * Show a window with radio buttons to choose between OrganismPart,
+	 * DiseaseState, SamplingTimePoint, Treatment; others can be added.
 	 */
 	factorHinting : function(btn) {
 		var w = new Ext.Window({
@@ -183,7 +184,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 								style : 'padding:8px;',
 								items : [{
 											/*
-											 * FIXME: cookie doesn't work, so I check 'any' by default.
+											 * FIXME: cookie doesn't work, so I
+											 * check 'any' by default.
 											 */
 											stateful : true,
 											id : 'factor-hinting-button',
@@ -272,7 +274,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	},
 
 	/**
-	 * Set the factor for a row to be the one matching a given pattern, if possible.
+	 * Set the factor for a row to be the one matching a given pattern, if
+	 * possible.
 	 * 
 	 * @param {}
 	 *            r - the PropertyStore record
@@ -286,8 +289,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 		editor = this.efGrid.customEditors[id];
 
 		/*
-		 * Locate the matching factor, if any, and set the value in the store. No filtering is actually done here; the
-		 * return value stops additional searching.
+		 * Locate the matching factor, if any, and set the value in the store.
+		 * No filtering is actually done here; the return value stops additional
+		 * searching.
 		 */
 		editor.field.store.each(function(record) {
 					if (record.get('name').match(regex) || record.get('category').match(regex)) {
@@ -297,7 +301,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 					return true; // keep iterating
 				});
 
-		// apply the multi-factor vs any filter. This is the actual filter, but just by number of factors.
+		// apply the multi-factor vs any filter. This is the actual filter, but
+		// just by number of factors.
 		if (Ext.getCmp('single-factor-toggle').pressed) {
 			// conditionally show it.
 			return this.filter(r, id);
@@ -367,22 +372,27 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 	 *            result
 	 */
 	returnFromGetFactors : function(results) {
+
 		this.data = results;
 		var dataFromServer = {
 			data : results
 		};
+
 		if (results.size() > 0) {
 			if (this.efGrid) {
 				this.remove(this.efGrid, true);
 			} else {
 				this.loadMask.hide();
 			}
+
 			this.efGrid = new Gemma.ExpressionExperimentExperimentalFactorGrid(dataFromServer);
 			this.add(this.efGrid);
 			this.doLayout();
 			this.efGrid.getStore().filterBy(this.filter, this, 0);
-
+		} else {
+			this.loadMask.hide();
+			Ext.Msg.alert("No results",
+					"Sorry, there are no differential expression analyses for the data sets you selected.");
 		}
 	}
-
 });
