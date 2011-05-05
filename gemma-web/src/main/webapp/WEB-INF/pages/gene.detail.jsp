@@ -4,6 +4,7 @@
 	class="ubic.gemma.model.genome.GeneImpl" />
 <jsp:useBean id="representativeImages" scope="request"
 	class="java.util.HashSet" />
+<jsp:useBean id="homologues" scope="request" class="java.util.HashSet" />
 <head>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/gene.detail.js' />
@@ -55,10 +56,11 @@ Ext.onReady(function() {
 		</c:if>
 	</h3>
 
+
 	<table cellspacing="6">
 		<tr>
 			<td align="right" valign="top">
-				<b> <fmt:message key="gene.aliases" /> </b>
+				<strong> <fmt:message key="gene.aliases" /> </strong>
 			</td>
 			<td valign="top">
 				<%
@@ -87,17 +89,41 @@ Ext.onReady(function() {
 
 
 			</td>
+			<c:if test="${not empty homologues}">
+				<tr>
+					<td align="right" valign="top">
+						<strong>Homologues</strong>
+					</td>
+					<td>
+						<%
+						    if ( homologues.size() > 0 ) {
+						            for ( Object o : homologues ) {
+						                ubic.gemma.model.genome.gene.GeneValueObject go = ( ubic.gemma.model.genome.gene.GeneValueObject ) o;
+						                out
+						                        .print( "<a title=\"View this homologous gene in Gemma\" href=\"/Gemma/gene/showGene.html?id="
+						                                + go.getId()
+						                                + "\">"
+						                                + go.getOfficialSymbol()
+						                                + "&nbsp;["
+						                                + go.getTaxonCommonName() + "]</a>&nbsp;&nbsp;&nbsp;" );
+						            }
+						        }
+						%>
+					</td>
+				</tr>
+			</c:if>
 		</tr>
 		<tr>
 			<td>
-				<div class="clearfix" />
-					<b> <fmt:message key="gene.group" /> </b>
+				<div class="clearfix">
+					<strong> <fmt:message key="gene.group" /> </strong>
+				</div>
 			</td>
 			<td>
 				<div id="gene-group-grid"></div>
 			</td>
 		</tr>
-		</div>
+
 
 
 		<tr>

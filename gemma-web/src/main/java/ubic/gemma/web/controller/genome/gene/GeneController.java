@@ -49,6 +49,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.web.controller.BaseController;
 
@@ -189,7 +190,9 @@ public class GeneController extends BaseController {
 
         getAllenBrainImages( gene, mav );
 
-        Collection<Gene> homologues = homologeneService.getHomologues( gene );
+        Collection<Gene> geneHomologues = homologeneService
+                .getHomologues( gene );
+        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
 
         if ( homologues != null && !homologues.isEmpty() ) {
             mav.addObject( "homologues", homologues );
