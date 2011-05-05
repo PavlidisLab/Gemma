@@ -112,6 +112,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			// use event 'selectSingle' to get event as fired by super
 			this.fireEvent('selectSingle', this, record); 
 		}	
+		this.actualTextOfLastQuery = this.lastQuery;
 	},
 
 	reset : function() {
@@ -132,6 +133,10 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	 * @return {}
 	 */
 	getParams : function(query) {
+		// don't want (taxon) in search query (we added that for clarity in the combo text box)
+		if(typeof this.actualTextOfLastQuery !== 'undefined'){
+				query = this.actualTextOfLastQuery;
+			}
 		if(this.stickyTaxon){
 			return [query, this.taxon ? this.taxon.id : -1];
 		}else{
