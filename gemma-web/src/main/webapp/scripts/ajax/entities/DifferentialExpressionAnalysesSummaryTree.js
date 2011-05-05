@@ -355,7 +355,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 				interaction = 1;
 			}
 		}
-		return [factor, interaction];
+		return [escape(factor), interaction];
 	},
 	drawPieCharts : function() {
 		var ctx, up, down, diffExpressed, interesting;
