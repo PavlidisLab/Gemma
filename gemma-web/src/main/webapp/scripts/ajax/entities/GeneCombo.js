@@ -47,7 +47,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 				name: "comboText",
 				type: "string",
 				convert: function(v, record){
-							return record.officialSymbol+" ("+record.taxonScientificName+")";
+							return record.officialSymbol+" ("+record.taxonCommonName+")";
 					}
 			}]),
 
@@ -63,7 +63,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 											id : "id"
 										}, this.record),
 								sortInfo : {
-									field : "officialSymbol",
+									field : "comboText",
 									dir : "ASC"
 								}
 							})
