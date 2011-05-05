@@ -311,9 +311,14 @@ public class ExperimentalDesignVisualizationService {
             double[] data = vec.getData();
             double[] dol = ArrayUtils.clone( data );
 
-            int j = 0;
+            if ( !thawedBads.containsKey( bad.getId() ) ) {
+                log.warn( "Missing bioassaydimension: " + bad.getId() ); // WHY?
+                continue;
+            }
+
             Collection<BioAssay> oldOrdering = thawedBads.get( bad.getId() ).getBioAssays();
             assert oldOrdering instanceof List<?>;
+            int j = 0;
             for ( BioAssay ba : oldOrdering ) {
 
                 if ( !ordering.containsKey( ba ) ) {
