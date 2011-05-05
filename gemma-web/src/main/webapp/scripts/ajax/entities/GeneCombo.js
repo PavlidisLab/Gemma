@@ -27,7 +27,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	queryDelay : 800, // default = 500
 	lastQuery : null,
 	
-	stickyTaxon: false, // this controls whether the taxon of the first selection 
+	stickyTaxon: true, // this controls whether the taxon of the first selection 
 	// from this box should be remembered for subsequent searches 
 
 	record : Ext.data.Record.create([{
