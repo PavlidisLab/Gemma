@@ -37,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -90,6 +91,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     protected boolean force = false;
 
     protected ExpressionExperimentSet expressionExperimentSet;
+
+    protected AuditEventService auditEventService;
 
     protected void addForceOption() {
         this.addForceOption( null );
@@ -149,6 +152,11 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     }
 
+    /**
+     * @param symbol
+     * @param t
+     * @return
+     */
     protected Gene findGeneByOfficialSymbol( String symbol, Taxon t ) {
         Collection<Gene> genes = geneService.findByOfficialSymbolInexact( symbol );
         for ( Gene gene : genes ) {
@@ -199,7 +207,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         eeService = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
         geneService = ( GeneService ) this.getBean( "geneService" );
         taxonService = ( TaxonService ) getBean( "taxonService" );
-
+        this.auditEventService = ( AuditEventService ) getBean( "auditEventService" );
         if ( hasOption( 't' ) ) {
             String taxonName = getOptionValue( 't' );
             this.taxon = taxonService.findByCommonName( taxonName );
@@ -210,10 +218,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         if ( hasOption( "force" ) ) {
             this.force = true;
-        }
-
-        if ( hasOption( AUTO_OPTION_NAME ) ) {
-            this.autoSeek = true;
         }
 
         if ( this.hasOption( "eeset" ) ) {
@@ -249,7 +253,17 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
         if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
-            if ( expressionExperiments.size() > 1 ) log.info( "Thawing experiments ..." );
+            if ( hasOption( AUTO_OPTION_NAME ) ) {
+                this.autoSeek = true;
+                if ( this.autoSeekEventType == null ) {
+                    throw new IllegalStateException( "Programming error: there is no 'autoSeekEventType' set" );
+                }
+                log.info( "Filtering for experiments lacking a " + this.autoSeekEventType.getSimpleName() + " event" );
+                auditEventService.retainLackingEvent( this.expressionExperiments, this.autoSeekEventType );
+            }
+
+            if ( expressionExperiments.size() > 1 )
+                log.info( "Thawing " + expressionExperiments.size() + " experiments ..." );
             int count = 0;
             for ( BioAssaySet ee : expressionExperiments ) {
                 if ( ee instanceof ExpressionExperiment ) {

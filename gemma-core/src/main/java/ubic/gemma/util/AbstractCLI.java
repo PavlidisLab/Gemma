@@ -48,6 +48,8 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
+
 /**
  * Base Command Line Interface. Provides some default functionality.
  * <p>
@@ -97,16 +99,21 @@ public abstract class AbstractCLI {
     protected String username;
     protected String password;
 
-    /*
+    /**
      * Date used to identify which endities to run the tool on (e.g., those which were run less recently than mDate). To
      * enable call addDateOption.
      */
     protected String mDate = null;
 
-    /*
+    /**
      * Automatically identify which entities to run the tool on. To enable call addAutoOption.
      */
     protected boolean autoSeek = false;
+
+    /**
+     * The event type to look for the lack of, when using autoseek.
+     */
+    protected Class<? extends AuditEventType> autoSeekEventType = null;
 
     // needs to be concurrently modifiable.
     protected Collection<Object> errorObjects = Collections.synchronizedSet( new HashSet<Object>() );
@@ -387,7 +394,7 @@ public abstract class AbstractCLI {
     @SuppressWarnings("static-access")
     protected void addAutoOption() {
         Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME ).withDescription(
-                "Attempt to run all entities that need processing based on workflow criteria." ).create(
+                "Attempt to process entities that need processing based on workflow criteria." ).create(
                 AUTO_OPTION_NAME );
 
         addOption( autoSeekOption );

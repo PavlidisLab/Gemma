@@ -300,6 +300,7 @@ public class LinkAnalysisCli extends ExpressionExperimentManipulatingCLI {
 
     @Override
     protected void processOptions() {
+        this.autoSeekEventType = LinkAnalysisEvent.class;
         super.processOptions();
 
         if ( hasOption( "dataFile" ) ) {

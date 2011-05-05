@@ -32,6 +32,7 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
@@ -114,6 +115,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         super.addOption( topOpt );
 
         super.addAutoOption();
+        this.autoSeekEventType = DifferentialExpressionAnalysisEvent.class;
         super.addForceOption( null );
 
         // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
