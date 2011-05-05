@@ -147,8 +147,8 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 return buildBadResponse( document, msg );
             }
 
-            Collection<Gene> rawGeneCol = geneService.loadMultiple( geneIDLong );
-            if ( rawGeneCol == null || rawGeneCol.isEmpty() ) {
+            Collection<Gene> rawGeneCol = geneService.loadThawed( geneIDLong );
+            if ( rawGeneCol.isEmpty() ) {
                 String msg = "None of the gene id's can be found.";
                 return buildBadResponse( document, msg );
             }
@@ -157,7 +157,6 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
                 String msg = "Input genes do not match input taxon.";
                 return buildBadResponse( document, msg );
             }
-            geneCol = geneService.thawLite( geneCol );
 
             int stringency = Integer.parseInt( string );
 

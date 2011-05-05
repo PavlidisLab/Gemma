@@ -396,4 +396,15 @@ public class GeneServiceImpl extends GeneServiceBase {
         this.getGeneDao().update( gene );
     }
 
+    @Override
+    public Collection<Gene> loadThawed( Collection<Long> ids ) {
+        return this.getGeneDao().loadThawed( ids );
+    }
+
+    @Override
+    public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
+        Collection<Gene> g = this.getGeneDao().loadThawed( ids );
+        return GeneValueObject.convert2ValueObjects( g );
+    }
+
 }

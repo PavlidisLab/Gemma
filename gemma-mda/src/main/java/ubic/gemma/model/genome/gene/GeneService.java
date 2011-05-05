@@ -230,6 +230,20 @@ public interface GeneService {
     public Collection<Gene> loadMultiple( Collection<Long> ids );
 
     /**
+     * Load with objects already thawed.
+     * 
+     * @param ids
+     * @return
+     */
+    public Collection<Gene> loadThawed( Collection<Long> ids );
+
+    /**
+     * @param ids
+     * @return
+     */
+    public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
+
+    /**
      * Returns a collection of Predicted Genes for the specified taxon
      */
     public Collection<PredictedGene> loadPredictedGenes( Taxon taxon );
@@ -258,6 +272,7 @@ public interface GeneService {
 
     /**
      * @param genes
+     * @see loadThawed as a way to avoid the load..thaw pattern.
      */
     public Collection<Gene> thawLite( Collection<Gene> genes );
 

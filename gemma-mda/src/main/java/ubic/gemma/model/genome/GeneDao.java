@@ -355,16 +355,12 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
 
     /**
-     * <p>
      * Returns a collection of predicted genes for the specified taxon.
-     * </p>
      */
     public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
 
     /**
-     * <p>
      * Returns a collection of probe aligned regions for the specified taxon
-     * </p>
      */
     public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
 
@@ -373,30 +369,23 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      */
     public Gene thaw( Gene gene );
 
+    /**
+     * @param gene
+     * @return
+     */
     public Gene thawLite( Gene gene );
 
     /**
-     * 
+     * @param genes
+     * @return
+     * @see loadThawed, which you should use instead of this method if you know you want to load thawed objects.
      */
     public Collection<Gene> thawLite( java.util.Collection<Gene> genes );
 
     /**
-     * Converts this DAO's entity to an object of type {@link ubic.gemma.model.genome.gene.GeneValueObject}.
+     * @param ids
+     * @return
      */
-    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( ubic.gemma.model.genome.Gene entity );
-
-    /**
-     * Copies the fields of the specified entity to the target value object. This method is similar to
-     * toGeneValueObject(), but it does not handle any attributes in the target value object that are "read-only" (as
-     * those do not have setter methods exposed).
-     */
-    public void toGeneValueObject( ubic.gemma.model.genome.Gene sourceEntity,
-            ubic.gemma.model.genome.gene.GeneValueObject targetVO );
-
-    /**
-     * Converts this DAO's entity to a Collection of instances of type
-     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public void toGeneValueObjectCollection( java.util.Collection<Gene> entities );
+    public Collection<Gene> loadThawed( Collection<Long> ids );
 
 }

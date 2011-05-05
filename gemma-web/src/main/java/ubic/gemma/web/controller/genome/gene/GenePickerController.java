@@ -61,7 +61,6 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 
@@ -124,7 +123,7 @@ public class GenePickerController {
         if ( geneIds == null || geneIds.isEmpty() ) {
             return new HashSet<GeneValueObject>();
         }
-        return GeneValueObject.convert2ValueObjects( geneService.thawLite( geneService.loadMultiple( geneIds ) ) );
+        return geneService.loadValueObjects( geneIds );
     }
 
     /**
@@ -255,10 +254,12 @@ public class GenePickerController {
             return new HashSet<GeneValueObject>();
         }
         log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
-        
-        for ( SearchResult sr : geneSearchResults ) { genes.add( ( Gene ) sr.getResultObject() ); log.debug(
-         "Gene search result: " + ((Gene)sr.getResultObject()).getOfficialSymbol() ); }         
-        
+
+        for ( SearchResult sr : geneSearchResults ) {
+            genes.add( ( Gene ) sr.getResultObject() );
+            log.debug( "Gene search result: " + ( ( Gene ) sr.getResultObject() ).getOfficialSymbol() );
+        }
+
         Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( genes );
         log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
         return geneValueObjects;
@@ -328,8 +329,8 @@ public class GenePickerController {
             /*
              * GET GENES AND GENESETS
              */
-           // SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-            SearchSettings settings =  new SearchSettings( query );
+            // SearchSettings settings = SearchSettings.geneSearch( query, taxon );
+            SearchSettings settings = new SearchSettings( query );
             settings.noSearches();
             settings.setGeneralSearch( true ); // add a general search, needed for finding GO groups
             settings.setSearchGenes( true ); // add searching for genes
@@ -338,16 +339,16 @@ public class GenePickerController {
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
             List<SearchResult> geneSetSearchResults = results.get( GeneSet.class );
             List<SearchResult> geneSearchResults = results.get( Gene.class );
-            
+
             // filter results by taxon
             List<SearchResult> taxonCheckedGenes = new ArrayList<SearchResult>();
             for ( SearchResult sr : geneSearchResults ) {
                 Gene gene = ( Gene ) sr.getResultObject();
-                if ( gene.getTaxon() != null && gene.getTaxon().getId().equals(taxonId) ) {
+                if ( gene.getTaxon() != null && gene.getTaxon().getId().equals( taxonId ) ) {
                     taxonCheckedGenes.add( sr );
                 }
             }
-            
+
             List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
             for ( SearchResult sr : geneSetSearchResults ) {
                 GeneSet gs = ( GeneSet ) sr.getResultObject();
@@ -390,7 +391,6 @@ public class GenePickerController {
                     }
                 }
             }
-
 
             /*
              * GET GO GROUPS
@@ -488,7 +488,7 @@ public class GenePickerController {
 
         }
 
-        if ( displayResults == null || displayResults.isEmpty() ) {
+        if ( displayResults.isEmpty() ) {
             log.info( "No results for search: " + query + " taxon="
                     + ( ( taxon == null ) ? null : taxon.getCommonName() ) );
             return new HashSet<SearchResultDisplayObject>();

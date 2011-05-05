@@ -123,8 +123,8 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
         Collection<Long> geneIDLong = new HashSet<Long>();
         for ( String id : geneInput )
             geneIDLong.add( Long.parseLong( id ) );
-        Collection<Gene> rawGeneCol = geneService.loadMultiple( geneIDLong );
-        if ( rawGeneCol == null || rawGeneCol.isEmpty() ) {
+        Collection<Gene> rawGeneCol = geneService.loadThawed( geneIDLong );
+        if ( rawGeneCol.isEmpty() ) {
             String msg = "None of the gene id's can be found.";
             return buildBadResponse( document, msg );
         }
@@ -133,7 +133,6 @@ public class DifferentialExpressionProbeResultEndpoint extends AbstractGemmaEndp
             String msg = "Input genes do not match input taxon.";
             return buildBadResponse( document, msg );
         }
-        geneCol = geneService.thawLite( geneCol );
 
         // expression experiment set id input
         Collection<String> analysisInput = getSingleNodeValue( requestElement, "expression_experiment_set_id" );

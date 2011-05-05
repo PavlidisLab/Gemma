@@ -78,9 +78,7 @@ public class GeneDetailsByGeneIDEndpoint extends AbstractGemmaEndpoint {
 
         log.debug( "XML input read: " + geneInput.size() + " gene ids read" );
 
-        Collection<Gene> geneCol = geneService.loadMultiple( geneLongInput );
-
-        geneCol = geneService.thawLite( geneCol );
+        Collection<Gene> geneCol = geneService.loadThawed( geneLongInput );
 
         if ( geneCol == null || geneCol.isEmpty() ) {
             String msg = "No genes can be found.";
