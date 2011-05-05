@@ -24,8 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.util.Collection;
-import java.util.Map;
+import java.util.Collection; 
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang.StringUtils;
