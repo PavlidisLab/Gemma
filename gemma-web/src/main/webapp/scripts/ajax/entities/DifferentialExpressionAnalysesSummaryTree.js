@@ -308,9 +308,9 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 
 		var percentDifferentiallyExpressed = resultSet.upregulatedCount + resultSet.downregulatedCount;
 		percentDifferentiallyExpressed /= this.totalProbes; // avoid "/" at line
-															// start!! Causes
-															// compression
-															// problems.
+		// start!! Causes
+		// compression
+		// problems.
 
 		if ((percentDifferentiallyExpressed < 0.05 && percentDifferentiallyExpressed > 0)) {
 			linkText += " ["
@@ -321,8 +321,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		linkText += '</span>';
 		/* provide link for visualization. */
 		linkText += '<span class="link" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(\''
-				+ eeID + '\',\'' + resultSet.resultSetId + '\',\'' + escape(factor)
-				+ '\')" ext:qtip="Click to visualize differentially expressed probes for: ' + escape(factor)
+				+ eeID + '\',\'' + resultSet.resultSetId + '\',\'' + factor
+				+ '\')" ext:qtip="Click to visualize differentially expressed probes for: ' + factor
 				+ ' (FDR threshold=' + resultSet.threshold
 				+ ')">&nbsp;<img src="/Gemma/images/icons/chart_curve.png">&nbsp;</span>';
 		return linkText;
