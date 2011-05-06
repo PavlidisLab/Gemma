@@ -88,6 +88,38 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
     },*/
 	
 
+	// overwrite ComboBox onLoad function to get rid of query text being selected after a search returns
+	// (this was interfering with the query queue fix)
+	// only change made is commented out line
+    onLoad : function(){
+        if(!this.hasFocus){
+            return;
+        }
+        if(this.store.getCount() > 0 || this.listEmptyText){
+            this.expand();
+            this.restrictHeight();
+            if(this.lastQuery == this.allQuery){
+                if(this.editable){
+                  //  this.el.dom.select();
+                }
+
+                if(this.autoSelect !== false && !this.selectByValue(this.value, true)){
+                    this.select(0, true);
+                }
+            }else{
+                if(this.autoSelect !== false){
+                    this.selectNext();
+                }
+                if(this.typeAhead && this.lastKey != Ext.EventObject.BACKSPACE && this.lastKey != Ext.EventObject.DELETE){
+                    this.taTask.delay(this.typeAheadDelay);
+                }
+            }
+        }else{
+            this.collapse();
+        }
+
+    }, // end onLoad overwrite
+
 	initComponent : function() {
 
         this.addEvents("beforeexpand","beforecollapse"); // if beforeexpand returns false, expand is cancelled
@@ -177,6 +209,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
 				// TODO add a 800ms (?) wait command here and then check if this.getValue() ==='' is still true
+				// actually, not really a good solution b/c the user won't know immediately that suggestions are going to be made
 				field.lastQuery = null; // needed for query queue fix
 				this.doQuery('',true); 
 			}

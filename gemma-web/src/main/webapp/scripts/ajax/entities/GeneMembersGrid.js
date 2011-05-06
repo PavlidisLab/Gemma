@@ -174,7 +174,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					text : "Done",
 					handler : this.done,
 					scope : this,
-					disabled : false
+					disabled : true
 				});
 		// add save button if user isn't logged in
 		if (Ext.get('hasUser').getValue()) {
@@ -267,7 +267,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.on('doneModification', function() {
 			this.changesMade = false;
 				// this.saveButton.disable();
-				// this.doneButton.disable();
+				 this.doneButton.disable();
 			});
 
 		this.getStore().on("remove", function() {
@@ -413,11 +413,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * When user clicks done, just save to session
 	 */
 	done : function() {
-		// if user hasn't made any changes, just close the window
-		// if(!this.changesMade){
-		// this.fireEvent('doneModification');
-		// return;
-		// }
+		
 		this.createDetails();
 		this.createInSession();
 	},
@@ -426,12 +422,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * When user clicks 'save', figure out what kind of save to do
 	 */
 	save : function() {
-
-		// if user hasn't made any changes, just close the window
-		// if(!this.changesMade){
-		// this.fireEvent('doneModification');
-		// return;
-		// }
 
 		// get name and description set up
 		this.createDetails();

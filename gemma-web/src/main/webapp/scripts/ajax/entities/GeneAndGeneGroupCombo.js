@@ -56,6 +56,39 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
         		}
     },
 	
+		
+	// overwrite ComboBox onLoad function to get rid of query text being selected after a search returns
+	// (this was interfering with the query queue fix)
+	// only change made is commented out line
+    onLoad : function(){
+        if(!this.hasFocus){
+            return;
+        }
+        if(this.store.getCount() > 0 || this.listEmptyText){
+            this.expand();
+            this.restrictHeight();
+            if(this.lastQuery == this.allQuery){
+                if(this.editable){
+                  //  this.el.dom.select();
+                }
+
+                if(this.autoSelect !== false && !this.selectByValue(this.value, true)){
+                    this.select(0, true);
+                }
+            }else{
+                if(this.autoSelect !== false){
+                    this.selectNext();
+                }
+                if(this.typeAhead && this.lastKey != Ext.EventObject.BACKSPACE && this.lastKey != Ext.EventObject.DELETE){
+                    this.taTask.delay(this.typeAheadDelay);
+                }
+            }
+        }else{
+            this.collapse();
+        }
+
+    }, // end onLoad overwrite
+	
 	initComponent : function() {
 
 		Ext.apply(this, {
