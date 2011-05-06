@@ -146,7 +146,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					text : "Done",
 					handler : this.done,
 					scope : this,
-					disabled : false
+					disabled : true
 				});
 		// add buttons only if haven't been added already
 		if (!this.buttons || this.buttons === null || this.buttons === []) {
@@ -221,7 +221,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		this.on('doneModification', function() {
 			this.changesMade = false;
 				// this.saveButton.disable();
-				// this.doneButton.disable();
+				 this.doneButton.disable();
 			});
 
 		this.getStore().on("remove", function() {
@@ -316,11 +316,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	 * When user clicks done, just save to session
 	 */
 	done : function() {
-		// if user hasn't made any changes, just close the window
-		// if(!this.changesMade){
-		// this.fireEvent('doneModification');
-		// return;
-		// }
+
 		this.createDetails();
 		this.saveToSession();
 	},
@@ -329,12 +325,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	 * When user clicks 'save', figure out what kind of save to do
 	 */
 	save : function() {
-
-		// if user hasn't made any changes, just close the window
-		// if(!this.changesMade){
-		// this.fireEvent('doneModification');
-		// return;
-		// }
 
 		// if the user hasn't made any changes, save anyway
 
@@ -463,7 +453,5 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.fireEvent('experimentListModified', this.selectedExperimentGroup);
 					this.fireEvent('doneModification');
 				}.createDelegate(this));
-
-		this.changesMade = false;
 	}
 });
