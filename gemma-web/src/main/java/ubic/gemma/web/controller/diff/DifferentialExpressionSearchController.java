@@ -209,7 +209,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
         vizColumn.setBaselineFactorValue( getFactorValueString( resultSet.getBaselineGroup() ) );
         vizColumn.setFactorName( factor.getName() );
-        // vizColumn.setFactorCategory( factor.getCategory().getName() );
+        vizColumn.setFactorDescription( factor.getDescription() );
+        vizColumn.setFactorId( factor.getId() );
+
+        if ( factor.getCategory() == null || StringUtils.isBlank( factor.getCategory().getCategory() ) ) {
+            vizColumn.setFactorCategory( factor.getName() );
+            log.warn( "No category for " + factor ); // might be very verbose, remove later.
+        } else {
+            vizColumn.setFactorCategory( factor.getCategory().getCategory() );
+        }
 
         for ( FactorValue fvalue : factor.getFactorValues() ) {
             vizColumn.addContrastsFactorValue( fvalue.getId(), getFactorValueString( fvalue ) );
@@ -300,14 +308,14 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         }
                     }
                 }
-                
+
                 // sort genes alphabetically
                 Collections.sort( genesInsideSet, new GeneSymbolComparator() );
-                
-                for(Gene gene : genesInsideSet){
-                  geneNamesInsideSet.add( gene.getOfficialSymbol() );
-                  geneFullNamesInsideSet.add( gene.getOfficialName() );
-                  geneIdsInsideSet.add( gene.getId() );  
+
+                for ( Gene gene : genesInsideSet ) {
+                    geneNamesInsideSet.add( gene.getOfficialSymbol() );
+                    geneFullNamesInsideSet.add( gene.getOfficialName() );
+                    geneIdsInsideSet.add( gene.getId() );
                 }
 
                 genes.add( genesInsideSet );
@@ -756,12 +764,12 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                         Collection<ExpressionExperimentValueObject> eevos = sessionListManager
                                 .getExperimentsInSetByReference( ref );
                         Collection<Long> ids = EntityUtils.getIds( eevos );
-                        experiments.add( loadExperimentsByIds( ids ));
+                        experiments.add( loadExperimentsByIds( ids ) );
 
                     } else if ( ref.isDatabaseBacked() ) {
                         ExpressionExperimentSet datasetGroup = expressionExperimentSetService.load( ref.getId() );
                         Collection<Long> ids = EntityUtils.getIds( datasetGroup.getExperiments() );
-                        experiments.add( loadExperimentsByIds( ids ));
+                        experiments.add( loadExperimentsByIds( ids ) );
                     }
                 }
             }

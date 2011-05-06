@@ -27,37 +27,40 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     private Long analysisId;
     private String subsetFactor;
     private String subsetFactorValue;
+    private Long factorId;
     private String factorName;
+
     private String factorCategory;
-    
+
+    private String factorDescription;
     // Various metrics/scores to be use for display/sorting/filtering.
-    private int numberOfProbesTotal;    
+    private int numberOfProbesTotal;
     private int numberOfProbesDiffExpressed;
+    
     private int numberOfProbesUpRegulated;
+
     private int numberOfProbesDownRegulated;
-    
-    private int numberOfGenesDiffExpressedFromGeneGroup;
-    
+
+    private int numberOfGenesDiffExpressedFromGeneGroup;    
     private boolean analysisNotRun = false;
-        
-    // Data
-    
     // 
     private List<List<Double>> visualizationValues;
     private List<List<Double>> pValues;
+    
     // Number of probes per gene ( per dataset ). Can be used to show genes with multiple probes on the array.  
-    private List<List<Integer>> numberOfProbes;                 
+    private List<List<Integer>> numberOfProbes;
     
     // Contrasts:    
     private Map<Long, String> contrastsFactorValues;
-    private List<Long> contrastsFactorValueIds;
+        
+    // Data
     
+    private List<Long> contrastsFactorValueIds;
     private String baselineFactorValue;
-
     // [geneGroupIndex][geneIndex][contrastIndex]
-    private List<List<List<Double>>> contrastsVisualizationValues;
+    private List<List<List<Double>>> contrastsVisualizationValues;                 
+    
     private List<List<List<Double>>> constrastsFoldChangeValues;
-   
     public DifferentialExpressionAnalysisResultSetVisualizationValueObject ( int[] geneGroupSizes ) {
         this.numberOfGeneGroups = geneGroupSizes.length;
         this.geneGroupSizes = geneGroupSizes;
@@ -74,182 +77,197 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
         
         this.contrastsFactorValues = new HashMap<Long,String>();
         this.contrastsFactorValueIds = new ArrayList<Long>();
-    }    
+    }
     
-//  List<List<List<Double>>>  contrastsVisualizationValues    = new ArrayList<List<List<Double>>>();
-//  List<List<List<Double>>>  contrastsFoldChangeValues       = new ArrayList<List<List<Double>>>();                        
-    
-    public boolean getAnalysisNotRun() {
-        return analysisNotRun;
-    }
-
-    public void setAnalysisNotRun( boolean analysisNotRun ) {
-        this.analysisNotRun = analysisNotRun;
-    }
-
-    public int getNumberOfProbesTotal() {
-        return numberOfProbesTotal;
-    }
-
-    public void setNumberOfProbesTotal( int numberOfProbesTotal ) {
-        this.numberOfProbesTotal = numberOfProbesTotal;
-    }
-
-    public int getNumberOfProbesDiffExpressed() {
-        return numberOfProbesDiffExpressed;
-    }
-
-    public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
-        this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
-    }
-
-    public int getNumberOfProbesUpRegulated() {
-        return numberOfProbesUpRegulated;
-    }
-
-    public void setNumberOfProbesUpRegulated( int numberOfProbesUpRegulated ) {
-        this.numberOfProbesUpRegulated = numberOfProbesUpRegulated;
-    }
-
-    public int getNumberOfProbesDownRegulated() {
-        return numberOfProbesDownRegulated;
-    }
-
-    public void setNumberOfProbesDownRegulated( int numberOfProbesDownRegulated ) {
-        this.numberOfProbesDownRegulated = numberOfProbesDownRegulated;
+    public void addContrastsFactorValue ( long factorValueId, String factorValueName ) {
+        this.contrastsFactorValueIds.add ( factorValueId );
+        this.contrastsFactorValues.put( factorValueId, factorValueName );
     }
 
     public Long getAnalysisId() {
         return analysisId;
     }
-
-    public void setAnalysisId( Long analysisId ) {
-        this.analysisId = analysisId;
+    public boolean getAnalysisNotRun() {
+        return analysisNotRun;
     }
-
-    public List<List<Double>> getVisualizationValues() {
-        return visualizationValues;
-    }
-
-    public void setVisualizationValues( List<List<Double>> visualizationValues ) {
-        this.visualizationValues = visualizationValues;
-    }
-
-    public void setVisualizationValue ( int geneGroupIndex, int geneIndex, Double value ) {
-        this.visualizationValues.get( geneGroupIndex ).add( geneIndex, value );
-    }    
-    
-    public List<List<Double>> getpValues() {
-        return pValues;
-    }
-
-    public void setpValues( List<List<Double>> pValues ) {
-        this.pValues = pValues;
-    }
-
-    public void setPvalue( int geneGroupIndex, int geneIndex, Double pValue ) {
-        this.pValues.get( geneGroupIndex ).add( geneIndex, pValue );
-    }
-    
-    public List<List<Integer>> getNumberOfProbes() {
-        return numberOfProbes;
-    }
-
-    public void setNumberOfProbes( List<List<Integer>> numberOfProbes ) {
-        this.numberOfProbes = numberOfProbes;
-    }
-
-    public void setNumberOfProbes( int geneGroupIndex, int geneIndex, Integer numberOfProbes ) {
-        this.numberOfProbes.get( geneGroupIndex ).add( geneIndex, numberOfProbes );
-    }
-    
-    public Map<Long,String> getContrastsFactorValues() {
-        return contrastsFactorValues;
-    }
-
-    public void addContrastsFactorValue ( long factorValueId, String factorValueName ) {
-        this.contrastsFactorValueIds.add ( factorValueId );
-        this.contrastsFactorValues.put( factorValueId, factorValueName );
-    }
-    
-    public void setContrastsFactorValues( Map<Long,String> contrastsFactorValues ) {
-        this.contrastsFactorValues = contrastsFactorValues;
-    }
-
+   
     public String getBaselineFactorValue() {
         return baselineFactorValue;
+    }    
+    
+//  List<List<List<Double>>>  contrastsVisualizationValues    = new ArrayList<List<List<Double>>>();
+//  List<List<List<Double>>>  contrastsFoldChangeValues       = new ArrayList<List<List<Double>>>();                        
+    
+    public List<List<List<Double>>> getConstrastsFoldChangeValues() {
+        return constrastsFoldChangeValues;
     }
 
-    public void setBaselineFactorValue( String baselineFactorValue ) {
-        this.baselineFactorValue = baselineFactorValue;
+    public List<Long> getContrastsFactorValueIds() {
+        return this.contrastsFactorValueIds;        
+    }
+
+    public Map<Long,String> getContrastsFactorValues() {
+        return contrastsFactorValues;
     }
 
     public List<List<List<Double>>> getContrastsVisualizationValues() {
         return contrastsVisualizationValues;
     }
 
-    public void setContrastsVisualizationValues( List<List<List<Double>>> contrastsVisualizationValues ) {
-        this.contrastsVisualizationValues = contrastsVisualizationValues;
-    }
-
-    public List<List<List<Double>>> getConstrastsFoldChangeValues() {
-        return constrastsFoldChangeValues;
-    }
-
-    public void setConstrastsFoldChangeValues( List<List<List<Double>>> constrastsFoldChangeValues ) {
-        this.constrastsFoldChangeValues = constrastsFoldChangeValues;
-    }
-
-    public String getDatasetName() {
-        return datasetName;
-    }
-
-    public void setDatasetName( String datasetName ) {
-        this.datasetName = datasetName;
-    }
-
-    public String getDatasetShortName() {
-        return datasetShortName;
-    }
-
-    public void setDatasetShortName( String datasetShortName ) {
-        this.datasetShortName = datasetShortName;
+    public Long getDatasetId() {
+        return datasetId;
     }
 
     public String getDatasetLink() {
         return datasetLink;
     }
 
-    public void setDatasetLink( String datasetLink ) {
-        this.datasetLink = datasetLink;
+    public String getDatasetName() {
+        return datasetName;
     }
 
-    public Long getDatasetId() {
-        return datasetId;
+    public String getDatasetShortName() {
+        return datasetShortName;
     }
 
-    public void setDatasetId( Long datasetId ) {
-        this.datasetId = datasetId;
+    public String getFactorCategory() {
+        return this.factorCategory;
+    }
+
+    public String getFactorDescription() {
+        return factorDescription;
+    }
+
+    public Long getFactorId() {
+        return factorId;
     }
 
     public String getFactorName() {
         return factorName;
     }
 
-    public void setFactorName( String factorName ) {
-        this.factorName = factorName;
+    public List<List<Integer>> getNumberOfProbes() {
+        return numberOfProbes;
     }
 
-    public String getFactorCategory() {
-        return this.factorCategory;
+    public int getNumberOfProbesDiffExpressed() {
+        return numberOfProbesDiffExpressed;
+    }
+
+    public int getNumberOfProbesDownRegulated() {
+        return numberOfProbesDownRegulated;
+    }    
+    
+    public int getNumberOfProbesTotal() {
+        return numberOfProbesTotal;
+    }
+
+    public int getNumberOfProbesUpRegulated() {
+        return numberOfProbesUpRegulated;
+    }
+
+    public List<List<Double>> getpValues() {
+        return pValues;
     }
     
+    public List<List<Double>> getVisualizationValues() {
+        return visualizationValues;
+    }
+
+    public void setAnalysisId( Long analysisId ) {
+        this.analysisId = analysisId;
+    }
+
+    public void setAnalysisNotRun( boolean analysisNotRun ) {
+        this.analysisNotRun = analysisNotRun;
+    }
+    
+    public void setBaselineFactorValue( String baselineFactorValue ) {
+        this.baselineFactorValue = baselineFactorValue;
+    }
+
+    public void setConstrastsFoldChangeValues( List<List<List<Double>>> constrastsFoldChangeValues ) {
+        this.constrastsFoldChangeValues = constrastsFoldChangeValues;
+    }
+    
+    public void setContrastsFactorValues( Map<Long,String> contrastsFactorValues ) {
+        this.contrastsFactorValues = contrastsFactorValues;
+    }
+
+    public void setContrastsVisualizationValues( List<List<List<Double>>> contrastsVisualizationValues ) {
+        this.contrastsVisualizationValues = contrastsVisualizationValues;
+    }
+
+    public void setDatasetId( Long datasetId ) {
+        this.datasetId = datasetId;
+    }
+
+    public void setDatasetLink( String datasetLink ) {
+        this.datasetLink = datasetLink;
+    }
+
+    public void setDatasetName( String datasetName ) {
+        this.datasetName = datasetName;
+    }
+
+    public void setDatasetShortName( String datasetShortName ) {
+        this.datasetShortName = datasetShortName;
+    }
+
     public void setFactorCategory( String name ) {
         this.factorCategory = name;
     }
 
-    public List<Long> getContrastsFactorValueIds() {
-        return this.contrastsFactorValueIds;        
+    public void setFactorDescription( String factorDescription ) {
+        this.factorDescription = factorDescription;
+    }
+
+    public void setFactorId( Long factorId ) {
+        this.factorId = factorId;
+    }
+
+    public void setFactorName( String factorName ) {
+        this.factorName = factorName;
+    }
+
+    public void setNumberOfProbes( int geneGroupIndex, int geneIndex, Integer numberOfProbes ) {
+        this.numberOfProbes.get( geneGroupIndex ).add( geneIndex, numberOfProbes );
+    }
+
+    public void setNumberOfProbes( List<List<Integer>> numberOfProbes ) {
+        this.numberOfProbes = numberOfProbes;
+    }
+
+    public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
+        this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
+    }
+
+    public void setNumberOfProbesDownRegulated( int numberOfProbesDownRegulated ) {
+        this.numberOfProbesDownRegulated = numberOfProbesDownRegulated;
+    }
+
+    public void setNumberOfProbesTotal( int numberOfProbesTotal ) {
+        this.numberOfProbesTotal = numberOfProbesTotal;
+    }
+
+    public void setNumberOfProbesUpRegulated( int numberOfProbesUpRegulated ) {
+        this.numberOfProbesUpRegulated = numberOfProbesUpRegulated;
+    }
+
+    public void setPvalue( int geneGroupIndex, int geneIndex, Double pValue ) {
+        this.pValues.get( geneGroupIndex ).add( geneIndex, pValue );
+    }
+
+    public void setpValues( List<List<Double>> pValues ) {
+        this.pValues = pValues;
+    }
+    
+    public void setVisualizationValue ( int geneGroupIndex, int geneIndex, Double value ) {
+        this.visualizationValues.get( geneGroupIndex ).add( geneIndex, value );
+    }
+
+    public void setVisualizationValues( List<List<Double>> visualizationValues ) {
+        this.visualizationValues = visualizationValues;
     }
 
     
