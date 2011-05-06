@@ -221,7 +221,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 								check : function(target, checked) {
 
 									if (checked) {
-										this._sortColumns('DESC', function(o1, o2) {
+										this._sortColumns('ASC', function(o1, o2) {
 
 													return o1.specificityScore - o2.specificityScore;
 												});
@@ -234,7 +234,43 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							}
 
 						}]
-					}, {
+					},{
+                            xtype: 'radio',
+							name:'geneSortRadios',
+							checked: true,
+                            boxLabel: 'Sort genes alphabetically.',
+                            listeners: {
+                                check: function(target, checked){
+                                    var geneGroupIndex;
+                                    var i;
+                                    if (!checked) {
+                                        // Sort genes : changes gene order
+                                        for (i = 0; i < this.geneScores[0].length; i++) {
+                                            this.geneScores[0][i].sort(function(o1, o2){
+                                                return o2.score - o1.score;
+                                            });
+                                        }
+                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
+                                            this.geneOrdering[geneGroupIndex] = [];
+                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+                                                    this.geneOrdering[geneGroupIndex].push(this.geneScores[0][geneGroupIndex][i].index);
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        // Default geneOrdering
+                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
+                                            this.geneOrdering[geneGroupIndex] = [];
+                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+                                                this.geneOrdering[geneGroupIndex].push(i);
+                                            }
+                                        }
+                                    }
+                                    this.refreshVisualization();
+                                },
+                                scope: this
+                            }
+                    }, {
 						xtype : 'radio',
 						name : 'geneSortRadios',
 						boxLabel : 'Sort genes by gene score.',
