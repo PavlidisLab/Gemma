@@ -350,7 +350,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 			for (var k = 1; k < resultSet.experimentalFactors.size(); k++) {
 				// console.log("!expFac " + k + ": " +
 				// resultSet.experimentalFactors[k].name);
-				factor = factor + " x " + resultSet.experimentalFactors[k].name /*
+				factor = factor + "&nbsp;x&nbsp;" + resultSet.experimentalFactors[k].name /*
 																				 * + " (" +
 																				 * resultSet.experimentalFactors[k].category +
 																				 * ")"
@@ -358,7 +358,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 				interaction = 1;
 			}
 		}
-		return [escape(factor), interaction];
+		return [factor, interaction];
 	},
 	drawPieCharts : function() {
 		var ctx, up, down, diffExpressed, interesting;
