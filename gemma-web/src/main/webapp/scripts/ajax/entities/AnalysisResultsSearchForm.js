@@ -1,6 +1,7 @@
 /**
  * @author thea
- * @version $Id$
+ * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
+ *          Exp $
  */
 Ext.namespace('Gemma');
 
@@ -288,52 +289,43 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 			// prune the gene Ids
 			csc.geneIds = csc.geneIds.slice(0, Gemma.MAX_GENES_PER_QUERY);
-			
-			/*
-			//update the previews
-			var runningCount = 0;
-			var i;
-			var idsToRemove = [];
-			for (i = 0; i < this.geneChoosers.items.items.length; i++) {
-				var chooser = this.geneChoosers.items.items[i];
-				if (typeof chooser.geneIds !== 'undefined') {// if not a
-					// blank combo
-					if (runningCount + chooser.geneIds.length <= Gemma.MAX_GENES_PER_QUERY) {
-						runningCount += chooser.geneIds.length;
-					} else {
-						if (runningCount > Gemma.MAX_GENES_PER_QUERY) {
-							runningCount = Gemma.MAX_GENES_PER_QUERY;
-						}
-						// idsToRemove.push(chooser.getId());
-						chooser.geneIds = chooser.geneIds.slice(0, (Gemma.MAX_GENES_PER_QUERY - runningCount));
-						runningCount += chooser.geneIds.length;
-						chooser.selectedGeneOrGroupRecord.geneIds = chooser.geneIds;
-						chooser.selectedGeneOrGroupRecord.memberIds = chooser.geneIds;
-						chooser.selectedGeneOrGroupRecord.reference = null;
-						chooser.selectedGeneOrGroupRecord.type = 'usersgeneSetSession';
-						chooser.selectedGeneOrGroupRecord.name = "Trimmed " + chooser.selectedGeneOrGroupRecord.name;
-						chooser.geneCombo.setRawValue(chooser.selectedGeneOrGroupRecord.name);
-						chooser.geneCombo.getStore().reload();
 
-						this.collapseGenePreviews();
-						chooser.loadGenePreview();
-						chooser.genePreviewContent.expand();
-					}
-				}
-			}
-			//for(idToRemove in idsToRemove){
-			//	this.removeGeneChooser(idToRemove);
-			//}
-			
-			return "You can only search up to " + Gemma.MAX_GENES_PER_QUERY +
-					" genes. Please note that your list(s) of genes have been trimmed automatically. <br>"+
-					"Press 'Go' again to run the search with this trimmed list or re-enter your gene query(ies) and "+
-					"use the edit tool to manually trim your selection(s).";
-			*/
-			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_QUERY +
-					" genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
+			/*
+			 * //update the previews var runningCount = 0; var i; var
+			 * idsToRemove = []; for (i = 0; i <
+			 * this.geneChoosers.items.items.length; i++) { var chooser =
+			 * this.geneChoosers.items.items[i]; if (typeof chooser.geneIds !==
+			 * 'undefined') {// if not a // blank combo if (runningCount +
+			 * chooser.geneIds.length <= Gemma.MAX_GENES_PER_QUERY) {
+			 * runningCount += chooser.geneIds.length; } else { if (runningCount >
+			 * Gemma.MAX_GENES_PER_QUERY) { runningCount =
+			 * Gemma.MAX_GENES_PER_QUERY; } //
+			 * idsToRemove.push(chooser.getId()); chooser.geneIds =
+			 * chooser.geneIds.slice(0, (Gemma.MAX_GENES_PER_QUERY -
+			 * runningCount)); runningCount += chooser.geneIds.length;
+			 * chooser.selectedGeneOrGroupRecord.geneIds = chooser.geneIds;
+			 * chooser.selectedGeneOrGroupRecord.memberIds = chooser.geneIds;
+			 * chooser.selectedGeneOrGroupRecord.reference = null;
+			 * chooser.selectedGeneOrGroupRecord.type = 'usersgeneSetSession';
+			 * chooser.selectedGeneOrGroupRecord.name = "Trimmed " +
+			 * chooser.selectedGeneOrGroupRecord.name;
+			 * chooser.geneCombo.setRawValue(chooser.selectedGeneOrGroupRecord.name);
+			 * chooser.geneCombo.getStore().reload();
+			 * 
+			 * this.collapseGenePreviews(); chooser.loadGenePreview();
+			 * chooser.genePreviewContent.expand(); } } } //for(idToRemove in
+			 * idsToRemove){ // this.removeGeneChooser(idToRemove); //}
+			 * 
+			 * return "You can only search up to " + Gemma.MAX_GENES_PER_QUERY + "
+			 * genes. Please note that your list(s) of genes have been trimmed
+			 * automatically. <br>"+ "Press 'Go' again to run the search with
+			 * this trimmed list or re-enter your gene query(ies) and "+ "use
+			 * the edit tool to manually trim your selection(s).";
+			 */
+			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_QUERY
+					+ " genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
 			return "";
-							
+
 		} else {
 			return "";
 		}
@@ -467,6 +459,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 
 	},
+
+	/**
+	 * 
+	 * @param {}
+	 *            dsc
+	 * @return {}
+	 */
 	getDiffExBookmarkableLink : function(dsc) {
 		if (!dsc) {
 			dsc = this.getDiffSearchCommand();
@@ -503,6 +502,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 		return url;
 	},
+
+	/**
+	 * 
+	 * @param {}
+	 *            dsc
+	 * @return {String}
+	 */
 	validateDiffExSearch : function(dsc) {
 		if (!dsc.geneIds || dsc.geneIds.length === 0) {
 			return "We couldn't figure out which gene you want to query. Please use the search functionality to find genes.";
@@ -886,6 +892,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.collapseGenePreviews();
 		this.collapseExperimentPreviews();
 	},
+
 	collapseGenePreviews : function() {
 		if (typeof this.geneChoosers.items !== 'undefined') {
 			this.geneChoosers.items.each(function() {
@@ -902,6 +909,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					});
 		}
 	},
+
 	collapseExperimentPreviews : function() {
 		if (typeof this.experimentChoosers.items !== 'undefined') {
 			this.experimentChoosers.items.each(function() {
@@ -957,10 +965,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		this.geneChoosers.doLayout();
 	},
+
 	removeGeneChooser : function(panelId) {
 		this.geneChoosers.remove(panelId, true);
 		this.geneChoosers.doLayout();
 	},
+
 	addExperimentChooser : function() {
 		// this.collapseExperimentPreviews();
 		this.experimentChooserIndex++;
@@ -978,7 +988,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			 * this.addExperimentChooser.createDelegate(this, [], false)
 			 * handler: this.removeExperimentChooser.createDelegate(this, [],
 			 * false) }, {
-			 */xtype : 'experimentSearchAndPreview',
+			 */
+			xtype : 'experimentSearchAndPreview',
 			searchForm : this,
 			style : 'padding-top:10px;margin-right:10px',
 			id : 'experimentChooser' + this.experimentChooserIndex,
@@ -1006,6 +1017,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		this.experimentChoosers.doLayout();
 	},
+
 	removeExperimentChooser : function(panelId) {
 		this.experimentChoosers.remove(panelId, true);
 		this.experimentChoosers.doLayout();
