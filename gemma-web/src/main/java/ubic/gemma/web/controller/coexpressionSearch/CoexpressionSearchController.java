@@ -150,19 +150,18 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         if ( searchOptions.getGeneIds().size() > MAX_GENES_PER_QUERY ) {
-            result.setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY +" genes");
+            result
+                    .setErrorState( "Too many genes selected, please limit searches to " + MAX_GENES_PER_QUERY
+                            + " genes" );
             return result;
         }
 
-        Collection<Gene> genes = geneService.loadMultiple( searchOptions.getGeneIds() );
+        Collection<Gene> genes = geneService.loadThawed( searchOptions.getGeneIds() );
 
         if ( genes.size() == 0 ) {
             result.setErrorState( "Invalid gene id(s) - no genes found" );
             return result;
-
         }
-
-        genes = this.geneService.thawLite( genes ); // need to thaw externalDB in taxon for marshling back to client...
 
         /*
          * Validation ...
@@ -186,7 +185,7 @@ public class CoexpressionSearchController extends BaseFormController {
         /*
          * User provided a eeset by name.
          */
-        if ( ( eeSetId == null && searchOptions.getEeSetName() != null ) 
+        if ( ( eeSetId == null && searchOptions.getEeSetName() != null )
                 || ( eeSetId != null && eeSetId < 0 && StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) ) {
             Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
                     .getEeSetName() );
@@ -307,22 +306,21 @@ public class CoexpressionSearchController extends BaseFormController {
                     throw new IllegalArgumentException( "Cannot load EE set with id=" + eeSetId );
                 }
 
-                for ( BioAssaySet b : eeSet.getExperiments() ) {
-                    eeIds.add( b.getId() );
-                }
+                eeIds = EntityUtils.getIds( eeSet.getExperiments() );
             } else if ( StringUtils.isNotBlank( request.getParameter( "an" ) ) ) {
-                Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( request.getParameter( "an" ) );
+                Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( request
+                        .getParameter( "an" ) );
                 if ( eeSets.size() == 1 ) {
                     eeSetId = eeSets.iterator().next().getId();
-                    
+
                     ExpressionExperimentSet eeSet = this.expressionExperimentSetService.load( eeSetId );
                     for ( BioAssaySet b : eeSet.getExperiments() ) {
                         eeIds.add( b.getId() );
-                    }                    
+                    }
                 } else {
                     log.warn( "Unknown or ambiguous set name: : " + request.getParameter( "an" ) );
                     return new ModelAndView( this.getFormView() );
-                }                
+                }
             } else {
                 eeIds = extractIds( request.getParameter( "ee" ) );
             }
