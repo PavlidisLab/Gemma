@@ -948,6 +948,7 @@ gemma.max.fileupload.size.bytes=
 								<value>remove</value>
 								<value>loadAllUserAndSessionGroups</value>
 								<value>updateUserAndSessionGroups</value>
+								<value>updateMembers</value>
 								<value>addUserAndSessionGroups</value>
 								<value>removeUserAndSessionGroups</value>
 								<value>loadAllSessionGroups</value>
@@ -2009,6 +2010,9 @@ gemma.max.fileupload.size.bytes=
 								<value>factorProfiles</value>
 								<value>eevo</value>
 								<value>sampleNames</value>
+								<value>factorValuesToNames</value>
+								<value>factorValues</value>
+								<value>factorNames</value>
 							</list>
 						</property>
 					</bean>

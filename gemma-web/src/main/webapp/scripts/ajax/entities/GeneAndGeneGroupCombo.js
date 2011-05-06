@@ -19,7 +19,7 @@ Ext.namespace('Gemma');
 Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 	name : 'geneAndGeneGroupCombo',
-	displayField : 'name',
+	displayField : 'comboText',
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
 	
@@ -118,7 +118,19 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 							},{
 								name: "memberIds",
 								defaultValue: []
-							}])),
+							},{
+								name: "comboText",
+								type: "string",
+								convert: function(v, record){
+									if (record.type === 'GOgroup') {
+										return record.name + ": " + record.description;
+									}
+									else {
+										return record.name;
+									}
+								}
+							}	
+							])),
 					
 						proxy : new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups),
 						autoLoad : false

@@ -706,44 +706,70 @@ Gemma.GeneSetDetailsDialog = Ext.extend(Ext.Window, {
 							description : values.newSetDescription
 						});
 			},
-
+			nameField: new Ext.form.TextField({
+				id: this.id+"Name",
+				fieldLabel: 'Name',
+				allowBlank: false,
+				name: 'newSetName',
+				minLength: 3,
+				invalidText: "You must provide a name",
+				width: 300
+			}),
+			descriptionField: new Ext.form.TextArea({
+				id: this.id+'Desc',
+				fieldLabel: 'Description',
+				name: 'newSetDescription',
+				value: this.description,
+				width: 300,
+			//value: this.suggestedDescription
+			}),
+									
+			
 			/**
 			 * 
 			 */
 			initComponent : function() {
 
 				this.formId = Ext.id();
-
+				
 				Ext.apply(this, {
 							items : new Ext.FormPanel({
+										id: this.id+'FormPanel',
 										frame : false,
 										labelAlign : 'left',
 										id : this.formId,
 										height : 250,
-										items : new Ext.form.FieldSet({
-													height : 240,
-													items : [new Ext.form.TextField({
-																		fieldLabel : 'Name',
-																		allowBlank : false,
-																		name : 'newSetName',
-																		minLength : 3,
-																		invalidText : "You must provide a name",
-																		width : 300
-																	}), new Ext.form.TextArea({
-																		fieldLabel : 'Description',
-																		name : 'newSetDescription',
-																		value : this.description,
-																		width : 300
-																	})/*, new Ext.form.Radio({
-																		fieldLabel : 'Private',
-																		name : 'publicPrivate',
-																		checked: true
-																	}), new Ext.form.Radio({
-																		fieldLabel : 'Public',
-																		name : 'publicPrivate',
-																		checked: false
-																	})*/]
-												}),
+										items: new Ext.form.FieldSet({
+											id: this.id + 'FieldSet',
+											height: 240,
+											items: [new Ext.form.TextField({
+												ref:'nameField',
+												id: this.id + "Name",
+												fieldLabel: 'Name',
+												allowBlank: false,
+												name: 'newSetName',
+												minLength: 3,
+												invalidText: "You must provide a name",
+												width: 300
+											}), new Ext.form.TextArea({
+												ref: 'descField',
+												id: this.id + 'Desc',
+												fieldLabel: 'Description',
+												name: 'newSetDescription',
+												value: this.description,
+												width: 300,
+											//value: this.suggestedDescription
+											})	/*, new Ext.form.Radio({
+													 fieldLabel : 'Private',
+													 name : 'publicPrivate',
+													 checked: true
+													 }), new Ext.form.Radio({
+													 fieldLabel : 'Public',
+													 name : 'publicPrivate',
+													 checked: false
+													 })*/
+											]
+										}),
 										buttons : [{
 													text : "Cancel",
 													handler : this.hide.createDelegate(this, [])
@@ -755,6 +781,7 @@ Gemma.GeneSetDetailsDialog = Ext.extend(Ext.Window, {
 												}]
 
 									})
+
 						});
 
 				Gemma.GeneSetDetailsDialog.superclass.initComponent.call(this);

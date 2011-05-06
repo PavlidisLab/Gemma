@@ -26,6 +26,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	height : 250,
 	experimentGroupId: null, 
 	viewConfig : {forceFit : true},
+	queryText:'',
 
 			/**
 			 * Add to table.
@@ -37,43 +38,50 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 * @param {}
 			 *            args optional
 			 */
-			loadExperiments : function(eeIds, callback, args) {
-				if (!eeIds || eeIds.length === 0) {
-					return;
-				}
-
-				ExpressionExperimentController.loadExpressionExperiments(eeIds, function(ees) {
-							var eeData = [];
-							var i;
-							for (i = 0; i < ees.length; ++i) {
-								eeData.push([ees[i].id, ees[i].shortName, ees[i].name, 
-								ees[i].arrayDesignCount, ees[i].bioAssayCount]);
-							}
-							/*
-							 * FIXME this can result in the same gene listed twice. This is taken care of at the server
-							 * side but looks funny.
-							 */
-							this.getStore().loadData(eeData);
-							if (callback) {
-								callback(args);
-							}
-						}.createDelegate(this));
-			},
+	loadExperiments: function(eeIds, callback, args){
+		if (!eeIds || eeIds.length === 0) {
+			return;
+		}
+		
+		ExpressionExperimentController.loadExpressionExperiments(eeIds, function(ees){
+			var eeData = [];
+			var i;
+			for (i = 0; i < ees.length; ++i) {
+				eeData.push([ees[i].id, ees[i].shortName, ees[i].name, ees[i].arrayDesignCount, ees[i].bioAssayCount]);
+			}
+			/*
+		 * FIXME this can result in the same gene listed twice. This is taken care of at the server
+		 * side but looks funny.
+		 */
+			this.getStore().loadData(eeData);
+			if (callback) {
+				callback(args);
+			}
+		}.createDelegate(this));
+	},
 				
 			// input window for creation of new groups
-			detailsWin : new Gemma.GeneSetDetailsDialog({
-										hidden: true
-				}),
+	detailsWin: new Gemma.GeneSetDetailsDialog({
+		id: 'experimentDetailsWin',
+		hidden: true
+	}),
 
 
 	initComponent : function() {
+		
+		Ext.apply(this.detailsWin, {
+			title: 'Provide or edit experiment group details'
+			//,suggestedName: this.queryText,
+			//suggestedDescription: 'Edited results of search for: "' + this.queryText + '". Created: ' + (new Date()).toString()
+		});
+		
 		// Create RowActions Plugin
 			 	this.action = new Ext.ux.grid.RowActions({
 					 header:'Actions',
 					keepSelection:true,
 					actions:[{
 						 iconCls:'icon-cross',
-						tooltip:'Remove gene'
+						tooltip:'Remove experiment'
 					}],
 					callbacks:{
 						'icon-cross':function(grid, record, action, row, col) {
@@ -115,8 +123,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 												}
 												else 
 													if (btn === 'yes') { // yes is save as
-														this.detailsWin.name = '';
-														this.detailsWin.description = '';
+														this.detailsWin.name = this.groupName;
+														this.detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' + (new Date()).toString();
+														
 														this.detailsWin.show();
 													}
 													else {
@@ -128,14 +137,14 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							text: "Save",
 							handler: this.save,
 							scope: this,
-							disabled: true
+							disabled: false
 						});
 				this.doneButton = new Ext.Button({
 							id: 'done-selecting-button-e',
 							text: "Done",
 							handler: this.done,
 							scope: this,
-							disabled: true
+							disabled: false
 						});
 				// add buttons only if haven't been added already
 				if(!this.buttons || this.buttons === null || this.buttons===[]){
@@ -199,7 +208,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 											tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
 											renderer: function(value, metadata, record, row, col, ds){
 												return String.format(
-												"<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a><br><span style=\"font-color:grey\">{2}</span> ", 
+												"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a><br><span style=\"font-color:grey\">{2}</span> ", 
 												record.data.id, record.data.shortName,record.data.name);
 											},
 											sortable : true
@@ -212,8 +221,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		this.on('doneModification', function(){
 			this.changesMade = false;
-			this.saveButton.disable();
-			this.doneButton.disable();
+			//this.saveButton.disable();
+			//this.doneButton.disable();
 		});
 
 		this.getStore().on("remove", function() {
@@ -306,10 +315,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 */
 			done: function(){
 				// if user hasn't made any changes, just close the window
-				if(!this.changesMade){
-					this.fireEvent('doneModification');
-					return;
-				}
+				//if(!this.changesMade){
+				//	this.fireEvent('doneModification');
+				//	return;
+				//}
 				this.createDetails();
 				this.saveToSession();
 			},
@@ -320,15 +329,19 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			save : function() {
 				
 				// if user hasn't made any changes, just close the window
-				if(!this.changesMade){
-					this.fireEvent('doneModification');
-					return;
-				}
+				//if(!this.changesMade){
+				//	this.fireEvent('doneModification');
+				//	return;
+				//}
 				
+				// if the user hasn't made any changes, save anyway
+				
+				
+			
 				// get name and description set up
 				this.createDetails();				
-				
-				// save button should only be visible if user is not logged in, but just to be safe:
+									
+				// save button should only be visible if user is logged in, but just to be safe:
 				if (!Ext.get('hasUser').getValue()) {
 						Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+
 											" however, your list will be available temporarily.");
@@ -361,9 +374,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								   msg: 'You have edited an existing group, '+
 											'would you like to save your changes?<br>'+
 											'(Unsaved lists are available until you log out.)',
-								   //: {ok:'Save', yes:'Save As...', no:'Don\'t save'},
-								   // TODO IMPLEMENT HANDLING OF GROUP UPDATE 
-								   buttons: {yes:'Save As...', no:'Don\'t save'},
+								   buttons: {ok:'Save', yes:'Save As...', no:'Don\'t save'},
+								   //buttons: {yes:'Save As...', no:'Don\'t save'},
 								   fn: this.editedExistingGroup,
 								   icon: Ext.MessageBox.QUESTION
 								});
@@ -377,62 +389,52 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				
 			},
 			saveToSession : function() {
-				var name = this.newGroupName;
-				var description = this.newGroupDescription;
-				var taxonName = this.selectedExperimentGroup.taxonName;
-				var taxonId = this.selectedExperimentGroup.taxonId;
-				var reference = this.selectedExperimentGroup.reference;
-				
-				var sessionStore = new Gemma.SessionDatasetGroupStore();
-				//sessionStore.purgeListeners();
-				var ids = this.getEEIds();
-		
-				var RecType = sessionStore.record;
-				var rec = new RecType();
-				rec.set("reference", reference);
-				rec.set("id", "-1");
-				rec.set("expressionExperimentIds", ids);
-				rec.set("size", ids.length);	
-				rec.set("name", name);
-				rec.set("description",description);
-				rec.set("taxonName",taxonName);
-				rec.set("taxonId",taxonId);
-				
-				sessionStore.add(rec);
-				
-				sessionStore.save();
-				
-				this.fireEvent('experimentListModified', this.getEEIds(), this.newGroupName);
-				this.fireEvent('doneModification');
+				var editedGroup = this.selectedExperimentGroup; // reference has the right type already
+				editedGroup.name = this.newGroupName;
+				editedGroup.description = this.newGroupDescription;
+				editedGroup.expressionExperimentIds = this.getEEIds();
+				editedGroup.memberIds = this.getEEIds();
+				editedGroup.type = 'userexperimentSetSession';
+						
+				ExpressionExperimentSetController.addSessionGroups([editedGroup], //returns datasets added
+					function(datasetSets){
+						// should be at least one datasetSet
+						if (datasetSets === null || datasetSets.length === 0) {
+							// TODO error message
+							return;
+						}
+						else {
+							var newRecordData = datasetSets;
+							this.fireEvent('experimentListModified', newRecordData);
+							this.fireEvent('doneModification');
+						}
+				}.createDelegate(this));
 				
 			},
 		createInDatabase : function() {
 			if(typeof this.selectedExperimentGroup !== 'undefined'){
-				var name = this.newGroupName;
-				var description = this.newGroupDescription;
-				var taxonName = this.selectedExperimentGroup.taxonName;
-				var taxonId = this.selectedExperimentGroup.taxonId;
-				var reference = this.selectedExperimentGroup.reference;
-		
-				var groupStore = new Gemma.DatasetGroupStore();		
 				
-				var ids = this.getEEIds();
-				
-				var RecType = groupStore.record;
-				var rec = new RecType();
-				rec.set("expressionExperimentIds", ids);
-				rec.set("reference", reference);
-				rec.set("size", ids.length);	
-				rec.set("name", name);
-				rec.set("description",description);
-				rec.set("taxonName",taxonName);
-				rec.set("taxonId",taxonId);
-				
-				groupStore.add(rec);
-				
-				groupStore.save();
-									
-				this.fireEvent('experimentListModified', this.getEEIds(), this.newGroupName);
+				var editedGroup = this.selectedExperimentGroup; // reference has the right type already
+				editedGroup.name = this.newGroupName;
+				editedGroup.description = this.newGroupDescription;
+				editedGroup.expressionExperimentIds = this.getEEIds();
+				editedGroup.memberIds = this.getEEIds();
+				editedGroup.type = 'userexperimentSet';
+						
+				ExpressionExperimentSetController.create([editedGroup], //returns datasets added
+					function(datasetSets){
+						// should be at least one datasetSet
+						if (datasetSets === null || datasetSets.length === 0) {
+							// TODO error message
+							return;
+						}
+						else {
+							var newRecordData = datasetSets;
+							datasetSets[0].type = 'userexperimentSet';
+							this.fireEvent('experimentListModified', newRecordData);
+							this.fireEvent('doneModification');
+						}
+				}.createDelegate(this));
 			}
 		
 		this.fireEvent('doneModification');
@@ -440,10 +442,19 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	updateDatabase : function() {
 		
-		// TODO!!!!
+		var groupId = this.selectedExperimentGroup.reference.id;
+		this.newGroupName = this.groupName;
+		var eeIds = this.getEEIds();
 		
-			this.changesMade = false;
-		return;
+		ExpressionExperimentSetController.updateMembers(groupId, eeIds, function(msg){
+			this.selectedExperimentGroup.memberIds = eeIds;
+			this.selectedExperimentGroup.eeIds = eeIds;
+			
+			this.fireEvent('experimentListModified', this.selectedExperimentGroup);
+			this.fireEvent('doneModification');
+		}.createDelegate(this));
+		
+		this.changesMade = false;
 	}
 });
 

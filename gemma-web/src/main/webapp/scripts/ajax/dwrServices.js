@@ -450,6 +450,10 @@ ExpressionExperimentSetController.update = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'update', p0,
 			callback);
 }
+ExpressionExperimentSetController.updateMembers = function(p0, p1, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateMembers', p0, p1,
+			callback);
+}
 ExpressionExperimentSetController.loadAll = function(callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAll',
 			callback);

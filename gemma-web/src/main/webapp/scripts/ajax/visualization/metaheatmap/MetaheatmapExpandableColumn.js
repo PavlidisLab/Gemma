@@ -111,6 +111,11 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
     },
         
 	onRender:function() {
+		
+		 // After the component has been rendered, disable the default browser context menu
+         // problem: this disables right click everywhere on the page (not just over component), pretty annoying
+		 // Ext.getBody().on("contextmenu", Ext.emptyFn, null, {preventDefault: true});
+					   
 		Gemma.MetaHeatmapColumn.superclass.onRender.apply(this, arguments);		
 		this._drawHeatmapColumn();
 		
@@ -136,7 +141,14 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			 *  - Gene / link to gene page
 			 *  - Fold change
 			 *    
-			 */						
+			 */		
+			 
+			// if user held down ctrl while clicking, select column or gene instead of popping up window
+			//if (e.ctrlKey == true) {
+        	//	Ext.Msg.alert('CTRL Used', 'Ctrl+Click was used');
+	       	//}
+
+							
 			var vizWindow = new Gemma.VisualizationWithThumbsWindow({
 				title : 'Gene Expression',
 				thumbnails : false
@@ -147,6 +159,11 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				params : [[eeId], [ this.applicationRoot._imageArea._heatmapArea.geneIds[this.rowGroup][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]] ] ]
 			});	
 		}, this);
+		
+		// detect right click. 
+		//this.el.on('contextmenu', function() {
+		//	Ext.Msg.alert("Right-o!","You right-clicked!");
+		//});
 		
 		this.el.on('mouseover', function(e,t) {
 			document.body.style.cursor = 'pointer';
@@ -176,6 +193,9 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 
 			// format p value
 			formatPVal = function(p) {
+							if( p === null){
+								return '-';
+							}
 							if (p < 0.0001) {
 								return sprintf("%.3e", p);
 							} else {

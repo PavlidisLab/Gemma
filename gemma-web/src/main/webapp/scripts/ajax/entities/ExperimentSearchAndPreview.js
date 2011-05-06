@@ -27,6 +27,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		// load preview of group if group was selected
 		if (isGroup) {
 			eeIds = record.get('memberIds');
+			this.experimentGroupId = id;
 			if(!eeIds || eeIds === null || eeIds.length === 0){
 				return;
 			}
@@ -223,14 +224,21 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			height : 200,
 			//hidden: 'true',
 			hideHeaders:true,
-			frame:false
+			frame:false,
+			queryText: this.experimentCombo.getValue()
 		});
 		
-		this.experimentSelectionEditor.on('experimentListModified', function(newExperimentIds, groupName){
-			if(newExperimentIds){
-				this.loadExperiments(newExperimentIds);
-			} if(groupName){
-				this.experimentCombo.setRawValue(groupName);
+		this.experimentSelectionEditor.on('experimentListModified', function(newRecords){
+			var i;
+			for(i = 0; i< newRecords.length; i++){ // should only be one
+				if(newRecords[i]){
+					this.loadExperiments(newRecords[i].expressionExperimentIds);
+					// update record
+					this.selectedExperimentOrGroupRecord = newRecords[i];
+					this.experimentCombo.setSelected = this.selectedExperimentOrGroupRecord;
+				} if(newRecords[i].name){
+					this.experimentCombo.setRawValue(newRecords[i].name);
+				}
 			}
 			this.experimentCombo.getStore().reload();
 		},this);

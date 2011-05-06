@@ -31,12 +31,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneSet;
+import ubic.gemma.model.genome.gene.GeneSetImpl;
+import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.web.controller.BaseFormController;
@@ -117,7 +123,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * AJAX adds the experiment group to the session
      * 
      * @param geneSetVo value object constructed on the client.
-     * @return id of the new gene group
+     * @return the new gene groups
      */
     public Collection<ExpressionExperimentSetValueObject> addUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> entities ) {
@@ -334,6 +340,66 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return entities;
     }
 
+    /**
+     * AJAX Updates the given group (permission permitting) with the given list of memberIds 
+     * Will not allow the same experiment to be added to the set twice.
+     * Cannot update name or description, just members
+     * @param groupId id of the gene set being updated
+     * @param eeIds
+     */
+    public String updateMembers( Long groupId, Collection<Long> eeIds) {
+        
+            String msg = null;
+            
+            ExpressionExperimentSet eeSet = expressionExperimentSetService.load( groupId );
+            if ( eeSet == null ) {
+                throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded" );
+            }
+            Collection<ExpressionExperiment> updatedExperimentlist = new HashSet<ExpressionExperiment>();
+
+            if ( !eeIds.isEmpty() ) {
+                Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
+
+                if ( experiments.isEmpty() ) {
+                    throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
+                            + " provided)" );
+                }
+                if ( experiments.size() < eeIds.size() ) {
+                    throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found " + experiments.size()
+                            + " out of " + eeIds.size() + " provided)" );
+                }
+
+                assert experiments.size() == eeIds.size();
+                boolean exists = false;
+                for ( ExpressionExperiment experiment : experiments ) {
+                    
+                    for ( BioAssaySet bas : eeSet.getExperiments() ) {
+                        if ( bas.getId().equals( experiment.getId() ) ){
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if ( !exists ) {
+                        eeSet.getExperiments().add( experiment );
+                        updatedExperimentlist.add( experiment );
+                    } else {
+                        updatedExperimentlist.add( experiment );
+                    }
+                    
+                    exists = false;
+                }
+            }
+
+            eeSet.getExperiments().clear();
+            eeSet.getExperiments().addAll( updatedExperimentlist );
+
+            expressionExperimentSetService.update( eeSet );
+            
+        return msg;
+
+    }
+    
     /**
      * AJAX Updates the session group.
      * 

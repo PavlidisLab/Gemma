@@ -262,20 +262,51 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		} else if (!csc.eeIds && !csc.eeSetId) {
 			return "Please select an analysis. Taxon, gene(s), and scope must be specified.";
 		} 
-		/* COMMENTED OUT LIMITATION ON NUMBER OF GENES
-		 * else if(csc.geneIds.length > Gemma.MAX_GENES_PER_QUERY){
+		else if(csc.geneIds.length > Gemma.MAX_GENES_PER_QUERY){
 			// if trying to search for more than the allowed limit of genes, show error
 			
 			// prune the gene Ids
 			csc.geneIds = csc.geneIds.slice(0, Gemma.MAX_GENES_PER_QUERY);
-			this.loadGenes(csc.geneIds);
+			
+			//update the previews
+			var runningCount = 0;
+			var i;
+			var idsToRemove = [];
+			for(i = 0;  i < this.geneChoosers.items.items.length; i++){
+				var chooser = this.geneChoosers.items.items[i];
+				if (typeof chooser.geneIds !== 'undefined') {// if not a blank combo
+					if (runningCount + chooser.geneIds.length <= Gemma.MAX_GENES_PER_QUERY) {
+						runningCount += chooser.geneIds.length;
+					}
+					else {
+						if(runningCount > Gemma.MAX_GENES_PER_QUERY){runningCount = Gemma.MAX_GENES_PER_QUERY;}
+						//idsToRemove.push(chooser.getId());
+						chooser.geneIds = chooser.geneIds.slice(0, (Gemma.MAX_GENES_PER_QUERY - runningCount) );
+						runningCount += chooser.geneIds.length;
+						chooser.selectedGeneOrGroupRecord.geneIds = chooser.geneIds;
+						chooser.selectedGeneOrGroupRecord.memberIds = chooser.geneIds;
+						chooser.selectedGeneOrGroupRecord.reference = null;
+						chooser.selectedGeneOrGroupRecord.type = 'usersgeneSetSession';
+						chooser.selectedGeneOrGroupRecord.name = "Trimmed "+chooser.selectedGeneOrGroupRecord.name;
+						chooser.geneCombo.setRawValue(chooser.selectedGeneOrGroupRecord.name);
+						chooser.geneCombo.getStore().reload();
+						
+						this.collapseGenePreviews();
+						chooser.loadGenePreview();
+						chooser.genePreviewContent.expand();
+					}
+				}
+			}
+			//for(idToRemove in idsToRemove){
+			//	this.removeGeneChooser(idToRemove);
+			//}
 			
 			return "You can only search up to " + Gemma.MAX_GENES_PER_QUERY +
-					" genes. Please note that your list of genes has been trimmed automatically. <br>"+
-					"Press 'Go' again to run the search with this trimmed list or re-enter your gene query and "+
-					"use the edit tool to manually trim your selection.";
+					" genes. Please note that your list(s) of genes have been trimmed automatically. <br>"+
+					"Press 'Go' again to run the search with this trimmed list or re-enter your gene query(ies) and "+
+					"use the edit tool to manually trim your selection(s).";
 										
-		}*/ else {
+		} else {
 			return "";
 		}
 	},

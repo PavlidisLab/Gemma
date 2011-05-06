@@ -87,6 +87,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			}
 			//load single gene if gene was selected
 			else {
+				this.selectedGeneOrGroupRecord.memberIds = [this.selectedGeneOrGroupRecord.reference.id];
 				this.geneIds = [id];
 				this.searchForm.geneIds = [id];
 				
@@ -156,6 +157,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 							this.geneSelectionEditorBtn.disable();
 							this.geneSelectionEditorBtn.show();
 						}
+						this.genePreviewContent.expand();
 						
 					}.createDelegate(this));
 					
@@ -396,13 +398,20 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			frame:false
 		});
 		
-		this.geneSelectionEditor.on('geneListModified', function(newGeneIds, groupName){
-			if(newGeneIds){
-				this.loadGenes(newGeneIds);
-			} if(groupName){
-				this.geneCombo.setValue(groupName);
+		this.geneSelectionEditor.on('geneListModified', function(newRecords){
+			var i;
+			for(i = 0; i< newRecords.length; i++){ // should only be one
+				if(typeof newRecords[i].geneIds !== 'undefined'){
+					this.loadGenes(newRecords[i].geneIds);
+					// update record
+					this.selectedGeneOrGroupRecord = newRecords[i];
+				} 
+				if(newRecords[i].name){
+					this.geneCombo.setRawValue(newRecords[i].name);
+				}
+				//this.geneCombo.setTaxon(newRecords[i].taxonId);
 			}
-			this.geneCombo.getStore().reload();
+			//this.geneCombo.getStore().reload();
 		},this);
 		
 		this.geneSelectionEditor.on('doneModification', function(){

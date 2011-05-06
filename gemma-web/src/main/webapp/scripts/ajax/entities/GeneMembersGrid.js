@@ -98,8 +98,9 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			
 			// input window for creation of new groups
 			detailsWin : new Gemma.GeneSetDetailsDialog({
-										hidden: true
-				}),
+										id: 'geneDetailsWin',
+										hidden: true,
+									}),
 
 			initComponent : function() {
 				
@@ -167,14 +168,14 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 							text: "Save",
 							handler: this.save,
 							scope: this,
-							disabled: true
+							disabled: false
 						});
 				this.doneButton = new Ext.Button({
 							id: 'done-selecting-button-g',
 							text: "Done",
 							handler: this.done,
 							scope: this,
-							disabled: true
+							disabled: false
 						});
 				// add save button if user isn't logged in
 				if(Ext.get('hasUser').getValue()){
@@ -265,8 +266,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 				this.on('doneModification', function(){
 					this.changesMade = false;
-					this.saveButton.disable();
-					this.doneButton.disable();
+					//this.saveButton.disable();
+					//this.doneButton.disable();
 				});
 
 				this.getStore().on("remove", function() {
@@ -406,10 +407,10 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			 */
 			done: function(){
 				// if user hasn't made any changes, just close the window
-				if(!this.changesMade){
-					this.fireEvent('doneModification');
-					return;
-				}
+				//if(!this.changesMade){
+				//	this.fireEvent('doneModification');
+				//	return;
+				//}
 				this.createDetails();
 				this.createInSession();
 			},
@@ -420,10 +421,10 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			save : function() {
 				
 				// if user hasn't made any changes, just close the window
-				if(!this.changesMade){
-					this.fireEvent('doneModification');
-					return;
-				}
+				//if(!this.changesMade){
+				//	this.fireEvent('doneModification');
+				//	return;
+				//}
 				
 				// get name and description set up
 				this.createDetails();				
@@ -475,71 +476,56 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				
 			},
 			createInSession : function() {
-				var name = this.newGroupName;
-				var description = this.newGroupDescription;
-				var taxonName;
-				var taxonId;
-				var reference = null;
-				if(this.selectedGeneGroup){
-					taxonName = this.selectedGeneGroup.taxonName;
-					taxonId = this.selectedGeneGroup.taxonId;
-					reference = this.selectedGeneGroup.reference;
-				}else{
-					taxonName = this.taxonName;
-					taxonId = this.taxonId;
-				}
-			
-				//var sessionStore = new Gemma.UserSessionGeneGroupStore();
-				var sessionStore = new Gemma.SessionGeneGroupStore();		
-		
+
 				var ids = this.getGeneIds();
-		
-				var RecType = sessionStore.record;
-				var rec = new RecType();
-				rec.set("geneIds", ids);
-				rec.set("reference", reference);
-				rec.set("id", "-1");
-				rec.set("size", ids.length);	
-				rec.set("name", name);
-				rec.set("description",description);
-				rec.set("taxonName",taxonName);
-				rec.set("taxonId",taxonId);
 				
-				sessionStore.add(rec);
-				
-				sessionStore.save();
-				
-				this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
-				this.fireEvent('doneModification');
+				var editedGroup = this.selectedGeneGroup; // reference has the right type already
+				editedGroup.name = this.newGroupName;
+				editedGroup.description = this.newGroupDescription;
+				editedGroup.geneIds = ids;
+				editedGroup.memberIds = ids;
+				editedGroup.type = 'usergeneSetSession';
+						
+				GeneSetController.addSessionGroups([editedGroup], //returns datasets added
+					function(geneSets){
+						// should be at least one datasetSet
+						if (geneSets === null || geneSets.length === 0) {
+							// TODO error message
+							return;
+						}
+						else {
+							var newRecordData = geneSets;
+							this.fireEvent('geneListModified', newRecordData);
+							this.fireEvent('doneModification');
+						}
+				}.createDelegate(this));
 				
 			},
 		createInDatabase : function() {
 			if (typeof this.selectedGeneGroup !== 'undefined') {
-				var name = this.newGroupName;
-				var description = this.newGroupDescription;
-				var taxonName = this.selectedGeneGroup.taxonName;
-				var taxonId = this.selectedGeneGroup.taxonId;
-				var reference = this.selectedGeneGroup.reference;
-				
-				var groupStore = new Gemma.GeneGroupStore();
-				
+
 				var ids = this.getGeneIds();
 				
-				var RecType = groupStore.record;
-				var rec = new RecType();
-				rec.set("geneIds", ids);
-				rec.set("reference", reference);
-				rec.set("size", ids.length);
-				rec.set("name", name);
-				rec.set("description", description);
-				rec.set("taxonName", taxonName);
-				rec.set("taxonId", taxonId);
-				
-				groupStore.add(rec);
-				
-				groupStore.save();
-				
-				this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
+				var editedGroup = this.selectedGeneGroup; // reference has the right type already
+				editedGroup.name = this.newGroupName;
+				editedGroup.description = this.newGroupDescription;
+				editedGroup.geneIds = ids;
+				editedGroup.memberIds = ids;
+				editedGroup.type = 'usergeneSet';
+						
+				GeneSetController.create([editedGroup], //returns datasets added
+					function(geneSets){
+						// should be at least one datasetSet
+						if (geneSets === null || geneSets.length === 0) {
+							// TODO error message
+							return;
+						}
+						else {
+							var newRecordData = geneSets;
+							this.fireEvent('geneListModified', newRecordData);
+							this.fireEvent('doneModification');
+						}
+				}.createDelegate(this));
 			}
 		
 		this.fireEvent('doneModification');
@@ -547,12 +533,15 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 	updateDatabase : function() {
 		
-		var groupId = this.selectedGeneGroup.id;
+		var groupId = this.selectedGeneGroup.reference.id;
 		this.newGroupName = this.groupName;
 		var geneIds = this.getGeneIds();
 		
 		GeneSetController.updateMembers(groupId, geneIds, function(msg){
-			this.fireEvent('geneListModified', this.getGeneIds(), this.newGroupName);
+			this.selectedGeneGroup.memberIds = geneIds;
+			this.selectedGeneGroup.geneIds = geneIds;
+			
+			this.fireEvent('geneListModified', this.selectedGeneGroup);
 			this.fireEvent('doneModification');
 		}.createDelegate(this));
 	}
