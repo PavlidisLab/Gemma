@@ -167,6 +167,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				if(this.records === null || this.records.length === 0){
 					this.doQuery(this.lastQuery);
 				}
+			}else if( this.lastQuery ==='' && this.getValue() !== '' ){
+				store.removeAll();
 			}else{
 				this.records = this.store.getRange();
 			}
