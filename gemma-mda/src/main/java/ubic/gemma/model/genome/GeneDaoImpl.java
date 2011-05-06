@@ -354,13 +354,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         for ( Long g : ids ) {
             batch.add( g );
             if ( batch.size() == BATCH_SIZE ) {
-                result.addAll( doLoadThawed( batch ) );
+                result.addAll( doLoadThawedLite( batch ) );
                 batch.clear();
             }
         }
 
         if ( !batch.isEmpty() ) {
-            result.addAll( doLoadThawed( batch ) );
+            result.addAll( doLoadThawedLite( batch ) );
         }
 
         if ( timer.getTime() > 1000 ) {
@@ -452,22 +452,34 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
     }
 
+    //
+    // /**
+    // * @param ids
+    // * @return
+    // */
+    // @SuppressWarnings("unchecked")
+    // private Collection<Gene> doLoadThawed( Collection<Long> ids ) {
+    // return this
+    // .getHibernateTemplate()
+    // .findByNamedParam(
+    // "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
+    // + "join fetch g.taxon t left join fetch t.externalDatabase"
+    // + " left join fetch acc.externalDatabase left join fetch g.products gp "
+    // + " left join fetch g.auditTrail at left join fetch at.events "
+    // + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
+    // + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
+    // + " where g.id in (:gids)", "gids", ids );
+    // }
+
     /**
      * @param ids
      * @return
      */
     @SuppressWarnings("unchecked")
-    private Collection<Gene> doLoadThawed( Collection<Long> ids ) {
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
-                                + "join fetch g.taxon t left join fetch t.externalDatabase"
-                                + " left join fetch acc.externalDatabase left join fetch g.products gp "
-                                + " left join fetch g.auditTrail at left join fetch at.events "
-                                + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
-                                + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
-                                + " where g.id in (:gids)", "gids", ids );
+    private Collection<Gene> doLoadThawedLite( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct g from GeneImpl g left join fetch g.aliases left join fetch g.accessions acc "
+                        + "join fetch g.taxon t left join fetch g.products gp where g.id in (:gids)", "gids", ids );
     }
 
     /**
@@ -1506,6 +1518,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleThaw(ubic.gemma.model.genome.Gene)
+     */
     @Override
     protected Gene handleThaw( final Gene gene ) throws Exception {
         if ( gene.getId() == null ) return gene;
