@@ -809,7 +809,7 @@ public class GeneCoexpressionService {
             Map<Long, TfGeneAssociation> regulates = this.getTfGeneAssociationsforTf( queryGene );
 
             if ( timer.getTime() > 100 ) {
-                log.info( "Postprocess " + queryGene.getOfficialSymbol() + "Phase I: " + timer.getTime() + "ms" );
+                log.info( "Postprocess " + queryGene.getOfficialSymbol() + " Phase I: " + timer.getTime() + "ms" );
             }
             timer.stop();
             timer.reset();
