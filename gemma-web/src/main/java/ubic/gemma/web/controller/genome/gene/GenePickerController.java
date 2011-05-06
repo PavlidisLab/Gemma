@@ -289,7 +289,7 @@ public class GenePickerController {
 
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
-        if ( query.equals( "" ) ) {
+        if ( StringUtils.isBlank( query ) ) {
 
             // get authenticated user's sets
             Collection<GeneSet> userGeneSets = new ArrayList<GeneSet>();
