@@ -18,7 +18,7 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	width : 140,// default.
 	listWidth : 450, // ridiculously large so IE displays it properly
 	// (usually)
-
+	enableKeyEvents : true,
 	loadingText : 'Searching...',
 	emptyText : "Search for a gene",
 	minChars : 1,
@@ -26,9 +26,12 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	mode : 'remote', // default = remote
 	queryDelay : 800, // default = 500
 	lastQuery : null,
-	
-	stickyTaxon: true, // this controls whether the taxon of the first selection 
-	// from this box should be remembered for subsequent searches 
+
+	stickyTaxon : true, // this controls whether the taxon of the first
+	// selection
+	// from this box should be remembered for subsequent searches
+
+	actualTextOfLastQuery : '',
 
 	record : Ext.data.Record.create([{
 				name : "id",
@@ -44,11 +47,11 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 				name : "officialName",
 				type : "string"
 			}, {
-				name: "comboText",
-				type: "string",
-				convert: function(v, record){
-							return record.officialSymbol+" ("+record.taxonCommonName+")";
-					}
+				name : "comboText",
+				type : "string",
+				convert : function(v, record) {
+					return record.officialSymbol + " (" + record.taxonCommonName + ")";
+				}
 			}]),
 
 	initComponent : function() {
@@ -78,29 +81,34 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 						this.fireEvent("invalid", "No matching genes");
 					}
 				}, this);
-				
-				
-		/***** start of query queue fix *****/
-		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
+
+		this.on('keyup', function() {
+					this.actualTextOfLastQuery = '';
+				}, this);
+
+		/** *** start of query queue fix **** */
+		// this makes sure that when older searches return AFTER newer searches,
+		// the newer results aren't bumped
 		// this needs the lastQuery property to be initialised as null
-		// note that is some other code in this file requried as well, it is marked
-		this.getStore().on('beforeload', function(store, options){
-			this.records = this.store.getRange();
-		}, this);
-		
-		this.getStore().on('load', function(store, records, options){
-			var query = ( options.params)? options.params[0]: null;
-			if( (query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery) ){
-				store.removeAll();
-				store.add(this.records);
-				if(this.records === null || this.records.length === 0){
-					this.doQuery(this.lastQuery);
-				}
-			}else{
-				this.records = this.store.getRange();
-			}
-		}, this);
-		/***** end of query queue fix *****/
+		// note that is some other code in this file requried as well, it is
+		// marked
+		this.getStore().on('beforeload', function(store, options) {
+					this.records = this.store.getRange();
+				}, this);
+
+		this.getStore().on('load', function(store, records, options) {
+					var query = (options.params) ? options.params[0] : null;
+					if ((query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery)) {
+						store.removeAll();
+						store.add(this.records);
+						if (this.records === null || this.records.length === 0) {
+							this.doQuery(this.lastQuery);
+						}
+					} else {
+						this.records = this.store.getRange();
+					}
+				}, this);
+		/** *** end of query queue fix **** */
 	},
 
 	onSelect : function(record, index) {
@@ -108,10 +116,10 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 		if (!this.selectedGene || record.data.id !== this.selectedGene.id) {
 			this.setGene(record.data);
 			// 'select' event is also fired by superclass.onSelect.call
-			this.fireEvent('select', this, this.selectedGene); 
+			this.fireEvent('select', this, this.selectedGene);
 			// use event 'selectSingle' to get event as fired by super
-			this.fireEvent('selectSingle', this, record); 
-		}	
+			this.fireEvent('selectSingle', this, record);
+		}
 		this.actualTextOfLastQuery = this.lastQuery;
 	},
 
@@ -133,21 +141,22 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 	 * @return {}
 	 */
 	getParams : function(query) {
-		// don't want (taxon) in search query (we added that for clarity in the combo text box)
-		if(typeof this.actualTextOfLastQuery !== 'undefined'){
-				query = this.actualTextOfLastQuery;
-			}
-		if(this.stickyTaxon){
+		// don't want (taxon) in search query (we added that for clarity in the
+		// combo text box)
+		if (this.actualTextOfLastQuery) {
+			query = this.actualTextOfLastQuery;
+		}
+		if (this.stickyTaxon) {
 			return [query, this.taxon ? this.taxon.id : -1];
-		}else{
+		} else {
 			return [query, -1];
 			this.taxon = false;
 		}
-		
+
 	},
 
 	getGene : function() {
-		if (this.getRawValue() === ''){
+		if (this.getRawValue() === '') {
 			return null;
 		}
 		return this.selectedGene;
@@ -182,8 +191,9 @@ Gemma.GeneCombo = Ext.extend(Ext.form.ComboBox, {
 			this.reset();
 
 			/*
-			 * this is to make sure we always search again after a taxon change, in case the user searches for the same
-			 * gene. Otherwise Ext just keeps the old results.
+			 * this is to make sure we always search again after a taxon change,
+			 * in case the user searches for the same gene. Otherwise Ext just
+			 * keeps the old results.
 			 */
 			this.lastQuery = null;
 
@@ -210,7 +220,7 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 			height : 30,
 			buttonAlign : 'right',
 			layout : 'fit',
-			stickyTaxon: true,
+			stickyTaxon : true,
 
 			initComponent : function() {
 
@@ -221,7 +231,7 @@ Gemma.GeneSearch = Ext.extend(Ext.FormPanel, {
 							id : 'gene-combo',
 							fieldLabel : 'Select a gene',
 							enableKeyEvents : true,
-							stickyTaxon: this.stickyTaxon
+							stickyTaxon : this.stickyTaxon
 						});
 
 				this.geneCombo.on("focus", this.clearMessages, this);
