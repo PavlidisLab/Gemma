@@ -167,8 +167,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				if(this.records === null || this.records.length === 0){
 					this.doQuery(this.lastQuery);
 				}
-			}else if( this.lastQuery ==='' && this.getValue() !== '' ){
-				store.removeAll();
 			}else{
 				this.records = this.store.getRange();
 			}
@@ -178,6 +176,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		this.on('focus', function(field){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
+				// TODO add a 800ms (?) wait command here and then check if this.getValue() ==='' is still true
 				field.lastQuery = null; // needed for query queue fix
 				this.doQuery('',true); 
 			}

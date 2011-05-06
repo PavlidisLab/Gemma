@@ -311,6 +311,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
                         hideLabel: true,
 						boxLabel: 'Show columns with no results.',
                         checked: true,
+						hidden:true,
                         listeners: {
                             check: function(target, checked){
                             	    var filteringFn = null;

@@ -268,6 +268,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			// prune the gene Ids
 			csc.geneIds = csc.geneIds.slice(0, Gemma.MAX_GENES_PER_QUERY);
 			
+			/*
 			//update the previews
 			var runningCount = 0;
 			var i;
@@ -305,7 +306,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					" genes. Please note that your list(s) of genes have been trimmed automatically. <br>"+
 					"Press 'Go' again to run the search with this trimmed list or re-enter your gene query(ies) and "+
 					"use the edit tool to manually trim your selection(s).";
-										
+			*/
+			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_QUERY +
+					" genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
+			return "";
+							
 		} else {
 			return "";
 		}

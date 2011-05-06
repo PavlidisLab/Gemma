@@ -408,20 +408,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
         if ( query.equals( "" ) ) {
-            
-            // FOR TESTING UNTIL SCALING ISSUES ARE WORKED OUT
-            // propmt with all groups, just limit by size for now
-            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered by security.
-            for ( ExpressionExperimentSet set : sets) {
-                if(set.getExperiments().size() < 50){
-                    expressionExperimentSetService.thaw( set );
-                    autoGenResults.add( new SearchResultDisplayObject( set ) );
-                }
-            }
-            Collections.sort( autoGenResults );
-            
-           /* USE THIS CODE WHEN SCALING ISSUES ARE RESOLVED
-            * 
+
             // get authenticated user's sets
             Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
             if ( SecurityService.isUserLoggedIn() ) {
@@ -439,11 +426,26 @@ public class ExpressionExperimentController extends AbstractTaskService {
                         newSRDO.setType( "usersExperimentSet" );
                         usersResults.add( newSRDO );
                     } else {
-                        autoGenResults.add( newSRDO );
+                      //  autoGenResults.add( newSRDO );
                     }
                 }
             }
             
+            
+            // FOR TESTING UNTIL SCALING ISSUES ARE WORKED OUT
+            // propmt with all groups, just limit by size for now
+            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered by security.
+            sets.removeAll( userExperimentSets );
+            for ( ExpressionExperimentSet set : sets) {
+                if(set.getExperiments().size() < 50){
+                    expressionExperimentSetService.thaw( set );
+                    autoGenResults.add( new SearchResultDisplayObject( set ) );
+                }
+            }
+            Collections.sort( autoGenResults );
+            
+            /* USE THIS CODE WHEN SCALING ISSUES ARE RESOLVED
+            * 
 
             // get auto generated sets
             // NOTE: assumption made here that total number of groups is small
@@ -484,10 +486,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
             // keep sets in proper order (user's groups first, then public ones)
             Collections.sort( sessionSets );
             displayResults.addAll( sessionSets );
-/*
+
             Collections.sort( usersResults );
             displayResults.addAll( usersResults );
-
+/*
             autoGenResults.addAll( autoGenSets );
             Collections.sort( autoGenResults );
  */           displayResults.addAll( autoGenResults );
