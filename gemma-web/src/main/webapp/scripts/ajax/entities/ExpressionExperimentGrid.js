@@ -24,6 +24,8 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				name : "id",
 				type : "int"
 			}, {
+				name : "reference"
+			}, {
 				name : "shortName",
 				type : "string"
 			}, {
@@ -310,6 +312,8 @@ Gemma.ExpressionExperimentListView = Ext.extend(Ext.list.ListView, {
 							fields : [{
 										name : "id",
 										type : "int"
+									},{
+										name : "reference"
 									}, {
 										name : "shortName",
 										type : "string"
