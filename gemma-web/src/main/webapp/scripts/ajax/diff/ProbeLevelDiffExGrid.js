@@ -16,7 +16,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 // forceFit : true
 	},
 
-	readMethod : DifferentialExpressionSearchController.getDifferentialExpression,
+	readMethod : DifferentialExpressionSearchController.getDifferentialExpressionWithoutBatch,
 
 	convertEE : function(s) {
 		return s.shortName;

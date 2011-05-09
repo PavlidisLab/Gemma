@@ -968,6 +968,7 @@ gemma.max.fileupload.size.bytes=
 						<property name="includes">
 							<list>
 								<value>getDifferentialExpression</value>
+								<value>getDifferentialExpressionWithoutBatch</value>
 								<value>getDiffExpressionForGenes</value>
 								<value>getDifferentialExpressionForFactors</value>
 								<value>getDiffMetaAnalysisForGenes</value>

@@ -239,6 +239,10 @@ DifferentialExpressionSearchController.getDifferentialExpression = function(p0, 
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDifferentialExpression', p0, p1, p2, callback);
 }
+DifferentialExpressionSearchController.getDifferentialExpressionWithoutBatch = function(p0, p1, p2, callback) {
+	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
+			'getDifferentialExpression', p0, p1, p2, callback);
+}
 DifferentialExpressionSearchController.getDiffExpressionForGenes = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getDiffExpressionForGenes', p0, callback);

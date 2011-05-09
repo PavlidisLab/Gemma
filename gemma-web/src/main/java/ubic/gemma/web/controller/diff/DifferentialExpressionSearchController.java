@@ -38,6 +38,7 @@ import ubic.gemma.analysis.expression.diff.DiffExpressionSelectedFactorCommand;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisValueObject;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -125,8 +126,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 try {
                     Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
                             .getAnalyses( ( ExpressionExperiment ) experiment );
-
+                    
                     for ( DifferentialExpressionAnalysis analysis : analyses ) {
+                        
                         ExpressionExperiment e = ( ExpressionExperiment ) experiment;
                         String datasetShortName = e.getShortName();
                         StopWatch timer = new StopWatch();
@@ -356,6 +358,36 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     /**
      * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
      * the gene with the id, geneId, are returned.
+     * This method is just like getDifferentialExpression but any analyses with the 'batch' factor are filtered out
+     * because they are not biologically relevant
+     * 
+     * @param geneId
+     * @param threshold
+     * @return
+     */
+    public Collection<DifferentialExpressionValueObject> getDifferentialExpressionWithoutBatch( Long geneId,
+            double threshold, Integer limit ) {
+
+        Collection<DifferentialExpressionValueObject> analyses = getDifferentialExpression( geneId, threshold, limit );
+
+        // for each DifferentialExpressionValueObject, check if its factors includes a batch factor and if so, remove
+        // the batch factor
+        Collection<DifferentialExpressionValueObject> toRemove = new ArrayList<DifferentialExpressionValueObject>();
+        for ( DifferentialExpressionValueObject analysis : analyses ) {
+            for ( ExperimentalFactorValueObject factor : analysis.getExperimentalFactors() ) {
+                if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+                    toRemove.add( analysis );
+                }
+            }
+        }
+        analyses.removeAll( toRemove );
+
+        return analyses;
+    }
+
+    /**
+     * AJAX entry which returns results on a non-meta analysis basis. That is, the differential expression results for
+     * the gene with the id, geneId, are returned.
      * 
      * @param geneId
      * @param threshold
@@ -369,7 +401,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         if ( g == null ) {
             return new ArrayList<DifferentialExpressionValueObject>();
         }
-
+     
         return geneDifferentialExpressionService.getDifferentialExpression( g, threshold, limit );
     }
 
@@ -607,15 +639,25 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( ExpressionAnalysisResultSet resultSet : analysis.getResultSets() ) {
             // Currently, we skip result sets containing interactions.
             if ( resultSet.getExperimentalFactors().size() != 1 ) continue;
+            
+            boolean isBatch = false;
+            for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
+                if ( ExperimentalDesignUtils.isBatch( factor ) ) {
+                    isBatch = true;
+                    break;
+                }
+            }
 
-            DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn = buildVisualizationColumn(
+            if(!isBatch){
+                 DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn = buildVisualizationColumn(
                     geneGroupSizes, datasetGroupIndex, genes, resultSet, theResult, arrayDesignIds );
 
-            // Common properties for result sets in this analysis.
-            vizColumn.setAnalysisId( analysis.getId() );
-
-            // Done with constructing visualization column.
-            analysisColumns.add( vizColumn );
+                // Common properties for result sets in this analysis.
+                vizColumn.setAnalysisId( analysis.getId() );
+    
+                // Done with constructing visualization column.
+                analysisColumns.add( vizColumn );
+            }
         }
 
         return analysisColumns;

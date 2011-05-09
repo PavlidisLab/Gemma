@@ -29,6 +29,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
@@ -149,6 +150,24 @@ public class ExperimentalDesignUtils {
         Characteristic category = ef.getCategory();
         if ( ef.getName().equals( BATCH_FACTOR_NAME ) && category.getCategory().equals( BATCH_FACTOR_CATEGORY_NAME ) )
             return true;
+
+        return false;
+    }
+
+    /**
+     * @param ef
+     * @return true if this factor appears to be a "batch" factor.
+     */
+    public static boolean isBatch( ExperimentalFactorValueObject ef ) {
+        if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) ) return false;
+
+        String category = ef.getCategory();
+        if(category != null && ef.getName() != null){
+            if ( category.equals( BATCH_FACTOR_CATEGORY_NAME ) 
+                && ef.getName().contains( BATCH_FACTOR_NAME )
+                && ef.getName().contains( BATCH_FACTOR_NAME_PREFIX ) ) 
+                return true;
+        }
 
         return false;
     }

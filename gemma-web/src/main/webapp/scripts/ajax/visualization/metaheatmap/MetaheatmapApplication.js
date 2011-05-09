@@ -764,19 +764,10 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					var experimentCount = 0;
 					var lastDatasetId = null;
 
-					/**
-					 * The 'batch' factor should always be excluded as it is a
-					 * technical artifact not of actual interest.
-					 */
 					var i;
 					var j;
-					var filteredResultSetValueObjects = [];
 					for (i = 0; i < data.resultSetValueObjects.length; i++) {
-						filteredResultSetValueObjects[i] = [];
 						for (j = 0; j < data.resultSetValueObjects[i].length; j++) {
-							if (data.resultSetValueObjects[i][j].factorName.toLowerCase() !== 'batch') {
-								filteredResultSetValueObjects[i].push(data.resultSetValueObjects[i][j]);
-							}
 
 							// get the number of experiments, they should be
 							// grouped by datasetId
@@ -785,9 +776,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 							}
 							lastDatasetId = data.resultSetValueObjects[i][j].datasetId;
 						}
-					}
-
-					data.resultSetValueObjects = filteredResultSetValueObjects;
+					}					
 
 					// if no experiments were returned, don't show visualizer
 					if (experimentCount == 0) {
