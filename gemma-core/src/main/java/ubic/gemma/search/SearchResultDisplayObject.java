@@ -40,6 +40,7 @@ import ubic.gemma.search.SearchResult;
  * object types handled are: Gene, GeneSet, GeneSetValueObject, ExpressionExperiment and ExpressionExperimentSet
  * SearchObject is also handled if the object it holds is of any of those types 
  * 
+ * for a gene or experiment, the memberIds field is a collection just containing the object's id
  * 
  * @author thea
  * @version $Id$
@@ -58,7 +59,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param taxonId can be null
      * @param taxonName can be null
      * @param type can be null
-     * @param memberIds can be null
+     * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
      */
     public SearchResultDisplayObject( Class<?> resultClass, Reference reference, String name, 
             String description, Boolean isGroup, int size, Long taxonId, String taxonName,String type, 
@@ -159,7 +160,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.name = gene.getOfficialSymbol();
         this.description = gene.getOfficialName();
         this.type = "gene";
-        this.memberIds = null;
+        this.memberIds.add(gene.getId());
     }
 
     /**
@@ -217,7 +218,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.name = expressionExperiment.getShortName();
         this.description = expressionExperiment.getName();
         this.type = "experiment";
-        this.memberIds = null;
+        this.memberIds.add(expressionExperiment.getId());
 
     }
 
@@ -261,7 +262,10 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
 
     private Long taxonId;
 
-    private Collection<Long> memberIds = new HashSet<Long>();
+    /**
+     * for genes and experiments, the memeberIds field is a collection containing just their id
+     */
+    private Collection<Long> memberIds = new HashSet<Long>(); 
 
     private String type;
     

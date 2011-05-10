@@ -725,7 +725,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					scale : 'medium',
 					width : 150,
 					enableToggle : true,
-					pressed : true
+					pressed : false
 				});
 		this.coexToggle.on('click', function() {
 					this.diffExToggle.toggle();
@@ -736,7 +736,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					scale : 'medium',
 					width : 150,
 					enableToggle : true,
-					pressed : false
+					pressed : true
 				});
 		this.diffExToggle.on('click', function() {
 					this.coexToggle.toggle();
@@ -874,12 +874,26 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.geneChoosers.items.each(function() {
 					if (this.xtype === 'geneSearchAndPreview') {
 						this.geneCombo.setTaxonId(taxonId);
-						this.resetGenePreview();
-						this.geneCombo.reset();
 					}
 				});
 	},
-
+	/*
+	changeTaxonId : function(taxonId) {
+		// set taxon for ALL geneChooser elements
+		var removed = false;
+		this.geneChoosers.items.each(function() {
+					if (this.xtype === 'geneSearchAndPreview') {
+						this.searchForm.removeGeneChooser(this.id);
+						removed = true;
+					}
+				});
+		if(removed){
+			this.addGeneChooser();
+		}
+		
+		this.setTaxonId();
+	},
+*/
 	getTaxonName : function() {
 		return this.taxonName;
 	},
@@ -922,22 +936,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	addGeneChooser : function() {
-		// this.collapseGenePreviews();
 		this.geneChooserIndex++;
 
 		this.geneChoosers.add(
-				/*
-				 * { layout: 'table', layoutConfig: {columns: 2}, style:
-				 * 'padding-top:4px', id: 'geneChooserPanel' +
-				 * this.geneChooserIndex, items: [{ xtype: 'button', id:
-				 * 'geneChooser' + this.geneChooserIndex + 'Button', //icon:
-				 * "/Gemma/images/icons/add.png", icon:
-				 * "/Gemma/images/icons/delete.png", cls: "x-btn-icon", style:
-				 * 'padding-top:6px', tooltip: 'Add another gene or group to
-				 * your search', disabled: true, hidden: true, //handler:
-				 * this.addGeneChooser.createDelegate(this, [], false) handler:
-				 * this.removeGeneChooser.createDelegate(this, [], false) },
-				 */
 				{
 			xtype : 'geneSearchAndPreview',
 			searchForm : this,
@@ -972,7 +973,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	addExperimentChooser : function() {
-		// this.collapseExperimentPreviews();
 		this.experimentChooserIndex++;
 
 		this.experimentChoosers.add({

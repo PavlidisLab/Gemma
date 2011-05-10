@@ -504,20 +504,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				}.createDelegate(this, [], true)
 			}
 		});
-
-		this.genePreviewExpandBtn = new Ext.Button({
-					handler : function() {
-						this.genePreviewExpandBtn.disable().hide();
-						this.loadGenePreview();
-					}.createDelegate(this, [], true),
-					scope : this,
-					style : 'float:right;',
-					tooltip : "View your selection",
-					hidden : true,
-					disabled : true,
-					icon : "/Gemma/images/plus.gif",
-					cls : "x-btn-icon"
-				});
 		this.removeBtn = new Ext.Button({
 					icon : "/Gemma/images/icons/cross.png",
 					cls : "x-btn-icon",
@@ -545,7 +531,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					items : [{
 								layout : 'hbox',
 								items : [this.symbolListButton, this.geneCombo, this.removeBtn, this.helpBtn]
-							}, this.genePreviewExpandBtn, this.genePreviewContent, this.geneSelectionEditorBtn]
+							}, this.genePreviewContent, this.geneSelectionEditorBtn]
 				});
 		Gemma.GeneSearchAndPreview.superclass.initComponent.call(this);
 

@@ -1584,12 +1584,11 @@ public class SearchService implements InitializingBean {
                 Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
                 Taxon currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
 
-                // Results with no taxon also get removed
                 if ( currentTaxon == null || !currentTaxon.equals( t ) ) {
                     if ( currentTaxon == null ) {
                         // Sanity check for bad data in db. Can happen that searchResults have a vaild getTaxon method
                         // but the method returns null (shouldn't make it this far)
-                        log.warn( "Object has getTaxon method but it retuns null. Obj is: " + o );
+                        log.debug( "Object has getTaxon method but it retuns null. Obj is: " + o );
                     }
                     toRemove.add( sr );
                 }
@@ -1602,8 +1601,9 @@ public class SearchService implements InitializingBean {
                  */
                 if ( excludeWithoutTaxon ) {
                     toRemove.add( sr );
+                    log.warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: " + e );
                 }
-                log.warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: " + e );
+                
             } catch ( IllegalArgumentException e ) {
                 throw new RuntimeException( e );
             } catch ( IllegalAccessException e ) {

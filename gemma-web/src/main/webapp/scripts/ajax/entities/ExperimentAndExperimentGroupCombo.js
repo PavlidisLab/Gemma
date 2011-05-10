@@ -119,7 +119,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
         }
 
     }, // end onLoad overwrite
-
+	
 	initComponent : function() {
 
         this.addEvents("beforeexpand","beforecollapse"); // if beforeexpand returns false, expand is cancelled
@@ -210,7 +210,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			if(this.getValue() ===''){
 				// TODO add a 800ms (?) wait command here and then check if this.getValue() ==='' is still true
 				// actually, not really a good solution b/c the user won't know immediately that suggestions are going to be made
-				field.lastQuery = null; // needed for query queue fix
+				this.lastQuery = null; // needed for query queue fix
 				this.doQuery('',true); 
 			}
 		},this);
