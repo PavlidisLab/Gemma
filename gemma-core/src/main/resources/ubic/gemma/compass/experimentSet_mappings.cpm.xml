@@ -18,5 +18,21 @@
 			<meta-data>description</meta-data>
 			<meta-data>experiment set description</meta-data>
 		</property>
+		<component name="taxon" ref-alias="taxon" />
+	</class>
+	<class name="genome.TaxonImpl" alias="taxon" root="false"  support-unmarshall="false">
+		<id name="id" />
+		<property name="scientificName">
+			<meta-data>scientific name</meta-data>
+		</property>
+		<property name="commonName">
+			<meta-data>common name</meta-data>
+		</property>
+		<property name="abbreviation">
+			<meta-data>abbreviation</meta-data>
+		</property>
+		<property name="ncbiId">
+			<meta-data>ncbi id</meta-data>
+		</property>
 	</class>
 </compass-core-mapping>
