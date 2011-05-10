@@ -20,10 +20,11 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		var name = record.get("name");
 
 		var taxonId = record.get("taxonId");
-		this.searchForm.setTaxonId(taxonId);
 		var taxonName = record.get("taxonName");
-		this.searchForm.setTaxonName(taxonName);
-		this.searchForm.setTaxonId(taxonId);
+		
+		// these should be taken care of by taxonChanged call
+		//this.searchForm.setTaxonName(taxonName);
+		//this.searchForm.setTaxonId(taxonId);
 
 		// load preview of group if group was selected
 		if (isGroup) {
@@ -329,25 +330,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				}.createDelegate(this, [], true)
 			}
 		});
-		this.experimentPreviewExpandBtn = new Ext.Button({
-					handler : function() {
-						// this.experimentPreviewExpandBtn.disable().hide();
-						// this.loadExperimentPreview();
-						if (this.experimentPreviewContent.collapsed) {
-							this.experimentPreviewContent.expand();
-						} else {
-							this.experimentPreviewContent.collapse();
-						}
-
-					}.createDelegate(this, [], true),
-					scope : this,
-					// style: 'float:right;',
-					tooltip : "View your selection",
-					hidden : true,
-					disabled : true,
-					icon : "/Gemma/images/minus.gif",
-					cls : "x-btn-icon"
-				});
 		this.removeBtn = new Ext.Button({
 					icon : "/Gemma/images/icons/cross.png",
 					cls : "x-btn-icon",
@@ -376,7 +358,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					items : [{
 								layout : 'hbox',
 								items : [this.experimentCombo, this.removeBtn, this.helpBtn]
-							}, this.experimentPreviewExpandBtn, this.experimentPreviewContent,
+							}, this.experimentPreviewContent,
 							this.experimentSelectionEditorBtn]
 				});
 		Gemma.ExperimentSearchAndPreview.superclass.initComponent.call(this);
