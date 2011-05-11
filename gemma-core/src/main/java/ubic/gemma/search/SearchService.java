@@ -23,10 +23,12 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -261,6 +263,8 @@ public class SearchService implements InitializingBean {
 
     private static final int MAX_LUCENE_HITS = 750;
 
+    private HashMap<String, Taxon> nameToTaxonMap = new LinkedHashMap<String, Taxon>();
+
     /*
      * (non-Javadoc)
      * 
@@ -281,6 +285,60 @@ public class SearchService implements InitializingBean {
 
         } catch ( CacheException e ) {
             throw new RuntimeException( e );
+        }
+
+        initializeNameToTaxonMap();
+
+    }
+
+    private void initializeNameToTaxonMap() {
+
+        Collection<Taxon> taxonCollection = taxonService.loadAll();
+
+        for ( Taxon taxon : taxonCollection ) {
+            if ( taxon.getScientificName() != null ) nameToTaxonMap.put( taxon.getScientificName().trim(), taxon );
+            if ( taxon.getCommonName() != null ) nameToTaxonMap.put( taxon.getCommonName().trim(), taxon );
+            if ( taxon.getAbbreviation() != null ) nameToTaxonMap.put( taxon.getAbbreviation().trim(), taxon );
+        }
+
+        // loop through again breaking up multi-word taxon database names and handling some special cases(e.g. salmon,
+        // rainbow are common to multiple taxa)
+        // doing this is a separate loop so that these names take lower precedence when matching than the full terms in
+        // the generated keySet
+        // some of the special cases the section below may be unnecessary, or more may need to be added
+        Taxon salmonTaxon = null;
+
+        for ( Taxon taxon : taxonCollection ) {
+            if ( taxon.getCommonName().equalsIgnoreCase( "salmonid" ) ) salmonTaxon = taxon;
+            String[] terms;
+            if ( taxon.getScientificName() != null ) {
+                terms = taxon.getScientificName().split( "\\s+" );
+                if ( terms.length > 1 ) {
+                    for ( String s : terms ) {
+
+                        if ( !s.equalsIgnoreCase( "Oncorhynchus" ) ) {
+                            nameToTaxonMap.put( s, taxon );
+                        }
+                    }
+                }
+            }
+            if ( taxon.getCommonName() != null ) {
+                terms = taxon.getCommonName().split( "\\s+" );
+                if ( terms.length > 1 ) {
+                    for ( String s : terms ) {
+
+                        if ( !s.equalsIgnoreCase( "salmon" ) && !s.equalsIgnoreCase( "pink" )
+                                && !s.equalsIgnoreCase( "rainbow" ) ) {
+                            nameToTaxonMap.put( s, taxon );
+                        }
+                    }
+                }
+            }
+
+        }
+
+        if ( salmonTaxon != null ) {
+            nameToTaxonMap.put( "salmon", salmonTaxon );
         }
 
     }
@@ -1603,7 +1661,7 @@ public class SearchService implements InitializingBean {
                     toRemove.add( sr );
                     log.warn( "No getTaxon method for: " + o.getClass() + ".  Filtering from results. Error was: " + e );
                 }
-                
+
             } catch ( IllegalArgumentException e ) {
                 throw new RuntimeException( e );
             } catch ( IllegalAccessException e ) {
@@ -2007,6 +2065,38 @@ public class SearchService implements InitializingBean {
      */
     protected Map<Class<?>, List<SearchResult>> generalSearch( SearchSettings settings, boolean fillObjects ) {
         String searchString = QueryParser.escape( StringUtils.strip( settings.getQuery() ) );
+
+        if ( settings.getTaxon() == null ) {
+
+            // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
+            String[] searchTerms = searchString.split( "\\s+", 4 );
+            List<String> searchTermsList = Arrays.asList( searchTerms );
+
+            // only strip out taxon terms if there is more than one search term in query
+            if ( searchTerms.length > 1 ) {
+
+                // this Set is ordered by insertion order(LinkedHashMap)
+                Set<String> keywords = nameToTaxonMap.keySet();
+
+                for ( String keyword : keywords ) {
+
+                    int termIndex = searchString.indexOf( keyword );
+                    // make sure that the keyword occurs in the searchString AND that it occurs as a single term(not as
+                    // part of another word)
+                    if ( termIndex != -1 && searchTermsList.contains( keyword ) ) {
+
+                        searchString = searchString.replaceFirst( keyword, "" );
+                        settings.setTaxon( nameToTaxonMap.get( keyword ) );
+                        //break on first term found in keywords since they should be(more or less) ordered by precedence
+                        break;
+                    }
+
+                }
+
+            }
+
+        }
+
         settings.setQuery( searchString );
 
         // If nothing to search return nothing.
