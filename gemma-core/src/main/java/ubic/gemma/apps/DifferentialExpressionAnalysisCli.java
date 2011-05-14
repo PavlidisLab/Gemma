@@ -31,6 +31,7 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -292,6 +293,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 factors.add( factor );
             }
         }
+
         return factors;
     }
 
@@ -333,12 +335,29 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 /*
                  * Automagically
                  */
-                if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 2 ) {
+                if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 3 ) {
                     throw new RuntimeException( "Experiment has too many factors to run automatically: "
                             + ee.getShortName() );
                 }
 
-                results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
+                Collection<ExperimentalFactor> factorsToUse = new HashSet<ExperimentalFactor>();
+
+                if ( this.ignoreBatch ) {
+                    for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                        if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
+                            factorsToUse.add( ef );
+                        }
+                    }
+                } else {
+                    factorsToUse.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+                }
+
+                if ( factors.isEmpty() ) {
+                    throw new Exception( "No factors available for " + ee.getShortName() );
+                }
+
+                results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,
+                        factorsToUse );
             }
 
             if ( results == null ) {
