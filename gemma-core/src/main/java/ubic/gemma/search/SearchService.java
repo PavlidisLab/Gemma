@@ -2089,7 +2089,7 @@ public class SearchService implements InitializingBean {
                     if ( termIndex != -1) {
                         //make sure that either the keyword is multi-term or that it occurs as a single term(not as part of another word)
                         if (keyword.contains( " " ) || searchTermsList.contains( keyword )){
-                        searchString = searchString.replaceFirst( "(?i)"+keyword, "" );
+                        searchString = searchString.replaceFirst( "(?i)"+keyword, "" ).trim();
                         settings.setTaxon( nameToTaxonMap.get( keyword ) );
                         //break on first term found in keywords since they should be(more or less) ordered by precedence
                         break;
