@@ -86,7 +86,7 @@ var Heatmap = function() {
 		// Creates 1 canvas per row of the heat map
 		function drawMap(vectorObjs, target, colors, config, sampleLabels, conditionLabels, conditionLabelKey){
 		
-			if (target.getWidth() <= 0 || target.getHeight() <= 0 || vectorObjs.length == 0) {
+			if (target.getWidth() <= 0 || target.getHeight() <= 0 || vectorObjs.length === 0) {
 				return;
 			}
 			
@@ -169,7 +169,7 @@ var Heatmap = function() {
 			
 			var numberOfColumns = vectorObjs[0].data.length; // assumed to be the same always.
 			// avoid insanity
-			if (numberOfColumns == 0) {
+			if (numberOfColumns === 0) {
 				return;
 			}
 			
@@ -237,8 +237,10 @@ var Heatmap = function() {
 				}
 			}
 			
-			if (config.legend && config.legend.show && config.legend.container) 
+			if (config.legend && config.legend.show && config.legend.container) {
 				insertLegend(config.legend.container);
+			}
+				
 			
 			/*
 		 * Add labels to the columns. FIXME: if the heatmap itself isn't taking much space, make more room for the

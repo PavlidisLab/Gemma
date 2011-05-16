@@ -633,8 +633,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	 *            record
 	 */
 	zoom : function(record) {
-		if (!record)
+		if (!record){
 			return;
+		}
 		var eevo = record.get("eevo");
 		var profiles = record.get("profiles");
 		var sampleNames = record.get("sampleNames");
@@ -791,7 +792,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		this.updateTemplate();
 
 		// force a refresh of the zoom.
-		var record = this.dv.getSelectedOrFirst();;
+		var record = this.dv.getSelectedOrFirst();
 		this.zoom(record);
 
 	},
@@ -859,7 +860,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 								+ 'px; float:left;'
 					}
 				});
-		var items = [this.thumbnailPanel, this.zoomPanel]
+		var items = [this.thumbnailPanel, this.zoomPanel];
 
 		var browserWarning = "";
 		if (Ext.isIE) {
@@ -1272,4 +1273,4 @@ Gemma.testVisData = function() {
 	s3[9] = "Muscle.SBD.3";
 
 	return [s0];
-}
+};
