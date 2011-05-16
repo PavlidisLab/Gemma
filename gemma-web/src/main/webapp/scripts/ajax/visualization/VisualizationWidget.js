@@ -403,7 +403,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	/**
 	 * Zoom panel update
 	 */
-	update : function(eevo, profiles, sampleNames) {
+	update : function(eevo, profiles, sampleNames, conditionLabels, conditionLabelKey) {
 		if (profiles === undefined || profiles === null) {
 			var record = this.dv.getSelectedOrFirst();
 
@@ -419,6 +419,8 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 			}
 
 			sampleNames = record.get("sampleNames");
+			conditionLabels = record.get("factorValuesToNames");
+			conditionLabelKey = record.get("factorNames");
 		}
 
 		if (profiles === undefined) {
@@ -461,7 +463,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 			smoothLineGraphs : smooth,
 
 			legend : {
-				show : this.showLegend && !this.heatmapMode,
+				show : this.showLegend, //&& !this.heatmapMode,
 				// container : this.legendDiv ? this.legendDiv : this.body.id,
 				labelFormatter : function(s) {
 					// assume we only have one link defined...
@@ -472,6 +474,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 				position : "sw" // best to be west, if we're expanded...applies
 								// to linecharts.
 			},
+			conditionLegend: true,
 			label : true
 
 		};
@@ -484,7 +487,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 		if (doHeatmap) {
 			graphConfig.legend.container = this.legendDiv ? this.legendDiv : this.body.id;
 			profiles.sort(Gemma.sortByImportance);
-			Heatmap.draw($(this.body.id), profiles, graphConfig, sampleNames, Gemma.sortByImportance);
+			Heatmap.draw($(this.body.id), profiles, graphConfig, sampleNames, conditionLabels, conditionLabelKey);
 		} else {
 			profiles.sort(Gemma.sortByImportance);
 
@@ -493,7 +496,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 				Ext.DomHelper.overwrite(this.legendDiv, '');
 			}
 
-			LinePlot.draw($(this.body.id), profiles, graphConfig, sampleNames);
+			LinePlot.draw($(this.body.id), profiles, graphConfig, sampleNames, conditionLabels, conditionLabelKey);
 
 			// make the line chart legend clickable. Selector is based on
 			// flotr's output.
@@ -515,6 +518,8 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 					var eevo = record.get("eevo");
 					var profiles = record.get("profiles");
 					var sampleNames = record.get("sampleNames");
+					var conditionLabels = record.get("factorValuesToNames");
+					var conditionLabelKey = record.get("factorNames");
 
 					for (var i = 0; i < profiles.size(); i++) {
 
@@ -537,7 +542,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 							break;
 						}
 					}
-					this.update(eevo, profiles, sampleNames);
+					this.update(eevo, profiles, sampleNames, conditionLabels, conditionLabelKey);
 
 				};
 
@@ -633,8 +638,10 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		var eevo = record.get("eevo");
 		var profiles = record.get("profiles");
 		var sampleNames = record.get("sampleNames");
+		var conditionLabels = record.get("factorValuesToNames");
+		var conditionLabelKey = record.get("factorNames");
 
-		this.zoomPanel.update(eevo, profiles, sampleNames);
+		this.zoomPanel.update(eevo, profiles, sampleNames, conditionLabels, conditionLabelKey);
 	},
 
 	/**
@@ -667,9 +674,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	 *            btn
 	 */
 	toggleLegend : function(btn) {
-		if (this.heatmapMode) {
-			return;
-		}
+		//if (this.heatmapMode) {
+		//	return;
+		//}
 
 		if (this.showLegend) {
 			this.showLegend = false;
@@ -940,10 +947,10 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 					if (this.heatmapMode) {
 						// Ext.getCmp(this.smoothBtnId).hide();
-						Ext.getCmp(this.toggleLegendBtnId).hide();
+						//Ext.getCmp(this.toggleLegendBtnId).hide();
 					} else {
 						// Ext.getCmp(this.smoothBtnId).show();
-						Ext.getCmp(this.toggleLegendBtnId).show();
+						//Ext.getCmp(this.toggleLegendBtnId).show();
 					}
 
 				}, this);
@@ -1029,6 +1036,12 @@ Gemma.VisualizationStore = function(config) {
 				name : "factorProfiles"
 			}, {
 				name : "sampleNames"
+			}, {
+				name : "factorNames"
+			}, {
+				name : "factorValues"
+			}, {
+				name : "factorValuesToNames"
 			}]);
 
 	if (config && config.readMethod) {

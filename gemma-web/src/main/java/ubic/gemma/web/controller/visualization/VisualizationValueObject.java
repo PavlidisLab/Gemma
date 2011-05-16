@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -59,6 +60,13 @@ public class VisualizationValueObject {
     private Collection<GeneExpressionProfile> profiles;
 
     private List<String> sampleNames;
+    
+    /**
+     * used for displaying factor info in heatmap
+     */
+    private List<List<String>> factorValues;
+    private LinkedHashMap<String, LinkedHashMap<String, String>> factorNames; // map of factor name to value-colour map (for labels)
+    private ArrayList<LinkedHashMap<String, String[]>> factorValueMaps; // list of factor name to value-colour maps (for colouring column headers)
 
     public VisualizationValueObject() {
         super();
@@ -208,6 +216,30 @@ public class VisualizationValueObject {
         return sampleNames;
     }
 
+    public List<List<String>> getFactorValues() {
+        return factorValues;
+    }
+
+    public LinkedHashMap<String, LinkedHashMap<String, String>> getFactorNames() {
+        return factorNames;
+    }
+
+    public ArrayList<LinkedHashMap<String, String[]>> getFactorValuesToNames() {
+        return factorValueMaps;
+    }
+
+    public void setFactorValuesToNames( ArrayList<LinkedHashMap<String, String[]>> factorValueMaps2 ) {
+        this.factorValueMaps = factorValueMaps2;
+    }
+
+    public void setFactorValues( List<List<String>> factorValues ) {
+        this.factorValues = factorValues;
+    }
+
+    public void setFactorNames( LinkedHashMap<String, LinkedHashMap<String, String>> factorNames2 ) {
+        this.factorNames = factorNames2;
+    }
+
     public void setEE( ExpressionExperiment ee ) {
         this.eevo = new ExpressionExperimentValueObject();
         this.eevo.setId( ee.getId() );
@@ -252,13 +284,14 @@ public class VisualizationValueObject {
      * 
      * @param layout
      */
-    public void setUpFactorProfiles( LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> layout ) {
+    public void setUpFactorProfiles( LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout ) {
         if ( layout == null ) {
             log.warn( "Null layout, ignoring" );
+            //new Exception().printStackTrace();
             return;
         }
         Collection<ExperimentalFactor> efs = new HashSet<ExperimentalFactor>();
-        for ( Map<ExperimentalFactor, Double> maps : layout.values() ) {
+        for ( LinkedHashMap<ExperimentalFactor, Double> maps : layout.values() ) {
             efs.addAll( maps.keySet() );
         }
 

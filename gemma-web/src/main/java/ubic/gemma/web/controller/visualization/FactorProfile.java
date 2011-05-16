@@ -53,7 +53,7 @@ public class FactorProfile {
      * @param layouts The double values are either just dummy values to tell us the extent of each factor value; or for
      *        continuous measurements it is the actual measurement.
      */
-    public FactorProfile( ExperimentalFactor ef, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> layouts ) {
+    public FactorProfile( ExperimentalFactor ef, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layouts ) {
         super();
         checkIfFactorIsContinuous( ef );
         List<Double> values = extractFactorPlotValues( ef, layouts );
@@ -164,7 +164,7 @@ public class FactorProfile {
     }
 
     private List<Double> extractFactorPlotValues( ExperimentalFactor ef,
-            LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>> profiles ) {
+            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> profiles ) {
         List<Double> values = new ArrayList<Double>();
         for ( BioAssay ba : profiles.keySet() ) {
             for ( ExperimentalFactor bef : profiles.get( ba ).keySet() ) {

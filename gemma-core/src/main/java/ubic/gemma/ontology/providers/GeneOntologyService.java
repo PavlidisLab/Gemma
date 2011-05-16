@@ -912,7 +912,7 @@ public class GeneOntologyService implements InitializingBean {
                     log.info( "Done loading GO" );
                     loadTime.stop();
                 } catch ( Throwable e ) {
-                    log.error( e, e );
+                    if(log!=null)log.error( e, e );// log call can break hot deploy
                     ready.set( false );
                     running.set( false );
                 }

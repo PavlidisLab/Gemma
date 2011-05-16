@@ -27,8 +27,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -47,11 +50,13 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.pca.ProbeLoading;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
@@ -66,6 +71,8 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
@@ -115,6 +122,9 @@ public class DEDVController {
 
     @Autowired
     private GeneService geneService;
+    
+    @Autowired
+    private FactorValueService factorValueService;
 
     @Autowired
     private Probe2ProbeCoexpressionService probe2ProbeCoexpressionService;
@@ -184,7 +194,7 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes, false );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
@@ -225,7 +235,7 @@ public class DEDVController {
 
         Map<ProbeLoading, DoubleVectorValueObject> topLoadedVectors = this.svdService.getTopLoadedVectors( ee,
                 component, count );
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         Collection<DoubleVectorValueObject> values = topLoadedVectors.values();
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( values );
@@ -258,7 +268,7 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees,
                 genes, false );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
 
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
@@ -285,6 +295,8 @@ public class DEDVController {
 
     /**
      * AJAX exposed method
+     * 
+     * Batch factor value analyses are filtered out
      * 
      * @param eeId FIXME accomodate ExpressionExperimentSubSets. Currently we pass in the "source experiment" so we
      *        don't get the slice.
@@ -319,25 +331,52 @@ public class DEDVController {
         ees.add( ee );
 
         dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
-
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
-        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
-
-        watch.stop();
+         
         Long time = watch.getTime();
 
         if ( time > 100 ) {
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ee.getShortName() + " and "
                     + gene.getOfficialSymbol() + " gene in " + time + " ms (times <100ms not reported)." );
         }
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
+        layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
-        watch = new StopWatch();
-        watch.start();
+        time = watch.getTime();
+
+        if ( time > 100 ) {
+            log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for 1 EE"
+                    + " in " + time + " ms (times <100ms not reported)." );
+        }
+        // don't include batch because it isn't biologically relevant
+        
+        for(ExpressionExperiment ee2 : layouts.keySet()){
+            if(layouts.get( ee2 ) != null && layouts.get( ee2 ).keySet() != null){
+                for(BioAssay bioAssay : layouts.get( ee2 ).keySet()){
+                    if(layouts.get( ee2 ).get( bioAssay ) != null && layouts.get( ee2 ).get( bioAssay ).keySet() != null){
+                        for(ExperimentalFactor ef : layouts.get( ee2 ).get( bioAssay ).keySet()){
+                            if(ExperimentalDesignUtils.isBatch( ef )){
+                                layouts.get( ee2 ).get( bioAssay ).remove( ef );
+                                break;
+                            }
+                        }
+                    }
+                } 
+            }
+        }
+
+        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor(layouts); //required?
+        
+        time = watch.getTime();
+
+        if ( time > 100 ) {
+            log.info( "Ran sortLayoutSamplesByFactor on " + layouts.size() + " layouts"
+                    + " in " + time + " ms (times <100ms not reported)." );
+        }
 
         Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes = new HashMap<Long, Collection<DifferentialExpressionValueObject>>();
         validatedProbes.put( ee.getId(), geneDifferentialExpressionService.getDifferentialExpression( gene, ees,
                 threshold, null ) );
-
+        
         watch.stop();
         time = watch.getTime();
 
@@ -372,7 +411,7 @@ public class DEDVController {
 
         List<DoubleVectorValueObject> dedvs = getDiffExVectors( resultSetId, threshold );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         return makeVisCollection( dedvs, null, null, layouts );
@@ -417,7 +456,7 @@ public class DEDVController {
             dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, true );
         }
 
-        watch.stop();
+        //watch.stop();
         Long time = watch.getTime();
 
         if ( time > 100 ) {
@@ -425,8 +464,25 @@ public class DEDVController {
                     + ( geneIds == null ? " sample" : " for " + geneIds.size() + " genes " ) + " in " + time
                     + " ms (times <100ms not reported)." );
         }
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
+
+        time = watch.getTime();
+
+        if ( time > 100 ) {
+            log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs"
+                    + " in " + time + " ms (times <100ms not reported)." );
+        }
+        layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor(layouts); //required?
+        
+        watch.stop();
+        time = watch.getTime();
+
+        if ( time > 100 ) {
+            log.info( "Ran sortLayoutSamplesByFactor on " + layouts.size() + " layouts"
+                    + " in " + time + " ms (times <100ms not reported)." );
+        }
         return makeVisCollection( dedvs, genes, null, layouts );
 
     }
@@ -455,7 +511,7 @@ public class DEDVController {
         Collection<DoubleVectorValueObject> dedvs = processedExpressionDataVectorService.getProcessedDataArraysByProbe(
                 ees, probes, false );
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts = null;
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = null;
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         watch.stop();
@@ -774,7 +830,7 @@ public class DEDVController {
                 return o1.getPvalue().compareTo( o2.getPvalue() );
             }
         } );
-
+        watch.stop();
         if ( watch.getTime() > 1000 )
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + probes.size() + " genes in " + watch.getTime()
                     + " ms. (result set=" + ar.getId() );
@@ -911,24 +967,220 @@ public class DEDVController {
      * @param layouts
      */
     private void getSampleNames( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
-        DoubleVectorValueObject vec = vectors.iterator().next(); // just one as an example.
+            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
+        
+        //DoubleVectorValueObject vec = vectors.iterator().next(); // just one as an example.
+        
+        for(DoubleVectorValueObject vec : vectors){
+            List<String> sampleNames = new ArrayList<String>();
+            if ( layouts != null && layouts.get( vec.getExpressionExperiment() ) != null ) {
+                for ( BioAssay ba : layouts.get( vec.getExpressionExperiment() ).keySet() ) {
+                    sampleNames.add( ba.getName() ); // fIXME
 
-        List<String> sampleNames = new ArrayList<String>();
-        if ( layouts != null && layouts.get( vec.getExpressionExperiment() ) != null ) {
-            for ( BioAssay ba : layouts.get( vec.getExpressionExperiment() ).keySet() ) {
-                sampleNames.add( ba.getName() ); // fIXME
+                }
+                if ( sampleNames.size() > 0 ) {
+                    log.debug( sampleNames.size() + " sample names!" );
+                    vvo.setSampleNames( sampleNames );
+                }
+            } else {
+                sampleNames = getSampleNames( vec );
+                if ( sampleNames.size() > 0 ) {
+                    log.debug( sampleNames.size() + " sample names!" );
+                    vvo.setSampleNames( sampleNames );
+                }
             }
-            if ( sampleNames.size() > 0 ) {
-                log.debug( sampleNames.size() + " sample names!" );
-                vvo.setSampleNames( sampleNames );
+        }
+        
+    }
+
+
+    /**
+     * Get the factor values we'll use for grouping the columns of the vectors.
+     * Uses factors and factor values from layouts
+     * 
+     * @param vectors
+     * @param vvo
+     * @param layouts
+     */
+    private void getFactorValues( Collection<DoubleVectorValueObject> vectors, VisualizationValueObject vvo,
+            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
+
+        List<String> colours = new LinkedList<String>();// TODO this is temp for testing, make function to generate colours
+
+
+        colours.add( "#d2ff7f" );
+        colours.add( "#82a938" );
+        colours.add( "#ff9400" );
+        colours.add( "#ffc97f" );
+        colours.add( "#ff907f" );
+        colours.add( "#a94738" );
+        colours.add( "#907299" );
+        colours.add( "#5292a5" );
+        colours.add( "#953158" );
+        colours.add( "#194617" );
+        colours.add( "#634f9b" );
+        colours.add( "#572265" );
+        colours.add( "#362367" );
+        colours.add( "#884c99" );
+        colours.add( "#338c2f" );
+        colours.add( "#e0a8bd" );
+        colours.add( "#007fa5" );
+        colours.add( "#e0709b" );
+        colours.add( "#7f759b" );
+        colours.add( "#a97a38" );
+        colours.add( "#54231c" );
+        colours.add( "#6fd369" );
+        //Collections.shuffle( colours );
+        // add some more later in list
+        Random random = new Random();
+        for(int i = 0; i<50; i++){
+            colours.add("#"+ (Integer.toHexString(random.nextInt( 16 ) ))+"0" 
+                    +(Integer.toHexString(random.nextInt( 16 ) ))+"0"
+                    +(Integer.toHexString(random.nextInt( 16 ) ))+"0");
+        }
+        
+        
+    /*           
+        colours.add( "#F37E79" );
+        colours.add( "#7998F3" );
+        colours.add( "#BBF379" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+        colours.add( "" );
+
+
+        for(int i = 1; i <= 3; i++){
+            for(int j = 1; j <= 3; j++){
+                for(int k = 1; k <= 3; k++){
+                    if(i != 1 || j!= 1 || k!= 1){
+                        colours.add( "rgb("+255/i+","+255/j+","+255/k+" )");                    
+                    }
+                }
             }
-        } else {
-            sampleNames = getSampleNames( vec );
-            if ( sampleNames.size() > 0 ) {
-                log.debug( sampleNames.size() + " sample names!" );
-                vvo.setSampleNames( sampleNames );
+        }
+        Collections.shuffle( colours );
+        System.out.println( colours );
+        
+        for(int i = 4; i <= 6; i++){
+            for(int j = 4; j <= 6; j++){
+                for(int k = 4; k <= 6; k++){
+                    colours.add( "rgb("+255/i+","+255/j+","+255/k+" )");                   
+                }
             }
+        }
+
+        
+        
+        
+        /* int colourIndex = 0;
+        String[] colours = new String[] { 
+            "FF0000", "00FF00", "0000FF", "FFFF00", "FF00FF", "00FFFF", "000000", 
+            "800000", "008000", "000080", "808000", "800080", "008080", "808080", 
+            "C00000", "00C000", "0000C0", "C0C000", "C000C0", "00C0C0", "C0C0C0", 
+            "400000", "004000", "000040", "404000", "400040", "004040", "404040", 
+            "200000", "002000", "000020", "202000", "200020", "002020", "202020", 
+            "600000", "006000", "000060", "606000", "600060", "006060", "606060", 
+            "A00000", "00A000", "0000A0", "A0A000", "A000A0", "00A0A0", "A0A0A0", 
+            "E00000", "00E000", "0000E0", "E0E000", "E000E0", "00E0E0", "E0E0E0", 
+        };
+
+      
+        for(int i = 0; i<50; i++){
+            colours.add( (Integer.toHexString(random.nextInt( 16 ) ))+"0" 
+                    +(Integer.toHexString(random.nextInt( 16 ) ))+"0"
+                    +(Integer.toHexString(random.nextInt( 16 ) ))+"0");
+        }
+         
+        // makes 64 colours
+        for(int i = 0; i<16; i+=4){
+            for(int j = 0; j<16; j+=4){
+                for(int k = 0; k<16; k+=4){
+                    colours.add(Integer.toHexString( i )+Integer.toHexString( i )
+                                +Integer.toHexString( j )+Integer.toHexString( j )
+                                +Integer.toHexString( k )+Integer.toHexString( k ));
+                }
+            }
+        }
+       */
+        
+        
+        // >1 vector can have same ee, but no need to do the same thing >1
+        Collection<ExpressionExperiment> usedEEs = new ArrayList<ExpressionExperiment>();
+        //DoubleVectorValueObject vec = vectors.iterator().next(); // just one as an example. TODO
+        for(DoubleVectorValueObject vec : vectors){
+            ExpressionExperiment ee = vec.getExpressionExperiment();
+            if(usedEEs.contains( ee )){
+                continue;
+            }
+            LinkedHashMap<String, LinkedHashMap<String,String>> factorNames = new LinkedHashMap<String, LinkedHashMap<String,String>>();
+            List<List<String>> factorValues = new ArrayList<List<String>>();
+            ArrayList<LinkedHashMap<String, String[]>> factorValueMaps = new ArrayList<LinkedHashMap<String, String[]>>(); //list of maps with entries: key = factorName, value=array of factor values
+            
+            if ( layouts != null && layouts.get( ee ) != null ) {
+                for ( BioAssay ba : layouts.get( ee ).keySet() ) {
+                    // double should be the factorValue id, defined in ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment, BioAssayDimension)
+                    LinkedHashMap<ExperimentalFactor, Double> factorMap = layouts.get( ee ).get( ba ); 
+                    LinkedHashMap<String, String[]> factorValuesToNames = new LinkedHashMap<String, String[]>();
+
+                    // for each experimental factor, store the name and value
+                    for(Entry<ExperimentalFactor, Double> pair : factorMap.entrySet()){
+                        // the double is only a double because it is meant to hold measurements when the factor is continuous
+                        // if the factor is categorical, the double value is set to the value's id
+                        // see ubic.gemma.visualization.ExperimentalDesignVisualizationService.getExperimentalDesignLayout(ExpressionExperiment, BioAssayDimension)
+                        FactorValue facVal = factorValueService.load( new Long( Math.round( pair.getValue()) ) );
+                        StringBuffer facValsStr = new StringBuffer();
+                        if(facVal.getCharacteristics().isEmpty()){
+                            facValsStr.append( facVal.getValue() + ", " );
+                        }
+                        for ( Characteristic characteristic : facVal.getCharacteristics() ) {
+                            facValsStr.append( characteristic.getValue() + ", ");
+                        }
+                        if(facValsStr.length() > 0){
+                            facValsStr.delete( facValsStr.length()-2, facValsStr.length()  ); 
+                        }
+                        if(facValsStr.length()==0){
+                            facValsStr.append( "FactorValue id:"+ Math.round( pair.getValue())+". No value found." );
+                        }
+                        String colourString = "";
+                        if(!factorNames.containsKey( facVal.getExperimentalFactor().getName())){
+                            factorNames.put( facVal.getExperimentalFactor().getName(), new LinkedHashMap<String,String>() );
+                        }
+                        if(!(factorNames.get( facVal.getExperimentalFactor().getName() )).containsKey( facValsStr.toString() )){
+                            // assign a colour to this factor value
+                            /*int rand = random.nextInt();
+                            colourString = "#"+new HsbColour( rand ).toHex();
+                            colourString = new HsbColour( rand ).toRGBhtmlString();
+                            if(colourIndex < colours.length){
+                                colourString = colours[colourIndex++];
+                            }else{
+                                colourString = (Integer.toHexString(random.nextInt( 16 ) ))+"0" 
+                                +(Integer.toHexString(random.nextInt( 16 ) ))+"0"
+                                +(Integer.toHexString(random.nextInt( 16 ) ))+"0";
+                            }*/
+                            
+                            colourString = colours.remove( 0 ); // for testing
+                            colours.add( colourString ); // for testing
+                            (factorNames.get( facVal.getExperimentalFactor().getName() )).put( facValsStr.toString(), colourString );
+                        }else{
+                            colourString = (factorNames.get( facVal.getExperimentalFactor().getName() )).get( facValsStr.toString() );
+                        }
+                        String[] facValAndColour = new String[]{facValsStr.toString(), colourString};
+                        factorValuesToNames.put( facVal.getExperimentalFactor().getName(), facValAndColour );
+                    }
+                    factorValueMaps.add( factorValuesToNames );
+                }
+            }
+            vvo.setFactorNames( factorNames );
+            vvo.setFactorValues( factorValues );
+            vvo.setFactorValuesToNames( factorValueMaps );
         }
     }
 
@@ -963,7 +1215,7 @@ public class DEDVController {
      */
     private VisualizationValueObject[] makeDiffVisCollection( Collection<DoubleVectorValueObject> dedvs,
             List<Gene> genes, Map<Long, Collection<DifferentialExpressionValueObject>> validatedProbes,
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
+            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
@@ -1044,6 +1296,7 @@ public class DEDVController {
                     .getPValue(), validatedProbes.get( ee2P.getEEId() ) );
 
             getSampleNames( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
+            getFactorValues( vvoMap.get( ee2P.getEEId() ), vvo, layouts );
 
             /*
              * Set up the experimental designinfo so we can show it above the graph.
@@ -1135,7 +1388,7 @@ public class DEDVController {
      */
     private VisualizationValueObject[] makeVisCollection( Collection<DoubleVectorValueObject> dedvs,
             Collection<Gene> genes, Map<Long, Collection<Long>> validatedProbes,
-            Map<ExpressionExperiment, LinkedHashMap<BioAssay, Map<ExperimentalFactor, Double>>> layouts ) {
+            Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1172,6 +1425,7 @@ public class DEDVController {
 
             if ( vectors.size() > 0 ) {
                 getSampleNames( vectors, vvo, layouts );
+                getFactorValues( vectors, vvo, layouts );
             }
 
             /*

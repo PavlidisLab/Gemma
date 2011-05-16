@@ -752,12 +752,10 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 				this.datasetGroupReferences, this.geneGroupReferences, function(data) {
 
 					progressWindow.hide();
-					this.ownerCt.fireEvent('visualizationLoaded'); // to
-					// trigger
-					// loadmask
-					// on search
-					// form to
-					// hide
+					if (typeof this.ownerCt !== 'undefined') {
+						// to trigger loadmask on search form to hide
+						this.ownerCt.fireEvent('visualizationLoaded');
+					} 
 
 					data.geneGroupNames = this.geneGroupNames;
 					data.datasetGroupNames = this.datasetGroupNames;
@@ -896,7 +894,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		// FOR TESTING !!!!!
 		this.param2 = {
 			geneReferences : [{
-				id : 97,
+				id : 94,
 				type : "databaseBackedGroup"
 			}/*
 				 * ,{ id: 75, type: "databaseBackedGroup" }
@@ -910,8 +908,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			 * ,{ id: 6107, type: "databaseBackedGroup" }
 			 */
 			],
-			geneNames : ["gene TEST", "gene TEST 2"],
-			datasetNames : ["dataset TEST", "dataset TEST2"],
+			geneNames : ["gene TEST"],//, "gene TEST 2"],
+			datasetNames : ["dataset TEST"],//, "dataset TEST2"],
 			taxonId : 2,
 			pvalue : Gemma.DEFAULT_THRESHOLD
 		};

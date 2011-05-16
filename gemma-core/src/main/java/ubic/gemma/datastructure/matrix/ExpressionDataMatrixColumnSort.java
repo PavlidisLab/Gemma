@@ -25,6 +25,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -129,15 +130,10 @@ public class ExpressionDataMatrixColumnSort {
         return ordered;
 
     }
-
-    /**
-     * @param start
-     * @param factorsToUse
-     * @return
-     */
+    
     public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start,
-            Collection<ExperimentalFactor> factorsToUse ) {
-
+            Collection<ExperimentalFactor> unsortedFactorsToUse ) {
+        
         if ( start.size() == 1 ) {
             return start;
         }
@@ -145,22 +141,73 @@ public class ExpressionDataMatrixColumnSort {
         if ( start.size() == 0 ) {
             throw new IllegalArgumentException( "Must provide some biomaterials" );
         }
-        Collection<ExperimentalFactor> factors = null;
-        if ( factorsToUse != null ) {
-            factors = factorsToUse;
+        
+        Collection<ExperimentalFactor> unsortedFactors = null;
+        if ( unsortedFactorsToUse  != null ) {
+            unsortedFactors = unsortedFactorsToUse ;
         } else {
-            factors = getFactors( start );
+            unsortedFactors = getFactors( start );
         }
-
-        if ( factors.size() == 0 ) {
+        if ( unsortedFactors.size() == 0 ) {
             log.warn( "No experimental design, sorting by sample name" );
             orderByName( start );
             return start;
         }
+        
+        // breaking this up because some methods need to know the order of factors that was used to sort the biomaterials
+        // difficult to know this if >1 factor has same number of values
+        
+        // sort factors
+        LinkedList<ExperimentalFactor> sortedFactors = orderFactorsByExperimentalDesign(start, unsortedFactors);
+        // sort biomaterials using sorted factors
+        return orderBiomaterialsBySortedFactors(start, sortedFactors);
+    }
+    /**
+     * @param start
+     * @param factorsToUse
+     * @return list of factors, sorted from simplest (fewest number of values from the biomaterials passed in) to least simple 
+     */
+    public static LinkedList<ExperimentalFactor> orderFactorsByExperimentalDesign( List<BioMaterial> start,
+            Collection<ExperimentalFactor> factors ) {
+
+        if(factors == null || factors.isEmpty()){
+            throw new IllegalArgumentException( "Must provide factors" );
+        }
+
+        LinkedList<ExperimentalFactor> sortedFactors = new LinkedList<ExperimentalFactor>();
+        while(!factors.isEmpty()){
+            ExperimentalFactor simplest = chooseSimplestFactor( start, factors );
+            sortedFactors.addLast( simplest );
+            factors.remove( simplest );
+        }
+        return sortedFactors;
+    }
+
+    /**
+     * Sort biomaterials according to a list of ordered factors
+     * 
+     * 
+     * @param start biomaterials to sort
+     * @param factorsToUse sorted list of factors to define sort order for biomaterials, cannot be null
+     * @return 
+     */
+    public static List<BioMaterial> orderBiomaterialsBySortedFactors( List<BioMaterial> start,
+            LinkedList<ExperimentalFactor> factors ) {
+        
+        if ( start.size() == 1 ) {
+            return start;
+        }
+
+        if ( start.size() == 0 ) {
+            throw new IllegalArgumentException( "Must provide some biomaterials" );
+        }        
+        if(factors == null ){
+            throw new IllegalArgumentException( "Must provide sorted factors" );
+        }
 
         Map<FactorValue, List<BioMaterial>> fv2bms = buildFv2BmMap( start );
 
-        ExperimentalFactor simplest = chooseSimplestFactor( start, factors );
+        ExperimentalFactor simplest = factors.getFirst();
 
         if ( simplest == null ) {
             // we're done.
@@ -173,7 +220,7 @@ public class ExpressionDataMatrixColumnSort {
         List<BioMaterial> ordered = orderByFactor( simplest, fv2bms, start,
                 new HashMap<ExperimentalFactor, Collection<BioMaterial>>() );
 
-        Collection<ExperimentalFactor> factorsStillToDo = new HashSet<ExperimentalFactor>();
+        LinkedList<ExperimentalFactor> factorsStillToDo = new LinkedList<ExperimentalFactor>();
         factorsStillToDo.addAll( factors );
         factorsStillToDo.remove( simplest );
 
@@ -206,7 +253,7 @@ public class ExpressionDataMatrixColumnSort {
             if ( chunk.size() < 2 ) {
                 result.addAll( chunk );
             } else {
-                List<BioMaterial> orderedChunk = orderByExperimentalDesign( chunk, factorsStillToDo );
+                List<BioMaterial> orderedChunk = orderBiomaterialsBySortedFactors( chunk, factorsStillToDo );
                 result.addAll( orderedChunk );
             }
         }
