@@ -196,7 +196,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 															name : 'query',
 															columnWidth : 0.75,
 															allowBlank : false,
-															regex : new RegExp("[\\w\\s]{3,}\\*?"),
+															regex : new RegExp("[-\\w\\s]{3,}\\*?"),
 															regexText : "Query contains invalid characters",
 															minLengthText : "Query must be at least 3 characters long",
 															msgTarget : "validation-messages",
