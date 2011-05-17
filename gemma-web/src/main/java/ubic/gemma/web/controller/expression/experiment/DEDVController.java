@@ -309,8 +309,12 @@ public class DEDVController {
 
         StopWatch watch = new StopWatch();
         watch.start();
-
+        // TODO this throws an error if the user selects an experiment they don't have permission to see
+        // this can happen through the diff expr. table on the gene page
+        // (ex: grin1 mouse, dataset="kottmann")
         ExpressionExperiment ee = expressionExperimentService.load( eeId );
+        
+        
         if ( ee == null ) return null;
 
         if ( threshold == null ) {
@@ -333,6 +337,7 @@ public class DEDVController {
         dedvs = processedExpressionDataVectorService.getProcessedDataArrays( ees, genes, false );
          
         Long time = watch.getTime();
+        watch.reset(); watch.start();
 
         if ( time > 100 ) {
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + ee.getShortName() + " and "
@@ -342,7 +347,7 @@ public class DEDVController {
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         time = watch.getTime();
-
+        watch.reset(); watch.start();
         if ( time > 100 ) {
             log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for 1 EE"
                     + " in " + time + " ms (times <100ms not reported)." );
@@ -367,7 +372,7 @@ public class DEDVController {
         layouts = experimentalDesignVisualizationService.sortLayoutSamplesByFactor(layouts); //required?
         
         time = watch.getTime();
-
+        watch.reset(); watch.start();
         if ( time > 100 ) {
             log.info( "Ran sortLayoutSamplesByFactor on " + layouts.size() + " layouts"
                     + " in " + time + " ms (times <100ms not reported)." );
@@ -458,6 +463,7 @@ public class DEDVController {
 
         //watch.stop();
         Long time = watch.getTime();
+        watch.reset(); watch.start();
 
         if ( time > 100 ) {
             log.info( "Retrieved " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs"
@@ -469,7 +475,7 @@ public class DEDVController {
         layouts = experimentalDesignVisualizationService.sortVectorDataByDesign( dedvs );
 
         time = watch.getTime();
-
+        watch.reset(); watch.start();
         if ( time > 100 ) {
             log.info( "Ran sortVectorDataByDesign on " + dedvs.size() + " DEDVs for " + eeIds.size() + " EEs"
                     + " in " + time + " ms (times <100ms not reported)." );

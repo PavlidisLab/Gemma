@@ -188,127 +188,110 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					border : true,
 					bodyBorder : true,
 					layout : 'form',
+					bodyStyle : 'padding:5px',
 					defaults : {
-						hideLabel : true
+						hideLabel : false
 					},
 					items : [{
-						xtype : 'radiogroup',
-						columns : 1,
-						items : [{
-							xtype : 'radio',
-							name : 'bbb',
-							boxLabel : 'Sort conditions by sum of pValues.',
-							listeners : {
-								check : function(target, checked) {
+						xtype: 'combo',
+						hiddenName: 'conditionSort',
+						fieldLabel: 'Sort conditions by',
+						mode: 'local',
+						displayField: 'text',
+						valueField: 'name',
+						width:150,
+						editable: 'false',
+						forceSelection: 'true',
+						triggerAction:'all',
+						store: new Ext.data.ArrayStore({
+							fields:['name','text'],
+							data:[['experiment','experiment'],['qValues','sum of q Values'], ['specificity','specificity']]
+						}),
+						listeners : {
+								select : function(field, record, selIndex) {
 
-									if (checked) {
+									if (record.get('name') === 'qValues') {
 										this._sortColumns('DESC', function(o1, o2) {
 
 													return o1.overallDifferentialExpressionScore
 															- o2.overallDifferentialExpressionScore;
 												});
 										this.doLayout();
-									}
-									this.refreshVisualization();
-								},
-								scope : this
-							}
-						}, {
-							xtype : 'radio',
-							name : 'bbb',
-							boxLabel : 'Sort conditions by specificity.',
-							listeners : {
-								check : function(target, checked) {
-
-									if (checked) {
+									}else if(record.get('name') ==='specificity'){
 										this._sortColumns('ASC', function(o1, o2) {
 
 													return o1.specificityScore - o2.specificityScore;
 												});
 
 										this.doLayout();
+									}else if(record.get('name') ==='experiment'){
+										this._sortColumns('ASC', function(o1, o2) {
+
+													return (o1.datasetName >= o2.datasetName)? 1:-1;
+												});
+
+										this.doLayout();
 									}
 									this.refreshVisualization();
 								},
+								render: function(combo){
+									combo.setValue('experiment');
+								},
 								scope : this
 							}
-
-						}]
 					},{
-                            xtype: 'radio',
-							name:'geneSortRadios',
-							checked: true,
-                            boxLabel: 'Sort genes alphabetically.',
-                            listeners: {
-                                check: function(target, checked){
-                                    var geneGroupIndex;
+						xtype: 'combo',
+						hiddenName: 'geneSort',
+						fieldLabel: 'Sort genes by',
+						mode: 'local',
+						displayField: 'text',
+						valueField: 'name',
+						width:150,
+						editable: 'false',
+						forceSelection: 'true',
+						triggerAction:'all',
+						store: new Ext.data.ArrayStore({
+							fields:['name','text'],
+							data:[['symbol','symbol'],['score','gene score']]
+						}),
+						listeners : {
+								select : function(field, record, selIndex) {
+									var geneGroupIndex;
                                     var i;
-                                    if (!checked) {
-                                        // Sort genes : changes gene order
-                                        for (i = 0; i < this.geneScores[0].length; i++) {
-                                            this.geneScores[0][i].sort(function(o1, o2){
-                                                return o2.score - o1.score;
-                                            });
-                                        }
-                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
-                                            this.geneOrdering[geneGroupIndex] = [];
-                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
-                                                    this.geneOrdering[geneGroupIndex].push(this.geneScores[0][geneGroupIndex][i].index);
-                                            }
-                                        }
-                                    }
-                                    else {
-                                        // Default geneOrdering
+									if (record.get('name') === 'symbol') {
+										// Default geneOrdering
                                         for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
                                             this.geneOrdering[geneGroupIndex] = [];
                                             for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
                                                 this.geneOrdering[geneGroupIndex].push(i);
                                             }
                                         }
-                                    }
-                                    this.refreshVisualization();
-                                },
-                                scope: this
-                            }
-                    }, {
-						xtype : 'radio',
-						name : 'geneSortRadios',
-						boxLabel : 'Sort genes by gene score.',
-						listeners : {
-							check : function(target, checked) {
-								var geneGroupIndex;
-								var i;
-								if (checked) {
-									// Sort genes : changes gene order
-									for (i = 0; i < this.geneScores[0].length; i++) {
-										this.geneScores[0][i].sort(function(o1, o2) {
-													return o2.score - o1.score;
-												});
-									}
-									for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
-										this.geneOrdering[geneGroupIndex] = [];
-										for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
-											// if
-											// (this.geneScores[0][geneGroupIndex][i].score
-											// !== 0) {
-											this.geneOrdering[geneGroupIndex]
-													.push(this.geneScores[0][geneGroupIndex][i].index);
-											// }
+									}else if(record.get('name') ==='score'){
+										// Sort genes : changes gene order
+										for (i = 0; i < this.geneScores[0].length; i++) {
+											this.geneScores[0][i].sort(function(o1, o2) {
+														return o2.score - o1.score;
+													});
+										}
+										for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
+											this.geneOrdering[geneGroupIndex] = [];
+											for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+												// if
+												// (this.geneScores[0][geneGroupIndex][i].score
+												// !== 0) {
+												this.geneOrdering[geneGroupIndex]
+														.push(this.geneScores[0][geneGroupIndex][i].index);
+												// }
+											}
 										}
 									}
-								} else {
-									// Default geneOrdering
-									for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
-										this.geneOrdering[geneGroupIndex] = [];
-										for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
-											this.geneOrdering[geneGroupIndex].push(i);
-										}
-									}
-								}
-								this.refreshVisualization();
-							},
-							scope : this
-						}
+									this.refreshVisualization();
+								},
+								render: function(combo){
+									combo.setValue('symbol');
+								},
+								scope : this
+							}
 					}]
 				}, {
 					title : 'Filter',
@@ -892,7 +875,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 							}]
 				});
 		// FOR TESTING !!!!!
-		this.param2 = {
+		this.param = {
 			geneReferences : [{
 				id : 94,
 				type : "databaseBackedGroup"

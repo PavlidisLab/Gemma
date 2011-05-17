@@ -131,7 +131,7 @@ public class ExperimentalDesignVisualizationService {
     /**
      * @param experiment assumed thawed
      * @param bd assumed thawed
-     * @return the map's double value is either the measurement associated with the factor or a placeholder
+     * @return the map's double value is either the measurement associated with the factor or the id of the factor value object
      */
     @SuppressWarnings("unchecked")
     public LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
