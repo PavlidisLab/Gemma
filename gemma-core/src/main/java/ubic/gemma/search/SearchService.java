@@ -96,6 +96,7 @@ import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
@@ -296,9 +297,12 @@ public class SearchService implements InitializingBean {
         Collection<Taxon> taxonCollection = taxonService.loadAll();
 
         for ( Taxon taxon : taxonCollection ) {
-            if ( taxon.getScientificName() != null ) nameToTaxonMap.put( taxon.getScientificName().trim().toLowerCase(), taxon );
-            if ( taxon.getCommonName() != null ) nameToTaxonMap.put( taxon.getCommonName().trim().toLowerCase(), taxon );
-            if ( taxon.getAbbreviation() != null ) nameToTaxonMap.put( taxon.getAbbreviation().trim().toLowerCase(), taxon );
+            if ( taxon.getScientificName() != null )
+                nameToTaxonMap.put( taxon.getScientificName().trim().toLowerCase(), taxon );
+            if ( taxon.getCommonName() != null )
+                nameToTaxonMap.put( taxon.getCommonName().trim().toLowerCase(), taxon );
+            if ( taxon.getAbbreviation() != null )
+                nameToTaxonMap.put( taxon.getAbbreviation().trim().toLowerCase(), taxon );
         }
 
         // loop through again breaking up multi-word taxon database names and handling some special cases(e.g. salmon,
@@ -1639,8 +1643,19 @@ public class SearchService implements InitializingBean {
 
             Object o = sr.getResultObject();
             try {
-                Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
-                Taxon currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
+
+                Taxon currentTaxon = null;
+
+                if ( o instanceof ExpressionExperimentImpl ) {
+
+                    ExpressionExperiment ee = ( ExpressionExperimentImpl ) o;
+                    currentTaxon = expressionExperimentService.getTaxon( ee.getId() );
+
+                } else {
+
+                    Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
+                    currentTaxon = ( Taxon ) m.invoke( o, new Object[] {} );
+                }
 
                 if ( currentTaxon == null || !currentTaxon.equals( t ) ) {
                     if ( currentTaxon == null ) {
@@ -2070,29 +2085,31 @@ public class SearchService implements InitializingBean {
 
             // split the query around whitespace characters, limit the splitting to 4 terms (may be excessive)
             String[] searchTerms = searchString.split( "\\s+", 4 );
-            for (int i =0; i<searchTerms.length;i++){
+            for ( int i = 0; i < searchTerms.length; i++ ) {
                 searchTerms[i] = searchTerms[i].toLowerCase();
             }
             List<String> searchTermsList = Arrays.asList( searchTerms );
-            
 
-         // this Set is ordered by insertion order(LinkedHashMap)
+            // this Set is ordered by insertion order(LinkedHashMap)
             Set<String> keywords = nameToTaxonMap.keySet();
-            
-            // only strip out taxon terms if there is more than one search term in query and if the entire search string is not itself a keyword
-            if ( searchTerms.length > 1 && !keywords.contains( searchString.toLowerCase() )) {                
+
+            // only strip out taxon terms if there is more than one search term in query and if the entire search string
+            // is not itself a keyword
+            if ( searchTerms.length > 1 && !keywords.contains( searchString.toLowerCase() ) ) {
 
                 for ( String keyword : keywords ) {
 
                     int termIndex = searchString.toLowerCase().indexOf( keyword );
                     // make sure that the keyword occurs in the searchString
-                    if ( termIndex != -1) {
-                        //make sure that either the keyword is multi-term or that it occurs as a single term(not as part of another word)
-                        if (keyword.contains( " " ) || searchTermsList.contains( keyword )){
-                        searchString = searchString.replaceFirst( "(?i)"+keyword, "" ).trim();
-                        settings.setTaxon( nameToTaxonMap.get( keyword ) );
-                        //break on first term found in keywords since they should be(more or less) ordered by precedence
-                        break;
+                    if ( termIndex != -1 ) {
+                        // make sure that either the keyword is multi-term or that it occurs as a single term(not as
+                        // part of another word)
+                        if ( keyword.contains( " " ) || searchTermsList.contains( keyword ) ) {
+                            searchString = searchString.replaceFirst( "(?i)" + keyword, "" ).trim();
+                            settings.setTaxon( nameToTaxonMap.get( keyword ) );
+                            // break on first term found in keywords since they should be(more or less) ordered by
+                            // precedence
+                            break;
                         }
                     }
 
