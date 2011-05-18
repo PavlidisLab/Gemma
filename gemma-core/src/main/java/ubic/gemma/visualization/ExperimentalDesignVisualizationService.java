@@ -363,7 +363,8 @@ public class ExperimentalDesignVisualizationService {
 
     /**
      * Sorts the layouts passed in by factor with factors ordered by their number of values, from fewest values to most.
-     * The LinkedHashMap<BioAssay, {value}> and LinkedHashMap<ExperimentalFactor, Double>> portions of each layout are both sorted.
+     * The LinkedHashMap<BioAssay, {value}> and LinkedHashMap<ExperimentalFactor, Double>> portions of each layout are
+     * both sorted.
      * 
      * @param layouts
      * @return sorted layouts
@@ -464,7 +465,14 @@ public class ExperimentalDesignVisualizationService {
             }
             BioAssayDimension bioAssayDimension = vec.getBioAssayDimension();
 
-            if ( bioAssayDimension == null ) continue;
+            if ( bioAssayDimension == null ) {// need bioAssayDimension to create layouts
+                /*
+                 * shouldn't be null (used to be nullified after vector data was sorted with sortVectorDataByDesign but
+                 * now only reorganized flag is set)
+                 */
+                log.debug( "bioAssayDimension is null" );
+                continue;
+            }
 
             if ( bioAssayDimension.getId() == null ) {
                 /*
