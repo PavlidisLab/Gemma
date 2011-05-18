@@ -164,7 +164,7 @@ public class ExpressionDataMatrixColumnSort {
         // difficult to know this if >1 factor has same number of values
 
         // sort factors
-        LinkedList<ExperimentalFactor> sortedFactors = orderFactorsByExperimentalDesign( start, unsortedFactors );
+        List<ExperimentalFactor> sortedFactors = orderFactorsByExperimentalDesign( start, unsortedFactors );
         // sort biomaterials using sorted factors
         return orderBiomaterialsBySortedFactors( start, sortedFactors );
     }
@@ -175,7 +175,7 @@ public class ExpressionDataMatrixColumnSort {
      * @return list of factors, sorted from simplest (fewest number of values from the biomaterials passed in) to least
      *         simple
      */
-    public static LinkedList<ExperimentalFactor> orderFactorsByExperimentalDesign( List<BioMaterial> start,
+    public static List<ExperimentalFactor> orderFactorsByExperimentalDesign( List<BioMaterial> start,
             Collection<ExperimentalFactor> factors ) {
 
         if ( factors == null || factors.isEmpty() ) {
@@ -183,13 +183,19 @@ public class ExpressionDataMatrixColumnSort {
         }
 
         LinkedList<ExperimentalFactor> sortedFactors = new LinkedList<ExperimentalFactor>();
-        Collection<ExperimentalFactor> factorsToTake = new HashSet<ExperimentalFactor>();
-        factorsToTake.addAll( factors );
+        Collection<ExperimentalFactor> factorsToTake = new HashSet<ExperimentalFactor>( factors );
         while ( !factorsToTake.isEmpty() ) {
-            ExperimentalFactor simplest = chooseSimplestFactor( start, factors );
+            ExperimentalFactor simplest = chooseSimplestFactor( start, factorsToTake );
+            if ( simplest == null ) {
+                // none of the factors have more than one factor value. One-sided t-tests ...
+                assert factors.size() == 1 : "It's possible to have just one factor value, but only if there is only one factor.";
+                sortedFactors.addAll( factors );
+                return sortedFactors;
+            }
             sortedFactors.addLast( simplest );
             factorsToTake.remove( simplest );
         }
+
         return sortedFactors;
     }
 
@@ -201,7 +207,7 @@ public class ExpressionDataMatrixColumnSort {
      * @return
      */
     public static List<BioMaterial> orderBiomaterialsBySortedFactors( List<BioMaterial> start,
-            LinkedList<ExperimentalFactor> factors ) {
+            List<ExperimentalFactor> factors ) {
 
         if ( start.size() == 1 ) {
             return start;
@@ -216,7 +222,7 @@ public class ExpressionDataMatrixColumnSort {
 
         Map<FactorValue, List<BioMaterial>> fv2bms = buildFv2BmMap( start );
 
-        ExperimentalFactor simplest = factors.getFirst();
+        ExperimentalFactor simplest = factors.get( 0 );
 
         if ( simplest == null ) {
             // we're done.
