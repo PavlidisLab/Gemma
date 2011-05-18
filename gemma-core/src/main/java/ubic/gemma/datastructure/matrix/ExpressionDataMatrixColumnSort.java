@@ -130,10 +130,15 @@ public class ExpressionDataMatrixColumnSort {
         return ordered;
 
     }
-    
+
+    /**
+     * @param start
+     * @param factors
+     * @return
+     */
     public static List<BioMaterial> orderByExperimentalDesign( List<BioMaterial> start,
-            Collection<ExperimentalFactor> unsortedFactorsToUse ) {
-        
+            Collection<ExperimentalFactor> factors ) {
+
         if ( start.size() == 1 ) {
             return start;
         }
@@ -141,10 +146,10 @@ public class ExpressionDataMatrixColumnSort {
         if ( start.size() == 0 ) {
             throw new IllegalArgumentException( "Must provide some biomaterials" );
         }
-        
+
         Collection<ExperimentalFactor> unsortedFactors = null;
-        if ( unsortedFactorsToUse  != null ) {
-            unsortedFactors = unsortedFactorsToUse ;
+        if ( factors != null ) {
+            unsortedFactors = factors;
         } else {
             unsortedFactors = getFactors( start );
         }
@@ -153,32 +158,37 @@ public class ExpressionDataMatrixColumnSort {
             orderByName( start );
             return start;
         }
-        
-        // breaking this up because some methods need to know the order of factors that was used to sort the biomaterials
+
+        // breaking this up because some methods need to know the order of factors that was used to sort the
+        // biomaterials
         // difficult to know this if >1 factor has same number of values
-        
+
         // sort factors
-        LinkedList<ExperimentalFactor> sortedFactors = orderFactorsByExperimentalDesign(start, unsortedFactors);
+        LinkedList<ExperimentalFactor> sortedFactors = orderFactorsByExperimentalDesign( start, unsortedFactors );
         // sort biomaterials using sorted factors
-        return orderBiomaterialsBySortedFactors(start, sortedFactors);
+        return orderBiomaterialsBySortedFactors( start, sortedFactors );
     }
+
     /**
      * @param start
      * @param factorsToUse
-     * @return list of factors, sorted from simplest (fewest number of values from the biomaterials passed in) to least simple 
+     * @return list of factors, sorted from simplest (fewest number of values from the biomaterials passed in) to least
+     *         simple
      */
     public static LinkedList<ExperimentalFactor> orderFactorsByExperimentalDesign( List<BioMaterial> start,
             Collection<ExperimentalFactor> factors ) {
 
-        if(factors == null || factors.isEmpty()){
+        if ( factors == null || factors.isEmpty() ) {
             throw new IllegalArgumentException( "Must provide factors" );
         }
 
         LinkedList<ExperimentalFactor> sortedFactors = new LinkedList<ExperimentalFactor>();
-        while(!factors.isEmpty()){
+        Collection<ExperimentalFactor> factorsToTake = new HashSet<ExperimentalFactor>();
+        factorsToTake.addAll( factors );
+        while ( !factorsToTake.isEmpty() ) {
             ExperimentalFactor simplest = chooseSimplestFactor( start, factors );
             sortedFactors.addLast( simplest );
-            factors.remove( simplest );
+            factorsToTake.remove( simplest );
         }
         return sortedFactors;
     }
@@ -186,22 +196,21 @@ public class ExpressionDataMatrixColumnSort {
     /**
      * Sort biomaterials according to a list of ordered factors
      * 
-     * 
      * @param start biomaterials to sort
      * @param factorsToUse sorted list of factors to define sort order for biomaterials, cannot be null
-     * @return 
+     * @return
      */
     public static List<BioMaterial> orderBiomaterialsBySortedFactors( List<BioMaterial> start,
             LinkedList<ExperimentalFactor> factors ) {
-        
+
         if ( start.size() == 1 ) {
             return start;
         }
 
         if ( start.size() == 0 ) {
             throw new IllegalArgumentException( "Must provide some biomaterials" );
-        }        
-        if(factors == null ){
+        }
+        if ( factors == null ) {
             throw new IllegalArgumentException( "Must provide sorted factors" );
         }
 
