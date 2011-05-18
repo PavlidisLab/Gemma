@@ -352,7 +352,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                     factorsToUse.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
                 }
 
-                if ( factors.isEmpty() ) {
+                if ( factorsToUse.isEmpty() ) {
                     throw new Exception( "No factors available for " + ee.getShortName() );
                 }
 
