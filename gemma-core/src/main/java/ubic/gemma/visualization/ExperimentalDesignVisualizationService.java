@@ -344,7 +344,12 @@ public class ExperimentalDesignVisualizationService {
              * Invalidate the bioassaydimension, it's in the wrong order compared to the bioasays.
              */
             vec.setReorganized( true );
-            vec.setBioAssayDimension( null );
+            // vec.setBioAssayDimension( null ); // BioAssayDimension is required for building layouts
+            /*
+             * layouts would need to be rebuilt from cached vectors if the layouts in memory
+             * (ubic.gemma.visualization.ExperimentalDesignVisualizationService.layouts) were wiped but the vector cache
+             * files were still present
+             */
 
         }
 
@@ -357,8 +362,11 @@ public class ExperimentalDesignVisualizationService {
     }
 
     /**
+     * Sorts the layouts passed in by factor with factors ordered by their number of values, from fewest values to most.
+     * The LinkedHashMap<BioAssay, {value}> and LinkedHashMap<ExperimentalFactor, Double>> portions of each layout are both sorted.
+     * 
      * @param layouts
-     * @return
+     * @return sorted layouts
      */
     public Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
