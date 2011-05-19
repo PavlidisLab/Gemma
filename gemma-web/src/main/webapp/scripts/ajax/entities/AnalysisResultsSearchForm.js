@@ -719,6 +719,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		 * *******************************************************************************
 		 */
 
+		this.coexRadio = new Ext.form.Radio({
+					name:'searchMode',
+					boxLabel: "<span style=\"font-size:1.7em\">Coexpression</span>",
+					//style : 'padding-bottom:0.4em',
+					checked : false
+				});		
+
+		this.diffExRadio = new Ext.form.Radio({
+					name:'searchMode',
+					boxLabel: "<span style=\"font-size:1.7em\">Differential Expression</span>",
+					style : 'padding:0.4em',
+					checked : true
+				});		
+
 		this.coexToggle = new Ext.Button({
 					text : "<span style=\"font-size:1.3em\">Coexpression</span>",
 					style : 'padding-bottom:0.4em',
@@ -826,7 +840,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 									html : 'these genes',
 									style : 'text-align:center;font-size:1.4em;padding:0px'
 								}, this.geneChoosers, {
-									html : 'Example: search for hippocampus and select "all results"'
+									html : '<div style="width:340px ; padding-left:10px">Example: search for "map kinase" and select a GO group<br>'
+											+ '<span style="color:red">Note: using more than 50 genes '
+											+ 'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)</div>'
 								}]
 					}, {
 						style : 'padding-top:30px',
