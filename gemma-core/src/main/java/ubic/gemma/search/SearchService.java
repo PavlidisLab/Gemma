@@ -82,6 +82,7 @@ import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -243,6 +244,9 @@ public class SearchService implements InitializingBean {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private ExpressionExperimentSetService expressionExperimentSetService;
 
     @Autowired
     private Gene2GOAssociationService gene2GOAssociationService;
@@ -1646,11 +1650,15 @@ public class SearchService implements InitializingBean {
 
                 Taxon currentTaxon = null;
 
-                if ( o instanceof ExpressionExperimentImpl ) {
+                if ( o instanceof ExpressionExperiment ) {
 
-                    ExpressionExperiment ee = ( ExpressionExperimentImpl ) o;
+                    ExpressionExperiment ee = ( ExpressionExperiment ) o;
                     currentTaxon = expressionExperimentService.getTaxon( ee.getId() );
 
+                } else if ( o instanceof ExpressionExperimentSet ) {
+                    ExpressionExperimentSet ees = ( ExpressionExperimentSet ) o;
+                    expressionExperimentSetService.thaw( ees );
+                    currentTaxon = ees.getTaxon();
                 } else {
 
                     Method m = o.getClass().getMethod( "getTaxon", new Class[] {} );
