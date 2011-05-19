@@ -19,26 +19,6 @@
  * @author Kelsey
  */
 
-Gemma.HeatmapPanel = Ext.extend(Ext.Panel, {
-	text: "heatmap panel text",
-	html: "heatmap panel html",
-	width : Gemma.ZOOM_PLOT_SIZE + 100,
-	height : Gemma.ZOOM_PLOT_SIZE + 100,
-	initComponent: function(){
-		Gemma.HeatmapPanel.superclass.initComponent.call(this);
-		Heatmap.draw(this, this.profiles, this.graphConfig, this.sampleNames, this.conditionLabels, this.conditionLabelKey);
-	},
-	onRender: function(){
-		Gemma.HeatmapPanel.superclass.onRender.apply(this, arguments);
-
-		this.el.on('click', function(e, t) {
-					Ext.Msg.alert("one render", "onrender!");
-				}, this);
-		
-	}
-	
-			
-});
 var Heatmap = function() {
 
 	// row labels
@@ -143,7 +123,7 @@ var Heatmap = function() {
 			var heatmapHeight = panelHeight; // initial guess.
 			var labelHeight = 0;
 			
-			if (sampleLabels) {
+			if (config.showSampleNames && sampleLabels) {
 			
 				// compute the room needed for the labels.
 				var maxLabelLength = 0;
@@ -209,6 +189,7 @@ var Heatmap = function() {
 				}
 				
 				/* do not use Math.floor, canvas will handle fractional values okay and fill the space. */
+				//var boxWidth = Math.floor(heatmapWidth / numberOfColumns);
 				var boxWidth = heatmapWidth / numberOfColumns;
 				
 				/*
@@ -268,7 +249,7 @@ var Heatmap = function() {
 		 * Add labels to the columns. FIXME: if the heatmap itself isn't taking much space, make more room for the
 		 * labels.
 		 */
-			if (sampleLabels) {
+			if (config.showSampleNames && sampleLabels) {
 				var id = 'sampleLabels-' + Ext.id();
 				
 				if (boxWidth >= SHOW_LABEL_MIN_SIZE) {
@@ -305,10 +286,10 @@ var Heatmap = function() {
 						// If too many, no matter how wide they make it, there won't be room
 						// -- expand is better.
 						if (numberOfColumns.length > 100) { // FIXME -- see if they have access to 'expand'.
-							message = "Click 'expand' to see the sample labels";
+							message = "Click 'zoom in' to see the sample labels";
 						}
 						else {
-							message = "Click 'expand' or try widening the window to see the sample labels";
+							message = "Click 'zoom in' or try widening the window to see the sample labels";
 						}
 						
 						Ext.DomHelper.append(target, {
@@ -325,7 +306,7 @@ var Heatmap = function() {
 					}
 				
 			}
-			if (conditionLabels && conditionLabelKey) { // draw the colour labels above the columns
+			if (conditionLabels) { // draw the colour labels above the columns
 				
 				var factorCount = 0;
 				maxLabelLength = 0;
@@ -346,7 +327,7 @@ var Heatmap = function() {
 					Ext.DomHelper.append(target, {
 						id: id,
 						tag: 'div',
-						width: heatmapWidth,
+						width: heatmapWidth + 10 + labelWidth,
 						height: factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM 
 					});
 					labelDiv = Ext.get(id);
@@ -375,7 +356,7 @@ var Heatmap = function() {
 					ctx.fillStyle = "#000000";
 					ctx.font = Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1) + "px sans-serif";
 					ctx.textAlign = "left";
-					ctx.translate(heatmapWidth + 10, Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1));
+					ctx.translate(boxWidth*conditionLabels.length + 10, Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1));
 					x = 0;
 					y = 0;
 					for ( factorCategory in conditionLabelKey) {
@@ -545,7 +526,6 @@ var Heatmap = function() {
 						x = 0;
 						y = 0;
 					}
-				
 			}
 		}
 	

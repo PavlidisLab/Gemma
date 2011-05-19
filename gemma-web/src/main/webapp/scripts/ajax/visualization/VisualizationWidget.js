@@ -18,7 +18,10 @@
  */
 Ext.namespace('Gemma');
 
-Gemma.ZOOM_PLOT_SIZE = 400;
+Gemma.VIZ_WINDOW_WIDTH = 750;
+Gemma.VIZ_WINDOW_HEIGHT = 500;
+Gemma.ZOOM_PLOT_SIZE = 500;
+Gemma.LEGEND_PANEL_HEIGHT = 100;
 Gemma.DIFFEXVIS_QVALUE_THRESHOLD = 0.05;
 
 // Multiply the line thickness by this factor when it is
@@ -360,8 +363,10 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 	region : 'center',
 	split : true,
-	width : Gemma.ZOOM_PLOT_SIZE + 100,
-	height : Gemma.ZOOM_PLOT_SIZE + 100,
+	//width : Gemma.ZOOM_PLOT_SIZE + 100,
+	//height : Gemma.ZOOM_PLOT_SIZE + 100,
+	width: Gemma.VIZ_WINDOW_WIDTH,
+	height: Gemma.VIZ_WINDOW_HEIGHT-100,
 	stateful : false,
 	autoScroll : false,
 	closeAction : 'destroy',
@@ -369,11 +374,6 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	layout : 'fit',
 	title : "", // dont show a title.
 	name : "vizZoom",
-
-	plugins : [new Ext.ux.plugins.ContainerMask({
-				msg : 'Loading ... <img src="/Gemma/images/loading.gif" />',
-				masked : true
-			})],
 
 	/*
 	 * The following are only used if we don't have a parent container, or on
@@ -383,6 +383,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	forceFitPlots : false,
 	smoothLineGraphs : false,
 	showLegend : false,
+	showSampleNames : false,
 
 	initComponent : function() {
 
@@ -436,16 +437,18 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 					+ "</a> ("
 					+ Ext.util.Format.ellipsis(eevo.name, 35) + ")";
 
-			if (this.ownerCt && this.ownerCt.originalTitle) {
-				this.ownerCt.setTitle(this.ownerCt.originalTitle + "&nbsp;In:&nbsp;" + eeInfoTitle);
+			if (this.vizWindow && this.vizWindow.originalTitle) {
+				this.vizWindow.setTitle(this.vizWindow.originalTitle + "&nbsp;In:&nbsp;" + eeInfoTitle);
 			} else {
 				this.setTitle(eeInfoTitle);
 			}
 		}
 
-		var forceFit = this.ownerCt ? this.ownerCt.forceFitPlots : this.forceFitPlots;
+		var forceFit = this.vizWindow ? this.vizWindow.forceFitPlots : this.forceFitPlots;
 
-		var smooth = this.ownerCt ? this.ownerCt.smoothLineGraphs : this.smoothLineGraphs;
+		var smooth = this.vizWindow ? this.vizWindow.smoothLineGraphs : this.smoothLineGraphs;
+		
+		var showSampleNames = this.vizWindow ? this.vizWindow.showSampleNames : this.showSampleNames;
 
 		var graphConfig = {
 			xaxis : {
@@ -461,7 +464,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 			shadowSize : 0,
 			forceFit : forceFit,
 			smoothLineGraphs : smooth,
-
+			showSampleNames: showSampleNames,
 			legend : {
 				show : this.showLegend, //&& !this.heatmapMode,
 				// container : this.legendDiv ? this.legendDiv : this.body.id,
@@ -474,15 +477,14 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 				position : "sw" // best to be west, if we're expanded...applies
 								// to linecharts.
 			},
-			conditionLegend: true,
+			conditionLegend: false,
 			label : true
 
 		};
 
 		Ext.DomHelper.overwrite(this.body.id, '');
 
-		var doHeatmap = this.ownerCt ? this.ownerCt.heatmapMode : this.heatmapMode;
-		this.showMask();
+		var doHeatmap = (this.vizWindow && this.vizWindow.heatmapMode != 'undefined') ? this.vizWindow.heatmapMode : this.heatmapMode;
 
 		if (doHeatmap) {
 			graphConfig.legend.container = this.legendDiv ? this.legendDiv : this.body.id;
@@ -552,7 +554,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 
 		}
 
-		this.hideMask();
+		this.ownerCt.hideMask();
 
 	}
 
@@ -567,8 +569,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	layout : 'border',
 	title : "Visualization",
 	maximizable : false,
-	height : Gemma.ZOOM_PLOT_SIZE,
-	width : 600,
+	height : Gemma.VIZ_WINDOW_HEIGHT,
+	width : Gemma.VIZ_WINDOW_WIDTH,
 	name : "VizWin",
 
 	thumbnails : true,
@@ -589,6 +591,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	smoothLineGraphs : false,
 	havePvalues : false,
 	showLegend : false,
+	showSampleNames : false,
 
 	toggleViewBtnId : 'toggleViewBtn-' + Ext.id(),
 
@@ -598,6 +601,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 	toggleLegendBtnId : 'toggleLegendBtn-' + Ext.id(),
 
+	toggleSampleNamesBtnId : 'toggleSampleNamesBtn-' + Ext.id(),
+
 	downloadDataBtnId : 'downloadDataBtn-' + Ext.id(),
 
 	getState : function() {
@@ -605,7 +610,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					heatmapMode : this.heatmapMode,
 					forceFitPlots : this.forceFitPlots,
 					smoothLineGraphs : this.smoothLineGraphs,
-					showLegend : false
+					showLegend : false,
+					showSampleNames: this.showSampleNames
 				});
 	},
 
@@ -642,6 +648,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		var conditionLabels = record.get("factorValuesToNames");
 		var conditionLabelKey = record.get("factorNames");
 
+		this.factorValueLegendPanel.update(conditionLabelKey);
 		this.zoomPanel.update(eevo, profiles, sampleNames, conditionLabels, conditionLabelKey);
 	},
 
@@ -655,11 +662,11 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		if (this.forceFitPlots) {
 			this.forceFitPlots = false;
 			this.zoomPanel.forceFitPlots = false;
-			btn.setText("Fit width");
+			btn.setText("Zoom out");
 		} else {
 			this.forceFitPlots = true;
 			this.zoomPanel.forceFitPlots = true;
-			btn.setText("Expand");
+			btn.setText("Zoom in");
 		}
 
 		// force a refresh of the zoom.
@@ -674,6 +681,28 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	 * @param {}F
 	 *            btn
 	 */
+	toggleSampleNames : function(btn) {
+
+		if (this.showSampleNames) {
+			this.showSampleNames = false;
+			this.zoomPanel.showSampleNames = false;
+			btn.setText("Show sample names");
+		} else {
+			this.showSampleNames = true;
+			this.zoomPanel.showSampleNames = true;
+			btn.setText("Hide sample names");
+		}
+
+		// force a refresh of the thumbnails.
+		var template = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues, /* this.smoothLineGraphs */
+				false);
+		this.dv.setTemplate(template);
+
+		// force a refresh of the zoom.
+		var record = this.dv.getSelectedOrFirst();
+
+		this.zoom(record);
+	},
 	toggleLegend : function(btn) {
 		//if (this.heatmapMode) {
 		//	return;
@@ -832,7 +861,8 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					store : this.store,
 					legendDiv : this.zoomLegendId,
 					dv : this.dv, // perhaps give store?
-					heatmapSortMethod : this.heatmapSortMethod
+					heatmapSortMethod : this.heatmapSortMethod,
+					vizWindow: this
 				});
 
 		this.thumbnailPanel = new Ext.Panel({
@@ -860,7 +890,50 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 								+ 'px; float:left;'
 					}
 				});
-		var items = [this.thumbnailPanel, this.zoomPanel];
+								
+		this.factorValueLegendPanel = new Ext.Panel({
+			//html: 'factorValueLegend',
+			region: 'north',
+			collapseMode: 'mini',
+			split: true,
+			autoScroll: true,
+			height: Gemma.LEGEND_PANEL_HEIGHT,
+			//vizWindow: this, // not needed (yet)
+
+			/**
+			 * factor value legend panel update
+			 */
+			update: function(conditionLabelKey){
+				if (conditionLabelKey === undefined || conditionLabelKey === null) {
+					var record = this.dv.getSelectedOrFirst();
+					
+					if (record === null || record === undefined) {
+						// can happen at startup.
+						return;
+					}
+					
+					conditionLabelKey = record.get("factorNames");
+				}
+				
+				Ext.DomHelper.overwrite(this.body.id, '');
+				
+				FactorValueLegend.draw($(this.body.id), conditionLabelKey);
+			}
+		});
+		
+		var items = [{
+			xtype: 'panel',
+			region: 'center',
+			layout: 'border',
+			
+			plugins : [new Ext.ux.plugins.ContainerMask({
+				msg : 'Loading ... <img src="/Gemma/images/loading.gif" />',
+				masked : true
+			})],
+			items: [this.zoomPanel, this.factorValueLegendPanel]
+		},this.thumbnailPanel];
+		
+		//var items = [this.thumbnailPanel, this.zoomPanel];
 
 		var browserWarning = "";
 		if (Ext.isIE) {
@@ -872,7 +945,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					items : items,
 					bbar : new Ext.Toolbar({
 								items : [{
-											xtype : 'tbbutton',
+											xtype : 'button',
 											id : this.downloadDataBtnId,
 											icon : '../images/download.gif',
 											cls : 'x-btn-text-icon',
@@ -882,7 +955,14 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 											tooltip : "Download displayed data in a tab-delimited format",
 											handler : this.downloadData.createDelegate(this)
 										}, browserWarning, '->', {
-											xtype : 'tbbutton', // in ext3, use
+											xtype : 'button', 
+											text : this.showSampleNames ? "Show sample names" : "Show sample names",
+											id : this.toggleSampleNamesBtnId,
+											handler : this.toggleSampleNames.createDelegate(this),
+											tooltip : "Toggle display of the sample names",
+											disabled : true
+										},{
+											xtype : 'button', // in ext3, use
 																// button;
 																// tbbutton is
 																// deprecated.
@@ -906,15 +986,15 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 										// },
 										//											
 										{
-											xtype : 'tbbutton',
-											text : this.forceFitPlots ? "Expand" : "Fit width",
+											xtype : 'button',
+											text : this.forceFitPlots ? "Zoom in" : "Zoom out",
 											id : this.forceFitBtnId,
 											handler : this.toggleForceFit.createDelegate(this),
 											tooltip : "Toggle forcing of the plot to fit in the width of the window",
 											disabled : true,
 											hidden : false
 										}, {
-											xtype : 'tbbutton',
+											xtype : 'button',
 											text : this.heatmapMode ? "Switch to line plot" : "Switch to heatmap",
 											id : this.toggleViewBtnId,
 											disabled : true,
@@ -934,6 +1014,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					// Ext.getCmp(this.smoothBtnId).enable();
 					Ext.getCmp(this.forceFitBtnId).enable();
 					Ext.getCmp(this.toggleLegendBtnId).enable();
+					Ext.getCmp(this.toggleSampleNamesBtnId).enable();
 					Ext.getCmp(this.downloadDataBtnId).enable();
 
 					// So initial state is sure to be okay, after restore from
@@ -941,8 +1022,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode
 							? "Switch to line plot"
 							: "Switch to heatmap");
-					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Expand" : "Fit width");
+					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Zoom in" : "Zoom out");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
+					Ext.getCmp(this.toggleSampleNamesBtnId).setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
 					// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
 					// ? "Unsmooth" : "Smooth");
 
@@ -978,6 +1060,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					this.zoomPanel.forceFitPlots = this.forceFitPlots;
 					// this.zoomPanel.smoothLineGraphs = this.smoothLineGraphs;
 					this.zoomPanel.showLegend = this.showLegend;
+					this.zoomPanel.showSampleNames = this.showSampleNames;
 					this.updateTemplate();
 				}, this);
 
@@ -1125,6 +1208,174 @@ Gemma.sortByImportance = function(a, b) {
 	}
 
 };
+
+
+
+
+var FactorValueLegend = function() {
+
+	// column labels
+	var PER_CONDITION_LABEL_HEIGHT = 10;
+	
+	// condition key
+	var FACTOR_VALUE_LABEL_MAX_CHAR = 125;
+	var FACTOR_VALUE_LABEL_BOX_WIDTH = 10;
+	
+	// extra space
+	var TRIM = 5;
+	var SMALL_TRIM = 3;
+
+	function FactorValueLegend(target, conditionLabelKey){
+			
+		drawLegend(target, conditionLabelKey);
+		
+		function drawLegend(target, conditionLabelKey){
+			
+			var labelHeight = 10;
+
+			var increment = 1;
+			var boxWidth = 10;
+			var boxHeight = 10;
+			var fontSize = 10;
+			var lineHeight = 10;
+			var legendWidth = 300; // to start 
+			var legendHeight = 100; // to start 
+			
+			
+			var id = 'factorValueLegend-' + Ext.id();
+				
+			Ext.DomHelper.append(target, {
+						id: id,
+						tag: 'div'
+						//,
+						//width: legendWidth,
+						//height: legendHeight
+					});
+			var legendDiv = Ext.get(id);
+					
+			var ctx = constructCanvas($(legendDiv), legendWidth, legendHeight);
+			
+			// draw legend for experimental design / condition bar chart
+		
+				var factorValueCount = 0;
+				var factorCount = 0;
+				var allColumnsWidth = 0;
+				var maxColumnWidth = 0;
+				//var ctxDummy = this.el.dom.getContext("2d");
+				//CanvasTextFunctions.enable(ctxDummy);
+				//ctxDummy.font = fontSize + "px sans-serif";
+				for ( factorCategory in conditionLabelKey) {
+					factorCount++;
+					// compute the room needed for the labels.
+					if (ctx.measureText(factorCategory).width > maxColumnWidth) {
+						maxColumnWidth = ctx.measureText(factorCategory).width;
+					}
+					for (var factorValue in conditionLabelKey[factorCategory]) {
+						factorValueCount++;
+						// compute the room needed for the labels.
+						var dim = ctx.measureText(factorValue);
+						var width = Math.round(dim.width);
+						if (width > maxColumnWidth) {
+								maxColumnWidth = width;
+						}
+					}
+					allColumnsWidth += maxColumnWidth;
+					maxColumnWidth = 0;
+				}
+				// calculate actual width
+				legendWidth = 3*TRIM+ allColumnsWidth + (FACTOR_VALUE_LABEL_BOX_WIDTH+SMALL_TRIM+SMALL_TRIM)*factorCount;
+				legendHeight = TRIM + lineHeight*(factorValueCount+1);
+				
+				Ext.DomHelper.overwrite($(legendDiv), '');
+				ctx = constructCanvas($(legendDiv), legendWidth, legendHeight);
+				
+					ctx.fillStyle = "#000000";
+					ctx.font = fontSize + "px sans-serif";
+					ctx.textAlign = "left";
+					ctx.translate(10, 20);
+					x = 0;
+					y = 0;
+					for ( factorCategory in conditionLabelKey) {
+						facCat = Ext.util.Format.ellipsis(factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR);
+						var maxLabelWidthInCategory = 0;
+						dim = ctx.measureText(facCat);
+						width = Math.round(dim.width);
+						if (width > maxLabelWidthInCategory) {
+								maxLabelWidthInCategory = width;
+						}
+						ctx.fillText(facCat, x, y);
+						y += PER_CONDITION_LABEL_HEIGHT + 2;
+						for ( factorValue in conditionLabelKey[factorCategory]) {
+							var facVal = Ext.util.Format.ellipsis(factorValue, FACTOR_VALUE_LABEL_MAX_CHAR);
+							colour = conditionLabelKey[factorCategory][factorValue];
+							ctx.fillStyle = colour;
+							ctx.fillRect(x, y - fontSize, FACTOR_VALUE_LABEL_BOX_WIDTH, PER_CONDITION_LABEL_HEIGHT);
+							x += FACTOR_VALUE_LABEL_BOX_WIDTH + SMALL_TRIM;
+							ctx.fillStyle = "#000000";
+							ctx.fillText(facVal, x, y);
+							x = 0;
+							y += PER_CONDITION_LABEL_HEIGHT;
+							dim = ctx.measureText(facVal);
+							width = Math.round(dim.width);
+							if (width > maxLabelWidthInCategory) {
+									maxLabelWidthInCategory = width;
+							}
+						}
+						ctx.translate(FACTOR_VALUE_LABEL_BOX_WIDTH + SMALL_TRIM + maxLabelWidthInCategory + SMALL_TRIM, 0);
+						x = 0;
+						y = 0;
+					}
+			
+		}
+	
+		/**
+		 * Function: (private) constructCanvas
+		 * 
+		 * Initializes a canvas. When the browser is IE, we make use of excanvas.
+		 * 
+		 * Parameters: none
+		 * 
+		 * Returns: ctx
+		 */
+		function constructCanvas(div, canvasWidth, canvasHeight) {
+
+			/**
+			 * For positioning labels and overlay.
+			 */
+			div.setStyle({
+						'position' : 'relative'
+					});
+
+			if (canvasWidth <= 0 || canvasHeight <= 0) {
+				throw 'Invalid dimensions for plot, width = ' + canvasWidth + ', height = ' + canvasHeight;
+			}
+
+			var canvas = Ext.DomHelper.append(div, {
+						tag : 'canvas',
+						width : canvasWidth,
+						height : canvasHeight
+					});
+
+			if (Prototype.Browser.IE) {
+				canvas = $(window.G_vmlCanvasManager.initElement(canvas));
+			}
+
+			return canvas.getContext('2d');
+		}
+
+	}
+
+	return {
+		clean : function(element) {
+			element.innerHTML = '';
+		},
+
+		draw : function(target, conditionLabelKey) {
+			var legend = new FactorValueLegend(target, conditionLabelKey);
+			return legend;
+		}
+	};
+}();
 
 /*
  * Handy test data.

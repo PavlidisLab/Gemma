@@ -803,14 +803,14 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         // ees must be thawed first as currently implemented (?)
 
         Collection<DoubleVectorValueObject> results = new HashSet<DoubleVectorValueObject>();
-
         /*
          * Check the cache.
          */
         Collection<ExpressionExperiment> needToSearch = new HashSet<ExpressionExperiment>();
         Collection<Gene> genesToSearch = new HashSet<Gene>();
         checkCache( ees, genes, results, needToSearch, genesToSearch );
-
+        log.info( "using "+results.size()+" DoubleVectorValueObject(s) from cache; need to search for "+needToSearch.size());
+        
         if ( needToSearch.size() != 0 ) {
 
             Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed( getExperiments( ees ),

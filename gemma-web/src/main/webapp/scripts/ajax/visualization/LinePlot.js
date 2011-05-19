@@ -24,17 +24,24 @@ var LinePlot = function() {
 
 	var MAX_SAMPLE_LABEL_HEIGHT_PIXELS = 120;
 	var TRIM = 5;
+	var SMALL_TRIM = 3;
 	var EXPANDED_BOX_WIDTH = 10; // maximum value to use when expanded.
 	var SAMPLE_LABEL_MAX_CHAR = 125;
+	var PER_CONDITION_LABEL_HEIGHT = 10;
+	
+	// condition key
+	var MAX_PER_FACTOR_VALUE_LABEL_WIDTH = 200;
+	var FACTOR_VALUE_LABEL_MAX_CHAR = 125;
+	var FACTOR_VALUE_LABEL_BOX_WIDTH = 10;
 
-	function LinePlot(container, data, config, sampleLabels) {
+	function LinePlot(container, data, config, sampleLabels, conditionLabels, conditionLabelKey) {
 
-		draw(container, data, config, sampleLabels);
+		draw(container, data, config, sampleLabels, conditionLabels, conditionLabelKey);
 
 		/**
 		 * 
 		 */
-		function draw(container, series, config, sampleLabels) {
+		function draw(container, series, config, sampleLabels, conditionLabels, conditionLabelKey) {
 
 			// maybe not ready yet.
 			if (series.length == 0)
@@ -88,7 +95,12 @@ var LinePlot = function() {
 			var spacePerPoint;
 
 			if (config.forceFit) {
-				spacePerPoint = plotWidth / numberOfColumns;
+				/*
+				 * doing a math.floor here doesn't work because the rounding adds up and makes the 
+				 * factor value bar chart out of step with the graph
+				 */ 
+				spacePerPoint = plotWidth / numberOfColumns; 
+				
 			} else {
 				spacePerPoint = Math.max(EXPANDED_BOX_WIDTH, plotWidth / numberOfColumns);
 				plotWidth = spacePerPoint * numberOfColumns;
@@ -99,7 +111,7 @@ var LinePlot = function() {
 				Ext.DomHelper.applyStyles(container, "overflow:auto");
 			}
 
-			if (sampleLabels) {
+			if (config.showSampleNames && sampleLabels) {
 
 				if (spacePerPoint >= EXPANDED_BOX_WIDTH) {
 					var fontSize = Math.min(12, spacePerPoint - 1);
@@ -131,7 +143,7 @@ var LinePlot = function() {
 					ctx.fillStyle = "#000000";
 					ctx.font = fontSize + "px sans-serif";
 					ctx.textAlign = "left";
-					ctx.translate(TRIM + 5, labelHeight - 2); // +extra to make sure we don't chop off the top.
+					ctx.translate(TRIM*2, labelHeight - 2); // +extra to make sure we don't chop off the top.
 
 					// vertical text.
 					for (var j = 0; j < sampleLabels.length; j++) {
@@ -150,9 +162,9 @@ var LinePlot = function() {
 					var message;
 					if (numberOfColumns.length > 80) { // basically, no matter how wide they make it, there won't be
 						// room.
-						message = "Click 'expand' to see the sample labels";
+						message = "Click 'zoom in' to see the sample labels";
 					} else {
-						message = "Click 'expand' or try widening the window to see the sample labels";
+						message = "Click 'zoom in' or try widening the window to see the sample labels";
 					}
 
 					var mid = "message-" + Ext.id();
@@ -171,8 +183,67 @@ var LinePlot = function() {
 				}
 
 			}
+			var factorCount = 0;
+			maxLabelLength = 0;
+			for (var factorCategory in conditionLabelKey) {
+				factorCount++;
+				// compute the room needed for the labels.
+				if (factorCategory.length > maxLabelLength) {
+					maxLabelLength = factorCategory.length;
+				}
+			}
+			var conditionLabelsHeight = factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM;
+			if (conditionLabels) { // draw the colour labels above the columns
 
-			plotHeight = plotHeight - 4 * TRIM;
+				// compute approximate pixel size of labels
+				//var labelWidth = Math.min(MAX_SAMPLE_LABEL_HEIGHT_PIXELS, Math.min(maxLabelLength, SAMPLE_LABEL_MAX_CHAR) *
+				//8);
+				
+				id = 'conditionLabels-' + Ext.id();
+				//id = 'conditionLabels-' + container.id;
+					
+					Ext.DomHelper.append(container, {
+						id: id,
+						tag: 'div',
+						width: plotWidth,
+						height: conditionLabelsHeight
+					});
+					labelDiv = Ext.get(id);
+					
+					//ctx = constructCanvas($(labelDiv), plotWidth + 10 + labelWidth, factorCount * PER_CONDITION_LABEL_HEIGHT + SMALL_TRIM);
+					ctx = constructCanvas($(labelDiv), plotWidth + 10, conditionLabelsHeight);
+					var x = 0;
+					var y = 0;
+					ctx.translate(TRIM, 0);
+					// over-column boxes
+					for ( j = 0; j < conditionLabels.length; j++) {
+						for ( factorCategory in conditionLabels[j]) {
+							var factorValueArr = conditionLabels[j][factorCategory];
+							var value = factorValueArr[0];
+							var colour = factorValueArr[1];
+							ctx.fillStyle = colour;
+							ctx.fillRect(x, y, spacePerPoint, PER_CONDITION_LABEL_HEIGHT);
+							y += PER_CONDITION_LABEL_HEIGHT;
+						}
+						x += spacePerPoint;
+						y = 0;
+					}
+					// end of line labels
+					/*ctx.fillStyle = "#000000";
+					ctx.font = Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1) + "px sans-serif";
+					ctx.textAlign = "left";
+					ctx.translate(plotWidth + 10, Math.min(10, PER_CONDITION_LABEL_HEIGHT - 1));
+					x = 0;
+					y = 0;
+					for ( factorCategory in conditionLabelKey) {
+						var facCat = Ext.util.Format.ellipsis(factorCategory, FACTOR_VALUE_LABEL_MAX_CHAR);
+						ctx.fillText(facCat, x, y);
+						y += PER_CONDITION_LABEL_HEIGHT;
+					}*/
+				
+			}
+
+			plotHeight = plotHeight - 4 * TRIM - conditionLabelsHeight;
 
 			if (plotHeight < 10 || plotWidth < 10) {
 				return; // don't try ...
@@ -276,8 +347,8 @@ var LinePlot = function() {
 			element.innerHTML = '';
 		},
 
-		draw : function(target, data, options, sampleLabels) {
-			return new LinePlot(target, data, options, sampleLabels);
+		draw : function(target, data, options, sampleLabels, conditionLabels, conditionLabelKey) {
+			return new LinePlot(target, data, options, sampleLabels, conditionLabels, conditionLabelKey);
 		}
 	};
 }();
