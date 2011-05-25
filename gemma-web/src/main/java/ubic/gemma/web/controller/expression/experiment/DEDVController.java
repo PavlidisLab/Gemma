@@ -76,7 +76,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.util.HsbColour;
 import ubic.gemma.visualization.ExperimentalDesignVisualizationService;
 import ubic.gemma.web.controller.visualization.ExpressionProfileDataObject;
 import ubic.gemma.web.controller.visualization.VisualizationValueObject;
