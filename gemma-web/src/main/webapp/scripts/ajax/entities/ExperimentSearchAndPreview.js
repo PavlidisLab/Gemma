@@ -22,10 +22,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		var taxonId = record.get("taxonId");
 		var taxonName = record.get("taxonName");
 		
-		// these should be taken care of by taxonChanged call
-		//this.searchForm.setTaxonName(taxonName);
-		//this.searchForm.setTaxonId(taxonId);
-
 		// load preview of group if group was selected
 		if (isGroup) {
 			eeIds = record.get('memberIds');
@@ -107,7 +103,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var j = 0; j < ees.size(); j++) {
 						this.experimentPreviewContent.update(ees[j]);
 					}
-					this.experimentPreviewContent.setTitle("Experiment Selection Preview (" + ids.size() + ")");
+					this.experimentPreviewContent.setTitle(
+						'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " experiments)");
 					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
 					this.showExperimentPreview();
 
@@ -125,7 +122,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	 * 
 	 */
 	launchExperimentSelectionEditor : function() {
-		console.log("Showing editor for: " + this.id);
 		this.searchForm.getEl().mask();
 
 		this.experimentSelectionEditorWindow.show();
@@ -214,6 +210,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 
 					// if the EE has changed taxon, reset the gene combo
 					this.taxonChanged(record.get("taxonId"), record.get("taxonName"));
+					
+					this.experimentSelectionEditor.setTaxonId(record.get("taxonId"));
 
 					// store the eeid(s) selected and load some EE into the
 					// previewer
@@ -238,6 +236,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.removeBtn.show();
 						// this.relayEvents(this.experimentCombo, ['select']);
 					}
+					combo.disable().hide();
+					//this.selectionTitle.update(combo.getValue());
+					this.removeBtn.setPosition(300,0);
+					this.doLayout();
 
 				}, this);
 
@@ -307,7 +309,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		 */
 
 		this.experimentPreviewContent = new Ext.Panel({
-			width : 290,
+			width : 315,
 			// id:'experimentPreview',
 			// html:'<div style="padding: 7px 0 ;font-weight:bold;">Experiment
 			// Selection Preview</div>',
@@ -316,9 +318,17 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					'{id}"',
 					' ext:qtip="{shortName}">{shortName}</a>&nbsp; {name} <span style="color:grey">({taxon})</span></div></tpl>'),
 			tplWriteMode : 'append',
-			style : 'padding-top:7px;',
+			//style : 'padding-top:7px;',
 			title : 'Experiment Selection Preview',
 			collapsible : true,
+			tools:[{
+				id:'delete',
+				handler:function(event, toolEl, panel, toolConfig){
+						this.searchForm.removeExperimentChooser(this.id);
+						// this.fireEvent('removeExperiment');
+				}.createDelegate(this, [], true),
+				qtip:'Remove this experiment or group from your search'
+			}],
 			cls : 'unstyledTitle',
 			hidden : true,
 			listeners : {
@@ -353,14 +363,14 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			}
 		});
 		Ext.apply(this, {
-					frame : true,
-					width : 330,
-					items : [{
-								layout : 'hbox',
-								items : [this.experimentCombo, this.removeBtn, this.helpBtn]
-							}, this.experimentPreviewContent,
-							this.experimentSelectionEditorBtn]
-				});
+			frame: true,
+			width: 330,
+			items: [
+			{
+				layout: 'hbox',
+				items: [this.experimentCombo, this.helpBtn]
+			}, this.experimentPreviewContent, this.experimentSelectionEditorBtn]
+		});
 		Gemma.ExperimentSearchAndPreview.superclass.initComponent.call(this);
 	}
 });

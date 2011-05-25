@@ -65,6 +65,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
 			this._drawLabels(index);
 			
+			this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 			this.applicationRoot._hoverDetailsPanel.update({
 				type: 'gene',
 				geneSymbol: this.geneNames[this.applicationRoot.geneOrdering[this.geneGroupId][index]],
@@ -74,6 +75,8 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 		}, this );		
 		
 		this.el.on('click', function(e,t) {
+			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
+			
 			var geneId = this.applicationRoot.geneOrdering[this.geneGroupId][index];
 			var geneName = this.geneNames[geneId];
 			var	realGeneId = this.applicationRoot._visualizationData.geneIds[this.geneGroupId][geneId];

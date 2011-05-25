@@ -296,7 +296,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					return sprintf("%.3f", p);
 				}
 			};
-
+			this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 			this.applicationRoot._hoverDetailsPanel.update({
 				type : 'cell',
 				// row: index.row,

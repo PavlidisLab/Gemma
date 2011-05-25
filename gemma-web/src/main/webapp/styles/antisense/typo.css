@@ -591,7 +591,7 @@ a.tooltip:hover .tooltiptext {
 	color:black;
 	border: 0px solid;
  }
- /*
+ 
  .unstyledTitle .x-tool-toggle{
 	background-position: 0 -255px;
  }
@@ -599,17 +599,32 @@ a.tooltip:hover .tooltiptext {
  .unstyledTitle .x-tool-toggle-over{
 	background-position: -15px -255px;
  }
-   .unstyledTitle .x-panel-collapsed .x-tool-toggle{
+ .x-panel, .unstyledTitle, .x-panel-collapsed .x-tool-toggle{
 	background-position: 0 -240px;
  }
   
-  .unstyledTitle .x-panel-collapsed .x-tool-toggle-over{
+ .x-panel, .unstyledTitle, .x-panel-collapsed .x-tool-toggle-over{
 	background-position: -15px -240px;
- }*/
+ }
 
 #fi-button-msg {
 	border: 2px solid #ccc;
 	padding: 5px 10px;
 	background: #eee;
 	float: left;
+}
+
+.purple-btn .x-btn-tl, .purple-btn .x-btn-tr, .purple-btn .x-btn-tc, .purple-btn .x-btn-ml, .purple-btn .x-btn-mr, .purple-btn .x-btn-mc, .purple-btn .x-btn-bl, .purple-btn .x-btn-br, .purple-btn .x-btn-bc {
+    background-image:url('../../images/default/button/btn-purple.png');
+}
+
+.x-tool-delete {
+    background-image:url('/Gemma/images/icons/cross.png');
+	margin-left:10px;
+	
+}
+
+.x-tool-delete-over {
+    background-image:url('/Gemma/images/icons/cross.png');
+	margin-left:10px;
 }

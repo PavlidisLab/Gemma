@@ -391,15 +391,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
         log.info( "Search: " + query + " taxon=" + taxonId );
         return searchService.searchExpressionExperiments( query, taxonId );
     }
-
+    
     /**
      * AJAX (used by experimentAndExperimentGroupCombo.js)
      * 
      * @param query
+     * @param taxonId if the search should not be limited by taxon, pass in null
      * @return Collection of SearchResultDisplayObjects
      */
-    public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query ) {
-
+    public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
+        
+        boolean taxonLimited = (taxonId != null)? true:false;
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
         List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
@@ -418,15 +420,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
                     expressionExperimentSetService.thaw( registeredUserSet );
                     taxonService.thaw( registeredUserSet.getTaxon() );
-                    newSRDO = new SearchResultDisplayObject( registeredUserSet );
+                    if ( !taxonLimited || registeredUserSet.getTaxon().getId().equals( taxonId ) ) {
+                        newSRDO = new SearchResultDisplayObject( registeredUserSet );
 
-                    // if set was automatically generated, don't label as user-created (technically was created by admin
-                    // user)
-                    if ( newSRDO.getName().indexOf( "All" ) != 0 ) {
-                        newSRDO.setType( "usersExperimentSet" );
-                        usersResults.add( newSRDO );
-                    } else {
-                      //  autoGenResults.add( newSRDO );
+                        // if set was automatically generated, don't label as user-created (technically was created by
+                        // admin user)
+                        if ( newSRDO.getName().indexOf( "All" ) != 0 ) {
+                            newSRDO.setType( "usersExperimentSet" );
+                            usersResults.add( newSRDO );
+                        } else {
+                            // autoGenResults.add( newSRDO );
+                        }
                     }
                 }
             }
@@ -439,10 +443,14 @@ public class ExpressionExperimentController extends AbstractTaskService {
             for ( ExpressionExperimentSet set : sets) {
                 if(set.getExperiments().size() < 50){
                     expressionExperimentSetService.thaw( set );
-                    autoGenResults.add( new SearchResultDisplayObject( set ) );
+                    if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
+                        autoGenResults.add( new SearchResultDisplayObject( set ) );
+                    }
                 }
             }
             Collections.sort( autoGenResults );
+            // end of section to be used until scaling issues are resolved
+            
             
             /* USE THIS CODE WHEN SCALING ISSUES ARE RESOLVED
             * 
@@ -457,7 +465,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
             for ( ExpressionExperimentSet set : sets) {
                 if(set.getName().indexOf( "All" ) == 0 ){
                     expressionExperimentSetService.thaw( set );
-                    autoGenSets.add( new SearchResultDisplayObject( set ) );
+                    if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
+                        autoGenSets.add( new SearchResultDisplayObject( set ) );
+                    }
                 }
             }
 */
@@ -470,16 +480,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
             if ( sessionResult != null && sessionResult.size() > 0 ) {
                 // for every object passed in, create a SearchResultDisplayObject
                 for ( ExpressionExperimentSetValueObject eevo : sessionResult ) {
-                    Reference ref = eevo.getReference();
-                    if ( ref == null ) {
-                        ref = new Reference( eevo.getId(), Reference.SESSION_BOUND_GROUP );
+                    if ( !taxonLimited || eevo.getTaxonId().equals( taxonId ) ) {
+                        Reference ref = eevo.getReference();
+                        if ( ref == null ) {
+                            ref = new Reference( eevo.getId(), Reference.SESSION_BOUND_GROUP );
+                        }
+                        SearchResultDisplayObject srdo = new SearchResultDisplayObject( ExpressionExperimentSet.class,
+                                ref, eevo.getName(), eevo.getDescription(), true, eevo.getExpressionExperimentIds()
+                                        .size(), eevo.getTaxonId(), eevo.getTaxonName(), "userexperimentSetSession",
+                                eevo.getExpressionExperimentIds() );
+                        sessionSets.add( srdo );
                     }
-
-                    SearchResultDisplayObject srdo = new SearchResultDisplayObject( ExpressionExperimentSet.class, ref,
-                            eevo.getName(), eevo.getDescription(), true, eevo.getExpressionExperimentIds().size(), eevo
-                                    .getTaxonId(), eevo.getTaxonName(), "userexperimentSetSession", eevo
-                                    .getExpressionExperimentIds() );
-                    sessionSets.add( srdo );
                 }
             }
 
@@ -492,20 +503,25 @@ public class ExpressionExperimentController extends AbstractTaskService {
 /*
             autoGenResults.addAll( autoGenSets );
             Collections.sort( autoGenResults );
- */           displayResults.addAll( autoGenResults );
+ */         displayResults.addAll( autoGenResults );
          
 
             return displayResults;
 
-        } // end of query = ''
+        } else{// end of query = ''
 
-        Taxon taxon = null;
+        // if query is not blank...
         /*
          * GET EXPERIMENTS AND SETS
          */
         SearchSettings settings = SearchSettings.expressionExperimentSearch( query );
         settings.setGeneralSearch( true ); // add a general search
         settings.setSearchExperimentSets( true ); // add searching for experimentSets
+        Taxon taxonParam = null;
+        if ( taxonLimited ) {
+            taxonParam = taxonService.load( taxonId );
+            settings.setTaxon( taxonParam );
+        }   
         Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
 
         List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
@@ -534,9 +550,15 @@ public class ExpressionExperimentController extends AbstractTaskService {
             experimentSets.removeAll( toRmv );
         }
 
+        Taxon taxon = null; 
         // for each experiment search result display object, set the taxon -- pretty hacky
         for ( SearchResultDisplayObject srdo : experiments ) {
-            taxon = expressionExperimentService.getTaxon( srdo.getReference().getId() );
+            if ( taxonLimited ) {
+              taxon = taxonParam;
+            }else{
+              taxon = expressionExperimentService.getTaxon( srdo.getReference().getId() );  
+            }
+            
             srdo.setTaxonId( taxon.getId() );
             srdo.setTaxonName( taxon.getCommonName() );
         }
@@ -609,10 +631,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
             // make an entry for each taxon
 
-            Long taxonId = null;
+            Long taxonId2 = null;
             for ( Map.Entry<Long, HashSet<Long>> entry : eeIdsByTaxonId.entrySet() ) {
-                taxonId = entry.getKey();
-                taxon = taxonService.load( taxonId );
+                taxonId2 = entry.getKey();
+                taxon = taxonService.load( taxonId2 );
                 Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
                 if ( taxon != null && entry.getValue().size() > 0 ) {
                     displayResults.add( new SearchResultDisplayObject( ExpressionExperimentSet.class, ref, "All "
@@ -634,7 +656,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getReference().getId() );
         }
         return displayResults;
-
+        }
     }
 
     /**

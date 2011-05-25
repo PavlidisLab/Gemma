@@ -174,6 +174,9 @@ public class ExperimentalDesignVisualizationService {
             for ( FactorValue fv : ef.getFactorValues() ) {
                 i = i + 1.0;
                 // fvV.put( fv, i ); // just for now, a placeholder value.
+                if(fv.getId() == null){
+                    log.warn( "FactorValue has null id, this shouldn't happen!"+ fv.toString() );
+                }
                 fvV.put( fv, new Double( fv.getId() ) ); // try using the factorValue id
             }
         }
@@ -372,6 +375,8 @@ public class ExperimentalDesignVisualizationService {
     public Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = 
+            new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay,LinkedHashMap<ExperimentalFactor,Double>>>();
         StopWatch timer = new StopWatch();
         timer.start();
         for ( ExpressionExperiment ee : layouts.keySet() ) {
@@ -420,8 +425,7 @@ public class ExperimentalDesignVisualizationService {
 
                     sortedLayout.put( BMtoBA.get( bm ), layout.get( ba ) );
                 }
-                layouts.remove( ee );
-                layouts.put( ee, sortedLayout );
+                sortedLayouts.put( ee, sortedLayout );
             }
 
         }
@@ -430,7 +434,7 @@ public class ExperimentalDesignVisualizationService {
             log.info( "Sorting layout samples by factor: " + timer.getTime() + "ms" );
         }
 
-        return layouts;
+        return sortedLayouts;
     }
 
     /**

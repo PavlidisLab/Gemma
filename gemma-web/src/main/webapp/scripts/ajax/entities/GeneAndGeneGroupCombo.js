@@ -199,6 +199,10 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		this.on('focus', function(field){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
+				
+				//this.doQuery('',true);
+				//this.lastQuery = null; // needed for query queue fix
+				
 				if(this.getTaxonId()){
 					field.lastQuery = null; // needed for query queue fix
 					// passing in taxon instead of taxonId breaks this call

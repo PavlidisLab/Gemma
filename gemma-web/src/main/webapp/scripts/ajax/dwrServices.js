@@ -347,8 +347,8 @@ ExpressionExperimentController.find = function(p0, p1, callback) {
 ExpressionExperimentController.searchExpressionExperiments = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExpressionExperiments', p0, callback);
 }
-ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroups', p0, callback);
+ExpressionExperimentController.searchExperimentsAndExperimentGroups = function(p0,p1, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroups', p0, p1, callback);
 }
 ExpressionExperimentController.searchExperimentsAndExperimentGroupsGetIds = function(p0, p1, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'searchExperimentsAndExperimentGroupsGetIds', p0, p1, callback);

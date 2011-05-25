@@ -104,9 +104,65 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				hidden : true
 				,
 			}),
+	addGenes : function(data) { // maybe this won't work b/c combo returns search objects?
+				if (!data) {
+					return;
+				}
+				this.selectedGeneOrGroupRecord = data;
 
+				var id = data.reference.id;
+				var isGroup = data.isGroup;
+				var reference = data.reference;
+				var name = data.name;
+		
+				var taxonId = data.taxonId;
+				var taxonName = data.taxonName;
+						
+				var geneIdsToAdd = [];
+				// load preview of group if group was selected
+				if (isGroup) {
+					geneIdsToAdd = data.memberIds;
+				}else{
+					geneIdsToAdd = [id];
+				}
+				if (!geneIdsToAdd || geneIdsToAdd === null || geneIdsToAdd.length === 0) {
+					return;
+				}
+				
+				GenePickerController.getGenes(geneIdsToAdd, function(genes) {
+
+					for (var j = 0; j < genes.size(); j++) {
+						if (this.getStore().find("id", genes[j].id) < 0) {
+							var Constructor = this.store.recordType;
+							var record = new Constructor(genes[j]);
+							this.getStore().add([record]);
+						}
+					}
+					/* maybe should notify user with text at bottom that 'x experiments have been added'
+					this.experimentPreviewContent.setTitle(
+						'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " experiments)");
+					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
+					*/
+
+				}.createDelegate(this));
+				
+				
+			},
+	/*
+	 * set the taxon for this grid and for the toolbar to control what can be added from combo
+	 */
+	setTaxonId: function(taxonId){
+		this.taxonId = taxonId;
+		Ext.apply(this.getTopToolbar().geneCombo, {
+			taxonId: taxonId
+		});
+	},
 	initComponent : function() {
-
+		Ext.apply(this, {
+			tbar: new Gemma.GeneAndGroupAdderToolbar({
+				geneGrid : this
+			})
+		});
 		// Create RowActions Plugin
 		this.action = new Ext.ux.grid.RowActions({
 					header : 'Actions',
@@ -232,7 +288,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					renderer : function(value, metadata, record, row, col, ds) {
 						return String
 								.format(
-										"<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a><br><span style=\"font-color:grey\">{2}</span> ",
+										"<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a><br>"
+										+"<span style='font-color:grey; white-space:normal !important;'>{2}</span> ",
 										record.data.id, record.data.officialSymbol, record.data.officialName);
 					}
 				}/*
@@ -552,3 +609,54 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	}
 });
 Ext.reg('geneMembersGrid', Gemma.GeneMembersGrid);
+
+
+/**
+ * toolbar for selecting genes or gene groups and adding them to a grid
+ * if this.taxonId is set, then searches will be limited by taxon  
+ */
+Gemma.GeneAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
+		//name : "eeChooserTb",
+
+			initComponent : function() {
+
+				Gemma.GeneAndGroupAdderToolbar.superclass.initComponent.call(this);
+				
+				this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
+					typeAhead : false,
+					width : 300,
+					listeners : {
+								'select' : {
+									fn : function(combo, rec, index) {
+										this.addButton.enable();
+										if(rec.data.size === 1){
+											this.addButton.setText('Add 1 gene');
+										}else{
+											this.addButton.setText('Add '+rec.data.size+' genes');
+										}
+										
+									}.createDelegate(this)
+								}
+							}
+				});
+
+				this.addButton = new Ext.Toolbar.Button({
+							icon : "/Gemma/images/icons/add.png",
+							cls : "x-btn-text-icon",
+							tooltip : "Add selected experiment(s) to the list",
+							text: 'Add',
+							disabled : true,
+							handler : function() {
+								this.geneGrid.addGenes(this.geneCombo.getGeneGroup());
+								this.geneCombo.reset();
+								this.addButton.setText('Add');
+								this.addButton.disable();
+							}.createDelegate(this)
+						});
+
+			},
+			afterRender : function(c, l) {
+				Gemma.GeneAndGroupAdderToolbar.superclass.afterRender.call(this, c, l);
+				this.add(this.geneCombo, this.addButton);
+			}
+});

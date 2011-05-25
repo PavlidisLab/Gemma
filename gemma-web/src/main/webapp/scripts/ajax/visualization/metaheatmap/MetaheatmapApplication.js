@@ -74,6 +74,52 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					this.refreshVisualization();
 				}, this);
 
+		/**
+		 * selection grids
+		 */
+		var selectionRecord = Ext.data.Record.create([
+			{ name: 'id'},
+			{ name: 'shortName'},
+			{ name: 'longName'}
+		]);
+		var eeSelectionStore = new Ext.data.Store({
+			reader: new Ext.data.ArrayReader({
+				idIndex: 0
+			}, selectionRecord)
+		});
+		var geneSelectionStore = new Ext.data.Store({
+			reader: new Ext.data.ArrayReader({
+				idIndex: 0
+			}, selectionRecord)
+		});
+		var eeSelectionData = [];
+		var lastDatasetId = null;
+		for (i = 0; i < this.visualizationData.resultSetValueObjects.length; i++) { // for every ee group
+			for (j = 0; j < this.visualizationData.resultSetValueObjects[i].length; j++) { // for every col
+				// get the experiments, they should be grouped by datasetId
+				if (this.visualizationData.resultSetValueObjects[i][j].datasetId != lastDatasetId) {
+					eeSelectionData.push([this.visualizationData.resultSetValueObjects[i][j].datasetId,
+											this.visualizationData.resultSetValueObjects[i][j].datasetShortName,
+											this.visualizationData.resultSetValueObjects[i][j].datasetName]);
+				}
+				lastDatasetId = this.visualizationData.resultSetValueObjects[i][j].datasetId;
+			}
+		}
+		eeSelectionStore.loadData(eeSelectionData);
+		var geneSelectionData = [];
+		for (i = 0; i < this.visualizationData.geneIds.length; i++) {
+				eeSelectionData.push([this.visualizationData.geneIds[i],
+										this.visualizationData.geneNames[i],
+										this.visualizationData.geneFullNames[i]]);
+		}
+		geneSelectionStore.loadData(geneSelectionData);
+		
+		this.eeSelectionList = new Ext.list.ListView({
+			store:eeSelectionStore,
+			multiSelect:true,
+			columns:[{dataIndex:'shortName'}]
+		});
+
 		this.TOTAL_NUMBER_OF_COLUMNS = 0;
 		var datasetGroupIndex;
 		for (datasetGroupIndex = 0; datasetGroupIndex < this.visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
@@ -128,19 +174,20 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			items : [{
 				// a window for displaying details as elements of the image are
 				// hovered over
-				title : 'Details <span style="color:grey">(Drag me!)</span>',
+				//title : 'Details <span style="color:grey">(Drag me!)</span>',
 				ref : '_hoverDetailsPanel',
 				xtype : 'window',
-				height : 200,
+				//height : 200,
 				width : 300,
 				x : Gemma.MetaVisualizationConfig.panelWidth - 650,
 				y : 20,
 				autoScroll : true,
-				collapsible : true,
+				//collapsible : true,
 				closable : false,
 				shadow : false,
-				border : true,
-				bodyBorder : true,
+				border : false,
+				bodyBorder : false,
+				hidden: true, // doesn't work for some reason
 				bodyStyle : 'padding: 7px',
 				html : '<span style="color:grey;font-size:1.3em">Hover over the visualisation for quick details or click for more information.</span>',
 				tpl : new Ext.XTemplate(
@@ -357,6 +404,14 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 									scope : this
 								}
 							}, this.tree]
+				},{
+					title: 'Select',
+					flex: 1,
+					items: [{
+						html: 'Experiments',items:this.eeSelectionList
+					}, {
+						html: 'Genes'
+					}]
 				}]
 			}, {
 				ref : '_imageArea',
@@ -372,7 +427,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 									.calculateColumnHeight(this.visualizationData.geneNames),
 							width : 80,
 							x : 0,
-							y : 272,
+							y : Gemma.MetaVisualizationConfig.columnLabelHeight+12,
 							labels : this.visualizationData.geneNames,
 							geneGroupNames : this.visualizationData.geneGroupNames,
 							border : false,
@@ -395,7 +450,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 									.calculateColumnHeight(this.visualizationData.geneNames),
 							width : this._heatMapWidth,
 							x : 80,
-							y : 262,
+							y : Gemma.MetaVisualizationConfig.columnLabelHeight+2,
 							dataDatasetGroups : this.visualizationData.resultSetValueObjects,
 							geneNames : this.visualizationData.geneNames,
 							geneIds : this.visualizationData.geneIds,

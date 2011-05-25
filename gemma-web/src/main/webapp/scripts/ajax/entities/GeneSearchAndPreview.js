@@ -154,7 +154,10 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var i = 0; i < genes.size(); i++) {
 						this.genePreviewContent.update(genes[i]);
 					}
-					this.genePreviewContent.setTitle("Gene Selection Preview (" + ids.size() + ")");
+					this.genePreviewContent.setTitle(
+						'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()
+						+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " genes)");
+				
 					this.geneSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
 					this.showGenePreview();
 
@@ -359,6 +362,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 								this.loadGeneOrGroup(record, query);
 								this.genePreviewContent.show();
 								this.genePreviewContent.expand();
+								
+								this.geneSelectionEditor.setTaxonId(record.get("taxonId"));
 
 								// if this was the first time a selection was
 								// made using this box
@@ -366,10 +371,16 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 									this.fireEvent('madeFirstSelection');
 									this.newBoxTriggered = true;
 									this.helpBtn.hide();
+									this.symbolListButton.hide();
 									this.removeBtn.show();
 									// this.relayEvents(this.experimentCombo,
 									// ['select']);
 								}
+								
+								combo.disable().hide();
+								this.removeBtn.setPosition(300,0);
+								this.doLayout();
+								
 							},
 							scope : this
 						},
@@ -485,14 +496,19 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		// use this.genePreviewContent.update("one line of gene text"); to write
 		// to this panel
 		this.genePreviewContent = new Ext.Panel({
-			// height:100,
-			width : 302,
+			width : 322,
 			tpl : new Ext.Template('<div style="padding-bottom:7px;"><a target="_blank" href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} <span style="color:grey">({taxonCommonName})</span></div>'),
 			tplWriteMode : 'append', // use this to append to content when
 			// calling update instead of replacing
-			style : 'padding-top:7px;',
 			title : 'Gene Selection Preview',
 			collapsible : true,
+			tools:[{
+				id:'delete',
+				handler:function(event, toolEl, panel, toolConfig){
+						this.searchForm.removeGeneChooser(this.id);
+				}.createDelegate(this, [], true),
+				qtip:'Remove this gene or group from your search'
+			}],
 			cls : 'unstyledTitle',
 			hidden : true,
 			listeners : {
@@ -530,9 +546,10 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					frame : true,
 					items : [{
 								layout : 'hbox',
-								items : [this.symbolListButton, this.geneCombo, this.removeBtn, this.helpBtn]
+								items : [this.symbolListButton, this.geneCombo, this.helpBtn]
 							}, this.genePreviewContent, this.geneSelectionEditorBtn]
 				});
+				
 		Gemma.GeneSearchAndPreview.superclass.initComponent.call(this);
 
 	}

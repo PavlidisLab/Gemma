@@ -34,6 +34,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	autoSelect: false,
 	forceSelection: true,
 	typeAhead: false,
+	taxonId:null,
 	
 	lastQuery: null, // used for query queue fix
 	
@@ -120,67 +121,76 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
     }, // end onLoad overwrite
 	
-	initComponent : function() {
-
-        this.addEvents("beforeexpand","beforecollapse"); // if beforeexpand returns false, expand is cancelled
-
+	/**
+	 * Parameters for AJAX call.
+	 * 
+	 * @param {}
+	 *            query
+	 * @return {}
+	 */
+	getParams : function(query) {
+		return [query, this.taxonId];
+	},
+	
+	initComponent: function(){
+	
+		this.addEvents("beforeexpand", "beforecollapse"); // if beforeexpand returns false, expand is cancelled
 		Ext.apply(this, {
-					// format fields to show in combo, only show size in brakets if the entry is a group
-					tpl: new Ext.XTemplate('<tpl for=".">' +
-					'<tpl if="type==\'experiment\'">' +
-						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>'+
-					'<tpl if="type==\'usersExperimentSet\'">' +
-					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +	
-					'<tpl if="type==\'userexperimentSetSession\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>:  <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +	
-					'<tpl if="type==\'experimentSet\'">' +
-					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +	
-					'<tpl if="type==\'freeText\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +
-					'</tpl>'),
-				store:{
-					reader : new Ext.data.ListRangeReader({}, 
-							Ext.data.Record.create([{
-								name : "reference"
-							},{
-								name : "name",
-								type : "string"
-							},{
-								name : "description",
-								type : "string"
-							},{
-								name: "isGroup",
-								type: "boolean"
-							},{
-								name: "size",
-								type: "int"
-							},{
-								name: "taxonId",
-								type: "int",
-								defaultValue: "-1"
-							},{
-								name: "taxonName",
-								type: "string",
-								defaultValue: ""
-							},{
-								name: "type",
-								type: "string"
-							},{
-								name: "memberIds",
-								defaultValue: []
-							}])),
-					proxy : new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
-					autoLoad : false
-				}
+			// format fields to show in combo, only show size in brakets if the entry is a group
+			tpl: new Ext.XTemplate('<tpl for=".">' +
+			'<tpl if="type==\'experiment\'">' +
+			'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
+			'</tpl>' +
+			'<tpl if="type==\'usersExperimentSet\'">' +
+			'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+			'</tpl>' +
+			'<tpl if="type==\'userexperimentSetSession\'">' +
+			'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>:  <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+			'</tpl>' +
+			'<tpl if="type==\'experimentSet\'">' +
+			'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+			'</tpl>' +
+			'<tpl if="type==\'freeText\'">' +
+			'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
+			'</tpl>' +
+			'</tpl>'),
+			store: {
+				reader: new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
+					name: "reference"
+				}, {
+					name: "name",
+					type: "string"
+				}, {
+					name: "description",
+					type: "string"
+				}, {
+					name: "isGroup",
+					type: "boolean"
+				}, {
+					name: "size",
+					type: "int"
+				}, {
+					name: "taxonId",
+					type: "int",
+					defaultValue: "-1"
+				}, {
+					name: "taxonName",
+					type: "string",
+					defaultValue: ""
+				}, {
+					name: "type",
+					type: "string"
+				}, {
+					name: "memberIds",
+					defaultValue: []
+				}])),
+				proxy: new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
+				autoLoad: false
+			}
 		});
-
+		
 		Gemma.ExperimentAndExperimentGroupCombo.superclass.initComponent.call(this);
-
+		
 		this.on('select', this.setExpressionExperimentGroup, this);
 		
 		
@@ -192,14 +202,15 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		}, this);
 		
 		this.getStore().on('load', function(store, records, options){
-			var query = ( options.params)? options.params[0]: null;
-			if( (query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery) ){
+			var query = (options.params) ? options.params[0] : null;
+			if ((query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery)) {
 				store.removeAll();
 				store.add(this.records);
-				if(this.records === null || this.records.length === 0){
+				if (this.records === null || this.records.length === 0) {
 					this.doQuery(this.lastQuery);
 				}
-			}else{
+			}
+			else {
 				this.records = this.store.getRange();
 			}
 		}, this);
@@ -207,13 +218,18 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		
 		this.on('focus', function(field){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
-			if(this.getValue() ===''){
-				// TODO add a 800ms (?) wait command here and then check if this.getValue() ==='' is still true
-				// actually, not really a good solution b/c the user won't know immediately that suggestions are going to be made
+			if (this.getValue() === '') {
+				
+				/*
+				// passing in taxon instead of taxonId breaks this call
+				ExpressionExperimentController.searchExperimentsAndExperimentGroups("", this.taxonId, function(records){
+					this.getStore().loadData(records);
+				}.createDelegate(this));
+				*/
+				this.doQuery('',true);
 				this.lastQuery = null; // needed for query queue fix
-				this.doQuery('',true); 
 			}
-		},this);
+		}, this);
 	},
 
 	reset : function() {
@@ -224,17 +240,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		if (this.tooltip) {
 			this.tooltip.destroy();
 		}
-	},
-
-	/**
-	 * Parameters for AJAX call.
-	 * 
-	 * @param {}
-	 *            query
-	 * @return {}
-	 */
-	getParams : function(query) {
-		return [query];
 	},
 
 	getExpressionExperimentGroup : function() {

@@ -281,7 +281,7 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 					 * Note: passing in 'newDiv' works in FF but not in IE.
 					 * (flotr, anyway)
 					 */
-					LinePlot.draw($(shortName + "_vis"), record.profiles, this.graphConfig); // no
+					LinePlot.draw($(shortName + "_vis"), record.profiles, this.graphConfig, null, record.factorValuesToNames); // no
 																								// sample
 																								// names
 				}
@@ -316,7 +316,7 @@ Gemma.HeatmapTemplate = Ext.extend(Ext.XTemplate, {
 					/*
 					 * Note: 'newDiv' works in FF but not in IE.
 					 */
-					Heatmap.draw($(shortName + "_vis"), record.profiles, this.graphConfig); // no
+					Heatmap.draw($(shortName + "_vis"), record.profiles, this.graphConfig, null, record.factorValuesToNames, null); // no
 																							// sample
 																							// names
 				}
@@ -662,11 +662,11 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		if (this.forceFitPlots) {
 			this.forceFitPlots = false;
 			this.zoomPanel.forceFitPlots = false;
-			btn.setText("Zoom out");
+			btn.setText("Zoom in");
 		} else {
 			this.forceFitPlots = true;
 			this.zoomPanel.forceFitPlots = true;
-			btn.setText("Zoom in");
+			btn.setText("Zoom out");
 		}
 
 		// force a refresh of the zoom.
@@ -916,8 +916,20 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 				}
 				
 				Ext.DomHelper.overwrite(this.body.id, '');
-				
-				FactorValueLegend.draw($(this.body.id), conditionLabelKey);
+				var factorCount = 0;
+				for (factorCategory in conditionLabelKey) {
+					factorCount++;
+					break;
+				}
+				if(factorCount === 0){
+					Ext.DomHelper.overwrite(this.body.id, 'No experimental design available.');
+					this.collapse();
+				}else{
+					if(this.collapsed){
+						this.expand();
+					}
+					FactorValueLegend.draw($(this.body.id), conditionLabelKey);
+				}
 			}
 		});
 		
@@ -987,7 +999,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 										//											
 										{
 											xtype : 'button',
-											text : this.forceFitPlots ? "Zoom in" : "Zoom out",
+											text : this.forceFitPlots ? "Zoom out" : "Zoom in",
 											id : this.forceFitBtnId,
 											handler : this.toggleForceFit.createDelegate(this),
 											tooltip : "Toggle forcing of the plot to fit in the width of the window",
@@ -1022,7 +1034,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode
 							? "Switch to line plot"
 							: "Switch to heatmap");
-					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Zoom in" : "Zoom out");
+					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Zoom out" : "Zoom in");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
 					Ext.getCmp(this.toggleSampleNamesBtnId).setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
 					// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
@@ -1284,7 +1296,7 @@ var FactorValueLegend = function() {
 				}
 				// calculate actual width
 				legendWidth = 3*TRIM+ allColumnsWidth + (FACTOR_VALUE_LABEL_BOX_WIDTH+SMALL_TRIM+SMALL_TRIM)*factorCount;
-				legendHeight = TRIM + lineHeight*(factorValueCount+1);
+				legendHeight = 3*TRIM + lineHeight*(factorValueCount+1);
 				
 				Ext.DomHelper.overwrite($(legendDiv), '');
 				ctx = constructCanvas($(legendDiv), legendWidth, legendHeight);

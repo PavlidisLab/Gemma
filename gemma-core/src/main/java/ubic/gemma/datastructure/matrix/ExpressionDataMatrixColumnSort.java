@@ -179,7 +179,8 @@ public class ExpressionDataMatrixColumnSort {
             Collection<ExperimentalFactor> factors ) {
 
         if ( factors == null || factors.isEmpty() ) {
-            throw new IllegalArgumentException( "Must provide factors" );
+            log.warn( "No factors supplied for sorting");
+            return new LinkedList<ExperimentalFactor>();
         }
 
         LinkedList<ExperimentalFactor> sortedFactors = new LinkedList<ExperimentalFactor>();
@@ -217,10 +218,12 @@ public class ExpressionDataMatrixColumnSort {
             throw new IllegalArgumentException( "Must provide some biomaterials" );
         }
         if ( factors == null ) {
-            throw new IllegalArgumentException( "Must provide sorted factors" );
+            throw new IllegalArgumentException( "Must provide sorted factors, or at least an empty list" );
         }
-
-        Map<FactorValue, List<BioMaterial>> fv2bms = buildFv2BmMap( start );
+        if(factors.isEmpty()){
+         // we're done.
+            return start;
+        }
 
         ExperimentalFactor simplest = factors.get( 0 );
 
@@ -232,6 +235,8 @@ public class ExpressionDataMatrixColumnSort {
         /*
          * Order this chunk by the selected factor
          */
+
+        Map<FactorValue, List<BioMaterial>> fv2bms = buildFv2BmMap( start );
         List<BioMaterial> ordered = orderByFactor( simplest, fv2bms, start,
                 new HashMap<ExperimentalFactor, Collection<BioMaterial>>() );
 

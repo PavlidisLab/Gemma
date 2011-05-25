@@ -85,6 +85,10 @@ var LinePlot = function() {
 			// TOTAL area available.
 			var width = container.getWidth();
 			var height = container.getHeight();
+			
+			/* happens with hidden thumbnails sometimes, set to non-zero to avoid errors in some browsers */
+			if(width === 0) width = 10; 
+			if(height === 0) height = 10; 
 
 			// space used for the line plot itself.
 			var plotHeight = height; // to be modified to make room for the sample labels.
@@ -143,7 +147,7 @@ var LinePlot = function() {
 					ctx.fillStyle = "#000000";
 					ctx.font = fontSize + "px sans-serif";
 					ctx.textAlign = "left";
-					ctx.translate(TRIM*2, labelHeight - 2); // +extra to make sure we don't chop off the top.
+					ctx.translate(TRIM + spacePerPoint, labelHeight - 2); // +extra to make sure we don't chop off the top.
 
 					// vertical text.
 					for (var j = 0; j < sampleLabels.length; j++) {

@@ -22,7 +22,6 @@ package ubic.gemma.web.controller.visualization;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import ubic.basecode.dataStructure.DoublePoint;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -107,7 +106,7 @@ public class FactorProfile {
         this.plots = new ArrayList<List<DoublePoint>>();
         List<DoublePoint> currentList = new ArrayList<DoublePoint>();
         int i = 0;
-        double lastValue = 0.0;
+        Double lastValue = 0.0;
         boolean first = true;
 
         for ( Double d : values ) {

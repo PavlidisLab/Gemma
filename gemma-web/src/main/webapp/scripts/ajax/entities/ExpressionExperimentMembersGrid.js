@@ -1,12 +1,8 @@
-/*
- */
+
 Ext.namespace('Gemma');
 
 /**
- * 
- * Grid to display ExpressionExperiments. Author: Paul (based on Luke's
- * CoexpressionDatasetGrid) $Id: ExpressionExperimentGrid.js,v 1.13 2008/04/23
- * 19:54:46 kelsey Exp $
+ * Grid to display ExpressionExperiment group members and allow the user to remove and add members.
  */
 Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
@@ -30,6 +26,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		forceFit : true
 	},
 	queryText : '',
+	addExperiments: true,
+	taxonId: null,
 
 	/**
 	 * Add to table.
@@ -63,6 +61,50 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}
 				}.createDelegate(this));
 	},
+	addExperiments : function(data) { // maybe this won't work b/c combo returns search objects?
+				if (!data) {
+					return;
+				}
+				this.selectedExperimentOrGroupRecord = data;
+
+				var id = data.reference.id;
+				var isGroup = data.isGroup;
+				var reference = data.reference;
+				var name = data.name;
+		
+				var taxonId = data.taxonId;
+				var taxonName = data.taxonName;
+						
+				var eeIdsToAdd = [];
+				// load preview of group if group was selected
+				if (isGroup) {
+					eeIdsToAdd = data.memberIds;
+				}else{
+					eeIdsToAdd = [id];
+				}
+				if (!eeIdsToAdd || eeIdsToAdd === null || eeIdsToAdd.length === 0) {
+					return;
+				}
+				
+				ExpressionExperimentController.loadExpressionExperiments(eeIdsToAdd, function(ees) {
+
+					for (var j = 0; j < ees.size(); j++) {
+						if (this.getStore().find("id", ees[j].id) < 0) {
+							var Constructor = this.store.recordType;
+							var record = new Constructor(ees[j]);
+							this.getStore().add([record]);
+						}
+					}
+					/* maybe should notify user with text at bottom that 'x experiments have been added'
+					this.experimentPreviewContent.setTitle(
+						'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " experiments)");
+					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
+					*/
+
+				}.createDelegate(this));
+				
+				
+			},
 
 	// input window for creation of new groups
 	detailsWin : new Gemma.GeneSetDetailsDialog({
@@ -70,8 +112,22 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				hidden : true
 			}),
 
-	initComponent : function() {
+	/*
+	 * set the taxon for this grid and for the toolbar to control what can be added from combo
+	 */
+	setTaxonId: function(taxonId){
+		this.taxonId = taxonId;
+		Ext.apply(this.getTopToolbar().eeCombo, {
+			taxonId: taxonId
+		});
+	},
 
+	initComponent : function() {
+		Ext.apply(this, {
+			tbar: new Gemma.ExperimentAndGroupAdderToolbar({
+				eeGrid : this
+			})
+		});
 		Ext.apply(this.detailsWin, {
 			title : 'Provide or edit experiment group details'
 				// ,suggestedName: this.queryText,
@@ -93,7 +149,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}
 				});
 
-		// dummy action event handler - just outputs some arguments to console
 		this.action.on({
 					action : function(grid, record, action, row, col) {
 						if (action === 'icon-cross') {
@@ -207,7 +262,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					renderer : function(value, metadata, record, row, col, ds) {
 						return String
 								.format(
-										"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a><br><span style=\"font-color:grey\">{2}</span> ",
+										"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
+										+"<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ",
 										record.data.id, record.data.shortName, record.data.name);
 					},
 					sortable : true
@@ -454,4 +510,56 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.fireEvent('doneModification');
 				}.createDelegate(this));
 	}
+});
+
+/**
+ * toolbar for selecting experiments or experiment groups and adding them to a grid
+ * if eeCombo.taxonId is set, then searches will be limited by taxon  
+ */
+Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
+		//name : "eeChooserTb",
+
+			initComponent : function() {
+
+				Gemma.ExperimentAndGroupAdderToolbar.superclass.initComponent.call(this);
+				
+				this.eeCombo = new Gemma.ExperimentAndExperimentGroupCombo({
+					typeAhead : false,
+					width : 300,
+					listeners : {
+								'select' : {
+									fn : function(combo, rec, index) {
+										this.addButton.enable();
+										if(rec.data.size === 1){
+											this.addButton.setText('Add 1 experiment');
+										}else{
+											this.addButton.setText('Add '+rec.data.size+' experiments');
+										}
+										
+									}.createDelegate(this)
+								}
+							}
+				});
+
+				this.addButton = new Ext.Toolbar.Button({
+							icon : "/Gemma/images/icons/add.png",
+							cls : "x-btn-text-icon",
+							tooltip : "Add selected experiment(s) to the list",
+							text: 'Add',
+							disabled : true,
+							handler : function() {
+								this.eeGrid.addExperiments(this.eeCombo.getExpressionExperimentGroup());
+								this.eeCombo.reset();
+								this.addButton.setText('Add');
+								this.addButton.disable();
+							}.createDelegate(this)
+						});
+
+			},
+			afterRender : function(c, l) {
+				Gemma.ExperimentAndGroupAdderToolbar.superclass.afterRender.call(this, c, l);
+
+				this.add(this.eeCombo, this.addButton);
+
+			}
 });
