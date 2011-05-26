@@ -165,6 +165,13 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 					if (nodeParam.children && nodeParam.children !== null && nodeParam.children.length !== 0) {
 						hasChildren = true;
 					}
+					if( nodeParam.text === null ){
+						if(hasChildren){
+							nodeParam.text = "unavailable";
+						}else{
+							return;
+						}
+					}
 					// if node already exists in tree with same text, get that
 					// node and have the children assigned to that node
 					// will this confuse recursion? if multi-leveled?

@@ -6,6 +6,7 @@
 Ext.namespace('Gemma');
 
 Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
+	taxonId: null, // might be set by parent to control combo
 	/**
 	 * Show the selected eeset members
 	 */
@@ -46,10 +47,13 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						id : record.get("id"),
 						taxon : record.get("taxonName")
 					});
-			this.experimentPreviewContent.setTitle("Experiment Selection Preview (1)");
+			this.experimentPreviewContent.setTitle(
+				'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()
+				+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 experiment)');
 			this.experimentSelectionEditorBtn.setText('0 more');
 			this.experimentSelectionEditorBtn.disable();
 			this.experimentSelectionEditorBtn.show();
+			this.experimentPreviewContent.expand();
 		}
 	},
 
@@ -167,32 +171,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		// this.experimentSelectionEditorBtn.disable().hide();
 		// this.experimentPreviewContent.collapse();
 	},
-	/**
-	 * Check if the taxon needs to be changed, and if so, update the
-	 * geneAndGroupCombo and reset the gene preivew
-	 * 
-	 * @param {}
-	 *            taxonId
-	 */
-	taxonChanged : function(taxonId, taxonName) {
 
-		// if the 'new' taxon is the same as the 'old' taxon for the experiment
-		// combo, don't do anything
-		if (taxonId && this.searchForm.getTaxonId() && (this.searchForm.getTaxonId() === taxonId)) {
-			return;
-		}
-		// if the 'new' and 'old' taxa are different, reset the gene preview and
-		// filter the geneCombo
-		else if (taxonId) {
-			// this.searchForm.geneChooser.resetGenePreview();
-			// this.searchForm.geneChooser.geneCombo.setTaxonId(taxonId);
-			this.searchForm.setTaxonId(taxonId);
-			this.searchForm.setTaxonName(taxonName);
-			// this.searchForm.geneChooser.geneCombo.reset();
-		}
-
-		this.searchForm.fireEvent("taxonchanged", taxonId);
-	},
 	initComponent : function() {
 
 		/**
@@ -204,12 +183,14 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.newBoxTriggered = false;
 		this.experimentCombo = new Gemma.ExperimentAndExperimentGroupCombo({
 					typeAhead : false,
-					width : 300
+					width : 300,
+					taxonId: this.taxonId
+					
 				});
 		this.experimentCombo.on('select', function(combo, record, index) {
 
 					// if the EE has changed taxon, reset the gene combo
-					this.taxonChanged(record.get("taxonId"), record.get("taxonName"));
+					this.searchForm.taxonChanged(record.get("taxonId"), record.get("taxonName"));
 					
 					this.experimentSelectionEditor.setTaxonId(record.get("taxonId"));
 
@@ -219,13 +200,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					var query = combo.store.baseParams.query;
 					this.loadExperimentOrGroup(record, query);
 					this.experimentPreviewContent.show();
-
-					// once an experiment has been selected, cue the user that
-					// the gene select is now active
-					Ext.get(this.searchForm.geneChoosers.items.items[0].geneCombo.id).setStyle('background', 'white');
-					// Ext.apply(this.searchForm.geneChoosers.items.items[0].items.items[1].geneCombo,
-					// {style:'background:white;'}); // doesn't work
-					// this.eeComboSelectedRecord=record;
 
 					// if this was the first time a selection was made using
 					// this box
@@ -351,7 +325,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					}.createDelegate(this, [], true)
 				});
 		this.helpBtn = new Ext.Button({
-			icon : "/Gemma/images/icons/questionMark16x16.png",
+			icon : "/Gemma/images/icons/question_blue.png",
 			cls : "x-btn-icon",
 			tooltip : 'Select a general group of experiments or try searching for experiments by name or keywords such as: schizophrenia, hippocampus, GPL96 etc.',
 			hidden : false,

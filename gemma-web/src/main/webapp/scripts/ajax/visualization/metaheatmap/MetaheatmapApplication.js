@@ -34,6 +34,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				if (!factorName) {
 					factorName = obj.factorName;
 				}
+				if (!factorName || (typeof factorName === 'undefined') || factorName === null) {
+					factorName = "unavailable";
+				}
 				var values = [];
 				for (k = 0; k < obj.contrastsFactorValueIds.length; k++) {
 					values.push({

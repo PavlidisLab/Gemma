@@ -319,6 +319,10 @@ h2.helpstep,h3.helpstep {
 	line-height: 13px;
 }
 
+.blue-text-not-link{
+	color:#15428B;
+}
+
 /* reduced font size elements */
 .small {
 	font-size: smaller;

@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.model.Reference;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -51,7 +49,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -269,20 +266,20 @@ public class GenePickerController {
      * AJAX (used by GeneAndGeneGroupCombo.js)
      * 
      * @param query
-     * @param taxonId
+     * @param taxonId can be null
      * @return Collection of SearchResultDisplayObject
      */
     public Collection<SearchResultDisplayObject> searchGenesAndGeneGroups( String query, Long taxonId ) {
         Taxon taxon = null;
+        String taxonName = "";
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
-                throw new IllegalArgumentException( "No such taxon with id=" + taxonId );
+                log.warn( "No such taxon with id=" + taxonId );
             }
-        } else {
-            throw new IllegalArgumentException( "No taxon supplied" );
+            taxonName = taxon.getCommonName();
         }
-        String taxonName = taxon.getCommonName();
+
         boolean privateOnly = true;
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
@@ -312,7 +309,8 @@ public class GenePickerController {
             }
             // get any session-bound groups
 
-            Collection<GeneSetValueObject> sessionResult = sessionListManager.getModifiedGeneSets( taxonId );
+            Collection<GeneSetValueObject> sessionResult = ( taxon != null ) ? sessionListManager.getModifiedGeneSets( taxonId )
+                                                                                : sessionListManager.getModifiedGeneSets( );
 
             result.addAll( sessionResult );
 
@@ -335,40 +333,60 @@ public class GenePickerController {
             settings.setGeneralSearch( true ); // add a general search, needed for finding GO groups
             settings.setSearchGenes( true ); // add searching for genes
             settings.setSearchGeneSets( true ); // add searching for geneSets
-            settings.setTaxon( taxon ); // causes no genes to be returned
+            if ( taxon != null ) settings.setTaxon( taxon ); // this doesn't work yet
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
             List<SearchResult> geneSetSearchResults = results.get( GeneSet.class );
             List<SearchResult> geneSearchResults = results.get( Gene.class );
 
-            // filter results by taxon
-            List<SearchResult> taxonCheckedGenes = new ArrayList<SearchResult>();
-            for ( SearchResult sr : geneSearchResults ) {
-                Gene gene = ( Gene ) sr.getResultObject();
-                if ( gene.getTaxon() != null && gene.getTaxon().getId().equals( taxonId ) ) {
-                    taxonCheckedGenes.add( sr );
+            Collection<SearchResultDisplayObject> genes = null;
+            Collection<SearchResultDisplayObject> geneSets = null;
+            
+            
+            if(taxon!=null){ // filter search results by taxon
+                
+                List<SearchResult> taxonCheckedGenes = new ArrayList<SearchResult>();
+                for ( SearchResult sr : geneSearchResults ) {
+                    Gene gene = ( Gene ) sr.getResultObject();
+                    if ( gene.getTaxon() != null && gene.getTaxon().getId().equals( taxonId ) ) {
+                        taxonCheckedGenes.add( sr );
+                    }
                 }
-            }
-
-            List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
-            for ( SearchResult sr : geneSetSearchResults ) {
-                GeneSet gs = ( GeneSet ) sr.getResultObject();
-                GeneSetValueObject gsvo = new GeneSetValueObject( gs );
-                if ( gsvo.getTaxonId() == taxonId ) {
-                    taxonCheckedSets.add( sr );
-                }
-            }
-
-            Collection<SearchResultDisplayObject> genes = SearchResultDisplayObject
+                
+                genes = SearchResultDisplayObject
                     .convertSearchResults2SearchResultDisplayObjects( taxonCheckedGenes );
-            Collection<SearchResultDisplayObject> geneSets = SearchResultDisplayObject
-                    .convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
 
-            // set the taxon values for geneSets
-            for ( SearchResultDisplayObject srdo : geneSets ) {
-                // geneSets were filtered by taxon above:
-                // if taxonId for geneSet != taxonId param, then geneset was already removed
-                srdo.setTaxonId( taxonId );
-                srdo.setTaxonName( taxonName );
+                List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
+                for ( SearchResult sr : geneSetSearchResults ) {
+                    GeneSet gs = ( GeneSet ) sr.getResultObject();
+                    GeneSetValueObject gsvo = new GeneSetValueObject( gs );
+                    if ( gsvo.getTaxonId() == taxonId ) {
+                        taxonCheckedSets.add( sr );
+                    }
+                }
+                
+                geneSets = SearchResultDisplayObject
+                    .convertSearchResults2SearchResultDisplayObjects( taxonCheckedSets );
+                 for ( SearchResultDisplayObject srdo : geneSets ) {
+                    // geneSets were filtered by taxon above:
+                    // if taxonId for geneSet != taxonId param, then geneset was already removed
+                    srdo.setTaxonId( taxonId );
+                    srdo.setTaxonName( taxonName );
+                }
+            }else{ // set the taxon values
+                
+                genes = SearchResultDisplayObject
+                    .convertSearchResults2SearchResultDisplayObjects( geneSearchResults );
+                
+                geneSets = new ArrayList<SearchResultDisplayObject>();
+                SearchResultDisplayObject srdo = null;
+               for(SearchResult sr : geneSetSearchResults){
+                   taxon = getTaxonForGeneSet((GeneSet)sr.getResultObject());
+                   srdo = new SearchResultDisplayObject( (GeneSet)sr.getResultObject() );
+                   srdo.setTaxonId( taxon.getId() );
+                   srdo.setTaxonName( taxon.getCommonName() );
+                   geneSets.add( srdo );
+               }
+               taxon = null;
             }
 
             // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in
@@ -395,32 +413,41 @@ public class GenePickerController {
             /*
              * GET GO GROUPS
              */
-
             List<GeneSet> goSets = new ArrayList<GeneSet>();
             ArrayList<SearchResultDisplayObject> goSRDOs = new ArrayList<SearchResultDisplayObject>();
+            Collection<Taxon> taxonsForGo = new ArrayList<Taxon>(); 
+            // if taxon isn't set, get go groups for each possible taxon
+            if(taxon == null){
+                 taxonsForGo.addAll( taxonService.loadAll());
+            }
+            else{
+                taxonsForGo.add( taxon );
+            }
 
-            if ( query.toUpperCase().startsWith( "GO" ) ) {
-                GeneSet goSet = this.geneSetSearch.findByGoId( query, taxon );
-                if ( goSet != null ) {
-                    SearchResultDisplayObject sdo = new SearchResultDisplayObject( goSet );
-                    sdo.setReference( new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
-                    sdo.setTaxonId( taxonId );
-                    sdo.setTaxonName( taxonName );
-                    goSRDOs.add( sdo );
-                    goSets.add( goSet );
-                }
-            } else {
-                for ( GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxon ) ) {
-                    // don't bother adding empty GO groups
-                    // (should probably do this check elsewhere in case it speeds things up)
-                    if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
-                        SearchResultDisplayObject sdo = new SearchResultDisplayObject( geneSet );
+            for ( Taxon taxonForGo : taxonsForGo ) {
+                if ( query.toUpperCase().startsWith( "GO" ) ) {
+                    GeneSet goSet = this.geneSetSearch.findByGoId( query, taxonForGo );
+                    if ( goSet != null ) {
+                        SearchResultDisplayObject sdo = new SearchResultDisplayObject( goSet );
                         sdo.setReference( new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
-                        sdo.setType( "GOgroup" );
-                        sdo.setTaxonId( taxonId );
-                        sdo.setTaxonName( taxonName );
+                        sdo.setTaxonId( taxonForGo.getId() );
+                        sdo.setTaxonName( taxonForGo.getCommonName() );
                         goSRDOs.add( sdo );
-                        goSets.add( geneSet );
+                        goSets.add( goSet );
+                    }
+                } else {
+                    for ( GeneSet geneSet : geneSetSearch.findByGoTermName( query, taxonForGo ) ) {
+                        // don't bother adding empty GO groups
+                        // (should probably do this check elsewhere in case it speeds things up)
+                        if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
+                            SearchResultDisplayObject sdo = new SearchResultDisplayObject( geneSet );
+                            sdo.setReference( new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
+                            sdo.setType( "GOgroup" );
+                            sdo.setTaxonId( taxonForGo.getId() );
+                            sdo.setTaxonName( taxonForGo.getCommonName() );
+                            goSRDOs.add( sdo );
+                            goSets.add( geneSet );
+                        }
                     }
                 }
             }
@@ -428,58 +455,62 @@ public class GenePickerController {
             Collections.sort( goSRDOs );
 
             /*
-             * GET 'ALL RESULTS' GROUPS
+             * ALL RESULTS BY TAXON GROUPS
              */
 
             // if >1 result, add a group whose members are all genes returned from search
             if ( ( genes.size() + geneSets.size() + goSets.size() ) > 1 ) {
 
-                // if a gene was returned by both gene and gene set search, don't count it twice (managed by set)
+                // if an experiment was returned by both experiment and experiment set search, don't count it twice
+                // (managed by set)
                 HashSet<Long> geneIds = new HashSet<Long>();
+                HashMap<Long, HashSet<Long>> geneIdsByTaxonId = new HashMap<Long, HashSet<Long>>();
 
                 // add every individual experiment to the set
                 for ( SearchResultDisplayObject srdo : genes ) {
+                    if ( !geneIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
+                        geneIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
+                    }
+                    geneIdsByTaxonId.get( srdo.getTaxonId() ).add( srdo.getReference().getId() );
+
                     geneIds.add( srdo.getReference().getId() );
                 }
 
-                // if there's a group, get the number of members by taxon
-                if ( geneSets.size() > 0 ) {
-                    // for each group
-                    for ( SearchResult geneSetSRO : results.get( GeneSet.class ) ) {
+                // if there's a group, get the number of members
+
+                // for each group
+                    for ( SearchResultDisplayObject srdo : geneSets ) {
                         // get the ids of the gene members
-                        Iterator<GeneSetMember> iter = ( ( GeneSet ) geneSetSRO.getResultObject() ).getMembers()
-                                .iterator();
-                        Long id = null;
-                        Gene gene = null;
-                        while ( iter.hasNext() ) {
-                            gene = iter.next().getGene();
-                            id = gene.getId();
-                            geneIds.add( id );
-                        }
+                         if ( !geneIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
+                            geneIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
+                         }
+                         geneIdsByTaxonId.get( srdo.getTaxonId() ).addAll( srdo.getMemberIds() );
+                     }
+                
+                // for each go group
+                for ( SearchResultDisplayObject srdo : goSRDOs ) {
+                    // get the ids of the gene members
+                     if ( !geneIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
+                        geneIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
+                     }
+                     geneIdsByTaxonId.get( srdo.getTaxonId() ).addAll( srdo.getMemberIds() );
+                 }
+            
+                // make an entry for each taxon
+
+                Long taxonId2 = null;
+                for ( Map.Entry<Long, HashSet<Long>> entry : geneIdsByTaxonId.entrySet() ) {
+                    taxonId2 = entry.getKey();
+                    taxon = taxonService.load( taxonId2 );
+      
+                    Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
+                    if ( taxon != null && entry.getValue().size() > 0 ) {
+                        displayResults.add( new SearchResultDisplayObject( GeneSet.class, ref, "All "
+                                + taxon.getCommonName() + " results for '" + query + "'", "All " + taxon.getCommonName()
+                                + " genes found for your query", true, entry.getValue().size(), taxon.getId(), taxon
+                                .getCommonName(), "freeText", entry.getValue() ) );
                     }
                 }
-
-                // if there are any go group results, get the members
-                if ( goSets.size() > 0 ) {
-                    // for each group
-                    for ( GeneSet geneSet : goSets ) {
-                        // get the ids of the gene members
-                        Iterator<GeneSetMember> iter = geneSet.getMembers().iterator();
-                        Long id = null;
-                        Gene gene = null;
-                        while ( iter.hasNext() ) {
-                            gene = iter.next().getGene();
-                            id = gene.getId();
-                            geneIds.add( id );
-                        }
-                    }
-                }
-
-                Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
-                SearchResultDisplayObject allResultsGroup = new SearchResultDisplayObject(
-                        ExpressionExperimentSet.class, ref, "All '" + query + "' results",
-                        "All genes found for your query", true, geneIds.size(), taxonId, taxonName, "freeText", geneIds );
-                displayResults.add( allResultsGroup );
             }
 
             displayResults.addAll( geneSets );
@@ -497,6 +528,24 @@ public class GenePickerController {
 
         return displayResults;
 
+    }
+    /**
+     * assumes that all members in the geneset have the same taxon (or top-level parent taxon)
+     * @param geneSet
+     * @return
+     */
+    private Taxon getTaxonForGeneSet( GeneSet geneSet ) {
+        Taxon taxon = null;
+        Taxon tmpTax = null;
+        tmpTax = geneSet.getMembers().iterator().next().getGene().getTaxon();
+        // check top-level parent
+        while ( tmpTax.getParentTaxon() != null ) {
+            tmpTax = tmpTax.getParentTaxon();
+        }
+        if ( taxon == null || !taxon.equals( tmpTax ) ) {
+            taxon = tmpTax;
+        }
+        return taxon;
     }
 
     /**

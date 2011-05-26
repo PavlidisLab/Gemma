@@ -41,6 +41,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	stateful : false,
 	stateEvents : ["beforesearch"],
 	eeSetReady : false,
+	taxonId: null,
 
 	PREVIEW_SIZE : 5,
 
@@ -779,17 +780,40 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 				});
 
-		/** Display items in form panel * */
+		/*************** TEXT *********************/
+
+				this.theseExperimentsPanel = new Ext.Panel({
+					html: 'these experiments',
+					style: 'text-align:center;font-size:1.4em;',
+					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ',
+					 'ext:qtip="Searches are limited to one taxon, if you want to change the taxon, click the reset button.">',
+					 '{taxonCommonName} </span> experiments ', 
+					 '<img src="/Gemma/images/icons/question_blue.png" ext:qtip="Searches are limited to one taxon, ' +
+					'if you want to change the taxon, click the reset button on the right."/> '),
+					tplWriteMode: 'overwrite'
+				});
+				this.theseGenesPanel = new Ext.Panel({
+					html: 'these genes',
+					style: 'text-align:center;font-size:1.4em;padding:0px',
+					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ', 
+					'ext:qtip="Searches are limited to one taxon, if you want to change the taxon, click the reset button.">', 
+					'{taxonCommonName}</span> genes ', 
+					'<img src="/Gemma/images/icons/question_blue.png" ext:qtip="Searches are limited to one taxon, ' +
+					'if you want to change the taxon, click the reset button on the right."/> '),
+					tplWriteMode: 'overwrite'
+				});
+
+		/*************** PUT ITEMS IN PANEL *********************/
 
 		Ext.apply(this, {
 			style : '',
-			items : {
-				xtype : 'fieldset',
-				title : '&nbsp;',
-				border : true,
-				searchBar : this.searchBar,
-				listeners : {
-					render : function(c) {
+			items: {
+				xtype: 'fieldset',
+				title: '&nbsp;',
+				border: true,
+				searchBar: this.searchBar,
+				listeners: {
+					render: function(c){
 						var floatType = Ext.isIE ? 'styleFloat' : 'cssFloat'; // work
 						// around
 						// Ext
@@ -797,72 +821,64 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						c.header.child('span').applyStyles(floatType + ':left;padding:5px 5px 0 0');
 						this.searchBar.render(c.header, 1);
 						// this.searchBar.wrap.applyStyles(floatType + ':left');
-						c.on('destroy', function() {
-									this.searchBar.destroy();
-								}, c, {
-									single : true
-								});
+						c.on('destroy', function(){
+							this.searchBar.destroy();
+						}, c, {
+							single: true
+						});
 					}
 				},
-				items : [{
-					layout : 'table',
-					layoutConfig : {
-						columns : 5
+				items: [{
+					layout: 'table', // needs to be table so panel stretches with content growth
+					width: 850,
+					border: false,
+					defaults: {
+						border: false,
+						style: 'padding: 3px'
 					},
-					colspan : 5,
-					width : 850,
-					border : false,
-					defaults : {
-						border : false,
-						style : 'padding: 3px'
-					},
-					items : [{
-						defaults : {
-							border : false
+					items: [{
+						defaults: {
+							border: false
 						},
-						items : [{
-									html : 'these experiments',
-									style : 'text-align:center;font-size:1.4em;'
-								}, this.experimentChoosers, {
-									width : 340,
-									html : 'Example: search for Alzheimer\'s and select all human experiments <br> '
-											+ '<span style="color:red">Note: using more than 50 experiments '
-											+ 'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)'
-								}]
+						items: [this.theseExperimentsPanel, this.experimentChoosers, {
+							width: 340,
+							html: 'Example: search for Alzheimer\'s and select all human experiments <br> ' +
+							'<span style="color:red">Note: using more than 50 experiments ' +
+							'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)'
+						}]
 					}, {
-						html : ' based on ',
-						style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top: 32px;margin-left: -11px;margin-right: -10px;'
+						html: ' based on ',
+						style: 'font-size:1.7em;padding-top: 32px;margin-left: -15px;margin-right: -12px;'
 					}, {
-						defaults : {
-							border : false
+						defaults: {
+							border: false
 						},
-						items : [{
-									html : 'these genes',
-									style : 'text-align:center;font-size:1.4em;padding:0px'
-								}, this.geneChoosers, {
-									html : '<div style="width:340px ; padding-left:10px">Example: search for "map kinase" and select a GO group<br>'
-											+ '<span style="color:red">Note: using more than 50 genes '
-											+ 'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)</div>'
-								}]
+						items: [this.theseGenesPanel, this.geneChoosers, {
+							html: '<div style="width:340px ; padding-left:10px">Example: search for "map kinase" and select a GO group<br>' +
+							'<span style="color:red">Note: using more than 50 genes ' +
+							'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)</div>'
+						}]
 					}, {
-						style : 'padding-top:30px',
-						items : new Ext.Button({
-									text : "<span style=\"font-size:1.3em\">Go!</span>",
-									// handler:
-									// this.doSearch.createDelegate(this,
-									// [this.getSelectedGeneRecords(),
-									// this.getSelectedExperimentRecords()],
-									// false),
-									width : 35,
-									scale : 'medium',
-									listeners : {
-										click : function() {
-											this.doSearch(this.getSelectedGeneRecords(), this
-															.getSelectedExperimentRecords());
-										}.createDelegate(this, [], false)
-									}
-
-								})
+						style:'padding:20 0 0 0px;margin:0px;',
+						items: [{
+							xtype: 'button',
+							text: "<span style=\"font-size:1.3em;padding-top:15px\">Go!</span>",
+							width: 55,
+							scale: 'medium',
+							listeners: {
+								click: function(){
+									this.doSearch(this.getSelectedGeneRecords(), this.getSelectedExperimentRecords());
+								}.createDelegate(this, [], false)
+							}
+						
+						}, {
+							xtype: 'button',
+							width: 55,
+							icon: '/Gemma/images/icons/arrow_refresh_small.png',
+							style: 'padding-top: 8px',
+							text:'Reset',
+							handler: this.reset.createDelegate(this)
+						}]
 					}]
 				}]
 			}
@@ -880,6 +896,27 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.doLayout();
 
 	},
+	
+	reset: function(){
+		
+		// remove all experiment and gene choosers
+		this.geneChoosers.removeAll();
+		this.experimentChoosers.removeAll();
+		
+		//reset taxon
+		this.taxonId = null;
+		
+		this.addGeneChooser();
+		this.addExperimentChooser();
+		
+		// reset taxon id and titles
+		Ext.DomHelper.overwrite(this.theseGenesPanel.body, {
+					cn : 'these genes'
+				});
+		Ext.DomHelper.overwrite(this.theseExperimentsPanel.body, {
+					cn : 'these experiments'
+				});
+	},
 
 	getTaxonId : function() {
 		return this.taxonId;
@@ -892,29 +929,44 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						this.geneCombo.setTaxonId(taxonId);
 					}
 				});
-	},
-	/*
-	changeTaxonId : function(taxonId) {
-		// set taxon for ALL geneChooser elements
-		var removed = false;
-		this.geneChoosers.items.each(function() {
-					if (this.xtype === 'geneSearchAndPreview') {
-						this.searchForm.removeGeneChooser(this.id);
-						removed = true;
+		this.experimentChoosers.items.each(function() {
+					if (this.xtype === 'experimentSearchAndPreview') {
+						this.experimentCombo.setTaxonId(taxonId);
 					}
 				});
-		if(removed){
-			this.addGeneChooser();
-		}
-		
-		this.setTaxonId();
+				
 	},
-*/
 	getTaxonName : function() {
 		return this.taxonName;
 	},
-	setTaxonName : function(taxonId) {
-		this.taxonName = taxonId;
+	setTaxonName : function(taxonName) {
+		this.taxonName = taxonName;
+		
+		this.theseExperimentsPanel.update({taxonCommonName:taxonName});
+		this.theseGenesPanel.update({taxonCommonName:taxonName});
+	},
+	/**
+	 * Check if the taxon needs to be changed, and if so, update the
+	 * geneAndGroupCombo and reset the gene preivew
+	 * 
+	 * @param {}
+	 *            taxonId
+	 */
+	taxonChanged : function(taxonId, taxonName) {
+
+		// if the 'new' taxon is the same as the 'old' taxon for the experiment
+		// combo, don't do anything
+		if (taxonId && this.getTaxonId() && (this.getTaxonId() === taxonId)) {
+			return;
+		}
+		// if the 'new' and 'old' taxa are different, reset the gene preview and
+		// filter the geneCombo
+		else if (taxonId) {
+			this.setTaxonId(taxonId);
+			this.setTaxonName(taxonName);
+		}
+
+		this.fireEvent("taxonchanged", taxonId);
 	},
 
 	// collapse all gene and experiment previews
@@ -986,57 +1038,44 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	removeGeneChooser : function(panelId) {
 		this.geneChoosers.remove(panelId, true);
 		this.geneChoosers.doLayout();
+		
+		if(this.getSelectedExperimentRecords().length === 0 && this.getSelectedGeneRecords().length === 0){
+			this.reset();
+		}
 	},
 
 	addExperimentChooser : function() {
 		this.experimentChooserIndex++;
 
 		this.experimentChoosers.add({
-			/*
-			 * layout: 'table', layoutConfig: {columns: 2}, style:
-			 * 'padding-top:4px', id: 'experimentChooserPanel' +
-			 * this.experimentChooserIndex, items: [ { xtype: 'button', id:
-			 * 'experimentChooser' + this.experimentChooserIndex + 'Button',
-			 * //icon: "/Gemma/images/icons/add.png", icon:
-			 * "/Gemma/images/icons/delete.png", cls: "x-btn-icon", style:
-			 * 'padding-top:6px', tooltip: 'Add another experiment or group to
-			 * your search', disabled: true, hidden: true, //handler:
-			 * this.addExperimentChooser.createDelegate(this, [], false)
-			 * handler: this.removeExperimentChooser.createDelegate(this, [],
-			 * false) }, {
-			 */
-			xtype : 'experimentSearchAndPreview',
-			searchForm : this,
-			style : 'padding-top:10px;margin-right:10px',
-			id : 'experimentChooser' + this.experimentChooserIndex,
-			listeners : {
-				madeFirstSelection : function() {
+			xtype: 'experimentSearchAndPreview',
+			searchForm: this,
+			taxonId: this.taxonId,
+			style: 'padding-top:10px;margin-right:10px',
+			id: 'experimentChooser' + this.experimentChooserIndex,
+			listeners: {
+				madeFirstSelection: function(){
 					// Ext.getCmp(this.getId()+'Button').enable();
 					this.searchForm.addExperimentChooser();
 					this.removeBtn.show();
 				},
-				removeExperiment : function() {
+				removeExperiment: function(){
 					this.searchForm.removeExperimentChooser(this.getId());
 				}
 			}
-				// }]
-			});
+		});
 
-		// change previous button to 'remove'
-		if (typeof Ext.getCmp('experimentChooser' + (this.experimentChooserIndex - 1) + 'Button') !== 'undefined') {
-			// Ext.getCmp('experimentChooser'+(this.experimentChooserIndex -
-			// 1)+'Button').show().setIcon('/Gemma/images/icons/delete.png').setTooltip('Remove
-			// this experiment or group from your
-			// search').setHandler(this.removeExperimentChooser.createDelegate(this,
-			// ['experimentChooserPanel'+(this.experimentChooserIndex - 1)],
-			// false));
-		}
 		this.experimentChoosers.doLayout();
 	},
 
 	removeExperimentChooser : function(panelId) {
 		this.experimentChoosers.remove(panelId, true);
 		this.experimentChoosers.doLayout();
+		
+		if(this.getSelectedExperimentRecords().length === 0 && this.getSelectedGeneRecords().length === 0){
+			this.reset();
+		}
+
 	}
 
 });

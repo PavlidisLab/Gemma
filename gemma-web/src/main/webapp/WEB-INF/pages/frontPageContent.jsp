@@ -1,5 +1,4 @@
 <%@ include file="/common/taglibs.jsp"%>
-<title><fmt:message key="mainMenu.title" /></title>
 
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/AnalysisResultsSearch.js' />

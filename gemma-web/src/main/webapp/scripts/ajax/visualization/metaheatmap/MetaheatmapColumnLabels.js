@@ -94,8 +94,14 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 								if (dColumn._expandButton.pressed) {
 									for (var i = 0; i < dColumn._factorValueNames.length; i++) {
 										if (i === 0) {
-											MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
+											if(dColumn.miniPieValue>0){
+												MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
 													Gemma.MetaVisualizationConfig.miniPieColor, dColumn.miniPieValue);
+											}else{
+												MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
+													Gemma.MetaVisualizationConfig.miniPieColorInvalid, 360);
+											}
+											
 										}
 										if (hiDatasetGroup === currentDatasetGroupIndex
 												&& hiColumnGroup === datasetColumnGroupPanel._columnGroupIndex
@@ -123,28 +129,28 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 									xPosition += Gemma.MetaVisualizationConfig.columnSeparatorWidth;
 								} else {
 									if (!dColumn.hidden) {
-										var factorText = dColumn.factorCategory
-												? dColumn.factorCategory
-												: dColumn.factorName;
+										var factorText = dColumn.factorCategory ? dColumn.factorCategory : dColumn.factorName;
 										factorText = Ext.util.Format.ellipsis(factorText, 25, false);
-
-										MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
-												Gemma.MetaVisualizationConfig.miniPieColor, dColumn.miniPieValue);
-										if (hiDatasetGroup === currentDatasetGroupIndex
-												&& hiColumnGroup === columnGroup._columnGroupIndex
-												&& hiColumn === currentColumn) {
-											ctx.drawRotatedText(xPosition,
-													Gemma.MetaVisualizationConfig.labelBaseYCoor,
-													Gemma.MetaVisualizationConfig.labelAngle,
-													Gemma.MetaVisualizationConfig.columnLabelFontSize,
-													Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
-													factorText);
-										} else {
-											ctx.drawRotatedText(xPosition,
-													Gemma.MetaVisualizationConfig.labelBaseYCoor,
-													Gemma.MetaVisualizationConfig.labelAngle,
-													Gemma.MetaVisualizationConfig.columnLabelFontSize,
-													Gemma.MetaVisualizationConfig.defaultLabelColor, factorText);
+										
+										if (dColumn.miniPieValue > 0) {
+											MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight - 5,
+											 9, Gemma.MetaVisualizationConfig.miniPieColor, dColumn.miniPieValue);
+										}
+										else {
+											MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight - 5,
+											 9, Gemma.MetaVisualizationConfig.miniPieColorInvalid, 360);
+										}
+										if (hiDatasetGroup === currentDatasetGroupIndex &&
+										hiColumnGroup === columnGroup._columnGroupIndex &&
+										hiColumn === currentColumn) {
+											ctx.drawRotatedText(xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor, 
+												Gemma.MetaVisualizationConfig.labelAngle, Gemma.MetaVisualizationConfig.columnLabelFontSize, 
+												Gemma.MetaVisualizationConfig.analysisLabelHighlightColor, factorText);
+										}
+										else {
+											ctx.drawRotatedText(xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor, 
+												Gemma.MetaVisualizationConfig.labelAngle, Gemma.MetaVisualizationConfig.columnLabelFontSize, 
+												Gemma.MetaVisualizationConfig.defaultLabelColor, factorText);
 										}
 										xPosition += Gemma.MetaVisualizationConfig.cellWidth;
 										xPosition += Gemma.MetaVisualizationConfig.columnSeparatorWidth;
@@ -164,17 +170,14 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 
 					// line to mark end of group
 					MiniPieLib.drawFilledRotatedRectangle(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth,
-							Gemma.MetaVisualizationConfig.labelBaseYCoor + 2, 2, 340,
+							Gemma.MetaVisualizationConfig.labelBaseYCoor + 2, 2, Gemma.MetaVisualizationConfig.columnLabelHeight+80,
 							Gemma.MetaVisualizationConfig.labelAngle, 'rgba(10,100,100, 0.9)');
-
-					// console.log("columnCentre: "+columnCentre+" lamda:
-					// "+lamda+" centre: "+labelCentre);
 
 					// draw background for titles
 					ctx.fillStyle = 'white';
 					ctx.fillRect(startPosition + lamda - 3 * Gemma.MetaVisualizationConfig.cellWidth, 0,
-							(xPosition - startPosition) * 2 + Gemma.MetaVisualizationConfig.columnSeparatorWidth, Gemma.MetaVisualizationConfig.columnLabelHeight
-									- Gemma.MetaVisualizationConfig.labelBaseYCoor + 15)
+							Math.max((xPosition - startPosition) * 2 + Gemma.MetaVisualizationConfig.columnSeparatorWidth,200), 
+								Gemma.MetaVisualizationConfig.columnLabelHeight - Gemma.MetaVisualizationConfig.labelBaseYCoor + 15)
 
 					// ctx.font =
 					// (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2) +

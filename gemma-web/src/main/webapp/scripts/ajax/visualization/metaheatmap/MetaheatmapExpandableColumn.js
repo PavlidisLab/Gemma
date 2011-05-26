@@ -387,7 +387,7 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 			_datasetGroupIndex : this.datasetGroupIndex,
 			_columnHidden : false,
 
-			miniPieValue : 360.0 * this.dataColumn.numberOfProbesDiffExpressed / this.dataColumn.numberOfProbesTotal,
+			miniPieValue : (this.dataColumn.numberOfProbesTotal === 0)? -1: 360.0 * this.dataColumn.numberOfProbesDiffExpressed / this.dataColumn.numberOfProbesTotal,
 			sumOfPvalues : 0.0,
 
 			factorValueIds : this.dataColumn.contrastsFactoreValueIds,

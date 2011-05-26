@@ -12,8 +12,8 @@ Gemma.MetaVisualizationConfig.geneLabelFontSize = 9;
 Gemma.MetaVisualizationConfig.columnLabelFontSize = 9;
 
 Gemma.MetaVisualizationConfig.labelAngle = 315.0;
-Gemma.MetaVisualizationConfig.labelBaseYCoor = 206;
-Gemma.MetaVisualizationConfig.columnLabelHeight = 220;
+Gemma.MetaVisualizationConfig.labelBaseYCoor = 196;
+Gemma.MetaVisualizationConfig.columnLabelHeight = 210;
 
 Gemma.MetaVisualizationConfig.panelWidth = (Ext.getBody().getViewSize().width > 1000)
 		? Ext.getBody().getViewSize().width * .95
@@ -36,6 +36,7 @@ Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor1 = 'rgba(10,100,10, 0
 Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor2 = 'rgba(10,100,10, 0.05)';
 
 Gemma.MetaVisualizationConfig.miniPieColor = 'rgb(95,158,160)';
+Gemma.MetaVisualizationConfig.miniPieColorInvalid = 'rgb(192,192,192)';
 
 Gemma.MetaVisualizationConfig.basicColourRange = new org.systemsbiology.visualization.DiscreteColorRange(20, {
 			min : -1,
