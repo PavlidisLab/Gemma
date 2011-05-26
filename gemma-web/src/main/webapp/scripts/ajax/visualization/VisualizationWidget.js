@@ -1031,9 +1031,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 					// So initial state is sure to be okay, after restore from
 					// cookie
-					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode
-							? "Switch to line plot"
-							: "Switch to heatmap");
+					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
 					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Zoom out" : "Zoom in");
 					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
 					Ext.getCmp(this.toggleSampleNamesBtnId).setText(this.showSampleNames ? "Hide sample names" : "Show sample names");

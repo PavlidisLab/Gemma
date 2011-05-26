@@ -6,10 +6,9 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 		Ext.apply(this, {
 			autoEl : {
 				tag : 'canvas',
-				width : this.applicationRoot._heatMapWidth
-						* 1
-						+ Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor
-								/ Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180)) + 80,
+				width : this.applicationRoot._heatMapWidth * 1 +
+						Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / 
+							Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180)) + 80,
 				height : Gemma.MetaVisualizationConfig.columnLabelHeight
 			},
 			_data : this.visualizationData,
@@ -40,22 +39,22 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 
 						if (datasetColumnGroupPanel._hidden === false) {
 							if (alternateColors == 1) {
-								MiniPieLib.drawFilledRotatedRectangle(ctx, xPosition
-												- Gemma.MetaVisualizationConfig.cellWidth,
+								MiniPieLib.drawFilledRotatedRectangle(ctx, xPosition -
+										Gemma.MetaVisualizationConfig.cellWidth,
 										Gemma.MetaVisualizationConfig.labelBaseYCoor, datasetColumnGroupPanel
 												.getWidth(), 300, Gemma.MetaVisualizationConfig.labelAngle,
 										Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor1);
 								alternateColors = 0;
 							} else {
-								MiniPieLib.drawFilledRotatedRectangle(ctx, xPosition
-												- Gemma.MetaVisualizationConfig.cellWidth,
+								MiniPieLib.drawFilledRotatedRectangle(ctx, xPosition -
+												Gemma.MetaVisualizationConfig.cellWidth,
 										Gemma.MetaVisualizationConfig.labelBaseYCoor, datasetColumnGroupPanel
 												.getWidth(), 300, Gemma.MetaVisualizationConfig.labelAngle,
 										Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor2);
 								alternateColors = 1;
 							}
-							if (hiDatasetGroup === currentDatasetGroupIndex
-									&& hiColumnGroup == datasetColumnGroupPanel._columnGroupIndex) {
+							if (hiDatasetGroup === currentDatasetGroupIndex &&
+									hiColumnGroup == datasetColumnGroupPanel._columnGroupIndex) {
 								ctx.drawRotatedText(xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 										Gemma.MetaVisualizationConfig.labelAngle,
 										Gemma.MetaVisualizationConfig.columnLabelFontSize,
@@ -78,13 +77,13 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 								continue;
 							}
 							if (alternateColorsAnalysis == 1) {
-								MiniPieLib.drawFilledRectangle(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth
-												+ 2, Gemma.MetaVisualizationConfig.labelBaseYCoor,
+								MiniPieLib.drawFilledRectangle(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth +
+												2, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 										analysisColumnGroupPanel.getWidth() - 2, 3, 'rgba(10,100,10, 0.9)');
 								alternateColorsAnalysis = 0;
 							} else {
-								MiniPieLib.drawFilledRectangle(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth
-												+ 2, Gemma.MetaVisualizationConfig.labelBaseYCoor,
+								MiniPieLib.drawFilledRectangle(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth +
+												2, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 										analysisColumnGroupPanel.getWidth() - 2, 3, 'rgba(10,100,100, 0.9)');
 								alternateColorsAnalysis = 1;
 							}
@@ -103,9 +102,9 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 											}
 											
 										}
-										if (hiDatasetGroup === currentDatasetGroupIndex
-												&& hiColumnGroup === datasetColumnGroupPanel._columnGroupIndex
-												&& i === hiFactorValue && currentColumn === hiColumn) {
+										if (hiDatasetGroup === currentDatasetGroupIndex &&
+												hiColumnGroup === datasetColumnGroupPanel._columnGroupIndex &&
+												i === hiFactorValue && currentColumn === hiColumn) {
 											ctx.drawRotatedText(xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 													Gemma.MetaVisualizationConfig.labelAngle,
 													Gemma.MetaVisualizationConfig.columnLabelFontSize,
@@ -164,8 +163,8 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 					// get the x coordinate of the middle of the experiment
 					// group's labels (not columns)
 					var columnCentre = Math.floor(startPosition + (xPosition - startPosition) / 2);
-					var lamda = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor
-							/ Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180));
+					var lamda = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor /
+							Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180));
 					var labelCentre = Math.floor(columnCentre + lamda);
 
 					// line to mark end of group
@@ -177,7 +176,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 					ctx.fillStyle = 'white';
 					ctx.fillRect(startPosition + lamda - 3 * Gemma.MetaVisualizationConfig.cellWidth, 0,
 							Math.max((xPosition - startPosition) * 2 + Gemma.MetaVisualizationConfig.columnSeparatorWidth,200), 
-								Gemma.MetaVisualizationConfig.columnLabelHeight - Gemma.MetaVisualizationConfig.labelBaseYCoor + 15)
+								Gemma.MetaVisualizationConfig.columnLabelHeight - Gemma.MetaVisualizationConfig.labelBaseYCoor + 15);
 
 					// ctx.font =
 					// (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2) +
@@ -188,19 +187,19 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 					// labelCentre = labelCentre - metrics.width/2;
 
 					// adjust for text width
-					var textStart = labelCentre - (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2)
-							* this._datasetGroupNames[currentDatasetGroupIndex].length / 2;
+					var textStart = labelCentre - (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2) *
+							 this._datasetGroupNames[currentDatasetGroupIndex].length / 2;
 
 					// draw experiment group titles
-					ctx.drawText('', Gemma.MetaVisualizationConfig.columnLabelFontSize, startPosition + lamda
-									- Gemma.MetaVisualizationConfig.cellWidth,
+					ctx.drawText('', Gemma.MetaVisualizationConfig.columnLabelFontSize, startPosition + lamda -
+									Gemma.MetaVisualizationConfig.cellWidth,
 							Gemma.MetaVisualizationConfig.columnLabelFontSize + 2,
 							this._datasetGroupNames[currentDatasetGroupIndex]);
 
 					xPosition += Gemma.MetaVisualizationConfig.groupSeparatorWidth;
 				}
-				this._widthOfColumns = xPosition - Gemma.MetaVisualizationConfig.cellWidth
-						- Gemma.MetaVisualizationConfig.groupSeparatorWidth;
+				this._widthOfColumns = xPosition - Gemma.MetaVisualizationConfig.cellWidth -
+						Gemma.MetaVisualizationConfig.groupSeparatorWidth;
 			}
 
 		});
@@ -220,8 +219,8 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 		return column;
 	},
 	getAnalysisObject : function(e, t) {
-		var rawColumnNumber = this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY()
-						- Ext.get(t).getY());
+		var rawColumnNumber = this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY() -
+						Ext.get(t).getY());
 
 		// if mouse is outside heatmap area, return null
 		if (rawColumnNumber >= (this.applicationRoot.TOTAL_NUMBER_OF_COLUMNS - this.applicationRoot.TOTAL_NUMBER_OF_HIDDEN_COLUMNS)) {
@@ -242,20 +241,20 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 
 		// get the group index and the column index within the group
 		while (columnWithinGroup >= (columnGroups[columnGroupIndex].dataColumns.length - columnGroups[columnGroupIndex]._columnsHidden)) {
-			columnWithinGroup = columnWithinGroup
-					- (columnGroups[columnGroupIndex].dataColumns.length - columnGroups[columnGroupIndex]._columnsHidden);
+			columnWithinGroup = columnWithinGroup -
+					(columnGroups[columnGroupIndex].dataColumns.length - columnGroups[columnGroupIndex]._columnsHidden);
 			columnGroupIndex++;
 		}
 
-		var colSum = columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length
-				- columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden;
+		var colSum = columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length -
+				columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden;
 
 		// get the experiment index within the group
 		while (columnWithinGroup >= colSum) {
 			prevColSum = colSum;
 			experimentWithinGroupIndex++;
-			colSum = colSum + columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length
-					- columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden;
+			colSum = colSum + columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length -
+					columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden;
 		}
 		// get the column number within the experiment
 		columnWithinExperiment = columnWithinGroup - prevColSum;
@@ -291,12 +290,11 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 			// cursor
 			var x = e.getPageX() - Ext.get(t).getX();
 			var y = e.getPageY() - Ext.get(t).getY();
-			if (y > 20
-					&& (x < Gemma.MetaVisualizationConfig.labelBaseYCoor
-							* Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) && (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) > Math
-							.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180)
-							* x)
-					|| (x > this._widthOfColumns && (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) < (Math
+			if (y > 20 &&
+					(x < Gemma.MetaVisualizationConfig.labelBaseYCoor *
+							Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) && (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) > 
+							Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) * x) ||
+					(x > this._widthOfColumns && (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) < (Math
 							.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) * (x - this._widthOfColumns)))) {
 				document.body.style.cursor = 'default';
 			} else {
@@ -309,8 +307,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 					// get the factor values into a readable form
 					var factorValues = [];
 					for (k = 0; k < analysisObj.contrastsFactorValueIds.length; k++) {
-						factorValues.push(" "
-								+ analysisObj.contrastsFactorValues[analysisObj.contrastsFactorValueIds[k]]);
+						factorValues.push(" " + analysisObj.contrastsFactorValues[analysisObj.contrastsFactorValueIds[k]]);
 					}
 
 					this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );

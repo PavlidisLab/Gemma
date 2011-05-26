@@ -106,8 +106,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						taxonCommonName : record.get("taxonName")
 					});
 			this.genePreviewContent.setTitle(
-				'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()
-				+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 gene)');
+				'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()+
+				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 gene)');
 			this.geneSelectionEditorBtn.setText('0 more');
 			this.geneSelectionEditorBtn.disable();
 			this.geneSelectionEditorBtn.show();
@@ -157,8 +157,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.genePreviewContent.update(genes[i]);
 					}
 					this.genePreviewContent.setTitle(
-						'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()
-						+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " genes)");
+						'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()+
+						'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " genes)");
 				
 					this.geneSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
 					this.showGenePreview();
@@ -205,8 +205,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				var warned = false;
 				if (i >= Gemma.MAX_GENES_PER_QUERY) {
 					if (!warned) {
-						Ext.Msg.alert("Too many genes", "You can only search up to " + Gemma.MAX_GENES_PER_QUERY
-										+ " genes, some of your selections will be ignored.");
+						Ext.Msg.alert("Too many genes", "You can only search up to " + 
+							Gemma.MAX_GENES_PER_QUERY +
+							" genes, some of your selections will be ignored.");
 						warned = true;
 					}
 				}
@@ -269,9 +270,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				var msgMany = "";
 				var msgNone = "";
 				if (queriesWithMoreThanOneResult.length > 0) {
-					msgMany = queriesWithMoreThanOneResult.length
-							+ ((queriesWithMoreThanOneResult.length === 1) ? " query" : " queries")
-							+ "  returned more than one gene, all were added to the results: <br>";
+					msgMany = queriesWithMoreThanOneResult.length +
+							((queriesWithMoreThanOneResult.length === 1) ? " query" : " queries") +
+							"  returned more than one gene, all were added to the results: <br>";
 					// for each query
 					query = '';
 					for (i = 0; i < queriesWithMoreThanOneResult.length; i++) {
@@ -290,9 +291,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					msgMany += '<br><br><br>';
 				}
 				if (queriesWithNoResults.length > 0) {
-					msgNone = queriesWithNoResults.length
-							+ ((queriesWithNoResults.length === 1) ? " query" : " queries")
-							+ " did not match any genes in Gemma:<br><br>";
+					msgNone = queriesWithNoResults.length +
+							((queriesWithNoResults.length === 1) ? " query" : " queries") +
+							" did not match any genes in Gemma:<br><br>";
 					// for each query
 					query = '';
 					for (i = 0; i < queriesWithNoResults.length; i++) {
@@ -307,11 +308,11 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				if (queriesWithMoreThanOneResult.length > 0 || queriesWithNoResults.length > 0) {
 
 					Ext.DomHelper.append(this.genePreviewContent.body, {
-								cn : '<div style="padding-bottom:7px;color:red;">Warning: Not all symbols had exact matches ('
-										+ '<a onclick="Ext.Msg.alert(\'Query Result Details\',\'Please note:<br><br>'
-										+ msgMany
-										+ msgNone
-										+ '\');" style="color: red; text-decoration: underline;">details</a>)</div>'
+								cn : '<div style="padding-bottom:7px;color:red;">Warning: Not all symbols had exact matches ('+
+										 '<a onclick="Ext.Msg.alert(\'Query Result Details\',\'Please note:<br><br>'+
+										 msgMany+
+										 msgNone+
+										 '\');" style="color: red; text-decoration: underline;">details</a>)</div>'
 							});
 				}
 
@@ -320,8 +321,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					this.genePreviewContent.update(genesToPreview[i]);
 				}
 				this.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + ")");
-				this.geneSelectionEditorBtn.setText('<a>' + (geneIds.length - genesToPreview.length)
-						+ ' more - Edit</a>');
+				this.geneSelectionEditorBtn.setText('<a>' + (geneIds.length - genesToPreview.length)+
+						 ' more - Edit</a>');
 				this.showGenePreview();
 				this.genePreviewContent.show();
 

@@ -181,8 +181,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				this.updateDatabase();
 			} else if (btn === 'yes') { // yes is save as
 				this.detailsWin.name = this.groupName;
-				this.detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: '
-						+ (new Date()).toString();
+				this.detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
+						(new Date()).toString();
 
 				this.detailsWin.show();
 			} else {
@@ -262,8 +262,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					renderer : function(value, metadata, record, row, col, ds) {
 						return String
 								.format(
-										"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"
-										+"<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ",
+										"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"+
+										"<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ",
 										record.data.id, record.data.shortName, record.data.name);
 					},
 					sortable : true
@@ -390,8 +390,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// save button should only be visible if user is logged in, but just to
 		// be safe:
 		if (!Ext.get('hasUser').getValue()) {
-			Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "
-							+ " however, your list will be available temporarily.");
+			Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+
+							" however, your list will be available temporarily.");
 			this.saveToSession();
 		} else {
 
@@ -421,9 +421,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					// ask user if they want to save changes
 					Ext.Msg.show({
 								title : 'Save Changes?',
-								msg : 'You have edited an existing group, '
-										+ 'would you like to save your changes?<br>'
-										+ '(Unsaved lists are available until you log out.)',
+								msg : 'You have edited an existing group, '+
+										 'would you like to save your changes?<br>'+
+										 '(Unsaved lists are available until you log out.)',
 								buttons : {
 									ok : 'Save',
 									yes : 'Save As...',

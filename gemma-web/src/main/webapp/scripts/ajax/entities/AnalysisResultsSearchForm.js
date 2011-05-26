@@ -103,8 +103,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var geneGroupsToMake = [];
 		var geneGroupsAlreadyMade = [];
 		var i;
+		var record;
 		for (i = 0; i < geneRecords.length; i++) {
-			var record = geneRecords[i];
+			record = geneRecords[i];
 			if (typeof record !== 'undefined' && (!record.reference || record.reference.id === null)) {
 				// addNonModificationBasedSessionBoundGroups() takes a
 				// genesetvalueobject, so add needed field
@@ -147,7 +148,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var experimentGroupsAlreadyMade = [];
 
 		for (i = 0; i < experimentRecords.length; i++) {
-			var record = experimentRecords[i];
+			record = experimentRecords[i];
 			// if the group has a null value for reference.id, then it hasn't
 			// been
 			// created as a group in the database nor session
@@ -323,8 +324,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			 * this trimmed list or re-enter your gene query(ies) and "+ "use
 			 * the edit tool to manually trim your selection(s).";
 			 */
-			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_QUERY
-					+ " genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
+			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_QUERY +
+					" genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
 			return "";
 
 		} else {
@@ -530,10 +531,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			this.loadGenes(dsc.geneIds); // TODO loadGenes isn't in this
 			// class anymore
 
-			return "You can only search up to " + Gemma.MAX_GENES_PER_QUERY
-					+ " genes. Please note that your list of genes has been trimmed automatically. <br>"
-					+ "Press 'Go' again to run the search with this trimmed list or re-enter your gene query and "
-					+ "use the edit tool to manually trim your selection.";
+			return "You can only search up to " + Gemma.MAX_GENES_PER_QUERY +
+					 " genes. Please note that your list of genes has been trimmed automatically. <br>" +
+					 "Press 'Go' again to run the search with this trimmed list or re-enter your gene query and " +
+					 "use the edit tool to manually trim your selection.";
 
 		} else {
 			return "";
@@ -573,8 +574,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getDataForDiffVisualization : function(geneRecords, experimentRecords) {
 		var geneRecordReferences = [];
 		var geneNames = [];
+		var i;
 		if (geneRecords.length > 0) {
-			var i;
 			for (i = 0; i < geneRecords.length; i++) {
 				geneRecordReferences.push(geneRecords[i].reference);
 				geneNames.push(geneRecords[i].name);
@@ -584,7 +585,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var experimentNames = [];
 		var experimentCount = 0;
 		if (experimentRecords.length > 0) {
-			var i;
 			for (i = 0; i < experimentRecords.length; i++) {
 				experimentRecordReferences.push(experimentRecords[i].reference);
 				experimentNames.push(experimentRecords[i].name);
@@ -651,8 +651,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getSelectedExperimentRecords : function() {
 		var selectedExperimentRecords = [];
 		this.experimentChoosers.items.each(function() {
-					if (this.xtype === 'experimentSearchAndPreview'
-							&& typeof this.selectedExperimentOrGroupRecord !== 'undefined') {
+					if (this.xtype === 'experimentSearchAndPreview' &&
+						typeof this.selectedExperimentOrGroupRecord !== 'undefined') {
 						selectedExperimentRecords.push(this.selectedExperimentOrGroupRecord);
 					}
 				});
@@ -1029,8 +1029,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (typeof Ext.getCmp('geneChooser' + (this.geneChooserIndex - 1) + 'Button') !== 'undefined') {
 			Ext.getCmp('geneChooser' + (this.geneChooserIndex - 1) + 'Button').show()
 					.setIcon('/Gemma/images/icons/delete.png').setTooltip('Remove this gene or group from your search')
-					.setHandler(this.removeGeneChooser.createDelegate(this, ['geneChooserPanel'
-									+ (this.geneChooserIndex - 1)], false));
+					.setHandler(this.removeGeneChooser.createDelegate(this, ['geneChooserPanel' +
+									 (this.geneChooserIndex - 1)], false));
 		}
 		this.geneChoosers.doLayout();
 	},

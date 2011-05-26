@@ -48,8 +48,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						taxon : record.get("taxonName")
 					});
 			this.experimentPreviewContent.setTitle(
-				'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()
-				+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 experiment)');
+				'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+
+				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 experiment)');
 			this.experimentSelectionEditorBtn.setText('0 more');
 			this.experimentSelectionEditorBtn.disable();
 			this.experimentSelectionEditorBtn.show();

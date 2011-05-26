@@ -15,9 +15,8 @@ Gemma.MetaVisualizationConfig.labelAngle = 315.0;
 Gemma.MetaVisualizationConfig.labelBaseYCoor = 196;
 Gemma.MetaVisualizationConfig.columnLabelHeight = 210;
 
-Gemma.MetaVisualizationConfig.panelWidth = (Ext.getBody().getViewSize().width > 1000)
-		? Ext.getBody().getViewSize().width * .95
-		: 1000;
+Gemma.MetaVisualizationConfig.panelWidth = (Ext.getBody().getViewSize().width > 1000)?
+		Ext.getBody().getViewSize().width * 0.95 : 1000;
 Gemma.MetaVisualizationConfig.panelHeight = 600;// (Ext.getBody().getViewSize().height
 // > 500)?
 // Ext.getBody().getViewSize().height*.90 : 500;

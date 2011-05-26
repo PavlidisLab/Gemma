@@ -190,7 +190,7 @@ var Heatmap = function() {
 				
 				/* do not use Math.floor, canvas will handle fractional values okay and fill the space. */
 				//var boxWidth = Math.floor(heatmapWidth / numberOfColumns);
-				var boxWidth = heatmapWidth / numberOfColumns;
+				boxWidth = heatmapWidth / numberOfColumns;
 				
 				/*
 			 * If columns are really tiny, we just skip some columns -- blur things out. This can also speed things
@@ -569,12 +569,12 @@ var Heatmap = function() {
 			var ctx;
 
 			var numBoxes = COLOR_16.length / 2;
-
+			var scalebarLength = 0;
 			if (vertical) {
-				var scalebarLength = Math.ceil(boxHeight * numBoxes);
+				scalebarLength = Math.ceil(boxHeight * numBoxes);
 				ctx = constructCanvas($(container), 50, 60 + scalebarLength);
 			} else {
-				var scalebarLength = Math.ceil(boxWidth * numBoxes);
+				scalebarLength = Math.ceil(boxWidth * numBoxes);
 				ctx = constructCanvas($(container), 60 + scalebarLength, 40);
 			}
 

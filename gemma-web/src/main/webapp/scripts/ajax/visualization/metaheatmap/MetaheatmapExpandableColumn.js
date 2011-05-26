@@ -257,23 +257,23 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				// this.applicationRoot._rotatedLabelsBox._drawTopLabels (
 				// this._datasetGroupIndex, this._columnGroupIndex,
 				// this._columnIndex, index.column );
-				this.applicationRoot.MiniWindowTool.setTitle("Gene: " + " Experiment: " + " Factor: "
-						+ " Factor value: ");
-				this.applicationRoot.MiniWindowTool.specificity.setText("Specificity: " + 100
-						* this.ownerCt.miniPieValue / 360);
+				this.applicationRoot.MiniWindowTool.setTitle("Gene: " + " Experiment: " + " Factor: "+
+						" Factor value: ");
+				this.applicationRoot.MiniWindowTool.specificity.setText("Specificity: " + 100 *
+						this.ownerCt.miniPieValue / 360);
 				this.applicationRoot.MiniWindowTool.pValue.setText("pValue: " + this.pValues[index.row]);
-				this.applicationRoot.MiniWindowTool.foldChange.setText("Fold change: "
-						+ this.contrastsFoldChanges[index.row][index.column]);
+				this.applicationRoot.MiniWindowTool.foldChange.setText("Fold change: " +
+						this.contrastsFoldChanges[index.row][index.column]);
 			} else {
 				this._drawHeatmapColumn(false, index.row);
 				// this.applicationRoot._rotatedLabelsBox._drawTopLabels (
 				// this._datasetGroupIndex, this._columnGroupIndex,
 				// this._columnIndex );
 				this.applicationRoot.MiniWindowTool.setTitle("Gene: " + " Experiment: " + " Factor: ");
-				this.applicationRoot.MiniWindowTool.specificity.setText("Specificity: " + 100
-						* this.ownerCt.miniPieValue / 360);
-				this.applicationRoot.MiniWindowTool.pValue.setText("pValue: "
-						+ this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]);
+				this.applicationRoot.MiniWindowTool.specificity.setText("Specificity: " + 100 *
+						this.ownerCt.miniPieValue / 360);
+				this.applicationRoot.MiniWindowTool.pValue.setText("pValue: " +
+						this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]);
 				// this.applicationRoot.MiniWindowTool.foldChange.setText("Fold
 				// change: " +
 				// this._contrastsVisualizationValues[index.row][index.column]);

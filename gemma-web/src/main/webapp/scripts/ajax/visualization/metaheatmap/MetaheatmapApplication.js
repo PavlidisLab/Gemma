@@ -126,14 +126,13 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		this.TOTAL_NUMBER_OF_COLUMNS = 0;
 		var datasetGroupIndex;
 		for (datasetGroupIndex = 0; datasetGroupIndex < this.visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
-			this.TOTAL_NUMBER_OF_COLUMNS = this.TOTAL_NUMBER_OF_COLUMNS
-					+ this.visualizationData.resultSetValueObjects[datasetGroupIndex].length;
+			this.TOTAL_NUMBER_OF_COLUMNS = this.TOTAL_NUMBER_OF_COLUMNS +
+					this.visualizationData.resultSetValueObjects[datasetGroupIndex].length;
 		}
-		this._heatMapWidth = this.TOTAL_NUMBER_OF_COLUMNS
-				* 1
-				* (Gemma.MetaVisualizationConfig.cellWidth * 1 + Gemma.MetaVisualizationConfig.columnSeparatorWidth * 1)
-				* 1 + Gemma.MetaVisualizationConfig.groupSeparatorWidth
-				* (this.visualizationData.resultSetValueObjects.length - 1) * 1;
+		this._heatMapWidth = this.TOTAL_NUMBER_OF_COLUMNS * 1 *
+				(Gemma.MetaVisualizationConfig.cellWidth * 1 + Gemma.MetaVisualizationConfig.columnSeparatorWidth * 1) *
+				1 + Gemma.MetaVisualizationConfig.groupSeparatorWidth *
+				(this.visualizationData.resultSetValueObjects.length - 1) * 1;
 
 		Ext.apply(this, {
 			width : Gemma.MetaVisualizationConfig.panelWidth,
@@ -263,8 +262,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 									if (record.get('name') === 'qValues') {
 										this._sortColumns('DESC', function(o1, o2) {
 
-													return o1.overallDifferentialExpressionScore
-															- o2.overallDifferentialExpressionScore;
+													return o1.overallDifferentialExpressionScore -
+															o2.overallDifferentialExpressionScore;
 												});
 										this.doLayout();
 									}else if(record.get('name') ==='specificity'){
@@ -387,9 +386,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 											// checked node, show it, otherwise
 											// hide it
 											filteringFn = function(o) {
-												console
-														.log("o.factorName.toLowerCase(): "
-																+ o.factorName.toLowerCase());
 												if (checkedNodeIds.indexOf(o.factorName.toLowerCase()) > -1) {
 													return false; // don't
 													// filter it
@@ -818,14 +814,14 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					}					
 
 					// if no experiments were returned, don't show visualizer
-					if (experimentCount == 0) {
+					if (experimentCount === 0) {
 						Ext.DomHelper.overwrite('meta-heatmap-div', {
 							html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
 						});
 					} else {
 						_metaVizApp = new Gemma.MetaHeatmapApp({
-									tbarTitle : '<b>Differential Expression Visualisation</b> (Data available for '
-											+ experimentCount + ' of ' + this.param.datasetCount + ' experiments)',
+									tbarTitle : '<b>Differential Expression Visualisation</b> (Data available for ' +
+											experimentCount + ' of ' + this.param.datasetCount + ' experiments)',
 									visualizationData : data,
 									applyTo : 'meta-heatmap-div',
 									pvalue : this.param.pvalue
@@ -978,8 +974,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
 		Gemma.MetaHeatmapDataSelection.superclass.initComponent.apply(this, arguments);
 
-		if (this.param && this.param.geneReferences && this.param.geneNames && this.param.datasetReferences
-				&& this.param.datasetNames && this.param.taxonId) {
+		if (this.param && this.param.geneReferences && this.param.geneNames && this.param.datasetReferences &&
+			this.param.datasetNames && this.param.taxonId) {
 			this.doVisualization();
 		}
 	},
