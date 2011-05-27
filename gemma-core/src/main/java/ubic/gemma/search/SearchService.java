@@ -82,7 +82,6 @@ import org.springframework.stereotype.Service;
 import ubic.basecode.ontology.model.OntologyIndividual;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -97,7 +96,6 @@ import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
@@ -314,10 +312,8 @@ public class SearchService implements InitializingBean {
         // doing this is a separate loop so that these names take lower precedence when matching than the full terms in
         // the generated keySet
         // some of the special cases the section below may be unnecessary, or more may need to be added
-        Taxon salmonTaxon = null;
-
         for ( Taxon taxon : taxonCollection ) {
-            if ( taxon.getCommonName().equalsIgnoreCase( "salmonid" ) ) salmonTaxon = taxon;
+
             String[] terms;
             if ( taxon.getScientificName() != null ) {
                 terms = taxon.getScientificName().split( "\\s+" );
@@ -330,11 +326,14 @@ public class SearchService implements InitializingBean {
                     }
                 }
             }
-            if ( taxon.getCommonName() != null ) {
+            if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {
+                if ( taxon.getCommonName().equalsIgnoreCase( "salmonid" ) ) {
+                    nameToTaxonMap.put( "salmon", taxon );
+                }
+
                 terms = taxon.getCommonName().split( "\\s+" );
                 if ( terms.length > 1 ) {
                     for ( String s : terms ) {
-
                         if ( !s.equalsIgnoreCase( "salmon" ) && !s.equalsIgnoreCase( "pink" )
                                 && !s.equalsIgnoreCase( "rainbow" ) ) {
                             nameToTaxonMap.put( s.toLowerCase(), taxon );
@@ -343,10 +342,6 @@ public class SearchService implements InitializingBean {
                 }
             }
 
-        }
-
-        if ( salmonTaxon != null ) {
-            nameToTaxonMap.put( "salmon", salmonTaxon );
         }
 
     }
