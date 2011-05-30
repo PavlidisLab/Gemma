@@ -146,6 +146,20 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 		var r = this.store.findExact(this.getValue());
 		this.fireEvent("select", this, r, this.store.indexOf(r));
 	},
+	
+	/**
+	 * To allow setting programmatically.
+	 * 
+	 * @param {}
+	 *            taxon
+	 */
+	setTaxonById : function(taxonId) {
+		if (taxonId) {
+			this.setValue(taxonId);
+		}
+		var r = this.store.findExact(this.getValue());
+		this.fireEvent("select", this, r, this.store.indexOf(r));
+	},
 
 	/**
 	 * returns complete taxon object that matches the common name given if successful. Else return -1.

@@ -407,13 +407,23 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 		this.symbolList = new Gemma.GeneImportPanel({
 			showTaxonCombo: true,
-					listeners : {
-						'commit' : {
-							fn : this.getGenesFromList.createDelegate(this),
-							scope : this
+			listeners: {
+				'commit': {
+					fn: this.getGenesFromList.createDelegate(this),
+					scope: this
+				},
+				'show': {
+					fn: function(){
+						if (this.searchForm.getTaxonId() !== null && this.searchForm.getTaxonId() && typeof this.searchForm.getTaxonId() !== 'undefined') {
+							this.symbolList._taxonCombo.setTaxonById(this.searchForm.getTaxonId());
+							this.symbolList._taxonCombo.disable();
 						}
-					}
-				});
+					},
+					scope:this
+				}
+			}
+		});
+		
 
 		this.symbolListButton = new Ext.Button({
 					icon : "/Gemma/images/icons/page_upload.png",
