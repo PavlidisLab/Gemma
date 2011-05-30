@@ -597,6 +597,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			geneNames : geneNames,
 			datasetNames : experimentNames,
 			taxonId : this.getTaxonId(),
+			taxonName : this.getTaxonName(),
 			pvalue : Gemma.DEFAULT_THRESHOLD,
 			datasetCount : experimentCount
 		};
@@ -844,7 +845,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							width: 340,
 							html: 'Example: search for Alzheimer\'s and select all human experiments <br> ' +
 							'<span style="color:red">Note: using more than 50 experiments ' +
-							'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)'
+							'will take some time and will slow down interactions (unless you\'re using <a target="_blank" href="http://www.google.com/chrome/">Chrome</a>)'
+							
 						}]
 					}, {
 						html: ' based on ',
@@ -856,7 +858,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						items: [this.theseGenesPanel, this.geneChoosers, {
 							html: '<div style="width:340px ; padding-left:10px">Example: search for "map kinase" and select a GO group<br>' +
 							'<span style="color:red">Note: using more than 50 genes ' +
-							'only works in the <a target="_blank" href="http://www.google.com/chrome/">Chrome</a> browser and will take some time  (we\'re working on it!)</div>'
+							'will take some time and will slow down interactions (unless you\'re using <a target="_blank" href="http://www.google.com/chrome/">Chrome</a>)'
 						}]
 					}, {
 						style:'padding:20 0 0 0px;margin:0px;',

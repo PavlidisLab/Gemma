@@ -31,6 +31,15 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 				// Gene ordering is mapping that capture order and number of shown genes.
 				for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupId].length; i++) {
 					var geneName = this.geneNames[this.applicationRoot.geneOrdering[this.geneGroupId][i]];
+					var geneId = this.applicationRoot.visualizationData.geneIds[this.geneGroupId][this.applicationRoot.geneOrdering[this.geneGroupId][i]];
+					
+					if( this.applicationRoot._selectedGenes.indexOf(geneId) != -1 ){
+						ctx.fillStyle = Gemma.MetaVisualizationConfig.rowHighlightColor;
+						ctx.fillRect(14, 
+										i*Gemma.MetaVisualizationConfig.cellHeight+2, 
+										77, 
+										Gemma.MetaVisualizationConfig.cellHeight);
+					}
 					if (highlightRow == i) {
 						ctx.save();
 						ctx.strokeStyle = Gemma.MetaVisualizationConfig.geneLabelHighlightColor;
@@ -44,7 +53,17 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 											geneName);						
 					}					
 				}									
-			}
+			},
+			_toggleSelectRow: function(row){
+				// Some genes can be hidden. Genes can be sorted in different ways.
+				// Gene ordering is mapping that capture order and number of shown genes.
+				for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupId].length; i++) {
+					if (row == i) {
+						var geneId = this.applicationRoot.visualizationData.geneIds[this.geneGroupId][this.applicationRoot.geneOrdering[this.geneGroupId][i]];
+						this.applicationRoot.fireEvent('geneSelectionChange', geneId);
+					}					
+				}		
+			}		
 		});
 		Gemma.MetaHeatmapLabelGroup.superclass.initComponent.apply ( this, arguments );		
 		
@@ -69,7 +88,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 			this.applicationRoot._hoverDetailsPanel.update({
 				type: 'gene',
 				geneSymbol: this.geneNames[this.applicationRoot.geneOrdering[this.geneGroupId][index]],
-				geneId: this.applicationRoot.geneOrdering[this.geneGroupId][index],
+				geneId: this.applicationRoot.visualizationData.geneIds[this.geneGroupId][this.applicationRoot.geneOrdering[this.geneGroupId][index]],
 				geneFullName: this.applicationRoot.visualizationData.geneFullNames[this.geneGroupId][this.applicationRoot.geneOrdering[this.geneGroupId][index]]
 			});
 		}, this );		
@@ -77,11 +96,16 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 		this.el.on('click', function(e,t) {
 			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
 			
-			var geneId = this.applicationRoot.geneOrdering[this.geneGroupId][index];
-			var geneName = this.geneNames[geneId];
-			var	realGeneId = this.applicationRoot._visualizationData.geneIds[this.geneGroupId][geneId];
-			var popup = Gemma.MetaVisualizationPopups.makeGeneInfoWindow(geneName, realGeneId);
-			//popup.show();
+			// if user held down ctrl while clicking, select column or gene instead of popping up window
+			if (e.ctrlKey == true) {
+				this._toggleSelectRow(index);
+				this._drawLabels();
+			}else{
+				var geneId = this.applicationRoot.geneOrdering[this.geneGroupId][index];
+				var geneName = this.geneNames[geneId];
+				var	realGeneId = this.applicationRoot._visualizationData.geneIds[this.geneGroupId][geneId];
+				var popup = Gemma.MetaVisualizationPopups.makeGeneInfoWindow(geneName, realGeneId);
+			}
 		}, this);		
 	},
 	refresh: function() {
@@ -89,7 +113,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 	}
 	
 });
-
+Ext.reg('metaVizGeneLabelGroup', Gemma.MetaHeatmapLabelGroup);
 
 // Gene Labels
 Gemma.MetaHeatmapLabelsColumn = Ext.extend(Ext.Panel, {	

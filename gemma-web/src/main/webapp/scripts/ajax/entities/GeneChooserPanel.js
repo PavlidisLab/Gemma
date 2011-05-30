@@ -516,11 +516,16 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 			height : 300,
 			closeAction : 'hide',
 			easing : 3,
+			showTaxonCombo: false,
 
 			onCommit : function() {
+				if(this.showTaxonCombo && isNaN(this._taxonCombo.getTaxon().id)){
+					this.markInvalid("This field is required");
+					return;
+				}
 				this.hide();
 				this.fireEvent("commit", {
-							geneNames : Ext.getCmp('gene-list-text').getValue()
+							geneNames : this._geneText.getValue()
 						});
 			},
 
@@ -530,15 +535,40 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 							"commit" : true
 						});
 
-				Ext.apply(this, {
+				if(this.showTaxonCombo){
+					Ext.apply(this, {
+							layout:'form',
+							width : 400,
+							height : 400,
+							padding:10,
+							items : [{
+										xtype : 'taxonCombo',
+										ref:'_taxonCombo',
+										emptyText : 'Select a taxon (required)',
+										fieldLabel : 'Select a taxon',
+										width: 250,
+										msgTarget:'side'
+									},{
+										xtype : 'textarea',
+										ref:'_geneText',
+										fieldLabel : "Paste in gene symbols, one per line, up to " +
+												Gemma.MAX_GENES_PER_QUERY,
+										width : 250
+									}]
+						});
+				}else{
+					Ext.apply(this, {
 							items : [{
 										id : 'gene-list-text',
 										xtype : 'textarea',
-
+										ref:'_geneText',
 										fieldLabel : "Paste in gene symbols, one per line, up to " +
 												Gemma.MAX_GENES_PER_QUERY,
 										width : 290
-									}],
+									}]
+						});
+				}
+				Ext.apply(this, {
 							buttons : [{
 										text : 'Cancel',
 										handler : function() {

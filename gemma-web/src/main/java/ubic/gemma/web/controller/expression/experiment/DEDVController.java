@@ -1078,7 +1078,7 @@ public class DEDVController {
                         if ( !factorColoursMap.containsKey( pair.getKey() ) ) {
                             factorColoursMap.put( pair.getKey(), new LinkedList<String>() );
                         }
-                        if(j < colourArrs[j].length){
+                        if(j < colourArrs.length){
                             for ( int i = 0; i < colourArrs[j].length; i++ ) {
                                 factorColoursMap.get( pair.getKey() ).add( colourArrs[j][i] ); // array to queue
                             }

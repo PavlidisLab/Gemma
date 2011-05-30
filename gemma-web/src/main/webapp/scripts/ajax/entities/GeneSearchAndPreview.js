@@ -182,16 +182,28 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	 *            e
 	 */
 	getGenesFromList : function(e, taxonId) {
-
+		var taxonName;
 		if (!taxonId && this.searchForm.getTaxonId()) {
 			taxonId = this.searchForm.getTaxonId();
+			taxonName = this.searchForm.getTaxonName();
+		}else{
+			taxonId = this.symbolList._taxonCombo.getTaxon().id;
+			taxonName = this.symbolList._taxonCombo.getTaxon().data.commonName;
 		}
 
 		if (isNaN(taxonId)) {
-			Ext.Msg.alert("Missing information", "Please select an experiment or experiment group first.");
+			Ext.Msg.alert("Missing information", "Please select a taxon.");
 			return;
 		}
 
+		this.searchForm.taxonChanged(taxonId, taxonName);
+		this.geneCombo.disable().hide();
+		this.helpBtn.hide();
+		this.symbolListButton.hide();
+		this.removeBtn.setPosition(300,0);
+		this.fireEvent('madeFirstSelection');
+		this.doLayout();
+								
 		var loadMask = new Ext.LoadMask(this.getEl(), {
 					msg : "Loading genes..."
 				});
@@ -394,6 +406,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.relayEvents(this.geneCombo, ['select']);
 
 		this.symbolList = new Gemma.GeneImportPanel({
+			showTaxonCombo: true,
 					listeners : {
 						'commit' : {
 							fn : this.getGenesFromList.createDelegate(this),
@@ -408,13 +421,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					tooltip : "Import multiple genes",
 					disabled : false,
 					handler : function() {
-
-						if (!this.searchForm.getTaxonId() || isNaN(this.searchForm.getTaxonId())) {
-							Ext.Msg.alert("Missing information",
-									"Please select an experiment or experiment group first.");
-							return;
-						}
-
 						this.geneCombo.reset();
 						this.symbolList.show();
 					}.createDelegate(this, [], true)

@@ -46,6 +46,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * list' boolean are shown
 	 */
 	columnSet : "reduced",
+	allowSaveToSession: true, // if false, user can only save to db
 
 	viewConfig : {
 		forceFit : true,
@@ -103,7 +104,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				id : 'geneDetailsWin',
 				hidden : true
 			}),
-	addGenes : function(data) { // maybe this won't work b/c combo returns search objects?
+	addGenes : function(data) { // for adding from combo
 				if (!data) {
 					return;
 				}
@@ -232,19 +233,28 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					disabled : true
 				});
 		// add save button if user isn't logged in
-		if (Ext.get('hasUser').getValue()) {
+		
+		if (Ext.get('hasUser').getValue() && this.allowSaveToSession) {
 			Ext.apply(this, {
 						buttons : [this.saveButton, this.doneButton, {
-									// id : 'cancel-selecting-button-g',
 									text : "Cancel",
 									handler : this.cancel,
 									scope : this
 								}]
 					});
-		} else {
+		}else if( this.allowSaveToSession ) {
 			Ext.apply(this, {
 						buttons : [this.doneButton, {
-									// id : 'cancel-selecting-button-g',
+									text : "Cancel",
+									handler : this.cancel,
+									scope : this
+								}]
+					});
+		}else{
+			Ext.apply(this, {
+						buttons : [{
+									xtype:'panel',
+									html:'Sorry, you must be logged in to save this selection.'}, {
 									text : "Cancel",
 									handler : this.cancel,
 									scope : this
@@ -537,9 +547,19 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	createInSession : function() {
 
 		var ids = this.getGeneIds();
+		var editedGroup;
+		if(this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined' ){ //group wasn't made before launching 
+			editedGroup = {
+				reference: {
+					id : null,
+					type : null
+				}
+			};
+		}else{
+			editedGroup = this.selectedGeneGroup; 
+			// reference has the right type already
+		}
 
-		var editedGroup = this.selectedGeneGroup; // reference has the right
-		// type already
 		editedGroup.name = this.newGroupName;
 		editedGroup.description = this.newGroupDescription;
 		editedGroup.geneIds = ids;

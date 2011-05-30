@@ -172,3 +172,5 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 
 	}
 });
+
+Ext.reg('taxonCombo', Gemma.TaxonCombo);

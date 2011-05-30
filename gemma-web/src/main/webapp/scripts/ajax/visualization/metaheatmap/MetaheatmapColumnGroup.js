@@ -87,14 +87,17 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 		Gemma.MetaHeatmapAnalysisColumnGroup.superclass.initComponent.apply(this, arguments);
 				
 		for (var i = 0; i < this.dataColumns.length; i++) {
+			var lastColumnInGroup = false;
 			this.add ( new Gemma.MetaHeatmapExpandableColumn(
 								{ applicationRoot: this.applicationRoot,
 								  height: this.height,
 								  dataColumn : this.dataColumns[i],
 								  columnIndex: i,
 								  columnGroupIndex: this.columnGroupIndex,
-								  datasetGroupIndex: this.datasetGroupIndex }) );
+								  datasetGroupIndex: this.datasetGroupIndex,
+								  lastColumnInGroup: lastColumnInGroup }) );
 		}
+		
 		var initialWidth = this.dataColumns.length * (Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);		
 		this.setSize ( initialWidth, this.height );
 	},

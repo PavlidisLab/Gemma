@@ -85,6 +85,10 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			var color = this._discreteColorRange
 					.getCellColorString(this._visualizationValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][i]]);
 			this._drawHeatmapCell(ctx, color, i, 0);
+			var geneId = this.applicationRoot.visualizationData.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][i]];
+			if (this.applicationRoot._selectedGenes.indexOf(geneId) != -1) {
+				this._drawHeatmapSelectedRowCell(ctx, i, 0);
+			}
 			if (highlightRow === i) {
 				this._drawHeatmapCellBox(ctx, highlightRow, 0);
 			}
@@ -154,6 +158,27 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 		ctx.save();
 		ctx.strokeStyle = Gemma.MetaVisualizationConfig.cellHighlightColor;
 		ctx.strokeRect(this.cellWidth * columnIndex, this.cellHeight * rowIndex, this.cellWidth, this.cellHeight);
+		ctx.restore();
+	},
+	
+	/**
+	 * 
+	 * @param {}
+	 *            ctx
+	 * @param {}
+	 *            rowIndex
+	 * @param {}
+	 *            columnIndex
+	 */
+	_drawHeatmapSelectedRowCell : function(ctx, rowIndex, columnIndex) {
+		ctx.save();
+		ctx.strokeStyle = Gemma.MetaVisualizationConfig.rowCellSelectColor;
+		ctx.beginPath();
+		ctx.moveTo(this.cellWidth * columnIndex, this.cellHeight * rowIndex);
+		ctx.lineTo(this.cellWidth * columnIndex + this.cellWidth, this.cellHeight * rowIndex);
+		ctx.moveTo(this.cellWidth * columnIndex, this.cellHeight * (rowIndex+1) );
+		ctx.lineTo(this.cellWidth * columnIndex + this.cellWidth, this.cellHeight * (rowIndex+1));
+		ctx.stroke();
 		ctx.restore();
 	},
 
@@ -520,8 +545,24 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 						columnGroupIndex : this._columnGroupIndex,
 						datasetGroupIndex : this._datasetGroupIndex
 					});
+
 			this._visualizationColumns.push(subColumn);
 			this.add(subColumn);
+			if(this.lastColumnInGroup){
+				
+				var spacerColumn = new Gemma.MetaHeatmapSpacerColumn({
+						applicationRoot : this.applicationRoot,
+						visualizationSubColumnData : this._dataColumn.visualizationValues[geneGroupIndex],
+						pValuesSubColumnData : this._dataColumn.pValues[geneGroupIndex],
+						factorValues : this._factorValueNames,
+						rowGroup : geneGroupIndex,
+						columnIndex : this._columnIndex,
+						columnGroupIndex : this._columnGroupIndex,
+						datasetGroupIndex : this._datasetGroupIndex
+					});
+					
+				this.add(spacerColumn);
+			}
 		}
 
 		this.overallDifferentialExpressionScore = 0;
@@ -581,6 +622,111 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 			this._visualizationColumns[geneGroupSubColumnIndex]._drawHeatmapColumn(false);
 		}
 	}
+});
+
+
+/**
+ * SPACER COLUMN (goes between groups and indicates the selected rows)
+ * @class Gemma.MetaHeatmapExpandableColumn
+ * @extends Ext.Panel
+ */
+Gemma.MetaHeatmapSpacerColumn = Ext.extend(Ext.Panel, {
+	initComponent : function() {
+		
+		Ext.apply(this, {
+					autoEl : {
+						tag : 'canvas',
+						width : Gemma.MetaVisualizationConfig.groupSeparatorWidth,
+						height : Gemma.MetaVisualizationConfig.cellHeight * this.visualizationSubColumnData.length
+					},
+					margins : {
+						top : 0,
+						right : 0,
+						bottom : Gemma.MetaVisualizationConfig.groupSeparatorHeight,
+						left : 0
+					},
+
+					applicationRoot : this.applicationRoot,
+
+					cellHeight : Gemma.MetaVisualizationConfig.cellHeight, 
+					cellWidth : Gemma.MetaVisualizationConfig.cellWidth, 
+
+					geneGroupIndex : this.rowGroup, // gene group index
+					columnIndex : this.columnIndex, // index within analysis panel
+
+				});
+		Gemma.MetaHeatmapSpacerColumn.superclass.initComponent.apply(this, arguments);
+	},
+
+	/**
+	 * 
+	 * @param {}
+	 *            doResize
+	 * @param {}
+	 *            highlightRow
+	 */
+	_drawHeatmapColumn : function(doResize, highlightRow) {
+
+		var ctx = this.el.dom.getContext("2d");
+		var oldWidth = ctx.canvas.width;
+		var newWidth = Gemma.MetaVisualizationConfig.groupSeparatorWidth;
+		ctx.canvas.width = newWidth;
+		ctx.clearRect(0, 0, this.el.dom.width, this.el.dom.height);
+
+		for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupIndex].length; i++) {
+			var geneId = this.applicationRoot.visualizationData.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][i]];
+			if (this.applicationRoot._selectedGenes.indexOf(geneId) != -1) {
+				this._drawHeatmapSelectedRowCell(ctx, i, 0);
+				
+			}
+		}
+
+	},
+
+	/**
+	 * 
+	 * @param {}
+	 *            ctx
+	 * @param {}
+	 *            rowIndex
+	 * @param {}
+	 *            columnIndex
+	 */
+	_drawHeatmapSelectedRowCell : function(ctx, rowIndex, columnIndex) {
+		ctx.save();
+		ctx.strokeStyle = Gemma.MetaVisualizationConfig.rowCellSelectColor;
+		ctx.strokeRect(0, this.cellHeight * rowIndex, Gemma.MetaVisualizationConfig.groupSeparatorWidth, this.cellHeight);
+		ctx.restore();
+	},
+
+	/**
+	 * 
+	 * @param {}
+	 *            x
+	 * @param {}
+	 *            y
+	 * @return {}
+	 */
+	__calculateIndexFromXY : function(x, y) {
+		var row = Math.floor(y / this.cellHeight);
+		var column = Math.floor(x / this.cellWidth);
+		return {
+			'row' : row,
+			'column' : column
+		};
+	},
+
+	/**
+	 * @Override
+	 */
+	onRender : function() {
+
+		Gemma.MetaHeatmapSpacerColumn.superclass.onRender.apply(this, arguments);
+		
+		this._drawHeatmapColumn();
+
+	}
+
 });
 
 /**

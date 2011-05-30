@@ -77,10 +77,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					this.refreshVisualization();
 				}, this);
 
-		/**
-		 * selection grids
-		 */
-		var selectionRecord = Ext.data.Record.create([
+		/************************* selection grids ****************************************/
+		
+		var SelectionRecord = Ext.data.Record.create([
 			{ name: 'id'},
 			{ name: 'shortName'},
 			{ name: 'longName'}
@@ -88,12 +87,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		var eeSelectionStore = new Ext.data.Store({
 			reader: new Ext.data.ArrayReader({
 				idIndex: 0
-			}, selectionRecord)
+			}, SelectionRecord)
 		});
 		var geneSelectionStore = new Ext.data.Store({
 			reader: new Ext.data.ArrayReader({
 				idIndex: 0
-			}, selectionRecord)
+			}, SelectionRecord)
 		});
 		var eeSelectionData = [];
 		var lastDatasetId = null;
@@ -111,17 +110,187 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		eeSelectionStore.loadData(eeSelectionData);
 		var geneSelectionData = [];
 		for (i = 0; i < this.visualizationData.geneIds.length; i++) {
-				eeSelectionData.push([this.visualizationData.geneIds[i],
-										this.visualizationData.geneNames[i],
-										this.visualizationData.geneFullNames[i]]);
+			for (j = 0; j < this.visualizationData.geneIds[i].length; j++) {
+				geneSelectionData.push([this.visualizationData.geneIds[i][j], 
+											this.visualizationData.geneNames[i][j], 
+											this.visualizationData.geneFullNames[i][j]]);
+			}
 		}
 		geneSelectionStore.loadData(geneSelectionData);
 		
-		this.eeSelectionList = new Ext.list.ListView({
+		this.eeSelectionList = new Ext.grid.GridPanel({ // tried listView but it was very very hard to select an entry by gene id
 			store:eeSelectionStore,
 			multiSelect:true,
-			columns:[{dataIndex:'shortName'}]
+			hideHeaders:true,
+			stripeRows : true,
+			viewConfig: {
+				forceFit: true
+			},
+			columns : [{
+					dataIndex : 'shortName',
+					renderer : function(value, metadata, record, row, col, ds) {
+						return String
+								.format(
+										"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a> "+
+										"<span style='font-color:grey; white-space:normal !important;'>{2}</span> ",
+										record.data.id, record.data.shortName, record.data.longName);
+					}
+				}]
 		});
+				
+		this.geneSelectionList = new Ext.grid.GridPanel({
+			store:geneSelectionStore,
+			multiSelect:true,
+			hideHeaders:true,
+			stripeRows : true,
+			viewConfig: {
+				forceFit: true
+			},
+			columns : [{
+					dataIndex : 'shortName',
+					renderer : function(value, metadata, record, row, col, ds) {
+						return String
+								.format(
+										"<a target='_blank' href='/Gemma/gene/showGene.html?id={0}'>{1}</a> "+
+										"<span style='font-color:grey; white-space:normal !important;'>{2}</span> ",
+										record.data.id, record.data.shortName, record.data.longName);
+					}
+				}]
+		});
+		
+		Ext.apply(this,{
+			_selectedGenes : [], // array of ids of selected genes
+			_selectedExperiments : [], // array of ids of selected experiments
+		});
+		
+		/* selection control */
+		this.geneSelectionList.getSelectionModel().on('rowselect', function(selModel, rowIndex, record){
+			this._selectedGenes.push(record.data.id);
+			this._imageArea._geneLabels.items.each(function(){ // for each gene group
+				this._drawLabels();
+			});
+			this._imageArea._heatmapArea.items.each(function(){ // redraw each column with row cells selected
+				this.items.each(function(){
+					this.items.each(function(){
+						this.items.each(function(){
+							this.items.each(function(){
+								if (this.xtype !== 'button'){
+									this._drawHeatmapColumn();									
+								}
+							});
+						});
+					});
+				});
+			});				
+			
+		},this);
+		this.geneSelectionList.getSelectionModel().on('rowdeselect', function(selModel, rowIndex, record){
+			this._selectedGenes.remove(record.data.id);
+			this._imageArea._geneLabels.items.each(function(){
+				this._drawLabels();
+			});
+			this._imageArea._heatmapArea.items.each(function(){ // redraw each column with row cells selected
+				this.items.each(function(){
+					this.items.each(function(){
+						this.items.each(function(){
+							this.items.each(function(){
+								if (this.xtype !== 'button'){
+									this._drawHeatmapColumn();									
+								}
+							});
+						});
+					});
+				});
+			});	
+		},this);
+		
+		this.on('geneSelectionChange', function(geneId){ // fired when a gene is selected from the image
+			var rec = this.geneSelectionList.getStore().getById(geneId);
+			var index = this.geneSelectionList.getStore().indexOfId(geneId);
+			if (this._selectedGenes.indexOf(geneId) == -1) {
+				this.geneSelectionList.getSelectionModel().selectRecords([rec],true);
+			}else{
+				this.geneSelectionList.getSelectionModel().deselectRow(index);
+			}
+			this._toolPanels._selectionTabPanel.setActiveTab(1);
+		});
+		
+		this.eeSelectionList.getSelectionModel().on('rowselect', function(selModel, rowIndex, record){
+			this._selectedExperiments.push(record.data.id);
+			this._imageArea._experimentLabels.items.each(function(){
+				this._drawLabels();
+			});
+		},this);
+		this.eeSelectionList.getSelectionModel().on('rowdeselect', function(selModel, rowIndex, record){
+			this._selectedExperiments.remove(record.data.id);
+			this._imageArea._experimentLabels.items.each(function(){
+				this._drawLabels();
+			});
+		},this);
+				
+		this.on('experimentSelectionChange', function(){ // fired when an experiment is selected from the image
+			var rec = this.eeSelectionList.getStore().getById(experimentId);
+			var index = this.eeSelectionList.getStore().indexOfId(experimentId);
+			if (this._selectedExperiments.indexOf(experimentId) == -1) {
+				this.eeSelectionList.getSelectionModel().selectRecords([rec],true);
+			}else{
+				this.eeSelectionList.getSelectionModel().deselectRow(index);
+			}
+			this._toolPanels._selectionTabPanel.setActiveTab(0);
+		});
+				
+		this.geneSelectionEditor = new Gemma.GeneMembersGrid({
+			// id: 'geneSelectionEditor',
+			name: 'geneSelectionEditor',
+			height: 200,
+			// hidden: 'true',
+			hideHeaders: true,
+			frame: false,
+			allowSaveToSession: false
+		});
+
+		this.geneSelectionEditorWindow = new Ext.Window({
+			closable : false,
+			layout : 'fit',
+			items : this.geneSelectionEditor,
+			title : 'Edit Your Gene Selection'
+		});
+				
+		this.geneSelectionEditor.on('doneModification', function() {
+			this.geneSelectionEditorWindow.hide();
+		}, this);
+				
+		Ext.apply(this,{
+			
+			launchGeneSelectionEditor : function() {
+
+				var geneRecords = this.geneSelectionList.getSelectionModel().getSelections();
+				if (!geneRecords || geneRecords === null || geneRecords.length === 0) {
+					return;
+				}
+				//this.searchForm.getEl().mask();
+		
+				this.geneSelectionEditorWindow.show();
+		
+				this.geneSelectionEditor.loadMask = new Ext.LoadMask(this.geneSelectionEditor.getEl(), {
+							msg : "Loading genes ..."
+						});
+				this.geneSelectionEditor.loadMask.show();
+				Ext.apply(this.geneSelectionEditor, {
+							geneGroupId : null,
+							selectedGeneGroup : null,
+							groupName : null,
+							taxonId : this.taxonId,
+							taxonName : this.taxonName
+						});
+				this.geneSelectionEditor.loadGenes(this._selectedGenes, function() {
+							this.geneSelectionEditor.loadMask.hide();
+						}.createDelegate(this, [], false));
+			}
+		});
+
+
+		/*************** end of selection grids **********************/
 
 		this.TOTAL_NUMBER_OF_COLUMNS = 0;
 		var datasetGroupIndex;
@@ -141,7 +310,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			_visualizationData : this.visualizationData,
 			geneScores : this.visualizationData.geneScores,
 			geneOrdering : null,
-
+			
 			visibleMissingValuesGeneScore : null,
 
 			// TOTAL_NUMBER_OF_COLUMNS: null,
@@ -184,14 +353,14 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				x : Gemma.MetaVisualizationConfig.panelWidth - 650,
 				y : 20,
 				autoScroll : true,
-				//collapsible : true,
 				closable : false,
 				shadow : false,
 				border : false,
 				bodyBorder : false,
 				hidden: true, // doesn't work for some reason
 				bodyStyle : 'padding: 7px',
-				html : '<span style="color:grey;font-size:1.3em">Hover over the visualisation for quick details or click for more information.</span>',
+				html : '<span style="color:black;font-size:1.3em">Hover over the visualisation for quick details or click for more information.'+
+						' <br><br>Hold down "ctrl" and click on a gene or experiment to select it.</span>',
 				tpl : new Ext.XTemplate(
 						'<span style="font-size: 12px ">',
 
@@ -215,112 +384,113 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						'</tpl>', '</tpl></span>'),
 				tplWriteMode : 'overwrite'
 			}, {
-				ref : '_toolPanels',
-				height : Gemma.MetaVisualizationConfig.panelHeight - 30,
-				width : 300,
-				x : Gemma.MetaVisualizationConfig.panelWidth - 300,
-				y : 0,
-				layout : 'vbox',
-				// layout: 'accordion',
-				/*
-				 * layoutConfig:{ fill: true, titleCollapse: true,
-				 * //activeOnTop: true animate: true },
-				 */
-				border : true,
-				applicationRoot : this,
-				items : [{
-					title : 'Sort',
-					flex : 0,
-					width : 300,
-					collapsible : true,
+				ref: '_toolPanels',
+				height: Gemma.MetaVisualizationConfig.panelHeight - 30,
+				width: 300,
+				x: Gemma.MetaVisualizationConfig.panelWidth - 300,
+				y: 0,
+				layout: 'vbox',
+				border: true,
+				applicationRoot: this,
+				items: [{
+					title: 'Sort',
+					flex: 0,
+					width: 300,
+					collapsible: true,
 					// collapsed:true,
-					border : true,
-					bodyBorder : true,
-					layout : 'form',
-					bodyStyle : 'padding:5px',
-					defaults : {
-						hideLabel : false
+					border: true,
+					bodyBorder: true,
+					layout: 'form',
+					bodyStyle: 'padding:5px',
+					defaults: {
+						hideLabel: false
 					},
-					items : [{
+					items: [{
 						xtype: 'combo',
 						hiddenName: 'conditionSort',
 						fieldLabel: 'Sort conditions by',
 						mode: 'local',
 						displayField: 'text',
 						valueField: 'name',
-						width:150,
+						width: 150,
 						editable: 'false',
 						forceSelection: 'true',
-						triggerAction:'all',
+						triggerAction: 'all',
 						store: new Ext.data.ArrayStore({
-							fields:['name','text'],
-							data:[['experiment','experiment'],['qValues','sum of q Values'], ['specificity','specificity']]
+							fields: ['name', 'text'],
+							data: [['experiment', 'experiment'], ['qValues', 'sum of q Values'], ['specificity', 'specificity']]
 						}),
-						listeners : {
-								select : function(field, record, selIndex) {
-
-									if (record.get('name') === 'qValues') {
-										this._sortColumns('DESC', function(o1, o2) {
-
-													return o1.overallDifferentialExpressionScore -
-															o2.overallDifferentialExpressionScore;
-												});
-										this.doLayout();
-									}else if(record.get('name') ==='specificity'){
-										this._sortColumns('ASC', function(o1, o2) {
-
-													return o1.specificityScore - o2.specificityScore;
-												});
-
-										this.doLayout();
-									}else if(record.get('name') ==='experiment'){
-										this._sortColumns('ASC', function(o1, o2) {
-
-													return (o1.datasetName >= o2.datasetName)? 1:-1;
-												});
-
+						listeners: {
+							select: function(field, record, selIndex){
+							
+								if (record.get('name') === 'qValues') {
+									this._sortColumns('DESC', function(o1, o2){
+									
+										return o1.overallDifferentialExpressionScore -
+										o2.overallDifferentialExpressionScore;
+									});
+									this.doLayout();
+								}
+								else 
+									if (record.get('name') === 'specificity') {
+										this._sortColumns('ASC', function(o1, o2){
+										
+											return o1.specificityScore - o2.specificityScore;
+										});
+										
 										this.doLayout();
 									}
-									this.refreshVisualization();
-								},
-								render: function(combo){
-									combo.setValue('experiment');
-								},
-								scope : this
-							}
-					},{
+									else 
+										if (record.get('name') === 'experiment') {
+											this._sortColumns('ASC', function(o1, o2){
+											
+												return (o1.datasetName >= o2.datasetName) ? 1 : -1;
+											});
+											
+											this.doLayout();
+										}
+								this.refreshVisualization();
+							},
+							render: function(combo){
+								combo.setValue('experiment');
+							},
+							scope: this
+						}
+					}, {
 						xtype: 'combo',
 						hiddenName: 'geneSort',
 						fieldLabel: 'Sort genes by',
 						mode: 'local',
 						displayField: 'text',
 						valueField: 'name',
-						width:150,
+						width: 150,
 						editable: 'false',
 						forceSelection: 'true',
-						triggerAction:'all',
+						triggerAction: 'all',
 						store: new Ext.data.ArrayStore({
-							fields:['name','text'],
-							data:[['symbol','symbol'],['score','gene score']]
+							fields: ['name', 'text'],
+							data: [['symbol', 'symbol'], ['score', 'gene score']]
 						}),
-						listeners : {
-								select : function(field, record, selIndex) {
-									var geneGroupIndex;
-                                    var i;
-									if (record.get('name') === 'symbol') {
-										// Default geneOrdering
-                                        for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
-                                            this.geneOrdering[geneGroupIndex] = [];
-                                            for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
-                                                this.geneOrdering[geneGroupIndex].push(i);
-                                            }
-                                        }
-									}else if(record.get('name') ==='score'){
+						listeners: {
+							select: function(field, record, selIndex){
+								var geneGroupIndex;
+								var i;
+								if (record.get('name') === 'symbol') {
+									// Default geneOrdering
+									for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
+										this.geneOrdering[geneGroupIndex] = [];
+										for (i = 0; i < this._imageArea._heatmapArea.geneIds[geneGroupIndex].length; i++) {
+											this.geneOrdering[geneGroupIndex].push(i);
+										}
+									}
+								}
+								else 
+									if (record.get('name') === 'score') {
 										// Sort genes : changes gene order
 										for (i = 0; i < this.geneScores[0].length; i++) {
-											this.geneScores[0][i].sort(function(o1, o2) {
-														return o2.score - o1.score;
-													});
+											this.geneScores[0][i].sort(function(o1, o2){
+												return o2.score - o1.score;
+											});
 										}
 										for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
 											this.geneOrdering[geneGroupIndex] = [];
@@ -328,91 +498,127 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 												// if
 												// (this.geneScores[0][geneGroupIndex][i].score
 												// !== 0) {
-												this.geneOrdering[geneGroupIndex]
-														.push(this.geneScores[0][geneGroupIndex][i].index);
-												// }
+												this.geneOrdering[geneGroupIndex].push(this.geneScores[0][geneGroupIndex][i].index);
+											// }
 											}
 										}
 									}
-									this.refreshVisualization();
-								},
-								render: function(combo){
-									combo.setValue('symbol');
-								},
-								scope : this
-							}
+								this.refreshVisualization();
+							},
+							render: function(combo){
+								combo.setValue('symbol');
+							},
+							scope: this
+						}
 					}]
 				}, {
-					title : 'Filter',
-					flex : 1,
-					collapsible : true,
-					collapsed : false,
-					border : true,
-					bodyBorder : true,
-					autoScroll : true,
-					layout : 'form', // to get font sizes matching
-					items : [{
-								xtype : 'checkbox',
-								hideLabel : true,
-								boxLabel : 'Show columns with no results.',
-								checked : true,
-								hidden : true,
-								listeners : {
-									check : function(target, checked) {
-										var filteringFn = null;
-										if (!checked) { // hide columns without
-											// results
-											filteringFn = function(o) {
-
-												if (o.overallDifferentialExpressionScore === 0) {
-													return !checked;
-												}
-												if (o.miniPieValue > 120) {
-													return !checked;
-												}
-
-												if ((o.missingValuesScore / this.TOTAL_NUMBER_OF_ROWS) > 0.7) {
-													return !checked;
-												}
-
-												return null;
-											};
-										} else { // show columns without
-											// results but respect
-											// filtering by factor
-											var checkedNodeIds = this.tree.getChecked('id');
-											console.log("checkedNodeIds: " + checkedNodeIds);
-											// if column has same factor name as
-											// checked node, show it, otherwise
-											// hide it
-											filteringFn = function(o) {
-												if (checkedNodeIds.indexOf(o.factorName.toLowerCase()) > -1) {
-													return false; // don't
-													// filter it
-												} else {
-													return true;
-												}
-											};
-										}
-
-										var num = this.filterColumns(filteringFn);
-										this.TOTAL_NUMBER_OF_HIDDEN_COLUMNS = num;
-										this.doLayout();
-										this.refreshVisualization();
-									},
-									scope : this
-								}
-							}, this.tree]
-				},{
-					title: 'Select',
+					title: 'Filter',
 					flex: 1,
+					collapsible: true,
+					collapsed: false,
+					border: true,
+					bodyBorder: true,
+					autoScroll: true,
+					layout: 'form', // to get font sizes matching
 					items: [{
-						html: 'Experiments',items:this.eeSelectionList
+						xtype: 'checkbox',
+						hideLabel: true,
+						boxLabel: 'Show columns with no results.',
+						checked: true,
+						hidden: true,
+						listeners: {
+							check: function(target, checked){
+								var filteringFn = null;
+								if (!checked) { // hide columns without
+									// results
+									filteringFn = function(o){
+									
+										if (o.overallDifferentialExpressionScore === 0) {
+											return !checked;
+										}
+										if (o.miniPieValue > 120) {
+											return !checked;
+										}
+										
+										if ((o.missingValuesScore / this.TOTAL_NUMBER_OF_ROWS) > 0.7) {
+											return !checked;
+										}
+										
+										return null;
+									};
+								}
+								else { // show columns without
+									// results but respect
+									// filtering by factor
+									var checkedNodeIds = this.tree.getChecked('id');
+									console.log("checkedNodeIds: " + checkedNodeIds);
+									// if column has same factor name as
+									// checked node, show it, otherwise
+									// hide it
+									filteringFn = function(o){
+										if (checkedNodeIds.indexOf(o.factorName.toLowerCase()) > -1) {
+											return false; // don't
+										// filter it
+										}
+										else {
+											return true;
+										}
+									};
+								}
+								
+								var num = this.filterColumns(filteringFn);
+								this.TOTAL_NUMBER_OF_HIDDEN_COLUMNS = num;
+								this.doLayout();
+								this.refreshVisualization();
+							},
+							scope: this
+						}
+					}, this.tree]
+				}, {
+					ref: '_selectionTabPanel',
+					flex: 1,
+					width: 300,
+					xtype:'tabpanel',
+					activeTab: 0,
+					deferredRender: false,
+					items: [{
+						title: 'Select Experiments',
+						layout:'fit',
+						autoScroll: true,
+						items: this.eeSelectionList,
+						bbar:['Hold \'ctrl\' and click to select > 1','->',{
+							text: 'Save',
+							icon: '/Gemma/images/icons/disk.png'
+						},'-',{
+							text:'Clear',
+							handler: function(button, clickEvent){
+								this.eeSelectionList.getSelectionModel().clearSelections();
+								this.fireEvent('clearedExperimentSelections');
+							},
+							scope:this
+						}]
 					}, {
-						html: 'Genes'
+						title: 'Select Genes',
+						autoScroll: true,
+						layout:'fit',
+						items: this.geneSelectionList,
+						bbar:['Hold \'ctrl\' and click to select > 1','->',{
+							text: 'Save',
+							icon: '/Gemma/images/icons/disk.png',
+							handler: this.launchGeneSelectionEditor,
+							scope: this
+						},'-',{
+							text:'Clear',
+							handler: function(button, clickEvent){
+								this.geneSelectionList.getSelectionModel().clearSelections();
+								this.fireEvent('clearedGeneSelections');
+							},
+							scope:this
+						}]
 					}]
+					
 				}]
-			}, {
+			},{
 				ref : '_imageArea',
 				autoScroll : true,
 				layout : 'absolute',
@@ -456,6 +662,15 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							applicationRoot : this,
 							ref : '_heatmapArea'
 						}]
+			},{
+				x:5,
+				y:5,
+				xtype:'panel',
+				html:'<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
+						'<b>Click</b> for details<br>Hold <b>"ctrl" + click</b> to select</span>',
+				border:false,
+				width: 180,
+				height: 100
 			}]
 		});
 		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
@@ -525,7 +740,7 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Ext.Panel, {
 							layoutConfig : {
 								defaultMargins : {
 									top : 0,
-									right : Gemma.MetaVisualizationConfig.groupSeparatorWidth,
+									right : Gemma.MetaVisualizationConfig.groupSeparatorWidth,//0,
 									bottom : 0,
 									left : 0
 								}
@@ -589,8 +804,6 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Ext.Panel, {
 
 		});
 Ext.reg('metaVizScrollableArea', Gemma.MetaHeatmapScrollableArea);
-
-Ext.reg('taxonCombo', Gemma.TaxonCombo);
 
 Gemma.MetaHeatmapControlWindow = Ext.extend(Ext.Window, {
 
@@ -931,22 +1144,22 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		// FOR TESTING !!!!!
 		this.param2 = {
 			geneReferences : [{
-				id : 94,
+				id : 96,
 				type : "databaseBackedGroup"
-			}/*
-				 * ,{ id: 75, type: "databaseBackedGroup" }
-				 */
+			}
+				 ,{ id: 94, type: "databaseBackedGroup" }
+				 
 			],
 			datasetReferences : [{
-						id : 6110,
+						id : 6137,
 						type : "databaseBackedGroup"
 					}
-			/*
-			 * ,{ id: 6107, type: "databaseBackedGroup" }
-			 */
+			
+			  ,{ id: 6110, type: "databaseBackedGroup" }
+			 
 			],
-			geneNames : ["gene TEST"],//, "gene TEST 2"],
-			datasetNames : ["dataset TEST"],//, "dataset TEST2"],
+			geneNames : ["gene TEST", "gene TEST 2"],
+			datasetNames : ["dataset TEST", "dataset TEST2"],
 			taxonId : 2,
 			pvalue : Gemma.DEFAULT_THRESHOLD
 		};
@@ -969,6 +1182,9 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			}
 			if (this.param.taxonId) {
 				this.taxonId = this.param.taxonId;
+			}
+			if (this.param.taxonName) {
+				this.taxonName = this.param.taxonName;
 			}
 		}
 
