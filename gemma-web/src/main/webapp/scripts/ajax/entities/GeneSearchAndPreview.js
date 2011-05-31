@@ -42,7 +42,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneSelectionEditor.loadMask.show();
 		Ext.apply(this.geneSelectionEditor, {
 					geneGroupId : this.geneGroupId,
-					selectedGeneGroup : this.geneCombo.selectedGeneGroup,
+					selectedGroup : this.geneCombo.selectedGeneGroup,
+					//selectedGeneGroup : this.geneCombo.selectedGeneGroup,
 					groupName : (this.geneCombo.selectedGeneGroup) ? this.geneCombo.selectedGeneGroup.name : null,
 					taxonId : this.searchForm.getTaxonId(),
 					taxonName : this.searchForm.getTaxonName()
@@ -108,8 +109,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.genePreviewContent.setTitle(
 				'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()+
 				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 gene)');
-			this.geneSelectionEditorBtn.setText('0 more');
-			this.geneSelectionEditorBtn.disable();
+			this.geneSelectionEditorBtn.setText('0 more - Edit');
+			this.geneSelectionEditorBtn.enable();
 			this.geneSelectionEditorBtn.show();
 		}
 	},
@@ -164,8 +165,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					this.showGenePreview();
 
 					if (ids.size() === 1) {
-						this.geneSelectionEditorBtn.setText('0 more');
-						this.geneSelectionEditorBtn.disable();
+						this.geneSelectionEditorBtn.setText('0 more - Edit');
+						this.experimentSelectionEditorBtn.enable();
 						this.geneSelectionEditorBtn.show();
 					}
 					this.genePreviewContent.expand();
@@ -339,8 +340,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				this.genePreviewContent.show();
 
 				if (geneIds.size() <= 1) {
-					this.geneSelectionEditorBtn.setText('0 more');
-					this.geneSelectionEditorBtn.disable();
+					this.geneSelectionEditorBtn.setText('0 more - Edit');
+					this.experimentSelectionEditorBtn.enable();
 					this.geneSelectionEditorBtn.show();
 				}
 
@@ -449,7 +450,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					frame : false
 				});
 
-		this.geneSelectionEditor.on('geneListModified', function(newRecords) {
+		this.geneSelectionEditor.on('listModified', function(newRecords) {
 			var i;
 			for (i = 0; i < newRecords.length; i++) { // should only be one
 				if (typeof newRecords[i].geneIds !== 'undefined') {

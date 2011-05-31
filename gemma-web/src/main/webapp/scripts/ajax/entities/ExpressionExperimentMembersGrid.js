@@ -97,7 +97,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}
 					/* maybe should notify user with text at bottom that 'x experiments have been added'
 					this.experimentPreviewContent.setTitle(
-						'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " experiments)");
+						'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+'</span>'+
+						' &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " experiments)");
 					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
 					*/
 
@@ -190,39 +191,35 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}
 		}.createDelegate(this);
 		this.saveButton = new Ext.Button({
-					// id: 'save-selection-button-e',
-					text : "Save",
-					handler : this.save,
-					scope : this,
-					disabled : false
-				});
+			text: "Save",
+			qtip: 'Save your selection before returning to search.',
+			handler: this.save,
+			scope: this,
+			disabled: false
+		});
 		this.doneButton = new Ext.Button({
-					// id: 'done-selecting-button-e',
-					text : "Done",
-					handler : this.done,
-					scope : this,
-					disabled : true
-				});
+			text: "Done",
+			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
+			handler: this.done,
+			scope: this,
+			disabled: true
+		});
+		this.cancelButton = new Ext.Button({
+			text: "Cancel",
+			qtip:'Discard any changes you have made.',
+			handler: this.cancel,
+			scope: this
+		});
 		// add buttons only if haven't been added already
 		if (!this.buttons || this.buttons === null || this.buttons === []) {
 			// add save button if user isn't logged in
 			if (Ext.get('hasUser').getValue()) {
 				Ext.apply(this, {
-							buttons : [this.saveButton, this.doneButton, {
-										// id : 'cancel-selecting-button-e',
-										text : "Cancel",
-										handler : this.cancel,
-										scope : this
-									}]
+							buttons : [this.saveButton, this.doneButton, this.cancelButton]
 						});
 			} else {
 				Ext.apply(this, {
-							buttons : [this.doneButton, {
-										// id : 'cancel-selecting-button-e',
-										text : "Cancel",
-										handler : this.cancel,
-										scope : this
-									}]
+							buttons : [this.doneButton, this.cancelButton]
 						});
 			}
 		}
@@ -258,13 +255,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					id : 'shortName',
 					header : "Dataset",
 					dataIndex : "shortName",
-					tooltip : "The unique short name for the dataset, often the accession number from the originating source database. Click on the name to view the details page.",
 					renderer : function(value, metadata, record, row, col, ds) {
 						return String
 								.format(
-										"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"+
-										"<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ",
-										record.data.id, record.data.shortName, record.data.name);
+									"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"+
+									"<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ",
+									record.data.id, record.data.shortName, record.data.name);
 					},
 					sortable : true
 				}, this.action]
@@ -517,50 +513,50 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
  * if eeCombo.taxonId is set, then searches will be limited by taxon  
  */
 Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
-		//name : "eeChooserTb",
 
-			initComponent : function() {
-
-				Gemma.ExperimentAndGroupAdderToolbar.superclass.initComponent.call(this);
-				
-				this.eeCombo = new Gemma.ExperimentAndExperimentGroupCombo({
-					typeAhead : false,
-					width : 300,
-					emptyText: 'Search for an experiment or group to add',
-					listeners : {
-								'select' : {
-									fn : function(combo, rec, index) {
-										this.addButton.enable();
-										if(rec.data.size === 1){
-											this.addButton.setText('Add 1 experiment');
-										}else{
-											this.addButton.setText('Add '+rec.data.size+' experiments');
-										}
-										
-									}.createDelegate(this)
-								}
-							}
-				});
-
-				this.addButton = new Ext.Toolbar.Button({
-							icon : "/Gemma/images/icons/add.png",
-							cls : "x-btn-text-icon",
-							tooltip : "Add selected experiment(s) to the list",
-							text: 'Add',
-							disabled : true,
-							handler : function() {
-								this.eeGrid.addExperiments(this.eeCombo.getExpressionExperimentGroup());
-								this.eeCombo.reset();
-								this.addButton.setText('Add');
-								this.addButton.disable();
-							}.createDelegate(this)
-						});
-
-			},
-			afterRender : function(c, l) {
-				Gemma.ExperimentAndGroupAdderToolbar.superclass.afterRender.call(this, c, l);
-
-				this.add(this.eeCombo, this.addButton);
-
+	initComponent: function(){
+	
+		Gemma.ExperimentAndGroupAdderToolbar.superclass.initComponent.call(this);
+		
+		this.eeCombo = new Gemma.ExperimentAndExperimentGroupCombo({
+			typeAhead: false,
+			width: 300,
+			emptyText: 'Search for an experiment or group to add',
+			listeners: {
+				'select': {
+					fn: function(combo, rec, index){
+						this.addButton.enable();
+						if (rec.data.size === 1) {
+							this.addButton.setText('Add 1 experiment');
+						}
+						else {
+							this.addButton.setText('Add ' + rec.data.size + ' experiments');
+						}
+						
+					}.createDelegate(this)
+				}
 			}
+		});
+		
+		this.addButton = new Ext.Toolbar.Button({
+			icon: "/Gemma/images/icons/add.png",
+			cls: "x-btn-text-icon",
+			tooltip: "Add selected experiment(s) to the list",
+			text: 'Add',
+			disabled: true,
+			handler: function(){
+				this.eeGrid.addExperiments(this.eeCombo.getExpressionExperimentGroup());
+				this.eeCombo.reset();
+				this.addButton.setText('Add');
+				this.addButton.disable();
+			}.createDelegate(this)
+		});
+		
+	},
+	afterRender: function(c, l){
+		Gemma.ExperimentAndGroupAdderToolbar.superclass.afterRender.call(this, c, l);
+		
+		this.add(this.eeCombo, this.addButton);
+		
+	}
 });

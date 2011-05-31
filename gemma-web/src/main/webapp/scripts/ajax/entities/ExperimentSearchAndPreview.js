@@ -50,8 +50,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.experimentPreviewContent.setTitle(
 				'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+
 				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 experiment)');
-			this.experimentSelectionEditorBtn.setText('0 more');
-			this.experimentSelectionEditorBtn.disable();
+			this.experimentSelectionEditorBtn.setText('0 more - Edit');
+			this.experimentSelectionEditorBtn.enable();
 			this.experimentSelectionEditorBtn.show();
 			this.experimentPreviewContent.expand();
 		}
@@ -113,8 +113,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					this.showExperimentPreview();
 
 					if (ids.size() === 1) {
-						this.experimentSelectionEditorBtn.setText('0 more');
-						this.experimentSelectionEditorBtn.disable();
+						this.experimentSelectionEditorBtn.setText('0 more - Edit');
+						this.experimentSelectionEditorBtn.enable();
 						this.experimentSelectionEditorBtn.show();
 					}
 

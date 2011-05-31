@@ -619,7 +619,7 @@ a.tooltip:hover .tooltiptext {
 }
 
 .purple-btn .x-btn-tl, .purple-btn .x-btn-tr, .purple-btn .x-btn-tc, .purple-btn .x-btn-ml, .purple-btn .x-btn-mr, .purple-btn .x-btn-mc, .purple-btn .x-btn-bl, .purple-btn .x-btn-br, .purple-btn .x-btn-bc {
-    background-image:url('../../images/default/button/btn-purple.png');
+    background-image:url('/Gemma/images/default/button/btn-purple.png');
 }
 
 .x-tool-delete {
@@ -627,14 +627,17 @@ a.tooltip:hover .tooltiptext {
 	margin-left:10px;
 	
 }
-
 .x-tool-delete-over {
     background-image:url('/Gemma/images/icons/cross.png');
 	margin-left:10px;
 }
+
 table.x-btn-pressed.highlightToggle{
 	padding: 0px;
 	margin 7px;
+}
+.highlightToggle .x-btn-tl, .highlightToggle  .x-btn-tr, .highlightToggle .x-btn-tc, .highlightToggle .x-btn-ml, .highlightToggle .x-btn-mr, .highlightToggle .x-btn-mc, .highlightToggle .x-btn-bl, .highlightToggle .x-btn-br, .highlightToggle .x-btn-bc{
+	background-image:url('/Gemma/images/default/button/btn-match-panel.gif');
 }
 .x-btn-pressed.highlightToggle button span{
 	color:black;	
