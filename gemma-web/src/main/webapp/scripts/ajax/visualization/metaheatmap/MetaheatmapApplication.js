@@ -240,10 +240,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		});
 				
 		this.geneSelectionEditor = new Gemma.GeneMembersGrid({
-			// id: 'geneSelectionEditor',
 			name: 'geneSelectionEditor',
 			height: 200,
-			// hidden: 'true',
 			hideHeaders: true,
 			frame: false,
 			allowSaveToSession: false
@@ -268,7 +266,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				if (!geneRecords || geneRecords === null || geneRecords.length === 0) {
 					return;
 				}
-				//this.searchForm.getEl().mask();
 		
 				this.geneSelectionEditorWindow.show();
 		
@@ -285,6 +282,53 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						});
 				this.geneSelectionEditor.loadGenes(this._selectedGenes, function() {
 							this.geneSelectionEditor.loadMask.hide();
+						}.createDelegate(this, [], false));
+			}
+		});
+						
+		this.eeSelectionEditor = new Gemma.ExpressionExperimentMembersGrid({
+			name: 'eeSelectionEditor',
+			height: 200,
+			hideHeaders: true,
+			frame: false,
+			allowSaveToSession: false
+		});
+
+		this.eeSelectionEditorWindow = new Ext.Window({
+			closable : false,
+			layout : 'fit',
+			items : this.eeSelectionEditor,
+			title : 'Edit Your Experiment Selection'
+		});
+				
+		this.eeSelectionEditor.on('doneModification', function() {
+			this.eeSelectionEditorWindow.hide();
+		}, this);
+				
+		Ext.apply(this,{
+			
+			launchExperimentSelectionEditor : function() {
+
+				var eeRecords = this.eeSelectionList.getSelectionModel().getSelections();
+				if (!eeRecords || eeRecords === null || eeRecords.length === 0) {
+					return;
+				}
+		
+				this.eeSelectionEditorWindow.show();
+		
+				this.eeSelectionEditor.loadMask = new Ext.LoadMask(this.eeSelectionEditor.getEl(), {
+							msg : "Loading ees ..."
+						});
+				this.eeSelectionEditor.loadMask.show();
+				Ext.apply(this.eeSelectionEditor, {
+							eeGroupId : null,
+							selectedExperimentGroup : null,
+							groupName : null,
+							taxonId : this.taxonId,
+							taxonName : this.taxonName
+						});
+				this.eeSelectionEditor.loadExperiments(this._selectedExperiments, function() {
+							this.eeSelectionEditor.loadMask.hide();
 						}.createDelegate(this, [], false));
 			}
 		});
@@ -588,7 +632,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						items: this.eeSelectionList,
 						bbar:['Hold \'ctrl\' and click to select > 1','->',{
 							text: 'Save',
-							icon: '/Gemma/images/icons/disk.png'
+							icon: '/Gemma/images/icons/disk.png',
+							handler: this.launchExperimentSelectionEditor,
+							scope: this
 						},'-',{
 							text:'Clear',
 							handler: function(button, clickEvent){
