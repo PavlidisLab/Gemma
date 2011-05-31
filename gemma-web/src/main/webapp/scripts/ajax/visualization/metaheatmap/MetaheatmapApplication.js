@@ -1191,7 +1191,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 							}]
 				});
 		// FOR TESTING !!!!!
-		this.param = {
+		this.param2 = {
 			geneReferences : [{
 				id : 96,
 				type : "databaseBackedGroup"
