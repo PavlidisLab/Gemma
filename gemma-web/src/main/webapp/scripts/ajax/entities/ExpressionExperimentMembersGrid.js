@@ -526,6 +526,7 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 				this.eeCombo = new Gemma.ExperimentAndExperimentGroupCombo({
 					typeAhead : false,
 					width : 300,
+					emptyText: 'Search for an experiment or group to add',
 					listeners : {
 								'select' : {
 									fn : function(combo, rec, index) {

@@ -217,15 +217,17 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		
 		this.eeSelectionList.getSelectionModel().on('rowselect', function(selModel, rowIndex, record){
 			this._selectedExperiments.push(record.data.id);
-			this._imageArea._experimentLabels.items.each(function(){
-				this._drawLabels();
-			});
+			// update viz
+			//this._imageArea._experimentLabels.items.each(function(){
+			//	this._drawLabels();
+			//});
 		},this);
 		this.eeSelectionList.getSelectionModel().on('rowdeselect', function(selModel, rowIndex, record){
 			this._selectedExperiments.remove(record.data.id);
-			this._imageArea._experimentLabels.items.each(function(){
-				this._drawLabels();
-			});
+			// update viz
+			//this._imageArea._experimentLabels.items.each(function(){
+			//	this._drawLabels();
+			//});
 		},this);
 				
 		this.on('experimentSelectionChange', function(){ // fired when an experiment is selected from the image
