@@ -274,6 +274,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 		this.el.on('mouseout', function(e, t) {
 					document.body.style.cursor = 'default';
 					this.applicationRoot._imageArea._geneLabels.unhighlightGene(this.rowGroup);
+					this.applicationRoot._hoverDetailsPanel.hide();
 				}, this);
 		this.el.on('mousemove', function(e, t) {
 			var index = this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY() - Ext.get(t).getY());
@@ -321,6 +322,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					return sprintf("%.3f", p);
 				}
 			};
+			this.applicationRoot._hoverDetailsPanel.show();
 			this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 			this.applicationRoot._hoverDetailsPanel.update({
 				type : 'cell',

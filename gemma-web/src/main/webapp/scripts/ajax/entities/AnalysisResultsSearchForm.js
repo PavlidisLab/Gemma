@@ -737,7 +737,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 		this.coexToggle = new Ext.Button({
 					text : "<span style=\"font-size:1.3em\">Coexpression</span>",
-					style : 'padding-bottom:0.4em',
+					cls:'highlightToggle',
+					style:'margin-top:5px',
 					scale : 'medium',
 					width : 150,
 					enableToggle : true,
@@ -748,8 +749,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				}, this);
 		this.diffExToggle = new Ext.Button({
 					text : "<span style=\"font-size:1.3em\">Differential Expression</span>",
-					style : 'padding-bottom:0.4em',
 					scale : 'medium',
+					style:'margin-top:5px',
+					cls:'highlightToggle',
 					width : 150,
 					enableToggle : true,
 					pressed : true
@@ -762,21 +764,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 					border : false,
 					layout : 'hbox',
-					width : 470,
+					width : 490,
 					style : 'padding: 0 7px',
 					defaults : {
-						border : false,
-						style : 'padding: 7px'
+						border : false
 					},
 					items : [{
 								html : 'Search for ',
-								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;'
+								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding-right: 7px'
 							}, this.coexToggle, {
 								html : 'or',
-								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;'
+								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding: 7px'
 							}, this.diffExToggle, {
 								html : 'in&hellip;',
-								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;'
+								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding-left: 7px'
 							}]
 
 				});

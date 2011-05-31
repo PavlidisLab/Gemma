@@ -360,7 +360,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				hidden: true, // doesn't work for some reason
 				bodyStyle : 'padding: 7px',
 				html : '<span style="color:black;font-size:1.3em">Hover over the visualisation for quick details or click for more information.'+
-						' <br><br>Hold down "ctrl" and click on a gene or experiment to select it.</span>',
+						' <br><br>Hold down "ctrl" and click on a gene to select it.</span>',
 				tpl : new Ext.XTemplate(
 						'<span style="font-size: 12px ">',
 
@@ -667,7 +667,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				y:5,
 				xtype:'panel',
 				html:'<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
-						'<b>Click</b> for details<br>Hold <b>"ctrl" + click</b> to select</span>',
+						'<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
 				border:false,
 				width: 180,
 				height: 100
@@ -675,6 +675,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		});
 		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
 
+		this._hoverDetailsPanel.hide();
 		this._imageArea.topLabelsPanel._setHeatmapContainer(this._imageArea._heatmapArea);
 		this._imageArea._heatmapArea._setTopLabelsBox(this._rotatedLabelsBox);
 
@@ -1142,7 +1143,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 							}]
 				});
 		// FOR TESTING !!!!!
-		this.param2 = {
+		this.param = {
 			geneReferences : [{
 				id : 96,
 				type : "databaseBackedGroup"

@@ -231,12 +231,27 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					handler : this.done,
 					scope : this,
 					disabled : true
+				})
+		this.exportButton = new Ext.Button({
+					// id: 'done-selecting-button-g',
+					text : "Export",
+					handler : this.exportToTxt,
+					scope : this,
+					disabled : false
 				});
 		// add save button if user isn't logged in
 		
 		if (Ext.get('hasUser').getValue() && this.allowSaveToSession) {
 			Ext.apply(this, {
-						buttons : [this.saveButton, this.doneButton, {
+						buttons : [this.saveButton, this.exportButton, this.doneButton, {
+									text : "Cancel",
+									handler : this.cancel,
+									scope : this
+								}]
+					});
+		}else if (Ext.get('hasUser').getValue()) {
+			Ext.apply(this, {
+						buttons : [this.saveButton,this.exportButton,  {
 									text : "Cancel",
 									handler : this.cancel,
 									scope : this
@@ -244,7 +259,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					});
 		}else if( this.allowSaveToSession ) {
 			Ext.apply(this, {
-						buttons : [this.doneButton, {
+						buttons : [this.doneButton, this.exportButton, {
 									text : "Cancel",
 									handler : this.cancel,
 									scope : this
@@ -252,7 +267,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					});
 		}else{
 			Ext.apply(this, {
-						buttons : [{
+						buttons : [this.exportButton, {
 									xtype:'panel',
 									html:'Sorry, you must be logged in to save this selection.'}, {
 									text : "Cancel",
@@ -482,6 +497,11 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		this.createDetails();
 		this.createInSession();
+	},
+	
+	exportToTxt : function(){
+		// TODO
+		
 	},
 
 	/**

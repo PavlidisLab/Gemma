@@ -279,11 +279,12 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 				}, this);
 
 		this.el.on('mouseover', function(e, t) {
-					document.body.style.cursor = 'pointer';
-				});
+			document.body.style.cursor = 'pointer';
+		});
 		this.el.on('mouseout', function(e, t) {
-					document.body.style.cursor = 'default';
-				});
+			document.body.style.cursor = 'default';
+			this.applicationRoot._hoverDetailsPanel.hide();
+		},this);
 		this.el.on('mousemove', function(e, t) {
 
 			// if mouse is in non-label area of component, don't show pointer
@@ -310,6 +311,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 						factorValues.push(" " + analysisObj.contrastsFactorValues[analysisObj.contrastsFactorValueIds[k]]);
 					}
 
+					this.applicationRoot._hoverDetailsPanel.show();
 					this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 					this.applicationRoot._hoverDetailsPanel.update({
 								type : 'experiment',

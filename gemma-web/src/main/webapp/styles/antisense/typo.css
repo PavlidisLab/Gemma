@@ -632,3 +632,13 @@ a.tooltip:hover .tooltiptext {
     background-image:url('/Gemma/images/icons/cross.png');
 	margin-left:10px;
 }
+table.x-btn-pressed.highlightToggle{
+	padding: 0px;
+	margin 7px;
+}
+.x-btn-pressed.highlightToggle button span{
+	color:black;	
+}
+.highlightToggle button span{
+	color:grey
+}

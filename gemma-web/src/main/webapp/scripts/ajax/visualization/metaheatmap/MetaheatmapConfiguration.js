@@ -25,7 +25,7 @@ mm = Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
 Gemma.MetaVisualizationConfig.labelExtraSpace = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / mm);
 
 // Colors
-Gemma.MetaVisualizationConfig.cellHighlightColor = 'yellow';
+Gemma.MetaVisualizationConfig.cellHighlightColor = 'red';
 Gemma.MetaVisualizationConfig.defaultLabelColor = 'black';
 Gemma.MetaVisualizationConfig.geneLabelHighlightColor = 'red';
 Gemma.MetaVisualizationConfig.rowHighlightColor = 'pink';
