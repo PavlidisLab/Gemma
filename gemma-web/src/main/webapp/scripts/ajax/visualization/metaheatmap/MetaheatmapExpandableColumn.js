@@ -250,16 +250,19 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			// if (e.ctrlKey == true) {
 			// Ext.Msg.alert('CTRL Used', 'Ctrl+Click was used');
 			// }
+			
+			var geneId = this.applicationRoot._imageArea._heatmapArea.geneIds[this.rowGroup][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]];
+			var eeId = this.ownerCt._dataColumn.datasetId;
+			var downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneId);
 			var vizWindow = new Gemma.VisualizationWithThumbsWindow({
 						title : 'Gene Expression',
-						thumbnails : false
+						thumbnails : false,
+						downloadLink: downloadLink
 					});
-			var eeId = this.ownerCt._dataColumn.datasetId;
-			var _datasetGroupPanel = this.ownerCt.ownerCt.ownerCt;
 			vizWindow.show({
 				params : [
 						[eeId],
-						[this.applicationRoot._imageArea._heatmapArea.geneIds[this.rowGroup][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]]]
+						[geneId]]
 			});
 		}, this);
 

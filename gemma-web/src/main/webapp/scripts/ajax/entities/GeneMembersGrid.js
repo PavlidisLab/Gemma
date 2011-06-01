@@ -108,7 +108,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				if (!data) {
 					return;
 				}
-				this.selectedGeneOrGroupRecord = data;
+				this.selectedRecord = data;
 
 				var id = data.reference.id;
 				var isGroup = data.isGroup;
@@ -235,6 +235,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.exportButton = new Ext.Button({
 					// id: 'done-selecting-button-g',
 					text : "Export",
+					qtip:'Get a plain text version of this list',
 					handler : this.exportToTxt,
 					scope : this,
 					disabled : false
@@ -500,8 +501,9 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 	
 	exportToTxt : function(){
-		// TODO
-		
+		// make download link
+		var downloadLink = String.format("/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds());
+		window.open(downloadLink);
 	},
 
 	/**

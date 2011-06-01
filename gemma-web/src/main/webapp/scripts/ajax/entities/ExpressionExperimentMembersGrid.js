@@ -204,6 +204,13 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			scope: this,
 			disabled: true
 		});
+		this.exportButton = new Ext.Button({
+					text : "Export",
+					qtip:'Get a plain text version of this list',
+					handler : this.exportToTxt,
+					scope : this,
+					disabled : false
+				});
 		this.cancelButton = new Ext.Button({
 			text: "Cancel",
 			qtip:'Discard any changes you have made.',
@@ -215,11 +222,11 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			// add save button if user isn't logged in
 			if (Ext.get('hasUser').getValue()) {
 				Ext.apply(this, {
-							buttons : [this.saveButton, this.doneButton, this.cancelButton]
+							buttons : [this.saveButton, this.exportButton,this.doneButton, this.cancelButton]
 						});
 			} else {
 				Ext.apply(this, {
-							buttons : [this.doneButton, this.cancelButton]
+							buttons : [this.exportButton,this.doneButton, this.cancelButton]
 						});
 			}
 		}
@@ -371,6 +378,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		this.createDetails();
 		this.saveToSession();
+	},
+		
+	exportToTxt : function(){
+		// make download link
+		var downloadLink = String.format("/Gemma/expressionExperiment/downloadExpressionExperimentList.html?g={0}", this.getEEIds());
+		window.open(downloadLink);
 	},
 
 	/**
