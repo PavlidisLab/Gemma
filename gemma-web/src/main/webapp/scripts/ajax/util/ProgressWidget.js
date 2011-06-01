@@ -253,7 +253,7 @@ Gemma.ProgressWidget = Ext.extend(Ext.Panel, {
 		 * keep going. Hopefully just a temporary network lapse.
 		 */
 		this.waiting = false;
-		this.progressBar.updateText("Network error, continuing.");
+		this.progressBar.updateText("Waiting...");
 	},
 
 	/**
