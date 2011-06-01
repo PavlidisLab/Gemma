@@ -323,7 +323,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					Ext.DomHelper.append(this.genePreviewContent.body, {
 								cn : '<div style="padding-bottom:7px;color:red;">Not all symbols had exact matches ('+
 										 '<a onmouseover="this.style.cursor=\'pointer\'" '+
-										 'onclick="Ext.Msg.alert(\'Query Result Details\',\'Please note:<br><br>'+
+										 'onclick="Ext.Msg.alert(\'Query Result Details\',\'<br>'+
 										 msgMany+
 										 msgNone+
 										 '\');" style="color: red; text-decoration: underline;">details</a>)</div>'

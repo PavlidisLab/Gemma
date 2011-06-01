@@ -959,7 +959,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 								items : [{
 											xtype : 'button',
 											id : this.downloadDataBtnId,
-											icon : '../images/download.gif',
+											icon : '/Gemma/images/download.gif',
 											cls : 'x-btn-text-icon',
 											hidden : this.downloadLink === undefined,
 											disabled : true, // enabled after
@@ -974,10 +974,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 											tooltip : "Toggle display of the sample names",
 											disabled : true
 										},{
-											xtype : 'button', // in ext3, use
-																// button;
-																// tbbutton is
-																// deprecated.
+											xtype : 'button', 
 											text : this.showLegend ? "Hide legend" : "Show legend",
 											id : this.toggleLegendBtnId,
 											handler : this.toggleLegend.createDelegate(this),
