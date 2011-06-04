@@ -255,9 +255,9 @@ DifferentialExpressionSearchController.getFactors = function(p0, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'getFactors', p0, callback);
 }
-DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch = function(p0, p1, p2, callback) {
+DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch = function(p0, p1, p2, p3, p4, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'differentialExpressionAnalysisVisualizationSearch', p0, p1, p2,  callback);
+			'differentialExpressionAnalysisVisualizationSearch', p0, p1, p2, p3, p4, callback);
 }
 
 // ====================================================================================

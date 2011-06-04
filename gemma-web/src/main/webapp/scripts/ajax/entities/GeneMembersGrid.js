@@ -218,65 +218,53 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				return;
 			}
 		}.createDelegate(this);
-		this.saveButton = new Ext.Button({
-					// id: 'save-selection-button-g',
-					text : "Save",
-					handler : this.save,
-					scope : this,
-					disabled : false
-				});
-		this.doneButton = new Ext.Button({
-					// id: 'done-selecting-button-g',
-					text : "Done",
-					handler : this.done,
-					scope : this,
-					disabled : true
-				})
-		this.exportButton = new Ext.Button({
-					// id: 'done-selecting-button-g',
-					text : "Export",
-					qtip:'Get a plain text version of this list',
-					handler : this.exportToTxt,
-					scope : this,
-					disabled : false
-				});
-		// add save button if user isn't logged in
 		
-		if (Ext.get('hasUser').getValue() && this.allowSaveToSession) {
-			Ext.apply(this, {
-						buttons : [this.saveButton, this.exportButton, this.doneButton, {
-									text : "Cancel",
-									handler : this.cancel,
-									scope : this
-								}]
-					});
-		}else if (Ext.get('hasUser').getValue()) {
-			Ext.apply(this, {
-						buttons : [this.saveButton,this.exportButton,  {
-									text : "Cancel",
-									handler : this.cancel,
-									scope : this
-								}]
-					});
-		}else if( this.allowSaveToSession ) {
-			Ext.apply(this, {
-						buttons : [this.doneButton, this.exportButton, {
-									text : "Cancel",
-									handler : this.cancel,
-									scope : this
-								}]
-					});
-		}else{
-			Ext.apply(this, {
-						buttons : [this.exportButton, {
-									xtype:'panel',
-									html:'Sorry, you must be logged in to save this selection.'}, {
-									text : "Cancel",
-									handler : this.cancel,
-									scope : this
-								}]
-					});
+		this.saveButton = new Ext.Button({
+			text: "Save",
+			handler: this.save,
+			qtip: 'Save your selection before returning to search.',
+			scope: this,
+			disabled: false
+		});
+		this.doneButton = new Ext.Button({
+			text: "Done",
+			handler: this.done,
+			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
+			scope: this,
+			disabled: true
+		})
+		this.exportButton = new Ext.Button({
+			text: "Export",
+			qtip: 'Get a plain text version of this list',
+			handler: this.exportToTxt,
+			scope: this,
+			disabled: false
+		});
+				
+		var buttons = [];
+		if (Ext.get('hasUser').getValue()) {
+			buttons.push(this.saveButton);
 		}
+		if( this.allowSaveToSession ) {
+			buttons.push(this.doneButton);
+		}
+		if(!Ext.get('hasUser').getValue() && !this.allowSaveToSession){
+			buttons.push({
+					xtype: 'panel',
+					html: 'You must be logged in to save this selection.',
+					border:false,
+					bodyStyle:'background: transparent'
+			});
+		}
+		buttons.push(this.exportButton,{
+			text: "Cancel",
+			handler: this.cancel,
+			scope: this
+		});
+
+		Ext.apply(this, {
+			buttons : buttons
+		});
 
 		Ext.apply(this, {
 			store : new Ext.data.SimpleStore({
@@ -487,7 +475,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		// if description for new group wasn't passed from parent component,
 		// make one up
 		if (!this.newGroupDescription || this.newGroupDescription === null) {
-			this.newGroupDescription = "Temporary experiment group saved " + (new Date()).toString();
+			this.newGroupDescription = "Temporary experiment group created " + (new Date()).toString();
 		}
 	},
 

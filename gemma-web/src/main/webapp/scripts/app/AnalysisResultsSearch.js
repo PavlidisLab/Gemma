@@ -239,7 +239,7 @@ Ext.onReady(function() {
 		
 		// show metaheatmap viewer (but not control panel)
 		// control panel is responsible for creating the visualisation view space
-		this.diffVisualizer = new Gemma.MetaHeatmapControlWindow(data); 
+		this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data); 
 		
 		this.diffVisualizer.on('visualizationLoaded', function(){
 			panel.loadMask.hide()

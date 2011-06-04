@@ -7,6 +7,7 @@ Ext.namespace('Gemma');
 
 Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	taxonId: null, // might be set by parent to control combo
+	listModified: false,
 	/**
 	 * Show the selected eeset members
 	 */
@@ -15,6 +16,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.selectedExperimentOrGroupRecord = record.data;
 
 		var id = record.data.reference.id;
+		this.queryUsedToGetSessionGroup = (id === null)? query : null;
+		
 		var isGroup = record.get("isGroup");
 		var type = record.get("type");
 		var reference = record.get("reference");
@@ -22,6 +25,15 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 
 		var taxonId = record.get("taxonId");
 		var taxonName = record.get("taxonName");
+		
+		if (id === null) {
+			var queryToGetSelected = name;
+			if(type === 'freeText' && name.indexOf(query)!=-1){
+				queryToGetSelected = "taxon:"+taxonId+"query:"+query;
+			}
+			this.queryUsedToGetSessionGroup = queryToGetSelected;
+		}
+		
 		
 		// load preview of group if group was selected
 		if (isGroup) {
@@ -247,6 +259,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						}
 					}
 					this.experimentCombo.getStore().reload();
+					this.listModified = true;
 				}, this);
 
 		this.experimentSelectionEditor.on('doneModification', function() {

@@ -5,7 +5,7 @@
 Ext.namespace('Gemma');
 
 Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
-
+	listModified : false,
 	resetGenePreview : function() {
 		Ext.DomHelper.overwrite(this.genePreviewContent.body, {
 					cn : ''
@@ -63,8 +63,19 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		var size = record.get("size");
 		var reference = record.get("reference");
 		var name = record.get("name");
-
 		var taxonId = this.searchForm.getTaxonId();
+		
+		if (id === null) {
+			var queryToGetSelected = "";
+			if (name.match(/^GO_\d+/)) {
+				queryToGetSelected = "taxon:"+taxonId+";GO:"+name;
+			}else if(type === 'freeText' && name.indexOf(query)!=-1){
+				queryToGetSelected = "taxon:"+taxonId+";query:"+query;
+			}
+			this.queryUsedToGetSessionGroup = queryToGetSelected;
+		}
+		
+
 		var geneIds = [];
 
 		// load preview of group if group was selected
@@ -464,7 +475,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				}
 				// this.geneCombo.setTaxon(newRecords[i].taxonId);
 			}
-				// this.geneCombo.getStore().reload();
+				this.geneCombo.getStore().reload();
+				this.listModified = true;
 			}, this);
 
 		this.geneSelectionEditor.on('doneModification', function() {

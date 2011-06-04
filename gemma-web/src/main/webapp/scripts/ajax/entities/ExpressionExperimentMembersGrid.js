@@ -28,6 +28,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	queryText : '',
 	addExperiments: true,
 	taxonId: null,
+	allowSaveToSession:true, // controls presence of 'done' button
 
 	/**
 	 * Add to table.
@@ -190,46 +191,93 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				return;
 			}
 		}.createDelegate(this);
+
 		this.saveButton = new Ext.Button({
 			text: "Save",
-			qtip: 'Save your selection before returning to search.',
 			handler: this.save,
+			qtip: 'Save your selection before returning to search.',
 			scope: this,
 			disabled: false
 		});
 		this.doneButton = new Ext.Button({
 			text: "Done",
-			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
 			handler: this.done,
+			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
 			scope: this,
 			disabled: true
-		});
+		})
 		this.exportButton = new Ext.Button({
-					text : "Export",
-					qtip:'Get a plain text version of this list',
-					handler : this.exportToTxt,
-					scope : this,
-					disabled : false
-				});
-		this.cancelButton = new Ext.Button({
-			text: "Cancel",
-			qtip:'Discard any changes you have made.',
-			handler: this.cancel,
-			scope: this
+			text: "Export",
+			qtip: 'Get a plain text version of this list',
+			handler: this.exportToTxt,
+			scope: this,
+			disabled: false
 		});
-		// add buttons only if haven't been added already
-		if (!this.buttons || this.buttons === null || this.buttons === []) {
-			// add save button if user isn't logged in
-			if (Ext.get('hasUser').getValue()) {
-				Ext.apply(this, {
-							buttons : [this.saveButton, this.exportButton,this.doneButton, this.cancelButton]
-						});
-			} else {
-				Ext.apply(this, {
-							buttons : [this.exportButton,this.doneButton, this.cancelButton]
-						});
-			}
-		}
+		this._noSavePanel = new Ext.Panel({
+			layout: 'hbox',
+			width: 250,
+			border: false,
+			bodyBorder: false,
+			bodyStyle: 'background: transparent',
+			padding: 0,
+			defaults: {
+				border: false,
+				bodyBorder: false,
+				bodyStyle: 'background: transparent',
+				padding: 0
+			},
+			items: [{
+				html: 'You must be ',
+				style: 'padding-top:3px'
+			}, new Ext.LinkButton({
+				text: 'logged in',
+				handler: this.login,
+				scope: this
+			}), {
+				html: 'to save this selection.',
+				style: 'padding-top:3px'
+			}, {
+				xtype: 'button',
+				icon: '/Gemma/images/icons/arrow_refresh_small.png',
+				qtip: 'Refresh your login state',
+				handler: function(){
+					// TODO re-evaluate what buttons they can see
+					this.setButtonVisibilities();
+					//console.log("logged in :"+Ext.get('hasUser').getValue());
+					this.doLayout();
+				},
+				scope: this
+			}],
+		});
+		Ext.apply(this, {
+		
+			setButtonVisibilities: function(){
+				if (Ext.get('hasUser').getValue()) {
+					this.saveButton.show();
+				}
+				else {
+					this.saveButton.hide();
+				}
+				if (this.allowSaveToSession) {
+					this.doneButton.show();
+				}
+				else {
+					this.doneButton.hide();
+				}
+				if (!Ext.get('hasUser').getValue() && !this.allowSaveToSession) {
+					this._noSavePanel.show();
+				}
+				else {
+					this._noSavePanel.hide();
+				}
+			},
+			buttons: [this.saveButton, this.doneButton, this._noSavePanel, this.exportButton, {
+				text: "Cancel",
+				handler: this.cancel,
+				scope: this
+			}]
+		});
+		this.setButtonVisibilities();
 
 		Ext.apply(this, {
 			store : new Ext.data.SimpleStore({
@@ -367,8 +415,15 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// if description for new group wasn't passed from parent component,
 		// make one up
 		if (!this.newGroupDescription || this.newGroupDescription === null) {
-			this.newGroupDescription = "Temporary experiment group saved " + (new Date()).toString();
+			this.newGroupDescription = "Temporary experiment group created " + (new Date()).toString();
 		}
+	},
+	
+	login: function(){
+		window.open("/Gemma/login.jsp");
+		//var win = new Ext.Window({
+		//items:[new Gemma.LoginPanel({})]});
+		//win.show();
 	},
 
 	/**
@@ -382,7 +437,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 	exportToTxt : function(){
 		// make download link
-		var downloadLink = String.format("/Gemma/expressionExperiment/downloadExpressionExperimentList.html?g={0}", this.getEEIds());
+		var downloadLink = String.format("/Gemma/expressionExperiment/downloadExpressionExperimentList.html?e={0}", this.getEEIds());
 		window.open(downloadLink);
 	},
 

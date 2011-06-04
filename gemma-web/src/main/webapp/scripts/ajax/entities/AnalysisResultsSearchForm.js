@@ -593,13 +593,16 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		var data = {
 			geneReferences : geneRecordReferences,
+			geneSessionGroupQueries : this.getGeneSessionGroupQueries(),
+			experimentSessionGroupQueries : this.getExperimentSessionGroupQueries(),
 			datasetReferences : experimentRecordReferences,
 			geneNames : geneNames,
 			datasetNames : experimentNames,
 			taxonId : this.getTaxonId(),
 			taxonName : this.getTaxonName(),
 			pvalue : Gemma.DEFAULT_THRESHOLD,
-			datasetCount : experimentCount
+			datasetCount : experimentCount,
+			selectionsModified : this.wereSelectionsModified()
 		};
 		return data;
 	},
@@ -638,14 +641,56 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var data = this.getDataForDiffVisualization();
 		this.fireEvent('showDiffExResults', this, result, data);
 	},
-
+	wereSelectionsModified: function(){
+		var wereModified = false;
+		this.geneChoosers.items.each(function(){
+			if (this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined') {
+				if( this.listModified){
+					wereModified = true;
+				}
+			}
+		});
+		if(!wereModified){
+			this.experimentChoosers.items.each(function(){
+				if (this.xtype === 'experimentSearchAndPreview' && typeof this.selectedExperimentOrGroupRecord !== 'undefined') {
+					if( this.listModified){
+						wereModified = true;
+					}
+				}
+			});
+		}
+		
+		return wereModified;
+	},
+	getGeneSessionGroupQueries: function(){
+		var queries = [];
+		this.geneChoosers.items.each(function(){
+			if (this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined') {
+				if( this.queryUsedToGetSessionGroup !== null ){
+					queries.push(this.queryUsedToGetSessionGroup);
+				}
+			}
+		});
+		return queries;
+	},
+	getExperimentSessionGroupQueries: function(){
+		var queries = [];
+		this.experimentChoosers.items.each(function(){
+			if (this.xtype === 'experimentSearchAndPreview' && typeof this.selectedExperimentOrGroupRecord !== 'undefined') {
+				if( this.queryUsedToGetSessionGroup !== null ){
+					queries.push(this.queryUsedToGetSessionGroup);
+				}
+			}
+		});
+		return queries;
+	},
 	getSelectedGeneRecords : function() {
 		var selectedGeneRecords = [];
-		this.geneChoosers.items.each(function() {
-					if (this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined') {
-						selectedGeneRecords.push(this.selectedGeneOrGroupRecord);
-					}
-				});
+		this.geneChoosers.items.each(function(){
+			if (this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined') {
+				selectedGeneRecords.push(this.selectedGeneOrGroupRecord);
+			}
+		});
 		return selectedGeneRecords;
 	},
 

@@ -1947,9 +1947,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         StopWatch watch = new StopWatch();
         watch.start();
 
-        Collection<Long> eeIds = extractIds( request.getParameter( "g" ) ); // might not be any
-        Collection<Long> eeSetIds = extractIds( request.getParameter( "gs" ) ); // might not be there
-        String eeSetName = request.getParameter( "gsn" ); // might not be there
+        Collection<Long> eeIds = extractIds( request.getParameter( "e" ) ); // might not be any
+        Collection<Long> eeSetIds = extractIds( request.getParameter( "es" ) ); // might not be there
+        String eeSetName = request.getParameter( "esn" ); // might not be there
 
         ModelAndView mav = new ModelAndView( new TextView() );
         if ( (eeIds == null || eeIds.isEmpty()) && (eeSetIds == null || eeSetIds.isEmpty()) ) {
@@ -1987,8 +1987,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         strBuff.append( ExpressionDataFileService.DISCLAIMER + "#\n" );
 
         if(eeSetName != null && eeSetName.length()!=0) 
-            strBuff.append( "# Gene Set: "+eeSetName+"\n");
-        strBuff.append( "# "+bas.size()+((bas.size()>1)?" genes": " gene")+"\n" );
+            strBuff.append( "# Experiment Set: "+eeSetName+"\n");
+        strBuff.append( "# "+bas.size()+((bas.size()>1)?" experiments": " experiment")+"\n#\n" );
         
         // add header        
         strBuff.append( "Short Name\tFull Name\n" );
