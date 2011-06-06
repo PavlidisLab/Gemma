@@ -50,7 +50,7 @@ public class SessionListManager {
 
     @Autowired
     ExperimentSetListContainer experimentSetList;
-    
+
     @Autowired
     ExpressionExperimentSetService expressionExperimentSetService;
 
@@ -59,10 +59,10 @@ public class SessionListManager {
 
     @Autowired
     ExpressionExperimentReportService expressionExperimentReportService;
-    
+
     @Autowired
     GeneService geneService;
-    
+
     @Autowired
     GeneSetService geneSetService;
 
@@ -96,7 +96,7 @@ public class SessionListManager {
     public Collection<GeneSetValueObject> getModifiedGeneSets() {
         return getAllGeneSets( null );
     }
-    
+
     public Collection<GeneSetValueObject> getModifiedGeneSets( Long taxonId ) {
 
         // We know that geneSetList will only contain GeneSetValueObjects (via
@@ -120,11 +120,35 @@ public class SessionListManager {
         return castedCollection;
     }
 
-    
     /**
-     * Get the members of session-bound group using the group's reference object
-     * if a reference is passed in for a group that isn't session-bound, null is returned
-     * members are returned as expression experiment value objects
+     * Get the session-bound group using the group's reference object if a reference is passed in for a group that isn't
+     * session-bound, null is returned if the reference cannot be found in the session list, null is returned
+     * 
+     * @param reference
+     * @return
+     */
+    public ExpressionExperimentSetValueObject getExperimentSetByReference( Reference reference ) {
+
+        if ( reference.isDatabaseBacked() ) {
+            return null;
+        } else if ( reference.isSessionBound() ) {
+
+            Collection<ExpressionExperimentSetValueObject> sessionExperimentSets = getAllExperimentSets();
+
+            for ( ExpressionExperimentSetValueObject esvo : sessionExperimentSets ) {
+                if ( reference.equals( esvo.getReference() ) ) {
+                    return esvo;
+                }
+            }
+        }
+        return null;
+
+    }
+
+    /**
+     * Get the members of session-bound group using the group's reference object if a reference is passed in for a group
+     * that isn't session-bound, null is returned members are returned as expression experiment value objects
+     * 
      * @param reference
      * @return
      */
@@ -139,16 +163,15 @@ public class SessionListManager {
 
         }
         // if group is session bound
-        else if (reference.isSessionBound()){
+        else if ( reference.isSessionBound() ) {
 
             Collection<ExpressionExperimentSetValueObject> sessionExperimentSets = getAllExperimentSets();
-            
+
             Collection<ExpressionExperiment> expressionExperiments = null;
 
             for ( ExpressionExperimentSetValueObject eesvo : sessionExperimentSets ) {
                 if ( reference.equals( eesvo.getReference() ) ) {
-                    expressionExperiments = expressionExperimentService.loadMultiple( eesvo
-                            .getMemberIds() );
+                    expressionExperiments = expressionExperimentService.loadMultiple( eesvo.getMemberIds() );
                     break;
                 }
             }
@@ -171,9 +194,34 @@ public class SessionListManager {
     }
 
     /**
-     * Get the members of session-bound group using the group's reference object
-     * if a reference is passed in for a group that isn't session-bound, null is returned
-     * members are returned as expression experiment value objects
+     * Get the session-bound group using the group's reference object if a reference is passed in for a group that isn't
+     * session-bound, null is returned if the reference cannot be found in the session list, null is returned
+     * 
+     * @param reference
+     * @return
+     */
+    public GeneSetValueObject getGeneSetByReference( Reference reference ) {
+
+        if ( reference.isDatabaseBacked() ) {
+            return null;
+        } else if ( reference.isSessionBound() ) {
+
+            Collection<GeneSetValueObject> sessionGeneSets = getAllGeneSets();
+
+            for ( GeneSetValueObject gsvo : sessionGeneSets ) {
+                if ( reference.equals( gsvo.getReference() ) ) {
+                    return gsvo;
+                }
+            }
+        }
+        return null;
+
+    }
+
+    /**
+     * Get the members of session-bound group using the group's reference object if a reference is passed in for a group
+     * that isn't session-bound, null is returned members are returned as gene value objects
+     * 
      * @param reference
      * @return
      */
@@ -181,10 +229,9 @@ public class SessionListManager {
 
         Collection<GeneValueObject> results = null;
 
-        if(reference.isDatabaseBacked()){
+        if ( reference.isDatabaseBacked() ) {
             return null;
-        }
-        else if(reference.isSessionBound()) {
+        } else if ( reference.isSessionBound() ) {
 
             Collection<GeneSetValueObject> sessionGeneSets = getAllGeneSets();
 
@@ -214,6 +261,7 @@ public class SessionListManager {
         return results;
 
     }
+
     /**
      * AJAX If the current user has access to given gene group will return the gene ids in the gene group
      * 
@@ -232,7 +280,6 @@ public class SessionListManager {
         return results;
 
     }
-    
 
     /**
      * @param id
@@ -244,6 +291,7 @@ public class SessionListManager {
         expressionExperimentReportService.fillReportInformation( result );
         return result;
     }
+
     /**
      * @param id
      * @return
@@ -257,17 +305,16 @@ public class SessionListManager {
         }
         return eeids;
     }
-    
-    
+
     public GeneSetValueObject addGeneSet( GeneSetValueObject gsvo ) {
 
         return ( GeneSetValueObject ) geneSetList.addSet( gsvo );
 
     }
-    
+
     public GeneSetValueObject addGeneSet( GeneSetValueObject gsvo, String referenceType ) {
 
-        return ( GeneSetValueObject ) geneSetList.addSet( gsvo , referenceType );
+        return ( GeneSetValueObject ) geneSetList.addSet( gsvo, referenceType );
 
     }
 
@@ -283,7 +330,6 @@ public class SessionListManager {
 
     }
 
-    
     public Long incrementAndGetLargestGeneSetSessionId() {
         return geneSetList.incrementAndGetLargestSessionId();
     }
@@ -291,7 +337,8 @@ public class SessionListManager {
     public Collection<ExpressionExperimentSetValueObject> getAllExperimentSets() {
 
         @SuppressWarnings("unchecked")
-        List<ExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList.getAllSessionBoundGroups();
+        List<ExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList
+                .getAllSessionBoundGroups();
 
         return castedCollection;
 
@@ -300,7 +347,8 @@ public class SessionListManager {
     public Collection<ExpressionExperimentSetValueObject> getModifiedExperimentSets() {
 
         @SuppressWarnings("unchecked")
-        List<ExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList.getSessionBoundModifiedGroups();
+        List<ExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList
+                .getSessionBoundModifiedGroups();
 
         return castedCollection;
 
@@ -312,7 +360,8 @@ public class SessionListManager {
 
     }
 
-    public ExpressionExperimentSetValueObject addExperimentSet( ExpressionExperimentSetValueObject eesvo , String referenceType) {
+    public ExpressionExperimentSetValueObject addExperimentSet( ExpressionExperimentSetValueObject eesvo,
+            String referenceType ) {
 
         return ( ExpressionExperimentSetValueObject ) experimentSetList.addSet( eesvo, referenceType );
 
