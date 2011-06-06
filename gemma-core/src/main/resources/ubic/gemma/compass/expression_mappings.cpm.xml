@@ -11,11 +11,11 @@
 <compass-core-mapping package="ubic.gemma.model">
 	<class name="expression.experiment.ExpressionExperimentImpl" alias="expressionExperiment" root="true">
 		<id name="id" />
-		<property name="name" boost="2.0f">
+		<property name="name">
 			<meta-data>name</meta-data>
 			<meta-data>expression experiment name</meta-data>
 		</property>
-		<property name="description">
+		<property name="description" boost="3.0f">
 			<meta-data>description</meta-data>
 			<meta-data>expression experiment description</meta-data>
 		</property>
