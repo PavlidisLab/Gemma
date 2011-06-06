@@ -33,7 +33,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 	loadingText : 'Searching...',
 
-	emptyText : "Search for genes or gene groups",
+	emptyText : "Search genes by keyword",
 	minChars : 2,
 	selectOnFocus : true,
 	typeAhead: false,

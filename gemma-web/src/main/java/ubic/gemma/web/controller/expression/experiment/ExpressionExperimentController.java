@@ -322,6 +322,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
 
     private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
+    
+    private static final int MAX_COMBO_PROMT_GROUP_SIZE = 100;
 
     /**
      * Exposed for AJAX calls.
@@ -407,10 +409,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
         List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
-        List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> publicResults = new LinkedList<SearchResultDisplayObject>();
+        //List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
                 
-        // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
-        // session-bound sets
+        // if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent
+        // session-bound sets (not autogen sets until handling of large searches is fixed)
         if ( query.equals( "" ) ) {
 
             // get authenticated user's sets
@@ -439,24 +442,28 @@ public class ExpressionExperimentController extends AbstractTaskService {
             
             
             // FOR TESTING UNTIL SCALING ISSUES ARE WORKED OUT
-            // propmt with all groups, just limit by size for now
+            // propmt with all public groups, just limit by size for now
             Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered by security.
             sets.removeAll( userExperimentSets );
-            for ( ExpressionExperimentSet set : sets) {
-                if(set.getExperiments().size() < 50){
+            for ( ExpressionExperimentSet set : sets ) {
+                if ( set.getExperiments().size() < MAX_COMBO_PROMT_GROUP_SIZE ) {
                     expressionExperimentSetService.thaw( set );
                     if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
-                        autoGenResults.add( new SearchResultDisplayObject( set ) );
+                        if ( set.getName().indexOf( "All" ) == 0 ) {
+                            /* remove auto-generated sets until scaling issues are resolved 
+                             * (should have all or none)
+                             */
+                            //autoGenResults.add( new SearchResultDisplayObject( set ) );
+                        } else{
+                            publicResults.add( new SearchResultDisplayObject( set ) );
+                        } 
                     }
                 }
             }
-            Collections.sort( autoGenResults );
             // end of section to be used until scaling issues are resolved
-            
             
             /* USE THIS CODE WHEN SCALING ISSUES ARE RESOLVED
             * 
-
             // get auto generated sets
             // NOTE: assumption made here that total number of groups is small
             // If this changes, may want to use searching instead of filtering
@@ -505,8 +512,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 /*
             autoGenResults.addAll( autoGenSets );
             Collections.sort( autoGenResults );
- */         displayResults.addAll( autoGenResults );
-         
+ */         //displayResults.addAll( autoGenResults );
+            
+            Collections.sort( publicResults );
+            displayResults.addAll( publicResults );
 
             return displayResults;
 
@@ -1956,7 +1965,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
             mav.addObject( "text", "Could not find genes to match expression experiment ids: {" + eeIds + "} or expression experiment set ids {" + eeSetIds +"}");
             return mav;
         }
-        Collection<BioAssay> bas = new ArrayList<BioAssay>();
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
         for(Long id : eeIds){
             ees.add( expressionExperimentService.load( id ));

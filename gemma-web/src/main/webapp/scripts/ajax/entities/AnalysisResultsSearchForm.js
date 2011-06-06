@@ -20,6 +20,10 @@ Ext.namespace('Gemma');
 Gemma.MAX_GENES_PER_QUERY = 20; // this is the value used for coexpression and
 // diff expression searches
 
+// max suggested number of elements to use for a diff ex viz query
+Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY = 100;
+Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY = 100;
+
 Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 	// collapsible:true,
@@ -71,18 +75,141 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * * SEARCH **
 	 **************************************************************************/
 
-	doSearch : function(geneRecords, experimentRecords) {
-
+	/**
+	 * check that there are some experiments and genes to run on
+	 * if there are too many experiments or genes, warn the user and offer to trim
+	 * 
+	 * after optional trimming, call the search function (doSearch)
+	 * 
+	 * @param {Object} geneRecords
+	 * @param {Object} experimentRecords
+	 * @return 
+	 */
+	validateSearch: function(geneRecords, experimentRecords){
 		if (geneRecords.length === 0) {
 			Ext.Msg.alert("Error", "Gene(s) must be selected before continuing.");
 			return;
 		}
 
-		if (geneRecords.length === 0) {
+		if (experimentRecords.length === 0) {
 			Ext.Msg.alert("Error", "Experiment(s) must be selected before continuing.");
 			return;
 		}
+		//get the total number of genes 
+		var i; var rec;
+		var geneCount = 0;
+		for(i = 0; i< geneRecords.length; i++){
+			rec = geneRecords[i];
+			if(rec.memberIds){
+				geneCount += rec.memberIds.length;
+			}
+		}
+		//get the total number of experiments 
+		var experimentCount = 0;
+		for(i = 0; i< experimentRecords.length; i++){
+			rec = experimentRecords[i];
+			if(rec.memberIds){
+				experimentCount += rec.memberIds.length;
+			}
+		}
+		var stateText = "";
+		var maxText = "";
+		if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY && experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY ){
+			stateText = geneCount + " genes and "+ experimentCount + " experiments";
+			maxText = Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY + " genes and "+Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY +" experiments";
+		}
+		else if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
+			stateText = experimentCount + " experiments";
+			maxText = Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY +" experiments";
+		}
+		else if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY){
+			stateText = geneCount + " genes";
+			maxText = Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY + " genes";
+		}
+		
+		if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY || experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
+			this.getEl().mask();
+			var warningWindow = new Ext.Window({
+				width:450,
+				height:200,
+				bodyStyle:'padding:7px;background: white; font-size:1.1em',
+				title: "Warning",
+				html: "You are using " + stateText + " for your search. " +
+					"Searching for more than " + maxText +
+					" can take some time to load and can slow down your interactions with the search results. " +
+					"You may also encounter error messages unless you are using the "+
+					"<a target='_blank' href='http://www.google.com/chrome/'>Chrome</a> browser. <br><br>" +
+					"We suggest you cancel this search and refine your selections or let us trim your query.",
+				//icon: Ext.Msg.WARNING,
+				buttons: [{
+					text: 'Trim',
+					tooltip:'Your query will be trimmed to '+maxText,
+					handler: function(){
+						if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY)
+						geneRecords = this.trimRecordSelection(geneRecords, Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY);
+						
+						if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY)
+						experimentRecords = this.trimRecordSelection(experimentRecords, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY);
+						
+						this.doSearch(geneRecords, experimentRecords);
+						warningWindow.close();
+						return;
+					},
+					scope: this
+				}, {
+					text: 'Don\'t trim',
+					tooltip:'Continue with your search as is',
+					handler: function(){
+						this.doSearch(geneRecords, experimentRecords);
+						warningWindow.close();
+						return;
+					},
+					scope:this
+				}, {
+					text: 'Cancel',
+					handler: function(){
+						warningWindow.close();
+						return;
+					},
+					scope:this
+				}],
+				listeners:{
+					close:function (){
+						this.getEl().unmask();
+					},
+					scope:this
+				}
+			});
+			warningWindow.show();
+		}else{
+			this.doSearch(geneRecords, experimentRecords);
+			return;
+		}
+		
+	},
+	trimRecordSelection: function(records, max){
+		var runningCount = 0;
+		var i; var rec;
+		var trimmedRecords = [];
+		for(i = 0; i< records.length; i++){
+			rec = records[i];
+			if(rec.memberIds && (runningCount+rec.memberIds.length)<max){
+				runningCount += rec.memberIds.length;
+				trimmedRecords.push(rec);
+			}else if(rec.memberIds){
+				var trimmedIds = rec.memberIds.slice(0, (max - runningCount));
+				rec.memberIds = trimmedIds;
+			 	rec.reference = null;
+				rec.type = null;
+			 	rec.name = "Trimmed " + rec.name;
+				trimmedRecords.push(rec);
+			}
+		}
+		return trimmedRecords;
+	},
 
+	doSearch : function(geneRecords, experimentRecords) {
+		
 		this.fireEvent('beforesearch', this);
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -110,6 +237,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				// addNonModificationBasedSessionBoundGroups() takes a
 				// genesetvalueobject, so add needed field
 				record.geneIds = record.memberIds;
+				
+				// no java bean properties to match these javascript properties 
+				delete record.memberIds;
+				delete record.comboText;
+				delete record.isGroup;
+				delete record.type;
+				
 				geneGroupsToMake.push(record);
 
 			} else {
@@ -156,6 +290,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				// addNonModificationBasedSessionBoundGroups() takes an
 				// experimentSetValueObject, so add needed field
 				record.expressionExperimentIds = record.memberIds;
+								
+				// no java bean properties to match these javascript properties 
+				delete record.memberIds;
+				delete record.comboText;
+				delete record.isGroup;
+				delete record.type;
+				
 				experimentGroupsToMake.push(record);
 			} else {
 				experimentGroupsAlreadyMade.push(record);
@@ -889,10 +1030,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						},
 						items: [this.theseExperimentsPanel, this.experimentChoosers, {
 							width: 340,
-							html: 'Example: search for Alzheimer\'s and select all human experiments <br> ' +
-							'<span style="color:red">Note: using more than 50 experiments ' +
-							'will take some time and will slow down interactions (unless you\'re using <a target="_blank" href="http://www.google.com/chrome/">Chrome</a>)'
-							
+							html: 'Example: search for Alzheimer\'s and select all human experiments <br> '
 						}]
 					}, {
 						html: ' based on ',
@@ -902,9 +1040,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							border: false
 						},
 						items: [this.theseGenesPanel, this.geneChoosers, {
-							html: '<div style="width:340px ; padding-left:10px">Example: search for "map kinase" and select a GO group<br>' +
-							'<span style="color:red">Note: using more than 50 genes ' +
-							'will take some time and will slow down interactions (unless you\'re using <a target="_blank" href="http://www.google.com/chrome/">Chrome</a>)'
+							html: '<div style="width:340px ; padding-left:10px">Example: search for "map kinase" and select a GO group<br>'
 						}]
 					}, {
 						style:'padding:20 0 0 0px;margin:0px;',
@@ -915,7 +1051,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							scale: 'medium',
 							listeners: {
 								click: function(){
-									this.doSearch(this.getSelectedGeneRecords(), this.getSelectedExperimentRecords());
+									this.validateSearch(this.getSelectedGeneRecords(), this.getSelectedExperimentRecords());
 								}.createDelegate(this, [], false)
 							}
 						

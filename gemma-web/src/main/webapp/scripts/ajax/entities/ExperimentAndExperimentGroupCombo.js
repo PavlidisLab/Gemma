@@ -28,7 +28,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	
 	loadingText : 'Searching...',
 
-	emptyText : "Select or search for a scope",
+	emptyText : "Search experiments by keyword",
 	minChars : 3,
 	selectOnFocus : false,
 	autoSelect: false,

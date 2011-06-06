@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -63,7 +62,6 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.search.SearchResult;
@@ -131,6 +129,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             int[] geneGroupSizes, int numberOfDatasets, List<List<Gene>> genes, List<List<String>> geneNames,
             List<List<String>> geneFullNames, List<List<Long>> geneIds, List<Collection<BioAssaySet>> experiments,
             List<String> geneGroupNames, List<String> datasetGroupNames ) {
+        
         DifferentialExpressionVisualizationValueObject mainVisuzalizationDataObject = new DifferentialExpressionVisualizationValueObject(
                 numberOfDatasets, geneGroupSizes );
 
@@ -167,7 +166,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
                         timer.stop();
                         if ( log.isDebugEnabled() )
-                            log.debug( "Call to constructVisualizationColumnsFromAnalysis took : " + timer.getTime()
+                            log.debug( "Call to buildVisualizationColumnsFromAnalysis took : " + timer.getTime()
                                     + " ms" );
 
                         // Set common properties for all columns in this dataset.
@@ -286,6 +285,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     public DifferentialExpressionVisualizationValueObject differentialExpressionAnalysisVisualizationSearch(
             Long taxonId, Collection<Reference> datasetGroupReferences, Collection<Reference> geneGroupReferences,
             List<String> geneSessionGroupQueries, List<String> experimentSessionGroupQueries ) {
+        
+
+        StopWatch timer = new StopWatch();
+        timer.start();
         
         // experiments
         List<Collection<BioAssaySet>> experiments = getExperiments( datasetGroupReferences );
@@ -512,6 +515,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             geneGroupSizes[i] = geneGroup.size();
             i++;
         }
+        
+        timer.stop();
+        log.info( "preparing data for search took: "+timer.getTime()+"ms" );
 
         return buildDifferentialExpressionVisualizationValueObject( geneGroupSizes, experiments.size(), genes,
                 geneNames, geneFullNames, geneIds, experiments, geneGroupNames, datasetGroupNames );
