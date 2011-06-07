@@ -692,6 +692,15 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				width : Gemma.MetaVisualizationConfig.panelWidth - 300,
 				height : Gemma.MetaVisualizationConfig.panelHeight - 30,
 				items : [{
+				x:5,
+				y:5,
+				xtype:'panel',
+				html:'<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
+						'<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
+				border:false,
+				width: 180,
+				height: 100
+			},{
 							xtype : 'metaVizGeneLabels',
 							height : Gemma.MetaVisualizationUtils
 									.calculateColumnHeight(this.visualizationData.geneNames),
@@ -727,15 +736,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							applicationRoot : this,
 							ref : '_heatmapArea'
 						}]
-			},{
-				x:5,
-				y:5,
-				xtype:'panel',
-				html:'<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
-						'<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
-				border:false,
-				width: 180,
-				height: 100
 			}]
 		});
 		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
