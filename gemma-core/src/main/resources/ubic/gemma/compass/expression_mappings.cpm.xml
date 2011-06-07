@@ -15,7 +15,7 @@
 			<meta-data>name</meta-data>
 			<meta-data>expression experiment name</meta-data>
 		</property>
-		<property name="description" boost="3.0f">
+		<property name="description">
 			<meta-data>description</meta-data>
 			<meta-data>expression experiment description</meta-data>
 		</property>
