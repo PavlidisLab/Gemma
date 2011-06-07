@@ -208,7 +208,13 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
             @Override
             public int compare( Taxon o1, Taxon o2 ) {
-                return o1.getScientificName().compareTo( o2.getScientificName() );
+                if(o1 == null){
+                    return 1;
+                }else if(o2 == null){
+                    return -1;
+                }else{
+                   return o1.getScientificName().compareTo( o2.getScientificName() );  
+                }                                   
             }
         } );
                 
@@ -219,7 +225,9 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) { 
             ee = it.next();
             t = expressionExperimentService.getTaxon(ee.getId());
-            eesPerTaxon.put(t, (eesPerTaxon.containsKey(t))? (eesPerTaxon.get(t)+1): 1);
+            if(t!=null){
+                eesPerTaxon.put(t, (eesPerTaxon.containsKey(t))? (eesPerTaxon.get(t)+1): 1);
+            }
         }
         return eesPerTaxon;
     }
@@ -267,6 +275,10 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
                     updateDate( wn, object );
                 }
             }
+            
+            // build total, new and updated counts by taxon to display in data summary widget on front page
+            wn.setNewEECountPerTaxon( getExpressionExperimentCountsByTaxon( wn.getNewExpressionExperiments() ) );
+            wn.setUpdatedEECountPerTaxon( getExpressionExperimentCountsByTaxon( wn.getUpdatedExpressionExperiments()) );
         } catch ( Throwable e ) {
             log.error( e, e );
             return null;
