@@ -365,19 +365,20 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         List<List<Long>> geneIds = new ArrayList<List<Long>>();
 
         List<String> geneGroupNames = new ArrayList<String>();
+        
+        List<Gene> genesInsideSet;
+        List<String> geneNamesInsideSet;
+        List<String> geneFullNamesInsideSet;
+        List<Long> geneIdsInsideSet;
 
         int geneGroupIndex = 0;
-        List<Gene> genesInsideSet = new ArrayList<Gene>();
-        List<String> geneNamesInsideSet = new ArrayList<String>();
-        List<String> geneFullNamesInsideSet = new ArrayList<String>();
-        List<Long> geneIdsInsideSet = new ArrayList<Long>();
         
         for ( Reference ref : geneGroupReferences ) {
-            if ( ref != null ) {
-                genesInsideSet.clear();
-                geneNamesInsideSet.clear();
-                geneFullNamesInsideSet.clear();
-                geneIdsInsideSet.clear();
+           if ( ref != null ) {
+                genesInsideSet = new ArrayList<Gene>();
+                geneNamesInsideSet = new ArrayList<String>();
+                geneFullNamesInsideSet = new ArrayList<String>();
+                geneIdsInsideSet = new ArrayList<Long>();
 
                 if ( ref.isNotGroup() && ref.isDatabaseBacked() ) {
                     Gene gene = geneService.load( ref.getId() );
@@ -445,10 +446,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 }
                 // get the query
                 String term = param[1].split( ":" )[1];
-                genesInsideSet.clear();
-                geneNamesInsideSet.clear();
-                geneFullNamesInsideSet.clear();
-                geneIdsInsideSet.clear();
+                genesInsideSet = new ArrayList<Gene>();
+                geneNamesInsideSet = new ArrayList<String>();
+                geneFullNamesInsideSet = new ArrayList<String>();
+                geneIdsInsideSet = new ArrayList<Long>();
 
                 if ( term.matches( "^GO_\\d+" ) ) {
                     GeneSet goSet = this.geneSetSearch.findByGoId( term, taxon );
