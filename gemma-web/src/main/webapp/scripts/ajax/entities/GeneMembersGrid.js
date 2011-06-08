@@ -591,36 +591,46 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}.createDelegate(this));
 
 	},
-	createInDatabase : function() {
-		if (typeof this.selectedGeneGroup !== 'undefined') {
-
+	createInDatabase: function(){
+		
 			var ids = this.getGeneIds();
-
-			var editedGroup = this.selectedGeneGroup; // reference has the
-			// right type already
+			
+			var editedGroup;
+			if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
+				//group wasn't made before launching 
+				editedGroup = {
+					reference: {
+						id: null,
+						type: null
+					}
+				};
+			}
+			else {
+				editedGroup = this.selectedGeneGroup;
+			// reference has the right type already
+			}
 			editedGroup.name = this.newGroupName;
 			editedGroup.description = this.newGroupDescription;
 			editedGroup.geneIds = ids;
 			editedGroup.memberIds = ids;
 			editedGroup.type = 'usergeneSet';
-
-			GeneSetController.create(
-					[editedGroup], // returns datasets added
-					function(geneSets) {
-						// should be at least one datasetSet
-						if (geneSets === null || geneSets.length === 0) {
-							// TODO error message
-							return;
-						} else {
-							var newRecordData = geneSets;
-							this.fireEvent('geneListModified', newRecordData);
-							this.fireEvent('doneModification');
-						}
-					}.createDelegate(this));
-		}
-
+			
+			GeneSetController.create([editedGroup], // returns datasets added
+ 				function(geneSets){
+					// should be at least one datasetSet
+					if (geneSets === null || geneSets.length === 0) {
+						// TODO error message
+						return;
+					}
+					else {
+						var newRecordData = geneSets;
+						this.fireEvent('geneListModified', newRecordData);
+						this.fireEvent('doneModification');
+					}
+				}.createDelegate(this));
+		
 		this.fireEvent('doneModification');
-
+		
 	},
 	updateDatabase : function() {
 

@@ -506,8 +506,21 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	},
 	saveToSession : function() {
-		var editedGroup = this.selectedExperimentGroup; // reference has the
-		// right type already
+		var editedGroup;
+		if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
+			//group wasn't made before launching 
+			editedGroup = {
+				reference: {
+					id: null,
+					type: null
+				}
+			};
+		}
+		else {
+			editedGroup = this.selectedGeneGroup;
+		// reference has the right type already
+		}
+			
 		editedGroup.name = this.newGroupName;
 		editedGroup.description = this.newGroupDescription;
 		editedGroup.expressionExperimentIds = this.getEEIds();
@@ -529,36 +542,47 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}.createDelegate(this));
 
 	},
-	createInDatabase : function() {
-		if (typeof this.selectedExperimentGroup !== 'undefined') {
-
-			var editedGroup = this.selectedExperimentGroup; // reference has the
-			// right type
-			// already
-			editedGroup.name = this.newGroupName;
-			editedGroup.description = this.newGroupDescription;
-			editedGroup.expressionExperimentIds = this.getEEIds();
-			editedGroup.memberIds = this.getEEIds();
-			editedGroup.type = 'userexperimentSet';
-
-			ExpressionExperimentSetController.create(
-					[editedGroup], // returns datasets added
-					function(datasetSets) {
-						// should be at least one datasetSet
-						if (datasetSets === null || datasetSets.length === 0) {
-							// TODO error message
-							return;
-						} else {
-							var newRecordData = datasetSets;
-							datasetSets[0].type = 'userexperimentSet';
-							this.fireEvent('experimentListModified', newRecordData);
-							this.fireEvent('doneModification');
-						}
-					}.createDelegate(this));
+	createInDatabase: function(){
+	
+		var editedGroup;
+		if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
+			//group wasn't made before launching 
+			editedGroup = {
+				reference: {
+					id: null,
+					type: null
+				}
+			};
 		}
-
+		else {
+			editedGroup = this.selectedGeneGroup;
+		// reference has the right type already
+		}
+		
+		editedGroup.name = this.newGroupName;
+		editedGroup.description = this.newGroupDescription;
+		editedGroup.expressionExperimentIds = this.getEEIds();
+		editedGroup.memberIds = this.getEEIds();
+		editedGroup.type = 'userexperimentSet';
+		
+		ExpressionExperimentSetController.create([editedGroup], // returns datasets added
+ 			function(datasetSets){
+				// should be at least one datasetSet
+				if (datasetSets === null || datasetSets.length === 0) {
+					// TODO error message
+					return;
+				}
+				else {
+					var newRecordData = datasetSets;
+					datasetSets[0].type = 'userexperimentSet';
+					this.fireEvent('experimentListModified', newRecordData);
+					this.fireEvent('doneModification');
+				}
+			}.createDelegate(this));
+		
+		
 		this.fireEvent('doneModification');
-
+		
 	},
 	updateDatabase : function() {
 
