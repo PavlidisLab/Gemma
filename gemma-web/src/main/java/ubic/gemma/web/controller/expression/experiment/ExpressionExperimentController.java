@@ -563,16 +563,24 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         Taxon taxon = null; 
         // for each experiment search result display object, set the taxon -- pretty hacky
+        Collection<SearchResultDisplayObject> toRmv = new ArrayList<SearchResultDisplayObject>();
         for ( SearchResultDisplayObject srdo : experiments ) {
             if ( taxonLimited ) {
               taxon = taxonParam;
             }else{
               taxon = expressionExperimentService.getTaxon( srdo.getReference().getId() );  
             }
-            
-            srdo.setTaxonId( taxon.getId() );
-            srdo.setTaxonName( taxon.getCommonName() );
+            if(taxon == null){
+                log.warn( "Experiment had null taxon, was excluded from results: experiment id="+  
+                        srdo.getReference().getId() + " shortname="+srdo.getName());
+                toRmv.add( srdo );
+            }else{
+                srdo.setTaxonId( taxon.getId() );
+                srdo.setTaxonName( taxon.getCommonName() );
+            }
         }
+        experiments.removeAll( toRmv );
+        
 
         // if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)
