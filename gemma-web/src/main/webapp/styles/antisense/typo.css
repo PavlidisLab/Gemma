@@ -598,6 +598,8 @@ a.tooltip:hover .tooltiptext {
  
  .unstyledTitle .x-tool-toggle{
 	background-position: 0 -255px;
+	float:left;
+	margin-right:5px;
  }
    
  .unstyledTitle .x-tool-toggle-over{
