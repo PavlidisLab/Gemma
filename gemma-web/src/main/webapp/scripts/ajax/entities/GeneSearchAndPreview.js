@@ -74,21 +74,12 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			}
 			this.queryUsedToGetSessionGroup = queryToGetSelected;
 		}
-		
 
 		var geneIds = [];
 
 		// load preview of group if group was selected
 		if (isGroup) {
-
-			if (type === "GOgroup") {
-				// if no taxon has been selected, warn user that this won't work
-				if (!this.searchForm.getTaxonId() || isNaN(this.searchForm.getTaxonId())) {
-					Ext.Msg.alert("Error", "You must select a taxon before selecting a GO group.");
-					return;
-				}
-			}
-
+			
 			geneIds = record.get('memberIds');
 			if (geneIds === null || geneIds.length === 0) {
 				return;
@@ -102,7 +93,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		else {
 			this.selectedGeneOrGroupRecord.memberIds = [this.selectedGeneOrGroupRecord.reference.id];
 			this.geneIds = [id];
-			this.searchForm.geneIds = [id];
 
 			this.geneGroupId = null;
 			this.searchForm.geneGroupId = null;
@@ -353,8 +343,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 				if (geneIds.size() <= 1) {
 					this.geneSelectionEditorBtn.setText('0 more - Edit');
-					this.experimentSelectionEditorBtn.enable();
-					this.geneSelectionEditorBtn.show();
+					this.geneSelectionEditorBtn.enable().show();
 				}
 
 				loadMask.hide();
@@ -407,6 +396,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 								}
 								
 								combo.disable().hide();
+								this.helpBtn.hide();
+								this.symbolListButton.hide();
 								this.removeBtn.setPosition(300,0);
 								this.doLayout();
 								
@@ -462,7 +453,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					frame : false
 				});
 
-		this.geneSelectionEditor.on('listModified', function(newRecords) {
+		this.geneSelectionEditor.on('geneListModified', function(newRecords) {
 			var i;
 			for (i = 0; i < newRecords.length; i++) { // should only be one
 				if (typeof newRecords[i].geneIds !== 'undefined') {
