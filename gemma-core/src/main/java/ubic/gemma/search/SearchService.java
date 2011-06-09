@@ -562,8 +562,12 @@ public class SearchService implements InitializingBean {
         Element cachedChildren = this.childTermCache.get( uri );
         // log.debug("Getting children of " + term);
         if ( cachedChildren == null ) {
-            children = term.getChildren( false );
-            childTermCache.put( new Element( uri, children ) );
+            try{
+                children = term.getChildren( false );
+                childTermCache.put( new Element( uri, children ) );
+            }catch(com.hp.hpl.jena.ontology.ConversionException ce){
+                log.warn( "getting children for term: "+term+" caused com.hp.hpl.jena.ontology.ConversionException. "+ce.getMessage() );
+            }
         } else {
             children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
         }
