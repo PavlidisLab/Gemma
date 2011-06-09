@@ -512,15 +512,16 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 			layout : 'fit',
 			stateful : false,
 			autoHeight : true,
-			width : 300,
+			width : 350,
 			height : 300,
 			closeAction : 'hide',
 			easing : 3,
 			showTaxonCombo: false,
 
 			onCommit : function() {
-				if(this.showTaxonCombo && isNaN(this._taxonCombo.getTaxon().id)){
-					this.markInvalid("This field is required");
+				if(this.showTaxonCombo &&
+					 (typeof this._taxonCombo.getTaxon() === 'undefined' || isNaN(this._taxonCombo.getTaxon().id))){
+					this._taxonCombo.markInvalid("This field is required");
 					return;
 				}
 				this.hide();
@@ -538,7 +539,7 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 				if(this.showTaxonCombo){
 					Ext.apply(this, {
 							layout:'form',
-							width : 400,
+							width : 420,
 							height : 400,
 							padding:10,
 							items : [{
@@ -581,8 +582,9 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										scope : this
 									}, {
 										text : 'Clear',
+										scope:this,
 										handler : function() {
-											Ext.getCmp('gene-list-text').setValue("");
+											this._geneText.setValue("");
 										}
 									}]
 						});
