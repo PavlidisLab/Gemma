@@ -158,7 +158,7 @@ text-align:center;">
 							<div class="roundedcornr_content_777249">
 								<div style="font-size: small; padding-bottom: 5px;">
 									<b> <a target="_blank"
-										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">Updated:
+										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">Updates since 
 											<c:out value="${ updateDate}" /> </a> </b>
 								</div>
 								<div id="dataSummary"

@@ -1,271 +1,277 @@
 /*  
 // Icon Classes */
 .icon-graph {
-	background-image:url(../images/icons/chart_curve.png) ! important;
+	background-image:url(/Gemma/images/icons/chart_curve.png) ! important;
 }
 .icon-chart {
-	background-image:url(../images/icons/chart_bar.png) ! important;
+	background-image:url(/Gemma/images/icons/chart_bar.png) ! important;
 }
 .icon-prefs {
-	background-image:url(../images/icons/application_form.png) ! important;
+	background-image:url(/Gemma/images/icons/application_form.png) ! important;
 	background-position: 1px 1px;
 }
 .icon-ok {
-	background-image:url(../images/icons/ok16.png) ! important;
+	background-image:url(/Gemma/images/icons/ok16.png) ! important;
 }
 .icon-view-tile {
-	background-image:url(../images/icons/application_view_tile.png) ! important;
+	background-image:url(/Gemma/images/icons/application_view_tile.png) ! important;
 }
 .icon-check, .icon-check-off {
-	background-image:url(../ext/resources/images/default/menu/unchecked.gif) ! important;
+	background-image:url(/Gemma/ext/resources/images/default/menu/unchecked.gif) ! important;
 }
 .icon-check-on {
-	background-image:url(../ext/resources/images/default/menu/checked.gif) ! important;
+	background-image:url(/Gemma/ext/resources/images/default/menu/checked.gif) ! important;
 }
 .icon-rename {
-	background-image:url(../images/icons/textfield_rename.png) ! important;
+	background-image:url(/Gemma/images/icons/textfield_rename.png) ! important;
 }
 .icon-add-col {
-	background-image:url(../images/icons/page_white_add.png) ! important;
+	background-image:url(/Gemma/images/icons/page_white_add.png) ! important;
 }
 .icon-del-col {
-	background-image:url(../images/icons/page_white_delete.png) ! important;
+	background-image:url(/Gemma/images/icons/page_white_delete.png) ! important;
 }
 .icon-save-table {
-	background-image:url(../images/icons/table_save.png) ! important;
+	background-image:url(/Gemma/images/icons/table_save.png) ! important;
 }
 .icon-add-tab {
-	background-image:url(../images/icons/tab_add.png) ! important;
+	background-image:url(/Gemma/images/icons/tab_add.png) ! important;
 }
 .icon-del-tab {
-	background-image:url(../images/icons/tab_delete.png) ! important;
+	background-image:url(/Gemma/images/icons/tab_delete.png) ! important;
 }
 .icon-go-tab {
-	background-image:url(../images/icons/tab_go.png) ! important;
+	background-image:url(/Gemma/images/icons/tab_go.png) ! important;
 }
 .icon-add-table {
-	background-image:url(../images/icons/table_add.png) ! important;
+	background-image:url(/Gemma/images/icons/table_add.png) ! important;
 }
 .icon-del-table {
-	background-image:url(../images/icons/table_delete.png) ! important;
+	background-image:url(/Gemma/images/icons/table_delete.png) ! important;
 }
 .icon-grid {
-    background-image:url(../images/icons/application_view_columns.png) !important;
+    background-image:url(/Gemma/images/icons/application_view_columns.png) !important;
 }
 .icon-key {
-	background-image:url(../images/icons/key.png) ! important;
+	background-image:url(/Gemma/images/icons/key.png) ! important;
 }
 .icon-tree-orgboard {
-	background-image:url(../images/icons/chart_organisation.png) ! important;
+	background-image:url(/Gemma/images/icons/chart_organisation.png) ! important;
 }
 .icon-tree-area {
-	background-image:url(../images/icons/post_title.png) ! important;
+	background-image:url(/Gemma/images/icons/post_title.png) ! important;
 }
 .icon-tree-post {
-	background-image:url(../images/icons/page_white.png) ! important;
+	background-image:url(/Gemma/images/icons/page_white.png) ! important;
 }
 .icon-plus {
-	background-image:url(../images/icons/add.png) ! important;
+	background-image:url(/Gemma/images/icons/add.png) ! important;
 }
 .icon-minus {
-	background-image:url(../images/icons/delete.png) ! important;
+	background-image:url(/Gemma/images/icons/delete.png) ! important;
 }
 .icon-trash-empty {
-	background-image:url(../images/icons/bin_empty.png) ! important;
+	background-image:url(/Gemma/images/icons/bin_empty.png) ! important;
 }
 .icon-trash-closed {
-	background-image:url(../images/icons/bin_closed.png) ! important;
+	background-image:url(/Gemma/images/icons/bin_closed.png) ! important;
 }
 .icon-disk {
-	background-image:url(../images/icons/disk.png) ! important;
+	background-image:url(/Gemma/images/icons/disk.png) ! important;
 }
 .icon-disk-bullet {
-	background-image:url(../images/icons/bullet_disk.png) ! important;
+	background-image:url(/Gemma/images/icons/bullet_disk.png) ! important;
 }
 .icon-undo {
-	background-image:url(../images/icons/arrow_undo.png) ! important;
+	background-image:url(/Gemma/images/icons/arrow_undo.png) ! important;
 }
 .icon-loading {
-	background-image:url(../ext/resources/images/default/grid/grid-loading.gif) ! important;
+	background-image:url(/Gemma/ext/resources/images/default/grid/grid-loading.gif) ! important;
 }
 .icon-db-refresh {
-	background-image:url(../images/icons/database_refresh.png) ! important;
+	background-image:url(/Gemma/images/icons/database_refresh.png) ! important;
 }
 .icon-db-gear {
-	background-image:url(../images/icons/database_gear.png) ! important;
+	background-image:url(/Gemma/images/icons/database_gear.png) ! important;
 }
 .icon-magnifier {
-	background-image:url(../images/icons/magnifier.png) ! important;
+	background-image:url(/Gemma/images/icons/magnifier.png) ! important;
 }
 .icon-wrench-orange {
-	background-image:url(../images/icons/wrench_orange.png) ! important;
+	background-image:url(/Gemma/images/icons/wrench_orange.png) ! important;
 }
 .icon-star {
-	background-image:url(../images/icons/star.png) ! important;
+	background-image:url(/Gemma/images/icons/star.png) ! important;
 }
 .icon-lock-go {
-	background-image:url(../images/icons/lock_go.png) ! important;
+	background-image:url(/Gemma/images/icons/lock_go.png) ! important;
 }
 .icon-group-add {
-	background-image:url(../images/icons/group_add.png) ! important;
+	background-image:url(/Gemma/images/icons/group_add.png) ! important;
 }
 .icon-group-del {
-	background-image:url(../images/icons/group_delete.png) ! important;
+	background-image:url(/Gemma/images/icons/group_delete.png) ! important;
 }
 .icon-cancel {
-	background-image:url(../images/icons/cancel16.png) ! important;
+	background-image:url(/Gemma/images/icons/cancel16.png) ! important;
 }
 .icon-cross {
-	background-image:url(../images/icons/cross.png) ! important;
+	background-image:url(/Gemma/images/icons/cross.png) ! important;
 }
 .icon-defaults {
-	background-image:url(../images/icons/arrow_rotate_clockwise.png) ! important;
+	background-image:url(/Gemma/images/icons/arrow_rotate_clockwise.png) ! important;
 }
 .icon-load {
-	background-image:url(../images/icons/database_go.png) ! important;
+	background-image:url(/Gemma/images/icons/database_go.png) ! important;
 }
 .icon-reconfigure {
-	background-image:url(../images/icons/database_gear.png) ! important;
+	background-image:url(/Gemma/images/icons/database_gear.png) ! important;
 }
 .icon-working {
-	background-image:url(../ext/resources/images/default/grid/wait.gif) ! important;
+	background-image:url(/Gemma/ext/resources/images/default/grid/wait.gif) ! important;
 }
 .icon-folder-add {
-	background-image:url(../images/icons/folder_add.png) ! important;
+	background-image:url(/Gemma/images/icons/folder_add.png) ! important;
 }
 .icon-open {
-	background-image:url(../images/icons/application_go.png) ! important;
+	background-image:url(/Gemma/images/icons/application_go.png) ! important;
 }
 .icon-open-self {
-	background-image:url(../images/icons/application.png) ! important;
+	background-image:url(/Gemma/images/icons/application.png) ! important;
 }
 .icon-open-popup {
-	background-image:url(../images/icons/application_double.png) ! important;
+	background-image:url(/Gemma/images/icons/application_double.png) ! important;
 }
 .icon-open-blank {
-	background-image:url(../images/icons/application_cascade.png) ! important;
+	background-image:url(/Gemma/images/icons/application_cascade.png) ! important;
 }
 .icon-open-download {
-	background-image:url(../images/icons/application_put.png) ! important;
+	background-image:url(/Gemma/images/icons/application_put.png) ! important;
 }
 .icon-refresh {
-	background-image:url(../images/icons/arrow_refresh.png) ! important;
+	background-image:url(/Gemma/images/icons/arrow_refresh.png) ! important;
 }
 .icon-pencil {
-	background-image:url(../images/icons/pencil.png) ! important;
+	background-image:url(/Gemma/images/icons/pencil.png) ! important;
 }
 .icon-stop {
-	background-image:url(../images/icons/control_stop.png) ! important;
+	background-image:url(/Gemma/images/icons/control_stop.png) ! important;
 }
 .icon-email {
-	background-image:url(../images/icons/email.png) ! important;
+	background-image:url(/Gemma/images/icons/email.png) ! important;
 }
 .icon-email-compose {
-	background-image:url(../images/icons/email_edit.png) ! important;
+	background-image:url(/Gemma/images/icons/email_edit.png) ! important;
 }
 .icon-coins {
-	background-image:url(../images/icons/coins.png) ! important;
+	background-image:url(/Gemma/images/icons/coins.png) ! important;
 }
 .icon-clock {
-	background-image:url(../images/icons/clock.png) ! important;
+	background-image:url(/Gemma/images/icons/clock.png) ! important;
 }
 .icon-zoom {
-	background-image:url(../images/icons/zoom.png) ! important;
+	background-image:url(/Gemma/images/icons/zoom.png) ! important;
 }
 .icon-print {
-	background-image:url(../images/icons/printer.png) ! important;
+	background-image:url(/Gemma/images/icons/printer.png) ! important;
 }
 .icon-folder-component {
-	background-image:url(../images/icons/folder_brick.png) ! important;
+	background-image:url(/Gemma/images/icons/folder_brick.png) ! important;
 }
 .icon-plugin {
-	background-image:url(../images/icons/plugin.png) ! important;
+	background-image:url(/Gemma/images/icons/plugin.png) ! important;
 }
 .icon-extension {
-	background-image:url(../images/icons/brick.png) ! important;
+	background-image:url(/Gemma/images/icons/brick.png) ! important;
 }
 .icon-function {
-	background-image:url(../images/icons/flag_yellow.png) ! important;
+	background-image:url(/Gemma/images/icons/flag_yellow.png) ! important;
 }
 .icon-bulb {
-	background-image:url(../images/icons/lightbulb.png) ! important;
+	background-image:url(/Gemma/images/icons/lightbulb.png) ! important;
 }
 .icon-bulb-off {
-	background-image:url(../images/icons/lightbulb_off.png) ! important;
+	background-image:url(/Gemma/images/icons/lightbulb_off.png) ! important;
 }
 .icon-copy {
-	background-image:url(../images/icons/page_white_copy.png) ! important;
+	background-image:url(/Gemma/images/icons/page_white_copy.png) ! important;
 }
 .icon-star {
-	background-image:url(../images/icons/award_star_gold_3.png) ! important;
+	background-image:url(/Gemma/images/icons/award_star_gold_3.png) ! important;
 }
 .icon-edit-record {
-	background-image:url(../images/icons/table_edit.png) ! important;
+	background-image:url(/Gemma/images/icons/table_edit.png) ! important;
 }
 .icon-actions {
-	background-image:url(../images/icons/lightning.png) ! important;
+	background-image:url(/Gemma/images/icons/lightning.png) ! important;
 }
 .icon-form-add {
-	background-image:url(../images/icons/layout_add.png) ! important;
+	background-image:url(/Gemma/images/icons/layout_add.png) ! important;
 }
 .icon-html {
-	background-image:url(../images/icons/html.png) ! important;
+	background-image:url(/Gemma/images/icons/html.png) ! important;
 }
 .icon-script {
-	background-image:url(../images/icons/script.png) ! important;
+	background-image:url(/Gemma/images/icons/script.png) ! important;
 }
 .icon-php {
-	background-image:url(../images/icons/script_code.png) ! important;
+	background-image:url(/Gemma/images/icons/script_code.png) ! important;
 }
 .icon-css {
-	background-image:url(../images/icons/css.png) ! important;
+	background-image:url(/Gemma/images/icons/css.png) ! important;
 }
 .icon-run {
-	background-image:url(../images/icons/application_go.png) ! important;
+	background-image:url(/Gemma/images/icons/application_go.png) ! important;
 }
 .icon-info {
-	background-image:url(../images/icons/information.png) ! important;
+	background-image:url(/Gemma/images/icons/information.png) ! important;
 }
 .icon-error {
-	background-image:url(../images/icons/cancel.png) ! important;
+	background-image:url(/Gemma/images/icons/cancel.png) ! important;
 }
 .icon-warn {
-	background-image:url(../images/icons/error.png) ! important;
+	background-image:url(/Gemma/images/icons/error.png) ! important;
 }
 .icon-calculator {
-	background-image:url(../images/icons/calculator.png) ! important;
+	background-image:url(/Gemma/images/icons/calculator.png) ! important;
 }
 .icon-add-wage {
-	background-image:url(../images/icons/coins_add.png) ! important;
+	background-image:url(/Gemma/images/icons/coins_add.png) ! important;
 }
 .icon-del-wage {
-	background-image:url(../images/icons/bin_closed.png) ! important;
+	background-image:url(/Gemma/images/icons/bin_closed.png) ! important;
 }
 .icon-manual {
-	background-image:url(../images/icons/book_open.png) ! important;
+	background-image:url(/Gemma/images/icons/book_open.png) ! important;
 }
 .icon-arrow-down {
-	background-image:url(../images/icons/arrow_down.png) ! important;
+	background-image:url(/Gemma/images/icons/arrow_down.png) ! important;
 }
 .icon-arrow-right {
-	background-image:url(../images/icons/arrow_right.png) ! important;
+	background-image:url(/Gemma/images/icons/arrow_right.png) ! important;
 }
 .icon-blank-img {
-	background-image:url(../ext/resources/images/default/s.gif) ! important;
+	background-image:url(/Gemma/ext/resources/images/default/s.gif) ! important;
 }
 .icon-delete {
-	background-image:url(../images/icons/bin_empty.png) ! important;
+	background-image:url(/Gemma/images/icons/bin_empty.png) ! important;
 }
 .icon-form-edit {
-	background-image:url(../images/icons/application_form_edit.png) ! important;
+	background-image:url(/Gemma/images/icons/application_form_edit.png) ! important;
 }
 .icon-form-add {
-	background-image:url(../images/icons/application_form_add.png) ! important;
+	background-image:url(/Gemma/images/icons/application_form_add.png) ! important;
 }
 .x-form-field-wrap .x-trigger-disabled {
 	cursor:default;
 	opacity:0.5;
 	background-position:0 0;
+}
+.icon-question {
+	background:url(/Gemma/images/icons/question_blue.png) no-repeat ! important;
+	width: 20px;
+	height: 20px;
+	
 }
 
 /*  Icon Classes end */

@@ -555,7 +555,10 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	},
 	createInSession : function() {
-
+		var loadMask = new Ext.LoadMask(this.getEl(), {
+			msg: "Creating temporary group ..."
+		});
+		loadMask.show();
 		var ids = this.getGeneIds();
 		var editedGroup;
 		if(this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined' ){ //group wasn't made before launching 
@@ -588,11 +591,15 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 						this.fireEvent('geneListModified', newRecordData);
 						this.fireEvent('doneModification');
 					}
+					loadMask.hide();
 				}.createDelegate(this));
 
 	},
 	createInDatabase: function(){
-		
+		var loadMask = new Ext.LoadMask(this.getEl(), {
+			msg: "Saving ..."
+		});
+		loadMask.show();
 			var ids = this.getGeneIds();
 			
 			var editedGroup;
@@ -627,13 +634,17 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 						this.fireEvent('geneListModified', newRecordData);
 						this.fireEvent('doneModification');
 					}
+					loadMask.hide();
 				}.createDelegate(this));
 		
 		this.fireEvent('doneModification');
 		
 	},
 	updateDatabase : function() {
-
+		var loadMask = new Ext.LoadMask(this.getEl(), {
+			msg: "Updating ..."
+		});
+		loadMask.show();
 		var groupId = this.selectedGeneGroup.reference.id;
 		this.newGroupName = this.groupName;
 		var geneIds = this.getGeneIds();
@@ -644,6 +655,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 					this.fireEvent('geneListModified', this.selectedGeneGroup);
 					this.fireEvent('doneModification');
+					loadMask.hide();
 				}.createDelegate(this));
 	}
 });

@@ -210,7 +210,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					this.doQuery(this.lastQuery);
 				}
 			}
-			else {
+			else if(this.store && typeof this.store ==! 'undefined'){
 				this.records = this.store.getRange();
 			}
 		}, this);

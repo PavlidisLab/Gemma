@@ -3,7 +3,9 @@
  * @version $Id$
  */
 Ext.namespace('Gemma');
+Gemma.SEARCH_FORM_WIDTH = 900;
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
@@ -19,8 +21,10 @@ Ext.onReady(function() {
 	}
 	
 	// panel for performing search, appears on load
-	var searchPanel = new Gemma.AnalysisResultsSearchForm();
-	
+	var searchPanel = new Gemma.AnalysisResultsSearchForm({
+		width: Gemma.SEARCH_FORM_WIDTH
+	});
+
 	// window that controls diff visualizer; 
 	// it's not part of the results panel so need to keep track separately to be able to delete it
 	this.diffVisualizer = null;
@@ -62,19 +66,36 @@ Ext.onReady(function() {
 			toHide.remove();
 		}
 		
-		
 		// remove previous diff visualization result
 		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
 		
 	},this);
-	
+		
 	searchPanel.on("showCoexResults",function(panel,result){
 		
+		var coexOptions = new Gemma.CoexpressionSearchOptions();
+		coexOptions.on('rerunSearch',function(stringency, forceProbe, queryGenesOnly){
+				coexOptions.hide();
+				resultsPanel.removeAll();
+				searchPanel.redoRecentCoexpressionSearch(stringency, forceProbe, queryGenesOnly);
+			},this);
+					
 		/*
 		 * Report any errors.
 		 */
 		if (result.errorState) {
-			resultsPanel.add({html:"<h2>Coexpression Search Results</h2><br>"+result.errorState+"<br><br><br>", border:false});
+			resultsPanel.add({
+					html: "<h2>Coexpression Search Results</h2><br><br>"+result.errorState + "<br><br><br>",
+					border: false,
+					/*items: { //can't broaden search results, so no use giving refinement options
+						xtype: 'button',
+						text: 'refine',
+						scope: this,
+						handler: function(){
+							coexOptions.show();
+						}
+					}*/
+			});
 			//Ext.DomHelper.overwrite('analysis-results-search-form-messages', result.errorState);
 			if (knownGeneGrid) {knownGeneGrid.getStore().removeAll();}
 			resultsPanel.doLayout();
@@ -156,7 +177,23 @@ Ext.onReady(function() {
 		}
 		
 		panel.collapsePreviews();
-		resultsPanel.add({html:"<h2>Coexpression Search Results</h2>", border:false});
+		resultsPanel.add(
+		{
+			layout: 'hbox',
+			items: [{
+				html: "<h2>Coexpression Search Results</h2><br>",
+				border:false
+			}, {
+				xtype: 'button',
+				text: 'refine',
+				style: 'padding-top: 5px; padding-left: 10px',
+				scope: this,
+				handler: function(){
+					coexOptions.show();
+				}
+			}],
+			border: false
+		});
 		resultsPanel.add(items);
 		resultsPanel.show();
 		resultsPanel.doLayout();

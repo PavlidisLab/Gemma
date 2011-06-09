@@ -160,8 +160,8 @@ public class HomePage2Controller {
         	
         	boolean drawNewColumn = (newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0)? true:false;
         	boolean drawUpdatedColumn = (updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 )? true:false;
-        	String date = (wn.getDate() != null)?DateFormat.getDateInstance(DateFormat.MEDIUM).format(wn.getDate()): "";
-        	date.replace( '-', ' ' );
+        	String date = (wn.getDate() != null)?DateFormat.getDateInstance(DateFormat.LONG).format(wn.getDate()): "";
+        	date = date.replace( '-', ' ' );
 
         	mav.addObject( "updateDate",  date);
         	mav.addObject( "drawNewColumn", drawNewColumn);

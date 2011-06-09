@@ -56,7 +56,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	DEFAULT_queryGenesOnly : false,
 
 	// defaults for differential expression
-	// using Gemma.DEFAULT_THRESHOLD, Gemma.MIN_THRESHOLD, Gemma.MAX_THRESHOLD
+	// using Gemma.DEFAULT_THRESHOLD, Gemma.MIN_THRESHOLD, Gemma.MAX_THRESHOLD (defined elsewhere)
 
 	geneIds : [],
 	geneGroupId : null, // keep track of what gene group has been selected
@@ -236,15 +236,19 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if (typeof record !== 'undefined' && (!record.reference || record.reference.id === null)) {
 				// addNonModificationBasedSessionBoundGroups() takes a
 				// genesetvalueobject, so add needed field
-				record.geneIds = record.memberIds;
-				
+				// record will already have geneIds if search was already run
+				if(record.memberIds && record.memberIds !== null && typeof record.memberIds !== 'undefined'){
+					record.geneIds = record.memberIds;
+				}
+								
 				// no java bean properties to match these javascript properties 
-				delete record.memberIds;
-				delete record.comboText;
-				delete record.isGroup;
-				delete record.type;
+				var recordToPass = Object.clone(record);
+				delete recordToPass.memberIds; // need to keep this one for later
+				delete recordToPass.comboText;
+				delete recordToPass.isGroup;
+				delete recordToPass.type;			
 				
-				geneGroupsToMake.push(record);
+				geneGroupsToMake.push(recordToPass);
 
 			} else {
 				geneGroupsAlreadyMade.push(record);
@@ -264,16 +268,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							}
 						}
 						this.waitingForGeneSessionGroupBinding = false;
-						this.doSearch(geneRecords, experimentRecords);// recurse
-						// so
-						// once
-						// all
-						// session-bound
-						// groups
-						// are
-						// made,
-						// search
-						// runs
+						/*
+						 * recurse so once all session-bound groups are made, search runs
+						 */
+						this.doSearch(geneRecords, experimentRecords);
 						return;
 					}.createDelegate(this));
 			return;
@@ -289,15 +287,19 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if (typeof record !== 'undefined' && (!record.reference || record.reference.id === null)) {
 				// addNonModificationBasedSessionBoundGroups() takes an
 				// experimentSetValueObject, so add needed field
-				record.expressionExperimentIds = record.memberIds;
+				// record will already have geneIds if search was already run
+				if(record.memberIds && record.memberIds !== null && typeof record.memberIds !== 'undefined'){
+					record.expressionExperimentIds = record.memberIds;
+				}
 								
 				// no java bean properties to match these javascript properties 
-				delete record.memberIds;
-				delete record.comboText;
-				delete record.isGroup;
-				delete record.type;
+				var recordToPass = Object.clone(record);
+				delete recordToPass.memberIds; // need to keep this one for later
+				delete recordToPass.comboText;
+				delete recordToPass.isGroup;
+				delete recordToPass.type;				
 				
-				experimentGroupsToMake.push(record);
+				experimentGroupsToMake.push(recordToPass);
 			} else {
 				experimentGroupsAlreadyMade.push(record);
 			}
@@ -392,6 +394,32 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		return newCsc;
 	},
+	
+	/**
+	 * public method to re-run the previous search with different options
+	 * used if the user changes an option (ex stringency)
+	 * applies new options to csc and makes a call to doCoexpressionSearch
+	 * 
+	 * no null or undefined parameters!
+	 * 
+	 * @param {Object} stringency must be an integer
+	 * @param {Object} probeLevel must be true or false
+	 * @param {Object} queryGenesOnly must be true or false
+	 */
+	redoRecentCoexpressionSearch: function(stringency, probeLevel, queryGenesOnly){
+		if (!this.lastCSC) {
+			return "No search to repeat";
+		}
+		
+		this.clearError();
+		Ext.apply(this.lastCSC, {
+			stringency: stringency,
+			forceProbeLevelSearch: probeLevel,
+			queryGenesOnly: queryGenesOnly
+		});
+		this.doCoexpressionSearch(this.lastCSC);
+		return "";
+	},
 
 	doCoexpressionSearch : function(csc) {
 		if (!csc) {
@@ -403,6 +431,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (msg.length === 0) {
 			this.loadMask.show();
 			var errorHandler = this.handleError.createDelegate(this, [], true);
+			this.lastCSC = csc;
 			ExtCoexpressionSearchController.doSearch(csc, {
 						callback : this.returnFromCoexSearch.createDelegate(this),
 						errorHandler : errorHandler
@@ -866,6 +895,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var records = this.getSelectedGeneRecords();
 		for (i = 0; i < records.length; i++) {
 			var record = records[i];
+			if(typeof record.memberIds === 'undefined' && typeof record.geneIds !== 'undefined'){
+				record.memberIds = record.geneIds;
+			}
 			for (j = 0; j < record.memberIds.length; j++) {
 				geneIds.push(record.memberIds[j]);
 			}
@@ -1275,4 +1307,5 @@ Ext.LinkButton = Ext.extend(Ext.Button, {
 	ctCls : "transparent-btn" // no button image
 });
 
+Ext.reg('linkButton', Ext.LinkButton);
 Ext.reg('analysisResultsSearchForm', Gemma.AnalysisResultsSearchForm);
