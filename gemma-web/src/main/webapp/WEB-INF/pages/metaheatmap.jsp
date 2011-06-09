@@ -11,7 +11,7 @@
 	<script type="text/javascript">
 	
 	//Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
-	//Ext.QuickTips.init();
+	Ext.QuickTips.init();
 	//var data = {};
 	Ext.onReady( function() {
 			var metaVizApp;		
