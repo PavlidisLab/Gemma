@@ -37,7 +37,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 						var datasetColumnGroupPanel = dsPanel.items.get(currentDatasetColumnGroupIndex);
 						var datasetShortName = dsPanel.dataColumns[currentDatasetColumnGroupIndex].datasetShortName;
 
-						if (datasetColumnGroupPanel._hidden === false) {
+						if (datasetColumnGroupPanel.isFiltered === false) {
 							if (alternateColors == 1) {
 								MiniPieLib.drawFilledRotatedRectangle(ctx, xPosition -
 										Gemma.MetaVisualizationConfig.cellWidth,
@@ -73,7 +73,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 								.getCount(); currentAnalysisColumnGroupIndex++) {
 							var analysisColumnGroupPanel = datasetColumnGroupPanel.items
 									.get(currentAnalysisColumnGroupIndex);
-							if (analysisColumnGroupPanel._hidden === true) {
+							if (analysisColumnGroupPanel.isFiltered === true) {
 								continue;
 							}
 							if (alternateColorsAnalysis == 1) {
@@ -90,8 +90,11 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 
 							for (var currentColumn = 0; currentColumn < analysisColumnGroupPanel.items.getCount(); currentColumn++) {
 								var dColumn = analysisColumnGroupPanel.items.get(currentColumn);
-								if (dColumn._expandButton.pressed) {
-									for (var i = 0; i < dColumn._factorValueNames.length; i++) {
+								if (dColumn.isFiltered === true) {
+									continue;
+								}
+								if (dColumn.expandButton_.pressed) {
+									for (var i = 0; i < dColumn.factorValueIds.length; i++) {
 										if (i === 0) {
 											if(dColumn.miniPieValue>0){
 												MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
@@ -127,7 +130,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 									}
 									xPosition += Gemma.MetaVisualizationConfig.columnSeparatorWidth;
 								} else {
-									if (!dColumn.hidden) {
+									if (!dColumn.isFiltered) {
 										var factorText = dColumn.factorCategory ? dColumn.factorCategory : dColumn.factorName;
 										factorText = Ext.util.Format.ellipsis(factorText, 25, false);
 										
@@ -156,7 +159,6 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 									}
 								}
 							}
-
 						}
 					}
 
@@ -207,62 +209,46 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 		Gemma.MetaHeatmapRotatedLabels.superclass.initComponent.apply(this, arguments);
 	},
 	__calculateIndexFromXY : function(x, y) {
-		var columnWidth = Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth; // shorter
-		// name
-		// to
-		// simplify
-		// access
+		var columnWidth = Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth; 
 		var adjustedx = x - 2;
 		var adjustedY = y * -1 + Gemma.MetaVisualizationConfig.labelBaseYCoor;
 		var lamda = Math.floor(adjustedY / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180));
 		var column = Math.floor((adjustedx * 1 - lamda) / columnWidth);
 		return column;
 	},
-	getAnalysisObject : function(e, t) {
-		var rawColumnNumber = this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY() -
-						Ext.get(t).getY());
-
-		// if mouse is outside heatmap area, return null
-		if (rawColumnNumber >= (this.applicationRoot.TOTAL_NUMBER_OF_COLUMNS - this.applicationRoot.TOTAL_NUMBER_OF_HIDDEN_COLUMNS)) {
-			return null;
+				
+	getAnalysisPanelByX : function ( x ) {
+		//TODO: refactor me!
+		var datasetGroupPanels = this.applicationRoot._imageArea._heatmapArea.items;
+		for (var i = 0; i < datasetGroupPanels.getCount(); i++) {
+			var datasetGroupPanel = datasetGroupPanels.get(i);
+			var XY = datasetGroupPanel.getPosition();
+			if ( x >= XY[0] && x<XY[0] + datasetGroupPanel.getWidth() ) {
+				var experimentPanels = datasetGroupPanel.items;
+				for (var j = 0; j < experimentPanels.getCount(); j++) {
+					var experimentPanel = experimentPanels.get(j);
+					XY = experimentPanel.getPosition();
+					if ( x >= XY[0] && x<XY[0] + experimentPanel.getWidth() ) {
+						var analysisPanels = experimentPanel.items;						
+						for (var k = 0; k < analysisPanels.getCount(); k++) {
+							var analysisPanel = analysisPanels.get(k);
+							XY = analysisPanel.getPosition();
+							if ( x >= XY[0] && x<XY[0] + analysisPanel.getWidth() ) {
+								var columnPanels = analysisPanel.items;						
+								for (var p = 0; p < columnPanels.getCount(); p++) {
+									var columnPanel = columnPanels.get(p);
+									XY = columnPanel.getPosition();
+									if ( x >= XY[0] && x<XY[0] + columnPanel.getWidth() )return columnPanel;
+								}
+							}						
+						}					
+					}	
+				}
+			}			
 		}
-
-		var columnGroups = this.applicationRoot._imageArea._heatmapArea.items.items; // for
-		// ease
-		// of
-		// access
-
-		// get [column group number] and [experiment index within the group]
-		var columnGroupIndex = 0;
-		var columnWithinGroup = rawColumnNumber;
-		var experimentWithinGroupIndex = 0;
-		var columnWithinExperiment = 0;
-		var prevColSum = 0;
-
-		// get the group index and the column index within the group
-		while (columnWithinGroup >= (columnGroups[columnGroupIndex].dataColumns.length - columnGroups[columnGroupIndex]._columnsHidden)) {
-			columnWithinGroup = columnWithinGroup -
-					(columnGroups[columnGroupIndex].dataColumns.length - columnGroups[columnGroupIndex]._columnsHidden);
-			columnGroupIndex++;
-		}
-
-		var colSum = columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length -
-				columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden;
-
-		// get the experiment index within the group
-		while (columnWithinGroup >= colSum) {
-			prevColSum = colSum;
-			experimentWithinGroupIndex++;
-			colSum = colSum + columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns.length -
-					columnGroups[columnGroupIndex].items.items[experimentWithinGroupIndex]._columnsHidden;
-		}
-		// get the column number within the experiment
-		columnWithinExperiment = columnWithinGroup - prevColSum;
-
-		analysisObj = this.applicationRoot._imageArea._heatmapArea.items.items[columnGroupIndex].items.items[experimentWithinGroupIndex].dataColumns[columnWithinExperiment];
-		return analysisObj;
-
-	},
+		return null;
+	},	
+	
 	onRender : function() {
 		Gemma.MetaHeatmapRotatedLabels.superclass.onRender.apply(this, arguments);
 		this.syncSize();
@@ -300,22 +286,24 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 				document.body.style.cursor = 'default';
 			} else {
 				document.body.style.cursor = 'pointer';
-
-				var analysisObj = this.getAnalysisObject(e, t);
+				
+				
+				var adjustedX = e.getPageX() - (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
+				var analysisObj = this.getAnalysisPanelByX(adjustedX);
 
 				if (analysisObj !== null && analysisObj !== undefined) {
 
 					// get the factor values into a readable form
 					var factorValues = [];
-					for (k = 0; k < analysisObj.contrastsFactorValueIds.length; k++) {
-						factorValues.push(" " + analysisObj.contrastsFactorValues[analysisObj.contrastsFactorValueIds[k]]);
+					for (k = 0; k < analysisObj.factorValueIds.length; k++) {
+						factorValues.push(" " + analysisObj.factorValueNames[analysisObj.factorValueIds[k]]);
 					}
 
 					this.applicationRoot._hoverDetailsPanel.show();
 					this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 					this.applicationRoot._hoverDetailsPanel.update({
 								type : 'experiment',
-								datasetName : analysisObj.datasetName,
+								datasetName : analysisObj.ownerCt.ownerCt.datasetName,
 								datasetShortName : analysisObj.datasetShortName,
 								datasetId : analysisObj.datasetId,
 								factorName : analysisObj.factorName,

@@ -66,8 +66,8 @@ Gemma.MetaVisualizationConfig.basicColourRange = new org.systemsbiology.visualiz
 		});
 
 Gemma.MetaVisualizationConfig.contrastsColourRange = new org.systemsbiology.visualization.DiscreteColorRange(20, {
-			min : -1,
-			max : 1
+			min : -2,
+			max : 2
 		}, {
 			maxColor : {
 				r : 0,

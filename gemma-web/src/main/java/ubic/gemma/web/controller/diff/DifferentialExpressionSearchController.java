@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -44,9 +45,12 @@ import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -55,6 +59,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -74,6 +79,7 @@ import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.util.GeneSymbolComparator;
 import ubic.gemma.web.view.TextView;
+import ubic.gemma.web.visualization.DifferentialExpressionAnalysisContrastsVisualizationValueObject;
 import ubic.gemma.web.visualization.DifferentialExpressionAnalysisResultSetVisualizationValueObject;
 import ubic.gemma.web.visualization.DifferentialExpressionVisualizationValueObject;
 
@@ -99,11 +105,17 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     private DifferentialExpressionResultService differentialExpressionResultService;
 
     @Autowired
+    private ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao differentialExpressionAnalysisResultDao;
+    
+    @Autowired
     private GeneSetService geneSetService;
 
     @Autowired
     private ExpressionExperimentDao expressionExperimentDao;
 
+    @Autowired
+    private FactorValueService factorValueService;
+    
     @Autowired
     private SessionListManager sessionListManager;
 
@@ -209,7 +221,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             DifferentialExpressionVisualizationValueObject theResult, Collection<Long> arrayDesignIds ) {
         DifferentialExpressionAnalysisResultSetVisualizationValueObject vizColumn = new DifferentialExpressionAnalysisResultSetVisualizationValueObject(
                 geneGroupSizes );
-
+        vizColumn.setResultSetId( resultSet.getId() );
         StopWatch timer = new StopWatch();
         timer.start();
         // TODO: should be part of result set?
@@ -229,6 +241,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     + factor.getFactorValues().size() );
 
         vizColumn.setBaselineFactorValue( getFactorValueString( resultSet.getBaselineGroup() ) );
+        vizColumn.setBaselineFactorValueId( resultSet.getBaselineGroup().getId() );
+
         vizColumn.setFactorName( factor.getName() );
         vizColumn.setFactorDescription( factor.getDescription() );
         vizColumn.setFactorId( factor.getId() );
@@ -240,7 +254,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             vizColumn.setFactorCategory( factor.getCategory().getCategory() );
         }
 
-        for ( FactorValue fvalue : factor.getFactorValues() ) {
+        for ( FactorValue fvalue : factor.getFactorValues() ) {            
             vizColumn.addContrastsFactorValue( fvalue.getId(), getFactorValueString( fvalue ) );
             if ( log.isDebugEnabled() ) log.debug( "Factor value: " + getFactorValueString( fvalue ) );
         }
@@ -248,7 +262,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         for ( int geneGroupIndex = 0; geneGroupIndex < genes.size(); geneGroupIndex++ ) {
             for ( int geneIndex = 0; geneIndex < genes.get( geneGroupIndex ).size(); geneIndex++ ) {
 
-                List<Double> resultsForGene = differentialExpressionResultService.findGeneInResultSets( genes.get(
+                List<Double> resultsForGene = differentialExpressionResultService.findGeneInResultSet( genes.get(
                         geneGroupIndex ).get( geneIndex ), resultSet, arrayDesignIds, 1 );
 
                 if ( resultsForGene == null || resultsForGene.isEmpty() || resultsForGene.get( 0 ) == null ) {
@@ -1118,51 +1132,73 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         return mav;
 
     }
+    
+    /**
+     * 
+     * 
+     * @param resultSetId
+     * @param geneIds
+     * @return
+     */
+    public DifferentialExpressionAnalysisContrastsVisualizationValueObject differentialExpressionAnalysisVisualizationLoadContrastsInfo (
+                                 long resultSetId, 
+                                 List<List<Long>> geneIds )
+    {
 
-    // public DifferentialExpressionAnalysisResultSetVisualizationValueObject
-    // differentialExpressionAnalysisVisualizationLoadContrastsInfo (
-    // long resultSetId, List<List<Long>> geneIds
-    // )
-    // {
-    // // Load genes
-    // List<List<Gene>> genes = new ArrayList<List<Gene>>();
-    //
-    // geneSetService.
-    //
-    // int numberOfGeneGroups = genes.size();
-    // int[] geneGroupSizes = new int[numberOfGeneGroups];
-    // int i = 0;
-    // for (List<Gene> geneGroup : genes) {
-    // geneGroupSizes[i] = geneGroup.size();
-    // }
-    //
-    // //public DifferentialExpressionAnalysisResultSetVisualizationValueObject loadContrastsData ( long resultSetId,
-    // List<Long> geneIds ) {
-    // //
-    // // load result set
-    // //timer.reset();
-    // //timer.start();
-    // //ProbeAnalysisResult result = differentialExpressionAnalysisResultDao.load ( probeResultId );
-    // //timer.stop();
-    // //log.info( "Loading probe result took :"+timer.getTime() );
-    //
-    // //differentialExpressionResultService.thaw( result );
-    //
-    // //differentialExpressionResultService.findGeneInResultSets( gene, resultSet, threshold, limit );
-    // //
-    // //for (ContrastResult cr : result.getContrasts()) {
-    // //String key = getFactorValueString(cr.getFactorValue());
-    // //if (cr.getPvalue() < 0.01) {
-    // // contrastsFoldChangeValuesPerGene.put ( key, cr.getLogFoldChange() );
-    // // contrastsVisualizationValuesPerGene.put ( key, calculateVisualizationValueBasedOnFoldChange(
-    // cr.getLogFoldChange()) );
-    // //}
-    // //}
-    // //
-    // //}
-    //
-    //
-    // }
-    //
+        DifferentialExpressionAnalysisContrastsVisualizationValueObject resultValueObject = new DifferentialExpressionAnalysisContrastsVisualizationValueObject();
+        
+        for (List<Long>geneIdsSet : geneIds) {
+            for (Long geneId : geneIdsSet) {
+                if (geneId == null) continue;  //skip
+                List<Long> results = differentialExpressionResultService.findProbeAnalysisResultIdsInResultSet( geneId, resultSetId, 1 );
+                
+                if (results == null || results.isEmpty() ) {
+                    resultValueObject.addNoContrastsFound ( geneId );
+                    continue;
+                }
+                
+                Long resultId = results.iterator().next();                                    
+                
+                if (resultId == null ) {
+                    resultValueObject.addNoContrastsFound ( geneId );                    
+                    continue;   
+                }
+                    
+                ProbeAnalysisResult probeResult  = differentialExpressionAnalysisResultDao.load( resultId );
+                differentialExpressionResultService.thaw( probeResult );                    
+                DifferentialExpressionAnalysisResult deaResult = (DifferentialExpressionAnalysisResult) probeResult;
 
+                Map<Long,DifferentialExpressionAnalysisContrastsVisualizationValueObject.ContrastVisualizationValueObject> contrastsMap =
+                    new HashMap<Long, DifferentialExpressionAnalysisContrastsVisualizationValueObject.ContrastVisualizationValueObject>();
+                for ( ContrastResult cr : deaResult.getContrasts() ) {                         
+                    double visualizationValue = calculateVisualizationValueBasedOnFoldChange ( cr.getLogFoldChange() );
+                    FactorValue factorValue = factorValueService.load( cr.getFactorValue().getId() );
+                    contrastsMap.put(factorValue.getId(), resultValueObject.new ContrastVisualizationValueObject(cr.getId(), visualizationValue, cr.getLogFoldChange(), getFactorValueString(factorValue) ) );                        
+                }
+                resultValueObject.add(geneId, contrastsMap);                                    
+            }
+        }                    
+
+        return resultValueObject;
+    }    
+
+    // assuming the value is between 0..2
+    private double calculateVisualizationValueBasedOnFoldChange ( double foldChange ) {
+        double visualizationValue = 0.0;
+        double absFoldChange = Math.abs(foldChange - 1);
+        if (absFoldChange >= 0 && absFoldChange < 0.05) visualizationValue = 0.1;                
+        else if (absFoldChange >= 0.05 && absFoldChange < 0.1 ) visualizationValue = 0.2;                                 
+        else if (absFoldChange >= 0.1 && absFoldChange < 0.2 ) visualizationValue = 0.3; 
+        else if (absFoldChange >= 0.2 && absFoldChange < 0.3 ) visualizationValue = 0.4; 
+        else if (absFoldChange >= 0.3 && absFoldChange < 0.4 ) visualizationValue = 0.5;
+        else if (absFoldChange >= 0.4 && absFoldChange < 0.5 ) visualizationValue = 0.6;
+        else if (absFoldChange >= 0.5 && absFoldChange < 0.6 ) visualizationValue = 0.7;
+        else if (absFoldChange >= 0.6 && absFoldChange < 0.7 ) visualizationValue = 0.8;
+        else if (absFoldChange >= 0.7 && absFoldChange < 0.8 ) visualizationValue = 0.9;
+        else if (absFoldChange >= 0.8) visualizationValue = 1;
+
+        if (foldChange < 0) visualizationValue = (-1)*visualizationValue;
+        return visualizationValue;
+    }
+    
 }

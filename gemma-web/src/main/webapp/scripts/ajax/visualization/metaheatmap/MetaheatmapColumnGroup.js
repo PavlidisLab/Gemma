@@ -11,11 +11,24 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 				defaultMargins: {top:0, right: 0, bottom: 0, left:0}
 			},
 						
-			_hidden: false,		
+			_hidden: false,
+			isFiltered: false,
 			_columnsHidden : 0,
-			applicationRoot: this.applicationRoot,		// root of metaheatmap app. Usefull to access various components.
+			applicationRoot: this.applicationRoot,	// root of metaheatmap app. Usefull to access various components.
 			
-			//
+			getGroupFromX : function(x) {
+				var groupIndex = 0;
+				var xEnd = 0;
+				var xStart = 0;
+				while (groupIndex < this.items.getCount()) {
+					xEnd = xEnd + this.items.get(groupIndex).getWidth();
+					if (x > xStart && x < xEnd ) return this.items.get(groupIndex);
+					xStart = xEnd;
+					datasetGroupIndex++;
+				}
+				return null;				
+			},
+			
 			changePanelWidthBy: function ( delta ) { // - value : shrink, + value : expand				
 				this.setWidth( this.getWidth() + delta );				
 				//propagate call until parent is not MetaHeatmapResizablePanelBase  TODO: (good candidate for event!)
@@ -44,21 +57,19 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 	
 	
 	filterColumns: function( filteringFn ) {
-		var newWidth = 0;	
-		var numberHidden = 0;			
-		this.items.each( function() {
-			numberHidden = numberHidden + this.filterColumns( filteringFn );		  	
-			newWidth = newWidth + this.getWidth(); 
-		} );
-		this._columnsHidden = numberHidden; // this is stored at the experiment group level
+		var newWidth = 0;
+		
+		for (var i = 0; i < this.items.getCount(); i++ ) {
+			this.items.get(i).filterColumns( filteringFn );		  	
+			newWidth = newWidth + this.items.get(i).getWidth();			
+		}
+		
 		this.setWidth( newWidth );
-		if ( newWidth === 0 ) {this._hidden = true;}
-		else {this._hidden = false;}
-		return numberHidden;
+		if ( newWidth === 0 ) this.isFiltered = true; else this.isFiltered = false;
 	},						
-
-	refresh: function() {
-		this.items.each(function() {if ( this._hidden !== true ) {this.refresh();}});		
+	
+	refresh : function() {
+		this.items.each(function() { this.refresh(); });
 	}
 	
 });
@@ -87,15 +98,14 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 		Gemma.MetaHeatmapAnalysisColumnGroup.superclass.initComponent.apply(this, arguments);
 				
 		for (var i = 0; i < this.dataColumns.length; i++) {
-			var lastColumnInGroup = false;
 			this.add ( new Gemma.MetaHeatmapExpandableColumn(
 								{ applicationRoot: this.applicationRoot,
 								  height: this.height,
 								  dataColumn : this.dataColumns[i],
 								  columnIndex: i,
 								  columnGroupIndex: this.columnGroupIndex,
-								  datasetGroupIndex: this.datasetGroupIndex,
-								  lastColumnInGroup: lastColumnInGroup }) );
+								  datasetGroupIndex: this.datasetGroupIndex
+								}) );
 		}
 		
 		var initialWidth = this.dataColumns.length * (Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);		
@@ -108,49 +118,24 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 	
 	
 	filterColumns: function ( filteringFn ) {
+		var newWidth = 0;
 		
-		var myNumberHidden = 0;
-		this.items.each( function() { 
-			if(this.getWidth() === 0){
-					myNumberHidden++; // if a column is already hidden
+		for (var i = 0; i < this.items.getCount(); i++ ) {
+			if ( filteringFn( this.items.get(i) ) === null ) { // not affected
+				//hack until applying multiple filters at once is implemented				
+			} else {
+				if ( filteringFn( this.items.get(i) ) ) { // hide
+					this.items.get(i).filterHide();
+				} else {
+					this.items.get(i).filterShow();
 				}
-			if(filteringFn( this ) === null){ // not affected
-				
-			}else{
-				if ( filteringFn( this ) ) { // hide
-					if(this.getWidth() !== 0){// if not already hidden
-						this.setWidth(0);
-						this.hide();
-						this._columnHidden = true;
-						this.updateParentsScores();
-						myNumberHidden++;
-					}
-				}else{ // show
-					if(this.getWidth() === 0){// if not already shown
-						this.setWidth(Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);
-						this.show();
-						this._columnHidden = false;
-						this.updateParentsScores();
-						myNumberHidden--;
-					}
-				}
+				this.items.get(i).updateParentsScores();
 			}
-			
-		});
-		//	TODO: any better way to get newWidth??
-		var newWidth = (this.dataColumns.length - myNumberHidden) * (Gemma.MetaVisualizationConfig.cellWidth + Gemma.MetaVisualizationConfig.columnSeparatorWidth);		
-		this.setWidth( newWidth );
-		
-		this._numberOfColumnsHidden111 = myNumberHidden;
-		if (myNumberHidden == this.dataColumns.length) {
-			this.setWidth(0);
-			this.hide();
-			this._hidden = true;
-		}else{
-			this.show();
-			this._hidden = false;			
+			newWidth = newWidth + this.items.get(i).getWidth();			
 		}
-		return myNumberHidden;
+				
+		this.setWidth( newWidth );		
+		if (newWidth === 0) this.isFiltered = true;	else this.isFiltered = false;						
 	}							
 });
 
@@ -282,3 +267,89 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 	}
 	
 });
+
+Gemma.MetaHeatmapScrollableArea = Ext.extend(Gemma.MetaHeatmapResizablePanelBase, {
+	initComponent : function() {
+		Ext.apply(this, {
+					border : false,
+					bodyBorder : false,
+					layout : 'hbox',
+					layoutConfig : {
+						defaultMargins : {
+							top : 0,
+							right : Gemma.MetaVisualizationConfig.groupSeparatorWidth,//0,
+							bottom : 0,
+							left : 0
+						}
+					},
+					dataDatasetGroups : this.dataDatasetGroups,
+					geneNames : this.geneNames,
+					geneIds : this.geneIds,
+
+					applicationRoot : this.applicationRoot,
+												
+					_setTopLabelsBox : function(l) {
+						this._topLabelsBox = l;
+					},
+
+					columnFilters : {},
+								
+					addFilterFunction : function (filterId, filterFunction) {
+						columnFilters[filterId] = filterFunction;
+					},
+					
+					removeFilterFunction : function (filterId) {
+						delete columnFilters[filterId];
+					},
+					
+					applyFilters : function () {
+						for (var filter in columnFilters) {
+							this.items.each(function() {this.filterColumns(filteringFn);});							
+						}												
+					},
+					
+					filterColumns : function(filteringFn) {
+						var count = 0;
+						this.items.each(function() {
+									count = count + this.filterColumns(filteringFn);
+								});
+						return count;
+					},
+
+					_filterRows : function(filteringFn) {
+
+					},
+
+					_sortColumns : function(asc_desc, sortingFn) {
+						this.items.each(function() {
+									this.items.sort(asc_desc, sortingFn);
+								});
+					}
+				});
+
+		Gemma.MetaHeatmapScrollableArea.superclass.initComponent.apply(this, arguments);
+	},
+
+	onRender : function() {
+		Gemma.MetaHeatmapScrollableArea.superclass.onRender.apply(this, arguments);
+		var i;
+		for (i = 0; i < this.dataDatasetGroups.length; i++) {
+			if (this.dataDatasetGroups[i].length > 0) {
+				this.add(new Gemma.MetaHeatmapDatasetGroupPanel({
+							applicationRoot : this.applicationRoot,
+							height : this.height,
+							dataFactorColumns : this.dataDatasetGroups[i],
+							datasetGroupIndex : i,
+							geneNames : this.geneNames[i],
+							geneIds : this.geneIds[i]
+						}));
+			}
+
+		}
+
+	},
+
+});
+Ext.reg('metaVizScrollableArea', Gemma.MetaHeatmapScrollableArea);
+
+

@@ -25,6 +25,7 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     private String datasetLink;
     private Long datasetId;
     private Long analysisId;
+    private Long resultSetId;    
     private String subsetFactor;
     private String subsetFactorValue;
     private Long factorId;
@@ -57,6 +58,8 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     
     private List<Long> contrastsFactorValueIds;
     private String baselineFactorValue;
+    private Long baselineFactorValueId;
+    
     // [geneGroupIndex][geneIndex][contrastIndex]
     private List<List<List<Double>>> contrastsVisualizationValues;                 
     
@@ -81,9 +84,25 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     
     public void addContrastsFactorValue ( long factorValueId, String factorValueName ) {
         this.contrastsFactorValueIds.add ( factorValueId );
-        this.contrastsFactorValues.put( factorValueId, factorValueName );
+        this.contrastsFactorValues.put( factorValueId, factorValueName );                
     }
 
+    public Long getBaselineFactorValueId() {
+        return baselineFactorValueId;
+    }
+
+    public void setBaselineFactorValueId( Long baselineFactorValueId ) {
+        this.baselineFactorValueId = baselineFactorValueId;
+    }
+
+    public Long getResultSetId() {
+        return resultSetId;
+    }
+
+    public void setResultSetId(Long resultSetId) {
+        this.resultSetId = resultSetId;
+    }
+    
     public Long getAnalysisId() {
         return analysisId;
     }
