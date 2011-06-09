@@ -792,7 +792,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
 		this.fireEvent('showCoexResults', this, result);
-
+		var csc = this.lastCSC;
+		if((csc.stringency && csc.stringency !==  this.DEFAULT_STRINGENCY) ||
+			(csc.forceProbeLevelSearch && csc.forceProbeLevelSearch !== this.DEFAULT_forceProbeLevelSearch) ||
+			(csc.queryGenesOnly && csc.queryGenesOnly !== this.DEFAULT_queryGenesOnly)){
+			this.fireEvent('showOptions', csc.stringency, csc.forceProbeLevelSearch, csc.queryGenesOnly);
+		}
 	},
 	returnFromDiffExSearch : function(result) {
 		this.doneDiffEx = true;

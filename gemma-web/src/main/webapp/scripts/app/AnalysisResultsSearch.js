@@ -271,6 +271,12 @@ Ext.onReady(function() {
 		}
 	});
 	
+	searchPanel.on("showOptions",function(stringency, forceProbeLevelSearch, queryGenesOnly){
+		resultsPanel.insert(1, {border:false,html:'Stringency = '+stringency+'; <br>Probe-level search: '+forceProbeLevelSearch+
+			"; <br>Results only among query genes: "+queryGenesOnly});
+		resultsPanel.doLayout();
+	});
+	
 	searchPanel.on("showDiffExResults",function(panel,result, data){
 		
 		
