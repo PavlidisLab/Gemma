@@ -132,6 +132,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			var warningWindow = new Ext.Window({
 				width:450,
 				height:200,
+				closable:false,
 				bodyStyle:'padding:7px;background: white; font-size:1.1em',
 				title: "Warning",
 				html: "You are using " + stateText + " for your search. " +
@@ -169,16 +170,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					text: 'Cancel',
 					handler: function(){
 						warningWindow.close();
+						this.getEl().unmask();
 						return;
 					},
 					scope:this
-				}],
-				listeners:{
-					close:function (){
-						this.getEl().unmask();
-					},
-					scope:this
-				}
+				}]
 			});
 			warningWindow.show();
 		}else{

@@ -39,7 +39,7 @@ Gemma.MetaVisualizationPopups.makeDatasetInfoWindow = function ( datasetName, da
 		tpl:new Ext.XTemplate('<br><h4>',
 					'<a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id={datasetId}"',
 						' ext:qtip="{datasetName}">{datasetShortName}</a>: {datasetName}</h4><br><b> Description: </b>{description}<br><br>',
-						'<a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id={datasetId}',
+						'<a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id={datasetId}"',
 						' ext:qtip="{datasetName}">More about this experiment</a>'),
 		tplWriteMode: 'overwrite'
 	});
