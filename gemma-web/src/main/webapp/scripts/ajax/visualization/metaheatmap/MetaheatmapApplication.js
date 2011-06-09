@@ -3,6 +3,7 @@
  * @author AZ
  */
 Ext.namespace('Gemma');
+
 /**
  * MetaHeatmap Application Consist of 3 main panels:
  * 
@@ -63,15 +64,14 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					// state{
 					var filteringFn = function(o) {
 						var factorId = o.factorCategory ? o.factorCategory : o.factorName;
-						if (factorId.toLowerCase() === node.text.toLowerCase()) {
+						if (factorId.toLowerCase() == node.text.toLowerCase()) {
 							return !checked; // should return true if you
 							// want to filter
 						}
 						return null; // don't do anything to a node that
 						// wasn't checked
 					};
-					var num = this.filterColumns(filteringFn);
-					this.TOTAL_NUMBER_OF_HIDDEN_COLUMNS = num;
+					this.filterColumns(filteringFn);
 					this.doLayout();
 					this.refreshVisualization();
 				}, this);
@@ -174,7 +174,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						this.items.each(function(){
 							this.items.each(function(){
 								if (this.xtype !== 'button'){
-									this._drawHeatmapColumn();									
+									this.drawHeatmapSubColumn_();									
 								}
 							});
 						});
@@ -194,7 +194,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						this.items.each(function(){
 							this.items.each(function(){
 								if (this.xtype !== 'button'){
-									this._drawHeatmapColumn();									
+									this.drawHeatmapSubColumn_();									
 								}
 							});
 						});
@@ -337,8 +337,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 
 		/*************** end of selection grids **********************/
 
-
-
 		this.TOTAL_NUMBER_OF_COLUMNS = 0;
 		var datasetGroupIndex;
 		for (datasetGroupIndex = 0; datasetGroupIndex < this.visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
@@ -362,7 +360,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 
 			// TOTAL_NUMBER_OF_COLUMNS: null,
 			TOTAL_NUMBER_OF_ROWS : null,
-			TOTAL_NUMBER_OF_HIDDEN_COLUMNS : 0,
+			//TOTAL_NUMBER_OF_HIDDEN_COLUMNS : 0,
 
 			filterColumns : function(filteringFn) {
 				return this._imageArea._heatmapArea.filterColumns(filteringFn);
@@ -404,6 +402,18 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				tooltip:'Get a link to re-run this search',
 				handler : function() {
 					this.getBookmarkableLinkMsg();
+				},
+				scope:this
+			},'-',{
+				xtype : 'button',
+				x : 5,
+				y : 5,
+				text : '<b>Bookmarkable Link</b>',
+				//icon : '/Gemma/images/download.gif',
+				//cls : 'x-btn-text-icon',
+				qtip:'Get a link to re-run this search',
+				handler : function() {
+					this.getBookmarkableLink();
 				},
 				scope:this
 			},'-',{
@@ -457,6 +467,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						'</tpl>',
 						'<tpl if="type==\'gene\'">',
 						'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
+						'</tpl>',
+						'<tpl if="type==\'contrastCell\'">',
+						'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
+						'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+						'{datasetId}"', ' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
+						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Fold change</b>: {foldChange}<br><br>',
 						'</tpl>',
 						'<tpl if="type==\'cell\'">',
 						'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
@@ -616,8 +632,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						listeners: {
 							check: function(target, checked){
 								var filteringFn = null;
-								if (!checked) { // hide columns without
-									// results
+								if (!checked) { // hide columns without results
 									filteringFn = function(o){
 									
 										if (o.overallDifferentialExpressionScore === 0) {
@@ -652,8 +667,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 									};
 								}
 								
-								var num = this.filterColumns(filteringFn);
-								this.TOTAL_NUMBER_OF_HIDDEN_COLUMNS = num;
+								this.filterColumns(filteringFn);
 								this.doLayout();
 								this.refreshVisualization();
 							},
@@ -707,56 +721,58 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					
 				}]
 			},{
-				ref: '_imageArea',
-				autoScroll: true,
-				layout: 'absolute',
-				frame: false,
-				border: false,
-				width: Gemma.MetaVisualizationConfig.panelWidth - 300,
-				height: Gemma.MetaVisualizationConfig.panelHeight - 30,
-				items: [{
-					x: 5,
-					y: 5,
-					xtype: 'panel',
-					html: '<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>' +
-					'<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
-					border: false,
-					width: 180,
-					height: 100
-				}, {
-					xtype: 'metaVizGeneLabels',
-					height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
-					width: 80,
-					x: 0,
-					y: Gemma.MetaVisualizationConfig.columnLabelHeight + 12,
-					labels: this.visualizationData.geneNames,
-					geneGroupNames: this.visualizationData.geneGroupNames,
-					border: false,
-					bodyBorder: false,
-					applicationRoot: this,
-					ref: '_geneLabels'
-				}, {
-					xtype: 'metaVizRotatedLabels',
-					width: this._heatMapWidth + Gemma.MetaVisualizationConfig.labelExtraSpace,
-					height: 260,
-					x: 80,
-					y: 0,
-					applicationRoot: this,
-					visualizationData: this.visualizationData.resultSetValueObjects,
-					datasetGroupNames: this.visualizationData.datasetGroupNames,
-					ref: 'topLabelsPanel'
-				}, {
-					xtype: 'metaVizScrollableArea',
-					height: Gemma.MetaVisualizationUtils.calculateColumnHeight(this.visualizationData.geneNames),
-					width: this._heatMapWidth,
-					x: 80,
-					y: Gemma.MetaVisualizationConfig.columnLabelHeight + 2,
-					dataDatasetGroups: this.visualizationData.resultSetValueObjects,
-					geneNames: this.visualizationData.geneNames,
-					geneIds: this.visualizationData.geneIds,
-					applicationRoot: this,
-					ref: '_heatmapArea'
-				}]
+				ref : '_imageArea',
+				autoScroll : true,
+				layout : 'absolute',
+				frame : false,
+				border : false,
+				width : Gemma.MetaVisualizationConfig.panelWidth - 300,
+				height : Gemma.MetaVisualizationConfig.panelHeight - 30,
+				items : [{
+				x:5,
+				y:5,
+				xtype:'panel',
+				html:'<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
+						'<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
+				border:false,
+				width: 180,
+				height: 100
+			},{
+							xtype : 'metaVizGeneLabels',
+							height : Gemma.MetaVisualizationUtils
+									.calculateColumnHeight(this.visualizationData.geneNames),
+							width : 80,
+							x : 0,
+							y : Gemma.MetaVisualizationConfig.columnLabelHeight+12,
+							labels : this.visualizationData.geneNames,
+							geneGroupNames : this.visualizationData.geneGroupNames,
+							border : false,
+							bodyBorder : false,
+							applicationRoot : this,
+							ref : '_geneLabels'
+						}, {
+							xtype : 'metaVizRotatedLabels',
+							width : this._heatMapWidth + Gemma.MetaVisualizationConfig.labelExtraSpace,
+							height : 260,
+							x : 80,
+							y : 0,
+							applicationRoot : this,
+							visualizationData : this.visualizationData.resultSetValueObjects,
+							datasetGroupNames : this.visualizationData.datasetGroupNames,
+							ref : 'topLabelsPanel'
+						}, {
+							xtype : 'metaVizScrollableArea',
+							height : Gemma.MetaVisualizationUtils
+									.calculateColumnHeight(this.visualizationData.geneNames),
+							width : this._heatMapWidth,
+							x : 80,
+							y : Gemma.MetaVisualizationConfig.columnLabelHeight+2,
+							dataDatasetGroups : this.visualizationData.resultSetValueObjects,
+							geneNames : this.visualizationData.geneNames,
+							geneIds : this.visualizationData.geneIds,
+							applicationRoot : this,
+							ref : '_heatmapArea'							
+						}]
 			}]
 		});
 		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
@@ -776,26 +792,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				this.TOTAL_NUMBER_OF_ROWS++;
 			}
 		}
-
-		this.MiniWindowTool = new Ext.Window({
-					width : 300,
-					height : 150,
-					title : "",
-					layout : "vbox",
-					items : [{
-								xtype : 'label',
-								ref : 'specificity',
-								text : "Specificity: "
-							}, {
-								xtype : 'label',
-								ref : 'pValue',
-								text : "pValue: " + this.pvalue
-							}, {
-								xtype : 'label',
-								ref : 'foldChange',
-								text : "Fold change: "
-							}]
-				});
 	},
 	onRender : function() {
 		Gemma.MetaHeatmapApp.superclass.onRender.apply(this, arguments);
@@ -911,7 +907,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		state.factorFilters = toFilter;
 		
 		state.taxonId = this._visualizationData.taxonId;
-		//state.pvalue = this.pvalue; //we don't use this yet
+		//state.pvalue = this.pvalue;
 		return state;
 	},
 		
@@ -927,7 +923,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	 *  state.filters = list of filters applied, values listed should be filtered OUT (note this 
 	 *  	is the opposite heuristic as in viz) (done to minimize url length)
 	 *  state.taxonId
-	 * @return url string or null if error or nothing to link to
+	 * @return url string
 	 */
 	getBookmarkableLink : function() {
 		var state = this.getVizState();
@@ -980,644 +976,29 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			url += String.format("ff={0}&", state.factorFilters.join(','));
 		}
 		url += String.format("t={0}&", state.taxonId);
-		//url += String.format("p={0}&", state.pvalue);//we don't use this yet
+		//url += String.format("p={0}&", state.pvalue);
 
 		// remove trailing '&'
 		url = url.substring(0, url.length-1);
-
-		if(noGenes || noExperiments){
-			return null;
-		}
-		return url;
-	},		
-	getBookmarkableLinkMsg : function() {
-		
-		url = this.getBookmarkableLink();
-
 		
 		var warning = (this.selectionsModified)? "Please note: you have unsaved modifications in one or more of your"+
 							" experiment and/or gene groups. <b>These changes will not be saved in this link.</b>"+
 							" In order to keep your modifications, please log in and save your unsaved groups.<br><br>":"";
 									
-		/*warning += (this.usingSessionGroup && )? "Please note: you are using one or more unsaved group(s) in your search. "+
+		warning += (this.usingSessionGroup)? "Please note: you are using one or more unsaved group(s) in your search. "+
 							"<b>Unsaved groups will not be included in this link.</b> "+
 							"In order to keep these groups included in your visualization, please log in and save your unsaved group(s).<br><br>":"";
-		*/
-		if(url === null){
-			url= "Error creating your link."
+		
+		if( (noGenes || noExperiments) && warning !== ""){
+			url = "<b>Nothing to link to.</b> See notes above.";	
+		}else if(noGenes || noExperiments){
+			url = "Error creating link";
 		}
+		
 		Ext.Msg.alert("Bookmark or sharable link",warning+"Use this link to re-run your search:<br> "+url);
-	}
+		return url;
+	},
 });
 
-Gemma.MetaHeatmapScrollableArea = Ext.extend(Ext.Panel, {
-			initComponent : function() {
-				Ext.apply(this, {
-							border : false,
-							bodyBorder : false,
-							layout : 'hbox',
-							layoutConfig : {
-								defaultMargins : {
-									top : 0,
-									right : Gemma.MetaVisualizationConfig.groupSeparatorWidth,//0,
-									bottom : 0,
-									left : 0
-								}
-							},
-							dataDatasetGroups : this.dataDatasetGroups,
-							geneNames : this.geneNames,
-							geneIds : this.geneIds,
-
-							applicationRoot : this.applicationRoot,
-
-							_setTopLabelsBox : function(l) {
-								this._topLabelsBox = l;
-							},
-
-							filterColumns : function(filteringFn) {
-								var count = 0;
-								this.items.each(function() {
-											count = count + this.filterColumns(filteringFn);
-										});
-								return count;
-							},
-
-							_filterRows : function(filteringFn) {
-
-							},
-
-							_sortColumns : function(asc_desc, sortingFn) {
-								this.items.each(function() {
-											this.items.sort(asc_desc, sortingFn);
-										});
-							}
-						});
-
-				Gemma.MetaHeatmapScrollableArea.superclass.initComponent.apply(this, arguments);
-			},
-
-			onRender : function() {
-				Gemma.MetaHeatmapScrollableArea.superclass.onRender.apply(this, arguments);
-				var i;
-				for (i = 0; i < this.dataDatasetGroups.length; i++) {
-					if (this.dataDatasetGroups[i].length > 0) {
-						this.add(new Gemma.MetaHeatmapDatasetGroupPanel({
-									applicationRoot : this.applicationRoot,
-									height : this.height,
-									dataFactorColumns : this.dataDatasetGroups[i],
-									datasetGroupIndex : i,
-									geneNames : this.geneNames[i],
-									geneIds : this.geneIds[i]
-								}));
-					}
-
-				}
-
-			},
-
-			refresh : function() {
-				this.items.each(function() {
-							this.refresh();
-						});
-			}
-
-		});
-Ext.reg('metaVizScrollableArea', Gemma.MetaHeatmapScrollableArea);
-
-Gemma.MetaHeatmapControlWindow = Ext.extend(Ext.Window, {
-
-			hidden : true,
-			shadow : false,
-			initComponent : function() {
-				Ext.apply(this, {
-							title : 'Visualization settings',
-							height : 400,
-							width : 300,
-							layout : 'accordion',
-							layoutConfig : {
-								titleCollapse : false,
-								animate : true,
-								activeOnTop : true
-							},
-							items : [{
-										title : 'Data selection',
-										xtype : 'metaVizDataSelection',
-										ref : 'selectionPanel'
-									}]
-						});
-				Gemma.MetaHeatmapControlWindow.superclass.initComponent.apply(this, arguments);
-			},
-			onRender : function() {
-				Gemma.MetaHeatmapControlWindow.superclass.onRender.apply(this, arguments);
-			}
-		});
 
 
-Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
-
-	constructor : function(searchCommand) {
-		if(typeof searchCommand !== 'undefined'){
-			Ext.apply(this, {
-			param : searchCommand
-				// get input from front-page search
-			});
-		}
-		
-		Gemma.MetaHeatmapDataSelection.superclass.constructor.call(this);
-	},
-
-	_selectedDatasetGroups : [],
-	_selectedGeneGroups : [],
-	waitingForGeneSessionGroupBinding : false,
-	waitingForDatasetSessionGroupBinding : false,
-	geneGroupNames : [],
-	geneGroupReferences : [],
-	datasetGroupNames : [],
-	datasetGroupReferences : [],
-	taxonId : null,
-
-	prepareVisualization : function(target) {
-
-		this.geneGroupNames = [];
-		this.geneGroupReferences = [];
-		this.datasetGroupNames = [];
-		this.datasetGroupReferences = [];
-		this._selectedGeneGroups = [];
-		this._selectedDatasetGroups = [];
-		// control variables used if asynchronous session group creation is
-		// performed
-		this.waitingForGeneSessionGroupBinding = false;
-		this.waitingForDatasetSessionGroupBinding = false;
-
-		var i;
-		// populate list of selected groups
-		for (i = 0; i < this._geneCombos.length; i++) {
-			this._selectedGeneGroups.push(this._geneCombos[i].getGeneGroup());
-		}
-
-		for (i = 0; i < this._datasetCombos.length; i++) {
-			this._selectedDatasetGroups.push(this._datasetCombos[i].getSelected());
-		}
-
-		var geneGroupsToBindToSession = [];
-
-		for (i = 0; i < this._selectedGeneGroups.length; i++) {
-
-			if (this._selectedGeneGroups[i] && this._selectedGeneGroups[i] !== null) {
-				// if the group has a null value for reference.id, then it
-				// hasn't been
-				// created as a group in the database nor session
-				if (this._selectedGeneGroups[i].reference.id === null) {
-					this._selectedGeneGroups[i].geneIds = this._selectedGeneGroups[i].memberIds;
-					geneGroupsToBindToSession.push(this._selectedGeneGroups[i]);
-				} else {
-					this.geneGroupReferences.push(this._selectedGeneGroups[i].reference);
-					this.geneGroupNames.push(this._selectedGeneGroups[i].name);
-				}
-			}
-		}
-		var j;
-		if (geneGroupsToBindToSession.length !== 0) {
-			this.waitingForGeneSessionGroupBinding = true;
-			GeneSetController.addNonModificationBasedSessionBoundGroups(geneGroupsToBindToSession, function(geneSets) {
-						// should be at least one geneset
-						if (geneSets === null || geneSets.length === 0) {
-							// TODO error message
-							return;
-						} else {
-							for (j = 0; j < geneSets.length; j++) {
-								this.geneGroupReferences.push(geneSets[j].reference);
-								this.geneGroupNames.push(geneSets[j].name);
-							}
-						}
-						this.waitingForGeneSessionGroupBinding = false;
-						this.fireEvent('geneGroupsReadyForVisualization');
-					}.createDelegate(this));
-		}
-
-		var datasetGroupsToBindToSession = [];
-		for (i = 0; i < this._selectedDatasetGroups.length; i++) {
-			if (this._selectedDatasetGroups[i] && this._selectedDatasetGroups[i] !== null) {
-				// if the group has a null value for reference.id, then it
-				// hasn't been
-				// created as a group in the database nor session
-				if (this._selectedDatasetGroups[i].reference.id === null) {
-					this._selectedDatasetGroups[i].expressionExperimentIds = this._selectedDatasetGroups[i].memberIds;
-					datasetGroupsToBindToSession.push(this._selectedDatasetGroups[i]);
-				} else {
-					this.datasetGroupReferences.push(this._selectedDatasetGroups[i].reference);
-					this.datasetGroupNames.push(this._selectedDatasetGroups[i].name);
-				}
-			}
-		}
-		if (datasetGroupsToBindToSession.length !== 0) {
-			this.waitingForDatasetSessionGroupBinding = true;
-			ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups(datasetGroupsToBindToSession,
-					function(datasetSets) {
-						// should be at least one datasetSet
-						if (datasetSets === null || datasetSets.length === 0) {
-							// TODO error message
-							return;
-						} else {
-							for (j = 0; j < datasetSets.length; j++) {
-								this.datasetGroupReferences.push(datasetSets[j].reference);
-								this.datasetGroupNames.push(datasetSets[j].name);
-							}
-						}
-						this.waitingForDatasetSessionGroupBinding = false;
-						this.fireEvent('datasetGroupsReadyForVisualization');
-					}.createDelegate(this));
-		}
-
-		// if no asynchronous calls were made, run visualization right away
-		// otherwise, doVisualization will be triggered by events
-		if (!this.waitingForDatasetSessionGroupBinding && !this.waitingForGeneSessionGroupBinding) {
-			this.doVisualization();
-		}
-	},
-	doVisualization : function() {
-		var estimatedTime = 15 * this.geneGroupReferences.length * this.datasetGroupReferences.length;
-		
-		/*var progressWindow = new Ext.Window({
-					width : 80,
-					height : 50,
-					closable:false,
-					title: "Estimated time: " + (estimatedTime / 1000) + "s",
-					items : [{
-								xtype : 'progress',
-								ref : 'progress_bar'
-							}]
-				});
-		progressWindow.show();*/
-		if(typeof this.param ==='undefined'){ // if not loading text from search interface (ex: when using a bookmarked link)
-			var waitMsg = Ext.Msg.wait("","Loading your visualization...");
-		}
-		
-		/*progressWindow.progress_bar.wait({
-					interval : 1000,
-					duration : estimatedTime,
-					increment : estimatedTime / 1000,
-					text : 'Building visualization...',
-					scope : this,
-					fn : function() {
-					}
-				});*/
-		this._selectedDatasetGroups = [];
-		this._selectedGeneGroups = [];
-
-		if (!this.taxonId || this.taxonId === null) {
-			// DO SOMETHING!!
-		}
-		this.geneReferences = this.geneGroupReferences;
-		this.datasetReferences = this.datasetGroupReferences;
-		
-		if(this.initExperimentGroupReferences){
-			this.datasetReferences = this.datasetReferences.concat(this.initExperimentGroupReferences);
-		}
-		if(this.initExperimentReferences){
-			this.datasetReferences= this.datasetReferences.concat(this.initExperimentReferences);
-		}
-		if(this.initGeneGroupReferences){
-			this.geneReferences = this.geneReferences.concat(this.initGeneGroupReferences);
-		}
-		if(this.initGeneReferences){
-			this.geneReferences = this.geneReferences.concat(this.initGeneReferences);
-		}
-		if(typeof this.initGeneSessionGroupQueries === 'undefined'){
-			this.initGeneSessionGroupQueries = [];
-		}else{
-			this.geneSessionGroupQueries = this.initGeneSessionGroupQueries;
-		}
-		if(typeof this.initExperimentSessionGroupQueries === 'undefined'){
-			this.initExperimentSessionGroupQueries = [];
-		}else{
-			this.experimentSessionGroupQueries = this.initExperimentSessionGroupQueries;
-		}
-
-		DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId,
-				this.datasetReferences, this.geneReferences, this.initGeneSessionGroupQueries,
-				this.initExperimentSessionGroupQueries, function(data) {
-
-					//progressWindow.hide();
-					if(waitMsg){
-						waitMsg.hide();
-					}
-					
-					// to trigger loadmask on search form to hide
-					this.fireEvent('visualizationLoaded');
-					
-					data.geneGroupReferences = this.geneReferences;
-					data.datasetGroupReferences = this.datasetReferences;
-					data.taxonId = this.taxonId;
-					
-					var experimentCount = 0;
-					var lastDatasetId = null;
-
-					var i;
-					var j;
-					for (i = 0; i < data.resultSetValueObjects.length; i++) {
-						for (j = 0; j < data.resultSetValueObjects[i].length; j++) {
-
-							// get the number of experiments, they should be
-							// grouped by datasetId
-							if (data.resultSetValueObjects[i][j].datasetId != lastDatasetId) {
-								experimentCount++;
-							}
-							lastDatasetId = data.resultSetValueObjects[i][j].datasetId;
-						}
-					}					
-
-					// if no experiments were returned, don't show visualizer
-					if (experimentCount === 0) {
-						Ext.DomHelper.overwrite('meta-heatmap-div', {
-							html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
-						});
-					} else {
-						var title = '<b>Differential Expression Visualisation</b>' +
-							' (Data available for ' +
-							experimentCount +
-							(((typeof this.param !== 'undefined') ? 
-								(' of ' + this.param.datasetCount + ' experiments)') : " experiments)"));
-							/*+" Threshold: " + this.pvalue)//we don't use this yet*/
-						_metaVizApp = new Gemma.MetaHeatmapApp({
-									_selectionController: this, // temp hack so we can re-run search from vizApp
-									tbarTitle : title,
-									visualizationData : data,
-									initGeneSort: (this.initGeneSort)? this.initGeneSort:null,
-									initExperimentSort: (this.initExperimentSort)? this.initExperimentSort:null,
-									initFactorFilter: (this.initFactorFilter)? this.initFactorFilter:null,
-									applyTo : 'meta-heatmap-div',
-									//pvalue : this.pvalue, //we don't use this yet
-									geneSessionGroupQueries :this.geneSessionGroupQueries,
-									experimentSessionGroupQueries :this.experimentSessionGroupQueries,
-									loadedFromURL: this.loadedFromURL
-								});
-						_metaVizApp.doLayout();
-						_metaVizApp.refreshVisualization();
-					}
-
-				}.createDelegate(this));
-	},
-	/**
-	 * Restore state from the URL (e.g., bookmarkable link)
-	 * 
-	 * @param {}
-	 *            query
-	 * @return {}
-	 */
-	initializeSearchFromURL : function(url) {
-		var param = Ext.urlDecode(url);
-		var arrs; var i;
-		
-		/*if (param.p) { //we don't use this yet
-			this.pvalue = param.p;
-		}*/if (param.t) {
-			this.taxonId = param.t;
-		}
-		if (param.gs) {
-			this.initGeneSort = param.gs;
-		}
-		if (param.es) {
-			this.initExperimentSort = param.es;
-		}
-		if (param.ff) {
-			this.initFactorFilter = param.ff.split(',');
-		}
-		if (param.gq) {
-			this.initGeneSessionGroupQueries = param.gq.split(',');
-		}
-		if (param.eq) {
-			this.initExperimentSessionGroupQueries = param.gq.split(',');
-		}
-		if (param.g) {
-			arrs = param.g.split(',');
-			for(i = 0; i< arrs.length; i++){
-				// make a reference object for each id
-				arrs[i] = {
-					id: arrs[i],
-					type: 'databaseBackedGene'  // TODO get this from the reference java object!!!
-				};
-			}
-			this.initGeneReferences = arrs;
-		}
-		if (param.e) {
-			arrs = param.e.split(',');
-			for(i = 0; i< arrs.length; i++){
-				// make a reference object for each id
-				arrs[i] = {
-					id: arrs[i],
-					type: 'databaseBackedExperiment'  // TODO get this from the reference java object!!!
-				};
-			}
-			this.initExperimentReferences = arrs;
-		}
-		if (param.gg) {
-			arrs = param.gg.split(',');var k = 0;
-			for(i = 0; i< arrs.length; i++){
-				// make a reference object for each id
-				arrs[i] = {
-					id: arrs[i],
-					type: 'databaseBackedGroup' // TODO get this from the reference java object!!!
-				};
-			}
-			this.initGeneGroupReferences = arrs;
-		}
-		if (param.eg) {
-			arrs = param.eg.split(',');
-			for(i = 0; i< arrs.length; i++){
-				// make a reference object for each id
-				arrs[i] = {
-					id: arrs[i],
-					type: 'databaseBackedGroup'  // TODO get this from the reference java object!!!
-				};
-			}
-			this.initExperimentGroupReferences = arrs;
-		}
-	},
-
-	initComponent : function() {
-
-		this.on('geneGroupsReadyForVisualization', function(geneReferences, geneNames) {
-					if (!this.waitingForDatasetSessionGroupBinding) {
-						this.doVisualization();
-					}
-				}, this);
-		this.on('datasetGroupsReadyForVisualization', function() {
-					if (!this.waitingForGeneSessionGroupBinding) {
-						this.doVisualization();
-					}
-				}, this);
-		Ext.apply(this, {
-					_geneCombos : [],
-					_datasetCombos : [],
-					_metaVizApp : null,
-					_sortPanel : null,
-					height : 450,
-					layout : 'fit',
-					items : [{
-								xtype : 'taxonCombo',
-								width : 200,
-								ref : '_taxonCombo'
-							}, {
-								xtype : 'panel',
-								width : 200,
-								height : 100,
-								ref : 'genePickerPanel',
-								items : [{
-											xtype : 'button',
-											text : 'Add gene group',
-											width : 200,
-											ref : 'addNewGeneGroupButton',
-											listeners : {
-												click : {
-													fn : function(target) {
-														// var genePicker = new
-														// Gemma.GeneGroupCombo({width
-														// : 200});
-														// genePicker.setTaxon(this._taxonCombo.getTaxon());
-														var genePicker = new Gemma.GeneAndGeneGroupCombo({
-																	width : 200
-																});
-														genePicker.setTaxonId(this._taxonCombo.getTaxon().id);
-														this._geneCombos.push(genePicker);
-														this.genePickerPanel.add(genePicker);
-														this.genePickerPanel.doLayout();
-													},
-													scope : this
-												}
-											}
-										}]
-
-							}, {
-								xtype : 'panel',
-								width : 200,
-								height : 100,
-								ref : 'datasetPickerPanel',
-								items : [{
-											xtype : 'button',
-											text : 'Add dataset group',
-											width : 200,
-											ref : 'addNewDatasetGroupButton',
-											listeners : {
-												click : {
-													fn : function(target) {
-														// var datasetPicker =
-														// new
-														// Gemma.DatasetGroupCombo({width
-														// : 200});
-														var datasetPicker = new Gemma.ExperimentAndExperimentGroupCombo(
-																{
-																	width : 200
-																});
-														this._datasetCombos.push(datasetPicker);
-														this.datasetPickerPanel.add(datasetPicker);
-														this.datasetPickerPanel.doLayout();
-													},
-													scope : this
-												}
-											}
-										}]
-							}, {
-								xtype : 'button',
-								text : 'Visualize!',
-								ref : 'goButton',
-								width : 50,
-								height : 30,
-								listeners : {
-									click : {
-										fn : this.prepareVisualization,
-										scope : this
-									}
-								}
-							}]
-				});
-		// FOR TESTING !!!!!
-		this.param2 = {
-			geneReferences : [{
-				id : 96,
-				type : "databaseBackedGroup"
-			}
-				 ,{ id: 94, type: "databaseBackedGroup" }
-				 
-			],
-			datasetReferences : [{
-						id : 6137,
-						type : "databaseBackedGroup"
-					}
-			
-			  ,{ id: 6110, type: "databaseBackedGroup" }
-			 
-			],
-			geneNames : ["gene TEST", "gene TEST 2"],
-			datasetNames : ["dataset TEST", "dataset TEST2"],
-			taxonId : 2,
-			//pvalue : Gemma.DEFAULT_THRESHOLD // not used anywhere!
-		};
-		this.loadedFromURL = false;
-		var queryStart = document.URL.indexOf("?");
-		if (queryStart > -1) {
-			this.initializeSearchFromURL(document.URL.substr(queryStart + 1));
-			if((this.initGeneSessionGroupQueries || this.initGeneReferences || this.initGeneGroupReferences) &&
-			   (this.initExperimentSessionGroupQueries || this.initExperimentReferences || this.initExperimentGroupReferences)){
-				this.loadedFromURL = true;
-			}
-		}
-		
-		if (this.param && !this.loadedFromURL) { // if from search form
-			if (this.param.geneReferences) {
-				this.geneGroupReferences = this.param.geneReferences;
-			}
-			if (this.param.geneNames) {
-				this.geneGroupNames = this.param.geneNames;
-			}
-			if (this.param.datasetReferences) {
-				this.datasetGroupReferences = this.param.datasetReferences;
-			}
-			if (this.param.datasetNames) {
-				this.datasetGroupNames = this.param.datasetNames;
-			}
-			if (this.param.datasetCount) {
-				this.datasetsSelectedCount = this.param.datasetCount;
-			}
-			if (this.param.taxonId) {
-				this.taxonId = this.param.taxonId;
-			}
-			if (this.param.taxonName) {
-				this.taxonName = this.param.taxonName;
-			}
-			if (this.param.geneSessionGroupQueries) {
-				this.geneSessionGroupQueries = this.param.geneSessionGroupQueries;
-			}
-			if (this.param.experimentSessionGroupQueries) {
-				this.experimentSessionGroupQueries = this.param.experimentSessionGroupQueries;
-			}
-			/*if (this.param.pvalue) { //we don't use this yet
-				this.pvalue = this.param.pvalue;
-			}*/
-			if (this.param.selectionsModified){
-				this.selectionsModified = this.param.selectionsModified;
-			}
-		}
-
-		Gemma.MetaHeatmapDataSelection.superclass.initComponent.apply(this, arguments);
-
-		if(this.loadedFromURL){
-			this.doVisualization();
-		}	
-		else if (this.param && this.param.geneReferences && this.param.geneNames && this.param.datasetReferences &&
-			this.param.datasetNames && this.param.taxonId) {
-			this.doVisualization();
-		}
-	},
-	onRender : function() {
-		Gemma.MetaHeatmapDataSelection.superclass.onRender.apply(this, arguments);
-		// var myNodes = [{text: 'parent1', children: [{text: 'child1'}]},
-		// {text: 'parent2', children:[]},{text: 'parent1', children: [{text:
-		// 'child2'}]}];
-		// var tree = new Gemma.FactorSelectTree(myNodes);
-
-		_sortPanel = this.ownerCt.sortPanel;
-	}
-});
-
-Ext.reg('metaVizDataSelection', Gemma.MetaHeatmapDataSelection);
