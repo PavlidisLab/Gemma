@@ -975,6 +975,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getFactors</value>
 								<value>differentialExpressionAnalysisVisualizationSearch</value>
 								<value>differentialExpressionAnalysisVisualizationSearchIdBased</value>
+								<value>differentialExpressionAnalysisVisualizationLoadContrastsInfo</value>
 							</list>
 						</property>
 					</bean>
@@ -1327,7 +1328,17 @@ gemma.max.fileupload.size.bytes=
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.visualization.DifferentialExpressionAnalysisContrastsVisualizationValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
 				</entry>												
+				<entry key="ubic.gemma.web.visualization.DifferentialExpressionAnalysisContrastsVisualizationValueObject$ContrastVisualizationValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>								
 				<entry key="ubic.gemma.model.genome.gene.GeneProduct">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />

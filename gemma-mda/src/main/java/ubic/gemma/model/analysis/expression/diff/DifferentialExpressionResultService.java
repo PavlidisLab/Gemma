@@ -99,8 +99,16 @@ public interface DifferentialExpressionResultService {
             Integer limit );
 
     
-    public List<Double> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit );
-
+    public List<Double> findGeneInResultSet(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit );
+    
+    /**
+     * 
+     * @param gene
+     * @param resultSet
+     * @param limit
+     * @return
+     */
+    public List<Long> findProbeAnalysisResultIdsInResultSet( Long geneId, Long resultSetId, Integer limit );
     
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold

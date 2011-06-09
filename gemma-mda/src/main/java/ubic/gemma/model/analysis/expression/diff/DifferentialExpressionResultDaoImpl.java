@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.GeneSetImpl;
 
 /**
  * @author keshav
@@ -94,16 +95,17 @@ public class DifferentialExpressionResultDaoImpl extends
             + " where rs in (:resultsAnalyzed)"; // no order by clause, we add it later; 'e' is not used in this query.
 
     private static final String fetchResultsByResultSetAndGeneQuery = "select dear.CORRECTED_PVALUE "
-            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par " // ,
-                                                                                                                            // COMPOSITE_SEQUENCE
-                                                                                                                            // cs
-                                                                                                                            // "
+            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par "
             + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
-            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id " // and g2s.CS=cs.ID and
-                                                                                          // cs.ARRAY_DESIGN_FK =
-                                                                                          // :array_ids"
+            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
             + " order by dear.CORRECTED_P_VALUE_BIN DESC";
 
+    private static final String fetchProbeAnalysisResultByResultSetAndGeneQuery = "select dear.ID "
+        + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par "
+        + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
+        + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
+        + " order by dear.CORRECTED_P_VALUE_BIN DESC";
+    
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -448,7 +450,41 @@ public class DifferentialExpressionResultDaoImpl extends
 
         return results;
     }
+    
+    public List<Long> findProbeAnalysisResultIdsInResultSet( Long geneId, Long resultSetId, Integer limit ) {
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        List<Long> results = null;
+
+        try {
+            Session session = super.getSession();
+            org.hibernate.SQLQuery queryObject = session.createSQLQuery( fetchProbeAnalysisResultByResultSetAndGeneQuery );
+
+            queryObject.setLong( "gene_id", geneId );
+            queryObject.setLong( "rs_id", resultSetId );
+
+            if ( limit != null ) {
+                queryObject.setMaxResults( limit );
+            }
+
+            queryObject.addScalar( "ID", new LongType() );
+            results = queryObject.list();
+
+        } catch ( org.hibernate.HibernateException ex ) {
+            throw super.convertHibernateAccessException( ex );
+        }
+
+        timer.stop();
+        if ( log.isDebugEnabled() )
+            log.debug( "Fetching ProbeResultIds from resultSet " + resultSetId + " for gene " + geneId
+                    + " took : " + timer.getTime() + " ms" );
+
+        return results;
+    }
+    
+    
     public Collection<ProbeAnalysisResult> loadAll() {
         throw new UnsupportedOperationException( "Sorry, that would be nuts" );
     }
@@ -472,6 +508,7 @@ public class DifferentialExpressionResultDaoImpl extends
                 for ( ContrastResult contrast : contrasts ) {
                     FactorValue f = contrast.getFactorValue();
                     Hibernate.initialize( f );
+                    Boolean is_baseline = f.getIsBaseline();
                 }
 
                 return null;
@@ -589,5 +626,10 @@ public class DifferentialExpressionResultDaoImpl extends
         }
         return ( ( HitListSize ) result ).getNumberOfProbes();
     }
+    
+    public ProbeAnalysisResult load (Long id) {        
+        return this.getHibernateTemplate().get( ProbeAnalysisResultImpl.class, id );
+    }
+        
 
 }
