@@ -167,8 +167,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 					if (ids.size() === 1) {
 						this.geneSelectionEditorBtn.setText('0 more - Edit');
-						this.experimentSelectionEditorBtn.enable();
-						this.geneSelectionEditorBtn.show();
+						this.geneSelectionEditorBtn.enable().show();
 					}
 					this.genePreviewContent.expand();
 
