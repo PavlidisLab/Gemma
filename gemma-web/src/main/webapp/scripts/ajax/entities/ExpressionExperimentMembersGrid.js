@@ -21,7 +21,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	layout : 'fit',
 	width : 450,
 	height : 250,
-	experimentGroupId : null,
 	viewConfig : {
 		forceFit : true
 	},
@@ -461,7 +460,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			// if geneGroupId is null, then there was no group to start with
 			// if user has made any changes, a new gene set will be created
-			if (!this.experimentGroupId || this.experimentGroupId === null) {
+			if (!this.selectedExperimentGroup ||this.selectedExperimentGroup === null || 
+					this.selectedExperimentGroup.reference === null || this.selectedExperimentGroup.reference.id === null) {
 				// ask user if they want to save changes
 				this.editedExistingGroup('yes'); // yes means 'save as'
 

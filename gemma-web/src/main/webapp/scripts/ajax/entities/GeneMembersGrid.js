@@ -38,7 +38,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	stripeRows : true,
 	changeMade : false,
 	// bubbleEvents: ['geneListModified'],
-	geneGroupId : null,
 	loggedId : null,
 	/*
 	 * columnSet can be "reduced" or "full", if "reduced": only symbol and
@@ -512,7 +511,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 			// if geneGroupId is null, then there was no group to start with
 			// if user has made any changes, a new gene set will be created
-			if (!this.geneGroupId || this.geneGroupId === null) {
+			if (!this.selectedGeneGroup ||this.selectedGeneGroup === null || 
+					this.selectedGeneGroup.reference === null || this.selectedGeneGroup.reference.id === null) {
 				// ask user if they want to save changes
 				this.editedExistingGroup('yes'); // yes means 'save as'
 
