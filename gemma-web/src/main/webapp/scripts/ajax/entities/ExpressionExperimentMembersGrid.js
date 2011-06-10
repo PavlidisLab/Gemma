@@ -20,7 +20,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	stateful : false,
 	layout : 'fit',
 	width : 450,
-	height : 250,
+	height : 500,
 	viewConfig : {
 		forceFit : true
 	},

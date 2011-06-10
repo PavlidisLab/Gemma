@@ -446,7 +446,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneSelectionEditor = new Gemma.GeneMembersGrid({
 					// id: 'geneSelectionEditor',
 					name : 'geneSelectionEditor',
-					height : 200,
 					// hidden: 'true',
 					hideHeaders : true,
 					frame : false

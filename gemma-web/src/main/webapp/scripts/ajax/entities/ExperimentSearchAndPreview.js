@@ -237,7 +237,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.experimentSelectionEditor = new Gemma.ExpressionExperimentMembersGrid({
 					// id : 'experimentSelectionEditor',
 					name : 'experimentSelectionEditor',
-					height : 200,
 					// hidden: 'true',
 					hideHeaders : true,
 					frame : false,

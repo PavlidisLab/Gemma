@@ -34,7 +34,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	frame : true,
 	layout : 'fit',
 	width : 400,
-	height : 250,
+	height : 500,
 	stripeRows : true,
 	changeMade : false,
 	// bubbleEvents: ['geneListModified'],
