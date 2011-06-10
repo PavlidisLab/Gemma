@@ -507,10 +507,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	saveToSession : function() {
 		var editedGroup;
-		var loadMask = new Ext.LoadMask(this.getEl(), {
-			msg: "Creating temporary group ..."
-		});
-		loadMask.show();
 		if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
 			//group wasn't made before launching 
 			editedGroup = {
@@ -543,16 +539,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						this.fireEvent('experimentListModified', newRecordData);
 						this.fireEvent('doneModification');
 					}
-					
-					this.loadMask.hide();
 				}.createDelegate(this));
 
 	},
 	createInDatabase: function(){
-		var loadMask = new Ext.LoadMask(this.getEl(), {
-			msg: "Saving group ..."
-		});
-		loadMask.show();
 		var editedGroup;
 		if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
 			//group wasn't made before launching 
@@ -587,7 +577,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.fireEvent('experimentListModified', newRecordData);
 					this.fireEvent('doneModification');
 				}
-				this.loadMask.hide();
 			}.createDelegate(this));
 		
 		
@@ -595,10 +584,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 	},
 	updateDatabase : function() {
-		var loadMask = new Ext.LoadMask(this.getEl(), {
-			msg: "Saving group ..."
-		});
-		loadMask.show();
 		var groupId = this.selectedExperimentGroup.reference.id;
 		this.newGroupName = this.groupName;
 		var eeIds = this.getEEIds();
@@ -607,9 +592,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.selectedExperimentGroup.memberIds = eeIds;
 					this.selectedExperimentGroup.eeIds = eeIds;
 
-					this.fireEvent('experimentListModified', this.selectedExperimentGroup);
+					this.fireEvent('experimentListModified', [this.selectedExperimentGroup]);
 					this.fireEvent('doneModification');
-					this.loadMask.hide()
 				}.createDelegate(this));
 	}
 });

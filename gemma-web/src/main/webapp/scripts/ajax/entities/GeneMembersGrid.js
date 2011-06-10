@@ -531,8 +531,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				// if group of genes being edited belongs to the user, ask if
 				// they want to save changes
 				else if (this.selectedGeneGroup !== null
-						&& (this.selectedGeneGroup.type.indexOf('user') >= 0 || this.selectedGeneGroup.type
-								.indexOf('User') >= 0)) {
+						&& (this.selectedGeneGroup.type.toLowerCase().indexOf('user') >= 0 )) {
 					// ask user if they want to save changes
 					Ext.Msg.show({
 								title : 'Save Changes?',
@@ -555,10 +554,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	},
 	createInSession : function() {
-		var loadMask = new Ext.LoadMask(this.getEl(), {
-			msg: "Creating temporary group ..."
-		});
-		loadMask.show();
 		var ids = this.getGeneIds();
 		var editedGroup;
 		if(this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined' ){ //group wasn't made before launching 
@@ -588,18 +583,16 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 						return;
 					} else {
 						var newRecordData = geneSets;
+						for(geneSer in geneSets){
+							geneSet.type = "usergeneSet"; // TODO I need to use type from backend
+						}
 						this.fireEvent('geneListModified', newRecordData);
 						this.fireEvent('doneModification');
 					}
-					loadMask.hide();
 				}.createDelegate(this));
 
 	},
 	createInDatabase: function(){
-		var loadMask = new Ext.LoadMask(this.getEl(), {
-			msg: "Saving ..."
-		});
-		loadMask.show();
 			var ids = this.getGeneIds();
 			
 			var editedGroup;
@@ -634,17 +627,12 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 						this.fireEvent('geneListModified', newRecordData);
 						this.fireEvent('doneModification');
 					}
-					loadMask.hide();
 				}.createDelegate(this));
 		
 		this.fireEvent('doneModification');
 		
 	},
 	updateDatabase : function() {
-		var loadMask = new Ext.LoadMask(this.getEl(), {
-			msg: "Updating ..."
-		});
-		loadMask.show();
 		var groupId = this.selectedGeneGroup.reference.id;
 		this.newGroupName = this.groupName;
 		var geneIds = this.getGeneIds();
@@ -653,9 +641,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					this.selectedGeneGroup.memberIds = geneIds;
 					this.selectedGeneGroup.geneIds = geneIds;
 
-					this.fireEvent('geneListModified', this.selectedGeneGroup);
+					this.fireEvent('geneListModified', [this.selectedGeneGroup]);
 					this.fireEvent('doneModification');
-					loadMask.hide();
 				}.createDelegate(this));
 	}
 });

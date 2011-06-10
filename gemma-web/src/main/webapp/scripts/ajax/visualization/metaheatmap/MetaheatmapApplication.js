@@ -408,18 +408,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				xtype : 'button',
 				x : 5,
 				y : 5,
-				text : '<b>Bookmarkable Link</b>',
-				//icon : '/Gemma/images/download.gif',
-				//cls : 'x-btn-text-icon',
-				qtip:'Get a link to re-run this search',
-				handler : function() {
-					this.getBookmarkableLink();
-				},
-				scope:this
-			},'-',{
-				xtype : 'button',
-				x : 5,
-				y : 5,
 				text : '<b>Download</b>',
 				icon : '/Gemma/images/download.gif',
 				cls : 'x-btn-text-icon',
@@ -907,7 +895,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		state.factorFilters = toFilter;
 		
 		state.taxonId = this._visualizationData.taxonId;
-		//state.pvalue = this.pvalue;
+		//state.pvalue = this.pvalue; //we don't use this yet
 		return state;
 	},
 		
@@ -923,7 +911,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	 *  state.filters = list of filters applied, values listed should be filtered OUT (note this 
 	 *  	is the opposite heuristic as in viz) (done to minimize url length)
 	 *  state.taxonId
-	 * @return url string
+	 * @return url string or null if error or nothing to link to
 	 */
 	getBookmarkableLink : function() {
 		var state = this.getVizState();
@@ -976,28 +964,34 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			url += String.format("ff={0}&", state.factorFilters.join(','));
 		}
 		url += String.format("t={0}&", state.taxonId);
-		//url += String.format("p={0}&", state.pvalue);
+		//url += String.format("p={0}&", state.pvalue);//we don't use this yet
 
 		// remove trailing '&'
 		url = url.substring(0, url.length-1);
+
+		if(noGenes || noExperiments){
+			return null;
+		}
+		return url;
+	},		
+	getBookmarkableLinkMsg : function() {
+		
+		url = this.getBookmarkableLink();
+
 		
 		var warning = (this.selectionsModified)? "Please note: you have unsaved modifications in one or more of your"+
 							" experiment and/or gene groups. <b>These changes will not be saved in this link.</b>"+
 							" In order to keep your modifications, please log in and save your unsaved groups.<br><br>":"";
 									
-		warning += (this.usingSessionGroup)? "Please note: you are using one or more unsaved group(s) in your search. "+
+		/*warning += (this.usingSessionGroup && )? "Please note: you are using one or more unsaved group(s) in your search. "+
 							"<b>Unsaved groups will not be included in this link.</b> "+
 							"In order to keep these groups included in your visualization, please log in and save your unsaved group(s).<br><br>":"";
-		
-		if( (noGenes || noExperiments) && warning !== ""){
-			url = "<b>Nothing to link to.</b> See notes above.";	
-		}else if(noGenes || noExperiments){
-			url = "Error creating link";
+		*/
+		if(url === null){
+			url= "Error creating your link."
 		}
-		
 		Ext.Msg.alert("Bookmark or sharable link",warning+"Use this link to re-run your search:<br> "+url);
-		return url;
-	},
+	}
 });
 
 

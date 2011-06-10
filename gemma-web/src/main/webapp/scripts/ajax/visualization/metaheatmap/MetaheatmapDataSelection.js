@@ -366,7 +366,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			}
 		}
 		
-		if (this.param && !this.loadedFromURL) {
+		if (this.param && !this.loadedFromURL) { // if from search form
 			if (this.param.geneReferences) {
 				this.geneGroupReferences = this.param.geneReferences;
 			}
@@ -387,6 +387,18 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			}
 			if (this.param.taxonName) {
 				this.taxonName = this.param.taxonName;
+			}
+			if (this.param.geneSessionGroupQueries) {
+				this.geneSessionGroupQueries = this.param.geneSessionGroupQueries;
+			}
+			if (this.param.experimentSessionGroupQueries) {
+				this.experimentSessionGroupQueries = this.param.experimentSessionGroupQueries;
+			}
+			/*if (this.param.pvalue) { //we don't use this yet
+				this.pvalue = this.param.pvalue;
+			}*/
+			if (this.param.selectionsModified){
+				this.selectionsModified = this.param.selectionsModified;
 			}
 		}
 

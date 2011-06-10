@@ -27,7 +27,7 @@ Gemma.SelectTree = Ext.extend(Ext.tree.TreePanel, {
 			rootVisible : false,
 			enableDD : false,
 			cls : 'x-tree-noicon',
-			singleClickExpand : true,
+			//singleClickExpand : true,
 			lines : false,
 			// containerScroll:true,
 			// panel
