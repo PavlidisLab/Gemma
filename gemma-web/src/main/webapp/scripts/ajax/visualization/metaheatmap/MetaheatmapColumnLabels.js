@@ -253,16 +253,16 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 		Gemma.MetaHeatmapRotatedLabels.superclass.onRender.apply(this, arguments);
 		this.syncSize();
 
-		this.el.on('click', function(e, t) {
-					var analysisObj = this.getAnalysisObject(e, t);
-
-					if (analysisObj !== null && analysisObj !== undefined) {
-						var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(analysisObj.datasetName,
-								analysisObj.datasetShortName, analysisObj.datasetId);
-						// popup.show();
-					}
-
-				}, this);
+		this.el.on('click', function(e, t){
+			var y = e.getPageY() - Ext.get(t).getY();
+			var adjustedX = e.getPageX() - (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
+			var analysisObj = this.getAnalysisPanelByX(adjustedX);
+			
+			if (analysisObj !== null && analysisObj !== undefined) {
+				var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(analysisObj._dataColumn.datasetName, analysisObj._dataColumn.datasetShortName, analysisObj._dataColumn.datasetId);
+			}
+			
+		}, this);
 
 		this.el.on('mouseover', function(e, t) {
 			document.body.style.cursor = 'pointer';
