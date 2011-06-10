@@ -45,6 +45,8 @@
 			<Item name="For developers" description="About the Gemma framework" title="resourcesMenu.software"
 				location="http://www.chibi.ubc.ca/Gemma/resources/" />
 			<Item name="Credits" description="Credits and more" title="resourcesMenu.credits" location="http://www.chibi.ubc.ca/Gemma/resources/thanks.html" />
+			<Item name="Contact Us" title="resourcesMenu.contactUs"
+				page="/contactUs.html" />
 		</Menu>
 		<Menu name="AdminMenu" title="menu.admin" description="Admin Menu" roles="GROUP_ADMIN">
 			<Item name="LoadData" title="Add data" description="Import from GEO or ArrayExpress" page="/admin/loadExpressionExperiment.html" />

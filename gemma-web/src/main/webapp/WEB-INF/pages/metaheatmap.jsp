@@ -6,7 +6,6 @@
      <script type='text/javascript' src='/Gemma/static/heatmaplib.js'></script>
 	 
 	 <script type='text/javascript' src='/Gemma/dwr/interface/DifferentialExpressionSearchController.js'></script>
-	<!-- jwr:script src='/scripts/app/AnalysisResultsSearch.js' /-->
 
 	<script type="text/javascript">
 	
@@ -27,14 +26,5 @@
 	);
 	</script>
 </head>
-	<!-- div align="center">
-		<div style="width: 900px">
-			<div id="analysis-results-search-form-warnings" align="left"></div>
-			<div id="analysis-results-search-form" align="center"></div>
-			<br>
-			<div id="analysis-results-search-form-messages" align="left"></div>
-			<div id="analysis-results-search-form-results" align="left"></div>
-		</div>
-	</div-->
 <a href='<c:url value="/home2.html"/>'>Start a new search</a><br/><br/>
 <div id="meta-heatmap-div"></div>

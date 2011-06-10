@@ -107,12 +107,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				
 			},
 
-	// input window for creation of new groups
-	detailsWin : new Gemma.GeneSetDetailsDialog({
-				id : 'experimentDetailsWin',
-				hidden : true
-			}),
-
 	/*
 	 * set the taxon for this grid and for the toolbar to control what can be added from combo
 	 */
@@ -124,17 +118,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	initComponent : function() {
+
 		Ext.apply(this, {
 			tbar: new Gemma.ExperimentAndGroupAdderToolbar({
 				eeGrid : this
 			})
 		});
-		Ext.apply(this.detailsWin, {
-			title : 'Provide or edit experiment group details'
-				// ,suggestedName: this.queryText,
-				// suggestedDescription: 'Edited results of search for: "' +
-				// this.queryText + '". Created: ' + (new Date()).toString()
-			});
 
 		// Create RowActions Plugin
 		this.action = new Ext.ux.grid.RowActions({
@@ -167,11 +156,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}
 				});
 
-		this.detailsWin.on("commit", function(args) {
-					this.newGroupName = args.name;
-					this.newGroupDescription = args.description;
-					this.createInDatabase();
-				}.createDelegate(this));
 
 		// function to deal with user choice of what to do after editing an
 		// existing group
@@ -181,12 +165,26 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			} else if (btn === 'ok') { // ok is save
 				this.updateDatabase();
 			} else if (btn === 'yes') { // yes is save as
-				this.detailsWin.name = this.groupName;
-				this.detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
-						(new Date()).toString();
-
-				this.detailsWin.show();
-			} else {
+			
+				// input window for creation of new groups
+				var detailsWin = new Gemma.GeneSetDetailsDialog({
+					id: 'experimentDetailsWin',
+					hidden: true,
+					title: 'Provide or edit experiment group details'
+				});
+				detailsWin.on("commit", function(args){
+					this.newGroupName = args.name;
+					this.newGroupDescription = args.description;
+					this.createInDatabase();
+				}, this);
+				
+				detailsWin.name = this.groupName;
+				detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
+				(new Date()).toString();
+				
+				detailsWin.show();
+			}
+			else {
 				return;
 			}
 		}.createDelegate(this);

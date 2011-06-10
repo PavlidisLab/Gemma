@@ -98,11 +98,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}.createDelegate(this));
 	},
 
-	// input window for creation of new groups
-	detailsWin : new Gemma.GeneSetDetailsDialog({
-				id : 'geneDetailsWin',
-				hidden : true
-			}),
 	addGenes : function(data) { // for adding from combo
 				if (!data) {
 					return;
@@ -196,12 +191,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					}
 				});
 
-		this.detailsWin.on("commit", function(args) {
-					this.newGroupName = args.name;
-					this.newGroupDescription = args.description;
-					this.createInDatabase();
-				}.createDelegate(this));
-
 		// function to deal with user choice of what to do after editing an
 		// existing group
 		this.editedExistingGroup = function(btn) {
@@ -210,9 +199,27 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			} else if (btn === 'ok') { // ok is save
 				this.updateDatabase();
 			} else if (btn === 'yes') { // yes is save as
-				this.detailsWin.name = '';
-				this.detailsWin.description = '';
-				this.detailsWin.show();
+				// input window for creation of new groups
+				var detailsWin = new Gemma.GeneSetDetailsDialog({
+					id: 'experimentDetailsWin',
+					hidden: true
+				});
+				detailsWin.on("commit", function(args){
+					this.newGroupName = args.name;
+					this.newGroupDescription = args.description;
+					this.createInDatabase();
+				}, this);
+				detailsWin.on("hide", function(args){
+					this.close();
+				});
+				
+				detailsWin.name = this.groupName;
+				detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
+				(new Date()).toString();
+				
+				//this.detailsWin.name = '';
+				//this.detailsWin.description = '';
+				detailsWin.show();
 			} else {
 				return;
 			}

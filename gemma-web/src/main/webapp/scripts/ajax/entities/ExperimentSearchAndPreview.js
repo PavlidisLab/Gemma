@@ -56,7 +56,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.experimentPreviewContent.update({
 						shortName : record.get("name"),
 						name : record.get("description"),
-						id : record.get("id"),
+						id : record.data.reference.id,
 						taxon : record.get("taxonName")
 					});
 			this.experimentPreviewContent.setTitle(

@@ -623,7 +623,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					}.createDelegate(this));
 			return;
 		}
-		this.zoom(records[0], this.body.id);
+		if(!this.hidden){ // in case window was closed before it finished loading
+			this.zoom(records[0], this.body.id);
+		}
 	},
 
 	setHeatmapMode : function(b) {
@@ -1017,33 +1019,35 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 		Gemma.VisualizationWithThumbsWindow.superclass.initComponent.call(this);
 
-		this.dv.getStore().on('load', function(s, records, options) {
-
-					Ext.getCmp(this.toggleViewBtnId).enable();
-					// Ext.getCmp(this.smoothBtnId).enable();
-					Ext.getCmp(this.forceFitBtnId).enable();
-					Ext.getCmp(this.toggleLegendBtnId).enable();
-					Ext.getCmp(this.toggleSampleNamesBtnId).enable();
-					Ext.getCmp(this.downloadDataBtnId).enable();
-
-					// So initial state is sure to be okay, after restore from
-					// cookie
-					Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
-					Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Zoom out" : "Zoom in");
-					Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
-					Ext.getCmp(this.toggleSampleNamesBtnId).setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
-					// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
-					// ? "Unsmooth" : "Smooth");
-
-					if (this.heatmapMode) {
-						// Ext.getCmp(this.smoothBtnId).hide();
-						//Ext.getCmp(this.toggleLegendBtnId).hide();
-					} else {
-						// Ext.getCmp(this.smoothBtnId).show();
-						//Ext.getCmp(this.toggleLegendBtnId).show();
-					}
-
-				}, this);
+		this.dv.getStore().on('load', function(s, records, options){
+			// check in case window was closed before finished loading, will show user error otherwise
+			if (typeof Ext.getCmp(this.toggleViewBtnId) !== 'undefined') {
+				Ext.getCmp(this.toggleViewBtnId).enable();
+				// Ext.getCmp(this.smoothBtnId).enable();
+				Ext.getCmp(this.forceFitBtnId).enable();
+				Ext.getCmp(this.toggleLegendBtnId).enable();
+				Ext.getCmp(this.toggleSampleNamesBtnId).enable();
+				Ext.getCmp(this.downloadDataBtnId).enable();
+				
+				// So initial state is sure to be okay, after restore from
+				// cookie
+				Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
+				Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Zoom out" : "Zoom in");
+				Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
+				Ext.getCmp(this.toggleSampleNamesBtnId).setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
+			// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
+			// ? "Unsmooth" : "Smooth");
+			}
+			if (this.heatmapMode) {
+			// Ext.getCmp(this.smoothBtnId).hide();
+			//Ext.getCmp(this.toggleLegendBtnId).hide();
+			}
+			else {
+			// Ext.getCmp(this.smoothBtnId).show();
+			//Ext.getCmp(this.toggleLegendBtnId).show();
+			}
+			
+		}, this);
 
 		this.dv.getStore().on('loadexception', function() {
 					Ext.Msg.alert("No data", "Sorry, no data were available", function() {

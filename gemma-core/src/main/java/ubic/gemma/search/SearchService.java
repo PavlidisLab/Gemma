@@ -572,9 +572,12 @@ public class SearchService implements InitializingBean {
             children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
         }
 
-        for ( OntologyTerm child : children ) {
-            characteristicUris.add( child.getUri() );
+        if(children != null){ // will happen if there's a com.hp.hpl.jena.ontology.ConversionException
+           for ( OntologyTerm child : children ) {
+               characteristicUris.add( child.getUri() );
+           } 
         }
+        
     }
 
     /**

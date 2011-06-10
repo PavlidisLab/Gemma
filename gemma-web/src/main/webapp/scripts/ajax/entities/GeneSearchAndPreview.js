@@ -104,7 +104,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.genePreviewContent.update({
 						officialSymbol : record.get("name"),
 						officialName : record.get("description"),
-						id : record.get("id"),
+						id : record.data.reference.id,
 						taxonCommonName : record.get("taxonName")
 					});
 			this.genePreviewContent.setTitle(
@@ -431,7 +431,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.symbolListButton = new Ext.Button({
 					icon : "/Gemma/images/icons/page_upload.png",
 					cls : "x-btn-icon",
-					tooltip : "Import multiple genes",
+					tooltip : "Select multiple genes with a list of symbols or NCBI IDs",
 					disabled : false,
 					handler : function() {
 						this.geneCombo.reset();

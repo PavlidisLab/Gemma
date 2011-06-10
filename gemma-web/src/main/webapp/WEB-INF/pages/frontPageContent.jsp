@@ -9,9 +9,20 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 });
+function hideTopBar(divID) {
+  refID = document.getElementById(divID);
+	refID.style.display = "none";
+	// adjust other elements on the page
+	// leaving this hacky because we'll probably get rid of it soon
+	// resize header
+	document.getElementById('homeheaderclear').style.height = '160px';
+	// move menu bar
+	document.getElementById('nav').style.top = '-85px';
+	
+	}
 </script>
 
-		<div style="
+		<div id="topBarUpdates" style="
 		background-color: #FFFFCC;
 border: 1px solid #FFCC66;
 float: left;
@@ -20,7 +31,13 @@ margin-top: -70px;
 padding: 5px;
 width: 84%;
 text-align:center;">
-			Welcome to the cutting edge of Gemma! Please remember this is a work in progress.
+			Welcome to Gemma 2.0!
+			<a style="float:right" href="JavaScript:void(0)" onclick="hideTopBar('topBarUpdates');">
+			<img src="/Gemma/images/icons/cross.png"/></a>
+			<br/>
+			<span style="font-size: 0.9em"></>Check out our <u><a target="_blank"
+			href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">new features</a></u>, including 
+			a differential expression visualizer, experiment batch effect analysis and a new search interface.</span>
 		</div>	
 <div align="center">
 	<div style="width: 900px">
@@ -96,22 +113,6 @@ text-align:center;">
 						</div>
 					</security:authorize>
 
-					<%--Don't show this area if the user is admin. --%>
-					<security:authorize access="!hasRole('GROUP_ADMIN')">
-
-						<!-- div style="margin-bottom: 10px;">
-	<div id="contact">
-			<strong>Contacting us</strong>
-			<p class="emphasized" style="font-size: 0.90em">
-				To get emails about updates to the Gemma software, subscribe to the
-				<a href="http://lists.chibi.ubc.ca/mailman/listinfo/gemma-announce">Gemma-announce mailing list</a>. Please send bug
-				reports or feature requests
-				<a href="mailto:gemma@chibi.ubc.ca">here</a>.
-			</p>
-	</div>
-</div-->
-					</security:authorize>
-
 					<security:authorize access="hasRole('GROUP_ADMIN')">
 						<div id="adminFunctions"
 							style="margin-bottom: 10px; font-size: 0.90em;">
@@ -165,90 +166,90 @@ text-align:center;">
 									style="margin-left: 15px; margin-right: 15px">
 									<table style="white-space: nowrap">
 										<tr>
-											<td>
+											<td style="padding-right: 10px">
 												<strong>Data Summary</strong>
 											</td>
-											<td align="right" width="60px">
+											<td style="padding-right: 10px" align="right">
 												Total
 											</td>
 											<c:if test="${ drawUpdatedColumn}">
-												<td align="right" width="60px">
+												<td align="right" style="padding-right: 10px">
 													Updated
 												</td>
 											</c:if>
 											<c:if test="${ drawNewColumn}">
-												<td align="right" width="40px">
+												<td align="right">
 													New
 												</td>
 											</c:if>
 										</tr>
 										<tr>
-											<td width="350px">
+											<td style="padding-right: 10px">
 												<a
 													href='<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>'>
 													Expression Experiments: </a>
 											</td>
-											<td align="right">
+											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ expressionExperimentCount}" /> </b>
 											</td>
-											<td align="right">
+											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ updatedExpressionExperimentCount}" />
 												</b>&nbsp;&nbsp;
 											</td>
 											<td align="right">
-												<b><c:out value="${ newExpressionExperimentCount}" /> </b>&nbsp;&nbsp;
+												<b><c:out value="${ newExpressionExperimentCount}" /> </b>&nbsp;
 											</td>
 										</tr>
 										<c:forEach var="taxon" items="${ taxonCount }">
 											<tr>
-												<td>
+												<td style="padding-right: 10px">
 													&emsp;
 													<a
 														href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
 														<c:out value="${ taxon.key.scientificName}" /> </a>
 
 												</td>
-												<td align="right">
+												<td align="right" style="padding-right: 10px">
 													<c:out value="${ taxon.value}" />
 												</td>
-												<td align="right">
+												<td align="right" style="padding-right: 10px">
 													<c:out value="${ updatedPerTaxonCount[taxon.key]}" />
 													&nbsp;&nbsp;
 												</td>
 												<td align="right">
 													<c:out value="${ newPerTaxonCount[taxon.key]}" />
-													&nbsp;&nbsp;
+													&nbsp;
 												</td>
 											</tr>
 										</c:forEach>
 										<tr>
-											<td>
+											<td style="padding-right: 10px">
 												<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'>
 													Array Designs: </a>
 											</td>
-											<td align="right">
+											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ stats.arrayDesignCount }" /> </b>
 											</td>
-											<td align="right">
+											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ stats.updatedArrayDesignCount}" />
 												</b>&nbsp;&nbsp;
 											</td>
 											<td align="right">
-												<b><c:out value="${ stats.newArrayDesignCount}" /> </b>&nbsp;&nbsp;
+												<b><c:out value="${ stats.newArrayDesignCount}" /> </b>&nbsp;
 											</td>
 										</tr>
 										<tr>
-											<td>
+											<td style="padding-right: 10px">
 												Assays:
 											</td>
-											<td align="right">
+											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ stats.bioAssayCount }" /> </b>
 											</td>
-											<td align="right">
+											<td align="right" style="padding-right: 10px">
 												&nbsp;&nbsp;
 											</td>
 											<td align="right">
-												<b><c:out value="${ stats.newBioAssayCount}" /> </b>&nbsp;&nbsp;
+												<b><c:out value="${ stats.newBioAssayCount}" /> </b>&nbsp;
 											</td>
 										</tr>
 									</table>

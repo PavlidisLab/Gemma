@@ -88,6 +88,7 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/widgetTest.html" />
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/metaheatmap.html" />
+    <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/contactUs.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -1165,7 +1166,6 @@ gemma.max.fileupload.size.bytes=
 			Specifications determine what will be marshelled to and from the client
 			***************************************************************************
 		-->
-		
 		<property name="converters">
 			<map>
 				<entry key="ubic.gemma.web.remote.EntityDelegator">
