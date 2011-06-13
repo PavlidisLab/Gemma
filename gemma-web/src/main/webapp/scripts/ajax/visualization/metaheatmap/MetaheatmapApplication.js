@@ -687,7 +687,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						layout:'fit',
 						items: this.geneSelectionList,
 						bbar:['Hold \'ctrl\' to select > 1','->',{
-							text: 'Save',
+							text: 'Save selected',
 							icon: '/Gemma/images/icons/disk.png',
 							handler: this.launchGeneSelectionEditor,
 							scope: this
