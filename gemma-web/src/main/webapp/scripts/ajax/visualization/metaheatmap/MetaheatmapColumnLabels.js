@@ -301,12 +301,12 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 					this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 					this.applicationRoot._hoverDetailsPanel.update({
 								type : 'experiment',
-								datasetName : analysisObj.ownerCt.ownerCt.datasetName,
-								datasetShortName : analysisObj.datasetShortName,
-								datasetId : analysisObj.datasetId,
-								factorName : analysisObj.factorName,
-								factorCategory : analysisObj.factorCategory,
-								baseline : analysisObj.baselineFactorValue,
+								datasetName : analysisObj.dataColumn.datasetName,
+								datasetShortName : analysisObj.dataColumn.datasetShortName,
+								datasetId : analysisObj.dataColumn.datasetId,
+								factorName : analysisObj.dataColumn.factorName,
+								factorCategory : analysisObj.dataColumn.factorCategory,
+								baseline : analysisObj.dataColumn.baselineFactorValue,
 								factorValues : factorValues
 
 							});
