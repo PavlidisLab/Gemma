@@ -16,15 +16,18 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 			applicationRoot : this.applicationRoot,
 
 			_drawTopLabels : function(hiDatasetGroup, hiColumnGroup, hiColumn, hiFactorValue) {				
-				//TODO resize if needed
-				var ctx = this.el.dom.getContext("2d");
-				CanvasTextFunctions.enable(ctx);
-				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-
-				var xPosition = Gemma.MetaVisualizationConfig.cellWidth;
-				
 				var mainHeatmapPanel = this.applicationRoot._imageArea._heatmapArea;
+				var newWidth = mainHeatmapPanel.getWidth() + 200;
+
+				var ctx = this.el.dom.getContext("2d");
+				ctx.canvas.width = newWidth;
+				this.setWidth(newWidth);
 				
+				CanvasTextFunctions.enable(ctx);
+				//ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+				var xPosition = Gemma.MetaVisualizationConfig.cellWidth;				
+					
 				for (var currentDatasetGroupIndex = 0; currentDatasetGroupIndex < mainHeatmapPanel.items.getCount(); currentDatasetGroupIndex++) {
 					var dsPanel = mainHeatmapPanel.items.get(currentDatasetGroupIndex);
 					var startPosition = xPosition;
