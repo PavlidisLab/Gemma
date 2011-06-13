@@ -225,16 +225,17 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				padding: 0
 			},
 			items: [{
-				html: 'You must be ',
+				html: 'You must be logged in',
 				style: 'padding-top:3px'
-			}, new Ext.LinkButton({
+			}, 
+			/*new Ext.LinkButton({
 				text: 'logged in',
 				handler: this.login,
 				scope: this
-			}), {
+			}),*/ {
 				html: 'to save this selection.',
 				style: 'padding-top:3px'
-			}, {
+			}/*, {
 				xtype: 'button',
 				icon: '/Gemma/images/icons/arrow_refresh_small.png',
 				qtip: 'Refresh your login state',
@@ -245,7 +246,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.doLayout();
 				},
 				scope: this
-			}],
+			}*/],
 		});
 		Ext.apply(this, {
 		
