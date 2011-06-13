@@ -200,10 +200,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.updateDatabase();
 			} else if (btn === 'yes') { // yes is save as
 				// input window for creation of new groups
-				var detailsWin = new Gemma.GeneSetDetailsDialog({
-					id: 'experimentDetailsWin',
-					hidden: true
-				});
+				var detailsWin = new Gemma.GeneSetDetailsDialog();
 				detailsWin.on("commit", function(args){
 					this.newGroupName = args.name;
 					this.newGroupDescription = args.description;

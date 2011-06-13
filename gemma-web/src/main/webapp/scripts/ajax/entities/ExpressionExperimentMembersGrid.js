@@ -168,9 +168,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			
 				// input window for creation of new groups
 				var detailsWin = new Gemma.GeneSetDetailsDialog({
-					id: 'experimentDetailsWin',
-					hidden: true,
 					title: 'Provide or edit experiment group details'
+				});
+				detailsWin.on("hide", function(args){
+					this.close();
 				});
 				detailsWin.on("commit", function(args){
 					this.newGroupName = args.name;

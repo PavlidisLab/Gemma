@@ -203,7 +203,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				//this.doQuery('',true);
 				//this.lastQuery = null; // needed for query queue fix
 				
-				if(this.getTaxonId()){
 					field.lastQuery = null; // needed for query queue fix
 					// passing in taxon instead of taxonId breaks this call
 					GenePickerController.searchGenesAndGeneGroups("", this.getTaxonId(),
@@ -211,7 +210,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 										this.getStore().loadData(records);
 									}.createDelegate(this)
 						);
-				}
+				
 				/* only allowing taxon searches for now
 				 * else{
 					GenePickerController.searchGenesAndGeneGroups("", null,

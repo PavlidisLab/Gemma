@@ -10,7 +10,7 @@ Ext.onReady(function() {
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 });
 function hideTopBar(divID) {
-  refID = document.getElementById(divID);
+	refID = document.getElementById(divID);
 	refID.style.display = "none";
 	// adjust other elements on the page
 	// leaving this hacky because we'll probably get rid of it soon
@@ -18,27 +18,27 @@ function hideTopBar(divID) {
 	document.getElementById('homeheaderclear').style.height = '160px';
 	// move menu bar
 	document.getElementById('nav').style.top = '-85px';
-	
-	}
+
+}
 </script>
 
-		<div id="topBarUpdates" style="
-		background-color: #FFFFCC;
-border: 1px solid #FFCC66;
-float: left;
-margin-left: 150px;
-margin-top: -70px;
-padding: 5px;
-width: 84%;
-text-align:center;">
-			Welcome to Gemma 2.0!
-			<a style="float:right" href="JavaScript:void(0)" onclick="hideTopBar('topBarUpdates');">
-			<img src="/Gemma/images/icons/cross.png"/></a>
-			<br/>
-			<span style="font-size: 0.9em"></>Check out our <u><a target="_blank"
-			href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">new features</a></u>, including 
-			a differential expression visualizer, experiment batch effect analysis and a new search interface.</span>
-		</div>	
+<div id="topBarUpdates"
+	style="background-color: #FFFFCC; border: 1px solid #FFCC66; float: left; margin-left: 150px; margin-top: -70px; padding: 5px; width: 84%; text-align: center;">
+	Welcome to Gemma 2.0!
+	<a style="float: right" href="JavaScript:void(0)"
+		onclick="hideTopBar('topBarUpdates');"> <img
+			src="/Gemma/images/icons/cross.png" />
+	</a>
+	<br />
+	<span style="font-size: 0.9em">
+			Check out our
+			<u><a target="_blank"
+				href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">new
+					features</a>
+			</u>, including a differential expression visualizer, experiment batch
+			effect analysis and a new search interface. Looking for <a href="<c:url value="/GemmaClassic.html"/>">Gemma 1.0</a>?
+	</span>
+</div>
 <div align="center">
 	<div style="width: 900px">
 
@@ -83,12 +83,13 @@ text-align:center;">
 								expression</a> results.
 						</p>
 						<p style="font-size: 0.9em">
-							More information about the project is
-							<a href="<c:url value="/static/about.html"/>">here</a>. Gemma
-							also has a
-							<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a>
-							where you can read additional documentation, in addition to the
-							in-line help.
+							More information about the project is available
+							<a href="<c:url value="/static/about.html"/>">here</a>. Documentation for Gemma can be 
+							found throughout the website and in Gemma's 
+							<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a>, where you can also
+							read about <a target="_blank"
+										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">updates</a>. 
+							Gemma 2.0 was launched on June 20, 2011. You can still access the classic version <a href="<c:url value="/GemmaClassic.html"/>">here</a>.
 						</p>
 					</div>
 
@@ -159,8 +160,8 @@ text-align:center;">
 							<div class="roundedcornr_content_777249">
 								<div style="font-size: small; padding-bottom: 5px;">
 									<b> <a target="_blank"
-										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">Updates since 
-											<c:out value="${ updateDate}" /> </a> </b>
+										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">Updates
+											since <c:out value="${ updateDate}" /> </a> </b>
 								</div>
 								<div id="dataSummary"
 									style="margin-left: 15px; margin-right: 15px">
