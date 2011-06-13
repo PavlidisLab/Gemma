@@ -59,9 +59,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						id : record.data.reference.id,
 						taxon : record.get("taxonName")
 					});
-			this.experimentPreviewContent.setTitle(
-				'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+
-				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 experiment)');
+			this.updateTitle(this.experimentCombo.getRawValue(), 1);
 			this.experimentSelectionEditorBtn.setText('0 more - Edit');
 			this.experimentSelectionEditorBtn.enable();
 			this.experimentSelectionEditorBtn.show();
@@ -119,8 +117,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var j = 0; j < ees.size(); j++) {
 						this.experimentPreviewContent.update(ees[j]);
 					}
-					this.experimentPreviewContent.setTitle(
-						'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " experiments)");
+					this.updateTitle(this.selectedExperimentOrGroupRecord.name,ids.size());
 					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
 					this.showExperimentPreview();
 
@@ -129,9 +126,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.experimentSelectionEditorBtn.enable();
 						this.experimentSelectionEditorBtn.show();
 					}
-
+					
 				}.createDelegate(this));
-
 	},
 
 	/**
@@ -148,8 +144,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.experimentSelectionEditor.loadMask.show();
 		Ext.apply(this.experimentSelectionEditor, {
 					experimentGroupId : this.experimentGroupId,
-					selectedExperimentGroup : this.experimentCombo.getExpressionExperimentGroup(),
-					groupName : this.experimentCombo.getExpressionExperimentGroup().name
+					selectedExperimentGroup : this.selectedExperimentOrGroupRecord,
+					groupName : this.selectedExperimentOrGroupRecord.name
 				});
 		this.experimentSelectionEditor.loadExperiments(this.experimentIds, function() {
 					this.experimentSelectionEditor.loadMask.hide();
@@ -251,13 +247,11 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 							this.loadExperiments(newRecords[i].expressionExperimentIds);
 							// update record
 							this.selectedExperimentOrGroupRecord = newRecords[i];
-							this.experimentCombo.setSelected = this.selectedExperimentOrGroupRecord;
 						}
 						if (newRecords[i].name) {
-							this.experimentCombo.setRawValue(newRecords[i].name);
+							this.updateTitle(newRecords[i].name,newRecords[i].size);
 						}
 					}
-					this.experimentCombo.getStore().reload();
 					this.listModified = true;
 				}, this);
 
@@ -293,6 +287,13 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		 * **** EE PREVIEW
 		 * *************************************************************************
 		 */
+
+		this.updateTitle = function(name, size){
+			this.experimentPreviewContent.setTitle(
+				'<span style="font-size:1.2em">'+name+
+				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1)?" experiments)":" experiment)"));
+				this.experimentPreviewContent.doLayout();
+		};
 
 		this.experimentPreviewContent = new Ext.Panel({
 			width : 315,

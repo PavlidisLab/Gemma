@@ -160,8 +160,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// function to deal with user choice of what to do after editing an
 		// existing group
 		this.editedExistingGroup = function(btn) {
-			if (btn === 'no') { // no is don't save
-				this.saveToSession();
+			if (btn === 'no') { // no is cancel 
+				//this.saveToSession();
 			} else if (btn === 'ok') { // ok is save
 				this.updateDatabase();
 			} else if (btn === 'yes') { // yes is save as
@@ -470,8 +470,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				// if group being edited is session-bound, only offer to save to
 				// database
 				if (this.selectedExperimentGroup !== null
-						&& (this.selectedExperimentGroup.type.indexOf('Session') >= 0 || this.selectedExperimentGroup.type
-								.indexOf('session') >= 0)) {
+						&& (this.selectedExperimentGroup.type.toLowerCase().indexOf('session') >= 0 )) {
 
 					this.editedExistingGroup('yes'); // yes means 'save as'
 				}
@@ -479,18 +478,17 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				// if group of genes being edited belongs to the user, ask if
 				// they want to save changes
 				else if (this.selectedExperimentGroup !== null
-						&& (this.selectedExperimentGroup.type.indexOf('user') >= 0 || this.selectedExperimentGroup.type
-								.indexOf('User') >= 0)) {
+						&& (this.selectedExperimentGroup.type.toLowerCase().indexOf('user') >= 0 )) {
 					// ask user if they want to save changes
 					Ext.Msg.show({
 								title : 'Save Changes?',
-								msg : 'You have edited an existing group, '+
-										 'would you like to save your changes?<br>'+
-										 '(Unsaved lists are available until you log out.)',
+								msg : 'You have edited an <b>existing group</b>, '+
+										'how would you like to save your changes?<br>',
 								buttons : {
-									ok : 'Save',
-									yes : 'Save As...',
-									no : 'Don\'t save'
+									ok : 'Save over',
+									yes : 'Save as...',
+									//,no : 'Don\'t save'
+									no : 'Cancel'
 								},
 								// buttons: {yes:'Save As...', no:'Don\'t
 								// save'},
@@ -534,6 +532,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						// TODO error message
 						return;
 					} else {
+						datasetSets[0].type = 'userexperimentSetSession';
 						var newRecordData = datasetSets;
 						this.fireEvent('experimentListModified', newRecordData);
 						this.fireEvent('doneModification');
@@ -571,8 +570,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					return;
 				}
 				else {
-					var newRecordData = datasetSets;
 					datasetSets[0].type = 'userexperimentSet';
+					var newRecordData = datasetSets;
 					this.fireEvent('experimentListModified', newRecordData);
 					this.fireEvent('doneModification');
 				}

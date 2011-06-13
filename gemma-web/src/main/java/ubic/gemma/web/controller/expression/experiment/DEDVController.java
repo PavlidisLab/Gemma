@@ -1063,7 +1063,7 @@ public class DEDVController {
         String[] blues = {"#85c6ff","#6b90ff","#105bfe","#005589","#0090e9","#0400fe","#008998","#3e3c90","#020090","#105bfe"}; //10
         String[] purples = {"#d19bff","#a30064","#7d00ea","#893984","#f05eb8","#9c00d0","#b66ccf","#e7008f","#670089","#bf00b2","#890080","#8865a6","#3f0076"}; //13
         String[] redYellows = {"#ffd78d","#d85d00","#b40101","#944343","#ff6d48","#d36b62","#ff8001","#c74f34","#d89561","#f8bc2e"}; //10
-        String[] greens= {"#98da95","#36b52f","#257e21","#3ab97c","#a9da5f","#4cfe42","#73c000","#0fa345","#99fe01","#508500"}; //10
+        String[] greens= {"#98da95","#82b998","#36b52f","#257e21","#38b990","#a9da5f","#4cfe42","#73c000","#0fa345","#99fe01","#508500"}; //10
         String[][] colourArrs = {blues,greens,purples,redYellows};
         int j = 0;
         

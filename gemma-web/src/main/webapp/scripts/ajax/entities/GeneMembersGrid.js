@@ -195,7 +195,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		// existing group
 		this.editedExistingGroup = function(btn) {
 			if (btn === 'no') { // no is don't save
-				this.createInSession();
+				//this.createInSession();
 			} else if (btn === 'ok') { // ok is save
 				this.updateDatabase();
 			} else if (btn === 'yes') { // yes is save as
@@ -526,8 +526,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				// if group being edited is session-bound, only offer to save to
 				// database
 				if (this.selectedGeneGroup !== null
-						&& (this.selectedGeneGroup.type.indexOf('Session') >= 0 || this.selectedGeneGroup.type
-								.indexOf('session') >= 0)) {
+						&& (this.selectedGeneGroup.type.toLowerCase().indexOf('session') >= 0 )) {
 
 					this.editedExistingGroup('yes'); // yes means 'save as'
 				}
@@ -539,13 +538,13 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					// ask user if they want to save changes
 					Ext.Msg.show({
 								title : 'Save Changes?',
-								msg : 'You have edited an existing group, '+
-										'would you like to save your changes?<br>'+
-										'(Unsaved lists are available until you log out.)',
+								msg : 'You have edited an <b>existing group</b>, '+
+										'how would you like to save your changes?<br>',
 								buttons : {
-									ok : 'Save',
-									yes : 'Save As...',
-									no : 'Don\'t save'
+									ok : 'Save over',
+									yes : 'Save as...',
+									//,no : 'Don\'t save'
+									no : 'Cancel'
 								},
 								fn : this.editedExistingGroup,
 								icon : Ext.MessageBox.QUESTION
@@ -586,11 +585,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 						// TODO error message
 						return;
 					} else {
-						var newRecordData = geneSets;
-						for(geneSer in geneSets){
-							geneSet.type = "usergeneSet"; // TODO I need to use type from backend
-						}
-						this.fireEvent('geneListModified', newRecordData);
+						geneSets[0].type = "usergeneSetSession"; // TODO I want to use type from backend
+						this.fireEvent('geneListModified', geneSets);
 						this.fireEvent('doneModification');
 					}
 				}.createDelegate(this));
@@ -627,8 +623,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 						return;
 					}
 					else {
-						var newRecordData = geneSets;
-						this.fireEvent('geneListModified', newRecordData);
+						geneSets[0].type = "usergeneSet"; // TODO I want to use type from backend
+						this.fireEvent('geneListModified', geneSets);
 						this.fireEvent('doneModification');
 					}
 				}.createDelegate(this));

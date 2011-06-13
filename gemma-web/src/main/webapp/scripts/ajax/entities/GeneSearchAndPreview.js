@@ -42,9 +42,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneSelectionEditor.loadMask.show();
 		Ext.apply(this.geneSelectionEditor, {
 					geneGroupId : this.geneGroupId,
-					selectedGroup : this.geneCombo.selectedGeneGroup,
-					//selectedGeneGroup : this.geneCombo.selectedGeneGroup,
-					groupName : (this.geneCombo.selectedGeneGroup) ? this.geneCombo.selectedGeneGroup.name : null,
+					selectedGeneGroup : this.selectedGeneOrGroupRecord,
+					groupName : this.selectedGeneOrGroupRecord.name,
 					taxonId : this.searchForm.getTaxonId(),
 					taxonName : this.searchForm.getTaxonName()
 				});
@@ -107,9 +106,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						id : record.data.reference.id,
 						taxonCommonName : record.get("taxonName")
 					});
-			this.genePreviewContent.setTitle(
-				'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()+
-				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(1 gene)');
+			this.updateTitle(this.selectedGeneOrGroupRecord.name, 1);
 			this.geneSelectionEditorBtn.setText('0 more - Edit');
 			this.geneSelectionEditorBtn.enable();
 			this.geneSelectionEditorBtn.show();
@@ -158,9 +155,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var i = 0; i < genes.size(); i++) {
 						this.genePreviewContent.update(genes[i]);
 					}
-					this.genePreviewContent.setTitle(
-						'<span style="font-size:1.2em">'+this.geneCombo.getRawValue()+
-						'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " genes)");
+					this.updateTitle(this.selectedGeneOrGroupRecord.name,ids.size());
 				
 					this.geneSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
 					this.showGenePreview();
@@ -460,11 +455,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					this.selectedGeneOrGroupRecord = newRecords[i];
 				}
 				if (newRecords[i].name) {
-					this.geneCombo.setRawValue(newRecords[i].name);
+					this.updateTitle(newRecords[i].name, newRecords[i].size);
 				}
-				// this.geneCombo.setTaxon(newRecords[i].taxonId);
 			}
-				this.geneCombo.getStore().reload();
 				this.listModified = true;
 			}, this);
 
@@ -498,6 +491,11 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		 * ***************************************************************************
 		 */
 
+		this.updateTitle = function(name, size){
+			this.genePreviewContent.setTitle(
+				'<span style="font-size:1.2em">'+name+
+				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1)?" genes)":" gene)"));
+		};
 		// use this.genePreviewContent.update("one line of gene text"); to write
 		// to this panel
 		this.genePreviewContent = new Ext.Panel({
