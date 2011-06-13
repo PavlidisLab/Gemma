@@ -239,9 +239,14 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         if ( log.isDebugEnabled() )
             log.debug( "Factor description: " + factor.getDescription() + ", number of factor values: "
                     + factor.getFactorValues().size() );
-
+        
         vizColumn.setBaselineFactorValue( getFactorValueString( resultSet.getBaselineGroup() ) );
-        vizColumn.setBaselineFactorValueId( resultSet.getBaselineGroup().getId() );
+        if(resultSet.getBaselineGroup() != null){
+            vizColumn.setBaselineFactorValueId( resultSet.getBaselineGroup().getId() );
+        }else{
+            log.warn("resultSet.getBaselineGroup() returned null");
+        }
+        
 
         vizColumn.setFactorName( factor.getName() );
         vizColumn.setFactorDescription( factor.getDescription() );

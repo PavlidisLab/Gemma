@@ -303,16 +303,16 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 					this.applicationRoot._hoverDetailsPanel.show();
 					this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 					this.applicationRoot._hoverDetailsPanel.update({
-								type : 'experiment',
-								datasetName : analysisObj.dataColumn.datasetName,
-								datasetShortName : analysisObj.dataColumn.datasetShortName,
-								datasetId : analysisObj.dataColumn.datasetId,
-								factorName : analysisObj.dataColumn.factorName,
-								factorCategory : analysisObj.dataColumn.factorCategory,
-								baseline : analysisObj.dataColumn.baselineFactorValue,
-								factorValues : factorValues
-
-							});
+						type: 'experiment',
+						datasetName: analysisObj.dataColumn.datasetName,
+						datasetShortName: analysisObj.dataColumn.datasetShortName,
+						datasetId: analysisObj.dataColumn.datasetId,
+						factorName: analysisObj.dataColumn.factorName,
+						factorCategory: analysisObj.dataColumn.factorCategory,
+						baseline: (analysisObj.dataColumn.baselineFactorValue === "null")?"-":analysisObj.dataColumn.baselineFactorValue,
+						factorValues: factorValues
+					
+					});
 				}
 			}
 
