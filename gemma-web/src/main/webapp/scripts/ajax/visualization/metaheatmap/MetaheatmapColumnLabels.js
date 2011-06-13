@@ -13,29 +13,27 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 			},
 			_data : this.visualizationData,
 			_datasetGroupNames : this.datasetGroupNames,
-			_heatmapContainer : null,
-			_setHeatmapContainer : function(container) {
-				this._heatmapContainer = container;
+			applicationRoot : this.applicationRoot,
 
-			},
-
-			_drawTopLabels : function(hiDatasetGroup, hiColumnGroup, hiColumn, hiFactorValue) {
+			_drawTopLabels : function(hiDatasetGroup, hiColumnGroup, hiColumn, hiFactorValue) {				
+				//TODO resize if needed
 				var ctx = this.el.dom.getContext("2d");
 				CanvasTextFunctions.enable(ctx);
 				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 				var xPosition = Gemma.MetaVisualizationConfig.cellWidth;
-
-				for (var currentDatasetGroupIndex = 0; currentDatasetGroupIndex < this._heatmapContainer.items
-						.getCount(); currentDatasetGroupIndex++) {
-					var dsPanel = this._heatmapContainer.items.get(currentDatasetGroupIndex);
+				
+				var mainHeatmapPanel = this.applicationRoot._imageArea._heatmapArea;
+				
+				for (var currentDatasetGroupIndex = 0; currentDatasetGroupIndex < mainHeatmapPanel.items.getCount(); currentDatasetGroupIndex++) {
+					var dsPanel = mainHeatmapPanel.items.get(currentDatasetGroupIndex);
 					var startPosition = xPosition;
 
 					var alternateColors = 0;
 					for (var currentDatasetColumnGroupIndex = 0; currentDatasetColumnGroupIndex < dsPanel.items
 							.getCount(); currentDatasetColumnGroupIndex++) {
 						var datasetColumnGroupPanel = dsPanel.items.get(currentDatasetColumnGroupIndex);
-						var datasetShortName = dsPanel.dataColumns[currentDatasetColumnGroupIndex].datasetShortName;
+						var datasetShortName = datasetColumnGroupPanel.datasetShortName;
 
 						if (datasetColumnGroupPanel.isFiltered === false) {
 							if (alternateColors == 1) {

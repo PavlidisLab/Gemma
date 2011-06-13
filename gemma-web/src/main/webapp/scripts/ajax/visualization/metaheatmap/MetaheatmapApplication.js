@@ -414,13 +414,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				handler : function() {
 					Ext.Msg.alert("Download Results", "Coming soon!");
 				}
-			}/*
-				 * , { xtype: 'button', x: 5, y: 29, ref: 'miniWindowButton',
-				 * text: 'Pvalue', enableToggle: true, listeners: { toggle:
-				 * function(target, checked){ if (checked) {
-				 * this.MiniWindowTool.show(); } else {
-				 * this.MiniWindowTool.hide(); } }, scope: this } }
-				 */
+			}
 			],
 			items : [{
 				// a window for displaying details as elements of the image are
@@ -717,15 +711,15 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				width : Gemma.MetaVisualizationConfig.panelWidth - 300,
 				height : Gemma.MetaVisualizationConfig.panelHeight - 30,
 				items : [{
-				x:5,
-				y:5,
-				xtype:'panel',
-				html:'<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
-						'<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
-				border:false,
-				width: 180,
-				height: 100
-			},{
+							x:5,
+							y:5,
+							xtype:'panel',
+							html:'<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
+							'<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
+							border:false,
+							width: 180,
+							height: 100
+						}, {
 							xtype : 'metaVizGeneLabels',
 							height : Gemma.MetaVisualizationUtils
 									.calculateColumnHeight(this.visualizationData.geneNames),
@@ -766,7 +760,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
 
 		this._hoverDetailsPanel.hide();
-		this._imageArea.topLabelsPanel._setHeatmapContainer(this._imageArea._heatmapArea);
 		this._imageArea._heatmapArea._setTopLabelsBox(this._rotatedLabelsBox);
 
 		this.TOTAL_NUMBER_OF_ROWS = 0;
@@ -784,8 +777,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	onRender : function() {
 		Gemma.MetaHeatmapApp.superclass.onRender.apply(this, arguments);
 
-		//this._hoverDetailsPanel.show();
-		
 		if(this.initGeneSort){
 			this._toolPanels._sortPanel._geneSort.setValue(this.initGeneSort);
 		}
@@ -793,15 +784,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this._toolPanels._sortPanel._experimentSort.setValue(this.initExperimentSort);
 		}
 		
-		// this.MiniWindowTool.show();
-		// this.el.on('mousemove', function(event,target) {
-		// if (this.miniWindowButton.pressed == true) {
-		// var x = event.getPageX()+10;
-		// var y = event.getPageY()+15;
-		// this.MiniWindowTool.setPosition(x,y);
-		// }
-		// }, this );
-
 	},
 	afterRender : function() {
 		Gemma.MetaHeatmapApp.superclass.afterRender.apply(this, arguments);

@@ -153,6 +153,7 @@ Gemma.MetaHeatmapDatasetColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePan
 			
 			datasetColumnGroupIndex: this.datasetColumnGroupIndex,			
 			datasetName: this.datasetName,			
+			datasetShortName : this.datasetShortName,
 			
 			overallDifferentialExpressionScore: null,
 			specificityScore: null												
@@ -228,6 +229,7 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 		var tempColumns = [];
 		var columnGroup;
 		var datasetName = this.dataColumns[0].datasetName;
+		var datasetShortName = this.dataColumns[0].datasetShortName;
 		tempColumns.push(this.dataColumns[0]);
 		for (var i = 1; i < this.dataColumns.length; i++) {			
 			if (datasetName == this.dataColumns[i].datasetName) {
@@ -237,6 +239,7 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 											{ applicationRoot: this.applicationRoot,
 											  height: this.height,
 											  datasetName: datasetName,
+											  datasetShortName : datasetShortName,
 											  dataColumns: tempColumns,
 											  datasetColumnGroupIndex: iGroupIndex,
 											  datasetGroupIndex: this.datasetGroupIndex } );				
@@ -245,6 +248,7 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 
 				initialWidth += columnGroup.width;
 				datasetName = this.dataColumns[i].datasetName;
+				datasetShortName = this.dataColumns[i].datasetShortName;
 				tempColumns = [];
 				tempColumns.push( this.dataColumns[i] );
 			}			
@@ -253,6 +257,7 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 											{ applicationRoot: this.applicationRoot,
 											  height: this.height,
 											  datasetName: datasetName,
+											  datasetShortName: datasetShortName,
 											  dataColumns: tempColumns,
 											  columnGroupIndex: iGroupIndex,															
 											  datasetGroupIndex: this._datasetGroupIndex } );				

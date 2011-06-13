@@ -287,12 +287,10 @@ public class CompositeSequenceController extends BaseController {
             if ( results.containsKey( blatResult ) ) {
                 results.get( blatResult ).addGene( geneProduct, gene );
             } else {
-            	CompositeSequenceValueObject cs_vo = new CompositeSequenceValueObject();
-            	
                 GeneMappingSummary summary = new GeneMappingSummary();
                 summary.addGene( geneProduct, gene );
                 summary.setBlatResult( blatResult );
-                summary.setCompositeSequence(cs_vo);
+                summary.setCompositeSequence(CompositeSequenceValueObject.fromEntity(cs));
                 results.put( blatResult, summary );
             }
 
