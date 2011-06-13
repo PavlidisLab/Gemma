@@ -589,6 +589,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		ExpressionExperimentSetController.updateMembers(groupId, eeIds, function(msg) {
 					this.selectedExperimentGroup.memberIds = eeIds;
 					this.selectedExperimentGroup.eeIds = eeIds;
+					this.selectedExperimentGroup.expressionExperimentIds = eeIds;
 
 					this.fireEvent('experimentListModified', [this.selectedExperimentGroup]);
 					this.fireEvent('doneModification');
