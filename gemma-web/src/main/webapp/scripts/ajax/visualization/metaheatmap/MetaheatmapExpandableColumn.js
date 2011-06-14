@@ -105,8 +105,12 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			for (var factorValueIndex = 0; factorValueIndex < this.factorValueIds.length; factorValueIndex++) {
 				var factorValueId = this.factorValueIds[factorValueIndex];
 				var vizValue = null
-				if (typeof geneContrastsInfo !== 'undefined' && geneContrastsInfo !== null && typeof geneContrastsInfo[factorValueId] !== 'undefined') {
-					vizValue = geneContrastsInfo[factorValueId].foldChangeValue;				
+				if (typeof geneContrastsInfo !== 'undefined' && geneContrastsInfo !== null) {
+					if ( typeof geneContrastsInfo[factorValueId] === 'undefined' || geneContrastsInfo[factorValueId] === null) {
+						vizValue = 0;				
+					} else {
+						vizValue = geneContrastsInfo[factorValueId].foldChangeValue;										
+					}
 				}					
 				var color = this._discreteColorRangeContrasts.getCellColorString(vizValue);
 				this.drawHeatmapCell_(ctx, color, geneIndex, factorValueIndex);

@@ -33,7 +33,7 @@ Gemma.MetaVisualizationConfig.rowCellSelectColor = 'pink';
 Gemma.MetaVisualizationConfig.columnHighlightColor = 'pink';
 Gemma.MetaVisualizationConfig.analysisLabelHighlightColor = 'rgb(255,140,0)';
 Gemma.MetaVisualizationConfig.baselineFactorValueColor = 'rgb(128, 0, 0)';
-Gemma.MetaVisualizationConfig.factorValueDefaultColor = 'rgb(46,139,87)';
+Gemma.MetaVisualizationConfig.factorValueDefaultColor = 'rgb(0,0,200)';
 Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor1 = 'rgba(10,100,10, 0.1)';
 Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor2 = 'rgba(10,100,10, 0.05)';
 
@@ -66,12 +66,12 @@ Gemma.MetaVisualizationConfig.basicColourRange = new org.systemsbiology.visualiz
 		});
 
 Gemma.MetaVisualizationConfig.contrastsColourRange = new org.systemsbiology.visualization.DiscreteColorRange(20, {
-			min : -2,
-			max : 2
+			min : -3,
+			max : 3
 		}, {
 			maxColor : {
 				r : 0,
-				g : 200,
+				g : 255,
 				b : 255,
 				a : 1
 			},

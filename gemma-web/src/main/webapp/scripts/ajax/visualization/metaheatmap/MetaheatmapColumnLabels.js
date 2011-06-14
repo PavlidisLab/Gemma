@@ -98,10 +98,10 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 									for (var i = 0; i < dColumn.factorValueIds.length; i++) {
 										if (i === 0) {
 											if(dColumn.miniPieValue>0){
-												MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
+												MiniPieLib.drawMiniPie(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth + 5, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
 													Gemma.MetaVisualizationConfig.miniPieColor, dColumn.miniPieValue);
 											}else{
-												MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
+												MiniPieLib.drawMiniPie(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth + 5, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
 													Gemma.MetaVisualizationConfig.miniPieColorInvalid, 360);
 											}
 											
@@ -136,11 +136,11 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 										factorText = Ext.util.Format.ellipsis(factorText, 25, false);
 										
 										if (dColumn.miniPieValue > 0) {
-											MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight - 5,
+											MiniPieLib.drawMiniPie(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth + 5, Gemma.MetaVisualizationConfig.columnLabelHeight - 5,
 											 9, Gemma.MetaVisualizationConfig.miniPieColor, dColumn.miniPieValue);
 										}
 										else {
-											MiniPieLib.drawMiniPie(ctx, xPosition - 4, Gemma.MetaVisualizationConfig.columnLabelHeight - 5,
+											MiniPieLib.drawMiniPie(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth + 5, Gemma.MetaVisualizationConfig.columnLabelHeight - 5,
 											 9, Gemma.MetaVisualizationConfig.miniPieColorInvalid, 360);
 										}
 										if (hiDatasetGroup === currentDatasetGroupIndex &&
