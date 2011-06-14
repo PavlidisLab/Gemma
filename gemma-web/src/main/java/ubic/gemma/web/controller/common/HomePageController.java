@@ -18,12 +18,18 @@
  */
 package ubic.gemma.web.controller.common;
 
+import java.text.DateFormat;
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.apache.commons.lang.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,15 +37,21 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.web.controller.WebConstants;
 
 /**
- * Responsible for display of the Gemma home page.
+ * Responsible for display of the Gemma 2.0 home page.
  * 
- * @author joseph
+ * Based on original HomePageController.java
+ * 
+ * @author thea
  * @version $Id$
  */
 @Controller
@@ -71,7 +83,7 @@ public class HomePageController {
         otherTaxa.setIsSpecies( false );
     }
 
-    @RequestMapping("/mainMenu.html")
+    @RequestMapping(WebConstants.HOME_PAGE)
     public ModelAndView showHomePage() throws Exception {
 
         /*
@@ -90,7 +102,7 @@ public class HomePageController {
     public void updateCounts() {
         Map<String, Long> stats = new HashMap<String, Long>();
 
-        long bioAssayCount = bioAssayService.countAll();
+        long bioAssayCount = bioAssayService.countAll(); 
         long arrayDesignCount = arrayDesignService.countAll();
 
         /*
@@ -102,8 +114,9 @@ public class HomePageController {
                 return o1.getScientificName().compareTo( o2.getScientificName() );
             }
         } );
+        
         eesPerTaxon.putAll( expressionExperimentService.getPerTaxonCount() );
-
+        
         long expressionExperimentCount = 0;
         long otherTaxaEECount = 0;
         for ( Iterator<Taxon> it = eesPerTaxon.keySet().iterator(); it.hasNext(); ) {
@@ -122,10 +135,50 @@ public class HomePageController {
         }
 
         WhatsNew wn = whatsNewService.retrieveReport();
+                
+        if(wn == null){
+        	Calendar c = Calendar.getInstance();
+        	Date date = c.getTime();
+        	date = DateUtils.addWeeks( date, -1 );
+        	wn = whatsNewService.getReport( date );
+        }
+        if(wn != null){
+        	 //Get count for new assays
+        	int newAssayCount = wn.getNewAssayCount();
+                
+        	int newExpressionExperimentCount = (wn.getNewExpressionExperiments()!=null)?
+        	                                            wn.getNewExpressionExperiments().size():0;
+        	int updatedExpressionExperimentCount = (wn.getUpdatedExpressionExperiments() != null)?
+        	                                            wn.getUpdatedExpressionExperiments().size():0;
+           
+            /*Store counts for new and updated experiments by taxonId*/
+            Map<Taxon, Long> newEEsPerTaxon = wn.getNewEECountPerTaxon();
+            Map<Taxon, Long> updatedEEsPerTaxon = wn.getUpdatedEECountPerTaxon();
+        
+        	//Get count for new and updated array designs
+            int newArrayCount = (wn.getNewArrayDesigns()!=null)? wn.getNewArrayDesigns().size():0;
+            int updatedArrayCount = (wn.getUpdatedArrayDesigns()!=null)? wn.getUpdatedArrayDesigns().size():0;
+        	
+        	boolean drawNewColumn = (newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0)? true:false;
+        	boolean drawUpdatedColumn = (updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 )? true:false;
+        	String date = (wn.getDate() != null)?DateFormat.getDateInstance(DateFormat.LONG).format(wn.getDate()): "";
+        	date = date.replace( '-', ' ' );
 
+        	mav.addObject( "updateDate",  date);
+        	mav.addObject( "drawNewColumn", drawNewColumn);
+        	mav.addObject( "drawUpdatedColumn", drawUpdatedColumn);
+        	if(newAssayCount != 0) stats.put( "newBioAssayCount", new Long(newAssayCount) );
+        	if(newArrayCount != 0) stats.put( "newArrayDesignCount", new Long(newArrayCount));
+        	if(updatedArrayCount != 0) stats.put( "updatedArrayDesignCount", new Long(updatedArrayCount));
+            if(newExpressionExperimentCount != 0) mav.addObject( "newExpressionExperimentCount",  newExpressionExperimentCount);
+            if(updatedExpressionExperimentCount != 0) mav.addObject( "updatedExpressionExperimentCount", updatedExpressionExperimentCount);
+        	mav.addObject( "newPerTaxonCount", newEEsPerTaxon );
+        	mav.addObject( "updatedPerTaxonCount", updatedEEsPerTaxon );
+        }
+               
         stats.put( "bioAssayCount", bioAssayCount );
         stats.put( "arrayDesignCount", arrayDesignCount );
-
+        
         mav.addObject( "stats", stats );
         mav.addObject( "taxonCount", eesPerTaxon );
         mav.addObject( "expressionExperimentCount", expressionExperimentCount );

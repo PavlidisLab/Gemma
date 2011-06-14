@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.util.EntityNotFoundException;
 
@@ -270,11 +271,11 @@ public class BioMaterialController {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
             String message = "Must provide a numeric biomaterial id";
-            return new ModelAndView( "mainMenu.html" ).addObject( "message", message );
+            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", message );
         }
 
         if ( id == null ) {
-            return new ModelAndView( "mainMenu.html" ).addObject( "message", "Must provide a biomaterial id" );
+            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", "Must provide a biomaterial id" );
         }
 
         BioMaterial bioMaterial = bioMaterialService.load( id );

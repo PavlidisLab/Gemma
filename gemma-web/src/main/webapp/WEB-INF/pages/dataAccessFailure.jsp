@@ -9,7 +9,7 @@
 		Data Access Failure
 		</content>
 
-		<a href="mainMenu.html" onclick="history.back();return false">&#171; Back</a>
+		<a href="home.html" onclick="history.back();return false">&#171; Back</a>
 
 		<Gemma:exception exception="${requestScope.exception}" />
 

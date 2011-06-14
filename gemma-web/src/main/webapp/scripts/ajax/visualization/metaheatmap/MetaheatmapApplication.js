@@ -669,7 +669,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						autoScroll: true,
 						items: this.eeSelectionList,
 						bbar:['Hold \'ctrl\' to select > 1','->',{
-							text: 'Save Selected',
+							text: 'Save Selection',
 							icon: '/Gemma/images/icons/disk.png',
 							handler: this.launchExperimentSelectionEditor,
 							scope: this
@@ -687,7 +687,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						layout:'fit',
 						items: this.geneSelectionList,
 						bbar:['Hold \'ctrl\' to select > 1','->',{
-							text: 'Save selected',
+							text: 'Save Selection',
 							icon: '/Gemma/images/icons/disk.png',
 							handler: this.launchGeneSelectionEditor,
 							scope: this
@@ -902,7 +902,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		}
 		var queryStart = document.URL.indexOf("?");
 		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
-		url = url.replace('home2','metaheatmap');
+		url = url.replace('home','metaheatmap');
 		
 		var noGenes = true;
 		var noExperiments = true;
@@ -925,14 +925,16 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			noExperiments = false;
 		}	
 		if (typeof state.experimentSessionGroupQueries !== 'undefined' && 
+				typeof state.experimentSessionGroupQueries[0] !== 'undefined' && 
 				state.experimentSessionGroupQueries !== null && 
 				state.experimentSessionGroupQueries.length !== 0) {
 			url += String.format("eq={0}&", state.experimentSessionGroupQueries.join(","));
 			noExperiments = false;
 		}
 		if (typeof state.geneSessionGroupQueries !== 'undefined' && 
+				typeof state.geneSessionGroupQueries[0] !== 'undefined' && 
 				state.geneSessionGroupQueries !== null && 
-				state.geneSessionGroupQueries.length !== 0) {
+				state.geneSessionGroupQueries.length > 0) {
 			url += String.format("gq={0}&", state.geneSessionGroupQueries.join(","));
 			noGenes=false;
 		}
@@ -969,7 +971,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							"<b>Unsaved groups will not be included in this link.</b> "+
 							"In order to keep these groups included in your visualization, please log in and save your unsaved group(s).<br><br>":"";
 		*/
-		if(url === null){
+		if(url === null && warning === ""){
 			url= "Error creating your link."
 		}
 		Ext.Msg.alert("Bookmark or sharable link",warning+"Use this link to re-run your search:<br> "+url);

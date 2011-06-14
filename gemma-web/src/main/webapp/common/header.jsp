@@ -4,7 +4,7 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <c:if test="${pageContext.request.locale.language != 'en'}">
 	<div id="switchLocale">
-		<a href="<c:url value='/mainMenu.html?locale=en'/>"><fmt:message key="webapp.name" /> in English</a>
+		<a href="<c:url value='/home.html?locale=en'/>"><fmt:message key="webapp.name" /> in English</a>
 	</div>
 </c:if>
 
@@ -14,18 +14,44 @@
 	</div>
 </c:if>
 
-<div id="search">
-	<%@ include file="/common/search.jsp"%>
-</div>
 <div id="branding">
 
 	<div id="headerLeft">
-		<a href="<c:url value='/mainMenu.html'/>"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" />
+		<a href="<c:url value='/home.html'/>"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" />
 		</a>
 	</div>
-
-
 </div>
+
+
+
+	<script type="text/javascript">
+	/*var menu = new Ext.Toolbar({
+	renderTo: document.body,
+	width:500,
+	floating:false,
+	items:[
+	{
+		xtype: 'button',
+		text:'Home'
+	},{
+		    xtype: 'button',
+            text: 'Browse',
+			menu: [{text: 'Genes'},{text: 'Gene Groups'},{text: 'Experiments'},{text: 'Experiment Groups'},{text: 'Arrays'}]
+	},{
+		    xtype: 'button',
+            text: 'Tools',
+			menu: [{text: 'Load data'},{text: 'Edit Profile'}]
+	},{
+		    xtype: 'button',
+            text: 'Manage Groups',
+			menu: [{text: 'Gene Groups'},{text: 'Experiment Groups'},{text: 'User Groups'}]
+	}]
+	});
+	*/
+
+	</script>
+
+
 
 <%-- Put constants into request scope --%>
 <Gemma:constants scope="request" />

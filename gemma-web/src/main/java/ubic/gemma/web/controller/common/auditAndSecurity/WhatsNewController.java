@@ -33,6 +33,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
+import ubic.gemma.web.controller.WebConstants;
 
 /**
  * Controller to provide information on "what's new" in the system
@@ -71,7 +72,7 @@ public class WhatsNewController {
      */
     @RequestMapping("/generateCache.html")
     public ModelAndView generateCache( HttpServletRequest request, HttpServletResponse response ) {
-        ModelAndView mav = new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
+        ModelAndView mav = new ModelAndView( new RedirectView( WebConstants.HOME_URL ) );
 
         Calendar c = Calendar.getInstance();
         Date date = c.getTime();

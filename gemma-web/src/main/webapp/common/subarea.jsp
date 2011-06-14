@@ -22,7 +22,7 @@
 	</p>
 		<p style="font-size: 0.9em">
 		Want to see what we're working on? Check out our work in progress for the 
-		<a href="/Gemma/home2.html">latest version of Gemma</a>.
+		<a href="/Gemma/home.html">latest version of Gemma</a>.
 	</p>
 </div>
 

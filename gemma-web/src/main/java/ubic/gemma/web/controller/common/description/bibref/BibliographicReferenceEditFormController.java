@@ -32,6 +32,7 @@ import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.util.BeanPropertyCompleter;
 import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.WebConstants;
 
 /**
  * Supports editing of bibliographic references.
@@ -51,7 +52,7 @@ public class BibliographicReferenceEditFormController extends BaseFormController
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
             Object command, BindException errors ) throws Exception {
         if ( request.getParameter( "cancel" ) != null ) {
-            return new ModelAndView( new RedirectView( "mainMenu.html" ) );
+            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE ) );
         }
 
         return super.processFormSubmission( request, response, command, errors );

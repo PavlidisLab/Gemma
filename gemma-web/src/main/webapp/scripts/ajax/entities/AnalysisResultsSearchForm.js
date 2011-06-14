@@ -194,11 +194,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				trimmedRecords.push(rec);
 			}else if(rec.memberIds){
 				var trimmedIds = rec.memberIds.slice(0, (max - runningCount));
-				rec.memberIds = trimmedIds;
-			 	rec.reference = null;
-				rec.type = null;
-			 	rec.name = "Trimmed " + rec.name;
-				trimmedRecords.push(rec);
+				// clone the record so you don't effect the original
+				var trimmedRec = Object.clone(rec);
+
+				trimmedRec.memberIds = trimmedIds;
+			 	trimmedRec.reference = null;
+				trimmedRec.type = null;
+			 	trimmedRec.name = "Trimmed " + rec.name;
+				trimmedRecords.push(trimmedRec);
 			}
 		}
 		return trimmedRecords;
@@ -520,7 +523,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (csc.dirty) {
 			url += "&dirty=1";
 		}
-		url = url.replace("home2", "searchCoexpression");
+		url = url.replace("home", "searchCoexpression");
 
 		return url;
 	},
@@ -666,7 +669,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			}
 		}
 
-		url = url.replace("home2", "diff/diffExpressionSearch");
+		url = url.replace("home", "diff/diffExpressionSearch");
 
 		return url;
 	},
@@ -995,7 +998,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 								html : 'or',
 								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding: 7px'
 							}, this.diffExToggle, {
-								html : 'in&hellip;',
+								html : 'in:',//'in&hellip;',
 								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding-left: 7px'
 							}]
 
@@ -1061,10 +1064,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						defaults: {
 							border: false
 						},
-						items: [this.theseExperimentsPanel, this.experimentChoosers, {
-							width: 340,
-							html: 'Example: search for Alzheimer\'s and select all human experiments <br> '
-						}]
+						items: [this.theseExperimentsPanel, this.experimentChoosers]
 					}, {
 						html: ' based on ',
 						style: 'font-size:1.7em;padding-top: 32px;margin-left: -15px;margin-right: -12px;'
@@ -1072,9 +1072,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						defaults: {
 							border: false
 						},
-						items: [this.theseGenesPanel, this.geneChoosers, {
-							html: '<div style="width:340px ; padding-left:10px">Example: search for "map kinase" and select a GO group<br>'
-						}]
+						items: [this.theseGenesPanel, this.geneChoosers]
 					}, {
 						style:'padding:20 0 0 0px;margin:0px;',
 						items: [{
@@ -1196,14 +1194,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (typeof this.geneChoosers.items !== 'undefined') {
 			this.geneChoosers.items.each(function() {
 						if (this.xtype === 'geneSearchAndPreview') {
-							this.geneSelectionEditorBtn.hide(); // needed here
-							// in case 'go'
-							// is pressed
-							// before
-							// preview is
-							// done loading
-							this.genePreviewContent.collapse();
-
+							this.collapsePreview();
 						}
 					});
 		}
@@ -1213,7 +1204,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (typeof this.experimentChoosers.items !== 'undefined') {
 			this.experimentChoosers.items.each(function() {
 						if (this.xtype === 'experimentSearchAndPreview') {
-							this.experimentPreviewContent.collapse();
+							this.collapsePreview();
 						}
 					});
 		}

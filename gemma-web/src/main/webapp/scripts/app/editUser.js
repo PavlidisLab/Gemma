@@ -34,7 +34,7 @@ Ext.onReady(function() {
 													url : this.url,
 													method : 'POST',
 													success : function() {
-														var target = 'mainMenu.html';
+														var target = 'home.html';
 														window.location = target;
 													},
 													failure : function(form, action) {
@@ -98,7 +98,7 @@ Ext.onReady(function() {
 									type : 'cancel',
 									minWidth : 75,
 									handler : function() {
-										window.location = 'mainMenu.html';
+										window.location = 'home.html';
 									}
 								}, {
 									text : 'Submit',
@@ -110,7 +110,7 @@ Ext.onReady(function() {
 													url : this.url,
 													method : 'POST',
 													success : function() {
-														var target = 'mainMenu.html';
+														var target = 'home.html';
 														window.location = target;
 													},
 													failure : function(form, action) {

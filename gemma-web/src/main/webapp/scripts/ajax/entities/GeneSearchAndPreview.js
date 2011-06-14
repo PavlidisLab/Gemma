@@ -7,7 +7,7 @@ Ext.namespace('Gemma');
 Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	listModified : false,
 	resetGenePreview : function() {
-		Ext.DomHelper.overwrite(this.genePreviewContent.body, {
+		Ext.DomHelper.overwrite(this.previewPart.genePreviewContent.body, {
 					cn : ''
 				});
 		// this.genePreviewExpandBtn.disable().hide();
@@ -100,7 +100,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.resetGenePreview();
 
 			// update the gene preview panel content
-			this.genePreviewContent.update({
+			this.previewPart.genePreviewContent.update({
 						officialSymbol : record.get("name"),
 						officialName : record.get("description"),
 						id : record.data.reference.id,
@@ -153,7 +153,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					// reset the gene preview panel content
 					this.resetGenePreview();
 					for (var i = 0; i < genes.size(); i++) {
-						this.genePreviewContent.update(genes[i]);
+						this.previewPart.genePreviewContent.update(genes[i]);
 					}
 					this.updateTitle(this.selectedGeneOrGroupRecord.name,ids.size());
 				
@@ -164,7 +164,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.geneSelectionEditorBtn.setText('0 more - Edit');
 						this.geneSelectionEditorBtn.enable().show();
 					}
-					this.genePreviewContent.expand();
+					this.previewPart.genePreviewContent.expand();
 
 				}.createDelegate(this));
 
@@ -315,7 +315,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 				if (queriesWithMoreThanOneResult.length > 0 || queriesWithNoResults.length > 0) {
 
-					Ext.DomHelper.append(this.genePreviewContent.body, {
+					Ext.DomHelper.append(this.previewPart.genePreviewContent.body, {
 								cn : '<div style="padding-bottom:7px;color:red;">Not all symbols had exact matches ('+
 										 '<a onmouseover="this.style.cursor=\'pointer\'" '+
 										 'onclick="Ext.Msg.alert(\'Query Result Details\',\'<br>'+
@@ -327,13 +327,14 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 				// write to the gene preview panel
 				for (i = 0; i < genesToPreview.length; i++) {
-					this.genePreviewContent.update(genesToPreview[i]);
+					this.previewPart.genePreviewContent.update(genesToPreview[i]);
 				}
-				this.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + ")");
+				this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + ")");
 				this.geneSelectionEditorBtn.setText('<a>' + (geneIds.length - genesToPreview.length)+
 						 ' more - Edit</a>');
 				this.showGenePreview();
-				this.genePreviewContent.show();
+				this.previewPart.genePreviewContent.show();
+				this.previewPart.show();
 
 				if (geneIds.size() <= 1) {
 					this.geneSelectionEditorBtn.setText('0 more - Edit');
@@ -361,21 +362,19 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		/* this.geneCombo = new Gemma.MyEXTGeneAndGeneGroupCombo; */
 		this.newBoxTriggered = false;
 		this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
-					width : 282,
-					hideTrigger : false,
-					typeAhead : false,
-					taxonId : this.taxonId,
-					listEmptyText : 'Enter text to search for genes',
-					listeners : {
-						'select' : {
-							fn : function(combo, record, index) {
+			width: 282,
+			hideTrigger: true,
+			taxonId: this.taxonId
+		});
+		this.geneCombo.on('select', function(combo, record, index) {
 								
 								this.searchForm.taxonChanged(record.get("taxonId"), record.get("taxonName"));
 					
 								var query = combo.store.baseParams.query;
 								this.loadGeneOrGroup(record, query);
-								this.genePreviewContent.show();
-								this.genePreviewContent.expand();
+								this.previewPart.genePreviewContent.show();
+								this.previewPart.show();
+								this.previewPart.genePreviewContent.expand();
 								
 								this.geneSelectionEditor.setTaxonId(record.get("taxonId"));
 
@@ -388,7 +387,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 									this.symbolListButton.hide();
 									this.removeBtn.show();
 								}
-								
 								combo.disable().hide();
 								this.helpBtn.hide();
 								this.symbolListButton.hide();
@@ -396,10 +394,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 								this.doLayout();
 								
 							},
-							scope : this
-						}
-					}
-				});
+							this
+						);
+					
 
 		this.relayEvents(this.geneCombo, ['select']);
 
@@ -428,6 +425,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					cls : "x-btn-icon",
 					tooltip : "Select multiple genes with a list of symbols or NCBI IDs",
 					disabled : false,
+					style:'padding-right:5px',
 					handler : function() {
 						this.geneCombo.reset();
 						this.symbolList.show();
@@ -469,7 +467,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneSelectionEditorBtn = new Ext.LinkButton({
 					handler : this.launchGeneSelectionEditor,
 					scope : this,
-					style : 'float:right;text-align:right; ',
+					style : 'float:right;text-align:right; padding-right:10px; padding-bottom:5px',
 					width : '200px',
 					tooltip : "Edit your selection",
 					hidden : true,
@@ -490,41 +488,55 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		 * **** GENE PREVIEW
 		 * ***************************************************************************
 		 */
-
+		this.previewPart = new Ext.Panel({
+			border: true,
+				hidden: true,
+				forceLayout:true,
+				hideBorders: true,
+				bodyStyle: 'border-color:#B5B8C8', // hide border until a selection is made
+				items: [{
+					width : 322,
+					ref: 'genePreviewContent',
+					tpl : new Ext.Template('<div style="padding-bottom:7px;">'+
+					'<a target="_blank" href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} '+
+					'<span style="color:grey">({taxonCommonName})</span></div>'),
+					tplWriteMode : 'append', // use this to append to content when
+					// calling update instead of replacing
+					title : 'Gene Selection Preview',
+					collapsible : true,
+					forceLayout:true,
+					tools:[{
+						id:'delete',
+						handler:function(event, toolEl, panel, toolConfig){
+								this.searchForm.removeGeneChooser(this.id);
+						}.createDelegate(this, [], true),
+						qtip:'Remove this gene or group from your search'
+					}],
+					cls : 'unstyledTitle',
+					bodyStyle:'padding:10px',
+					hidden : false,
+					listeners : {
+						collapse : function() {
+							this.geneSelectionEditorBtn.hide();
+						}.createDelegate(this, [], true),
+						expand : function() {
+							this.geneSelectionEditorBtn.show();
+						}.createDelegate(this, [], true)
+					}
+				}, this.geneSelectionEditorBtn]
+		});
 		this.updateTitle = function(name, size){
-			this.genePreviewContent.setTitle(
+			this.previewPart.genePreviewContent.setTitle(
 				'<span style="font-size:1.2em">'+name+
 				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1)?" genes)":" gene)"));
 		};
-		// use this.genePreviewContent.update("one line of gene text"); to write
-		// to this panel
-		this.genePreviewContent = new Ext.Panel({
-			width : 322,
-			tpl : new Ext.Template('<div style="padding-bottom:7px;">'+
-			'<a target="_blank" href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} '+
-			'<span style="color:grey">({taxonCommonName})</span></div>'),
-			tplWriteMode : 'append', // use this to append to content when
-			// calling update instead of replacing
-			title : 'Gene Selection Preview',
-			collapsible : true,
-			tools:[{
-				id:'delete',
-				handler:function(event, toolEl, panel, toolConfig){
-						this.searchForm.removeGeneChooser(this.id);
-				}.createDelegate(this, [], true),
-				qtip:'Remove this gene or group from your search'
-			}],
-			cls : 'unstyledTitle',
-			hidden : true,
-			listeners : {
-				collapse : function() {
-					this.geneSelectionEditorBtn.hide();
-				}.createDelegate(this, [], true),
-				expand : function() {
-					this.geneSelectionEditorBtn.show();
-				}.createDelegate(this, [], true)
+		this.collapsePreview = function(){
+			this.geneSelectionEditorBtn.hide();
+			if(typeof this.previewPart.genePreviewContent !== 'undefined'){
+				this.previewPart.genePreviewContent.collapse(true);
 			}
-		});
+		};				
+		
 		this.removeBtn = new Ext.Button({
 					icon : "/Gemma/images/icons/cross.png",
 					cls : "x-btn-icon",
@@ -534,26 +546,26 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.fireEvent('removeGene');
 					}.createDelegate(this, [], true)
 				});
-		this.helpBtn = new Ext.Button({
-			icon : "/Gemma/images/icons/question_blue.png",
-			cls : "x-btn-icon",
-			tooltip : 'Select a general group of genes or try searching for genes by symbol, GO terms or keywords such as: schizophrenia, hippocampus etc.',
+
+		this.helpBtn = new Ext.Panel({
 			hidden : false,
-			handler : function() {
-				Ext.Msg
-						.alert(
-								'Gene Selection Help',
-								'Select a general group of genes or try searching for genes by symbol, GO terms or keywords such as: schizophrenia, hippocampus etc.');
-			}
+			padding:'3px',
+			html: '<img ext:qtip=\'Select a general group of genes or try searching for genes by symbol, '+
+					'GO terms or keywords such as: schizophrenia, hippocampus etc.<br><br>'+
+					'<b>Example: search for \"map kinase\" and select a GO group</b>\' ' +
+					'src="/Gemma/images/icons/question_blue.png">'
 		});
 		Ext.apply(this, {
-					width : 335,
-					frame : true,
-					items : [{
-								layout : 'hbox',
-								items : [this.symbolListButton, this.geneCombo, this.helpBtn]
-							}, this.genePreviewContent, this.geneSelectionEditorBtn]
-				});
+			width: 335,
+			frame: false,
+			border: false,
+			hideBorders: true,
+			items: [{
+				layout: 'hbox',
+				hideBorders: true,
+				items: [this.symbolListButton, this.geneCombo, this.helpBtn]
+			}, this.previewPart]
+		});
 				
 		Gemma.GeneSearchAndPreview.superclass.initComponent.call(this);
 

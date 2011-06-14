@@ -26,5 +26,5 @@
 	);
 	</script>
 </head>
-<a href='<c:url value="/home2.html"/>'>Start a new search</a><br/><br/>
+<a href='<c:url value="/home.html"/>'>Start a new search</a><br/><br/>
 <div id="meta-heatmap-div"></div>

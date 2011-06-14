@@ -21,9 +21,6 @@
 		});
 </script>
 
-
-
-
 <div class="rightcolumn" style="width: 265px; float: right; font-size: smaller">
 
 	<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">

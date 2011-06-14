@@ -33,6 +33,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.Constants;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.web.controller.WebConstants;
 
 /**
  * Performs actions required when we wish to indicate that the system is undergoing maintenance and many not behave
@@ -72,7 +73,7 @@ public class MaintenanceModeController extends WebApplicationObjectSupport {
         } else if ( StringUtils.isNotBlank( start ) ) {
             config.put( "maintenanceMode", true );
         }
-        return new ModelAndView( new RedirectView( "/Gemma/mainMenu.html" ) );
+        return new ModelAndView( new RedirectView( WebConstants.HOME_URL ) );
 
     }
 }

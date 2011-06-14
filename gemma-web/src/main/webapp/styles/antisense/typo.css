@@ -684,3 +684,7 @@ top: 0;
 left: 60px; /*position where enlarged image should offset horizontally */
 
 }
+
+.x-form-trigger-paste-genes{
+	background-image: url("/Gemma/images/icons/page_upload.png")
+}

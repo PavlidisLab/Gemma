@@ -12,11 +12,14 @@
     <decorator name="default" page="default.jsp">   
         <pattern>/*</pattern>
     </decorator>
-    <decorator name="homePage" page="home.jsp">
+    <!--decorator name="homePage" page="home.jsp">
         <pattern>/mainMenu*</pattern>
+    </decorator-->
+    <decorator name="homePage" page="home.jsp">
+        <pattern>/home*</pattern>
     </decorator>
-    <decorator name="homePage2" page="home2.jsp">
-        <pattern>/home2*</pattern>
+    <decorator name="classicHomePage" page="homeClassic.jsp">
+        <pattern>/gemmaClassic*</pattern>
     </decorator>
     
     <!--  Need this filter so that ajax json responses don't get decorated 

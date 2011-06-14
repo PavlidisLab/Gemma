@@ -22,21 +22,23 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	displayField : 'comboText',
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
-	
+	lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
 	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
 	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
-
-	/*
-	 * Whether the user's groups should show up right away.
-	 */
-	prepopulate : true,
 
 	loadingText : 'Searching...',
 
 	emptyText : "Search genes by keyword",
+	listEmptyText : 'Enter text to search for genes',
 	minChars : 2,
-	selectOnFocus : true,
+	selectOnFocus : false,
+	autoSelect: false,
+	forceSelection: true,
 	typeAhead: false,
+	taxonId:null,
+	
+	lastQuery: null, // used for query queue fix
+	
 	mode : 'remote',
 	queryDelay : 800, // default = 500
 	listeners: {
@@ -56,7 +58,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
         		}
     },
 	
-		
 	// overwrite ComboBox onLoad function to get rid of query text being selected after a search returns
 	// (this was interfering with the query queue fix)
 	// only change made is commented out line
@@ -88,6 +89,17 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
         }
 
     }, // end onLoad overwrite
+	
+	/**
+	 * Parameters for AJAX call.
+	 * 
+	 * @param {}
+	 *            query
+	 * @return {}
+	 */
+	getParams : function(query) {
+		return [query, this.getTaxonId()]; // default taxon is human
+	},
 	
 	initComponent : function() {
 
@@ -200,17 +212,17 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
 			if(this.getValue() ===''){
 				
-				//this.doQuery('',true);
-				//this.lastQuery = null; // needed for query queue fix
+				this.doQuery('',true);
+				this.lastQuery = null; // needed for query queue fix
 				
-					field.lastQuery = null; // needed for query queue fix
+				//	field.lastQuery = null; // needed for query queue fix
 					// passing in taxon instead of taxonId breaks this call
-					GenePickerController.searchGenesAndGeneGroups("", this.getTaxonId(),
+				/*	GenePickerController.searchGenesAndGeneGroups("", this.getTaxonId(),
 						function(records) {
 										this.getStore().loadData(records);
 									}.createDelegate(this)
 						);
-				
+				*/
 				/* only allowing taxon searches for now
 				 * else{
 					GenePickerController.searchGenesAndGeneGroups("", null,
@@ -221,7 +233,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				}*/
 				
 			}
-		});
+		},this);
 
 	},
 
@@ -233,18 +245,6 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		if (this.tooltip) {
 			this.tooltip.destroy();
 		}
-	},
-
-	/**
-	 * Parameters for AJAX call.
-	 * 
-	 * @param {}
-	 *            query
-	 * @return {}
-	 */
-	getParams : function(query) {
-		var taxonId = this.getTaxonId();
-		return [query, taxonId]; // default taxon is human
 	},
 
 	getGeneGroup : function() {

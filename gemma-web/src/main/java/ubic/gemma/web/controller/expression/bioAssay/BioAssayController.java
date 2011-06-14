@@ -36,6 +36,7 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.tasks.analysis.expression.BioAssayOutlierProcessingTask;
+import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.util.EntityNotFoundException;
 
 /**
@@ -131,11 +132,11 @@ public class BioAssayController extends AbstractTaskService {
         try {
             id = Long.parseLong( request.getParameter( "id" ) );
         } catch ( NumberFormatException e ) {
-            return new ModelAndView( "mainMenu.html" ).addObject( "message", identifierNotFound );
+            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", identifierNotFound );
         }
 
         if ( id == null ) {
-            return new ModelAndView( "mainMenu.html" ).addObject( "message", identifierNotFound );
+            return new ModelAndView( WebConstants.HOME_PAGE ).addObject( "message", identifierNotFound );
         }
 
         BioAssay bioAssay = bioAssayService.load( id );

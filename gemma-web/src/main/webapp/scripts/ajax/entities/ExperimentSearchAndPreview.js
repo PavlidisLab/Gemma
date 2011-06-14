@@ -53,7 +53,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.resetExperimentPreview();
 
 			// update the gene preview panel content
-			this.experimentPreviewContent.update({
+			this.previewPart.experimentPreviewContent.update({
 						shortName : record.get("name"),
 						name : record.get("description"),
 						id : record.data.reference.id,
@@ -63,7 +63,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.experimentSelectionEditorBtn.setText('0 more - Edit');
 			this.experimentSelectionEditorBtn.enable();
 			this.experimentSelectionEditorBtn.show();
-			this.experimentPreviewContent.expand();
+			this.previewPart.experimentPreviewContent.expand();
 		}
 	},
 
@@ -115,7 +115,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		ExpressionExperimentController.loadExpressionExperiments(idsToPreview, function(ees) {
 
 					for (var j = 0; j < ees.size(); j++) {
-						this.experimentPreviewContent.update(ees[j]);
+						this.previewPart.experimentPreviewContent.update(ees[j]);
 					}
 					this.updateTitle(this.selectedExperimentOrGroupRecord.name,ids.size());
 					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
@@ -168,16 +168,17 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.loadMask.hide();
 		this.experimentSelectionEditorBtn.enable();
 		this.experimentSelectionEditorBtn.show();
-		this.experimentPreviewContent.show();
-		this.experimentPreviewContent.expand();
+		this.previewPart.experimentPreviewContent.show();
+		this.previewPart.show();
+		this.previewPart.experimentPreviewContent.expand();
 	},
 	resetExperimentPreview : function() {
-		Ext.DomHelper.overwrite(this.experimentPreviewContent.body, {
+		Ext.DomHelper.overwrite(this.previewPart.experimentPreviewContent.body, {
 					cn : ''
 				});
 		// this.experimentPreviewExpandBtn.disable().hide();
 		// this.experimentSelectionEditorBtn.disable().hide();
-		// this.experimentPreviewContent.collapse();
+		// this.previewPart.experimentPreviewContent.collapse();
 	},
 
 	initComponent : function() {
@@ -190,9 +191,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		// Shows the combo box for EE groups
 		this.newBoxTriggered = false;
 		this.experimentCombo = new Gemma.ExperimentAndExperimentGroupCombo({
-					typeAhead : false,
-					width : 300,
-					taxonId: this.taxonId
+					width : 310,
+					taxonId: this.taxonId,
+					hideTrigger: true
 					
 				});
 		this.experimentCombo.on('select', function(combo, record, index) {
@@ -207,7 +208,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					// store the taxon associated with selection
 					var query = combo.store.baseParams.query;
 					this.loadExperimentOrGroup(record, query);
-					this.experimentPreviewContent.show();
+					this.previewPart.experimentPreviewContent.show();
+					this.previewPart.show();
 
 					// if this was the first time a selection was made using
 					// this box
@@ -266,7 +268,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.experimentSelectionEditorBtn = new Ext.LinkButton({
 					handler : this.launchExperimentSelectionEditor,
 					scope : this,
-					style : 'float:right;text-align:right; ',
+					style : 'float:right;text-align:right;  padding-right:10px; padding-bottom:5px',
 					width : '200px',
 					tooltip : "Edit your selection",
 					hidden : true,
@@ -289,44 +291,57 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		 */
 
 		this.updateTitle = function(name, size){
-			this.experimentPreviewContent.setTitle(
+			this.previewPart.experimentPreviewContent.setTitle(
 				'<span style="font-size:1.2em">'+name+
 				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1)?" experiments)":" experiment)"));
-				this.experimentPreviewContent.doLayout();
+				this.previewPart.experimentPreviewContent.doLayout();
 		};
-
-		this.experimentPreviewContent = new Ext.Panel({
-			width : 315,
-			// id:'experimentPreview',
-			// html:'<div style="padding: 7px 0 ;font-weight:bold;">Experiment
-			// Selection Preview</div>',
-			tpl : new Ext.XTemplate(
-					'<tpl for="."><div style="padding-bottom:7px;"><a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-					'{id}"',
-					' ext:qtip="{shortName}">{shortName}</a>&nbsp; {name} <span style="color:grey">({taxon})</span></div></tpl>'),
-			tplWriteMode : 'append',
-			//style : 'padding-top:7px;',
-			title : 'Experiment Selection Preview',
-			collapsible : true,
-			tools:[{
-				id:'delete',
-				handler:function(event, toolEl, panel, toolConfig){
+		this.previewPart = new Ext.Panel({
+			border: true,
+			hidden: true,
+			forceLayout: true,
+			hideBorders: true,
+			bodyStyle: 'border-color:#B5B8C8', // hide border until a selection is made
+			items: [{
+				ref: 'experimentPreviewContent',
+				width: 315,
+				// id:'experimentPreview',
+				// html:'<div style="padding: 7px 0 ;font-weight:bold;">Experiment
+				// Selection Preview</div>',
+				tpl: new Ext.XTemplate('<tpl for="."><div style="padding-bottom:7px;"><a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=', '{id}"', ' ext:qtip="{shortName}">{shortName}</a>&nbsp; {name} <span style="color:grey">({taxon})</span></div></tpl>'),
+				tplWriteMode: 'append',
+				//style : 'padding-top:7px;',
+				title: 'Experiment Selection Preview',
+				collapsible: true,
+				tools: [{
+					id: 'delete',
+					handler: function(event, toolEl, panel, toolConfig){
 						this.searchForm.removeExperimentChooser(this.id);
-						// this.fireEvent('removeExperiment');
-				}.createDelegate(this, [], true),
-				qtip:'Remove this experiment or group from your search'
-			}],
-			cls : 'unstyledTitle',
-			hidden : true,
-			listeners : {
-				collapse : function() {
-					this.experimentSelectionEditorBtn.hide();
-				}.createDelegate(this, [], true),
-				expand : function() {
-					this.experimentSelectionEditorBtn.show();
-				}.createDelegate(this, [], true)
-			}
+					// this.fireEvent('removeExperiment');
+					}.createDelegate(this, [], true)					,
+					qtip: 'Remove this experiment or group from your search'
+				}],
+				cls: 'unstyledTitle',
+				bodyStyle: 'padding:10px',
+				hidden: true,
+				listeners: {
+					collapse: function(){
+						this.experimentSelectionEditorBtn.hide();
+					}.createDelegate(this, [], true)					,
+					expand: function(){
+						this.experimentSelectionEditorBtn.show();
+					}.createDelegate(this, [], true)
+				}
+			},this.experimentSelectionEditorBtn]
 		});
+		
+		this.collapsePreview = function(){
+			this.experimentSelectionEditorBtn.hide();
+			if(typeof this.previewPart.experimentPreviewContent !== 'undefined'){
+				this.previewPart.experimentPreviewContent.collapse();
+			}
+		};		
+		
 		this.removeBtn = new Ext.Button({
 					icon : "/Gemma/images/icons/cross.png",
 					cls : "x-btn-icon",
@@ -337,26 +352,25 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						// this.fireEvent('removeExperiment');
 					}.createDelegate(this, [], true)
 				});
-		this.helpBtn = new Ext.Button({
-			icon : "/Gemma/images/icons/question_blue.png",
-			cls : "x-btn-icon",
-			tooltip : 'Select a general group of experiments or try searching for experiments by name or keywords such as: schizophrenia, hippocampus, GPL96 etc.',
+		this.helpBtn = new Ext.Panel({
 			hidden : false,
-			handler : function() {
-				Ext.Msg
-						.alert(
-								'Experiment Selection Help',
-								'Select a general group of experiments or try searching for experiments by name or keywords such as: schizophrenia, hippocampus, GPL96 etc.');
-			}
+			padding:'3px',
+			html: '<img ext:qtip="Select a general group of genes or try searching for genes by symbol, '+
+					'GO terms or keywords such as: schizophrenia, hippocampus etc.<br><br>'+
+					'<b>Example: search for Alzheimer\'s and select all human experiments</b>" ' +
+					'src="/Gemma/images/icons/question_blue.png">'
 		});
 		Ext.apply(this, {
-			frame: true,
+			frame : false,
+			border:false,
+			hideBorders:true,
 			width: 330,
 			items: [
 			{
 				layout: 'hbox',
+				hideBorders: true,
 				items: [this.experimentCombo, this.helpBtn]
-			}, this.experimentPreviewContent, this.experimentSelectionEditorBtn]
+			}, this.previewPart]
 		});
 		Gemma.ExperimentSearchAndPreview.superclass.initComponent.call(this);
 	}

@@ -163,7 +163,7 @@ public class GeneralSearchController extends BaseFormController {
 
         if ( request.getParameter( "cancel" ) != null ) {
             this.saveMessage( request, "Cancelled Search" );
-            return new ModelAndView( new RedirectView( "mainMenu.html" ) );
+            return new ModelAndView( new RedirectView( WebConstants.HOME_PAGE ) );
         }
 
         return this.doSearch( request, response, command, errors );

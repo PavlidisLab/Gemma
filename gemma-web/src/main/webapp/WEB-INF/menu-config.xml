@@ -16,7 +16,8 @@
 	</Displayers>
 	<Menus>
 		<Menu name="MainMenu" title="mainMenu.title">
-			<Item name="Home" title="menu.home" page="/mainMenu.html" />
+			<Item name="Home" title="menu.home" page="/home.html" />
+			<Item name="Gemma Classic" title="menu.gemmaClassic" page="/gemmaClassic.html" />
 			<Item name="Search" title="menu.search" page="/searcher.html" />
 			<Item name="Coexpression analysis" description="Search for gene coexpression patterns" title="menu.coexpression"
 				page="/searchCoexpression.html" />

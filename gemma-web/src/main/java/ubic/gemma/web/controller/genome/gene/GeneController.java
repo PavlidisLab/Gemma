@@ -57,6 +57,7 @@ import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.controller.WebConstants;
 import ubic.gemma.web.view.TextView;
 
 /**
@@ -259,10 +260,10 @@ public class GeneController extends BaseController {
         Long id = Long.parseLong( request.getParameter( "id" ) );
         Gene gene = geneService.load( id );
         if ( gene == null ) {
-            addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
+            addMessage( request, "object.notfound", new Object[] { "Gene with id: " + request.getParameter( "id" ) } );
             StringBuffer requestURL = request.getRequestURL();
             log.info( requestURL );
-            return new ModelAndView( "mainMenu.html" );
+            return new ModelAndView( WebConstants.HOME_PAGE );
         }
         Collection<CompositeSequence> compositeSequences = geneService.getCompositeSequencesById( id );
 

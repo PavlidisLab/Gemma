@@ -29,6 +29,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	loadingText : 'Searching...',
 
 	emptyText : "Search experiments by keyword",
+	listEmptyText : 'Enter text to search for experiments',
 	minChars : 3,
 	selectOnFocus : false,
 	autoSelect: false,
@@ -56,38 +57,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
             		delete qe.combo.lastQuery;
         		}
     },
-	/*listeners: {
-		beforequery:function(queryEvent){
-			// queryEvent has combo, query, forceAll and cancel fields
-			//var store = queryEvent.combo.getStore();
-			console.log("before query");
-		},
-		beforeexpand:function(combo){
-			console.log("before expand");
-		},
-		beforecollapse:function(combo){
-			console.log("before collapse");
-		}
-	},
-	// overwrite expand, only proceed is beforeexpand returns true
-	expand: function () {
-        if(this.isExpanded() || !this.hasFocus){
-            return;
-        }
-    	if (this.fireEvent("beforeexpand", this)) {
-            Gemma.ExperimentAndExperimentGroupCombo.superclass.expand.apply(this);
-        }
-    },
-	// overwrite collapse
-	collapse: function () {
-        if(!this.isExpanded() || !this.hasFocus){
-            return;
-        }
-    	if (this.fireEvent("beforecollapse", this)) {
-           Gemma.ExperimentAndExperimentGroupCombo.superclass.collapse.apply(this);
-        }
-    },*/
-	
 
 	// overwrite ComboBox onLoad function to get rid of query text being selected after a search returns
 	// (this was interfering with the query queue fix)
@@ -134,7 +103,6 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	
 	initComponent: function(){
 	
-		this.addEvents("beforeexpand", "beforecollapse"); // if beforeexpand returns false, expand is cancelled
 		Ext.apply(this, {
 			// format fields to show in combo, only show size in brakets if the entry is a group
 			tpl: new Ext.XTemplate('<tpl for=".">' +
