@@ -972,7 +972,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							"In order to keep these groups included in your visualization, please log in and save your unsaved group(s).<br><br>":"";
 		*/
 		if(url === null && warning === ""){
-			url= "Error creating your link."
+			url= "Error creating your link.";
 		}
 		Ext.Msg.alert("Bookmark or sharable link",warning+"Use this link to re-run your search:<br> "+url);
 	}
