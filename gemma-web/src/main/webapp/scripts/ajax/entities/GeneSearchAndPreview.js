@@ -493,7 +493,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				hidden: true,
 				forceLayout:true,
 				hideBorders: true,
-				bodyStyle: 'border-color:#B5B8C8', // hide border until a selection is made
+				bodyStyle: 'border-color:#B5B8C8; background-color:ghostwhite',
 				items: [{
 					width : 322,
 					ref: 'genePreviewContent',
@@ -513,7 +513,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						qtip:'Remove this gene or group from your search'
 					}],
 					cls : 'unstyledTitle',
-					bodyStyle:'padding:10px',
+					bodyStyle: 'padding:10px; background-color:transparent', 
 					hidden : false,
 					listeners : {
 						collapse : function() {

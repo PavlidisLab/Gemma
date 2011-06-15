@@ -348,9 +348,39 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				1 + Gemma.MetaVisualizationConfig.groupSeparatorWidth *
 				(this.visualizationData.resultSetValueObjects.length - 1) * 1;
 
+		/************** visualizer sizing *****************/
+		var pageHeight =  window.innerHeight != null ? window.innerHeight : document.documentElement && 
+			document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body != null ? document.body.clientHeight : null;
+			
+		var pageWidth = window.innerWidth != null? window.innerWidth : document.documentElement && 
+			document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body != null ? document.body.clientWidth : null;
+
+		var adjPageWidth = ((pageWidth - Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppWidth)? 
+								(pageWidth - Gemma.MetaVisualizationConfig.windowPadding - 30) : Gemma.MetaVisualizationConfig.minAppWidth;
+								// not sure why need extra -30 here and not below, but otherwise it doesn't fit 
+		var adjPageHeight = ((pageHeight -Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppHeight)? 
+								(pageHeight - Gemma.MetaVisualizationConfig.windowPadding) : Gemma.MetaVisualizationConfig.minAppHeight;
+		
+		// resize all elements with browser window resize
+		Ext.EventManager.onWindowResize(function(width, height){
+			// -50 so that window fits nicely
+			var adjWidth = ((width - Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppWidth)? 
+								(width - Gemma.MetaVisualizationConfig.windowPadding): Gemma.MetaVisualizationConfig.minAppWidth;
+			var adjHeight = ((height - Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppHeight)? 
+								(height - Gemma.MetaVisualizationConfig.windowPadding): Gemma.MetaVisualizationConfig.minAppHeight;
+			this.setSize(adjWidth, adjHeight);
+			this._imageArea.setSize(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeight);
+			this._toolPanels.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth,0);
+			this._toolPanels.setSize(Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeight);
+			this._toolPanels.doLayout();
+			this.doLayout();
+		}, this);
+		
+		/*********** END: visualizer sizing *****************/
+
 		Ext.apply(this, {
-			width : Gemma.MetaVisualizationConfig.panelWidth,
-			height : Gemma.MetaVisualizationConfig.panelHeight,
+			width : adjPageWidth,
+			height : adjPageHeight,
 			layout : 'absolute',
 			_visualizationData : this.visualizationData,
 			geneScores : this.visualizationData.geneScores,
@@ -424,8 +454,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				xtype : 'window',
 				//height : 200,
 				width : 300,
-				x : Gemma.MetaVisualizationConfig.panelWidth - 650,
-				y : 20,
 				autoScroll : true,
 				closable : false,
 				shadow : false,
@@ -465,9 +493,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				tplWriteMode : 'overwrite'
 			}, {
 				ref: '_toolPanels',
-				height: Gemma.MetaVisualizationConfig.panelHeight - 30,
-				width: 300,
-				x: Gemma.MetaVisualizationConfig.panelWidth - 300,
+				height: adjPageHeight - 30,
+				width: Gemma.MetaVisualizationConfig.toolPanelWidth,
+				x: adjPageWidth - Gemma.MetaVisualizationConfig.toolPanelWidth,
 				y: 0,
 				layout: 'vbox',
 				border: true,
@@ -476,7 +504,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					title: 'Sort',
 					ref:'_sortPanel',
 					flex: 0,
-					width: 300,
+					width: Gemma.MetaVisualizationConfig.toolPanelWidth,
 					collapsible: true,
 					// collapsed:true,
 					border: true,
@@ -660,7 +688,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				}, {
 					ref: '_selectionTabPanel',
 					flex: 1,
-					width: 300,
+					width: Gemma.MetaVisualizationConfig.toolPanelWidth,
 					xtype:'tabpanel',
 					activeTab: 0,
 					deferredRender: false,
@@ -709,8 +737,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				layout : 'absolute',
 				frame : false,
 				border : false,
-				width : Gemma.MetaVisualizationConfig.panelWidth - 300,
-				height : Gemma.MetaVisualizationConfig.panelHeight - 30,
+				width : adjPageWidth - Gemma.MetaVisualizationConfig.toolPanelWidth,
+				height : adjPageHeight - 30,
 				items : [{
 							x:5,
 							y:5,

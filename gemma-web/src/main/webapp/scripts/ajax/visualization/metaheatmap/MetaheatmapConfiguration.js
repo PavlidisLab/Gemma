@@ -15,11 +15,12 @@ Gemma.MetaVisualizationConfig.labelAngle = 315.0;
 Gemma.MetaVisualizationConfig.labelBaseYCoor = 196;
 Gemma.MetaVisualizationConfig.columnLabelHeight = 210;
 
-Gemma.MetaVisualizationConfig.panelWidth = (Ext.getBody().getViewSize().width > 1000)?
-		Ext.getBody().getViewSize().width * 0.95 : 1000;
-Gemma.MetaVisualizationConfig.panelHeight = 600;// (Ext.getBody().getViewSize().height
-// > 500)?
-// Ext.getBody().getViewSize().height*.90 : 500;
+Gemma.MetaVisualizationConfig.minAppHeight = 600;
+Gemma.MetaVisualizationConfig.minAppWidth = 600;
+Gemma.MetaVisualizationConfig.windowPadding = 50;
+Gemma.MetaVisualizationConfig.toolPanelWidth = 300;
+
+
 
 mm = Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
 Gemma.MetaVisualizationConfig.labelExtraSpace = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / mm);

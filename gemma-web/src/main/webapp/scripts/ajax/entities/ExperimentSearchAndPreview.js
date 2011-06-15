@@ -301,14 +301,12 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			hidden: true,
 			forceLayout: true,
 			hideBorders: true,
-			bodyStyle: 'border-color:#B5B8C8', // hide border until a selection is made
+			bodyStyle: 'border-color:#B5B8C8; background-color:ghostwhite', 
 			items: [{
 				ref: 'experimentPreviewContent',
 				width: 315,
-				// id:'experimentPreview',
-				// html:'<div style="padding: 7px 0 ;font-weight:bold;">Experiment
-				// Selection Preview</div>',
-				tpl: new Ext.XTemplate('<tpl for="."><div style="padding-bottom:7px;"><a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=', '{id}"', ' ext:qtip="{shortName}">{shortName}</a>&nbsp; {name} <span style="color:grey">({taxon})</span></div></tpl>'),
+				tpl: new Ext.XTemplate('<tpl for="."><div style="padding-bottom:7px;"><a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
+						 '{id}"', ' ext:qtip="{shortName}">{shortName}</a>&nbsp; {name} <span style="color:grey">({taxon})</span></div></tpl>'),
 				tplWriteMode: 'append',
 				//style : 'padding-top:7px;',
 				title: 'Experiment Selection Preview',
@@ -322,7 +320,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					qtip: 'Remove this experiment or group from your search'
 				}],
 				cls: 'unstyledTitle',
-				bodyStyle: 'padding:10px',
+				bodyStyle: 'padding:10px; background-color:transparent', 
 				hidden: true,
 				listeners: {
 					collapse: function(){
