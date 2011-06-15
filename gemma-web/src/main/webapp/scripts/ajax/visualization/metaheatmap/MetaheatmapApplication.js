@@ -336,7 +336,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 
 
 		/*************** end of selection grids **********************/
-
+		
 		this.TOTAL_NUMBER_OF_COLUMNS = 0;
 		var datasetGroupIndex;
 		for (datasetGroupIndex = 0; datasetGroupIndex < this.visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
@@ -373,7 +373,13 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this._toolPanels.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth,0);
 			this._toolPanels.setSize(Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeight);
 			this._toolPanels.doLayout();
+			
+			this.colorLegend.x = adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215;
+			this.colorLegend.y = 0;
+			
 			this.doLayout();
+			
+			
 		}, this);
 		
 		/*********** END: visualizer sizing *****************/
@@ -428,6 +434,22 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				xtype : 'button',
 				x : 5,
 				y : 5,
+				text : '<b>Color Legend</b>',
+				tooltip:'See Color Legend',
+				handler : function() {
+					if (this.colorLegend.hidden){
+						this.colorLegend.y=0;
+						this.colorLegend.x=adjPageWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215;
+						this.colorLegend.show();
+					}else{
+						this.colorLegend.hide();
+					}
+				},
+				scope:this
+			},'-', {
+				xtype : 'button',
+				x : 5,
+				y : 5,
 				text : '<b>Bookmarkable Link</b>',
 				tooltip:'Get a link to re-run this search',
 				handler : function() {
@@ -446,7 +468,28 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				}
 			}
 			],
-			items : [{
+			items : [new Gemma.ColorLegend({				
+				ref:"colorLegend",
+				discreteColorRangeObject: Gemma.MetaVisualizationConfig.basicColourRange,
+				discreteColorRangeObject2: Gemma.MetaVisualizationConfig.contrastsColourRange,
+				cellHeight:14,
+				cellWidth:14,
+				colorValues:[[,"No Data"],[0.1,"0.5"],[0.2,"0.25"],[0.3,"0.1"],[0.4,"0.05"],[0.5,"0.01"],[0.6,"0.001"],[0.7,"0.0001"],[1,"0.00001"]],
+				colorValues2:[[,"No Data"],[-3,"-3"],[-2,"-2"],[-1,"-1"],[0,"0"],[1,"1"],[2,"2"],[3,"3"]],
+				vertical:true,
+				canvasId:'canvas1',
+				canvasId2:'canvas12',
+				legendTitle:'q-value',
+				legendTitle2:'Fold Change',
+				textWidthMax: 80,
+				textOffset:1,
+				fontSize:12,
+				x:adjPageWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215,
+				y:0,
+				constrain:true
+				
+				
+			}),{
 				// a window for displaying details as elements of the image are
 				// hovered over
 				//title : 'Details <span style="color:grey">(Drag me!)</span>',
@@ -839,6 +882,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				this.tree.getNodeById(this.initFactorFilter[j]).getUI().toggleCheck(false);
 			}
 		}
+		
+		this.colorLegend.show();
 
 	},
 	refreshVisualization : function() {
