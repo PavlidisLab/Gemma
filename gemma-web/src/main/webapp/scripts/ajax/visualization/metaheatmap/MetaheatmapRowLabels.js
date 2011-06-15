@@ -40,7 +40,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 										77, 
 										Gemma.MetaVisualizationConfig.cellHeight);
 					}
-					if (highlightRow == i) {
+					if (highlightRow === i) {
 						ctx.save();
 						ctx.strokeStyle = Gemma.MetaVisualizationConfig.geneLabelHighlightColor;
 						ctx.drawTextRight( '', Gemma.MetaVisualizationConfig.geneLabelFontSize, 77,
