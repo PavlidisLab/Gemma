@@ -104,7 +104,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 
 			for (var factorValueIndex = 0; factorValueIndex < this.factorValueIds.length; factorValueIndex++) {
 				var factorValueId = this.factorValueIds[factorValueIndex];
-				var vizValue = null
+				var vizValue = null;
 				if (typeof geneContrastsInfo !== 'undefined' && geneContrastsInfo !== null) {
 					if ( typeof geneContrastsInfo[factorValueId] === 'undefined' || geneContrastsInfo[factorValueId] === null) {
 						vizValue = 0;				
@@ -230,7 +230,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				var geneContrastsInfo = contrasts[ geneId ];
 				
 				var factorValueId = this.factorValueIds[index.column];
-				var foldChange = null
+				var foldChange = null;
 				if (typeof geneContrastsInfo !== 'undefined' && geneContrastsInfo !== null && typeof geneContrastsInfo[factorValueId] !== 'undefined') {
 					foldChange = geneContrastsInfo[factorValueId].foldChangeValue;				
 				}					
@@ -452,7 +452,7 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 		// set width		
 		// show()
 		// let parent now 
-		if (this.expandButton_.pressed) this.setWidth(this.expandedWidth); else this.setWidth(this.collapsedWidth); 
+		if (this.expandButton_.pressed) {this.setWidth(this.expandedWidth);} else {this.setWidth(this.collapsedWidth);} 
 		this.show();
 		this.isFiltered = false;				
 	},
@@ -559,12 +559,12 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 		ctx.stroke();				
 	},
 
-	drawHorizontalDottedLine_ : function (ctx, x, y, length) {
-		var xEnd = x + length;
+	drawHorizontalDottedLine_ : function (ctx, xStart, y, length) {
+		var xEnd = xStart + length;
 		ctx.beginPath();
-		ctx.moveTo(x,y);
+		ctx.moveTo(xStart,y);
 		
-		for (x; x < xEnd; x=x+4) {
+		for (var x = xStart; x < xEnd; x=x+4) {
 			ctx.lineTo(x+2,y);
 			ctx.moveTo(x+4,y);
 		}

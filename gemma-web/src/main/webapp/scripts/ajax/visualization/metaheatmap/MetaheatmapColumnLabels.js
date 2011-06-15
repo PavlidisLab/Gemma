@@ -239,7 +239,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 								for (var p = 0; p < columnPanels.getCount(); p++) {
 									var columnPanel = columnPanels.get(p);
 									XY = columnPanel.getPosition();
-									if ( x >= XY[0] && x<XY[0] + columnPanel.getWidth() )return columnPanel;
+									if ( x >= XY[0] && x<XY[0] + columnPanel.getWidth() ) {return columnPanel;}
 								}
 							}						
 						}					

@@ -159,7 +159,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		
 		Ext.apply(this,{
 			_selectedGenes : [], // array of ids of selected genes
-			_selectedExperiments : [], // array of ids of selected experiments
+			_selectedExperiments : [] // array of ids of selected experiments
 		});
 		
 		/* selection control */
@@ -572,10 +572,11 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 								else 
 									if (record.get('name') === 'score') {
 										// Sort genes : changes gene order
+										var sortByScoreFn = function(o1, o2){
+											return o2.score - o1.score;
+										}; 
 										for (i = 0; i < this.geneScores[0].length; i++) {
-											this.geneScores[0][i].sort(function(o1, o2){
-												return o2.score - o1.score;
-											});
+											this.geneScores[0][i].sort(sortByScoreFn);
 										}
 										for (geneGroupIndex = 0; geneGroupIndex < this._imageArea._heatmapArea.geneNames.length; geneGroupIndex++) {
 											this.geneOrdering[geneGroupIndex] = [];
