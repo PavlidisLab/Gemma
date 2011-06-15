@@ -40,7 +40,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 										77, 
 										Gemma.MetaVisualizationConfig.cellHeight);
 					}
-					if (highlightRow === i) {
+					if (highlightRow == i) {
 						ctx.save();
 						ctx.strokeStyle = Gemma.MetaVisualizationConfig.geneLabelHighlightColor;
 						ctx.drawTextRight( '', Gemma.MetaVisualizationConfig.geneLabelFontSize, 77,
@@ -98,7 +98,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
 			
 			// if user held down ctrl while clicking, select column or gene instead of popping up window
-			if (e.ctrlKey == true) {
+			if (e.ctrlKey === true) {
 				this._toggleSelectRow(index);
 				this._drawLabels();
 			}else{
