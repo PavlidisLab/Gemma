@@ -146,12 +146,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					text: 'Trim',
 					tooltip:'Your query will be trimmed to '+maxText,
 					handler: function(){
-						if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY)
-						geneRecords = this.trimRecordSelection(geneRecords, Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY);
-						
-						if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY)
-						experimentRecords = this.trimRecordSelection(experimentRecords, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY);
-						
+						if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY){
+							geneRecords = this.trimRecordSelection(geneRecords, Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY);
+						}
+						if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
+							experimentRecords = this.trimRecordSelection(experimentRecords, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY);
+						}
 						this.doSearch(geneRecords, experimentRecords);
 						warningWindow.close();
 						return;
@@ -230,6 +230,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var geneGroupsAlreadyMade = [];
 		var i;
 		var record;
+		var recordToPass;
 		for (i = 0; i < geneRecords.length; i++) {
 			record = geneRecords[i];
 			if (typeof record !== 'undefined' && (!record.reference || record.reference.id === null)) {
@@ -241,7 +242,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				}
 								
 				// no java bean properties to match these javascript properties 
-				var recordToPass = Object.clone(record);
+				recordToPass = Object.clone(record);
 				delete recordToPass.memberIds; // need to keep this one for later
 				delete recordToPass.comboText;
 				delete recordToPass.isGroup;
@@ -292,7 +293,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				}
 								
 				// no java bean properties to match these javascript properties 
-				var recordToPass = Object.clone(record);
+				recordToPass = Object.clone(record);
 				delete recordToPass.memberIds; // need to keep this one for later
 				delete recordToPass.comboText;
 				delete recordToPass.isGroup;

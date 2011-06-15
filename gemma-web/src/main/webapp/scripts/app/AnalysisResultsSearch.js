@@ -86,7 +86,7 @@ Ext.onReady(function() {
 		if (result.errorState) {
 			resultsPanel.add({
 					html: "<h2>Coexpression Search Results</h2><br><br>"+result.errorState + "<br><br><br>",
-					border: false,
+					border: false
 					/*items: { //can't broaden search results, so no use giving refinement options
 						xtype: 'button',
 						text: 'refine',
@@ -285,7 +285,7 @@ Ext.onReady(function() {
 		this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data); 
 		
 		this.diffVisualizer.on('visualizationLoaded', function(){
-			panel.loadMask.hide()
+			panel.loadMask.hide();
 		}, this);
 		
 		/* doesn't work
