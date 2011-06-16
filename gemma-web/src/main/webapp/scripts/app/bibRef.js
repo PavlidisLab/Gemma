@@ -7,15 +7,64 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	var pstore = new Gemma.BibRefPagingStore({
-				autoLoad : {
-					params : {
-						start : 0,
-						limit : 20
-					}
-				}
-			});
+	
+	var btnFilter = new Ext.CycleButton({
+	    showText: true,
+	    prependText: 'Filter by ',
+	    items: [{
+	        text:'Authors',
+	        id:'authorList',
+	        iconCls:'view-text',
+	        checked:true
+	    },{
+	        text:'Title',
+	        id:'title',
+	        iconCls:'view-text'
+	    },{
+	        text:'PudMed ID',
+	        id:'pubAccession',
+	        iconCls:'view-text'
+	    },{
+	        text:'Mesh Terms',
+	        id:'meshTerms',
+	        iconCls:'view-text'
 
+	    }]
+	});
+	
+	
+	var searchInGridField = new Ext.form.TextField({
+		enableKeyEvents : true,
+		emptyText : 'Filter',
+		listeners: {
+          'keyup': function(){
+              var txtValue = searchInGridField.getValue();
+              pstore.clearFilter();
+      
+              if (txtValue.length > 1) {
+            	  pstore.filter(btnFilter.getActiveItem().id,txtValue,true,false);
+              }
+           }
+		}			
+	});
+		
+		
+	var filterToolbar = new Ext.Toolbar({ 
+		items: [
+		btnFilter,
+	    searchInGridField
+	    ]  
+	    }); 
+	
+	var pstore = new Gemma.BibRefPagingStore({
+		autoLoad : {
+			params : {
+				start : 0,
+				limit : 20
+			    }
+			}
+		});
+	
 	var bibRefGrid = new Ext.grid.GridPanel({
 		renderTo : 'bibRefGrid',
 		width : 1000,
@@ -36,7 +85,7 @@ Ext.onReady(function() {
 					return '<a href="/Gemma/bibRef/bibRefView.html?accession=' + record.get('pubAccession') +
 							'"><img ext:qtip="View details in Gemma" src="/Gemma/images/icons/magnifier.png" /></a>';
 				},
-				width : 30,
+				width : 45,
 				sortable : false
 			}, {
 				header : "Authors",
@@ -45,14 +94,15 @@ Ext.onReady(function() {
 			}, {
 				header : "Title",
 				dataIndex : 'title',
-				width : 300
+				width : 335
 			}, {
 				header : "Publication",
-				dataIndex : 'publication'
+				dataIndex : 'publication',
+				width : 120
 			}, {
 				header : "Date",
 				dataIndex : 'publicationDate',
-				width : 50,
+				width : 70,
 				renderer : Ext.util.Format.dateRenderer("Y")
 			}, {
 				header : "Pages",
@@ -62,6 +112,7 @@ Ext.onReady(function() {
 			}, {
 				header : "Experiments",
 				dataIndex : 'experiments',
+				width : 80,
 				renderer : function(value) {
 					var result = "";
 					for (var i = 0; i < value.length; i++) {
@@ -76,19 +127,54 @@ Ext.onReady(function() {
 			}, {
 				header : "PubMed",
 				dataIndex : 'pubAccession',
-				width : 60,
+				width : 70,
 				renderer : function(value) {
 					return '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&list_uids=' +
 							value +
 							'&query_hl=3&dopt=Abstract"><img ext:qtip="View at NCBI PubMed"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
 				},
 				sortable : false
-			}]
+			}
+			
+			/*
+			, {
+				editable:false,
+				hidden : true,
+				menuDisabled: true,
+				header : "meshTerms",
+				dataIndex : 'meshTerms',
+				width : 100,
+				renderer : function(value) {
+					var result = "";
+					for (var i = 0; i < value.length; i++) {
+						if(i==0){
+							result = value[i];
+						}
+						else{
+							result = result +", " + value[i];
+						}
+					}
+					return result;
+				}
+
+			}
+			*/
+			
+			
+			
+			]
 		})
 
 	}
 
 	);
+	
+	var bibRefPanel = new Ext.Panel({
+		width : 1000,
+		renderTo : 'bibRefPanel',
+		items : [ filterToolbar, bibRefGrid ]
+	});
+	
 
 });
 
@@ -139,6 +225,8 @@ Gemma.BibRefPagingStore = Ext.extend(Ext.data.Store, {
 									name : "abstractText"
 								}, {
 									name : "experiments"
+								}, {
+									name : "meshTerms"
 								}]
 					}),
 

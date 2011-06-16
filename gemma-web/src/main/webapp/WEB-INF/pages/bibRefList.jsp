@@ -12,4 +12,6 @@
 
 <div style="padding: 4px;" id="messages"></div>
 
+
 <div id="bibRefGrid"></div>
+<div id="bibRefPanel"></div>

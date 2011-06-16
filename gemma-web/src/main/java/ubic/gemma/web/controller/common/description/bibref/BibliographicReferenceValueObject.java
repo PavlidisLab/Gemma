@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
@@ -68,6 +69,8 @@ public class BibliographicReferenceValueObject {
     private String title;
 
     private String volume;
+    
+    private ArrayList<String> meshTerms;
 
     public BibliographicReferenceValueObject() {
         super();
@@ -86,7 +89,26 @@ public class BibliographicReferenceValueObject {
         this.publication = ref.getPublication();
         this.volume = ref.getVolume();
         this.citation = ref.getCitation();
+        
+        this.meshTerms= setMeshTermsArray(ref.getMeshTerms());
     }
+    
+    
+    
+    private ArrayList<String> setMeshTermsArray(Collection<MedicalSubjectHeading> mshCollection){
+    	
+    	ArrayList<String> meshTermList = new ArrayList<String>();
+    	
+    	for(MedicalSubjectHeading msh: mshCollection){	
+    		meshTermList.add(msh.getTerm());
+    	}
+    	return meshTermList;
+    }
+    
+    public ArrayList<String> getMeshTerms() {
+        return meshTerms;
+    }
+    
 
     public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String citation,
             String issue, String pages, String pubAccession, String publication, Date publicationDate,
