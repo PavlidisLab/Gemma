@@ -27,16 +27,15 @@ function hideTopBar(divID) {
 	Welcome to the new Gemma!
 	<a style="float: right" href="JavaScript:void(0)"
 		onclick="hideTopBar('topBarUpdates');"> <img
-			src="/Gemma/images/icons/cross.png" />
-	</a>
+			src="/Gemma/images/icons/cross.png" /> </a>
 	<br />
-	<span style="font-size: 0.9em">
-			Check out our
-			<u><a target="_blank"
-				href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">new
-					features</a></u>, including a differential expression visualizer, experiment batch
-			effect analysis and a new search interface. Looking for <a href="<c:url value="/gemmaClassic.html"/>">Gemma Classic</a>?
-	</span>
+	<span style="font-size: 0.9em"> Check out our <u><a
+			target="_blank"
+			href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">new
+				features</a>
+	</u>, including a differential expression visualizer, experiment batch
+		effect analysis and a new search interface. Looking for <a
+		href="<c:url value="/gemmaClassic.html"/>">Gemma Classic</a>? </span>
 </div>
 <div align="center">
 	<div style="width: 900px">
@@ -83,12 +82,16 @@ function hideTopBar(divID) {
 						</p>
 						<p style="font-size: 0.9em">
 							More information about the project is available
-							<a href="<c:url value="/static/about.html"/>">here</a>. Documentation for Gemma can be 
-							found throughout the website and in Gemma's 
-							<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a>, where you can also
-							read about <a target="_blank"
-										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">updates</a>. 
-							The newest version of Gemma was launched on June 20, 2011. You can still access the classic version <a href="<c:url value="/gemmaClassic.html"/>">here</a>.
+							<a href="<c:url value="/static/about.html"/>">here</a>.
+							Documentation for Gemma can be found throughout the website and
+							in Gemma's
+							<a href="http://chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma">Wiki</a>,
+							where you can also read about
+							<a target="_blank"
+								href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">updates</a>.
+							The newest version of Gemma was launched on June 20, 2011. You
+							can still access the classic version
+							<a href="<c:url value="/gemmaClassic.html"/>">here</a>.
 						</p>
 					</div>
 
@@ -160,14 +163,16 @@ function hideTopBar(divID) {
 								<div style="font-size: small; padding-bottom: 5px;">
 									<b> <a target="_blank"
 										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">Updates
-											since <c:out value="${ updateDate}" /> </a> </b>
+											in the last week</a> </b>
 								</div>
+
 								<div id="dataSummary"
 									style="margin-left: 15px; margin-right: 15px">
 									<table style="white-space: nowrap">
 										<tr>
 											<td style="padding-right: 10px">
-												<strong>Data Summary</strong>
+												<span style="white-space: nowrap"> <!-- for IE --> <strong>Data
+														Summary</strong> </span>
 											</td>
 											<td style="padding-right: 10px" align="right">
 												Total
@@ -185,9 +190,10 @@ function hideTopBar(divID) {
 										</tr>
 										<tr>
 											<td style="padding-right: 10px">
-												<a
+
+												<span style="white-space: nowrap"> <!-- for IE --> <a
 													href='<c:url value="/expressionExperiment/showAllExpressionExperiments.html"/>'>
-													Expression Experiments: </a>
+														Expression Experiments: </a> </span>
 											</td>
 											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ expressionExperimentCount}" /> </b>
@@ -203,11 +209,12 @@ function hideTopBar(divID) {
 										<c:forEach var="taxon" items="${ taxonCount }">
 											<tr>
 												<td style="padding-right: 10px">
-													&emsp;
-													<a
-														href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
-														<c:out value="${ taxon.key.scientificName}" /> </a>
 
+													<span style="white-space: nowrap"> <!-- for IE -->
+														&emsp; <a
+														href='/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId=<c:out value="${ taxon.key.id}" />'>
+															<c:out value="${ taxon.key.scientificName}" /> </a> 
+													</span>
 												</td>
 												<td align="right" style="padding-right: 10px">
 													<c:out value="${ taxon.value}" />
@@ -224,8 +231,11 @@ function hideTopBar(divID) {
 										</c:forEach>
 										<tr>
 											<td style="padding-right: 10px">
+											
+											<span style="white-space: nowrap"> <!-- for IE -->
 												<a href='<c:url value="/arrays/showAllArrayDesigns.html"/>'>
 													Array Designs: </a>
+													</span>
 											</td>
 											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ stats.arrayDesignCount }" /> </b>
@@ -240,7 +250,10 @@ function hideTopBar(divID) {
 										</tr>
 										<tr>
 											<td style="padding-right: 10px">
+											
+											<span style="white-space: nowrap"> <!-- for IE -->
 												Assays:
+												</span>
 											</td>
 											<td align="right" style="padding-right: 10px">
 												<b><c:out value="${ stats.bioAssayCount }" /> </b>

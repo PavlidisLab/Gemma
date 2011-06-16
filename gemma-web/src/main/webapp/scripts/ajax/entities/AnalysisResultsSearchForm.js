@@ -917,8 +917,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.experimentChoosers = new Ext.Panel({
 					// width: 319,
 					frame : false,
+						bodyStyle:'background-color:transparent',
 					defaults : {
-						border : false
+						border : false,
+						bodyStyle:'background-color:transparent'
 					},
 					style : 'padding-bottom: 10px',
 					autoDestroy : true
@@ -961,7 +963,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.coexToggle = new Ext.Button({
 					text : "<span style=\"font-size:1.3em\">Coexpression</span>",
 					cls:'highlightToggle',
-					style:'margin-top:5px',
 					scale : 'medium',
 					width : 150,
 					enableToggle : true,
@@ -973,7 +974,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.diffExToggle = new Ext.Button({
 					text : "<span style=\"font-size:1.3em\">Differential Expression</span>",
 					scale : 'medium',
-					style:'margin-top:5px',
 					cls:'highlightToggle',
 					width : 150,
 					enableToggle : true,
@@ -986,21 +986,25 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.searchBar = new Ext.Panel({
 
 					border : false,
-					layout : 'hbox',
+					layout : 'table',
+					layoutConfig:{
+						columns:5
+					},
 					width : 490,
-					style : 'padding: 0 7px',
+					style : 'margin: 0 7px',
 					defaults : {
 						border : false
+						
 					},
 					items : [{
 								html : 'Search for ',
-								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding-right: 7px'
+								style : 'white-space: nowrap;text-align:center;vertical-align:middle;font-size:1.7em;margin-top:7px'
 							}, this.coexToggle, {
 								html : 'or',
-								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding: 7px'
+								style : 'white-space: nowrap;text-align:center;vertical-align:middle;font-size:1.7em;margin-top:7px'
 							}, this.diffExToggle, {
 								html : 'in:',//'in&hellip;',
-								style : 'text-align:center;vertical-align:middle;font-size:1.7em;padding-top:10px;padding-left: 7px'
+								style : 'white-space: nowrap;text-align:center;vertical-align:middle;font-size:1.7em;margin-top:7px'
 							}]
 
 				});
@@ -1059,7 +1063,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					border: false,
 					defaults: {
 						border: false,
-						style: 'padding: 3px'
+						bodyStyle: 'padding: 0px;margin:0px'
 					},
 					items: [{
 						defaults: {
@@ -1068,7 +1072,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						items: [this.theseExperimentsPanel, this.experimentChoosers]
 					}, {
 						html: ' based on ',
-						style: 'font-size:1.7em;padding-top: 32px;margin-left: -15px;margin-right: -12px;'
+						style: 'white-space: nowrap;font-size:1.7em;padding-top: 32px;'
 					}, {
 						defaults: {
 							border: false
@@ -1091,7 +1095,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							xtype: 'button',
 							width: 55,
 							icon: '/Gemma/images/icons/arrow_refresh_small.png',
-							style: 'padding-top: 8px',
+							style: 'margin-top: 8px',
 							text:'Reset',
 							handler: this.reset.createDelegate(this)
 						}]
@@ -1219,7 +1223,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				{
 			xtype : 'geneSearchAndPreview',
 			searchForm : this,
-			style : 'padding-top:10px;margin-left:10px',
+			style : 'padding-top:10px;',
 			id : 'geneChooser' + this.geneChooserIndex,
 			taxonId : this.taxonId,
 			listeners : {
@@ -1260,7 +1264,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			xtype: 'experimentSearchAndPreview',
 			searchForm: this,
 			taxonId: this.taxonId,
-			style: 'padding-top:10px;margin-right:10px',
+			style: 'padding-top:10px;',
 			id: 'experimentChooser' + this.experimentChooserIndex,
 			listeners: {
 				madeFirstSelection: function(){

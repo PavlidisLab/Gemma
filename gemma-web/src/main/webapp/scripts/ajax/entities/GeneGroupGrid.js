@@ -726,7 +726,7 @@ Gemma.GeneSetDetailsDialog = Ext.extend(Ext.Window, {
 								fieldLabel: 'Description',
 								name: 'newSetDescription',
 								value: this.description,
-								width: 300,
+								width: 300
 							//value: this.suggestedDescription
 							})			/*, new Ext.form.Radio({
 			 fieldLabel : 'Private',

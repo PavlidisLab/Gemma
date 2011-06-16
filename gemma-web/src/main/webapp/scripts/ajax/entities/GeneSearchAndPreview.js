@@ -157,7 +157,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					}
 					this.updateTitle(this.selectedGeneOrGroupRecord.name,ids.size());
 				
-					this.geneSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
+					this.geneSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
 					this.showGenePreview();
 
 					if (ids.size() === 1) {
@@ -330,8 +330,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					this.previewPart.genePreviewContent.update(genesToPreview[i]);
 				}
 				this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + ")");
-				this.geneSelectionEditorBtn.setText('<a>' + (geneIds.length - genesToPreview.length)+
-						 ' more - Edit</a>');
+				this.geneSelectionEditorBtn.setText((geneIds.length - genesToPreview.length)+
+						 ' more - Edit');
 				this.showGenePreview();
 				this.previewPart.genePreviewContent.show();
 				this.previewPart.show();
@@ -480,6 +480,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					// closeAction: 'hide',
 					closable : false,
 					layout : 'fit',
+					width : 450,
+					height : 500,
 					items : this.geneSelectionEditor,
 					title : 'Edit Your Gene Selection'
 				});

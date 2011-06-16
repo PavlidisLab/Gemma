@@ -203,7 +203,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
 			scope: this,
 			disabled: true
-		})
+		});
 		this.exportButton = new Ext.Button({
 			text: "Export",
 			qtip: 'Get a plain text version of this list',
@@ -246,7 +246,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.doLayout();
 				},
 				scope: this
-			}*/],
+			}*/]
 		});
 		Ext.apply(this, {
 		

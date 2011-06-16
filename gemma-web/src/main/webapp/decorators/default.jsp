@@ -26,7 +26,7 @@
 		<div id="page">
 
 			<div id="header" class="clearfix">
-				<jsp:include page="/common/header.classic.inner.jsp" />
+				<jsp:include page="/common/header.inner.jsp" />
 			</div>
 
 			<div id="content" class="clearfix">

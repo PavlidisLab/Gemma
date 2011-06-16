@@ -118,7 +118,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.previewPart.experimentPreviewContent.update(ees[j]);
 					}
 					this.updateTitle(this.selectedExperimentOrGroupRecord.name,ids.size());
-					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
+					this.experimentSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
 					this.showExperimentPreview();
 
 					if (ids.size() === 1) {
@@ -163,7 +163,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		}
 		this.loadMask.show();
 	},
-
 	showExperimentPreview : function() {
 		this.loadMask.hide();
 		this.experimentSelectionEditorBtn.enable();
@@ -268,7 +267,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.experimentSelectionEditorBtn = new Ext.LinkButton({
 					handler : this.launchExperimentSelectionEditor,
 					scope : this,
-					style : 'float:right;text-align:right;  padding-right:10px; padding-bottom:5px',
+					style : 'float:right;text-align:right; padding-right:10px; padding-bottom:5px',
 					width : '200px',
 					tooltip : "Edit your selection",
 					hidden : true,
@@ -281,6 +280,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					// closeAction: 'hide',
 					closable : false,
 					layout : 'fit',
+					width : 450,
+					height : 500,
 					items : this.experimentSelectionEditor,
 					title : 'Edit Your Experiment Selection'
 				});
@@ -325,7 +326,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				listeners: {
 					collapse: function(){
 						this.experimentSelectionEditorBtn.hide();
-					}.createDelegate(this, [], true)					,
+					}.createDelegate(this, [], true),
 					expand: function(){
 						this.experimentSelectionEditorBtn.show();
 					}.createDelegate(this, [], true)
