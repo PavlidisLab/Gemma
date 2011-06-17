@@ -90,12 +90,12 @@ public class BibliographicReferenceValueObject {
         this.volume = ref.getVolume();
         this.citation = ref.getCitation();
         
-        this.meshTerms= setMeshTermsArray(ref.getMeshTerms());
+        this.meshTerms= extractMeshTermsFromMedicalSubjectHeadings(ref.getMeshTerms());
     }
     
     
     
-    private ArrayList<String> setMeshTermsArray(Collection<MedicalSubjectHeading> mshCollection){
+    private ArrayList<String> extractMeshTermsFromMedicalSubjectHeadings(Collection<MedicalSubjectHeading> mshCollection){
     	
     	ArrayList<String> meshTermList = new ArrayList<String>();
     	
@@ -105,7 +105,7 @@ public class BibliographicReferenceValueObject {
     	return meshTermList;
     }
     
-    public ArrayList<String> getMeshTerms() {
+    public Collection<String> getMeshTerms() {
         return meshTerms;
     }
     
