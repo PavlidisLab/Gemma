@@ -65,7 +65,7 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 		}
 		
 		this.setWidth( newWidth );
-		if ( newWidth === 0 ) {this.isFiltered = true;} else {this.isFiltered = false;}
+		this.isFiltered = ( newWidth === 0 )? true : false;
 	},						
 	
 	refresh : function() {
@@ -134,8 +134,8 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 			newWidth = newWidth + this.items.get(i).getWidth();			
 		}
 				
-		this.setWidth( newWidth );		
-		if (newWidth === 0) {this.isFiltered = true;} else {this.isFiltered = false;}						
+		this.setWidth( newWidth );
+		this.isFiltered = (newWidth === 0)? true:false;						
 	}							
 });
 
@@ -307,7 +307,7 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Gemma.MetaHeatmapResizablePanelBase
 						delete columnFilters[filterId];
 					},
 					
-					applyFilters : function () {						
+					applyFilters : function () {
 						for (var filter in columnFilters) {
 							this.items.each(function() {this.filterColumns(filteringFn);});							
 						}												

@@ -336,7 +336,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 
 
 		/*************** end of selection grids **********************/
-		
+
 		this.TOTAL_NUMBER_OF_COLUMNS = 0;
 		var datasetGroupIndex;
 		for (datasetGroupIndex = 0; datasetGroupIndex < this.visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
@@ -349,18 +349,17 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				(this.visualizationData.resultSetValueObjects.length - 1) * 1;
 
 		/************** visualizer sizing *****************/
-		var pageHeight =  window.innerHeight != null ? window.innerHeight : document.documentElement && 
-			document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body != null ? document.body.clientHeight : null;
+		var pageHeight =  window.innerHeight !== null ? window.innerHeight : document.documentElement && 
+			document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body !== null ? document.body.clientHeight : null;
 			
-		var pageWidth = window.innerWidth != null? window.innerWidth : document.documentElement && 
-			document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body != null ? document.body.clientWidth : null;
+		var pageWidth = window.innerWidth !== null? window.innerWidth : document.documentElement && 
+			document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body !== null ? document.body.clientWidth : null;
 
 		var adjPageWidth = ((pageWidth - Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppWidth)? 
 								(pageWidth - Gemma.MetaVisualizationConfig.windowPadding - 30) : Gemma.MetaVisualizationConfig.minAppWidth;
 								// not sure why need extra -30 here and not below, but otherwise it doesn't fit 
 		var adjPageHeight = ((pageHeight -Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppHeight)? 
 								(pageHeight - Gemma.MetaVisualizationConfig.windowPadding) : Gemma.MetaVisualizationConfig.minAppHeight;
-		
 		// resize all elements with browser window resize
 		Ext.EventManager.onWindowResize(function(width, height){
 			// -50 so that window fits nicely
@@ -378,8 +377,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this.colorLegend.y = 0;
 			
 			this.doLayout();
-			
-			
 		}, this);
 		
 		/*********** END: visualizer sizing *****************/
@@ -814,7 +811,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							visualizationData : this.visualizationData.resultSetValueObjects,
 							datasetGroupNames : this.visualizationData.datasetGroupNames,
 							ref : 'topLabelsPanel'
-						}, {
+						},{
 							xtype : 'metaVizScrollableArea',
 							height : Gemma.MetaVisualizationUtils
 									.calculateColumnHeight(this.visualizationData.geneNames),
@@ -826,7 +823,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							geneIds : this.visualizationData.geneIds,
 							applicationRoot : this,
 							ref : '_heatmapArea'							
-						}]
+						} ]
 			}]
 		});
 		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
@@ -882,7 +879,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				this.tree.getNodeById(this.initFactorFilter[j]).getUI().toggleCheck(false);
 			}
 		}
-		
+
 		this.colorLegend.show();
 
 	},

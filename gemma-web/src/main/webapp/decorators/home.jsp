@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <%-- Decorator for the home page --%>
 <%-- $Id$ --%>
 
@@ -19,7 +19,6 @@
 		<jwr:style src="/bundles/gemma-all.css" />
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
-
 
 		<decorator:head />
 	</head>

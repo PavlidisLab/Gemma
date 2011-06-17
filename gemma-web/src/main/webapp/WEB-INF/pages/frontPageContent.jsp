@@ -39,16 +39,14 @@ function hideTopBar(divID) {
 </div>
 <div align="center">
 	<div style="width: 900px">
-
 		<div align="center">
 			<div id="analysis-results-search-form-warnings" align="left"></div>
-			<div id="analysis-results-search-form" align="center"></div>
+			<div id="analysis-results-search-form" align="left"></div>
 			<br>
 			<div id="analysis-results-search-form-messages" align="left"></div>
 			<div id="analysis-results-search-form-results" align="left"></div>
 		</div>
 	</div>
-
 
 	<div id="meta-heatmap-div" align="left"></div>
 

@@ -7,18 +7,34 @@ Gemma.SEARCH_FORM_WIDTH = 900;
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
 Ext.onReady(function() {
+	
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 	var admin = (Ext.get('hasAdmin')!==null)? Ext.get('hasAdmin').getValue(): null;
 	var user = (Ext.get('hasUser')!==null)? Ext.get('hasUser').getValue(): null;
 	
-	if (Ext.isIE && Ext.isIE6) {
-		Ext.DomHelper.append('analysis-results-search-form', {
-			tag : 'p',
-			cls : 'trouble',
-			html : 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 7 or newer.'
-		});
-	}
+	// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+	if (!document.createElement("canvas").getContext) {
+		//not supported
+		if(Ext.isIE8){
+			// need to use excanvas
+			// warn user this will be slower?
+		}else if(Ext.isIE){
+			Ext.DomHelper.append('analysis-results-search-form', {
+				tag: 'p',
+				cls: 'trouble',
+				html: 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 8 or newer.' +
+				' If you are running IE 8 or 9 and you see this message, please make sure you are not in compatibility mode. '
+			});
+		}else{
+			Ext.DomHelper.append('analysis-results-search-form', {
+				tag: 'p',
+				cls: 'trouble',
+				html: 'This page may not display properly in all browsers. (The \"canvas\" element is requried.)'+
+						' Please switch to Firefox, Chrome or Internet Explorer 9.'
+			});
+		}
+	} 
 	
 	// panel for performing search, appears on load
 	var searchPanel = new Gemma.AnalysisResultsSearchForm({
