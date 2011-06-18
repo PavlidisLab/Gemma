@@ -332,22 +332,23 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					}.createDelegate(this));
 			return;
 		}
-
+		/* this is disabled
 		if (this.diffExToggle.pressed && this.coexToggle.pressed) {
 			this.doDifferentialExpressionSearch();
 			this.efChooserPanel.on("factors-chosen", function() {
 						this.doCoexpressionSearch();
 					}, this);
-		}
+		}*/
 		// if differential expression button is depressed, do a differential
 		// search
-		else if (this.diffExToggle.pressed) {
-
-			// this.doDifferentialExpressionSearch();
-			var data = this.getDataForDiffVisualization(geneRecords, experimentRecords);
-			// console.log(data);
+		if (this.diffExToggle.pressed) {
+			if(this.showClassicDiffExResults){
+				this.doDifferentialExpressionSearch();
+			}else{
+				var data = this.getDataForDiffVisualization(geneRecords, experimentRecords);
+			}
+			
 			this.fireEvent('showDiffExResults', this, null, data);
-			// this.loadMask.show(); // can't get it to hide
 		}
 
 		// if coexpression button is depressed, do a coexpression search
@@ -553,7 +554,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var efMap = this.efChooserPanel.eeFactorsMap;
 
 		Ext.apply(newDsc, {
-					geneIds : this.geneIds,
+					geneIds : this.getGeneIds(),
 					selectedFactors : efMap,
 					threshold : Gemma.DEFAULT_THRESHOLD,
 					taxonId : this.getTaxonId()
@@ -575,8 +576,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	/**
 	 * Show the user interface for choosing factors. This happens
 	 * asynchronously, so listen for the factors-chosen event.
-	 * 
-	 * 
 	 */
 	chooseFactors : function() {
 		if (this.getSelectedExperimentRecords().length <= 0) {
@@ -600,34 +599,37 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (msg.length !== 0) {
 			this.handleError(msg);
 			return;
-		} else {
-
+		}
+		else {
+		
 			this.chooseFactors();
-			this.efChooserPanel.on("factors-chosen", function(efmap) {
-
-						if (!dsc) {
-							dsc = this.getDiffSearchCommand();
-						} else {
-							dsc.selectedFactors = efmap;
-						}
-						this.clearError();
-						var msg = this.validateDiffExSearch(dsc);
-						if (msg.length === 0) {
-							this.loadMask.show();
-							var errorHandler = this.handleError.createDelegate(this, [], true);
-							DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
-										callback : this.returnFromDiffExSearch.createDelegate(this),
-										errorHandler : errorHandler
-									});
-						} else {
-							this.handleError(msg, e);
-						}
-						if (typeof pageTracker !== 'undefined') {
-							pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
-						}
-					}, this, {
-						single : true
+			this.efChooserPanel.on("factors-chosen", function(efmap){
+			
+				if (!dsc) {
+					dsc = this.getDiffSearchCommand();
+				}
+				else {
+					dsc.selectedFactors = efmap;
+				}
+				this.clearError();
+				var msg = this.validateDiffExSearch(dsc);
+				if (msg.length === 0) {
+					this.loadMask.show();
+					var errorHandler = this.handleError.createDelegate(this, [], true);
+					DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
+						callback: this.returnFromDiffExSearch.createDelegate(this),
+						errorHandler: errorHandler
 					});
+				}
+				else {
+					this.handleError(msg, e);
+				}
+				if (typeof pageTracker !== 'undefined') {
+					pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
+				}
+			}, this, {
+				single: true
+			});
 		}
 
 	},
@@ -813,7 +815,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
 
-		var data = this.getDataForDiffVisualization();
+		var data;
+		if(!this.showClassicDiffExResults){
+			data = this.getDataForDiffVisualization();
+		}else{
+			data = null;
+		}
 		this.fireEvent('showDiffExResults', this, result, data);
 	},
 	wereSelectionsModified: function(){
@@ -1292,17 +1299,5 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	}
 
 });
-// this makes the text in the button change colour on hover, like a normal link
-Ext.LinkButton = Ext.extend(Ext.Button, {
-	template : new Ext.Template(
-			'<table cellspacing="0" class="x-btn {3}"><tbody class="{4}">',
-			'<tr><td class="x-btn-tl"><i>&#160;</i></td><td class="x-btn-tc"></td><td class="x-btn-tr"><i>&#160;</i></td></tr>',
-			'<tr><td class="x-btn-ml"><i>&#160;</i></td><td class="x-btn-mc"><em class="{5}" unselectable="on"><a href="{6}" target="{7}" class="x-btn-text {2}"><button>{0}</button></a></em></td><td class="x-btn-mr"><i>&#160;</i></td></tr>',
-			'<tr><td class="x-btn-bl"><i>&#160;</i></td><td class="x-btn-bc"></td><td class="x-btn-br"><i>&#160;</i></td></tr>',
-			'</tbody></table>').compile(),
-	buttonSelector : 'a:first',
-	ctCls : "transparent-btn" // no button image
-});
 
-Ext.reg('linkButton', Ext.LinkButton);
 Ext.reg('analysisResultsSearchForm', Gemma.AnalysisResultsSearchForm);

@@ -108,6 +108,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					});
 			this.updateTitle(this.selectedGeneOrGroupRecord.name, 1);
 			this.geneSelectionEditorBtn.setText('0 more - Edit');
+			this.previewPart.moreIndicator.update('');
 			this.geneSelectionEditorBtn.enable();
 			this.geneSelectionEditorBtn.show();
 		}
@@ -157,13 +158,16 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					}
 					this.updateTitle(this.selectedGeneOrGroupRecord.name,ids.size());
 				
-					this.geneSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
 					this.showGenePreview();
 
 					if (ids.size() === 1) {
 						this.geneSelectionEditorBtn.setText('0 more - Edit');
-						this.geneSelectionEditorBtn.enable().show();
+					this.previewPart.moreIndicator.update('');
+					}else{
+						this.geneSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
+					this.previewPart.moreIndicator.update('[...]');
 					}
+					this.geneSelectionEditorBtn.enable().show();
 					this.previewPart.genePreviewContent.expand();
 
 				}.createDelegate(this));
@@ -339,6 +343,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				if (geneIds.size() <= 1) {
 					this.geneSelectionEditorBtn.setText('0 more - Edit');
 					this.geneSelectionEditorBtn.enable().show();
+					this.previewPart.moreIndicator.update('[...]');
+				}else{
+					this.previewPart.moreIndicator.update('');
 				}
 
 				loadMask.hide();
@@ -401,6 +408,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.relayEvents(this.geneCombo, ['select']);
 
 		this.symbolList = new Gemma.GeneImportPanel({
+			height:300,
 			showTaxonCombo: true,
 			listeners: {
 				'commit': {
@@ -464,15 +472,14 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					this.geneSelectionEditorWindow.hide();
 				}, this);
 
-		this.geneSelectionEditorBtn = new Ext.LinkButton({
+		this.geneSelectionEditorBtn = new Ext.Button({
 					handler : this.launchGeneSelectionEditor,
 					scope : this,
 					style : 'float:right;text-align:right; padding-right:10px; padding-bottom:5px',
-					width : '200px',
 					tooltip : "Edit your selection",
 					hidden : true,
-					disabled : true,
-					ctCls : 'right-align-btn transparent-btn'
+					//disabled : true, // enabling later is buggy in IE
+					ctCls : 'right-align-btn transparent-btn transparent-btn-link'
 				});
 
 		this.geneSelectionEditorWindow = new Ext.Window({
@@ -507,24 +514,34 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					title : 'Gene Selection Preview',
 					collapsible : true,
 					forceLayout:true,
-					tools:[{
-						id:'delete',
-						handler:function(event, toolEl, panel, toolConfig){
-								this.searchForm.removeGeneChooser(this.id);
-						}.createDelegate(this, [], true),
-						qtip:'Remove this gene or group from your search'
-					}],
 					cls : 'unstyledTitle',
-					bodyStyle: 'padding:10px; background-color:transparent', 
+					bodyStyle: 'padding:10px;padding-bottom:0px; background-color:transparent', 
 					hidden : false,
+					tools: [{
+						id: 'delete',
+						handler: function(event, toolEl, panel, toolConfig){
+							this.searchForm.removeGeneChooser(this.id);
+						// this.fireEvent('removeExperiment');
+						}.createDelegate(this, [], true)					,
+						qtip: 'Remove this gene or group from your search'
+					}],
 					listeners : {
 						collapse : function() {
+							this.previewPart.moreIndicator.hide();
 							this.geneSelectionEditorBtn.hide();
-						}.createDelegate(this, [], true),
+						},
 						expand : function() {
 							this.geneSelectionEditorBtn.show();
-						}.createDelegate(this, [], true)
+							this.previewPart.moreIndicator.show();
+						},
+						scope:this
 					}
+				},{
+					xtype:'box',
+					ref:'moreIndicator',
+					html:'[...]',
+					hidden:true,
+					style: 'margin-left:10px; background-color:transparent', 
 				}, this.geneSelectionEditorBtn]
 		});
 		this.updateTitle = function(name, size){

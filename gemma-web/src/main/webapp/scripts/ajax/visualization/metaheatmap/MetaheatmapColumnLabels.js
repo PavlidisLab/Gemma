@@ -4,24 +4,31 @@ Ext.namespace('Gemma');
 Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 	initComponent : function() {
 		Ext.apply(this, {
-			autoEl : {
+			
+			/*autoEl : {
 				tag : 'canvas',
-				width : this.applicationRoot._heatMapWidth * 1 +
+			},*/
+			autoEl : 'canvas',
+			/*	width : this.applicationRoot._heatMapWidth * 1 +
 						Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / 
 							Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180)) + 80,
-				height : Gemma.MetaVisualizationConfig.columnLabelHeight
-			},
-			_data : this.visualizationData,
+				height : Gemma.MetaVisualizationConfig.columnLabelHeight,
+			*/_data : this.visualizationData,
 			_datasetGroupNames : this.datasetGroupNames,
 			applicationRoot : this.applicationRoot,
 
 			_drawTopLabels : function(hiDatasetGroup, hiColumnGroup, hiColumn, hiFactorValue) {				
 				var mainHeatmapPanel = this.applicationRoot._imageArea._heatmapArea;
 				var newWidth = mainHeatmapPanel.getWidth() + 200;
-
-				var ctx = this.el.dom.getContext("2d");
+				var height = Gemma.MetaVisualizationConfig.columnLabelHeight;
+				
+				//var ctx = this.el.dom.getContext("2d");
+				
+				ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
 				ctx.canvas.width = newWidth;
+				ctx.canvas.height = height;
 				this.setWidth(newWidth);
+				this.setHeight(height);
 				
 				CanvasTextFunctions.enable(ctx);
 				//ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
@@ -252,6 +259,8 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 	
 	onRender : function() {
 		Gemma.MetaHeatmapRotatedLabels.superclass.onRender.apply(this, arguments);
+		
+				
 		this.syncSize();
 
 		this.el.on('click', function(e, t){

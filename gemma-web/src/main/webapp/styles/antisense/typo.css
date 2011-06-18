@@ -584,8 +584,20 @@ a.tooltip:hover .tooltiptext {
 }
 .transparent-btn .x-btn-tl, .transparent-btn .x-btn-tr, .transparent-btn .x-btn-tc, .transparent-btn .x-btn-ml, .transparent-btn .x-btn-mr, .transparent-btn .x-btn-mc, .transparent-btn .x-btn-bl, .transparent-btn .x-btn-br, .transparent-btn .x-btn-bc {
     background-image:url(../../images/s.gif);
-
+	cursor:pointer;
 }
+.transparent-btn-link table:hover{
+	cursor:pointer;
+}
+.transparent-btn-link button {
+	color: #004f64;
+	text-decoration: none;
+}
+.transparent-btn-link button:hover {
+	color: #f47f20;
+	text-decoration: none;
+}
+
 .right-align-btn .x-btn-mc{
  	text-align: right;
  }

@@ -12,99 +12,94 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 		
 	
 		
-		if (this.vertical===true){
+		if (this.vertical === true) {
+		
+			var widthInit = this.cellWidth + this.textWidthMax + this.textOffset;
 			
-			var widthInit = this.cellWidth+this.textWidthMax+this.textOffset;
-			
-			var heightInit = this.cellHeight*this.colorValues.length+this.fontSize+this.textOffset*2;
+			var heightInit = this.cellHeight * this.colorValues.length + this.fontSize + this.textOffset * 2;
 			
 			Ext.apply(this, {
+			
+				height: heightInit + 35,
 				
-			height: heightInit+35,
-			
-			width: widthInit*2+25,
+				width: widthInit * 2 + 25,
 				
-			_offset:this.textOffset,			
-			
-			items:[{
-			
-				xtype: 'box',
-				autoEl : {
-						tag : 'canvas',
-						width : widthInit,
-						height : heightInit,
-						id:this.canvasId
-					},
-					listeners:{
-						afterrender:{
-							scope:this,
-							fn:function(){
-								this._ctx = document.getElementById(this._canvasId).getContext("2d");
+				_offset: this.textOffset,
+				
+				items: [{
+				
+					xtype: 'box',
+					autoEl: 'canvas',
+					id: this.canvasId,
+					listeners: {
+						afterrender: {
+							scope: this,
+							fn: function(){
+								this._ctx = Gemma.MetaVisualizationUtils.getCanvasContext(document.getElementById(this._canvasId));
+								this._ctx.canvas.height = heightInit;
+								this._ctx.canvas.width = widthInit;
 								this.drawVertical(this._discreteColorRange, this._colorValues, this._title);
 							}
 						}
-						
-						
+					
+					
 					}
-			
-			
-			},{
-				xtype: 'box',
-				autoEl : {
-						tag : 'canvas',
-						width : widthInit,
-						height : heightInit,
-						id:this.canvasId2
-					},
-					listeners:{
-						afterrender:{
-							scope:this,
-							fn:function(){
-								this._ctx = document.getElementById(this._canvasId2).getContext("2d");
+				
+				
+				}, {
+					xtype: 'box',
+					autoEl: 'canvas',
+					id: this.canvasId2,
+					listeners: {
+						afterrender: {
+							scope: this,
+							fn: function(){
+								this._ctx = Gemma.MetaVisualizationUtils.getCanvasContext(document.getElementById(this._canvasId2));
+								this._ctx.canvas.height = heightInit;
+								this._ctx.canvas.width = widthInit;
 								this.drawVertical(this._discreteColorRange2, this._colorValues2, this._title2);
 							}
 						}
-						
-						
+					
+					
 					}
-			
-			}]
+				
+				}]
 			});
 			
-		} else{			
-			
-			var heightInit = this.cellHeight+this.textWidthMax +this.textOffset;
+		}
+		else {
+		
+			var heightInit = this.cellHeight + this.textWidthMax + this.textOffset;
 			Ext.apply(this, {
+			
+				height: heightInit + 35,
 				
-			height: heightInit+35,
-			
-			width: this.cellWidth*this.colorValues.length+25,
-			
-			_offset:this.textOffset,
-			
-			items:{
-			
-				xtype: 'box',
-				autoEl : {
-						tag : 'canvas',
-						width : this.cellWidth*this.colorValues.length,
-						height : heightInit,
-						id:this.canvasId
-					},
-					listeners:{
-						afterrender:{
-							scope:this,
-							fn:function(){
-								this._ctx = document.getElementById(this._canvasId).getContext("2d");
+				width: this.cellWidth * this.colorValues.length + 25,
+				
+				_offset: this.textOffset,
+				
+				items: {
+				
+					xtype: 'box',
+					autoEl: 'canvas',
+					id: this.canvasId,
+					listeners: {
+						afterrender: {
+							scope: this,
+							fn: function(){
+								this._ctx = Gemma.MetaVisualizationUtils.getCanvasContext(document.getElementById(this._canvasId));
+								this._ctx.canvas.height = heightInit;
+								this._ctx.canvas.width = widthInit;
 								this.drawHorizontal();
 							}
 						}
-						
-						
+					
+					
 					}
-			
-			
-			}
+				
+				
+				}
 			});
 			
 			
@@ -164,8 +159,8 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 		if (this._cellWidth<15){//tweak for smaller cell sizes
 			xStartText=-2;
 		}	
-		
-		for (var i = 0 ; i < this.colorValues.length; i++){
+		var i;
+		for (i = 0 ; i < this.colorValues.length; i++){
 			this._ctx.save();
 			this._ctx.translate(xStartText, this._textWidthMax);
 			this._ctx.rotate(-Math.PI/2);
@@ -179,7 +174,7 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 		
 		xstart=0;
 		
-		for (var i = 0 ; i < this.colorValues.length; i++){			
+		for (i = 0 ; i < this.colorValues.length; i++){			
 			colorValue = this.colorValues[i];			
 			this._ctx.fillStyle = this._discreteColorRange.getCellColorString(colorValue[0]);
 			this._ctx.fillRect(xstart,this._textWidthMax+this._offset,this._cellWidth, this._cellHeight);

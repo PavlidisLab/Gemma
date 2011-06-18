@@ -511,7 +511,7 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 			modal : true,
 			layout : 'fit',
 			stateful : false,
-			autoHeight : true,
+			autoHeight : false,
 			width : 350,
 			height : 300,
 			closeAction : 'hide',
@@ -554,7 +554,8 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										ref:'_geneText',
 										fieldLabel : "Paste in gene symbols, one per line, up to " +
 												Gemma.MAX_GENES_PER_QUERY,
-										width : 250
+										width : 250,
+										height:290
 									}]
 						});
 				}else{
@@ -565,27 +566,28 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										ref:'_geneText',
 										fieldLabel : "Paste in gene symbols, one per line, up to " +
 												Gemma.MAX_GENES_PER_QUERY,
-										width : 290
+										width : 290,
+										height: 290
 									}]
 						});
 				}
 				Ext.apply(this, {
 							buttons : [{
-										text : 'Cancel',
-										handler : function() {
-											this.hide();
-										}.createDelegate(this),
-										scope : this
-									}, {
 										text : 'OK',
 										handler : this.onCommit,
 										scope : this
-									}, {
+									},  {
 										text : 'Clear',
 										scope:this,
 										handler : function() {
 											this._geneText.setValue("");
 										}
+									},{
+										text : 'Cancel',
+										handler : function() {
+											this.hide();
+										}.createDelegate(this),
+										scope : this
 									}]
 						});
 

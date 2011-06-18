@@ -61,9 +61,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					});
 			this.updateTitle(this.experimentCombo.getRawValue(), 1);
 			this.experimentSelectionEditorBtn.setText('0 more - Edit');
-			this.experimentSelectionEditorBtn.enable();
 			this.experimentSelectionEditorBtn.show();
 			this.previewPart.experimentPreviewContent.expand();
+			this.previewPart.moreIndicator.update('');
 		}
 	},
 
@@ -118,13 +118,15 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.previewPart.experimentPreviewContent.update(ees[j]);
 					}
 					this.updateTitle(this.selectedExperimentOrGroupRecord.name,ids.size());
-					this.experimentSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
 					this.showExperimentPreview();
 
 					if (ids.size() === 1) {
 						this.experimentSelectionEditorBtn.setText('0 more - Edit');
-						this.experimentSelectionEditorBtn.enable();
 						this.experimentSelectionEditorBtn.show();
+						this.previewPart.moreIndicator.update('');
+					}else{
+						this.experimentSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
+						this.previewPart.moreIndicator.update('[...]');
 					}
 					
 				}.createDelegate(this));
@@ -165,7 +167,6 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	},
 	showExperimentPreview : function() {
 		this.loadMask.hide();
-		this.experimentSelectionEditorBtn.enable();
 		this.experimentSelectionEditorBtn.show();
 		this.previewPart.experimentPreviewContent.show();
 		this.previewPart.show();
@@ -221,6 +222,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					}
 					combo.disable().hide();
 					//this.selectionTitle.update(combo.getValue());
+					this.removeBtn.show();
 					this.removeBtn.setPosition(300,0);
 					this.doLayout();
 
@@ -264,15 +266,14 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		/**
 		 * 
 		 */
-		this.experimentSelectionEditorBtn = new Ext.LinkButton({
+		this.experimentSelectionEditorBtn = new Ext.Button({
 					handler : this.launchExperimentSelectionEditor,
 					scope : this,
-					style : 'float:right;text-align:right; padding-right:10px; padding-bottom:5px',
-					width : '200px',
+					style : 'float:right;text-align:right; margin-right:10px; margin-bottom:5px;',
 					tooltip : "Edit your selection",
 					hidden : true,
-					disabled : true,
-					ctCls : 'right-align-btn transparent-btn'
+					//disabled : true, // enabling later is buggy in IE
+					ctCls : 'right-align-btn transparent-btn transparent-btn-link'
 				});
 
 		this.experimentSelectionEditorWindow = new Ext.Window({
@@ -312,6 +313,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				//style : 'padding-top:7px;',
 				title: 'Experiment Selection Preview',
 				collapsible: true,
+				cls: 'unstyledTitle',
+				bodyStyle: 'padding:10px;padding-bottom:0px; background-color:transparent', 
+				hidden: true,
 				tools: [{
 					id: 'delete',
 					handler: function(event, toolEl, panel, toolConfig){
@@ -320,17 +324,23 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					}.createDelegate(this, [], true)					,
 					qtip: 'Remove this experiment or group from your search'
 				}],
-				cls: 'unstyledTitle',
-				bodyStyle: 'padding:10px; background-color:transparent', 
-				hidden: true,
 				listeners: {
 					collapse: function(){
 						this.experimentSelectionEditorBtn.hide();
-					}.createDelegate(this, [], true),
+							this.previewPart.moreIndicator.hide();
+					},
 					expand: function(){
 						this.experimentSelectionEditorBtn.show();
-					}.createDelegate(this, [], true)
+							this.previewPart.moreIndicator.show();
+					},
+					scope:this
 				}
+			},{
+				xtype: 'box',
+				ref: 'moreIndicator',
+				html: '[...]',
+				hidden: true,
+				style: 'margin-left:10px; background-color:transparent',
 			},this.experimentSelectionEditorBtn]
 		});
 		

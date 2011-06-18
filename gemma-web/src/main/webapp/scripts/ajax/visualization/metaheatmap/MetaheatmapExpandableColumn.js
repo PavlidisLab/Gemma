@@ -4,11 +4,12 @@ Ext.namespace('Gemma');
 Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 	initComponent : function() {
 		Ext.apply(this, {
-					autoEl : {
+					/*autoEl : {
 						tag : 'canvas',
 						width : Gemma.MetaVisualizationConfig.cellWidth,
 						height : Gemma.MetaVisualizationConfig.cellHeight * this.visualizationSubColumnData.length
-					},
+					},*/
+					autoEl:'canvas',
 					margins : {
 						top : 0,
 						right : 0,
@@ -57,7 +58,9 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 	collapseSubColumn_ : function () {
 		this._isExpanded = false;
 		this.setWidth( this.collapsedWidth ); //TODO: Can I override this method?
-		this.el.dom.getContext("2d").canvas.width = this.collapsedWidth;
+		
+		var ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
+		ctx.canvas.width = this.collapsedWidth;
 		
 		this.drawQvalues_ ();
 	},
@@ -65,13 +68,16 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 	expandSubColumn_ : function () {
 		this._isExpanded = true;
 		this.setWidth( this.expandedWidth );
-		this.el.dom.getContext("2d").canvas.width = this.expandedWidth;		
+		var ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
+		ctx.canvas.width = this.expandedWidth;		
 		
 		this.drawContrasts_ ();
 	},
 	
 	drawQvalues_ : function(highlightRow) {
-		var ctx = this.el.dom.getContext("2d");
+		
+		var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
+		//var ctx = this.el.dom.getContext("2d");
 		ctx.clearRect(0, 0, this.el.dom.width, this.el.dom.height);
 
 		for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupIndex].length; i++) {
@@ -89,7 +95,8 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 	},	
 	
 	drawContrasts_ : function(highlightRow, highlightColumn) {
-		var ctx = this.el.dom.getContext("2d");
+		var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
+		//var ctx = this.el.dom.getContext("2d");
 
 		var contrasts = this.ownerCt.contrastsData.contrasts;
 		
@@ -223,7 +230,6 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				}
 			};
 			this.applicationRoot._hoverDetailsPanel.show();
-			this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
 			if (this._isExpanded) {
 				var contrasts = this.ownerCt.contrastsData.contrasts;
 				var geneId = this.applicationRoot._imageArea._heatmapArea.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]];				
@@ -270,33 +276,24 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					// specificity: 100 * this.ownerCt.miniPieValue / 360,
 					pvalue : formatPVal(this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
 					// baselineFactorValue: this.ownerCt.baselineFactorValue,
-					factorName : this.ownerCt._dataColumn.factorName, // can also
-					// get
-					// factor
-					// values,
-					// using
-					// this.ownerCt.contrastsFactorValues
-					// and
-					// this.ownerCt.contrastsFactorValueIds
+					factorName : this.ownerCt._dataColumn.factorName, 
 					factorCategory : this.ownerCt._dataColumn.factorCategory,
 					factorDescription : this.ownerCt._dataColumn.factorDescription,
 					factorId : this.ownerCt._dataColumn.factorId,
 					datasetId : this.ownerCt._dataColumn.datasetId,
 					datasetName : this.ownerCt._dataColumn.datasetName,
 					datasetShortName : this.ownerCt._dataColumn.datasetShortName,
-					// numberOfProbes: this.ownerCt.numberOfProbes,
-					// numberOfProbesDiffExpressed:
-					// this.ownerCt.numberOfProbesDiffExpressed,
-					// numberOfProbesDownRegulated:
-					// this.ownerCt.numberOfProbesDownRegulated,
-					// numberOfProbesUpRegulated:
-					// this.ownerCt.numberOfProbesUpRegulated,
-					// numberOfProbesTotal: this.ownerCt.numberOfProbesTotal,
 					geneSymbol : this.applicationRoot._imageArea._geneLabels.labels[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]],
 					geneId : this.applicationRoot._imageArea._heatmapArea.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]],
 					geneFullName : this.applicationRoot.visualizationData.geneFullNames[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]
 				});
 			}
+			
+			var heightOfHoverWin = (typeof this.applicationRoot._hoverDetailsPanel.height !== 'undefined')?
+					this.applicationRoot._hoverDetailsPanel.height:200; 
+			var y = ((e.getPageY()+ 20 + heightOfHoverWin) > this.applicationRoot._imageArea.height)?
+						e.getPageY() - heightOfHoverWin - 20 : e.getPageY()+ 20;
+			this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , y );
 			
 		}, this);
 
@@ -395,7 +392,8 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 				},
 				changeWidth : function ( newWidth ) {
 					this.setWidth( newWidth ); //TODO: Can I override this method?
-					this.btnEl.dom.getContext("2d").canvas.width = newWidth;					
+					var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.btnEl.dom);
+					ctx.canvas.width = newWidth;					
 				},
 				listeners : {
 					toggle : function(target, checked) {
@@ -496,7 +494,8 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 	// Move to a separate file/'class'?
 	drawButton_ : function (color) {
 		// Clear canvas.
-		var ctx = this.expandButton_.btnEl.dom.getContext("2d");
+		var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.expandButton_.btnEl.dom);
+		//var ctx = this.expandButton_.btnEl.dom.getContext("2d");
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 				
 		if (this.expandButton_.pressed) {

@@ -12,33 +12,51 @@ Ext.onReady(function() {
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 	var admin = (Ext.get('hasAdmin')!==null)? Ext.get('hasAdmin').getValue(): null;
 	var user = (Ext.get('hasUser')!==null)? Ext.get('hasUser').getValue(): null;
-	
+	var redirectToClassic = false;
 	// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
 	if (!document.createElement("canvas").getContext) {
+		redirectToClassic = true;
 		//not supported
 		if(Ext.isIE8){
-			// need to use excanvas
-			// warn user this will be slower?
+			// excanvas doesn't cover all functionality of new diff ex metaheatmap visualization
+			Ext.DomHelper.append('analysis-results-search-form', {
+				tag: 'p',
+				cls: 'trouble',
+				id: 'browserWarning',
+				html: 'Advanced differential expression visualizations are not available in your browser (Internet Explorer 8). We suggest upgrading to  '+
+						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>, '+
+						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or '+
+						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.'
+			});
 		}else if(Ext.isIE){
 			Ext.DomHelper.append('analysis-results-search-form', {
 				tag: 'p',
 				cls: 'trouble',
-				html: 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 8 or newer.' +
-				' If you are running IE 8 or 9 and you see this message, please make sure you are not in compatibility mode. '
+				id: 'browserWarning',
+				html: 'This page may display improperly in older versions of Internet Explorer(IE). Please upgrade to '+
+						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">IE 9</a>, '+
+						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or '+
+						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.'+
+				' If you are running IE 9 and you see this message, please make sure you are not in compatibility mode. '
 			});
 		}else{
 			Ext.DomHelper.append('analysis-results-search-form', {
 				tag: 'p',
 				cls: 'trouble',
+				id: 'browserWarning',
 				html: 'This page may not display properly in all browsers. (The \"canvas\" element is requried.)'+
-						' Please switch to Firefox, Chrome or Internet Explorer 9.'
+						' Please switch to '+
+						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a>,'+
+						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a> or'+
+						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>.'
 			});
 		}
 	} 
 	
 	// panel for performing search, appears on load
 	var searchPanel = new Gemma.AnalysisResultsSearchForm({
-		width: Gemma.SEARCH_FORM_WIDTH
+		width: Gemma.SEARCH_FORM_WIDTH,
+		showClassicDiffExResults: redirectToClassic
 	});
 
 	// window that controls diff visualizer; 
@@ -84,6 +102,11 @@ Ext.onReady(function() {
 		
 		// remove previous diff visualization result
 		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
+		
+		//clear browser warning
+		if (redirectToClassic) {
+			document.getElementById('browserWarning').style.display = "none";
+		}
 		
 	},this);
 		
@@ -295,58 +318,47 @@ Ext.onReady(function() {
 	
 	searchPanel.on("showDiffExResults",function(panel,result, data){
 		
-		
-		// show metaheatmap viewer (but not control panel)
-		// control panel is responsible for creating the visualisation view space
-		this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data); 
-		
-		this.diffVisualizer.on('visualizationLoaded', function(){
-			panel.loadMask.hide();
-		}, this);
-		
-		/* doesn't work
-		this.relayEvents(this.diffVisualizer, ['visualizationLoaded']);
-		this.on('visualizationLoaded', function(){
-			panel.loadMask.hide()
-		}, this);
-		*/
-		
-		/* doesn't work either
-		 * this.diffVisualizer.on('visualizationLoaded', function(){
-			panel.loadMask.hide()
-		}, this);
-		*/
-		
-		/*	old way	
-		var diffExResultsGrid = new Gemma.DiffExpressionGrid({
+		if (!redirectToClassic) {
+			
+			// show metaheatmap viewer (but not control panel)
+			// control panel is responsible for creating the visualisation view space
+			this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data);
+			
+			this.diffVisualizer.on('visualizationLoaded', function(){
+				panel.loadMask.hide();
+			}, this);
+		}
+		else {
+			
+			var diffExResultsGrid = new Gemma.DiffExpressionGrid({
 				//renderTo : "analysis-results-search-form-results",
-				title : "Differentially expressed genes",
-				searchPanel : searchPanel,
-				viewConfig: {forceFit: true},
-				height:200,
-				width:900
+				title: "Differentially expressed genes",
+				searchPanel: searchPanel,
+				viewConfig: {
+					forceFit: true
+				},
+				height: 200,
+				width: 900
 			});
-		panel.collapsePreviews();
-		resultsPanel.add({html:"<h2>Differential Expression Search Results</h2>", border:false});
-		resultsPanel.add(diffExResultsGrid);
-		
-		var link = panel.getDiffExBookmarkableLink();
-		diffExResultsGrid
-				.setTitle(String
-						.format(
-								"Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a target='_blank' href='{0}&export'>(export as text)</a>",
-								link));
-
-		var resultsP = Ext.get('analysis-results-search-form-results-panel');
-
-		//if(resultsP) resultsP.animate({height:{from:0},opacity:{to:1}},2);
-		//resultsPanel.show({height:{from:0},opacity:{from:0}});
-		resultsPanel.show();
-		resultsPanel.doLayout();
-		diffExResultsGrid.loadData(result);
+			resultsPanel.removeAll();
+			panel.collapsePreviews();
+			resultsPanel.add({
+				html: "<h2>Differential Expression Search Results</h2>",
+				border: false
+			});
+			resultsPanel.add(diffExResultsGrid);
+			
+			var link = panel.getDiffExBookmarkableLink();
+			diffExResultsGrid.setTitle(String.format("Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a target='_blank' href='{0}&export'>(export as text)</a>", link));
+			
+			var resultsP = Ext.get('analysis-results-search-form-results-panel');
+			
+			//if(resultsP) resultsP.animate({height:{from:0},opacity:{to:1}},2);
+			//resultsPanel.show({height:{from:0},opacity:{from:0}});
+			resultsPanel.show();
+			resultsPanel.doLayout();
+			diffExResultsGrid.loadData(result);
 		//this.diffVisualizer.show();
-		*/
+		}
 	});
-	
-
 });

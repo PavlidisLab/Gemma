@@ -7,10 +7,11 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 		Ext.apply(this, {
 			applicationRoot: this.applicationRoot,
 			geneNames: this.labels,
-			autoEl: { tag: 'canvas',
+			autoEl:'canvas',
+			/*autoEl: { tag: 'canvas',
 			  		  width: 80,
 			  		  height: this.labels.length*10
-			},
+			},*/
 			
 			geneGroupName: this.geneGroupName,
 			geneGroupId: this.geneGroupId,
@@ -19,7 +20,8 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 		    	return Math.floor(y/Gemma.MetaVisualizationConfig.cellHeight);
 			},
 			_drawLabels : function (highlightRow) {
-				var ctx = this.el.dom.getContext("2d");
+				var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
+				//var ctx = this.el.dom.getContext("2d");
 				ctx.clearRect(0, 0, this.el.dom.width, this.el.dom.height);		
 				CanvasTextFunctions.enable(ctx);
 				var textwidth = (this.geneGroupName*(Gemma.MetaVisualizationConfig.geneLabelFontSize) > this.getHeight())? this.geneGroupName*(Gemma.MetaVisualizationConfig.geneLabelFontSize) :this.getHeight();

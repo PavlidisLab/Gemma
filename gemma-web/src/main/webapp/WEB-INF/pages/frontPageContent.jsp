@@ -32,8 +32,8 @@ function hideTopBar(divID) {
 	<span style="font-size: 0.9em"> Check out our <u><a
 			target="_blank"
 			href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">new
-				features</a>
-	</u>, including a differential expression visualizer, experiment batch
+				features</a></u>,
+	including a differential expression visualizer, experiment batch
 		effect analysis and a new search interface. Looking for <a
 		href="<c:url value="/gemmaClassic.html"/>">Gemma Classic</a>? </span>
 </div>

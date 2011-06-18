@@ -373,8 +373,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this._toolPanels.setSize(Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeight);
 			this._toolPanels.doLayout();
 			
-			this.colorLegend.x = adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215;
-			this.colorLegend.y = 0;
+			this.colorLegend.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215, 0)
 			
 			this.doLayout();
 		}, this);
@@ -404,7 +403,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			tbar : [this.tbarTitle, 
 							{
 								hidden: true,
-								xtype: 'linkButton',
+								xtype: 'button',
 								text: 'change',
 								scope:this,
 								handler: function(){
