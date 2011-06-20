@@ -62,15 +62,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	geneGroupId : null, // keep track of what gene group has been selected
 	experimentIds : [],
 
-	listeners : {
-		'ready' : function() {
-			this.loadMask.hide();
-			this.loadMask = new Ext.LoadMask(this.getEl(), {
-						msg : "Searching for analysis results ..."
-					});
-		}
-	},
-
 	/***************************************************************************
 	 * * SEARCH **
 	 **************************************************************************/
@@ -210,14 +201,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	doSearch : function(geneRecords, experimentRecords) {
 		
 		this.fireEvent('beforesearch', this);
+		this.collapsePreviews();
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
-						msg : "Searching for analysis results ..."
+						msg : "Searching for analysis results ...",
+						msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 					});
 		}
-		this.collapsePreviews();
 		this.loadMask.show();
-
 		// reset flags marking if searches are done
 		// only used if both searches are run at once
 		this.doneCoex = false;
@@ -1208,7 +1199,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (typeof this.geneChoosers.items !== 'undefined') {
 			this.geneChoosers.items.each(function() {
 						if (this.xtype === 'geneSearchAndPreview') {
-							this.collapsePreview();
+							this.collapsePreview(false);
 						}
 					});
 		}
@@ -1218,7 +1209,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (typeof this.experimentChoosers.items !== 'undefined') {
 			this.experimentChoosers.items.each(function() {
 						if (this.xtype === 'experimentSearchAndPreview') {
-							this.collapsePreview();
+							this.collapsePreview(false);
 						}
 					});
 		}
