@@ -60,6 +60,9 @@ Gemma.CoexpressionSearchOptions = Ext.extend(Ext.Window,{
 	}, {
 		xtype: 'checkbox',
 		style: 'margin-top:7px',
+		disabled : !this.admin,
+		hidden : !this.admin,
+		hideLabel : !this.admin,
 		ref: 'forceProbeLevelSearch',
 		fieldLabel: 'Probe-level query ' +
 		'<img ext:qtip="Run this query at the level of probes instead of genes. ' +

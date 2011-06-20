@@ -426,12 +426,9 @@ Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 								xtype : 'checkbox',
 								id : 'forceProbeLevelSearch',
 								fieldLabel : 'Force Probe query',
-//								disabled : !this.admin,
-//								hidden : !this.admin,
-//								hideLabel : !this.admin,
-								disabled : false,
-								hidden : false,
-								hideLabel : false,
+								disabled : !this.admin,
+								hidden : !this.admin,
+								hideLabel : !this.admin,
 								tooltip : "Always do the query at the level of probes. May be slower but always gets most current information from newly-processed data sets."
 							}, {
 								xtype : 'checkbox',
