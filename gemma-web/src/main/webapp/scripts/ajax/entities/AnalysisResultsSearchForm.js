@@ -1024,7 +1024,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ',
 					 'ext:qtip="Searches are limited to one taxon, if you want to change the taxon, click the reset button.">',
 					 '{taxonCommonName} </span> experiments ', 
-					 '<img src="/Gemma/images/icons/question_blue.png" ext:qtip="Searches are limited to one taxon, ' +
+					 '<img src="/Gemma/images/icons/question_blue.png" title="Searches are limited to one taxon, ' +
 					'if you want to change the taxon, click the reset button on the right."/> '),
 					tplWriteMode: 'overwrite'
 				});
@@ -1034,7 +1034,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ', 
 					'ext:qtip="Searches are limited to one taxon, if you want to change the taxon, click the reset button.">', 
 					'{taxonCommonName}</span> genes ', 
-					'<img src="/Gemma/images/icons/question_blue.png" ext:qtip="Searches are limited to one taxon, ' +
+					'<img src="/Gemma/images/icons/question_blue.png" title="Searches are limited to one taxon, ' +
 					'if you want to change the taxon, click the reset button on the right."/> '),
 					tplWriteMode: 'overwrite'
 				});
@@ -1091,6 +1091,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							xtype: 'button',
 							text: "<span style=\"font-size:1.3em;padding-top:15px\">Go!</span>",
 							width: 55,
+							tooltip:'Run the search',
 							scale: 'medium',
 							listeners: {
 								click: function(){
@@ -1104,6 +1105,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							icon: '/Gemma/images/icons/arrow_refresh_small.png',
 							style: 'margin-top: 8px',
 							text:'Reset',
+							tooltip:'Clear all selections and reset the taxon mode ',
 							handler: this.reset.createDelegate(this)
 						}]
 					}]

@@ -119,14 +119,17 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					}
 					this.updateTitle(this.selectedExperimentOrGroupRecord.name,ids.size());
 					this.showExperimentPreview();
-
+					if (ids.size() <= this.searchForm.PREVIEW_SIZE) {
+						this.previewPart.moreIndicator.update('');
+					}
+					else {
+						this.previewPart.moreIndicator.update('[...]');
+					}
 					if (ids.size() === 1) {
 						this.experimentSelectionEditorBtn.setText('0 more - Edit');
 						this.experimentSelectionEditorBtn.show();
-						this.previewPart.moreIndicator.update('');
 					}else{
 						this.experimentSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
-						this.previewPart.moreIndicator.update('[...]');
 					}
 					
 				}.createDelegate(this));
@@ -339,7 +342,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				xtype: 'box',
 				ref: 'moreIndicator',
 				html: '[...]',
-				hidden: true,
+				hidden: false,
 				style: 'margin-left:10px; background-color:transparent',
 			},this.experimentSelectionEditorBtn]
 		});
@@ -361,13 +364,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						// this.fireEvent('removeExperiment');
 					}.createDelegate(this, [], true)
 				});
-		this.helpBtn = new Ext.Panel({
-			hidden : false,
-			padding:'3px',
-			html: '<img ext:qtip="Select a general group of genes or try searching for genes by symbol, '+
+		this.helpBtn = new Gemma.InlineHelpIcon({
+			tooltipText:'Select a general group of genes or try searching for genes by symbol, '+
 					'GO terms or keywords such as: schizophrenia, hippocampus etc.<br><br>'+
-					'<b>Example: search for Alzheimer\'s and select all human experiments</b>" ' +
-					'src="/Gemma/images/icons/question_blue.png">'
+					'<b>Example: search for Alzheimer\'s and select all human experiments'
 		});
 		Ext.apply(this, {
 			frame : false,

@@ -593,18 +593,6 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	showLegend : false,
 	showSampleNames : false,
 
-	toggleViewBtnId : 'toggleViewBtn-' + Ext.id(),
-
-	forceFitBtnId : 'forceFitbtn-' + Ext.id(),
-
-	smoothBtnId : 'smoothbtn-' + Ext.id(),
-
-	toggleLegendBtnId : 'toggleLegendBtn-' + Ext.id(),
-
-	toggleSampleNamesBtnId : 'toggleSampleNamesBtn-' + Ext.id(),
-
-	downloadDataBtnId : 'downloadDataBtn-' + Ext.id(),
-
 	getState : function() {
 		return Ext.apply(Ext.Window.superclass.getState.call(this) || {}, {
 					heatmapMode : this.heatmapMode,
@@ -960,7 +948,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 					bbar : new Ext.Toolbar({
 								items : [{
 											xtype : 'button',
-											id : this.downloadDataBtnId,
+											ref:'downloadDataBtn',
 											icon : '/Gemma/images/download.gif',
 											cls : 'x-btn-text-icon',
 											hidden : this.downloadLink === undefined,
@@ -971,35 +959,22 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 										}, browserWarning, '->', {
 											xtype : 'button', 
 											text : this.showSampleNames ? "Show sample names" : "Show sample names",
-											id : this.toggleSampleNamesBtnId,
+											ref:'toggleSampleNamesBtn',
 											handler : this.toggleSampleNames.createDelegate(this),
 											tooltip : "Toggle display of the sample names",
 											disabled : true
 										},{
 											xtype : 'button', 
 											text : this.showLegend ? "Hide legend" : "Show legend",
-											id : this.toggleLegendBtnId,
+											ref:'toggleLegendBtn',
 											handler : this.toggleLegend.createDelegate(this),
 											tooltip : "Toggle display of the plot legend",
 											disabled : true,
 											hidden : this.heatmapMode
-										},
-
-										// {
-										// xtype : 'tbbutton',
-										// text : this.smoothLineGraphs ?
-										// "Unsmooth" : "Smooth",
-										// id : this.smoothBtnId,
-										// handler :
-										// this.toggleSmooth.createDelegate(this),
-										// disabled : true,
-										// hidden : true
-										// },
-										//											
-										{
+										},{
 											xtype : 'button',
 											text : this.forceFitPlots ? "Zoom out" : "Zoom in",
-											id : this.forceFitBtnId,
+											ref:'forceFitBtn',
 											handler : this.toggleForceFit.createDelegate(this),
 											tooltip : "Toggle forcing of the plot to fit in the width of the window",
 											disabled : true,
@@ -1007,7 +982,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 										}, {
 											xtype : 'button',
 											text : this.heatmapMode ? "Switch to line plot" : "Switch to heatmap",
-											id : this.toggleViewBtnId,
+											ref:'toggleViewBtn',
 											disabled : true,
 											handler : this.switchView.createDelegate(this)
 										} /*
@@ -1021,23 +996,23 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 		this.dv.getStore().on('load', function(s, records, options){
 			// check in case window was closed before finished loading, will show user error otherwise
-			if (typeof Ext.getCmp(this.toggleViewBtnId) !== 'undefined') {
-				Ext.getCmp(this.toggleViewBtnId).enable();
-				// Ext.getCmp(this.smoothBtnId).enable();
-				Ext.getCmp(this.forceFitBtnId).enable();
-				Ext.getCmp(this.toggleLegendBtnId).enable();
-				Ext.getCmp(this.toggleSampleNamesBtnId).enable();
-				Ext.getCmp(this.downloadDataBtnId).enable();
+			
+				this.getBottomToolbar().toggleViewBtn.enable();
+				// this.getBottomToolbar().smoothBtn.enable();
+				this.getBottomToolbar().forceFitBtn.enable();
+				this.getBottomToolbar().toggleLegendBtn.enable();
+				this.getBottomToolbar().toggleSampleNamesBtn.enable();
+				this.getBottomToolbar().downloadDataBtn.enable();
 				
 				// So initial state is sure to be okay, after restore from
 				// cookie
-				Ext.getCmp(this.toggleViewBtnId).setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
-				Ext.getCmp(this.forceFitBtnId).setText(this.forceFitPlots ? "Zoom out" : "Zoom in");
-				Ext.getCmp(this.toggleLegendBtnId).setText(this.showLegend ? "Hide legend" : "Show legend");
-				Ext.getCmp(this.toggleSampleNamesBtnId).setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
+				this.getBottomToolbar().toggleViewBtn.setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
+				this.getBottomToolbar().forceFitBtn.setText(this.forceFitPlots ? "Zoom out" : "Zoom in");
+				this.getBottomToolbar().toggleLegendBtn.setText(this.showLegend ? "Hide legend" : "Show legend");
+				this.getBottomToolbar().toggleSampleNamesBtn.setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
 			// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
 			// ? "Unsmooth" : "Smooth");
-			}
+			
 			if (this.heatmapMode) {
 			// Ext.getCmp(this.smoothBtnId).hide();
 			//Ext.getCmp(this.toggleLegendBtnId).hide();

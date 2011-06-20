@@ -156,16 +156,25 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var i = 0; i < genes.size(); i++) {
 						this.previewPart.genePreviewContent.update(genes[i]);
 					}
-					this.updateTitle(this.selectedGeneOrGroupRecord.name,ids.size());
+					var title = this.selectedGeneOrGroupRecord.name;
+					var goPattern = /^GO_\d+$/;
+					if(goPattern.test(this.selectedGeneOrGroupRecord.name)){
+						title = this.selectedGeneOrGroupRecord.name +": "+this.selectedGeneOrGroupRecord.description
+					}
+					this.updateTitle(title,ids.size());
 				
 					this.showGenePreview();
 
+					if (ids.size() <= this.searchForm.PREVIEW_SIZE) {
+						this.previewPart.moreIndicator.update('');
+					}else{
+						this.previewPart.moreIndicator.update('[...]');
+					}
+
 					if (ids.size() === 1) {
 						this.geneSelectionEditorBtn.setText('0 more - Edit');
-					this.previewPart.moreIndicator.update('');
 					}else{
 						this.geneSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
-					this.previewPart.moreIndicator.update('[...]');
 					}
 					this.geneSelectionEditorBtn.enable().show();
 					this.previewPart.genePreviewContent.expand();
@@ -340,12 +349,15 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				this.previewPart.genePreviewContent.show();
 				this.previewPart.show();
 
+				if (geneIds.size() <= this.searchForm.PREVIEW_SIZE) {
+					this.previewPart.moreIndicator.update('');
+				}else{
+					this.previewPart.moreIndicator.update('[...]');
+				}
+
 				if (geneIds.size() <= 1) {
 					this.geneSelectionEditorBtn.setText('0 more - Edit');
 					this.geneSelectionEditorBtn.enable().show();
-					this.previewPart.moreIndicator.update('[...]');
-				}else{
-					this.previewPart.moreIndicator.update('');
 				}
 
 				loadMask.hide();
@@ -540,7 +552,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					xtype:'box',
 					ref:'moreIndicator',
 					html:'[...]',
-					hidden:true,
+					hidden:false,
 					style: 'margin-left:10px; background-color:transparent', 
 				}, this.geneSelectionEditorBtn]
 		});
@@ -566,13 +578,10 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					}.createDelegate(this, [], true)
 				});
 
-		this.helpBtn = new Ext.Panel({
-			hidden : false,
-			padding:'3px',
-			html: '<img ext:qtip=\'Select a general group of genes or try searching for genes by symbol, '+
+		this.helpBtn = new Gemma.InlineHelpIcon({
+			tooltipText:'Select a general group of genes or try searching for genes by symbol, '+
 					'GO terms or keywords such as: schizophrenia, hippocampus etc.<br><br>'+
-					'<b>Example: search for \"map kinase\" and select a GO group</b>\' ' +
-					'src="/Gemma/images/icons/question_blue.png">'
+					'<b>Example: search for "map kinase" and select a GO group</b>'
 		});
 		Ext.apply(this, {
 			width: 335,

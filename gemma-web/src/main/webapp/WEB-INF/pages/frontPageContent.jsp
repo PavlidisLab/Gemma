@@ -64,7 +64,7 @@ function hideTopBar(divID) {
 						<h2>
 							Welcome!
 						</h2>
-						<p style="font-size: 0.90em">
+						<p>
 							Gemma is a database and software system for the
 							<strong>meta-analysis of gene expression data</strong>. Gemma
 							contains data from hundreds of public
@@ -78,7 +78,7 @@ function hideTopBar(divID) {
 							<a href="<c:url value="/diff/diffExpressionSearch.html"/>">differential
 								expression</a> results.
 						</p>
-						<p style="font-size: 0.9em">
+						<p>
 							More information about the project is available
 							<a href="<c:url value="/static/about.html"/>">here</a>.
 							Documentation for Gemma can be found throughout the website and
@@ -100,7 +100,7 @@ function hideTopBar(divID) {
 							<div id="contact">
 								<div>
 									<strong>Get an account</strong>
-									<p class="emphasized" style="font-size: 0.90em">
+									<p class="emphasized">
 										Most features of Gemma are open to guests. However, to access
 										some functionality, such as data upload, you'll need an
 										account.
@@ -116,7 +116,7 @@ function hideTopBar(divID) {
 
 					<security:authorize access="hasRole('GROUP_ADMIN')">
 						<div id="adminFunctions"
-							style="margin-bottom: 10px; font-size: 0.90em;">
+							style="margin-bottom: 10px;">
 							<strong> More administrative functions </strong>
 							<ul class="compactList" style="padding-left: 15px;">
 								<li>
@@ -150,7 +150,7 @@ function hideTopBar(divID) {
 
 
 
-					<!-- Box for summary of data in Gemma and summery of updates and new additions -->
+					<!-- Box for summary of data in Gemma and summary of updates and new additions -->
 					<div class="rightcolumn" style="font-size: smaller">
 
 						<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
