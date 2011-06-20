@@ -343,10 +343,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this.TOTAL_NUMBER_OF_COLUMNS = this.TOTAL_NUMBER_OF_COLUMNS +
 					this.visualizationData.resultSetValueObjects[datasetGroupIndex].length;
 		}
-		this._heatMapWidth = this.TOTAL_NUMBER_OF_COLUMNS * 1 *
-				(Gemma.MetaVisualizationConfig.cellWidth * 1 + Gemma.MetaVisualizationConfig.columnSeparatorWidth * 1) *
-				1 + Gemma.MetaVisualizationConfig.groupSeparatorWidth *
-				(this.visualizationData.resultSetValueObjects.length - 1) * 1;
+		
 
 		/************** visualizer sizing *****************/
 		var pageHeight =  window.innerHeight !== null ? window.innerHeight : document.documentElement && 
@@ -358,7 +355,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		var adjPageWidth = ((pageWidth - Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppWidth)? 
 								(pageWidth - Gemma.MetaVisualizationConfig.windowPadding - 30) : Gemma.MetaVisualizationConfig.minAppWidth;
 								// not sure why need extra -30 here and not below, but otherwise it doesn't fit 
-		var adjPageHeight = ((pageHeight -Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppHeight)? 
+		var adjPageHeight = ((pageHeight - Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppHeight)? 
 								(pageHeight - Gemma.MetaVisualizationConfig.windowPadding) : Gemma.MetaVisualizationConfig.minAppHeight;
 		// resize all elements with browser window resize
 		Ext.EventManager.onWindowResize(function(width, height){
@@ -460,8 +457,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				icon : '/Gemma/images/download.gif',
 				cls : 'x-btn-text-icon',
 				handler : function() {
-					Ext.Msg.alert("Download Results", "Coming soon!");
-				}
+					window.open(this.getDownloadLink());				
+				},
+				scope:this
 			}
 			],
 			items : [new Gemma.ColorLegend({				
@@ -567,7 +565,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						triggerAction: 'all',
 						store: new Ext.data.ArrayStore({
 							fields: ['name', 'text'],
-							data: [['experiment', 'experiment'], ['qValues', 'sum of q Values'], ['specificity', 'specificity']],
+							data: [['experiment', 'name'], ['qValues', 'q values'], ['specificity', 'diff. exp. specificity']],
 							idIndex:0
 						}),
 						listeners: {
@@ -620,7 +618,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						triggerAction: 'all',
 						store: new Ext.data.ArrayStore({
 							fields: ['name', 'text'],
-							data: [['symbol', 'symbol'], ['score', 'gene score']],
+							data: [['symbol', 'symbol'], ['score', 'q values']],
 							idIndex:0
 						}),
 						listeners: {
@@ -802,7 +800,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							ref : '_geneLabels'
 						}, {
 							xtype : 'metaVizRotatedLabels',
-							width : this._heatMapWidth + Gemma.MetaVisualizationConfig.labelExtraSpace,
 							height : 260,
 							x : 80,
 							y : 0,
@@ -814,7 +811,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							xtype : 'metaVizScrollableArea',
 							height : Gemma.MetaVisualizationUtils
 									.calculateColumnHeight(this.visualizationData.geneNames),
-							width : this._heatMapWidth,
 							x : 80,
 							y : Gemma.MetaVisualizationConfig.columnLabelHeight+2,
 							dataDatasetGroups : this.visualizationData.resultSetValueObjects,
@@ -1045,7 +1041,76 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			url= "Error creating your link.";
 		}
 		Ext.Msg.alert("Bookmark or sharable link",warning+"Use this link to re-run your search:<br> "+url);
-	}
+	},
+	/**
+	 * 
+	 */
+	getDownloadLink : function() {
+		var state = this.getVizState();
+		if (!state) {
+			return null;
+		}
+		var queryStart = document.URL.indexOf("?");
+		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
+		url = url.replace('home','downloadText/downloadMetaheatmapData');
+		
+		var noGenes = true;
+		var noExperiments = true;
+		
+		url += "?";
+		if( typeof state.geneIds !== 'undefined' &&  state.geneIds !== null &&  state.geneIds.length !== 0){
+			url += String.format("g={0}&", state.geneIds.join(","));
+			noGenes=false;
+		}	
+		if (typeof state.geneGroupIds !== 'undefined' && state.geneGroupIds !== null && state.geneGroupIds.length !== 0) {
+			url += String.format("gg={0}&", state.geneGroupIds.join(","));
+			noGenes=false;
+		}
+		if( typeof state.eeIds !== 'undefined' &&  state.eeIds !== null &&  state.eeIds.length !== 0){
+			url += String.format("e={0}&", state.eeIds.join(","));
+			noExperiments = false;
+		}		
+		if (typeof state.eeGroupIds !== 'undefined' && state.eeGroupIds !== null && state.eeGroupIds.length !== 0) {
+			url += String.format("eg={0}&", state.eeGroupIds.join(","));
+			noExperiments = false;
+		}	
+		if (typeof state.experimentSessionGroupQueries !== 'undefined' && 
+				typeof state.experimentSessionGroupQueries[0] !== 'undefined' && 
+				state.experimentSessionGroupQueries !== null && 
+				state.experimentSessionGroupQueries.length !== 0) {
+			url += String.format("eq={0}&", state.experimentSessionGroupQueries.join(","));
+			noExperiments = false;
+		}
+		if (typeof state.geneSessionGroupQueries !== 'undefined' && 
+				typeof state.geneSessionGroupQueries[0] !== 'undefined' && 
+				state.geneSessionGroupQueries !== null && 
+				state.geneSessionGroupQueries.length > 0) {
+			url += String.format("gq={0}&", state.geneSessionGroupQueries.join(","));
+			noGenes=false;
+		}
+		// Not supported on backend yet.
+		if (typeof state.geneSort !== 'undefined' && state.geneSort !== null && state.geneSort.length !== 0) {
+			url += String.format("gs={0}&", state.geneSort);
+		}
+		// Not supported on backend yet.
+		if (typeof state.eeSort !== 'undefined' && state.eeSort !== null && state.eeSort.length !== 0) {
+			url += String.format("es={0}&", state.eeSort);
+		}
+		// Not supported on backend yet.
+		if (typeof state.factorFilters !== 'undefined' && state.factorFilters !== null && state.factorFilters.length !== 0) {
+			url += String.format("ff={0}&", state.factorFilters.join(','));
+		}
+		url += String.format("t={0}&", state.taxonId);
+
+		// Remove trailing '&'.
+		url = url.substring(0, url.length-1);
+
+		if(noGenes || noExperiments){
+			return null;
+		}
+		return url;
+	},			
+	
 });
 
 
