@@ -24,9 +24,10 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 				//var ctx = this.el.dom.getContext("2d");
 				ctx.clearRect(0, 0, this.el.dom.width, this.el.dom.height);		
 				CanvasTextFunctions.enable(ctx);
-				var textwidth = (this.geneGroupName*(Gemma.MetaVisualizationConfig.geneLabelFontSize) > this.getHeight())? this.geneGroupName*(Gemma.MetaVisualizationConfig.geneLabelFontSize) :this.getHeight();
+				var geneGroupNameLabelSize = this.geneGroupName.length * Gemma.MetaVisualizationConfig.geneLabelFontSize;
+				var geneGroupNameLabelYPosition = ( geneGroupNameLabelSize > this.getHeight() ) ? this.getHeight() : this.getHeight()/2 + geneGroupNameLabelSize/2;
 				
-				ctx.drawRotatedText(10, textwidth, 270.0, 
+				ctx.drawRotatedText(10, geneGroupNameLabelYPosition, 270.0, 
 					(Gemma.MetaVisualizationConfig.geneLabelFontSize), 'black', this.geneGroupName);
 				
 				// Some genes can be hidden. Genes can be sorted in different ways.

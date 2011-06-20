@@ -20,10 +20,7 @@ Gemma.MetaVisualizationConfig.minAppWidth = 600;
 Gemma.MetaVisualizationConfig.windowPadding = 50;
 Gemma.MetaVisualizationConfig.toolPanelWidth = 300;
 
-
-
-mm = Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
-Gemma.MetaVisualizationConfig.labelExtraSpace = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / mm);
+Gemma.MetaVisualizationConfig.labelExtraSpace = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180));
 
 // Colors
 Gemma.MetaVisualizationConfig.cellHighlightColor = 'red';
