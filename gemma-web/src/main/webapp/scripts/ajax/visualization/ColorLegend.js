@@ -73,13 +73,13 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 			var heightInit = this.cellHeight + this.textWidthMax + this.textOffset;
 			Ext.apply(this, {
 			
-				height: heightInit + 35,
+				height: heightInit*2 + 35,
 				
 				width: this.cellWidth * this.colorValues.length + 25,
 				
 				_offset: this.textOffset,
 				
-				items: {
+				items: [{
 				
 					xtype: 'box',
 					autoEl: 'canvas',
@@ -91,7 +91,7 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 								this._ctx = Gemma.MetaVisualizationUtils.getCanvasContext(document.getElementById(this._canvasId));
 								this._ctx.canvas.height = heightInit;
 								this._ctx.canvas.width = widthInit;
-								this.drawHorizontal();
+								this.drawHorizontal(this._discreteColorRange, this._colorValues, this._title);
 							}
 						}
 					
@@ -99,7 +99,28 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 					}
 				
 				
-				}
+				},
+				{
+				
+					xtype: 'box',
+					autoEl: 'canvas',
+					id: this.canvasId2,
+					listeners: {
+						afterrender: {
+							scope: this,
+							fn: function(){
+								this._ctx = Gemma.MetaVisualizationUtils.getCanvasContext(document.getElementById(this._canvasId2));
+								this._ctx.canvas.height = heightInit;
+								this._ctx.canvas.width = widthInit;
+								this.drawHorizontal(this._discreteColorRange2, this._colorValues2, this._title2);
+							}
+						}
+					
+					
+					}
+				
+				
+				}]
 			});
 			
 			
@@ -142,7 +163,7 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
         
     },
     
-    drawHorizontal : function() {
+    drawHorizontal : function(discreteCR, cValues, title) {
 		
 		var colorValue;
 		var xstart=0;
@@ -152,7 +173,11 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 			this._fontSize=10;
 		}
 		
-		this._ctx.font = this._fontSize + "px sans-serif";		
+		this._ctx.font = this._fontSize + "px sans-serif";	
+		
+		//display title
+		this._ctx.fillStyle="black";
+		this._ctx.fillText(title,this.textOffset , 10);
 		
 		var xStartText=xstart-this._fontSize/2;
 		
@@ -160,11 +185,11 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 			xStartText=-2;
 		}	
 		var i;
-		for (i = 0 ; i < this.colorValues.length; i++){
+		for (i = 0 ; i < cValues.length; i++){
 			this._ctx.save();
 			this._ctx.translate(xStartText, this._textWidthMax);
 			this._ctx.rotate(-Math.PI/2);
-			colorValue = this.colorValues[i];
+			colorValue = cValues[i];
 			
 			this._ctx.fillText(colorValue[1], 2, this._cellHeight, this._textWidthMax);
 			this._ctx.rotate(Math.PI/2);
@@ -174,9 +199,9 @@ Gemma.ColorLegend = Ext.extend(Ext.Window,
 		
 		xstart=0;
 		
-		for (i = 0 ; i < this.colorValues.length; i++){			
-			colorValue = this.colorValues[i];			
-			this._ctx.fillStyle = this._discreteColorRange.getCellColorString(colorValue[0]);
+		for (i = 0 ; i < cValues.length; i++){			
+			colorValue = cValues[i];			
+			this._ctx.fillStyle = discreteCR.getCellColorString(colorValue[0]);
 			this._ctx.fillRect(xstart,this._textWidthMax+this._offset,this._cellWidth, this._cellHeight);
 			xstart=xstart + this._cellWidth;
 		}		
