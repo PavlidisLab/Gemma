@@ -42,7 +42,6 @@ var LinePlot = function() {
 		 * 
 		 */
 		function draw(container, series, config, sampleLabels, conditionLabels, conditionLabelKey) {
-
 			// maybe not ready yet.
 			if (series.length == 0)
 				return;
@@ -259,9 +258,11 @@ var LinePlot = function() {
 			Ext.DomHelper.append(container, {
 						id : vid,
 						tag : 'div',
-						style : "margin:" + TRIM + "px;width:" + plotWidth + ";height:" + plotHeight
+						width: plotWidth,
+						height: plotHeight
 					});
-			Flotr.draw($(vid), series, config);
+			var target = $(vid);
+			Flotr.draw(target, series, config);
 		}
 
 	}
