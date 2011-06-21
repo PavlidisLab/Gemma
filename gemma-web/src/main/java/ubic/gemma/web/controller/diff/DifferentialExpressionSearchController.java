@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -51,6 +50,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisR
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
@@ -240,13 +240,20 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             log.debug( "Factor description: " + factor.getDescription() + ", number of factor values: "
                     + factor.getFactorValues().size() );
         
-        vizColumn.setBaselineFactorValue( getFactorValueString( resultSet.getBaselineGroup() ) );
+        
         if(resultSet.getBaselineGroup() != null){
             vizColumn.setBaselineFactorValueId( resultSet.getBaselineGroup().getId() );
+            vizColumn.setBaselineFactorValue( getFactorValueString( resultSet.getBaselineGroup() ) );
+            vizColumn.addContrastsFactorValue(  resultSet.getBaselineGroup().getId(), getFactorValueString( resultSet.getBaselineGroup() ) );
         }else{
             log.warn("resultSet.getBaselineGroup() returned null");
         }
-        
+
+        for ( FactorValue fvalue : factor.getFactorValues() ) {            
+            if ( fvalue.getId() == vizColumn.getBaselineFactorValueId() ) continue; // we already added it to the list.
+            vizColumn.addContrastsFactorValue( fvalue.getId(), getFactorValueString( fvalue ) );
+            if ( log.isDebugEnabled() ) log.debug( "Factor value: " + getFactorValueString( fvalue ) );
+        }
 
         vizColumn.setFactorName( factor.getName() );
         vizColumn.setFactorDescription( factor.getDescription() );
@@ -258,12 +265,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         } else {
             vizColumn.setFactorCategory( factor.getCategory().getCategory() );
         }
-
-        for ( FactorValue fvalue : factor.getFactorValues() ) {            
-            vizColumn.addContrastsFactorValue( fvalue.getId(), getFactorValueString( fvalue ) );
-            if ( log.isDebugEnabled() ) log.debug( "Factor value: " + getFactorValueString( fvalue ) );
-        }
-
+       
         for ( int geneGroupIndex = 0; geneGroupIndex < genes.size(); geneGroupIndex++ ) {
             for ( int geneIndex = 0; geneIndex < genes.get( geneGroupIndex ).size(); geneIndex++ ) {
 
@@ -294,11 +296,13 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     }
 
     /**
-     * Ajax.
+     * Ajax. Search by ... and return visualization value object. 
      * 
      * @param taxonId
      * @param datasetGroupReferences
      * @param geneGroupReferences
+     * @param geneSessionGroupQueries
+     * @param experimentSessionGroupQueries
      * @return
      */
     public DifferentialExpressionVisualizationValueObject differentialExpressionAnalysisVisualizationSearch(
@@ -1032,7 +1036,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         if ( fv == null ) return "null";
 
         if ( fv.getCharacteristics() != null && fv.getCharacteristics().size() > 0 ) {
-            return fv.getCharacteristics().iterator().next().getValue();
+            String fvString = "";
+            for (Characteristic c : fv.getCharacteristics()) {
+                fvString += c.getValue() + " ";                
+            }
+            return fvString;
         } else if ( fv.getMeasurement() != null ) {
             return fv.getMeasurement().getValue();
         } else if ( fv.getValue() != null && !fv.getValue().isEmpty() ) {
@@ -1205,5 +1213,9 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         if (foldChange < 0) visualizationValue = (-1)*visualizationValue;
         return visualizationValue;
     }
+    
+    
+                
+    
     
 }
