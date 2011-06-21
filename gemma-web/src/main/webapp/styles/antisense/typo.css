@@ -700,3 +700,11 @@ left: 60px; /*position where enlarged image should offset horizontally */
 .x-form-trigger-paste-genes{
 	background-image: url("/Gemma/images/icons/page_upload.png")
 }
+
+.absolute-position-loading-mask{
+	top:70px !important
+}
+.inline-help-form-q-tip{
+	line-height:1.1em;
+	font-size: 1.0em;
+}
