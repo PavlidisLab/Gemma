@@ -367,7 +367,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this._toolPanels.setSize(Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeight);
 			this._toolPanels.doLayout();
 			
-			this.colorLegend.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215, 0)
+			this.colorLegend.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215, 0);
 			
 			this.doLayout();
 		}, this);
@@ -466,8 +466,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				discreteColorRangeObject2: Gemma.MetaVisualizationConfig.contrastsColourRange,
 				cellHeight:14,
 				cellWidth:14,
-				colorValues:[[,"No Data"],[0.1,"0.5"],[0.2,"0.25"],[0.3,"0.1"],[0.4,"0.05"],[0.5,"0.01"],[0.6,"0.001"],[0.7,"0.0001"],[1,"0.00001"]],
-				colorValues2:[[,"No Data"],[-3,"-3"],[-2,"-2"],[-1,"-1"],[0,"0"],[1,"1"],[2,"2"],[3,"3"]],
+				colorValues:[[null,"No Data"],[0.1,"0.5"],[0.2,"0.25"],[0.3,"0.1"],[0.4,"0.05"],[0.5,"0.01"],[0.6,"0.001"],[0.7,"0.0001"],[1,"0.00001"]],
+				colorValues2:[[null,"No Data"],[-3,"-3"],[-2,"-2"],[-1,"-1"],[0,"0"],[1,"1"],[2,"2"],[3,"3"]],
 				vertical:true,
 				canvasId:'canvas1',
 				canvasId2:'canvas12',
