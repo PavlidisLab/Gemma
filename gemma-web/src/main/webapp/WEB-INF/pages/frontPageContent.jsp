@@ -8,6 +8,15 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+	// Apply a set of config properties to the singleton
+	Ext.apply(Ext.QuickTips.getQuickTip(), {
+    	maxWidth: 200,
+    	minWidth: 100,
+    	showDelay: 50,
+    	//trackMouse: true,
+    	dismissDelay: 0,
+    	hideDelay : 0
+	});
 });
 function hideTopBar(divID) {
 	refID = document.getElementById(divID);

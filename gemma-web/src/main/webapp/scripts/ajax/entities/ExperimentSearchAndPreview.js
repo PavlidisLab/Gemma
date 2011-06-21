@@ -365,8 +365,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					}.createDelegate(this, [], true)
 				});
 		this.helpBtn = new Gemma.InlineHelpIcon({
-			tooltipText:'Select a general group of genes or try searching for genes by symbol, '+
-					'GO terms or keywords such as: schizophrenia, hippocampus etc.<br><br>'+
+			tooltipText:'Select a group of experiments or try searching for experiments by name, '+
+					' or keywords such as: schizophrenia, hippocampus, GPL96 etc.<br><br>'+
 					'<b>Example: search for Alzheimer\'s and select all human experiments'
 		});
 		Ext.apply(this, {

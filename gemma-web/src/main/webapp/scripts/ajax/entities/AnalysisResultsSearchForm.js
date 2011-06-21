@@ -16,9 +16,10 @@ Ext.namespace('Gemma');
  * 
  * 
  */
-
-Gemma.MAX_GENES_PER_QUERY = 20; // this is the value used for coexpression and
+// this is the value used for CLASSIC coexpression and
 // diff expression searches
+Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY = 20;
+Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY = 20; 
 
 // max suggested number of elements to use for a diff ex viz query
 Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY = 100;
@@ -447,12 +448,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			return "There are no datasets that match your search terms";
 		} else if (!csc.eeIds && !csc.eeSetId) {
 			return "Please select an analysis. Taxon, gene(s), and scope must be specified.";
-		} else if (csc.geneIds.length > Gemma.MAX_GENES_PER_QUERY) {
+		} else if (csc.geneIds.length > Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
 			// if trying to search for more than the allowed limit of genes,
 			// show error
 
 			// prune the gene Ids
-			csc.geneIds = csc.geneIds.slice(0, Gemma.MAX_GENES_PER_QUERY);
+			csc.geneIds = csc.geneIds.slice(0, Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY);
 
 			/*
 			 * //update the previews var runningCount = 0; var i; var
@@ -480,13 +481,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			 * chooser.genePreviewContent.expand(); } } } //for(idToRemove in
 			 * idsToRemove){ // this.removeGeneChooser(idToRemove); //}
 			 * 
-			 * return "You can only search up to " + Gemma.MAX_GENES_PER_QUERY + "
+			 * return "You can only search up to " + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY + "
 			 * genes. Please note that your list(s) of genes have been trimmed
 			 * automatically. <br>"+ "Press 'Go' again to run the search with
 			 * this trimmed list or re-enter your gene query(ies) and "+ "use
 			 * the edit tool to manually trim your selection(s).";
 			 */
-			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_QUERY +
+			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY +
 					" genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
 			return "";
 
@@ -685,16 +686,16 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			return "There are no datasets that match your search terms";
 		} else if (!dsc.eeIds && !dsc.eeSetId) {
 			return "Please select an analysis. Taxon, gene(s), and scope must be specified.";
-		} else if (dsc.geneIds.length > Gemma.MAX_GENES_PER_QUERY) {
+		} else if (dsc.geneIds.length > Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY) {
 			// if trying to search for more than the allowed limit of genes,
 			// show error
 
 			// prune the gene Ids
-			dsc.geneIds = dsc.geneIds.slice(0, Gemma.MAX_GENES_PER_QUERY);
+			dsc.geneIds = dsc.geneIds.slice(0, Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY);
 			this.loadGenes(dsc.geneIds); // TODO loadGenes isn't in this
 			// class anymore
 
-			return "You can only search up to " + Gemma.MAX_GENES_PER_QUERY +
+			return "You can only search up to " + Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY +
 					 " genes. Please note that your list of genes has been trimmed automatically. <br>" +
 					 "Press 'Go' again to run the search with this trimmed list or re-enter your gene query and " +
 					 "use the edit tool to manually trim your selection.";
