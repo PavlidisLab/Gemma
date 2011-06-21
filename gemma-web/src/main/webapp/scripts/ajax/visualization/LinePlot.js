@@ -258,10 +258,10 @@ var LinePlot = function() {
 			Ext.DomHelper.append(container, {
 						id : vid,
 						tag : 'div',
-						width: plotWidth,
-						height: plotHeight
+						style : "margin:" + TRIM + "px;width:" + plotWidth + "px;height:" + plotHeight+"px"
 					});
-			var target = $(vid);
+			var target = $(vid);			
+			
 			Flotr.draw(target, series, config);
 		}
 
