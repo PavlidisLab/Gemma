@@ -1109,7 +1109,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			return null;
 		}
 		return url;
-	},			
+	}			
 	
 });
 
