@@ -559,7 +559,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						hiddenName: 'conditionSort',
 						fieldLabel: 'Sort experiments by',
 						fieldTipTitle: 'Sort Experiments By:',
-						fieldTipHTML:'<br><b>Name</b>: official descriptive title<br><br><b>q Value</b>: confidence in the expression levels of the selected genes<br><br>'+
+						fieldTipHTML:'<br><b>Name</b>: official descriptive title<br><br><b>q Value</b>: confidence that the selected genes are differentially expressed<br><br>'+
 							'<b>Diff. Exp. Specificity</b>: within each column, this is the proportion of probes that are differentially expressed '+
 							'versus the total number of expressed probes. This measure is represented by each column\'s pie chart. Experiments are ordered based '+
 							'on their columns\' average specificity<br><br>',
@@ -625,7 +625,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						fieldTipHTML:'<b>Symbol</b>: official gene symbol<br>'+
 										'<b>q Values</b>: confidence in the gene\'s differential expression across all experiments<br><br>',
 						fieldTip:'Symbol: official gene symbol.  '+
-										'q Values: confidence in their expression levels, averaged across the queried experiments',
+										'q Values: confidence that they are differentially expressed, averaged across the queried experiments',
 						mode: 'local',
 						displayField: 'text',
 						valueField: 'name',
