@@ -70,7 +70,7 @@ Gemma.MetaVisualizationConfig.contrastsColourRange = new org.systemsbiology.visu
 			maxColor : {
 				r : 0,
 				g : 255,
-				b : 0,
+				b : 255,
 				a : 1
 			},
 			minColor : {
