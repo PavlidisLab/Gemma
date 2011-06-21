@@ -12,7 +12,7 @@ Ext.namespace('Gemma');
  * 
  * @type Number
  */
-Gemma.MAX_GENES_PER_QUERY = 1000;
+Gemma.MAX_GENES_PER_PASTE = 1000;
 
 /**
  * Table of genes with toolbar for searching.
@@ -507,7 +507,7 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
  */
 Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 
-			title : "Import multiple genes (one symbol or NCBI id per line, up to " + Gemma.MAX_GENES_PER_QUERY + ")",
+			title : "Import multiple genes (one symbol or NCBI id per line, up to " + Gemma.MAX_GENES_PER_PASTE + ")",
 			modal : true,
 			layout : 'fit',
 			stateful : false,

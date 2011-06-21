@@ -224,15 +224,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				var i;
 				var geneData = [];
 				var warned = false;
-				if (i >= Gemma.MAX_GENES_PER_QUERY) {
-					if (!warned) {
-						Ext.Msg.alert("Too many genes", "You can only search up to " + 
-							Gemma.MAX_GENES_PER_QUERY +
-							" genes, some of your selections will be ignored.");
-						warned = true;
-					}
-				}
-
 				this.maskGenePreview();
 
 				var geneIds = [];
