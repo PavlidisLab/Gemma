@@ -1,15 +1,16 @@
 package ubic.gemma.web.visualization;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.tools.ant.util.StringUtils;
+
 import edu.emory.mathcs.backport.java.util.Collections;
 
-// This object represents a column in visualization. It also contains contrasts data so each factor can
-// be expanded...
-// 
+// This object represents a column in visualization. 
 // 
 public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {    
     private int numberOfGeneGroups;
@@ -64,6 +65,7 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     private List<List<List<Double>>> contrastsVisualizationValues;                 
     
     private List<List<List<Double>>> constrastsFoldChangeValues;
+    
     public DifferentialExpressionAnalysisResultSetVisualizationValueObject ( int[] geneGroupSizes ) {
         this.numberOfGeneGroups = geneGroupSizes.length;
         this.geneGroupSizes = geneGroupSizes;
@@ -289,5 +291,24 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
         this.visualizationValues = visualizationValues;
     }
 
-    
+    public String toText() {
+        DecimalFormat df = new DecimalFormat("#.##");
+        StringBuilder text = new StringBuilder();
+        text.append("|"+datasetShortName + "|"+ factorName + "|");
+        for (Long fvId : this.contrastsFactorValues.keySet() ) {
+            text.append( this.contrastsFactorValues.get( fvId ).trim()+"," );
+        }
+        text.append("|");
+        for ( List<Double> pValueGroup : this.pValues ) {
+            for ( Double pValue : pValueGroup ) {
+                if (pValue == null) {
+                    text.append("NA|");
+                } else {
+                    text.append(df.format(pValue) + "|");                    
+                }
+            }
+        } 
+        text.append("\n");
+        return text.toString();
+    }
 }
