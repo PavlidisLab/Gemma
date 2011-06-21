@@ -428,7 +428,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				x : 5,
 				y : 5,
 				text : '<b>Color Legend</b>',
-				tooltip:'See Color Legend',
+				tooltip:'Show/hide the color legend',
 				handler : function() {
 					if (this.colorLegend.hidden){
 						this.colorLegend.y=0;
@@ -456,6 +456,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				text : '<b>Download</b>',
 				icon : '/Gemma/images/download.gif',
 				cls : 'x-btn-text-icon',
+				tooltip:'Download a formatted text version of your search results',
 				handler : function() {
 					window.open(this.getDownloadLink());				
 				},
@@ -738,7 +739,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							text: 'Save Selection',
 							icon: '/Gemma/images/icons/disk.png',
 							handler: this.launchExperimentSelectionEditor,
-							scope: this
+							scope: this,
+							tooltip:'Create a group of experiments from your selection'
 						},'-',{
 							text:'Clear',
 							handler: function(button, clickEvent){
@@ -756,7 +758,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							text: 'Save Selection',
 							icon: '/Gemma/images/icons/disk.png',
 							handler: this.launchGeneSelectionEditor,
-							scope: this
+							scope: this,
+							tooltip:'Create a group of genes from your selection'
 						},'-',{
 							text:'Clear',
 							handler: function(button, clickEvent){
