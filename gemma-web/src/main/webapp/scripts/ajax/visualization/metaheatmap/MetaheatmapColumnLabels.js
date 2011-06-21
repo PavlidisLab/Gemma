@@ -23,13 +23,13 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 				var height = Gemma.MetaVisualizationConfig.columnLabelHeight;
 				
 				var ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
+				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 				ctx.canvas.width = newWidth;
 				ctx.canvas.height = height;
 				this.setWidth(newWidth);
 				this.setHeight(height);
 				
 				CanvasTextFunctions.enable(ctx);
-				//ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 				var xPosition = Gemma.MetaVisualizationConfig.cellWidth;				
 					
