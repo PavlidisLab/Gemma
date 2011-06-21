@@ -31,7 +31,7 @@ Gemma.MetaHeatmapResizablePanelBase = Ext.extend(Ext.Panel, {
 			
 			changePanelWidthBy: function ( delta ) { // - value : shrink, + value : expand				
 				this.setWidth( this.getWidth() + delta );				
-				//propagate call until parent is not MetaHeatmapResizablePanelBase  TODO: (good candidate for event!)
+				//propagate call until parent is not MetaHeatmapResizablePanelBase  TODO: (good candidate for event?)
 				var parent = this.ownerCt;				
 				if ( parent instanceof Gemma.MetaHeatmapResizablePanelBase ) {
 					parent.changePanelWidthBy(delta);
@@ -282,7 +282,7 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Gemma.MetaHeatmapResizablePanelBase
 					layoutConfig : {
 						defaultMargins : {
 							top : 0,
-							right : Gemma.MetaVisualizationConfig.groupSeparatorWidth,//0,
+							right : Gemma.MetaVisualizationConfig.groupSeparatorWidth,
 							bottom : 0,
 							left : 0
 						}
@@ -333,25 +333,29 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Gemma.MetaHeatmapResizablePanelBase
 				});
 
 		Gemma.MetaHeatmapScrollableArea.superclass.initComponent.apply(this, arguments);
+
+		var i;
+		var initialWidth = 0;
+		for (i = 0; i < this.dataDatasetGroups.length; i++) {
+			if (this.dataDatasetGroups[i].length > 0) {
+				var dsGroupPanel = new Gemma.MetaHeatmapDatasetGroupPanel({
+					applicationRoot : this.applicationRoot,
+					height : this.height,
+					dataFactorColumns : this.dataDatasetGroups[i],
+					datasetGroupIndex : i,
+					geneNames : this.geneNames[i],
+					geneIds : this.geneIds[i]
+				});				
+				this.add(dsGroupPanel);
+				initialWidth += dsGroupPanel.width;
+			}			
+		}
+		this.setWidth(initialWidth);
+		
 	},
 
 	onRender : function() {
 		Gemma.MetaHeatmapScrollableArea.superclass.onRender.apply(this, arguments);
-		var i;
-		for (i = 0; i < this.dataDatasetGroups.length; i++) {
-			if (this.dataDatasetGroups[i].length > 0) {
-				this.add(new Gemma.MetaHeatmapDatasetGroupPanel({
-							applicationRoot : this.applicationRoot,
-							height : this.height,
-							dataFactorColumns : this.dataDatasetGroups[i],
-							datasetGroupIndex : i,
-							geneNames : this.geneNames[i],
-							geneIds : this.geneIds[i]
-						}));
-			}
-
-		}
-
 	}
 
 });
