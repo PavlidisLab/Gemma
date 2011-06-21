@@ -545,6 +545,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					border: true,
 					bodyBorder: true,
 					layout: 'form',
+					labelWidth: 115,
 					bodyStyle: 'padding:5px',
 					defaults: {
 						hideLabel: false
@@ -554,6 +555,16 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						ref:'_experimentSort',
 						hiddenName: 'conditionSort',
 						fieldLabel: 'Sort experiments by',
+						fieldTipTitle: 'Sort Experiments By:',
+						fieldTipHTML:'<br><b>Name</b>: official descriptive title<br><br><b>q Value</b>: confidence in the found differential expression<br><br>'+
+							'<b>Diff. Exp. Specificity</b>: within each column, this is the proportion of probes that are differentially expressed '+
+							'versus the total number of expressed probes. This measure is represented by each column\'s pie chart. Experiments are ordered based '+
+							'on their columns\' average specificity<br><br>',
+						fieldTip:'Name: official descriptive title.  q Value: confidence in the found differential expression.  '+
+							'Diff. Exp. Specificity: the proportion of probes that are differentially expressed '+
+							'across each experimental factor '+
+							'versus the total number of expressed probes. This measure is represented by each column\'s pie chart. Experiments are ordered based '+
+							'on their column\'s average specificity.',
 						mode: 'local',
 						displayField: 'text',
 						valueField: 'name',
@@ -607,6 +618,11 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						hiddenName: 'geneSort',
 						ref:'_geneSort',
 						fieldLabel: 'Sort genes by',
+						fieldTipTitle: 'Sort Genes By:',
+						fieldTipHTML:'<b>Symbol</b>: official gene symbol<br>'+
+										'<b>q Values</b>: confidence in the gene\'s differential expression across all experiments<br><br>',
+						fieldTip:'Symbol: official gene symbol.  '+
+										'q Values: confidence in the found differential expression across all experiments',
 						mode: 'local',
 						displayField: 'text',
 						valueField: 'name',

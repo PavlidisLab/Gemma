@@ -52,11 +52,10 @@ Gemma.CoexpressionSearchOptions = Ext.extend(Ext.Window,{
 		allowNegative: false,
 		minValue: Gemma.MIN_STRINGENCY,
 		maxValue: 999,
-		fieldLabel: 'Stringency ' +
-		'<img ext:qtip="The minimum number of datasets that must show coexpression for a result to appear" ' +
-		'src="/Gemma/images/icons/question_blue.png"/>',
+		fieldLabel: 'Stringency ',
 		value: 2,
-		width: 60
+		width: 60,
+		fieldTip:"The minimum number of datasets that must show coexpression for a result to appear"
 	}, {
 		xtype: 'checkbox',
 		style: 'margin-top:7px',
@@ -64,17 +63,15 @@ Gemma.CoexpressionSearchOptions = Ext.extend(Ext.Window,{
 		hidden : !this.admin,
 		hideLabel : !this.admin,
 		ref: 'forceProbeLevelSearch',
-		fieldLabel: 'Probe-level query ' +
-		'<img ext:qtip="Run this query at the level of probes instead of genes. ' +
-		'May be slower but always gets most current information from newly-processed data sets." ' +
-		'src="/Gemma/images/icons/question_blue.png"/>'
+		fieldLabel: 'Probe-level query',
+		fieldTip: 'Run this query at the level of probes instead of genes. ' +
+		'May be slower but always gets most current information from newly-processed data sets.'
 	}, {
 		xtype: 'checkbox',
 		ref: 'querygenesonly',
 		style: 'margin-top:10px',
-		fieldLabel: 'Coexpression among query genes only ' +
-		'<img ext:qtip="Restrict the output to include only links among the listed query genes" ' +
-		'src="/Gemma/images/icons/question_blue.png"/>'
+		fieldLabel: 'Coexpression among query genes only ',
+		fieldTip:"Restrict the output to include only links among the listed query genes"
 	}]});
 		Gemma.CoexpressionSearchOptions.superclass.initComponent.call(this);
 	}

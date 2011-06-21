@@ -652,11 +652,11 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		if (this.forceFitPlots) {
 			this.forceFitPlots = false;
 			this.zoomPanel.forceFitPlots = false;
-			btn.setText("Zoom in");
+			btn.setText("Zoom out");
 		} else {
 			this.forceFitPlots = true;
 			this.zoomPanel.forceFitPlots = true;
-			btn.setText("Zoom out");
+			btn.setText("Zoom in");
 		}
 
 		// force a refresh of the zoom.
@@ -973,7 +973,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 											hidden : this.heatmapMode
 										},{
 											xtype : 'button',
-											text : this.forceFitPlots ? "Zoom out" : "Zoom in",
+											text : this.forceFitPlots ? "Zoom in" : "Zoom out",
 											ref:'forceFitBtn',
 											handler : this.toggleForceFit.createDelegate(this),
 											tooltip : "Toggle forcing of the plot to fit in the width of the window",
@@ -996,23 +996,23 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 
 		this.dv.getStore().on('load', function(s, records, options){
 			// check in case window was closed before finished loading, will show user error otherwise
+		if (typeof this.getBottomToolbar().toggleViewBtn !== 'undefined') {
+			this.getBottomToolbar().toggleViewBtn.enable();
+			// this.getBottomToolbar().smoothBtn.enable();
+			this.getBottomToolbar().forceFitBtn.enable();
+			this.getBottomToolbar().toggleLegendBtn.enable();
+			this.getBottomToolbar().toggleSampleNamesBtn.enable();
+			this.getBottomToolbar().downloadDataBtn.enable();
 			
-				this.getBottomToolbar().toggleViewBtn.enable();
-				// this.getBottomToolbar().smoothBtn.enable();
-				this.getBottomToolbar().forceFitBtn.enable();
-				this.getBottomToolbar().toggleLegendBtn.enable();
-				this.getBottomToolbar().toggleSampleNamesBtn.enable();
-				this.getBottomToolbar().downloadDataBtn.enable();
-				
-				// So initial state is sure to be okay, after restore from
-				// cookie
-				this.getBottomToolbar().toggleViewBtn.setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
-				this.getBottomToolbar().forceFitBtn.setText(this.forceFitPlots ? "Zoom out" : "Zoom in");
-				this.getBottomToolbar().toggleLegendBtn.setText(this.showLegend ? "Hide legend" : "Show legend");
-				this.getBottomToolbar().toggleSampleNamesBtn.setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
-			// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
-			// ? "Unsmooth" : "Smooth");
-			
+			// So initial state is sure to be okay, after restore from
+			// cookie
+			this.getBottomToolbar().toggleViewBtn.setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
+			this.getBottomToolbar().forceFitBtn.setText(this.forceFitPlots ? "Zoom in" : "Zoom out");
+			this.getBottomToolbar().toggleLegendBtn.setText(this.showLegend ? "Hide legend" : "Show legend");
+			this.getBottomToolbar().toggleSampleNamesBtn.setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
+		// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
+		// ? "Unsmooth" : "Smooth");
+		}
 			if (this.heatmapMode) {
 			// Ext.getCmp(this.smoothBtnId).hide();
 			//Ext.getCmp(this.toggleLegendBtnId).hide();

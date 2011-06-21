@@ -311,8 +311,15 @@ Ext.onReady(function() {
 	});
 	
 	searchPanel.on("showOptions",function(stringency, forceProbeLevelSearch, queryGenesOnly){
-		resultsPanel.insert(1, {border:false,html:'<h4>Refinements:</h4><br>Stringency = '+stringency+'<br>Probe-level search: '+forceProbeLevelSearch+
-			"<br>Results only among query genes: "+queryGenesOnly});
+		if(this.admin){
+			resultsPanel.insert(1, {border:false,html:'<h4>Refinements Used:</h4>Stringency = '+stringency+
+			'<br>Probe-level search: '+forceProbeLevelSearch+
+			"<br>Results only among query genes: "+queryGenesOnly+'<br>'});
+		}else{
+			resultsPanel.insert(1, {border:false,html:'<h4>Refinements Used:</h4>Stringency = '+stringency+
+			"<br>Results only among query genes: "+queryGenesOnly+'<br>'});
+		}
+		
 		resultsPanel.doLayout();
 	});
 	
