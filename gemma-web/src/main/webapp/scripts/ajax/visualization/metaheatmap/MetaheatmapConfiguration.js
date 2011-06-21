@@ -44,7 +44,7 @@ Gemma.MetaVisualizationConfig.basicColourRange = new org.systemsbiology.visualiz
 		}, {
 			maxColor : {
 				r : 255,
-				g : 215,
+				g : 69,
 				b : 0,
 				a : 1
 			},
@@ -75,8 +75,8 @@ Gemma.MetaVisualizationConfig.contrastsColourRange = new org.systemsbiology.visu
 			},
 			minColor : {
 				r : 255,
-				g : 0,
-				b : 255,
+				g : 255,
+				b : 0,
 				a : 1
 			},
 			emptyDataColor : {
