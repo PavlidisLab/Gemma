@@ -559,10 +559,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						hiddenName: 'conditionSort',
 						fieldLabel: 'Sort experiments by',
 						fieldTipTitle: 'Sort Experiments By:',
-						fieldTipHTML:'<br><b>Name</b>: official descriptive title<br><br><b>q Value</b>: confidence that the selected genes are differentially expressed<br><br>'+
+						fieldTipHTML:'<br><b>Full Name</b>: official descriptive title<br><br>'+
+							'<b>Short Name</b>: short name or ID (ex: GSE1234)<br><br>'+
+							'<b>q Value</b>: confidence that the selected genes are differentially expressed<br><br>'+
 							'<b>Diff. Exp. Specificity</b>: within each column, this is the proportion of probes that are differentially expressed '+
 							'versus the total number of expressed probes. This measure is represented by each column\'s pie chart. Experiments are ordered based '+
-							'on their columns\' average specificity<br><br>',
+							'on their columns\' average specificity.<br><br>',
 						fieldTip:'Name: official descriptive title.  q Value: confidence in the expression levels of the selected genes.  '+
 							'Diff. Exp. Specificity: the proportion of probes that are differentially expressed '+
 							'across each experimental factor '+
@@ -577,7 +579,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						triggerAction: 'all',
 						store: new Ext.data.ArrayStore({
 							fields: ['name', 'text'],
-							data: [['experiment', 'name'], ['qValues', 'q values'], ['specificity', 'diff. exp. specificity']],
+							data: [['experiment', 'full name'],['shortName', 'short name'], ['qValues', 'q values'], ['specificity', 'diff. exp. specificity']],
 							idIndex:0
 						}),
 						listeners: {
@@ -591,24 +593,30 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 									});
 									this.doLayout();
 								}
-								else 
-									if (record.get('name') === 'specificity') {
+								else if (record.get('name') === 'specificity') {
 										this._sortColumns('ASC', function(o1, o2){
 										
 											return o1.specificityScore - o2.specificityScore;
 										});
 										
 										this.doLayout();
-									}
-									else 
-										if (record.get('name') === 'experiment') {
+								}
+								else if (record.get('name') === 'experiment') {
 											this._sortColumns('ASC', function(o1, o2){
 											
 												return (o1.datasetName >= o2.datasetName) ? 1 : -1;
 											});
 											
 											this.doLayout();
-										}
+								}
+								else if (record.get('name') === 'shortName') {
+											this._sortColumns('ASC', function(o1, o2){
+											
+												return (o1.datasetShortName >= o2.datasetShortName) ? 1 : -1;
+											});
+											
+											this.doLayout();
+								}
 								this.refreshVisualization();
 							},
 							render: function(combo){
