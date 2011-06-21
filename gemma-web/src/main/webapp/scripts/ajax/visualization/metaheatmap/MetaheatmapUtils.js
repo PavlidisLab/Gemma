@@ -2,7 +2,7 @@ Ext.namespace('Gemma');
 
 Gemma.MetaVisualizationUtils = {};
 
-Gemma.MetaVisualizationUtils.calculateColumnHeight = function (geneNames) {
+Gemma.MetaVisualizationUtils.calculateGeneLabelColumnHeight = function (geneNames) {
 	var initialHeight = 20;
 	for (var i = 0; i < geneNames.length; i++) {
 		initialHeight += geneNames[i].length * Gemma.MetaVisualizationConfig.cellHeight;
@@ -12,10 +12,8 @@ Gemma.MetaVisualizationUtils.calculateColumnHeight = function (geneNames) {
 };
 
 Gemma.MetaVisualizationUtils.shortenText = function (text, maxLength) {
-	var shortenedText = "";
-	
-	
-	return shortenedText;
+	if (text.length <= maxLength) return text;				
+	return text.substring(0,maxLength - 3) + "...";
 };
 /**
  * Function: (private) constructCanvas

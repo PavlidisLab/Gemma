@@ -51,17 +51,14 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						});
 			}
 		}
-		// display the tree
+		// Display the tree.
 		this.tree = new Gemma.FactorSelectTree(this.treeData);
 		Ext.apply(this.tree, {
 					autoScroll : true,
 					bodyStyle : 'padding-bottom:5px'
 				});
 		this.tree.on('checkchange', function(node, checked) { // fired every
-					// time a
-					// checkbox
-					// changes
-					// state{
+					// time a checkbox changes state
 					var filteringFn = function(o) {
 						var factorId = o.factorCategory ? o.factorCategory : o.factorName;
 						if (factorId.toLowerCase() == node.text.toLowerCase()) {
@@ -76,7 +73,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					this.refreshVisualization();
 				}, this);
 
-		/************************* selection grids ****************************************/
+		/************************* Selection grids ****************************************/
 		
 		var SelectionRecord = Ext.data.Record.create([
 			{ name: 'id'},
@@ -110,20 +107,20 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		var geneSelectionData = [];
 		for (i = 0; i < this.visualizationData.geneIds.length; i++) {
 			for (j = 0; j < this.visualizationData.geneIds[i].length; j++) {
-				geneSelectionData.push([this.visualizationData.geneIds[i][j], 
-											this.visualizationData.geneNames[i][j], 
-											this.visualizationData.geneFullNames[i][j]]);
+				geneSelectionData.push( [ this.visualizationData.geneIds[i][j], 
+										  this.visualizationData.geneNames[i][j], 
+										  this.visualizationData.geneFullNames[i][j] ] );
 			}
 		}
-		geneSelectionStore.loadData(geneSelectionData);
+		geneSelectionStore.loadData( geneSelectionData );
 		
-		this.eeSelectionList = new Ext.grid.GridPanel({ // tried listView but it was very very hard to select an entry by gene id
-			store:eeSelectionStore,
-			multiSelect:true,
-			hideHeaders:true,
+		this.eeSelectionList = new Ext.grid.GridPanel({ // Tried listView but it was very very hard to select an entry by gene id.
+			store : eeSelectionStore,
+			multiSelect : true,
+			hideHeaders : true,
 			stripeRows : true,
-			viewConfig: {
-				forceFit: true
+			viewConfig : {
+				forceFit : true
 			},
 			columns : [{
 					dataIndex : 'shortName',
@@ -475,7 +472,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				canvasId:'canvas1',
 				canvasId2:'canvas12',
 				legendTitle:'q-value',
-				legendTitle2:'Fold Change',
+				legendTitle2:'log fold change',
 				textWidthMax: 80,
 				textOffset:1,
 				fontSize:12,
@@ -678,47 +675,47 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						boxLabel: 'Show columns with no results.',
 						checked: true,
 						hidden: true,
-						listeners: {
+						listeners: { // What's the point? Why is it hidden and checked?
 							check: function(target, checked){
-								var filteringFn = null;
-								if (!checked) { // hide columns without results
-									filteringFn = function(o){
-									
-										if (o.overallDifferentialExpressionScore === 0) {
-											return !checked;
-										}
-										if (o.miniPieValue > 120) {
-											return !checked;
-										}
-										
-										if ((o.missingValuesScore / this.TOTAL_NUMBER_OF_ROWS) > 0.7) {
-											return !checked;
-										}
-										
-										return null;
-									};
-								}
-								else { // show columns without
-									// results but respect
-									// filtering by factor
-									var checkedNodeIds = this.tree.getChecked('id');
-									// if column has same factor name as
-									// checked node, show it, otherwise
-									// hide it
-									filteringFn = function(o){
-										if (checkedNodeIds.indexOf(o.factorName.toLowerCase()) > -1) {
-											return false; // don't
-										// filter it
-										}
-										else {
-											return true;
-										}
-									};
-								}
-								
-								this.filterColumns(filteringFn);
-								this.doLayout();
-								this.refreshVisualization();
+//								var filteringFn = null;
+//								if (!checked) { // hide columns without results
+//									filteringFn = function(o){
+//									
+//										if (o.overallDifferentialExpressionScore === 0) {
+//											return !checked;
+//										}
+//										if (o.miniPieValue > 120) {
+//											return !checked;
+//										}
+//										
+//										if ((o.missingValuesScore / this.TOTAL_NUMBER_OF_ROWS) > 0.7) {
+//											return !checked;
+//										}
+//										
+//										return null;
+//									};
+//								}
+//								else { // show columns without
+//									// results but respect
+//									// filtering by factor
+//									var checkedNodeIds = this.tree.getChecked('id');
+//									// if column has same factor name as
+//									// checked node, show it, otherwise
+//									// hide it
+//									filteringFn = function(o){
+//										if (checkedNodeIds.indexOf(o.factorName.toLowerCase()) > -1) {
+//											return false; // don't
+//										// filter it
+//										}
+//										else {
+//											return true;
+//										}
+//									};
+//								}
+//								
+//								this.filterColumns(filteringFn);
+//								this.doLayout();
+//								this.refreshVisualization();
 							},
 							scope: this
 						}
@@ -791,7 +788,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						}, {
 							xtype : 'metaVizGeneLabels',
 							height : Gemma.MetaVisualizationUtils
-									.calculateColumnHeight(this.visualizationData.geneNames),
+									.calculateGeneLabelColumnHeight(this.visualizationData.geneNames),
 							width : 80,
 							x : 0,
 							y : Gemma.MetaVisualizationConfig.columnLabelHeight+12,
@@ -813,7 +810,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						},{
 							xtype : 'metaVizScrollableArea',
 							height : Gemma.MetaVisualizationUtils
-									.calculateColumnHeight(this.visualizationData.geneNames),
+									.calculateGeneLabelColumnHeight(this.visualizationData.geneNames),
 							x : 80,
 							y : Gemma.MetaVisualizationConfig.columnLabelHeight+2,
 							dataDatasetGroups : this.visualizationData.resultSetValueObjects,
@@ -888,12 +885,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	},
 	getVizState: function(){
 		var state = {};
-		// get gene group ids
-		// if there are any session-bound groups, get query that made them
+		// Get gene group ids.
+		// If there are any session-bound groups, get query that made them.
 		state.geneGroupIds = [];
 		state.geneIds = [];
 		var i; var ref; var k = 0;
-		for(i = 0; i < this._visualizationData.geneGroupReferences.length;i++){
+		for (i = 0; i < this._visualizationData.geneGroupReferences.length;i++) {
 			ref = this._visualizationData.geneGroupReferences[i];
 			if (typeof ref.type !== 'undefined') {
 				if(ref.type === 'databaseBackedGene'){
@@ -912,8 +909,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			state.geneSessionGroupQueries = this.geneSessionGroupQueries;
 		}
 		
-		// get experiment group ids
-		// if there are any session-bound groups, get queries that made them
+		// Get experiment group ids.
+		// If there are any session-bound groups, get queries that made them.
 		state.eeGroupIds = [];
 		state.eeIds = [];
 		for(i = 0; i < this._visualizationData.datasetGroupReferences.length;i++){
@@ -929,10 +926,10 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			}
 		}
 		
-		// gene sort state
+		// Gene sort state.
 		state.geneSort = this._toolPanels._sortPanel._geneSort.getValue();
 		
-		// experiment sort
+		// Experiment sort state.
 		state.eeSort = this._toolPanels._sortPanel._experimentSort.getValue();
 		
 		// filters
