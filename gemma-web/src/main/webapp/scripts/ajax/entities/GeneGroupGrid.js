@@ -42,13 +42,17 @@ Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 				this.geneChooserPanel = new Gemma.GeneGroupMemberPanel({
 							region : 'east',
 							split : true,
-							id : 'gene-chooser-panel'
+							id : 'gene-chooser-panel',
+							width: eastWidth,
+							maxSize: 650,
+							minSize: 500,
 						});
 
 				this.geneGroupPanel = new Gemma.GeneGroupPanel({
 							id : 'gene-group-panel',
 							region : 'center',
-							tbar : new Gemma.GeneGroupEditToolbar()
+							tbar : new Gemma.GeneGroupEditToolbar(),
+							width: westWidth,
 						});
 
 				Ext.apply(this.geneChooserPanel.getTopToolbar().taxonCombo, {
@@ -618,6 +622,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			columns : [{
 						header : 'Name',
 						dataIndex : 'name',
+						width: 250,
 						editable : true,
 						sortable : true,
 						editor : new Ext.form.TextField({
@@ -626,6 +631,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					}, {
 						header : 'Description',
 						dataIndex : 'description',
+						width: 250,
 						editable : true,
 						sortable : true,
 						editor : new Ext.form.TextField({
@@ -636,11 +642,12 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						sortable : true,
 						dataIndex : 'size',
 						editable : false,
-						width : 80,
+						width : 40,
 						tooltip : 'number of genes in group'
 					}, {
 						header : 'Flags',
 						sortable : true,
+						width: 100,
 						renderer : function(value, metadata, record, rowIndex, colIndex, store) {
 							var result = Gemma.SecurityManager.getSecurityLink(
 									"ubic.gemma.model.genome.gene.GeneSetImpl", record.get('id'), record.get('publik'),

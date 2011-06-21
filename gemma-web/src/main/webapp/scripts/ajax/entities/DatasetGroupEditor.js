@@ -17,6 +17,7 @@
 /* 
  * get width and height of viewport to use for sizing the parent and children panels 
  */
+var windowHeightData = Ext.getBody().getViewSize().height * 0.9;
 var windowWidthData = Ext.getBody().getViewSize().width * 0.9;
 var westWidthData = windowWidthData* 0.33;
 var eastWidthData = windowWidthData* 0.33;
@@ -28,6 +29,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 			id : 'dataset-chooser',
 			name : 'datasetchooser',
 			layout : 'border',
+			height : windowHeightData,
 			width : windowWidthData,
 			height : 500,
 			closeAction : 'hide',
