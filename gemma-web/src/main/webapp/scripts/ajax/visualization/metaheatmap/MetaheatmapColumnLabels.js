@@ -65,12 +65,12 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 										Gemma.MetaVisualizationConfig.labelAngle,
 										Gemma.MetaVisualizationConfig.columnLabelFontSize,
 										Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
-										"                          " + datasetShortName);
+										"                          " + Ext.util.Format.ellipsis(datasetShortName, 10, false));
 							} else {
 								ctx.drawRotatedText(xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 										Gemma.MetaVisualizationConfig.labelAngle,
 										Gemma.MetaVisualizationConfig.columnLabelFontSize, this._fontColor,
-										"                          " + datasetShortName);
+										"                          " + Ext.util.Format.ellipsis(datasetShortName, 10, false));
 							}
 						}
 
@@ -118,19 +118,19 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 													Gemma.MetaVisualizationConfig.labelAngle,
 													Gemma.MetaVisualizationConfig.columnLabelFontSize,
 													Gemma.MetaVisualizationConfig.analysisLabelHighlightColor,
-													dColumn.factorValueNames[dColumn.factorValueIds[i]]);
+													Ext.util.Format.ellipsis( dColumn.factorValueNames[dColumn.factorValueIds[i]] , 25, false ));
 										} else if (dColumn.factorValueIds[i] == dColumn.baselineFactorValueId) {
 											ctx.drawRotatedText(xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 													Gemma.MetaVisualizationConfig.labelAngle,
 													Gemma.MetaVisualizationConfig.columnLabelFontSize,
 													Gemma.MetaVisualizationConfig.baselineFactorValueColor,
-													dColumn.factorValueNames[dColumn.factorValueIds[i]]);
+													Ext.util.Format.ellipsis( dColumn.factorValueNames[dColumn.factorValueIds[i]] , 25, false ));
 										} else {
 											ctx.drawRotatedText(xPosition, Gemma.MetaVisualizationConfig.labelBaseYCoor,
 													Gemma.MetaVisualizationConfig.labelAngle,
 													Gemma.MetaVisualizationConfig.columnLabelFontSize,
 													Gemma.MetaVisualizationConfig.factorValueDefaultColor,
-													dColumn.factorValueNames[dColumn.factorValueIds[i]]);
+													Ext.util.Format.ellipsis( dColumn.factorValueNames[dColumn.factorValueIds[i]] , 25, false ));
 										}
 										xPosition += Gemma.MetaVisualizationConfig.cellWidth;
 									}
