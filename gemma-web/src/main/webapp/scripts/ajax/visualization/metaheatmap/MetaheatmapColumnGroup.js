@@ -214,6 +214,12 @@ Gemma.MetaHeatmapDatasetColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePan
 Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelBase, {	
 	initComponent: function() {
 		Ext.apply(this, {
+			margins : {
+			top : 0,
+			right : Gemma.MetaVisualizationConfig.groupSeparatorWidth,
+			bottom : 0,
+			left : 0
+		},
 			datasetGroupIndex: this.datasetGroupIndex,
 			dataColumns: this.dataFactorColumns			
 		});
@@ -347,7 +353,7 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Gemma.MetaHeatmapResizablePanelBase
 					geneIds : this.geneIds[i]
 				});				
 				this.add(dsGroupPanel);
-				initialWidth += dsGroupPanel.width;
+				initialWidth += dsGroupPanel.width + Gemma.MetaVisualizationConfig.groupSeparatorWidth;
 			}			
 		}
 		this.setWidth(initialWidth);

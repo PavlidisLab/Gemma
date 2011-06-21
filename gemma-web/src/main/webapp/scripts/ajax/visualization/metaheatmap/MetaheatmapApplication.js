@@ -828,8 +828,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							ref : 'topLabelsPanel'
 						},{
 							xtype : 'metaVizScrollableArea',
-							height : Gemma.MetaVisualizationUtils
-									.calculateGeneLabelColumnHeight(this.visualizationData.geneNames),
+							height : Gemma.MetaVisualizationUtils.calculateGeneLabelColumnHeight( this.visualizationData.geneNames ),
 							x : 80,
 							y : Gemma.MetaVisualizationConfig.columnLabelHeight+2,
 							dataDatasetGroups : this.visualizationData.resultSetValueObjects,

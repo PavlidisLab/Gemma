@@ -44,12 +44,13 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 
 	drawHeatmapSubColumn_ : function(highlightRow, highlightColumn) {
 		var ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
-		ctx.canvas.width = this.collapsedWidth;
 		ctx.canvas.height = this.cellHeight * this._visualizationValues.length;
 		
 		if (this._isExpanded) {
+			ctx.canvas.width = this.expandedWidth;
 			this.drawContrasts_ ( highlightRow, highlightColumn );
 		} else {
+			ctx.canvas.width = this.collapsedWidth;
 			this.drawQvalues_ ( highlightRow );
 		}		
 	},
@@ -67,6 +68,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 	expandSubColumn_ : function () {
 		this._isExpanded = true;
 		this.setWidth( this.expandedWidth );
+		
 		var ctx = Gemma.MetaVisualizationUtils.getCanvasContext( this.el.dom );
 		ctx.canvas.width = this.expandedWidth;		
 		
@@ -78,7 +80,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
 		for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupIndex].length; i++) {
-			var color = this._discreteColorRange.getCellColorString(this._visualizationValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][i]]);
+			var color = Gemma.MetaVisualizationConfig.basicColourRange.getCellColorString(this._visualizationValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][i]]);
 			this.drawHeatmapCell_(ctx, color, i, 0);
 			var geneId = this.applicationRoot.visualizationData.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][i]];
 			if (this.applicationRoot._selectedGenes.indexOf(geneId) != -1) {
@@ -91,10 +93,9 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 	},	
 	
 	drawContrasts_ : function(highlightRow, highlightColumn) {
-		var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext( this.el.dom );
 		var contrasts = this.ownerCt.contrastsData.contrasts;
-		
-		// Clear canvas.
+
+		var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext( this.el.dom );		
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 		
 		// Draw cells.
@@ -481,7 +482,6 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 	drawButton_ : function (color) {
 		// Clear canvas.
 		var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.expandButton_.btnEl.dom);
-		//var ctx = this.expandButton_.btnEl.dom.getContext("2d");
 		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 				
 		if (this.expandButton_.pressed) {

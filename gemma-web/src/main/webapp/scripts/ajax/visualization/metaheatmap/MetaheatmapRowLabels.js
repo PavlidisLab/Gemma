@@ -8,10 +8,6 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 			applicationRoot: this.applicationRoot,
 			geneNames: this.labels,
 			autoEl:'canvas',
-			/*autoEl: { tag: 'canvas',
-			  		  width: 80,
-			  		  height: this.labels.length*10
-			},*/
 			
 			geneGroupName: this.geneGroupName,
 			geneGroupId: this.geneGroupId,
@@ -21,8 +17,9 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 			},
 			_drawLabels : function (highlightRow) {
 				var	ctx = Gemma.MetaVisualizationUtils.getCanvasContext(this.el.dom);
-				//var ctx = this.el.dom.getContext("2d");
-				ctx.clearRect(0, 0, this.el.dom.width, this.el.dom.height);		
+				ctx.canvas.width = 80;
+				ctx.canvas.height = this.labels.length * Gemma.MetaVisualizationConfig.cellHeight;
+				ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);		
 				CanvasTextFunctions.enable(ctx);
 				var geneGroupNameLabelSize = this.geneGroupName.length * Gemma.MetaVisualizationConfig.geneLabelFontSize;
 				var geneGroupNameLabelYPosition = ( geneGroupNameLabelSize > this.getHeight() ) ? this.getHeight() : this.getHeight()/2 + geneGroupNameLabelSize/2;
@@ -31,7 +28,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 					(Gemma.MetaVisualizationConfig.geneLabelFontSize), 'black', this.geneGroupName);
 				
 				// Some genes can be hidden. Genes can be sorted in different ways.
-				// Gene ordering is mapping that capture order and number of shown genes.
+				// Gene ordering is a mapping that captures order and visibility of genes.
 				for (var i = 0; i < this.applicationRoot.geneOrdering[this.geneGroupId].length; i++) {
 					var geneName = this.geneNames[this.applicationRoot.geneOrdering[this.geneGroupId][i]];
 					var geneId = this.applicationRoot.visualizationData.geneIds[this.geneGroupId][this.applicationRoot.geneOrdering[this.geneGroupId][i]];
@@ -100,7 +97,7 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 		this.el.on('click', function(e,t) {
 			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
 			
-			// if user held down ctrl while clicking, select column or gene instead of popping up window
+			// If user held down ctrl while clicking, select column or gene instead of popping up window.
 			if (e.ctrlKey === true) {
 				this._toggleSelectRow(index);
 				this._drawLabels();
