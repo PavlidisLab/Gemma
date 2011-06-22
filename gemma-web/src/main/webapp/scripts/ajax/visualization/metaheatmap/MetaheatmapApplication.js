@@ -471,7 +471,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				discreteColorRangeObject2: Gemma.MetaVisualizationConfig.contrastsColourRange,
 				cellHeight:14,
 				cellWidth:14,
-				colorValues:[[null,"No Data"],[0.1,"0.5~0,25"],[0.2,"0.1"],[0.3,"0.05"],[0.4,"0.01"],[0.6,"0.001"],[0.8,"0.0001"],[0.9,"0.00001"],[1,"< 0.00001"]],
+				colorValues:[[null,"No Data"],[0.1,"0.5~0.25"],[0.2,"0.1"],[0.3,"0.05"],[0.4,"0.01"],[0.6,"0.001"],[0.8,"0.0001"],[0.9,"0.00001"],[1,"< 0.00001"]],
 				colorValues2:[[null,"No Data"],[-3,"-3"],[-2,"-2"],[-1,"-1"],[0,"0"],[1,"1"],[2,"2"],[3,"3"]],
 				vertical:true,
 				canvasId:'canvas1',
