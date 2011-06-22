@@ -69,8 +69,8 @@ public class BibliographicReferenceValueObject {
     private String title;
 
     private String volume;
-    
-    private ArrayList<String> meshTerms;
+
+    private Collection<String> meshTerms;
 
     public BibliographicReferenceValueObject() {
         super();
@@ -89,26 +89,29 @@ public class BibliographicReferenceValueObject {
         this.publication = ref.getPublication();
         this.volume = ref.getVolume();
         this.citation = ref.getCitation();
-        
-        this.meshTerms= extractMeshTermsFromMedicalSubjectHeadings(ref.getMeshTerms());
+
+        this.meshTerms = extractTermsfromHeadings( ref.getMeshTerms() );
     }
-    
-    
-    
-    private ArrayList<String> extractMeshTermsFromMedicalSubjectHeadings(Collection<MedicalSubjectHeading> mshCollection){
-    	
-    	ArrayList<String> meshTermList = new ArrayList<String>();
-    	
-    	for(MedicalSubjectHeading msh: mshCollection){	
-    		meshTermList.add(msh.getTerm());
-    	}
-    	return meshTermList;
+
+    /**
+     * Extract the Mesh terms from the BibliographicReference
+     */
+    private Collection<String> extractTermsfromHeadings( Collection<MedicalSubjectHeading> mshCollection ) {
+
+        ArrayList<String> meshTermList = new ArrayList<String>();
+
+        for ( MedicalSubjectHeading msh : mshCollection ) {
+            meshTermList.add( msh.getTerm() );
+        }
+        return meshTermList;
     }
-    
+
+    /**
+     * @return the meshTerms
+     */
     public Collection<String> getMeshTerms() {
         return meshTerms;
     }
-    
 
     public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String citation,
             String issue, String pages, String pubAccession, String publication, Date publicationDate,
