@@ -885,11 +885,11 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         else if ( pValue < 0.05 && pValue >= 0.01 )
             visualizationValue = 0.4;
         else if ( pValue < 0.01 && pValue >= 0.001 )
-            visualizationValue = 0.5;
-        else if ( pValue < 0.001 && pValue >= 0.0001 )
             visualizationValue = 0.6;
+        else if ( pValue < 0.001 && pValue >= 0.0001 )
+            visualizationValue = 0.8;
         else if ( pValue < 0.0001 && pValue >= 0.00001 )
-            visualizationValue = 0.7;
+            visualizationValue = 0.9;
         else if ( pValue < 0.00001 ) visualizationValue = 1;
         return visualizationValue;
     }

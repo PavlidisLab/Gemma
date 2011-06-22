@@ -471,7 +471,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				discreteColorRangeObject2: Gemma.MetaVisualizationConfig.contrastsColourRange,
 				cellHeight:14,
 				cellWidth:14,
-				colorValues:[[null,"No Data"],[0.1,"0.5"],[0.2,"0.25"],[0.3,"0.1"],[0.4,"0.05"],[0.5,"0.01"],[0.6,"0.001"],[0.7,"0.0001"],[1,"0.00001"]],
+				colorValues:[[null,"No Data"],[0.1,"0.5~0,25"],[0.2,"0.1"],[0.3,"0.05"],[0.4,"0.01"],[0.6,"0.001"],[0.8,"0.0001"],[0.9,"0.00001"],[1,"< 0.00001"]],
 				colorValues2:[[null,"No Data"],[-3,"-3"],[-2,"-2"],[-1,"-1"],[0,"0"],[1,"1"],[2,"2"],[3,"3"]],
 				vertical:true,
 				canvasId:'canvas1',
@@ -1074,67 +1074,11 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	 * 
 	 */
 	getDownloadLink : function() {
-		var state = this.getVizState();
-		if (!state) {
-			return null;
-		}
-		var queryStart = document.URL.indexOf("?");
-		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
-		url = url.replace('home','downloadText/downloadMetaheatmapData');
-		
-		var noGenes = true;
-		var noExperiments = true;
-		
-		url += "?";
-		if( typeof state.geneIds !== 'undefined' &&  state.geneIds !== null &&  state.geneIds.length !== 0){
-			url += String.format("g={0}&", state.geneIds.join(","));
-			noGenes=false;
-		}	
-		if (typeof state.geneGroupIds !== 'undefined' && state.geneGroupIds !== null && state.geneGroupIds.length !== 0) {
-			url += String.format("gg={0}&", state.geneGroupIds.join(","));
-			noGenes=false;
-		}
-		if( typeof state.eeIds !== 'undefined' &&  state.eeIds !== null &&  state.eeIds.length !== 0){
-			url += String.format("e={0}&", state.eeIds.join(","));
-			noExperiments = false;
-		}		
-		if (typeof state.eeGroupIds !== 'undefined' && state.eeGroupIds !== null && state.eeGroupIds.length !== 0) {
-			url += String.format("eg={0}&", state.eeGroupIds.join(","));
-			noExperiments = false;
-		}	
-		if (typeof state.experimentSessionGroupQueries !== 'undefined' && 
-				typeof state.experimentSessionGroupQueries[0] !== 'undefined' && 
-				state.experimentSessionGroupQueries !== null && 
-				state.experimentSessionGroupQueries.length !== 0) {
-			url += String.format("eq={0}&", state.experimentSessionGroupQueries.join(","));
-			noExperiments = false;
-		}
-		if (typeof state.geneSessionGroupQueries !== 'undefined' && 
-				typeof state.geneSessionGroupQueries[0] !== 'undefined' && 
-				state.geneSessionGroupQueries !== null && 
-				state.geneSessionGroupQueries.length > 0) {
-			url += String.format("gq={0}&", state.geneSessionGroupQueries.join(","));
-			noGenes=false;
-		}
-		// Not supported on backend yet.
-		if (typeof state.geneSort !== 'undefined' && state.geneSort !== null && state.geneSort.length !== 0) {
-			url += String.format("gs={0}&", state.geneSort);
-		}
-		// Not supported on backend yet.
-		if (typeof state.eeSort !== 'undefined' && state.eeSort !== null && state.eeSort.length !== 0) {
-			url += String.format("es={0}&", state.eeSort);
-		}
-		// Not supported on backend yet.
-		if (typeof state.factorFilters !== 'undefined' && state.factorFilters !== null && state.factorFilters.length !== 0) {
-			url += String.format("ff={0}&", state.factorFilters.join(','));
-		}
-		url += String.format("t={0}&", state.taxonId);
-
-		// Remove trailing '&'.
-		url = url.substring(0, url.length-1);
-
-		if(noGenes || noExperiments){
-			return null;
+		// TODO: Refactor!
+		// That was a quick way to reuse bookmarkable link logic. We should take shared code out into a separate function.
+		var url = this.getBookmarkableLink();
+		if (url != null) {
+			url = url.replace('metaheatmap.html','downloadText/downloadMetaheatmapData.html');
 		}
 		return url;
 	}			
