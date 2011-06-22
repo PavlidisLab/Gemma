@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--  Default header for any page but the main gemma home page -->
 <%@ include file="/common/taglibs.jsp"%>
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />

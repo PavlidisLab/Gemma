@@ -1,6 +1,4 @@
 <%@ include file="/common/taglibs.jsp"%>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-
 <head>
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />    
      <script type='text/javascript' src='/Gemma/static/heatmaplib.js'></script>
@@ -13,17 +11,61 @@
 	Ext.QuickTips.init();
 	//var data = {};
 	Ext.onReady( function() {
-			var metaVizApp;		
-
-			metaVizApp = new Gemma.MetaHeatmapDataSelection();
-			metaVizApp.show();
-
-//			DifferentialExpressionSearchController.getVisualizationTestData(function(data) {
-//				metaVizApp = new Gemma.MetaHeatmapApp({visualizationData : data, renderTo:'meta-heatmap-div'});
-//				metaVizApp.doLayout();
-//       		});
+	
+		if (!document.createElement("canvas").getContext) {
+			redirectToClassic = true;
+			//not supported
+			if(Ext.isIE8){
+				// excanvas doesn't cover all functionality of new diff ex metaheatmap visualization
+				Ext.DomHelper.append('meta-heatmap-div', {
+					tag: 'p',
+					cls: 'trouble',
+					id: 'browserWarning',
+					html: 'Advanced differential expression visualizations are not available in your browser (Internet Explorer 8). We suggest upgrading to  '+
+							'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>, '+
+							'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or '+
+							'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.'
+				});
+			}else if(Ext.isIE){
+				Ext.DomHelper.append('meta-heatmap-div', {
+					tag: 'p',
+					cls: 'trouble',
+					id: 'browserWarning',
+					html: 'This page may display improperly in older versions of Internet Explorer(IE). Please upgrade to '+
+							'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">IE 9</a>, '+
+							'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or '+
+							'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.'+
+					' If you are running IE 9 and you see this message, please make sure you are not in compatibility mode. '
+				});
+			}else{
+				Ext.DomHelper.append('meta-heatmap-div', {
+					tag: 'p',
+					cls: 'trouble',
+					id: 'browserWarning',
+					html: 'This page may not display properly in all browsers. (The \"canvas\" element is requried.)'+
+							' Please switch to '+
+							'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a>,'+
+							'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a> or'+
+							'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>.'
+				});
+			}
+		} else{
+		
+		// IE throws an error when loading the bookmarked page because it doesn't support the createContextualFragment method
+			if ((typeof Range !== "undefined") && !Range.prototype.createContextualFragment){
+				Range.prototype.createContextualFragment = function(html){
+					var frag = document.createDocumentFragment(),
+					div = document.createElement("div");
+					frag.appendChild(div);
+					div.outerHTML = html;
+					return frag;
+				};
+			}
+			handler:function(){
+				new Gemma.MetaHeatmapDataSelection().show();
+			}});
 		}
-	);
+	});
 	</script>
 </head>
 <a href='<c:url value="/home.html"/>'>Start a new search</a><br/><br/>
