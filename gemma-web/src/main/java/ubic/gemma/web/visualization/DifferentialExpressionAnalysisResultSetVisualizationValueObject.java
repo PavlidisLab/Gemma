@@ -292,7 +292,7 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     }
 
     public String toText() {
-        DecimalFormat df = new DecimalFormat("#.##");
+        DecimalFormat df = new DecimalFormat("#.######");
         StringBuilder text = new StringBuilder();
         text.append("|"+datasetShortName + "|"+ factorName + "|");
         for (Long fvId : this.contrastsFactorValues.keySet() ) {
