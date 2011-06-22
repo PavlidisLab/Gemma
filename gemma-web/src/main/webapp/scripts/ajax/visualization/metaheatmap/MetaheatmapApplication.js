@@ -367,9 +367,10 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			var adjHeight = ((height - Gemma.MetaVisualizationConfig.windowPadding) > Gemma.MetaVisualizationConfig.minAppHeight)? 
 								(height - Gemma.MetaVisualizationConfig.windowPadding): Gemma.MetaVisualizationConfig.minAppHeight;
 			this.setSize(adjWidth, adjHeight);
-			this._imageArea.setSize(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeight);
+			var adjHeightInner = adjHeight - 30; // for top-bar
+			this._imageArea.setSize(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeightInner);
 			this._toolPanels.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth,0);
-			this._toolPanels.setSize(Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeight);
+			this._toolPanels.setSize(Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeightInner);
 			this._toolPanels.doLayout();
 			
 			this.colorLegend.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215, 0);
