@@ -8,11 +8,11 @@ Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
-	if (Ext.isIE && Ext.isIE6) {
+	if (Ext.isIE && Ext.isIE7) {
 		Ext.DomHelper.append('diffExpression-form', {
 			tag : 'p',
 			cls : 'trouble',
-			html : 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 7 or newer.'
+			html : 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 8 or newer.'
 		});
 	}
 
