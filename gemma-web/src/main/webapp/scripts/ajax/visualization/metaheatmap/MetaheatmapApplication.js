@@ -18,6 +18,8 @@ Ext.namespace('Gemma');
  */
 Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	autoScroll : false,
+	prevVizWindowX: null,
+	prevVizWindowY: null,
 	initComponent : function() {
 
 		// build data structure for filtering factor tree

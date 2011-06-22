@@ -37,7 +37,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					_isExpanded : false,
 
 					overallDifferentialExpressionScore : null,
-					missingValuesScore : null
+					missingValuesScore : null					
 				});
 		Gemma.MetaHeatmapColumn.superclass.initComponent.apply(this, arguments);
 	},
@@ -186,13 +186,20 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			var vizWindow = new Gemma.VisualizationWithThumbsWindow({
 						title : 'Gene Expression',
 						thumbnails : false,
-						downloadLink: downloadLink
+						downloadLink: downloadLink,
+						prevX : this.applicationRoot.prevVizWindowX,
+						prevY : this.applicationRoot.prevVizWindowY
+						
 					});
 			vizWindow.show({
 				params : [
 						[eeId],
 						[geneId]]
 			});
+			
+			this.applicationRoot.prevVizWindowX = vizWindow.x;
+			this.applicationRoot.prevVizWindowY = vizWindow.y;
+    		
 		}, this);
 
 		// detect right click.
