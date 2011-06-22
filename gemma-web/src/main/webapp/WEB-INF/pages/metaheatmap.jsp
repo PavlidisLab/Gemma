@@ -61,9 +61,7 @@
 					return frag;
 				};
 			}
-			handler:function(){
-				new Gemma.MetaHeatmapDataSelection().show();
-			}});
+			new Gemma.MetaHeatmapDataSelection().show();
 		}
 	});
 	</script>
