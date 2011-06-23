@@ -82,7 +82,7 @@ Gemma.DiffExpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						header : "Meta P-Value",
 						tooltip : "Combined p-value for the datasets you chose, using Fisher's method.",
 						renderer : function(p) {
-							if (p < 0.0001) {
+							if (p < 0.001) {
 								return sprintf("%.3e", p);
 							} else {
 								return sprintf("%.3f", p);

@@ -225,7 +225,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				if (p === null) {
 					return '-';
 				}
-				if (p < 0.0001) {
+				if (p < 0.001) {
 					return sprintf("%.3e", p);
 				} else {
 					return sprintf("%.3f", p);
