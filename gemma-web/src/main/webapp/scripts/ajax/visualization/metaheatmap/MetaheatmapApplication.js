@@ -1069,7 +1069,13 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		if(url === null && warning === ""){
 			url= "Error creating your link.";
 		}
-		Ext.Msg.alert("Bookmark or sharable link",warning+"Use this link to re-run your search:<br> "+url);
+		new Ext.Window({
+			closeAction:'close',
+			title:"Bookmark or sharable link",
+			html:"<b>Use this link to re-run your search:</b><br> "+url,
+			width:650,
+			padding:10
+		}).show();
 	},
 	/**
 	 * 
