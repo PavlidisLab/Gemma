@@ -14,8 +14,8 @@
 		</title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
-		<script type='text/javascript' src='/Gemma/dwr/engine.js'/>
-		<script type='text/javascript' src='/Gemma/dwr/util.js'/>
+		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
+		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
