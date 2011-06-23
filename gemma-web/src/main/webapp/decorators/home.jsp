@@ -13,10 +13,10 @@
 				key="webapp.name" />
 		</title>
 
+		<jwr:style src="/bundles/gemma-all.css" />
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'/>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'/>
 
-		<jwr:style src="/bundles/gemma-all.css" />
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
 

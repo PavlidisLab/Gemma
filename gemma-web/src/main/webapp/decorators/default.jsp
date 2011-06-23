@@ -13,7 +13,7 @@
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
 
 		<jwr:script src="/bundles/include.js" />
-		<jwr:script src="/bundles/gemma-all.js" />
+		<jwr:script src="/bundles/gemma-lib.js" />
 
 		<decorator:head />
 	</head>
