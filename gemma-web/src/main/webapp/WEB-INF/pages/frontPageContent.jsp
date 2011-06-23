@@ -96,7 +96,7 @@ function hideTopBar(divID) {
 							where you can also read about
 							<a target="_blank"
 								href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">updates</a>.
-							The newest version of Gemma was launched on June 20, 2011. You
+							The newest version of Gemma was launched on June 24, 2011. You
 							can still access the classic version
 							<a href="<c:url value="/gemmaClassic.html"/>">here</a>.
 						</p>
