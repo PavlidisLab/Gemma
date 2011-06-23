@@ -23,7 +23,7 @@
 <input id="eeId" type="hidden" value="${eeId}" />
 <input id="taxonName" type="hidden" value="${taxonName}  " />
 
-<div id="eedetails">
+<div spellcheck="false" id="eedetails">
 
 	<div id="messages"></div>
 	<div id="basics" style="padding: 5px;"></div>
