@@ -38,10 +38,10 @@ function hideTopBar(divID) {
 		onclick="hideTopBar('topBarUpdates');"> <img
 			src="/Gemma/images/icons/cross.png" /> </a>
 	<br />
-	<span style="font-size: 0.9em"> Check out our <u><a
+	<span style="font-size: 0.9em"> Check out our <a
 			target="_blank"
 			href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">new
-				features</a></u>,
+				features</a>,
 	including a differential expression visualizer, experiment batch
 		effect analysis and a new search interface. Looking for <a
 		href="<c:url value="/gemmaClassic.html"/>">Gemma Classic</a>? </span>
@@ -96,7 +96,7 @@ function hideTopBar(divID) {
 							where you can also read about
 							<a target="_blank"
 								href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">updates</a>.
-							The newest version of Gemma was launched on June 24, 2011. You
+							The newest version of Gemma was launched in June 2011. You
 							can still access the classic version
 							<a href="<c:url value="/gemmaClassic.html"/>">here</a>.
 						</p>

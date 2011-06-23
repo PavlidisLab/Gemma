@@ -50,17 +50,6 @@
 				});
 			}
 		} else{
-		
-		// IE throws an error when loading the bookmarked page because it doesn't support the createContextualFragment method
-			if ((typeof Range !== "undefined") && !Range.prototype.createContextualFragment){
-				Range.prototype.createContextualFragment = function(html){
-					var frag = document.createDocumentFragment(),
-					div = document.createElement("div");
-					frag.appendChild(div);
-					div.outerHTML = html;
-					return frag;
-				};
-			}
 			new Gemma.MetaHeatmapDataSelection().show();
 		}
 	});

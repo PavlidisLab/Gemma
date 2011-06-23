@@ -135,9 +135,6 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 							}]
 				});
 		progressWindow.show();*/
-		if(typeof this.param ==='undefined'){ // if not loading text from search interface (ex: when using a bookmarked link)
-			var waitMsg = Ext.Msg.wait("","Loading your visualization...");
-		}
 		
 		/*progressWindow.progress_bar.wait({
 					interval : 1000,
@@ -148,6 +145,11 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					fn : function() {
 					}
 				});*/
+		
+		if (typeof this.param === 'undefined') { // if not loading text from search interface (ex: when using a bookmarked link)
+			var waitMsg = Ext.Msg.wait("", "Loading your visualization...");
+		}
+		
 		this._selectedDatasetGroups = [];
 		this._selectedGeneGroups = [];
 

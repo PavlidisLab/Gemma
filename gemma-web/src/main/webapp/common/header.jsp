@@ -23,6 +23,19 @@
 </div>
 
 
+<script type="text/javascript">
+// IE throws an error when loading the bookmarked page because it doesn't support the createContextualFragment method
+		// also throws this error when opening any visualisationWidget pop-up window
+			if ((typeof Range !== "undefined") && !Range.prototype.createContextualFragment){
+				Range.prototype.createContextualFragment = function(html){
+					var frag = document.createDocumentFragment(),
+					div = document.createElement("div");
+					frag.appendChild(div);
+					div.outerHTML = html;
+					return frag;
+				};
+			}
+</script>
 
 	<script type="text/javascript">
 	/*var menu = new Ext.Toolbar({

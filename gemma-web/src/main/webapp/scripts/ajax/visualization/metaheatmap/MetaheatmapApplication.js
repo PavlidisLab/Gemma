@@ -506,29 +506,24 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						' <br><br>Hold down "ctrl" and click on a gene to select it.</span>',
 				tpl : new Ext.XTemplate(
 						'<span style="font-size: 12px ">',
-
 						'<tpl for=".">',
 						'<tpl if="type==\'experiment\'">',
-						'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-						'{datasetId}"',
-						' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
+						'<b>Experiment</b>: {datasetShortName} {datasetName}<br><br>',
 						'<b>Factor</b>: {factorCategory} - {factorDescription}<br> <br>',
 						'<b>Factor Values</b>: {factorValues}<br><br> ',
 						'<b>Baseline</b>: {baseline}<br><br>',
 						'</tpl>',
 						'<tpl if="type==\'gene\'">',
-						'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
+						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 						'</tpl>',
 						'<tpl if="type==\'contrastCell\'">',
-						'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
-						'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-						'{datasetId}"', ' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
+						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
+						'<b>Experiment</b>: {datasetShortName}</a> {datasetName}<br><br>',
 						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Fold change</b>: {foldChange}<br><br>',
 						'</tpl>',
 						'<tpl if="type==\'cell\'">',
-						'<b>Gene</b>: <a target="_blank" href="/Gemma/gene/showGene.html?id={geneId}">{geneSymbol}</a> {geneFullName}<br><br> ',
-						'<b>Experiment</b>: <a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
-						'{datasetId}"', ' ext:qtip="{datasetName}">{datasetShortName}</a> {datasetName}<br><br>',
+						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
+						'<b>Experiment</b>: {datasetShortName} {datasetName}<br><br>',
 						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>q Value</b>: {pvalue}',
 						'</tpl>', '</tpl></span>'),
 				tplWriteMode : 'overwrite'
@@ -538,13 +533,25 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				width: Gemma.MetaVisualizationConfig.toolPanelWidth,
 				x: adjPageWidth - Gemma.MetaVisualizationConfig.toolPanelWidth,
 				y: 0,
-				layout: 'vbox',
 				border: true,
 				applicationRoot: this,
+				//layout: 'vbox',
+				layout:'ux.accordionvbox',
+				defaults: {
+					collapsible: true,
+					flex: 1 // The sizes of panels are divided according to the flex index
+				},
+			    layoutConfig: {
+					align: 'stretch',
+					pack: 'start',
+					animate: true,
+					titleCollapse: false
+				},
 				items: [{
 					title: 'Sort',
 					ref:'_sortPanel',
 					flex: 0,
+					height:100,
 					width: Gemma.MetaVisualizationConfig.toolPanelWidth,
 					collapsible: true,
 					// collapsed:true,
@@ -582,7 +589,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						triggerAction: 'all',
 						store: new Ext.data.ArrayStore({
 							fields: ['name', 'text'],
-							data: [['experiment', 'full name'],['shortName', 'short name'], ['qValues', 'q values'], ['specificity', 'diff. exp. specificity']],
+							data: [['experimentName', ' -- '],['shortName', 'short name'], ['qValues', 'q values'], ['specificity', 'diff. exp. specificity']],
 							idIndex:0
 						}),
 						listeners: {
@@ -604,13 +611,13 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 										
 										this.doLayout();
 								}
-								else if (record.get('name') === 'experiment') {
-											this._sortColumns('ASC', function(o1, o2){
+								else if (record.get('name') === 'experimentName') {
+										this._sortColumns('ASC', function(o1, o2){
 											
-												return (o1.datasetName >= o2.datasetName) ? 1 : -1;
-											});
+											return (o1.datasetName >= o2.datasetName) ? 1 : -1;
+										});
 											
-											this.doLayout();
+										this.doLayout();
 								}
 								else if (record.get('name') === 'shortName') {
 											this._sortColumns('ASC', function(o1, o2){
@@ -623,7 +630,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 								this.refreshVisualization();
 							},
 							render: function(combo){
-								combo.setValue('experiment');
+								combo.setValue('--');
 							},
 							scope: this
 						}
@@ -699,105 +706,71 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					bodyBorder: true,
 					autoScroll: true,
 					layout: 'form', // to get font sizes matching
-					items: [{
-						xtype: 'checkbox',
-						hideLabel: true,
-						boxLabel: 'Show columns with no results.',
-						checked: true,
-						hidden: true,
-						listeners: { // What's the point? Why is it hidden and checked?
-							check: function(target, checked){
-//								var filteringFn = null;
-//								if (!checked) { // hide columns without results
-//									filteringFn = function(o){
-//									
-//										if (o.overallDifferentialExpressionScore === 0) {
-//											return !checked;
-//										}
-//										if (o.miniPieValue > 120) {
-//											return !checked;
-//										}
-//										
-//										if ((o.missingValuesScore / this.TOTAL_NUMBER_OF_ROWS) > 0.7) {
-//											return !checked;
-//										}
-//										
-//										return null;
-//									};
-//								}
-//								else { // show columns without
-//									// results but respect
-//									// filtering by factor
-//									var checkedNodeIds = this.tree.getChecked('id');
-//									// if column has same factor name as
-//									// checked node, show it, otherwise
-//									// hide it
-//									filteringFn = function(o){
-//										if (checkedNodeIds.indexOf(o.factorName.toLowerCase()) > -1) {
-//											return false; // don't
-//										// filter it
-//										}
-//										else {
-//											return true;
-//										}
-//									};
-//								}
-//								
-//								this.filterColumns(filteringFn);
-//								this.doLayout();
-//								this.refreshVisualization();
-							},
-							scope: this
+					items: [this.tree],
+					listeners: {
+						resize: function(cmp, adjWidth, adjHeight, rawWidth,rawHeight){
+							console.log('i was resized!');
+							//this.doLayout();
 						}
-					}, this.tree]
+					},
 				}, {
-					ref: '_selectionTabPanel',
-					flex: 1,
-					width: Gemma.MetaVisualizationConfig.toolPanelWidth,
-					xtype:'tabpanel',
-					activeTab: 0,
-					deferredRender: false,
-					items: [{
-						title: 'Select Experiments',
-						layout:'fit',
-						autoScroll: true,
-						items: this.eeSelectionList,
-						bbar:['Hold \'ctrl\' to select > 1','->',{
-							text: 'Save Selection',
-							icon: '/Gemma/images/icons/disk.png',
-							handler: this.launchExperimentSelectionEditor,
-							scope: this,
-							tooltip:'Create a group of experiments from your selection'
-						},'-',{
-							text:'Clear',
-							handler: function(button, clickEvent){
-								this.eeSelectionList.getSelectionModel().clearSelections();
-								this.fireEvent('clearedExperimentSelections');
-							},
-							scope:this
+						ref: '_selectionTabPanel',
+						flex: 1,
+						width: Gemma.MetaVisualizationConfig.toolPanelWidth,
+						xtype: 'tabpanel',
+						defaults: {
+							layout: 'fit'
+						},
+						layoutConfig: {
+							monitorResize: true
+						},
+						activeTab: 0,
+						deferredRender: false,
+						items: [{
+							title: 'Select Experiments',
+							layout: 'fit',
+							autoScroll: true,
+							items: this.eeSelectionList,
+							bbar: ['Hold \'ctrl\' to select > 1', '->', {
+								text: 'Save Selection',
+								icon: '/Gemma/images/icons/disk.png',
+								handler: this.launchExperimentSelectionEditor,
+								scope: this,
+								tooltip: 'Create a group of experiments from your selection'
+							}, '-', {
+								text: 'Clear',
+								handler: function(button, clickEvent){
+									this.eeSelectionList.getSelectionModel().clearSelections();
+									this.fireEvent('clearedExperimentSelections');
+								},
+								scope: this
+							}]
+						}, {
+							title: 'Select Genes',
+							autoScroll: true,
+							layout: 'fit',
+							items: this.geneSelectionList,
+							bbar: ['Hold \'ctrl\' to select > 1', '->', {
+								text: 'Save Selection',
+								icon: '/Gemma/images/icons/disk.png',
+								handler: this.launchGeneSelectionEditor,
+								scope: this,
+								tooltip: 'Create a group of genes from your selection'
+							}, '-', {
+								text: 'Clear',
+								handler: function(button, clickEvent){
+									this.geneSelectionList.getSelectionModel().clearSelections();
+									this.fireEvent('clearedGeneSelections');
+								},
+								scope: this
+							}]
 						}]
-					}, {
-						title: 'Select Genes',
-						autoScroll: true,
-						layout:'fit',
-						items: this.geneSelectionList,
-						bbar:['Hold \'ctrl\' to select > 1','->',{
-							text: 'Save Selection',
-							icon: '/Gemma/images/icons/disk.png',
-							handler: this.launchGeneSelectionEditor,
-							scope: this,
-							tooltip:'Create a group of genes from your selection'
-						},'-',{
-							text:'Clear',
-							handler: function(button, clickEvent){
-								this.geneSelectionList.getSelectionModel().clearSelections();
-								this.fireEvent('clearedGeneSelections');
-							},
-							scope:this
-						}]
-					}]
 					
-				}]
+				}
+				
+				
+				
+				]
 			},{
 				ref : '_imageArea',
 				autoScroll : true,
