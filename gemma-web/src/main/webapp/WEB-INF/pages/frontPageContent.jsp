@@ -102,7 +102,6 @@ function hideTopBar(divID) {
 						</p>
 					</div>
 
-
 					<%--Don't show this area if the user is logged in. --%>
 					<security:authorize access="isAnonymous()">
 						<div style="margin-bottom: 10px;">
@@ -122,6 +121,11 @@ function hideTopBar(divID) {
 							</div>
 						</div>
 					</security:authorize>
+					
+					<div><p>
+						<a href="http://twitter.com/GemmaSoftware" class="twitter-follow-button">Follow @GemmaSoftware</a>
+						<script src="http://platform.twitter.com/widgets.js" type="text/javascript"></script>
+					</p></div>
 
 					<security:authorize access="hasRole('GROUP_ADMIN')">
 						<div id="adminFunctions"
