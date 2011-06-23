@@ -26,6 +26,7 @@ import java.util.List;
 
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
+import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
@@ -71,6 +72,7 @@ public class BibliographicReferenceValueObject {
     private String volume;
 
     private Collection<String> meshTerms;
+    private Collection<String> chemicalsTerms;
 
     public BibliographicReferenceValueObject() {
         super();
@@ -91,6 +93,7 @@ public class BibliographicReferenceValueObject {
         this.citation = ref.getCitation();
 
         this.meshTerms = extractTermsfromHeadings( ref.getMeshTerms() );
+        this.chemicalsTerms = extractChemfromHeadings( ref.getChemicals() );
     }
 
     /**
@@ -107,11 +110,19 @@ public class BibliographicReferenceValueObject {
     }
 
     /**
-     * @return the meshTerms
+     * Extract the Chemicals terms from the BibliographicReference
      */
-    public Collection<String> getMeshTerms() {
-        return meshTerms;
+    private Collection<String> extractChemfromHeadings( Collection<Compound> chemCollection ) {
+
+        ArrayList<String> chemTermList = new ArrayList<String>();
+
+        for ( Compound compound : chemCollection ) {
+            chemTermList.add( compound.getName() );
+        }
+        return chemTermList;
     }
+
+
 
     public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String citation,
             String issue, String pages, String pubAccession, String publication, Date publicationDate,
@@ -130,6 +141,21 @@ public class BibliographicReferenceValueObject {
         this.title = title;
         this.volume = volume;
         this.experiments = experiments;
+    }
+    
+    
+    /**
+     * @return the meshTerms
+     */
+    public Collection<String> getMeshTerms() {
+        return meshTerms;
+    }
+
+    /**
+     * @return the chemicalsTerms
+     */
+    public Collection<String> getChemicalsTerms() {
+        return chemicalsTerms;
     }
 
     /**
