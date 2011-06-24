@@ -1058,6 +1058,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				},
 				items: [{
 					layout: 'table', // needs to be table so panel stretches with content growth
+					layoutConfig:{
+						columns:4
+					},
 					width: 850,
 					border: false,
 					defaults: {
@@ -1100,6 +1103,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip:'Clear all selections and reset the taxon mode ',
 							handler: this.reset.createDelegate(this)
 						}]
+					},{
+						html:'Examples: <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."'+
+							'href="/Gemma/metaheatmap.html?gg=48&eg=6112&t=1">autism</a> (human),'+
+							' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." '+
+							'href="/Gemma/metaheatmap.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">hippocampus development</a> (mouse)'
 					}]
 				}]
 			}

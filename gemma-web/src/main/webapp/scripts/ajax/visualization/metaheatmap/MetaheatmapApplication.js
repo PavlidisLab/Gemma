@@ -863,13 +863,18 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this._toolPanels._sortPanel._geneSort.setValue(this.initGeneSort);
 			rec = this._toolPanels._sortPanel._geneSort.getStore().getById(this.initGeneSort);
 			index = this._toolPanels._sortPanel._geneSort.getStore().indexOfId(this.initGeneSort);
-			this._toolPanels._sortPanel._geneSort.fireEvent('select',this._toolPanels._sortPanel._geneSort, rec, index);
+			if (index !== -1) {
+				this._toolPanels._sortPanel._geneSort.fireEvent('select', this._toolPanels._sortPanel._geneSort, rec, index);
+			}
 		}
 		if(this.initExperimentSort){
 			this._toolPanels._sortPanel._experimentSort.setValue(this.initExperimentSort);
 			rec = this._toolPanels._sortPanel._experimentSort.getStore().getById(this.initExperimentSort);
 			index = this._toolPanels._sortPanel._experimentSort.getStore().indexOfId(this.initExperimentSort);
-			this._toolPanels._sortPanel._experimentSort.fireEvent('select',this._toolPanels._sortPanel._experimentSort, rec, index);
+			if (index !== -1) {
+				this._toolPanels._sortPanel._experimentSort.fireEvent('select', this._toolPanels._sortPanel._experimentSort, rec, index);
+			}
+			
 		}
 		
 		// restore filtering from URL
@@ -937,7 +942,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		// Experiment sort state.
 		state.eeSort = this._toolPanels._sortPanel._experimentSort.getValue();
 		if(state.eeSort === '--'){// TODO make this less fragile
-			state.eeSort = 'experimentName';
+			state.eeSort = null;
 		}
 		
 		// filters
