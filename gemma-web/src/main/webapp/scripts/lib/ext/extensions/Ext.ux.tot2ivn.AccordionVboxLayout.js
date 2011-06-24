@@ -289,7 +289,8 @@ Ext.ux.tot2ivn.AccordionVboxLayout = Ext.extend(Ext.layout.AccordionLayout, {
         	childBoxCache = this.calculateChildBoxes(items, tSize);
        
         // Resize the child components accordingly using Ext.Fx
-        this.resizeChildComponents(childBoxCache.boxes, true);
+        this.resizeChildComponents(childBoxCache.boxes, this.animate);
+		
 	},
 	
 	onRemove: function(c){

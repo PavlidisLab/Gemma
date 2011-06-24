@@ -819,7 +819,7 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 	show : function(config) {
 		Gemma.VisualizationWithThumbsWindow.superclass.show.call(this);
 		
-		if (this.prevX != null){
+		if (this.prevX !== null){
 			this.setPosition(this.prevX+20, this.prevY+20);
 		}
 

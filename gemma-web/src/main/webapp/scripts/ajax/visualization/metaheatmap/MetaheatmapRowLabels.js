@@ -78,15 +78,15 @@ Gemma.MetaHeatmapLabelGroup = Ext.extend(Ext.BoxComponent, {
 		});
 		this.el.on('mouseout', function(e,t) {
 			document.body.style.cursor = 'default';
-			this.applicationRoot._hoverDetailsPanel.hide();
+			this.applicationRoot._imageArea._hoverDetailsPanel.hide();
 				this._drawLabels();
 		}, this);
 		this.el.on('mousemove', function(e,t) { 						
 			var index = this.getIndexFromY(e.getPageY() - Ext.get(t).getY());
 			this._drawLabels(index);
-			this.applicationRoot._hoverDetailsPanel.show();
-			this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
-			this.applicationRoot._hoverDetailsPanel.update({
+			this.applicationRoot._imageArea._hoverDetailsPanel.show();
+			this.applicationRoot._imageArea._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
+			this.applicationRoot._imageArea._hoverDetailsPanel.update({
 				type: 'gene',
 				geneSymbol: this.geneNames[this.applicationRoot.geneOrdering[this.geneGroupId][index]],
 				geneId: this.applicationRoot.visualizationData.geneIds[this.geneGroupId][this.applicationRoot.geneOrdering[this.geneGroupId][index]],

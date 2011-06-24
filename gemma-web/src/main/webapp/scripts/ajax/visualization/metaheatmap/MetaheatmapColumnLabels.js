@@ -277,7 +277,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 		});
 		this.el.on('mouseout', function(e, t) {
 			document.body.style.cursor = 'default';
-			this.applicationRoot._hoverDetailsPanel.hide();
+			this.applicationRoot._imageArea._hoverDetailsPanel.hide();
 		},this);
 		this.el.on('mousemove', function(e, t) {
 
@@ -307,9 +307,9 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 						factorValues.push(" " + analysisObj.factorValueNames[analysisObj.factorValueIds[k]]);
 					}
 
-					this.applicationRoot._hoverDetailsPanel.show();
-					this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
-					this.applicationRoot._hoverDetailsPanel.update({
+					this.applicationRoot._imageArea._hoverDetailsPanel.show();
+					this.applicationRoot._imageArea._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
+					this.applicationRoot._imageArea._hoverDetailsPanel.update({
 						type: 'experiment',
 						datasetName: analysisObj.dataColumn.datasetName,
 						datasetShortName: analysisObj.dataColumn.datasetShortName,

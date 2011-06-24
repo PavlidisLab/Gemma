@@ -213,7 +213,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 		this.el.on('mouseout', function(e, t) {
 					document.body.style.cursor = 'default';
 					this.applicationRoot._imageArea._geneLabels.unhighlightGene(this.rowGroup);
-					this.applicationRoot._hoverDetailsPanel.hide();
+					this.applicationRoot._imageArea._hoverDetailsPanel.hide();
 				}, this);
 		this.el.on('mousemove', function(e, t) {
 			var index = this.__calculateIndexFromXY(e.getPageX() - Ext.get(t).getX(), e.getPageY() - Ext.get(t).getY());
@@ -231,7 +231,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					return sprintf("%.3f", p);
 				}
 			};
-			this.applicationRoot._hoverDetailsPanel.show();
+			this.applicationRoot._imageArea._hoverDetailsPanel.show();
 			if (this._isExpanded) {
 				var contrasts = this.ownerCt.contrastsData.contrasts;
 				var geneId = this.applicationRoot._imageArea._heatmapArea.geneIds[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]];				
@@ -243,7 +243,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					foldChange = geneContrastsInfo[factorValueId].foldChangeValue;				
 				}					
 									
-				this.applicationRoot._hoverDetailsPanel.update({
+				this.applicationRoot._imageArea._hoverDetailsPanel.update({
 					type : 'contrastCell',
 					// row: index.row,
 					// column: this.rowGroup,
@@ -271,7 +271,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					geneFullName : this.applicationRoot.visualizationData.geneFullNames[this.geneGroupIndex][this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]
 				});
 			} else {
-				this.applicationRoot._hoverDetailsPanel.update({
+				this.applicationRoot._imageArea._hoverDetailsPanel.update({
 					type : 'cell',
 					// row: index.row,
 					// column: this.rowGroup,
@@ -291,11 +291,11 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 				});
 			}
 			
-			var heightOfHoverWin = (typeof this.applicationRoot._hoverDetailsPanel.height !== 'undefined')?
-					this.applicationRoot._hoverDetailsPanel.height:200; 
+			var heightOfHoverWin = (typeof this.applicationRoot._imageArea._hoverDetailsPanel.height !== 'undefined')?
+					this.applicationRoot._imageArea._hoverDetailsPanel.height:200; 
 			var y = ((e.getPageY()+ 20 + heightOfHoverWin) > this.applicationRoot._imageArea.height)?
 						e.getPageY() - heightOfHoverWin - 20 : e.getPageY()+ 20;
-			this.applicationRoot._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , y );
+			this.applicationRoot._imageArea._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , y );
 			
 		}, this);
 

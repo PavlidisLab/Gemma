@@ -373,7 +373,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this._toolPanels.setSize(Gemma.MetaVisualizationConfig.toolPanelWidth,adjHeightInner);
 			this._toolPanels.doLayout();
 			
-			this.colorLegend.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215, 0);
+			this._imageArea.colorLegend.setPosition(adjWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215, 0);
 			
 			this.doLayout();
 		}, this);
@@ -383,7 +383,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		Ext.apply(this, {
 			width : adjPageWidth,
 			height : adjPageHeight,
-			layout : 'absolute',
+			//layout : 'absolute',
+			layout:'border',
 			_visualizationData : this.visualizationData,
 			geneScores : this.visualizationData.geneScores,
 			geneOrdering : null,
@@ -433,12 +434,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				text : '<b>Color Legend</b>',
 				tooltip:'Show/hide the color legend',
 				handler : function() {
-					if (this.colorLegend.hidden){
-						this.colorLegend.y=0;
-						this.colorLegend.x=adjPageWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215;
-						this.colorLegend.show();
+					if (this._imageArea.colorLegend.hidden){
+						this._imageArea.colorLegend.y=0;
+						this._imageArea.colorLegend.x=adjPageWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215;
+						this._imageArea.colorLegend.show();
 					}else{
-						this.colorLegend.hide();
+						this._imageArea.colorLegend.hide();
 					}
 				},
 				scope:this
@@ -466,92 +467,37 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				scope:this
 			}
 			],
-			items : [new Gemma.ColorLegend({				
-				ref:"colorLegend",
-				discreteColorRangeObject: Gemma.MetaVisualizationConfig.basicColourRange,
-				discreteColorRangeObject2: Gemma.MetaVisualizationConfig.contrastsColourRange,
-				cellHeight:14,
-				cellWidth:14,
-				colorValues:[[null,"No Data"],[0.1,"0.5~0.25"],[0.2,"0.1"],[0.3,"0.05"],[0.4,"0.01"],[0.6,"0.001"],[0.8,"0.0001"],[0.9,"0.00001"],[1,"< 0.00001"]],
-				colorValues2:[[null,"No Data"],[-3,"-3"],[-2,"-2"],[-1,"-1"],[0,"0"],[1,"1"],[2,"2"],[3,"3"]],
-				vertical:true,
-				canvasId:'canvas1',
-				canvasId2:'canvas12',
-				legendTitle:'q-value',
-				legendTitle2:'log fold change',
-				textWidthMax: 80,
-				textOffset:1,
-				fontSize:12,
-				x:adjPageWidth-Gemma.MetaVisualizationConfig.toolPanelWidth-215,
-				y:0,
-				constrain:true
-				
-				
-			}),{
-				// a window for displaying details as elements of the image are
-				// hovered over
-				//title : 'Details <span style="color:grey">(Drag me!)</span>',
-				ref : '_hoverDetailsPanel',
-				xtype : 'window',
-				//height : 200,
-				width : 300,
-				autoScroll : true,
-				closable : false,
-				shadow : false,
-				border : false,
-				bodyBorder : false,
-				hidden: true, // doesn't work for some reason
-				bodyStyle : 'padding: 7px',
-				html : '<span style="color:black;font-size:1.3em">Hover over the visualisation for quick details or click for more information.'+
-						' <br><br>Hold down "ctrl" and click on a gene to select it.</span>',
-				tpl : new Ext.XTemplate(
-						'<span style="font-size: 12px ">',
-						'<tpl for=".">',
-						'<tpl if="type==\'experiment\'">',
-						'<b>Experiment</b>: {datasetShortName} {datasetName}<br><br>',
-						'<b>Factor</b>: {factorCategory} - {factorDescription}<br> <br>',
-						'<b>Factor Values</b>: {factorValues}<br><br> ',
-						'<b>Baseline</b>: {baseline}<br><br>',
-						'</tpl>',
-						'<tpl if="type==\'gene\'">',
-						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
-						'</tpl>',
-						'<tpl if="type==\'contrastCell\'">',
-						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
-						'<b>Experiment</b>: {datasetShortName}</a> {datasetName}<br><br>',
-						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Fold change</b>: {foldChange}<br><br>',
-						'</tpl>',
-						'<tpl if="type==\'cell\'">',
-						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
-						'<b>Experiment</b>: {datasetShortName} {datasetName}<br><br>',
-						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>q Value</b>: {pvalue}',
-						'</tpl>', '</tpl></span>'),
-				tplWriteMode : 'overwrite'
-			}, {
+			items : [{
 				ref: '_toolPanels',
+				region:'east',
+				split:true,
+				//collapsible:true,
+				collapseMode:'mini',
+				useSplitTips : true,
 				height: adjPageHeight - 30,
 				width: Gemma.MetaVisualizationConfig.toolPanelWidth,
 				x: adjPageWidth - Gemma.MetaVisualizationConfig.toolPanelWidth,
 				y: 0,
 				border: true,
 				applicationRoot: this,
+				parentShrunk: false,
 				//layout: 'vbox',
 				layout:'ux.accordionvbox',
 				defaults: {
 					collapsible: true,
-					flex: 1 // The sizes of panels are divided according to the flex index
+					flex: 3 // The sizes of panels are divided according to the flex index
 				},
 			    layoutConfig: {
 					align: 'stretch',
 					pack: 'start',
-					animate: true,
+					animate: false,
 					titleCollapse: false
 				},
 				items: [{
 					title: 'Sort',
 					ref:'_sortPanel',
-					flex: 0,
-					height:100,
+					flex: 1, // because more space for this panel doesn't help
+					//height:100,
 					width: Gemma.MetaVisualizationConfig.toolPanelWidth,
 					collapsible: true,
 					// collapsed:true,
@@ -699,23 +645,16 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					}]
 				}, {
 					title: 'Filter',
-					flex: 1,
+					ref:'_filterPanel',
 					collapsible: true,
 					collapsed: false,
 					border: true,
 					bodyBorder: true,
 					autoScroll: true,
 					layout: 'form', // to get font sizes matching
-					items: [this.tree],
-					listeners: {
-						resize: function(cmp, adjWidth, adjHeight, rawWidth,rawHeight){
-							console.log('i was resized!');
-							//this.doLayout();
-						}
-					},
+					items: [this.tree]
 				}, {
 						ref: '_selectionTabPanel',
-						flex: 1,
 						width: Gemma.MetaVisualizationConfig.toolPanelWidth,
 						xtype: 'tabpanel',
 						defaults: {
@@ -773,13 +712,77 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				]
 			},{
 				ref : '_imageArea',
+				region:'center',
 				autoScroll : true,
 				layout : 'absolute',
 				frame : false,
 				border : false,
 				width : adjPageWidth - Gemma.MetaVisualizationConfig.toolPanelWidth,
 				height : adjPageHeight - 30,
-				items : [{
+				items : [
+				
+				new Gemma.ColorLegend({
+					ref: "colorLegend",
+					discreteColorRangeObject: Gemma.MetaVisualizationConfig.basicColourRange,
+					discreteColorRangeObject2: Gemma.MetaVisualizationConfig.contrastsColourRange,
+					cellHeight: 14,
+					cellWidth: 14,
+					colorValues: [[null, "No Data"], [0.1, "0.5~0.25"], [0.2, "0.1"], [0.3, "0.05"], [0.4, "0.01"], [0.6, "0.001"], [0.8, "0.0001"], [0.9, "0.00001"], [1, "< 0.00001"]],
+					colorValues2: [[null, "No Data"], [-3, "-3"], [-2, "-2"], [-1, "-1"], [0, "0"], [1, "1"], [2, "2"], [3, "3"]],
+					vertical: true,
+					canvasId: 'canvas1',
+					canvasId2: 'canvas12',
+					legendTitle: 'q-value',
+					legendTitle2: 'log fold change',
+					textWidthMax: 80,
+					textOffset: 1,
+					fontSize: 12,
+					x: adjPageWidth - Gemma.MetaVisualizationConfig.toolPanelWidth - 215,
+					y: 0,
+					constrain: true
+				
+				
+				}),{
+				// a window for displaying details as elements of the image are
+				// hovered over
+				//title : 'Details <span style="color:grey">(Drag me!)</span>',
+				ref : '_hoverDetailsPanel',
+				xtype : 'window',
+				//height : 200,
+				width : 300,
+				autoScroll : true,
+				closable : false,
+				shadow : false,
+				border : false,
+				bodyBorder : false,
+				hidden: true, // doesn't work for some reason
+				bodyStyle : 'padding: 7px',
+				html : '<span style="color:black;font-size:1.3em">Hover over the visualisation for quick details or click for more information.'+
+						' <br><br>Hold down "ctrl" and click on a gene to select it.</span>',
+				tpl : new Ext.XTemplate(
+						'<span style="font-size: 12px ">',
+						'<tpl for=".">',
+						'<tpl if="type==\'experiment\'">',
+						'<b>Experiment</b>: {datasetShortName} {datasetName}<br><br>',
+						'<b>Factor</b>: {factorCategory} - {factorDescription}<br> <br>',
+						'<b>Factor Values</b>: {factorValues}<br><br> ',
+						'<b>Baseline</b>: {baseline}<br><br>',
+						'</tpl>',
+						'<tpl if="type==\'gene\'">',
+						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
+						'</tpl>',
+						'<tpl if="type==\'contrastCell\'">',
+						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
+						'<b>Experiment</b>: {datasetShortName}</a> {datasetName}<br><br>',
+						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Fold change</b>: {foldChange}<br><br>',
+						'</tpl>',
+						'<tpl if="type==\'cell\'">',
+						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
+						'<b>Experiment</b>: {datasetShortName} {datasetName}<br><br>',
+						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>q Value</b>: {pvalue}',
+						'</tpl>', '</tpl></span>'),
+				tplWriteMode : 'overwrite'
+			}, {
 							x:5,
 							y:5,
 							xtype:'panel',
@@ -825,7 +828,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		});
 		Gemma.MetaHeatmapApp.superclass.initComponent.apply(this, arguments);
 
-		this._hoverDetailsPanel.hide();
+		this._imageArea._hoverDetailsPanel.hide();
 		this._imageArea._heatmapArea._setTopLabelsBox(this._rotatedLabelsBox);
 
 		this.TOTAL_NUMBER_OF_ROWS = 0;
@@ -877,7 +880,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			}
 		}
 
-		this.colorLegend.show();
+		this._imageArea.colorLegend.show();
 
 	},
 	refreshVisualization : function() {
@@ -933,6 +936,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		
 		// Experiment sort state.
 		state.eeSort = this._toolPanels._sortPanel._experimentSort.getValue();
+		if(state.eeSort === '--'){// TODO make this less fragile
+			state.eeSort = 'experimentName';
+		}
 		
 		// filters
 		var toFilter =[];
