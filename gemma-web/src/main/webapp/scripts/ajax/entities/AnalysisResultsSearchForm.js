@@ -22,7 +22,7 @@ Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY = 20;
 Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY = 20; 
 
 // max suggested number of elements to use for a diff ex viz query
-Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY = 200;
+Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY = 100;
 Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY = 100;
 
 Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
