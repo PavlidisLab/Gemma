@@ -5,78 +5,59 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.tools.ant.util.StringUtils;
-
-import edu.emory.mathcs.backport.java.util.Collections;
-
-// This object represents a column in visualization. 
-// 
+ 
+/**
+ * This class contains data for a column in metaheatmap visualization.
+ */
 public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {    
     private int numberOfGeneGroups;
-    private int[] geneGroupSizes;    
-    private int numberOfFactorValues;
-    
-    // [geneGroupIndex] [geneIndex]
-    //private List<List<String>> geneNames;
-    //private List<List<Long>> geneIds;
     
     private String datasetName;
     private String datasetShortName;
     private String datasetLink;
     private Long datasetId;
+    
     private Long analysisId;
+    private boolean analysisNotRun = false;
+    
     private Long resultSetId;    
-    private String subsetFactor;
-    private String subsetFactorValue;
+    
     private Long factorId;
     private String factorName;
-
     private String factorCategory;
-
     private String factorDescription;
+
     // Various metrics/scores to be use for display/sorting/filtering.
     private int numberOfProbesTotal;
-    private int numberOfProbesDiffExpressed;
-    
+    private int numberOfProbesDiffExpressed;    
     private int numberOfProbesUpRegulated;
-
     private int numberOfProbesDownRegulated;
 
-    private int numberOfGenesDiffExpressedFromGeneGroup;    
-    private boolean analysisNotRun = false;
-    // 
+    // Visualization values (used to determine the colour of the cell)
     private List<List<Double>> visualizationValues;
-    private List<List<Double>> pValues;
+    private List<List<Double>> qValues;
     
     // Number of probes per gene ( per dataset ). Can be used to show genes with multiple probes on the array.  
     private List<List<Integer>> numberOfProbes;
     
-    // Contrasts:    
-    private Map<Long, String> contrastsFactorValues;
-        
-    // Data
-    
+    // Contrasts.    
+    private Map<Long, String> contrastsFactorValues;       
     private List<Long> contrastsFactorValueIds;
     private String baselineFactorValue;
     private Long baselineFactorValueId;
+        
     
-    // [geneGroupIndex][geneIndex][contrastIndex]
-    private List<List<List<Double>>> contrastsVisualizationValues;                 
-    
-    private List<List<List<Double>>> constrastsFoldChangeValues;
     
     public DifferentialExpressionAnalysisResultSetVisualizationValueObject ( int[] geneGroupSizes ) {
         this.numberOfGeneGroups = geneGroupSizes.length;
-        this.geneGroupSizes = geneGroupSizes;
         
         // Initialize lists        
         this.visualizationValues = new ArrayList<List<Double>>( numberOfGeneGroups );
-        this.pValues = new ArrayList<List<Double>>( numberOfGeneGroups );                
+        this.qValues = new ArrayList<List<Double>>( numberOfGeneGroups );                
         this.numberOfProbes = new ArrayList<List<Integer>>( numberOfGeneGroups );
         for ( int i = 0; i < numberOfGeneGroups; i++ ) {
             this.visualizationValues.add ( new ArrayList<Double> ( geneGroupSizes[i] ) );
-            this.pValues.add ( new ArrayList<Double> ( geneGroupSizes[i] ) );
+            this.qValues.add ( new ArrayList<Double> ( geneGroupSizes[i] ) );
             this.numberOfProbes.add ( new ArrayList<Integer> ( geneGroupSizes[i] ) );
         }                
         
@@ -116,23 +97,12 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
         return baselineFactorValue;
     }    
     
-//  List<List<List<Double>>>  contrastsVisualizationValues    = new ArrayList<List<List<Double>>>();
-//  List<List<List<Double>>>  contrastsFoldChangeValues       = new ArrayList<List<List<Double>>>();                        
-    
-    public List<List<List<Double>>> getConstrastsFoldChangeValues() {
-        return constrastsFoldChangeValues;
-    }
-
     public List<Long> getContrastsFactorValueIds() {
         return this.contrastsFactorValueIds;        
     }
 
     public Map<Long,String> getContrastsFactorValues() {
         return contrastsFactorValues;
-    }
-
-    public List<List<List<Double>>> getContrastsVisualizationValues() {
-        return contrastsVisualizationValues;
     }
 
     public Long getDatasetId() {
@@ -187,8 +157,8 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
         return numberOfProbesUpRegulated;
     }
 
-    public List<List<Double>> getpValues() {
-        return pValues;
+    public List<List<Double>> getqValues() {
+        return qValues;
     }
     
     public List<List<Double>> getVisualizationValues() {
@@ -206,17 +176,9 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
     public void setBaselineFactorValue( String baselineFactorValue ) {
         this.baselineFactorValue = baselineFactorValue;
     }
-
-    public void setConstrastsFoldChangeValues( List<List<List<Double>>> constrastsFoldChangeValues ) {
-        this.constrastsFoldChangeValues = constrastsFoldChangeValues;
-    }
-    
+   
     public void setContrastsFactorValues( Map<Long,String> contrastsFactorValues ) {
         this.contrastsFactorValues = contrastsFactorValues;
-    }
-
-    public void setContrastsVisualizationValues( List<List<List<Double>>> contrastsVisualizationValues ) {
-        this.contrastsVisualizationValues = contrastsVisualizationValues;
     }
 
     public void setDatasetId( Long datasetId ) {
@@ -275,12 +237,12 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
         this.numberOfProbesUpRegulated = numberOfProbesUpRegulated;
     }
 
-    public void setPvalue( int geneGroupIndex, int geneIndex, Double pValue ) {
-        this.pValues.get( geneGroupIndex ).add( geneIndex, pValue );
+    public void setQvalue( int geneGroupIndex, int geneIndex, Double qValue ) {
+        this.qValues.get( geneGroupIndex ).add( geneIndex, qValue );
     }
 
-    public void setpValues( List<List<Double>> pValues ) {
-        this.pValues = pValues;
+    public void setqValues( List<List<Double>> qValues ) {
+        this.qValues = qValues;
     }
     
     public void setVisualizationValue ( int geneGroupIndex, int geneIndex, Double value ) {
@@ -299,7 +261,7 @@ public class DifferentialExpressionAnalysisResultSetVisualizationValueObject {
             text.append( this.contrastsFactorValues.get( fvId ).trim()+"," );
         }
         text.append("|");
-        for ( List<Double> pValueGroup : this.pValues ) {
+        for ( List<Double> pValueGroup : this.qValues ) {
             for ( Double pValue : pValueGroup ) {
                 if (pValue == null) {
                     text.append("NA|");

@@ -9,15 +9,17 @@ public class DifferentialExpressionAnalysisContrastsVisualizationValueObject {
     public class ContrastVisualizationValueObject {
         public double visualizationValue;
         public double foldChangeValue;
+        public double contrastPvalue;
         public boolean isBaseline;
         public long id;
         public String factorValueName;
        
-        public ContrastVisualizationValueObject( Long id, double visualizationValue, double foldChangeValue, String name ) {
+        public ContrastVisualizationValueObject( Long id, double visualizationValue, double foldChangeValue, double pValue, String name ) {
             this.factorValueName = name;
             this.foldChangeValue = foldChangeValue;
             this.id = id;
             this.visualizationValue = visualizationValue;
+            this.contrastPvalue = pValue;
         }
         
         public double getVisualizationValue() {
@@ -27,11 +29,13 @@ public class DifferentialExpressionAnalysisContrastsVisualizationValueObject {
         public double getFoldChangeValue() {
             return this.foldChangeValue;
         }
+        
+        public double getContrastPvalue() {
+            return this.contrastPvalue;
+        }
     }
     
     private Map<Long,Map<Long,ContrastVisualizationValueObject>> contrasts;                     
-    private List<Long> factorValueIds;
-    private List<String> factorValueNames;
     
     public DifferentialExpressionAnalysisContrastsVisualizationValueObject() {
         contrasts = new HashMap<Long,Map<Long,ContrastVisualizationValueObject>>();
