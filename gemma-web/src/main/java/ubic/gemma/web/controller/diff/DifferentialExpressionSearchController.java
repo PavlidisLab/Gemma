@@ -225,13 +225,10 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         StopWatch timer = new StopWatch();
         timer.start();
         // TODO: should be part of result set?
-        Integer numberDiffExpressedProbes = differentialExpressionAnalysisService.countProbesMeetingThreshold(
-                resultSet, VISUALIZATION_P_VALUE_THRESHOLD );// differentialExpressionAnalysisDao.countNumberOfDifferentiallyExpressedProbes(
-        // resultSet.getId(),
-        // VISUALIZATION_P_VALUE_THRESHOLD );
+        Integer numberDiffExpressedProbes = differentialExpressionAnalysisService.countProbesMeetingThreshold (resultSet, 0.05);
         timer.stop();
         if ( log.isDebugEnabled() )
-            log.debug( "DiffEx probes: " + numberDiffExpressedProbes + ", call took :" + timer.getTime() + " ms" );
+            log.debug ("DiffEx probes: " + numberDiffExpressedProbes + ", call took :" + timer.getTime() + " ms");
 
         vizColumn.setNumberOfProbesDiffExpressed( numberDiffExpressedProbes );
 
@@ -274,7 +271,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
 
                 if ( resultsForGene == null || resultsForGene.isEmpty() || resultsForGene.get( 0 ) == null ) {
                     vizColumn.setVisualizationValue( geneGroupIndex, geneIndex, null );
-                    vizColumn.setPvalue( geneGroupIndex, geneIndex, null );
+                    vizColumn.setQvalue( geneGroupIndex, geneIndex, null );
                     vizColumn.setNumberOfProbes( geneGroupIndex, geneIndex, 0 );
                 } else {
                     Double correctedPvalue = resultsForGene.get( 0 );
@@ -283,7 +280,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                     // are multiple
                     // probes for the
                     // gene
-                    vizColumn.setPvalue( geneGroupIndex, geneIndex, correctedPvalue );
+                    vizColumn.setQvalue( geneGroupIndex, geneIndex, correctedPvalue );
                     vizColumn.setVisualizationValue( geneGroupIndex, geneIndex,
                             calculateVisualizationValueBasedOnPvalue( correctedPvalue ) );
 
@@ -1186,7 +1183,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 for ( ContrastResult cr : deaResult.getContrasts() ) {                         
                     double visualizationValue = calculateVisualizationValueBasedOnFoldChange ( cr.getLogFoldChange() );
                     FactorValue factorValue = factorValueService.load( cr.getFactorValue().getId() );
-                    contrastsMap.put(factorValue.getId(), resultValueObject.new ContrastVisualizationValueObject(cr.getId(), visualizationValue, cr.getLogFoldChange(), getFactorValueString(factorValue) ) );                        
+                    contrastsMap.put(factorValue.getId(), resultValueObject.new ContrastVisualizationValueObject(cr.getId(), visualizationValue, cr.getLogFoldChange(), cr.getPvalue(), getFactorValueString(factorValue) ) );                        
                 }
                 resultValueObject.add(geneId, contrastsMap);                                    
             }
@@ -1213,9 +1210,5 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         if (foldChange < 0) visualizationValue = (-1)*visualizationValue;
         return visualizationValue;
     }
-    
-    
-                
-    
     
 }

@@ -102,7 +102,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 								if (dColumn.expandButton_.pressed) {
 									for (var i = 0; i < dColumn.factorValueIds.length; i++) {
 										if (i === 0) {
-											if(dColumn.miniPieValue>0){
+											if(dColumn.miniPieValue >= 0){
 												MiniPieLib.drawMiniPie(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth + 5, Gemma.MetaVisualizationConfig.columnLabelHeight-5, 9,
 													Gemma.MetaVisualizationConfig.miniPieColor, dColumn.miniPieValue);
 											}else{
@@ -140,7 +140,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 										var factorText = dColumn.factorCategory ? dColumn.factorCategory : dColumn.factorName;
 										factorText = Ext.util.Format.ellipsis(factorText, 25, false);
 										
-										if (dColumn.miniPieValue > 0) {
+										if (dColumn.miniPieValue >= 0) {
 											MiniPieLib.drawMiniPie(ctx, xPosition - Gemma.MetaVisualizationConfig.cellWidth + 5, Gemma.MetaVisualizationConfig.columnLabelHeight - 5,
 											 9, Gemma.MetaVisualizationConfig.miniPieColor, dColumn.miniPieValue);
 										}
