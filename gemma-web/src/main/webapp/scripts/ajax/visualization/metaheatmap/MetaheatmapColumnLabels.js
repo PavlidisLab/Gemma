@@ -186,14 +186,6 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 							Math.max((xPosition - startPosition) * 2 + Gemma.MetaVisualizationConfig.columnSeparatorWidth,200), 
 								Gemma.MetaVisualizationConfig.columnLabelHeight - Gemma.MetaVisualizationConfig.labelBaseYCoor + 15);
 
-					// ctx.font =
-					// (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2) +
-					// "px sans-serif";
-					// var name =
-					// this._datasetGroupNames[currentDatasetGroupIndex];
-					// var metrics = ctx.measureText(name);
-					// labelCentre = labelCentre - metrics.width/2;
-
 					// adjust for text width
 					var textStart = labelCentre - (Gemma.MetaVisualizationConfig.columnLabelFontSize + 2) *
 							 this._datasetGroupNames[currentDatasetGroupIndex].length / 2;

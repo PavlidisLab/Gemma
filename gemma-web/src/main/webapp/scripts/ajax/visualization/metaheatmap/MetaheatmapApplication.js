@@ -728,12 +728,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					cellHeight: 14,
 					cellWidth: 14,
 					colorValues: [[null, "No Data"], [0.1, "0.5~0.25"], [0.2, "0.1"], [0.3, "0.05"], [0.4, "0.01"], [0.6, "0.001"], [0.8, "0.0001"], [0.9, "0.00001"], [1, "< 0.00001"]],
-					colorValues2: [[null, "No Data"], [-3, "-3"], [-2, "-2"], [-1, "-1"], [0, "0"], [1, "1"], [2, "2"], [3, "3"]],
+					colorValues2: [[null, "No Data"], [3, "Up"], [-3, "Down"]],
 					vertical: true,
 					canvasId: 'canvas1',
 					canvasId2: 'canvas12',
 					legendTitle: 'q-value',
-					legendTitle2: 'log fold change',
+					legendTitle2: 'direction',
 					textWidthMax: 80,
 					textOffset: 1,
 					fontSize: 12,
@@ -774,12 +774,12 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						'<tpl if="type==\'contrastCell\'">',
 						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 						'<b>Experiment</b>: {datasetShortName}</a> {datasetName}<br><br>',
-						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Fold change</b>: {foldChange}<br><br>',
+						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Log2 fold change</b>: {foldChange}<br><br>',
 						'</tpl>',
 						'<tpl if="type==\'cell\'">',
 						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 						'<b>Experiment</b>: {datasetShortName} {datasetName}<br><br>',
-						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>q Value</b>: {pvalue}',
+						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>q Value</b>: {qvalue}',
 						'</tpl>', '</tpl></span>'),
 				tplWriteMode : 'overwrite'
 			}, {
@@ -953,10 +953,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				toFilter.push(children[i].id);
 			}
 		}
-		state.factorFilters = toFilter;
-		
+		state.factorFilters = toFilter;	
 		state.taxonId = this._visualizationData.taxonId;
-		//state.pvalue = this.pvalue; //we don't use this yet
 		return state;
 	},
 		
@@ -1027,7 +1025,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			url += String.format("ff={0}&", state.factorFilters.join(','));
 		}
 		url += String.format("t={0}&", state.taxonId);
-		//url += String.format("p={0}&", state.pvalue);//we don't use this yet
 
 		// remove trailing '&'
 		url = url.substring(0, url.length-1);

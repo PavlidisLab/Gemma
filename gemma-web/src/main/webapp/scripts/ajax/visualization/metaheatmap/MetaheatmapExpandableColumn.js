@@ -27,7 +27,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					datasetGroupIndex : this.datasetGroupIndex, // dataset group index
 					
 					_visualizationValues : this.visualizationSubColumnData,
-					pValues : this.pValuesSubColumnData,
+					qValues : this.qValuesSubColumnData,
 
 					factorValueNames : this.factorValueNames,
 					factorValueIds : this.factorValueIds,
@@ -111,7 +111,11 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					if ( typeof geneContrastsInfo[factorValueId] === 'undefined' || geneContrastsInfo[factorValueId] === null) {
 						vizValue = 0;				
 					} else {
-						vizValue = geneContrastsInfo[factorValueId].foldChangeValue;										
+						if (geneContrastsInfo[factorValueId].foldChangeValue > 0) {
+							vizValue = 3;										
+						} else {
+							vizValue = -3;																	
+						}
 					}
 				}					
 				var color = this._discreteColorRangeContrasts.getCellColorString(vizValue);
@@ -248,7 +252,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					// row: index.row,
 					// column: this.rowGroup,
 					// specificity: 100 * this.ownerCt.miniPieValue / 360,
-					pvalue : formatPVal(this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
+					qvalue : formatPVal(this.qValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
 					// baselineFactorValue: this.ownerCt.baselineFactorValue,
 					factorName : this.ownerCt._dataColumn.factorName,				
 					foldChange : foldChange,
@@ -276,7 +280,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 					// row: index.row,
 					// column: this.rowGroup,
 					// specificity: 100 * this.ownerCt.miniPieValue / 360,
-					pvalue : formatPVal(this.pValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
+					qvalue : formatPVal(this.qValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
 					// baselineFactorValue: this.ownerCt.baselineFactorValue,
 					factorName : this.ownerCt._dataColumn.factorName, 
 					factorCategory : this.ownerCt._dataColumn.factorCategory,
@@ -353,7 +357,7 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 			isFiltered : false,
 
 			miniPieValue : (this.dataColumn.numberOfProbesTotal === 0)? -1: 360.0 * this.dataColumn.numberOfProbesDiffExpressed / this.dataColumn.numberOfProbesTotal,
-			sumOfPvalues : 0.0,
+			sumOfQvalues : 0.0,
 
 			resultSetId : this.dataColumn.resultSetId,
 			factorValueIds : this.dataColumn.contrastsFactoreValueIds,
@@ -570,7 +574,7 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 			var subColumn = new Gemma.MetaHeatmapColumn({
 						applicationRoot : this.applicationRoot,
 						visualizationSubColumnData : this._dataColumn.visualizationValues[geneGroupIndex],
-						pValuesSubColumnData : this._dataColumn.pValues[geneGroupIndex],
+						qValuesSubColumnData : this._dataColumn.qValues[geneGroupIndex],
 						factorValueNames : this.factorValueNames,
 						factorValueIds: this.factorValueIds,
 						rowGroup : geneGroupIndex,

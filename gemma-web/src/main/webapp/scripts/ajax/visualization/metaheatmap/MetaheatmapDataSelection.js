@@ -121,30 +121,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			this.doVisualization(null);
 		}
 	},
-	doVisualization : function() {
-		var estimatedTime = 15 * this.geneGroupReferences.length * this.datasetGroupReferences.length;
-		
-		/*var progressWindow = new Ext.Window({
-					width : 80,
-					height : 50,
-					closable:false,
-					title: "Estimated time: " + (estimatedTime / 1000) + "s",
-					items : [{
-								xtype : 'progress',
-								ref : 'progress_bar'
-							}]
-				});
-		progressWindow.show();*/
-		
-		/*progressWindow.progress_bar.wait({
-					interval : 1000,
-					duration : estimatedTime,
-					increment : estimatedTime / 1000,
-					text : 'Building visualization...',
-					scope : this,
-					fn : function() {
-					}
-				});*/
+	doVisualization : function() {	
 		
 		if (typeof this.param === 'undefined') { // if not loading text from search interface (ex: when using a bookmarked link)
 			var waitMsg = Ext.Msg.wait("", "Loading your visualization...");
@@ -235,7 +212,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 									initExperimentSort: (this.initExperimentSort)? this.initExperimentSort:null,
 									initFactorFilter: (this.initFactorFilter)? this.initFactorFilter:null,
 									applyTo : 'meta-heatmap-div',
-									//pvalue : this.pvalue, //we don't use this yet
+									//pvalue : this.pvalue, //we don't use this yet // should be renamed to p value threshold or something like that
 									geneSessionGroupQueries :this.geneSessionGroupQueries,
 									experimentSessionGroupQueries :this.experimentSessionGroupQueries,
 									loadedFromURL: this.loadedFromURL
