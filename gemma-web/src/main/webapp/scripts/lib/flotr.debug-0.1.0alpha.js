@@ -563,7 +563,8 @@ var Flotr = (function() {
 						'height' : canvasHeight
 					});
 			target.appendChild(canvas);
-			if (Prototype.Browser.IE) {
+			// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+			if (!document.createElement("canvas").getContext && Prototype.Browser.IE) {
 				canvas = $(window.G_vmlCanvasManager.initElement(canvas));
 			}
 			ctx = canvas.getContext('2d');
@@ -582,7 +583,8 @@ var Flotr = (function() {
 			target.setStyle({
 						cursor : 'default'
 					}).appendChild(overlay);
-			if (Prototype.Browser.IE) {
+			// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+			if (!document.createElement("canvas").getContext && Prototype.Browser.IE) {
 				overlay = $(window.G_vmlCanvasManager.initElement(overlay));
 			}
 			octx = overlay.getContext('2d');

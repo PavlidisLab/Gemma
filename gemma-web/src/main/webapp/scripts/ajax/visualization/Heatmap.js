@@ -678,7 +678,8 @@ var Heatmap = function() {
 						height : canvasHeight
 					});
 
-			if (Prototype.Browser.IE) {
+			// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+			if (!document.createElement("canvas").getContext && Prototype.Browser.IE) {
 				canvas = $(window.G_vmlCanvasManager.initElement(canvas));
 			}
 

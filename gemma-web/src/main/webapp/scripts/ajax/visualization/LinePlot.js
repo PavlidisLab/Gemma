@@ -43,13 +43,13 @@ var LinePlot = function() {
 		 */
 		function draw(container, series, config, sampleLabels, conditionLabels, conditionLabelKey) {
 			// maybe not ready yet.
-			if (series.length == 0)
+			if (series.length === 0){
 				return;
-
+			}
 			var numberOfColumns = series[0].data.length; // assumed to be the same always.
 
 			// avoid insanity
-			if (numberOfColumns == 0) {
+			if (numberOfColumns === 0) {
 				return;
 			}
 
@@ -86,8 +86,8 @@ var LinePlot = function() {
 			var height = container.getHeight();
 			
 			/* happens with hidden thumbnails sometimes, set to non-zero to avoid errors in some browsers */
-			if(width === 0) width = 10; 
-			if(height === 0) height = 10; 
+			if(width === 0) {width = 10;}
+			if(height === 0) {height = 10;}
 
 			// space used for the line plot itself.
 			var plotHeight = height; // to be modified to make room for the sample labels.
@@ -339,8 +339,8 @@ var LinePlot = function() {
 					width : canvasWidth,
 					height : canvasHeight
 				});
-
-		if (Prototype.Browser.IE) {
+		// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+		if (!document.createElement("canvas").getContext && Prototype.Browser.IE) {
 			canvas = $(window.G_vmlCanvasManager.initElement(canvas));
 		}
 

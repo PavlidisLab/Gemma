@@ -261,12 +261,6 @@ Gemma.ProfileTemplate = Ext.extend(Ext.XTemplate, {
 
 				Gemma.ProfileTemplate.superclass.overwrite.call(this, el, values, ret);
 
-				// if (this.smooth) {
-				// this.graphConfig.smoothLineGraphs = true;
-				// } else {
-				// this.graphConfig.smoothLineGraphs = false;
-				// }
-
 				for (var i = 0; i < values.length; i++) {
 					var record = values[i];
 					var shortName = record.eevo.shortName;
@@ -942,7 +936,9 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 		//var items = [this.thumbnailPanel, this.zoomPanel];
 
 		var browserWarning = "";
-		if (Ext.isIE) {
+		
+		// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+		if (!document.createElement("canvas").getContext && Ext.isIE) {
 			browserWarning = "<span ext:qtip='Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. Firefox, Chrome, Safari and Opera will be faster too.'>"
 					+ "Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/' target='_blank'>Chrome Frame</a></span>";
 		}
@@ -1346,7 +1342,8 @@ var FactorValueLegend = function() {
 						height : canvasHeight
 					});
 
-			if (Prototype.Browser.IE) {
+			// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+			if (!document.createElement("canvas").getContext && Prototype.Browser.IE) {
 				canvas = $(window.G_vmlCanvasManager.initElement(canvas));
 			}
 

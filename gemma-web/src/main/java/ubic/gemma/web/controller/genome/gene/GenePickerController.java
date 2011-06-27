@@ -466,7 +466,7 @@ public class GenePickerController {
                 HashSet<Long> geneIds = new HashSet<Long>();
                 HashMap<Long, HashSet<Long>> geneIdsByTaxonId = new HashMap<Long, HashSet<Long>>();
 
-                // add every individual experiment to the set
+                // add every individual gene to the set
                 for ( SearchResultDisplayObject srdo : genes ) {
                     if ( !geneIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
                         geneIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
@@ -504,7 +504,8 @@ public class GenePickerController {
                     taxon = taxonService.load( taxonId2 );
       
                     Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
-                    if ( taxon != null && entry.getValue().size() > 0 ) {
+                    // don't make groups for 1 gene
+                    if ( taxon != null && entry.getValue().size() > 1 ) {
                         displayResults.add( new SearchResultDisplayObject( GeneSet.class, ref, "All "
                                 + taxon.getCommonName() + " results for '" + query + "'", "All " + taxon.getCommonName()
                                 + " genes found for your query", true, entry.getValue().size(), taxon.getId(), taxon

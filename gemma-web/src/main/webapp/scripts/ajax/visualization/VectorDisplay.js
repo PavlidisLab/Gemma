@@ -67,7 +67,7 @@ Gemma.VectorDisplay = Ext.extend(Ext.Window,
 				/*
 				 * Note that this only handles data from a single experiment --- data.length == 1.
 				 */
-				if (!data || data[0].data.profiles.length == 0) {
+				if (!data || data[0].data.profiles.length === 0) {
 					this.hide();
 					Ext.Msg.alert('Status', 'No data available');
 					return;
