@@ -126,10 +126,11 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 			} else {
 				if ( filteringFn( this.items.get(i) ) ) { // hide
 					this.items.get(i).filterHide();
+					this.items.get(i).updateParentsScores (true);					
 				} else {
 					this.items.get(i).filterShow();
+					this.items.get(i).updateParentsScores (false);					
 				}
-				this.items.get(i).updateParentsScores();
 			}
 			newWidth = newWidth + this.items.get(i).getWidth();			
 		}

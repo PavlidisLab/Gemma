@@ -589,23 +589,20 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 
 		this.overallDifferentialExpressionScore = 0;
 		this.missingValuesScore = 0;
+		
 		for (var i = 0; i < this._dataColumn.visualizationValues.length; i++) {
 			for (var j = 0; j < this._dataColumn.visualizationValues[i].length; j++) {
 				if (this._dataColumn.visualizationValues[i][j] === null) {
 					this.missingValuesScore++;
 					this.overallDifferentialExpressionScore += 0;
 				} else {
-					this.overallDifferentialExpressionScore += this._dataColumn.visualizationValues[i][j];
+					this.overallDifferentialExpressionScore += .05 + this._dataColumn.visualizationValues[i][j];
 				}
 			}
 		}
-
-		this.ownerCt.overallDifferentialExpressionScore += this.overallDifferentialExpressionScore;
-		this.ownerCt.ownerCt.overallDifferentialExpressionScore += this.overallDifferentialExpressionScore;
-
-		this.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.specificityScore);
-		this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.ownerCt.specificityScore);
-
+		
+		this.updateParentsScores (false);
+		
 		this.el.on('mouseover', function(e, t) {
 					this.drawButton_('rgb(255,10,10)');					
 				}, this);
@@ -613,15 +610,29 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 					this.drawButton_('rgb(10,100,10)');					
 				}, this);
 	},
-	
-	updateParentsScores : function() {
-		this.ownerCt.overallDifferentialExpressionScore -= this.overallDifferentialExpressionScore;
-		this.ownerCt.ownerCt.overallDifferentialExpressionScore -= this.overallDifferentialExpressionScore;
+						
+	updateParentsScores : function (isHiding) {
+		if (isHiding) {
+			this.ownerCt.overallDifferentialExpressionScore -= this.overallDifferentialExpressionScore;
+			this.ownerCt.ownerCt.overallDifferentialExpressionScore -= this.overallDifferentialExpressionScore;
 
-		// this.ownerCt.specificityScore = Math.max(this.miniPieValue,
-		// this.ownerCt.specificityScore);
-		// this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue,
-		// this.ownerCt.ownerCt.specificityScore);
+			this.ownerCt.specificityScore -= this.miniPieValue;
+			this.ownerCt.ownerCt.specificityScore -= this.miniPieValue;
+						
+//			this.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.specificityScore);
+//			this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.ownerCt.specificityScore);
+			
+		} else {
+			this.ownerCt.overallDifferentialExpressionScore += this.overallDifferentialExpressionScore;
+			this.ownerCt.ownerCt.overallDifferentialExpressionScore += this.overallDifferentialExpressionScore;
+
+			this.ownerCt.specificityScore += this.miniPieValue;
+			this.ownerCt.ownerCt.specificityScore += this.miniPieValue;
+			
+//			this.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.specificityScore);
+//			this.ownerCt.ownerCt.specificityScore = Math.max(this.miniPieValue, this.ownerCt.ownerCt.specificityScore);
+		}
+
 	},
 
 	redraw_ : function() {

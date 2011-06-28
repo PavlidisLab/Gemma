@@ -70,7 +70,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						return null; // don't do anything to a node that
 						// wasn't checked
 					};
-					this.filterColumns(filteringFn);
+					this.filterColumns (filteringFn);
+					this._sortColumns (this.currentSortingDirection, this.currentSortingFn);
 					this.doLayout();
 					this.refreshVisualization();
 				}, this);
@@ -398,6 +399,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			filterColumns : function(filteringFn) {
 				return this._imageArea._heatmapArea.filterColumns(filteringFn);
 			},
+			currentSortingFn_ : null,			
 			_sortColumns : function(asc_desc, sortingFn) {
 				this._imageArea._heatmapArea._sortColumns(asc_desc, sortingFn);
 			},
@@ -540,38 +542,38 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						}),
 						listeners: {
 							select: function(field, record, selIndex){
-							
+						
 								if (record.get('name') === 'qValues') {
-									this._sortColumns('DESC', function(o1, o2){
-									
-										return o1.overallDifferentialExpressionScore -
-										o2.overallDifferentialExpressionScore;
-									});
+									this.currentSortingFn = function(o1, o2){									
+										return o1.overallDifferentialExpressionScore - o2.overallDifferentialExpressionScore;
+									};
+									this.currentSortingDirection = 'DESC';
+									this._sortColumns('DESC', this.currentSortingFn);
 									this.doLayout();
 								}
 								else if (record.get('name') === 'specificity') {
-										this._sortColumns('ASC', function(o1, o2){
-										
-											return o1.specificityScore - o2.specificityScore;
-										});
-										
-										this.doLayout();
+									this.currentSortingFn = function(o1, o2){										
+										return o1.specificityScore - o2.specificityScore;
+									};
+									this.currentSortingDirection = 'ASC';
+									this._sortColumns('ASC', this.currentSortingFn);									
+									this.doLayout();
 								}
 								else if (record.get('name') === 'experimentName') {
-										this._sortColumns('ASC', function(o1, o2){
-											
-											return (o1.datasetName >= o2.datasetName) ? 1 : -1;
-										});
-											
-										this.doLayout();
+									this.currentSortingFn = function(o1, o2){										
+										return (o1.datasetName >= o2.datasetName) ? 1 : -1;
+									};
+									this.currentSortingDirection = 'ASC';
+									this._sortColumns('ASC', this.currentSortingFn);										
+									this.doLayout();
 								}
 								else if (record.get('name') === 'shortName') {
-											this._sortColumns('ASC', function(o1, o2){
-											
-												return (o1.datasetShortName >= o2.datasetShortName) ? 1 : -1;
-											});
-											
-											this.doLayout();
+									this.currentSortingFn = function(o1, o2){										
+										return (o1.datasetShortName >= o2.datasetShortName) ? 1 : -1;
+									}
+									this.currentSortingDirection = 'ASC';
+									this._sortColumns('ASC', this.currentSortingFn); 																				
+									this.doLayout();
 								}
 								this.refreshVisualization();
 							},
