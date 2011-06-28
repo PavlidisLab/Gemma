@@ -83,6 +83,7 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 
 	initComponent: function() {
 		Ext.apply(this, {
+			ourType:'MetaHeatmapAnalysisColumnGroup',
 			dataColumns : this.dataColumns,
 						
 			datasetGroupIndex : this.datasetGroupIndex,
@@ -100,6 +101,7 @@ Gemma.MetaHeatmapAnalysisColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePa
 		for (var i = 0; i < this.dataColumns.length; i++) {
 			this.add ( new Gemma.MetaHeatmapExpandableColumn(
 								{ applicationRoot: this.applicationRoot,
+								  ourType:'MetaHeatmapExpandableColumn',
 								  height: this.height,
 								  dataColumn : this.dataColumns[i],
 								  columnIndex: i,
@@ -147,7 +149,8 @@ Gemma.MetaHeatmapDatasetColumnGroup = Ext.extend ( Gemma.MetaHeatmapResizablePan
 	initComponent: function() {
 		Ext.apply(this, {
 			
-			dataColumns : this.dataColumns,		
+			dataColumns : this.dataColumns,	
+			ourType:'MetaHeatmapDatasetColumnGroup',	
 			_columnsHidden : 0,
 			
 			datasetGroupIndex : this.datasetGroupIndex,
@@ -222,7 +225,8 @@ Gemma.MetaHeatmapDatasetGroupPanel = Ext.extend(Gemma.MetaHeatmapResizablePanelB
 			left : 0
 		},
 			datasetGroupIndex: this.datasetGroupIndex,
-			dataColumns: this.dataFactorColumns			
+			dataColumns: this.dataFactorColumns,
+			ourType:'MetaHeatmapDatasetGroupPanel'		
 		});
 
 		Gemma.MetaHeatmapDatasetGroupPanel.superclass.initComponent.apply(this, arguments);
@@ -286,6 +290,7 @@ Gemma.MetaHeatmapScrollableArea = Ext.extend(Gemma.MetaHeatmapResizablePanelBase
 					border : false,
 					bodyBorder : false,
 					layout : 'hbox',
+					ourType:'MetaHeatmapScrollableArea',
 					layoutConfig : {
 						defaultMargins : {
 							top : 0,

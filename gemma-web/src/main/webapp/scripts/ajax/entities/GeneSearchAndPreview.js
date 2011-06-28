@@ -333,7 +333,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				for (i = 0; i < genesToPreview.length; i++) {
 					this.previewPart.genePreviewContent.update(genesToPreview[i]);
 				}
-				this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + ")");
+				this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + " genes)");
 				this.geneSelectionEditorBtn.setText((geneIds.length - genesToPreview.length)+
 						 ' more - Edit');
 				this.showGenePreview();

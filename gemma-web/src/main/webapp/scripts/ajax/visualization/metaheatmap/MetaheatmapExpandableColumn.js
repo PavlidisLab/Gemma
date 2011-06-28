@@ -11,7 +11,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 						bottom : Gemma.MetaVisualizationConfig.groupSeparatorHeight,
 						left : 0
 					},
-
+					ourType:'MetaHeatmapColumn',
 					applicationRoot : this.applicationRoot,
 
 					cellHeight : Gemma.MetaVisualizationConfig.cellHeight, 
@@ -340,6 +340,7 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 		Ext.apply(this, {
 			applicationRoot : this.applicationRoot,
 
+			ourType:'MetaHeatmapExpandableColumn',
 			border : false,
 			bodyBorder : false,
 

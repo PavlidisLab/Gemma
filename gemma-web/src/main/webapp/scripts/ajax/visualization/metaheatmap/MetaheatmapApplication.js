@@ -463,8 +463,11 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				icon : '/Gemma/images/download.gif',
 				cls : 'x-btn-text-icon',
 				tooltip:'Download a formatted text version of your search results',
-				handler : function() {
-					window.open(this.getDownloadLink());				
+				handler: function(){
+					var textWindow = new Gemma.MetaHeatmapDownloadWindow();
+					textWindow.show();
+					textWindow.loadData(this._imageArea._heatmapArea);
+					//window.open(this.getDownloadLink()); 
 				},
 				scope:this
 			}
@@ -589,9 +592,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						fieldLabel: 'Sort genes by',
 						fieldTipTitle: 'Sort Genes By:',
 						fieldTipHTML:'<b>Symbol</b>: official gene symbol<br>'+
-										'<b>q Values</b>: confidence in the gene\'s differential expression across all experiments<br><br>',
+										'<b>q Values</b>: confidence that the gene is differentially expressed, averaged across the queried experiments<br><br>',
 						fieldTip:'Symbol: official gene symbol.  '+
-										'q Values: confidence that they are differentially expressed, averaged across the queried experiments',
+										'q Values: confidence that the gene is differentially expressed, averaged across the queried experiments',
 						mode: 'local',
 						displayField: 'text',
 						valueField: 'name',
@@ -757,7 +760,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				shadow : false,
 				border : false,
 				bodyBorder : false,
-				hidden: true, // doesn't work for some reason
+				hidden: true,
 				bodyStyle : 'padding: 7px',
 				html : '<span style="color:black;font-size:1.3em">Hover over the visualisation for quick details or click for more information.'+
 						' <br><br>Hold down "ctrl" and click on a gene to select it.</span>',
@@ -982,6 +985,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		var queryStart = document.URL.indexOf("?");
 		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
 		url = url.replace('home','metaheatmap');
+		url = url.replace('html#','html'); // added by IE sometimes
 		
 		var noGenes = true;
 		var noExperiments = true;
@@ -1004,14 +1008,14 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			noExperiments = false;
 		}	
 		if (typeof state.experimentSessionGroupQueries !== 'undefined' && 
-				typeof state.experimentSessionGroupQueries[0] !== 'undefined' && 
+				!(state.experimentSessionGroupQueries.length === 1 && typeof state.experimentSessionGroupQueries[0] === 'undefined') && 
 				state.experimentSessionGroupQueries !== null && 
 				state.experimentSessionGroupQueries.length !== 0) {
 			url += String.format("eq={0}&", state.experimentSessionGroupQueries.join(","));
 			noExperiments = false;
 		}
 		if (typeof state.geneSessionGroupQueries !== 'undefined' && 
-				typeof state.geneSessionGroupQueries[0] !== 'undefined' && 
+				!(state.geneSessionGroupQueries.length === 1 && typeof state.geneSessionGroupQueries[0] === 'undefined') && 
 				state.geneSessionGroupQueries !== null && 
 				state.geneSessionGroupQueries.length > 0) {
 			url += String.format("gq={0}&", state.geneSessionGroupQueries.join(","));
@@ -1055,7 +1059,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		new Ext.Window({
 			closeAction:'close',
 			title:"Bookmark or sharable link",
-			html:"<b>Use this link to re-run your search:</b><br> "+url,
+			html:'<b>Use this link to re-run your search:</b><br> <a target="_blank" href="'+url+'">'+url+'<\a>',
 			width:650,
 			padding:10
 		}).show();

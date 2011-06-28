@@ -27,7 +27,6 @@ Gemma.SelectTree = Ext.extend(Ext.tree.TreePanel, {
 			rootVisible : false,
 			enableDD : false,
 			cls : 'x-tree-noicon',
-			//singleClickExpand : true,
 			lines : false,
 			// containerScroll:true,
 			// panel
@@ -60,9 +59,6 @@ Gemma.SelectTree = Ext.extend(Ext.tree.TreePanel, {
 				this.setRootNode(root);
 				this.buildNodes(root, this.nodeParams);
 			},
-			/**
-			 * returns a node
-			 */
 			buildNodes : function(parent, nodeParams) {
 				var node;
 				var nodeParam;
@@ -188,7 +184,7 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 						if (haveCheck) {
 							node = new Ext.tree.TreeNode({
 										expanded : false,
-										singleClickExpand : true,
+										singleClickExpand : false,
 										id : parent.text + nodeParam.text.toLowerCase(), // so
 										// that
 										// multiple
@@ -199,12 +195,17 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 										// aren't
 										// created
 										text : nodeParam.text,
-										checked : true
+										checked : true,
+										listeners: {
+											dblclick:function() {
+												Ext.Msg.alert('Hey','I\'m listening');
+											}
+										}
 									});
 						} else {
 							node = new Ext.tree.TreeNode({
 										expanded : false,
-										singleClickExpand : true,
+										singleClickExpand : false,
 										id : parent.text + nodeParam.text.toLowerCase(), // so
 										// that
 										// multiple
