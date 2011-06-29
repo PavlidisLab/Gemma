@@ -944,21 +944,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		 * ***** BUTTONS
 		 * *******************************************************************************
 		 */
-
-		this.coexRadio = new Ext.form.Radio({
-					name:'searchMode',
-					boxLabel: "<span style=\"font-size:1.7em\">Coexpression</span>",
-					//style : 'padding-bottom:0.4em',
-					checked : false
-				});		
-
-		this.diffExRadio = new Ext.form.Radio({
-					name:'searchMode',
-					boxLabel: "<span style=\"font-size:1.7em\">Differential Expression</span>",
-					style : 'padding:0.4em',
-					checked : true
-				});		
-
 		this.coexToggle = new Ext.Button({
 					text : "<span style=\"font-size:1.3em\">Coexpression</span>",
 					cls:'highlightToggle',
@@ -971,13 +956,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					this.diffExToggle.toggle();
 				}, this);
 		this.diffExToggle = new Ext.Button({
-					text : "<span style=\"font-size:1.3em\">Differential Expression</span>",
-					scale : 'medium',
-					cls:'highlightToggle',
-					width : 150,
-					enableToggle : true,
-					pressed : true
-				});
+			text: "<span style=\"font-size:1.3em\">Differential Expression</span>",
+			scale: 'medium',
+			cls: 'highlightToggle',
+			width: 150,
+			enableToggle: true,
+			pressed: true
+		});
 		this.diffExToggle.on('click', function() {
 					this.coexToggle.toggle();
 				}, this);
@@ -1031,6 +1016,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					tplWriteMode: 'overwrite'
 				});
 
+				this.diffExExamples = new Ext.Panel({
+					ref: 'diffExExamples',
+					hidden: !this.diffExToggle.pressed,
+					html: 'Examples: <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
+					'href="/Gemma/metaheatmap.html?gg=48&eg=6112&t=1">autism</a> (human),' +
+					' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." ' +
+					'href="/Gemma/metaheatmap.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">hippocampus development</a> (mouse)'
+				});
 		/*************** PUT ITEMS IN PANEL *********************/
 
 		Ext.apply(this, {
@@ -1103,15 +1096,18 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip:'Clear all selections and reset the taxon mode ',
 							handler: this.reset.createDelegate(this)
 						}]
-					},{
-						html:'Examples: <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."'+
-							'href="/Gemma/metaheatmap.html?gg=48&eg=6112&t=1">autism</a> (human),'+
-							' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." '+
-							'href="/Gemma/metaheatmap.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">hippocampus development</a> (mouse)'
-					}]
+					},this.diffExExamples]
 				}]
 			}
 		});
+		this.diffExToggle.on('toggle', function(){
+			if (this.diffExToggle.pressed) {
+				this.diffExExamples.show();
+			}
+			else {
+				this.diffExExamples.hide();
+			}
+		}, this);
 
 		/* factor chooser for differential expression */
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({
