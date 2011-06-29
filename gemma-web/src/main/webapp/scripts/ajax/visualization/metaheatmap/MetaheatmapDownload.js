@@ -184,10 +184,25 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 				text: 'Select All',
 				scope: this,
 				handler: function(){
-				this.textAreaPanel.selectText();
-			}
+					this.textAreaPanel.selectText();
+				}
 			}],
-			items: this.textAreaPanel
+			items:[new Ext.form.TextArea({
+				ref: 'textAreaPanel',
+                readOnly: true,
+				// tabs don't show up in Chrome, but \t doesn't work any better than &#09;
+                tpl: new Ext.XTemplate('<tpl for=".">' ,
+                	'<tpl if="type==\'headerRow\'">', '{text}', '</tpl>', '<tpl if="type==\'dataRow\'">', 
+					'&quot;{datasetShortName}&quot;&#09;&quot;{rowType}&quot;&#09;&quot;{factorCategory}&quot;&#09;&quot;',
+					'{factorValue}&quot;&#09;&quot;{baseline}&quot;&#09;{perGeneData}\n', 
+					'</tpl>', '</tpl>'),
+                tplWriteMode: 'append',
+                bodyStyle: 'white-space: nowrap',
+                style: 'white-space: nowrap',
+                wordWrap: false,
+                padding: 7,
+                autoScroll: true
+            })]
 		});        
 
 	this.loadData = function (data) {
