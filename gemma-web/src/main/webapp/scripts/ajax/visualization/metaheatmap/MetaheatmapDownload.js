@@ -130,9 +130,9 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 		
 		return {
 			type: 'dataRow',
-			datasetShortName: dataColumn.datasetShortName.replace('"',"'"),
+			datasetShortName: (dataColumn.datasetShortName)? dataColumn.datasetShortName.replace('"',"'"):'',
 			rowType: 'basic diff ex',
-			factorCategory: (dataColumn.factorCategory) ? dataColumn.factorCategory.replace('"',"'") : dataColumn.factorName.replace('"',"'"),
+			factorCategory: (dataColumn.factorCategory) ? dataColumn.factorCategory.replace('"',"'") : ((dataColumn.factorName)?dataColumn.factorName.replace('"',"'"):''),
 			factorValue: factorValues.replace('"',"'"), 
 			baseline: '',
 			perGeneData: ("&quot;"+orderedQValues.join('&quot;&#09;&quot;')+'&quot').replace('"',"'")
@@ -162,12 +162,12 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 			
 			rows.push( {
 			type: 'dataRow',
-				datasetShortName: dataColumn.datasetShortName.replace('"',"'"),
+				datasetShortName: (dataColumn.datasetShortName)? dataColumn.datasetShortName.replace('"',"'"):'',
 				rowType: 'contrast',
-				factorCategory: (dataColumn.factorCategory) ? dataColumn.factorCategory.replace('"',"'") : dataColumn.factorName.replace('"',"'"),
-				factorValue: factorValueName.replace('"',"'"),
-				baseline: column.baselineFactorValue.replace('"',"'"),
-				perGeneData: foldChanges.replace('"',"'")
+				factorCategory: (dataColumn.factorCategory) ? dataColumn.factorCategory.replace('"',"'") : ((dataColumn.factorName)? dataColumn.factorName.replace('"',"'"):''),
+				factorValue: (factorValueName)? factorValueName.replace('"',"'"):'',
+				baseline: (column.baselineFactorValue)? column.baselineFactorValue.replace('"',"'"):'',
+				perGeneData: (foldChanges)? foldChanges.replace('"',"'"):''
 			});
 		}
 		return rows;
@@ -212,10 +212,7 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 					'\# \n'+
 					'\# This functionality is currently in beta. The file format may change in the near future. \n'+
 					'\# Fields are separated by tabs and delimited with double quotes\n'+
-					'\# \n'+
 					'\# \n'
-
-
 		});
 		
 			html:
