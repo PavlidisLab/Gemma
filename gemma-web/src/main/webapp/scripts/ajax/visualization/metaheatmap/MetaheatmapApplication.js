@@ -779,7 +779,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						'<tpl if="type==\'contrastCell\'">',
 						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 						'<b>Experiment</b>: {datasetShortName}</a> {datasetName}<br><br>',
-						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Log2 fold change</b>: {foldChange}<br><br>',
+						'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Log2 fold change</b>: {foldChange}<br>', '<b>pValue</b>: {contrastPvalue} <br>',
 						'</tpl>',
 						'<tpl if="type==\'cell\'">',
 						'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
