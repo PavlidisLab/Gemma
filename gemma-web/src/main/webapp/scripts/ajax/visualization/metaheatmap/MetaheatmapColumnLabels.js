@@ -290,6 +290,7 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 				
 				var adjustedX = e.getPageX() - (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
 				var analysisObj = this.getAnalysisPanelByX(adjustedX);
+				
 
 				if (analysisObj !== null && analysisObj !== undefined) {
 
@@ -301,7 +302,9 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 
 					this.applicationRoot._imageArea._hoverDetailsPanel.show();
 					this.applicationRoot._imageArea._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
-					this.applicationRoot._imageArea._hoverDetailsPanel.update({
+					// if hovering over a mini pie, show specificity info
+					if(y < Gemma.MetaVisualizationConfig.columnLabelHeight - 10 ){ // 10 is mini-pie height
+						this.applicationRoot._imageArea._hoverDetailsPanel.update({
 						type: 'experiment',
 						datasetName: analysisObj.dataColumn.datasetName,
 						datasetShortName: analysisObj.dataColumn.datasetShortName,
@@ -312,6 +315,16 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 						factorValues: factorValues
 					
 					});
+					}else{
+						this.applicationRoot._imageArea._hoverDetailsPanel.update({
+						type: 'minipie',
+						numberOfProbesTotal: analysisObj.dataColumn.numberOfProbesTotal,
+						numberOfProbesDiffExpressed: analysisObj.dataColumn.numberOfProbesDiffExpressed, 
+						numberOfProbesDownRegulated: analysisObj.dataColumn.numberOfProbesDownRegulated, 
+						numberOfProbesUpRegulated: analysisObj.dataColumn.numberOfProbesUpRegulated
+					});
+					}
+					
 				}
 			}
 
