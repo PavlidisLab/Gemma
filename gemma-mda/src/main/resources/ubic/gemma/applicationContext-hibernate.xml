@@ -174,7 +174,6 @@
 				</value>
 				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/association/phenotype/Phenotype.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml
 				</value>
