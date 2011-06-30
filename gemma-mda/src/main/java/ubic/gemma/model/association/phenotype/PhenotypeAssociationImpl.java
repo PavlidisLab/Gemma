@@ -1,11 +1,3 @@
-<?xml version="1.0" encoding="ISO-8859-1" ?>
-<mappings name="gemma">
-	<mapping>
-		<from>
-			<![CDATA[// license-header java merge-point]]>
-		</from>
-		<to>
-			<![CDATA[
 /*
  * The Gemma project.
  * 
@@ -24,7 +16,21 @@
  * limitations under the License.
  *
  */
-]]>
-		</to>
-	</mapping>
-</mappings>
+/**
+ * This is only generated once! It will never be overwritten.
+ * You can (and have to!) safely modify it by hand.
+ */
+package ubic.gemma.model.association.phenotype;
+
+/**
+ * @see ubic.gemma.model.association.phenotype.PhenotypeAssociation
+ */
+public abstract class PhenotypeAssociationImpl
+    extends ubic.gemma.model.association.phenotype.PhenotypeAssociation
+{
+    /**
+     * The serial version UID of this class. Needed for serialization.
+     */
+    private static final long serialVersionUID = -3654309069465471576L;
+
+}
