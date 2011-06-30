@@ -1018,12 +1018,22 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 				this.diffExExamples = new Ext.Panel({
 					ref: 'diffExExamples',
+					colspan:4,
 					hidden: !this.diffExToggle.pressed,
-					html: 'Examples: <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
-					'href="/Gemma/metaheatmap.html?gg=48&eg=6112&t=1">autism</a> (human),' +
+					html: 'Example Queries:<br> <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
+					'href="/Gemma/metaheatmap.html?gg=48&eg=6112&t=1">Search for differential expression in ten experiments studying autism spectrum disorder based on genes from AutDB\'s candidate gene list</a> (human)<br>' +
 					' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." ' +
-					'href="/Gemma/metaheatmap.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">hippocampus development</a> (mouse)'
+					'href="/Gemma/metaheatmap.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)'
 				});
+				
+				this.diffExToggle.on('toggle', function(){
+					if (this.diffExToggle.pressed) {
+						this.diffExExamples.show();
+					}
+					else {
+						this.diffExExamples.hide();
+					}
+				}, this);
 		/*************** PUT ITEMS IN PANEL *********************/
 
 		Ext.apply(this, {
@@ -1100,14 +1110,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				}]
 			}
 		});
-		this.diffExToggle.on('toggle', function(){
-			if (this.diffExToggle.pressed) {
-				this.diffExExamples.show();
-			}
-			else {
-				this.diffExExamples.hide();
-			}
-		}, this);
 
 		/* factor chooser for differential expression */
 		this.efChooserPanel = new Gemma.ExperimentalFactorChooserPanel({

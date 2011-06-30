@@ -9,8 +9,8 @@ Ext.namespace('Gemma');
  *
  * Filters and sorting are taken into account.
  *
- * Fields are separated by tabs and delimited by double quotes (&quot;)
- * Quote delimitation is required for displaying data properly in Chrome (it merges adjacent tabs (&#09;))
+ * Fields are separated by tabs and delimited by double quotes (\")
+ * Quote delimitation is required for displaying data properly in Chrome (it merges adjacent tabs (\t))
  * All text used in data rows (as opposed to header rows) are checked for double quotes. If found, each is replaced with a single quote.
  *
  */
@@ -122,7 +122,7 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 			factorCategory: (dataColumn.factorCategory) ? dataColumn.factorCategory.replace('"',"'") : ((dataColumn.factorName)?dataColumn.factorName.replace('"',"'"):''),
 			factorValue: factorValues.replace('"',"'"), 
 			baseline: '',
-			perGeneData: ("&quot;"+orderedQValues.join('&quot;&#09;&quot;')+'&quot').replace('"',"'")
+			perGeneData: ("\""+orderedQValues.join('\"\t\"')+'&quot').replace('"',"'")
 		};
 		
 	},
@@ -132,18 +132,25 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 		var n;
 		var r;
 		var geneId;
-		var foldChanges;
+		var foldChanges = '';
+		var contrastPValues = '';
 		var rows = [];
 		for (n = 0; n < column.factorValueIds.length; n++) {
 			var factorValueName = column.factorValueNames[column.factorValueIds[n]];
 			// for each gene id in proper order
 			foldChanges = '';
+			contrastPValues = '';
+			var fc = ''; var pval = '';
 			for (r = 0; r < orderedGeneIds.length; r++) {
 				geneId = orderedGeneIds[r];
 				if(column.contrastsData.contrasts[geneId] && column.contrastsData.contrasts[geneId][column.factorValueIds[n]]){
-					foldChanges += "&quot;"+column.contrastsData.contrasts[geneId][column.factorValueIds[n]].foldChangeValue + "&quot;&#09;";
+					fc = column.contrastsData.contrasts[geneId][column.factorValueIds[n]].foldChangeValue;
+					pval = column.contrastsData.contrasts[geneId][column.factorValueIds[n]].contrastPvalue;
+					foldChanges += "\""+ fc + "\"\t";
+					contrastPValues += "\""+ pval + "\"\t";
 				}else{
-					foldChanges += "&quot;&quot;" + "&#09;";
+					foldChanges += "\"\"" + "\t";
+					contrastPValues += "\"\"" + "\t";
 				}
 			}
 			
@@ -153,7 +160,16 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 						factorCategory: (dataColumn.factorCategory) ? dataColumn.factorCategory.replace('"',"'") : ((dataColumn.factorName)? dataColumn.factorName.replace('"',"'"):''),
 						factorValue: (factorValueName)? factorValueName.replace('"',"'"):'',
 						baseline: (dataColumn.baselineFactorValue) ? dataColumn.baselineFactorValue.replace('"',"'"):'',
-						perGeneData: (foldChanges)? foldChanges.replace('"',"'"):''
+						perGeneData: foldChanges
+			});
+						
+			rows.push ({type: 'dataRow',
+						datasetShortName: (dataColumn.datasetShortName)? dataColumn.datasetShortName.replace('"',"'"):'',
+						rowType: 'contrast q value',
+						factorCategory: (dataColumn.factorCategory) ? dataColumn.factorCategory.replace('"',"'") : ((dataColumn.factorName)? dataColumn.factorName.replace('"',"'"):''),
+						factorValue: (factorValueName)? factorValueName.replace('"',"'"):'',
+						baseline: (dataColumn.baselineFactorValue) ? dataColumn.baselineFactorValue.replace('"',"'"):'',
+						perGeneData: contrastPValues
 			});
 		}
 		return rows;
@@ -163,11 +179,11 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 		//width:750,
 		//height:350,
 		readOnly: true,
-		// tabs don't show up in Chrome, but \t doesn't work any better than &#09;
+		// tabs don't show up in Chrome, but \t doesn't work any better than \t
 		tpl: new Ext.XTemplate('<tpl for=".">' ,
 				'<tpl if="type==\'headerRow\'">', '{text}', '</tpl>', '<tpl if="type==\'dataRow\'">', 
-				'&quot;{datasetShortName}&quot;&#09;&quot;{rowType}&quot;&#09;&quot;{factorCategory}&quot;&#09;&quot;',
-				'{factorValue}&quot;&#09;&quot;{baseline}&quot;&#09;{perGeneData}\n', 
+				'\"{datasetShortName}\"\t\"{rowType}\"\t\"{factorCategory}\"\t\"',
+				'{factorValue}\"\t\"{baseline}\"\t{perGeneData}\n', 
 				'</tpl>', '</tpl>'),
 				tplWriteMode: 'append',
 				bodyStyle: 'white-space: nowrap',
@@ -190,11 +206,12 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 			items:[new Ext.form.TextArea({
 				ref: 'textAreaPanel',
                 readOnly: true,
-				// tabs don't show up in Chrome, but \t doesn't work any better than &#09;
+				// tabs don't show up in Chrome, but \t doesn't work any better than \t
                 tpl: new Ext.XTemplate('<tpl for=".">' ,
-                	'<tpl if="type==\'headerRow\'">', '{text}', '</tpl>', '<tpl if="type==\'dataRow\'">', 
-					'&quot;{datasetShortName}&quot;&#09;&quot;{rowType}&quot;&#09;&quot;{factorCategory}&quot;&#09;&quot;',
-					'{factorValue}&quot;&#09;&quot;{baseline}&quot;&#09;{perGeneData}\n', 
+                	'<tpl if="type==\'headerRow\'">', '{text}', '</tpl>', 
+					'<tpl if="type==\'dataRow\'">', 
+					'\"{datasetShortName}\"\t\"{rowType}\"\t\"{factorCategory}\"\t\"',
+					'{factorValue}\"\t\"{baseline}\"\t{perGeneData}\r\n', 
 					'</tpl>', '</tpl>'),
                 tplWriteMode: 'append',
                 bodyStyle: 'white-space: nowrap',
@@ -207,7 +224,9 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 
 	this.loadData = function (data) {
 		var timeStamp = new Date();
-		var timeStampString = timeStamp.getFullYear()+"/"+timeStamp.getMonth()+"/"+timeStamp.getDate()+" "+timeStamp.getHours()+":"+timeStamp.getMinutes();
+		// make minutes double digits
+		var min = (timeStamp.getMinutes()<10)?'0'+timeStamp.getMinutes(): timeStamp.getMinutes();
+		var timeStampString = timeStamp.getFullYear()+"/"+timeStamp.getMonth()+"/"+timeStamp.getDate()+" "+timeStamp.getHours()+":"+min;
 		this.textAreaPanel.update({
 			type: 'headerRow',
 			text:'\# Generated by Gemma\n'+
@@ -222,8 +241,8 @@ Gemma.MetaHeatmapDownloadWindow= Ext.extend(Ext.Window, {
 		});
 		
 		var formattedData = this.formatData (data);
-		var geneNames = this.getOrderedGeneNames (data).join('&quot;&#09;&quot;');
-		geneNames = "&quot;"+geneNames+"&quot;";
+		var geneNames = this.getOrderedGeneNames (data).join('\"\t\"');
+		geneNames = "\""+geneNames+"\"";
 		
 		this.textAreaPanel.update({
 			type: 'dataRow',

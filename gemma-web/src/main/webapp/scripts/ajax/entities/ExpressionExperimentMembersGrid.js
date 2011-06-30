@@ -523,6 +523,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		editedGroup.description = this.newGroupDescription;
 		editedGroup.expressionExperimentIds = this.getEEIds();
 		editedGroup.memberIds = this.getEEIds();
+		editedGroup.taxonId = this.taxonId;
 		editedGroup.type = 'userexperimentSetSession';
 
 		ExpressionExperimentSetController.addSessionGroups(

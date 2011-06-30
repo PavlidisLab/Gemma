@@ -463,13 +463,14 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				icon : '/Gemma/images/download.gif',
 				cls : 'x-btn-text-icon',
 				tooltip:'Download a formatted text version of your search results',
-				handler: function(){
-					var textWindow = new Gemma.MetaHeatmapDownloadWindow();
-					textWindow.show();
-					textWindow.loadData(this._imageArea._heatmapArea);
-					//window.open(this.getDownloadLink()); 
-				},
-				scope:this
+				listeners: {
+					click: function(){
+						var textWindow = new Gemma.MetaHeatmapDownloadWindow();
+						textWindow.show();
+						textWindow.loadData(this._imageArea._heatmapArea);
+					},
+					scope: this
+				}
 			}
 			],
 			items : [{
