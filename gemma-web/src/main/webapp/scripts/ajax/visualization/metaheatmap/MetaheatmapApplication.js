@@ -471,6 +471,19 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					},
 					scope: this
 				}
+			},'-',{
+				xtype : 'button',
+				x : 5,
+				y : 5,
+				icon : '/Gemma/images/icons/question_blue.png',
+				cls : 'x-btn-icon',
+				tooltip:'Click here for documentation on how to use this visualizer.',
+				listeners: {
+					click: function(){
+						window.open('http://www.chibi.ubc.ca/faculty/pavlidis/wiki/download/attachments/26706691/differentialExpressionVisualizationImageMap-howTo3.png'); 
+					},
+					scope: this
+				}
 			}
 			],
 			items : [{
