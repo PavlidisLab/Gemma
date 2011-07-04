@@ -226,11 +226,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         timer.start();
         // TODO: should be part of result set?
         Integer numberDiffExpressedProbes = differentialExpressionAnalysisService.countProbesMeetingThreshold (resultSet, 0.05);
+        Integer numberDiffExpressedProbesUp = differentialExpressionAnalysisService.countUpregulated(resultSet, 0.05);
+        Integer numberDiffExpressedProbesDown = differentialExpressionAnalysisService.countDownregulated(resultSet, 0.05);
         timer.stop();
         if ( log.isDebugEnabled() )
             log.debug ("DiffEx probes: " + numberDiffExpressedProbes + ", call took :" + timer.getTime() + " ms");
 
         vizColumn.setNumberOfProbesDiffExpressed( numberDiffExpressedProbes );
+        vizColumn.setNumberOfProbesUpRegulated( numberDiffExpressedProbesUp );
+        vizColumn.setNumberOfProbesDownRegulated( numberDiffExpressedProbesDown );
 
         ExperimentalFactor factor = resultSet.getExperimentalFactors().iterator().next();
         if ( log.isDebugEnabled() )

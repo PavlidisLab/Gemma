@@ -74,3 +74,23 @@ Gemma.MetaVisualizationPopups.makeDatasetInfoWindow = function ( datasetName, da
 	}.createDelegate(this));
 			
 };
+
+
+Gemma.MetaVisualizationPopups.makeMinipieInfoWindow = function ( numberOfProbesTotal, numberOfProbesDiffExpressed, percentProbesDiffExpressed, 
+	numberOfProbesUpRegulated, percentProbesUpRegulated, numberOfProbesDownRegulated, percentProbesDownRegulated) {
+	
+	var popup = new Ext.Window(
+			{  width: 400,
+			   height: 350,
+				autoScroll: true,
+				bodyStyle: 'padding: 7px; font-size: 12px; line-height: 18px; ',
+				title: "Differential Expression Details",
+				html:'<b>Number of Probes:<br><br></b>'+
+						'<b>&nbsp;&nbsp;&nbsp;Total</b>: '+numberOfProbesTotal+'<br><br>'+
+						'<b>&nbsp;&nbsp;&nbsp;Differentially Expressed</b>: '+numberOfProbesDiffExpressed+' ('+percentProbesDiffExpressed+' of total)<br><br>'+
+						'<b>&nbsp;&nbsp;&nbsp;Up Regulated</b>: '+numberOfProbesUpRegulated+'  ('+percentProbesUpRegulated+' of total)<br><br> '+
+						'<b>&nbsp;&nbsp;&nbsp;Down Regulated</b>: '+numberOfProbesDownRegulated+'  ('+percentProbesDownRegulated+' of total)<br>'							      	  
+			});
+	popup.show();
+			
+};

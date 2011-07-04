@@ -34,3 +34,49 @@ Gemma.MetaVisualizationUtils.getCanvasContext = function(canvas){
 	
 	return canvas.getContext('2d');
 };
+
+// Format p value.
+Gemma.MetaVisualizationUtils.formatPVal = function(p){
+	if (p === null) {
+		return '-';
+	}
+	if (p < 0.001) {
+		return sprintf("%.3e", p);
+	}
+	else {
+		return sprintf("%.3f", p);
+	}
+};
+
+/**
+ * Calculates percentage and formats with 1 decimal point
+ * @param {Object} n numerator
+ * @param {Object} d denominator
+ * @param {boolean} round true if percentages should be rounded to integers 
+ * @return string (might contain non-digit characters)
+ */
+Gemma.MetaVisualizationUtils.formatPercent = function(n, d, round){
+	if (n === 0) {
+		return "0"
+	}
+	if (d === 0 || d === null || n === null) {
+		return "-";
+	}
+	var  p = n/d*100;
+	if(round){
+		if (p < 1) {
+		return "< 1"
+	}
+	else {
+		return Math.round(p);
+	}
+	}else{
+		if (p < 0.01) {
+		return "< 0.01"
+	}
+	else {
+		return sprintf("%.2f", p);
+	}
+	}
+	
+};

@@ -228,17 +228,6 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			this.drawHeatmapSubColumn_ (index.row, index.column);
 			this.applicationRoot._imageArea._geneLabels.highlightGene (this.rowGroup, index.row); 
 
-			// Format p value.
-			formatPVal = function(p) {
-				if (p === null) {
-					return '-';
-				}
-				if (p < 0.001) {
-					return sprintf("%.3e", p);
-				} else {
-					return sprintf("%.3f", p);
-				}
-			};
 			this.applicationRoot._imageArea._hoverDetailsPanel.show();
 			if (this._isExpanded) {
 				var contrasts = this.ownerCt.contrastsData.contrasts;
@@ -255,17 +244,18 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 									
 				this.applicationRoot._imageArea._hoverDetailsPanel.update({
 					type : 'contrastCell',
-					qvalue : formatPVal(this.qValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
+					qvalue : Gemma.MetaVisualizationUtils.formatPVal(
+								this.qValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
 					// baselineFactorValue: this.ownerCt.baselineFactorValue,
 					factorName : this.ownerCt._dataColumn.factorName,				
-					foldChange : formatPVal(foldChange),
+					foldChange : Gemma.MetaVisualizationUtils.formatPVal(foldChange),
 					factorCategory : this.ownerCt._dataColumn.factorCategory,
 					factorDescription : this.ownerCt._dataColumn.factorDescription,
 					factorId : this.ownerCt._dataColumn.factorId,
 					datasetId : this.ownerCt._dataColumn.datasetId,
 					datasetName : this.ownerCt._dataColumn.datasetName,
 					datasetShortName : this.ownerCt._dataColumn.datasetShortName,
-					contrastPvalue : formatPVal(contrastPvalue), 
+					contrastPvalue : Gemma.MetaVisualizationUtils.formatPVal(contrastPvalue), 
 					// numberOfProbes: this.ownerCt.numberOfProbes,
 					// numberOfProbesDiffExpressed:
 					// this.ownerCt.numberOfProbesDiffExpressed,
@@ -281,7 +271,7 @@ Gemma.MetaHeatmapColumn = Ext.extend(Ext.BoxComponent, {
 			} else {
 				this.applicationRoot._imageArea._hoverDetailsPanel.update({
 					type : 'cell',
-					qvalue : formatPVal(this.qValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
+					qvalue : Gemma.MetaVisualizationUtils.formatPVal(this.qValues[this.applicationRoot.geneOrdering[this.geneGroupIndex][index.row]]),
 					// baselineFactorValue: this.ownerCt.baselineFactorValue,
 					factorName : this.ownerCt._dataColumn.factorName, 
 					factorCategory : this.ownerCt._dataColumn.factorCategory,

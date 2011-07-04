@@ -254,13 +254,27 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 		this.syncSize();
 
 		this.el.on('click', function(e, t){
+		
 			var y = e.getPageY() - Ext.get(t).getY();
-			var adjustedX = e.getPageX() - (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
-			var analysisObj = this.getAnalysisPanelByX(adjustedX);
-			
-			if (analysisObj !== null && analysisObj !== undefined) {
-				var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(analysisObj._dataColumn.datasetName, analysisObj._dataColumn.datasetShortName, analysisObj._dataColumn.datasetId);
+			if (y < Gemma.MetaVisualizationConfig.columnLabelHeight - 10) {
+				var adjustedX = e.getPageX() - (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
+				var analysisObj = this.getAnalysisPanelByX(adjustedX);
+				
+				if (analysisObj !== null && analysisObj !== undefined) {
+					var popup = Gemma.MetaVisualizationPopups.makeDatasetInfoWindow(analysisObj._dataColumn.datasetName, analysisObj._dataColumn.datasetShortName, analysisObj._dataColumn.datasetId);
+				}
 			}
+			else {
+			
+				analysisObj = this.getAnalysisPanelByX(e.getPageX());
+				
+				Gemma.MetaVisualizationPopups.makeMinipieInfoWindow(analysisObj.dataColumn.numberOfProbesTotal, analysisObj.dataColumn.numberOfProbesDiffExpressed, 
+					Gemma.MetaVisualizationUtils.formatPercent(analysisObj.dataColumn.numberOfProbesDiffExpressed, analysisObj.dataColumn.numberOfProbesTotal,false)+"%",
+					 analysisObj.dataColumn.numberOfProbesUpRegulated, Gemma.MetaVisualizationUtils.formatPercent(analysisObj.dataColumn.numberOfProbesUpRegulated, analysisObj.dataColumn.numberOfProbesTotal,false)+"%", 
+					 analysisObj.dataColumn.numberOfProbesDownRegulated, Gemma.MetaVisualizationUtils.formatPercent(analysisObj.dataColumn.numberOfProbesDownRegulated, analysisObj.dataColumn.numberOfProbesTotal,false)+"%");
+				
+			}
+			
 			
 		}, this);
 
@@ -278,53 +292,75 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 			var x = e.getPageX() - Ext.get(t).getX();
 			var y = e.getPageY() - Ext.get(t).getY();
 			if (y > 20 &&
-					(x < Gemma.MetaVisualizationConfig.labelBaseYCoor *
-							Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) && (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) > 
-							Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) * x) ||
-					(x > this._widthOfColumns && (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) < (Math
-							.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) * (x - this._widthOfColumns)))) {
+			(x <
+			Gemma.MetaVisualizationConfig.labelBaseYCoor *
+			Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) &&
+			(Gemma.MetaVisualizationConfig.labelBaseYCoor - y) >
+			Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) * x) ||
+			(x > this._widthOfColumns &&
+			(Gemma.MetaVisualizationConfig.labelBaseYCoor - y) <
+			(Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) *
+			(x - this._widthOfColumns)))) {
 				document.body.style.cursor = 'default';
-			} else {
+			}
+			else {
 				document.body.style.cursor = 'pointer';
+				var analysisObj = null;
+				// if hovering over column label 
+				if (y < Gemma.MetaVisualizationConfig.columnLabelHeight - 10) {
 				
-				
-				var adjustedX = e.getPageX() - (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
-				var analysisObj = this.getAnalysisPanelByX(adjustedX);
-				
-
-				if (analysisObj !== null && analysisObj !== undefined) {
-
-					// get the factor values into a readable form
-					var factorValues = [];
-					for (k = 0; k < analysisObj.factorValueIds.length; k++) {
-						factorValues.push(" " + analysisObj.factorValueNames[analysisObj.factorValueIds[k]]);
-					}
-
-					this.applicationRoot._imageArea._hoverDetailsPanel.show();
-					this.applicationRoot._imageArea._hoverDetailsPanel.setPagePosition(e.getPageX()+20 , e.getPageY()+20 );
-					// if hovering over a mini pie, show specificity info
-					if(y < Gemma.MetaVisualizationConfig.columnLabelHeight - 10 ){ // 10 is mini-pie height
-						this.applicationRoot._imageArea._hoverDetailsPanel.update({
-						type: 'experiment',
-						datasetName: analysisObj.dataColumn.datasetName,
-						datasetShortName: analysisObj.dataColumn.datasetShortName,
-						datasetId: analysisObj.dataColumn.datasetId,
-						factorName: analysisObj.dataColumn.factorName,
-						factorCategory: analysisObj.dataColumn.factorCategory,
-						baseline: (analysisObj.dataColumn.baselineFactorValue === "null")?"-":analysisObj.dataColumn.baselineFactorValue,
-						factorValues: factorValues
+					var adjustedX = e.getPageX() - (Gemma.MetaVisualizationConfig.labelBaseYCoor - y) / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180);
+					analysisObj = this.getAnalysisPanelByX(adjustedX);
+					if (analysisObj !== null && analysisObj !== undefined) {
 					
-					});
-					}else{
+						// get the factor values into a readable form
+						var factorValues = [];
+						for (k = 0; k < analysisObj.factorValueIds.length; k++) {
+							factorValues.push(" " + analysisObj.factorValueNames[analysisObj.factorValueIds[k]]);
+						}
+						
+						this.applicationRoot._imageArea._hoverDetailsPanel.show();
+						this.applicationRoot._imageArea._hoverDetailsPanel.setPagePosition(e.getPageX() + 20, e.getPageY() + 20);
+						
 						this.applicationRoot._imageArea._hoverDetailsPanel.update({
-						type: 'minipie',
-						numberOfProbesTotal: analysisObj.dataColumn.numberOfProbesTotal,
-						numberOfProbesDiffExpressed: analysisObj.dataColumn.numberOfProbesDiffExpressed, 
-						numberOfProbesDownRegulated: analysisObj.dataColumn.numberOfProbesDownRegulated, 
-						numberOfProbesUpRegulated: analysisObj.dataColumn.numberOfProbesUpRegulated
-					});
+							type: 'experiment',
+							datasetName: analysisObj.dataColumn.datasetName,
+							datasetShortName: analysisObj.dataColumn.datasetShortName,
+							datasetId: analysisObj.dataColumn.datasetId,
+							factorName: analysisObj.dataColumn.factorName,
+							factorCategory: analysisObj.dataColumn.factorCategory,
+							baseline: (analysisObj.dataColumn.baselineFactorValue === "null") ? "-" : analysisObj.dataColumn.baselineFactorValue,
+							factorValues: factorValues
+						
+						});
 					}
 					
+				}
+				else {
+					// if hovering over minipie
+					
+					analysisObj = this.getAnalysisPanelByX(e.getPageX());
+					if (analysisObj !== null && analysisObj !== undefined) {
+											
+						this.applicationRoot._imageArea._hoverDetailsPanel.show();
+						this.applicationRoot._imageArea._hoverDetailsPanel.setPagePosition(e.getPageX() + 20, e.getPageY() + 20);
+						// if hovering over a mini pie, show specificity info
+						
+						this.applicationRoot._imageArea._hoverDetailsPanel.update({
+							type: 'minipie',
+							numberOfProbesTotal: analysisObj.dataColumn.numberOfProbesTotal,
+							numberOfProbesDiffExpressed: analysisObj.dataColumn.numberOfProbesDiffExpressed,
+							percentProbesDiffExpressed: Gemma.MetaVisualizationUtils.formatPercent(analysisObj.dataColumn.numberOfProbesDiffExpressed, analysisObj.dataColumn.numberOfProbesTotal,true) +
+							"%",
+							numberOfProbesDownRegulated: analysisObj.dataColumn.numberOfProbesDownRegulated,
+							percentProbesDownRegulated: Gemma.MetaVisualizationUtils.formatPercent(analysisObj.dataColumn.numberOfProbesDownRegulated, analysisObj.dataColumn.numberOfProbesTotal,true) +
+							"%",
+							numberOfProbesUpRegulated: analysisObj.dataColumn.numberOfProbesUpRegulated,
+							percentProbesUpRegulated: Gemma.MetaVisualizationUtils.formatPercent(analysisObj.dataColumn.numberOfProbesUpRegulated, analysisObj.dataColumn.numberOfProbesTotal,true) +
+							"%"
+						});
+						
+					}
 				}
 			}
 
