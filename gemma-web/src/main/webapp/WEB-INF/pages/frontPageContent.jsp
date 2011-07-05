@@ -188,12 +188,12 @@ function hideTopBar(divID) {
 											<td style="padding-right: 10px" align="right">
 												Total
 											</td>
-											<c:if test="${not empty updatedExpressionExperimentCount}">
+											<c:if test="${not empty updatedExpressionExperimentCount || not empty stats.updatedArrayDesignCount}">
 												<td align="right" style="padding-right: 10px">
 													Updated
 												</td>
 											</c:if>
-											<c:if test="${not empty newExpressionExperimentCount}">
+											<c:if test="${not empty newExpressionExperimentCount || not empty stats.newArrayDesignCount || not empty stats.newBioAssayCount}">
 												<td align="right">
 													New
 												</td>
