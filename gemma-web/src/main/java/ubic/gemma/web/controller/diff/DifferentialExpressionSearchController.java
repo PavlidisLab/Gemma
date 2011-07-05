@@ -233,8 +233,8 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             log.debug ("DiffEx probes: " + numberDiffExpressedProbes + ", call took :" + timer.getTime() + " ms");
 
         vizColumn.setNumberOfProbesDiffExpressed( numberDiffExpressedProbes );
-        vizColumn.setNumberOfProbesUpRegulated( numberDiffExpressedProbesUp );
-        vizColumn.setNumberOfProbesDownRegulated( numberDiffExpressedProbesDown );
+        //vizColumn.setNumberOfProbesUpRegulated( numberDiffExpressedProbesUp );
+        //vizColumn.setNumberOfProbesDownRegulated( numberDiffExpressedProbesDown );
 
         ExperimentalFactor factor = resultSet.getExperimentalFactors().iterator().next();
         if ( log.isDebugEnabled() )
