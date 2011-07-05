@@ -268,12 +268,12 @@
 			<version>0.9</version>
 		</dependency>
 		<dependency>
-			<groupId>net.jini</groupId>
+			<groupId>jini</groupId>
 			<artifactId>jini-core</artifactId>
 			<version>2.1</version>
 		</dependency>
 		<dependency>
-			<groupId>net.jini</groupId>
+			<groupId>jini</groupId>
 			<artifactId>jini-ext</artifactId>
 			<version>2.1</version>
 		</dependency>
