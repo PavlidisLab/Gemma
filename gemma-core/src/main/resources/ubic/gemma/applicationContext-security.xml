@@ -37,7 +37,7 @@
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
 		<s:logout logout-success-url="/login.jsp" />
-		<s:form-login login-page="/login.jsp" default-target-url="/" />
+		<s:form-login login-page="/login.jsp" default-target-url="/" authentication-success-handler-ref="ajaxAuthenticationSuccessHandler" authentication-failure-handler-ref="ajaxAuthenticationFailureHandler" />
 		<s:remember-me key="gemma_rm" />
 
 		<!--
@@ -50,6 +50,14 @@
 		</s:session-management>
 
 	</s:http>
+	
+	<bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationSuccessHandler" >
+		<property name="alwaysUseDefaultTargetUrl" value="false"></property>			
+	</bean>
+	
+	<bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationFailureHandler" >
+		<property name="defaultFailureUrl" value="/login.jsp"></property>			
+	</bean>
 
 	<!-- For use with access tags  -->
 	<bean id="defaultWebSecurityExpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"></bean>
