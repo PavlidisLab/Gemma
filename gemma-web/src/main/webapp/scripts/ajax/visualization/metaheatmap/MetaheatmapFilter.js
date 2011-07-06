@@ -41,11 +41,11 @@ function GemmaMetaheatmapFilter(){
 	this.remove = function(id){
 		if (this.filters[id]) {
 			
-			if(this.filters[id])
-			delete this.filters[id];
+			if(this.filters[id]){
+			delete this.filters[id];}
 			
-			if(this.params[id])
-			delete this.params[id];
+			if(this.params[id]){
+			delete this.params[id];}
 			
 			// remove from order
 			var i;

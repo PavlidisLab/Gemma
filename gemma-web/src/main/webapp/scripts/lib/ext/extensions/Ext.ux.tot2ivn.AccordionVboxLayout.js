@@ -144,7 +144,7 @@ Ext.ux.tot2ivn.AccordionVboxLayout = Ext.extend(Ext.layout.AccordionLayout, {
 					comp.body.shift({
 						height		: h,
 						easing		: 'easeOut',
-						duration	: .35							
+						duration	: 0.35							
 					});
 				}				
 				else {
@@ -239,7 +239,7 @@ Ext.ux.tot2ivn.AccordionVboxLayout = Ext.extend(Ext.layout.AccordionLayout, {
             // IE in strict mode will return a width of 0 on the 1st pass of getViewSize.
             // Use getStyleSize to verify the 0 width, the adjustment pass will then work properly
             // with getViewSize
-            if (Ext.isIE && Ext.isStrict && ret.width == 0){
+            if (Ext.isIE && Ext.isStrict && ret.width === 0){
                 ret =  target.getStyleSize();
             }
 

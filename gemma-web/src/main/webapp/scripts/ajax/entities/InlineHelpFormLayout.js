@@ -14,6 +14,8 @@
  *  
  * if you want to include markup for use in FF and Chrome, set the fieldTipHTML field
  * 
+ * if you want to hide the help icon, set property hideHelpIcon = true
+ * 
  * 
  */
 if (Ext.isIE) {
@@ -43,7 +45,7 @@ if (Ext.isIE) {
 				
 				labelTip: tipText,
 				displayHelp: (field.hidden || field.hideHelpIcon || !tipText || typeof tipText ==='undefined' || tipText==='')? 'none':'inline'
-			}
+			};
 		}
 	});
 }else{
@@ -76,7 +78,7 @@ if (Ext.isIE) {
 				labelTipCls: 'inline-help-form-q-tip '+((typeof field.fieldTipCls !=='undefined')?field.fieldTipCls:''),
 				labelTipTitle: field.fieldTipTitle,
 				displayHelp: (field.hidden || field.hideHelpIcon || !tipText || typeof tipText ==='undefined' || tipText==='')? 'none':'inline'
-			}
+			};
 		}
 	});
 }

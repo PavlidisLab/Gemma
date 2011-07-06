@@ -12,7 +12,7 @@ Gemma.MetaVisualizationUtils.calculateGeneLabelColumnHeight = function (geneName
 };
 
 Gemma.MetaVisualizationUtils.shortenText = function (text, maxLength) {
-	if (text.length <= maxLength) return text;				
+	if (text.length <= maxLength) {return text;}			
 	return text.substring(0,maxLength - 3) + "...";
 };
 /**
@@ -57,7 +57,7 @@ Gemma.MetaVisualizationUtils.formatPVal = function(p){
  */
 Gemma.MetaVisualizationUtils.formatPercent = function(n, d, round){
 	if (n === 0) {
-		return "0"
+		return "0";
 	}
 	if (d === 0 || d === null || n === null) {
 		return "-";
@@ -65,14 +65,14 @@ Gemma.MetaVisualizationUtils.formatPercent = function(n, d, round){
 	var  p = n/d*100;
 	if(round){
 		if (p < 1) {
-		return "< 1"
+		return "< 1";
 	}
 	else {
 		return Math.round(p);
 	}
 	}else{
 		if (p < 0.01) {
-		return "< 0.01"
+		return "< 0.01";
 	}
 	else {
 		return sprintf("%.2f", p);

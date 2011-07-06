@@ -638,7 +638,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 								else if (record.get('name') === 'shortName') {
 									this.currentSortingFn = function(o1, o2){										
 										return (o1.datasetShortName >= o2.datasetShortName) ? 1 : -1;
-									}
+									};
 									this.currentSortingDirection = 'ASC';
 									this._sortColumns('ASC', this.currentSortingFn); 																				
 									this.doLayout();
@@ -1143,10 +1143,10 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		if(url === null && warning === ""){
 			url= "Error creating your link.";
 		}
-		new Ext.Window({
+		var win = new Ext.Window({
 			closeAction:'close',
 			title:"Bookmark or sharable link",
-			html:'<b>Use this link to re-run your search:</b><br> <a target="_blank" href="'+url+'">'+url+'<\a>',
+			html:'<b>Use this link to re-run your search:</b><br> <a target="_blank" href="'+url+'">'+url+'</a>',
 			width:650,
 			padding:10
 		}).show();
@@ -1158,7 +1158,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		// TODO: Refactor!
 		// That was a quick way to reuse bookmarkable link logic. We should take shared code out into a separate function.
 		var url = this.getBookmarkableLink();
-		if (url != null) {
+		if (url !== null) {
 			url = url.replace('metaheatmap.html','downloadText/downloadMetaheatmapData.html');
 		}
 		return url;

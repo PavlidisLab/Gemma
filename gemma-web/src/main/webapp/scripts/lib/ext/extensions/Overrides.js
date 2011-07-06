@@ -48,8 +48,8 @@ Ext.override(Ext.tree.TreePanel,{
 
         this.getView().getTreeStore().getRootNode().cascadeBy(function(node){
            if( node.data.checked ){
-                if( prop && node.data[prop] ) checked.push(node.data[prop]);
-                else checked.push(node);
+           	   if( prop && node.data[prop] ) {checked.push(node.data[prop]);}
+           	   else {checked.push(node);}
            }
         });
 
