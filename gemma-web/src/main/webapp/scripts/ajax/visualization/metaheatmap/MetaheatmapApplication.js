@@ -904,6 +904,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		this._imageArea._hoverDetailsPanel.hide();
 		this._imageArea._heatmapArea._setTopLabelsBox(this._rotatedLabelsBox);
 
+
+		this.filters= new GemmaMetaheatmapFilter();
+
 		this.TOTAL_NUMBER_OF_ROWS = 0;
 		// Default geneOrdering
 		this.geneOrdering = [];
