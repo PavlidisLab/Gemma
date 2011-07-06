@@ -99,9 +99,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			}
 			return false;
 		},0);
-		this.qValueFilterField = {
+		this.qValueFilterField = new Ext.form.NumberField({
 						fieldLabel: 'Filter Results by q Value',
-						xtype: 'numberfield',
+						//xtype: 'numberfield',
 						incrementValue: 0.01,
 						allowBlank: false,
 						accelerate: true,
@@ -112,16 +112,23 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						decimalPrecision:10,
 						//value:this.threshold,
 						value: '1',
-						msgTarget:'side',
-						listeners:{
-							change: function(field, newVal, oldVal){
-								this.filters.update(this.qValueFilterId, [newVal]);
-								this.refreshVisualization();
-							},
-							scope:this
-						},
-						fieldTip:"Hide any rows or columns where all cells have q values less than this threshold"
-					};
+						//msgTarget:'side',
+						fieldTip:"Hide any rows or columns where all cells have q values less than this threshold",
+						hideHelpIcon: true
+					});
+		this.qValueFilterButton = {
+			xtype: 'button',
+			text: 'OK',
+			listeners: {
+				click: function(button, event){
+					if (this.qValueFilterField.validate()) {
+						this.filters.update(this.qValueFilterId, [this.qValueFilterField.getValue()]);
+						this.refreshVisualization();
+					}
+				},
+				scope: this
+			}
+		};			
 
 		/************************* Selection grids ****************************************/
 		
@@ -443,10 +450,6 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			TOTAL_NUMBER_OF_ROWS : null,
 			//TOTAL_NUMBER_OF_HIDDEN_COLUMNS : 0,
 
-			filterColumns : function() {
-				return this._imageArea._heatmapArea.filterColumns();
-			},
-			
 			currentSortingFn_ : null,			
 			_sortColumns : function(asc_desc, sortingFn) {
 				this._imageArea._heatmapArea._sortColumns(asc_desc, sortingFn);
@@ -712,16 +715,28 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					}]
 				}, {
 					title: 'Filter',
-					ref:'_filterPanel',
+					ref: '_filterPanel',
 					collapsible: true,
 					collapsed: false,
 					border: true,
 					bodyBorder: true,
 					autoScroll: true,
-					labelWidth: 140,
-					padding:10,
-					layout: 'form', // to get font sizes matching
-					items: [this.qValueFilterField,this.tree]
+					padding: 10,
+					defaults: {
+						border: false
+					},
+					//layout: 'form', // to get font sizes matching
+					items: [{
+						layout: 'hbox',
+						defaults: {
+							border: false
+						},
+						items: [{
+							layout: 'form',
+							labelWidth: 140,
+							items: [this.qValueFilterField]
+						}, this.qValueFilterButton]
+					}, this.tree]
 				}, {
 						ref: '_selectionTabPanel',
 						width: Gemma.MetaVisualizationConfig.toolPanelWidth,
