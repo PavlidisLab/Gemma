@@ -20,6 +20,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 	autoScroll : false,
 	prevVizWindowX: null,
 	prevVizWindowY: null,
+	filters: new GemmaMetaheatmapFilter(),
 	initComponent : function() {
 
 		// build data structure for filtering factor tree
@@ -57,24 +58,70 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		this.tree = new Gemma.FactorSelectTree(this.treeData);
 		Ext.apply(this.tree, {
 					autoScroll : true,
-					bodyStyle : 'padding-bottom:5px'
+					bodyStyle : 'padding-bottom:5px',
+					border:false
 				});
+				
+		this.factorFilterId = this.filters.add(function(o, param){
+			if (param && param.length === 1) {
+				var checkedIds = param[0];
+				var factorId = o.factorCategory ? o.factorCategory : o.factorName;
+				if ( checkedIds.indexOf(factorId.toLowerCase()) === -1 ) {
+					// should return true if you want to filter
+					return true; 
+				}
+			}
+			return false;
+		});
 		this.tree.on('checkchange', function(node, checked) { // fired every
 					// time a checkbox changes state
-					var filteringFn = function(o) {
-						var factorId = o.factorCategory ? o.factorCategory : o.factorName;
-						if (factorId.toLowerCase() == node.text.toLowerCase()) {
-							return !checked; // should return true if you
-							// want to filter
-						}
-						return null; // don't do anything to a node that
-						// wasn't checked
-					};
-					this.filterColumns (filteringFn);
-					this._sortColumns (this.currentSortingDirection, this.currentSortingFn);
-					this.doLayout();
+					this.filters.update(this.factorFilterId, [this.tree.getChecked('id')]);
 					this.refreshVisualization();
 				}, this);
+
+		/************************* q Value Filter *****************************************/
+		
+		this.qValueFilterId = this.filters.add(function(o, param){
+			if (param && param.length === 1) {
+				var newVal = param[0];
+					var qValues = o.dataColumn.qValues;
+					var i;
+					var j;
+					for (i = 0; i < qValues.length; i++) {
+						for (j = 0; j < qValues[i].length; j++) {
+							if (qValues[i][j] !== null && qValues[i][j] < newVal) {
+								return false;
+							}
+						}
+					}
+				// if no cells in this column meet the threshold, hide the column
+				return true;
+			}
+			return false;
+		},0);
+		this.qValueFilterField = {
+						fieldLabel: 'Filter Results by q Value',
+						xtype: 'numberfield',
+						incrementValue: 0.01,
+						allowBlank: false,
+						accelerate: true,
+						width:70,
+						maxValue: 1,
+						minValue: 0,
+						allowNegative:false,
+						decimalPrecision:10,
+						//value:this.threshold,
+						value: '1',
+						msgTarget:'side',
+						listeners:{
+							change: function(field, newVal, oldVal){
+								this.filters.update(this.qValueFilterId, [newVal]);
+								this.refreshVisualization();
+							},
+							scope:this
+						},
+						fieldTip:"Hide any rows or columns where all cells have q values less than this threshold"
+					};
 
 		/************************* Selection grids ****************************************/
 		
@@ -396,9 +443,10 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			TOTAL_NUMBER_OF_ROWS : null,
 			//TOTAL_NUMBER_OF_HIDDEN_COLUMNS : 0,
 
-			filterColumns : function(filteringFn) {
-				return this._imageArea._heatmapArea.filterColumns(filteringFn);
+			filterColumns : function() {
+				return this._imageArea._heatmapArea.filterColumns();
 			},
+			
 			currentSortingFn_ : null,			
 			_sortColumns : function(asc_desc, sortingFn) {
 				this._imageArea._heatmapArea._sortColumns(asc_desc, sortingFn);
@@ -670,8 +718,10 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 					border: true,
 					bodyBorder: true,
 					autoScroll: true,
+					labelWidth: 140,
+					padding:10,
 					layout: 'form', // to get font sizes matching
-					items: [this.tree]
+					items: [this.qValueFilterField,this.tree]
 				}, {
 						ref: '_selectionTabPanel',
 						width: Gemma.MetaVisualizationConfig.toolPanelWidth,
@@ -912,8 +962,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 
 	},
 	refreshVisualization : function() {
-		this._imageArea.topLabelsPanel.refresh();
+		// order matters
 		this._imageArea._heatmapArea.refresh();
+		this._imageArea.topLabelsPanel.refresh();
 		this._imageArea._geneLabels.refresh();
 	},
 	getVizState: function(){

@@ -195,12 +195,7 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 										// aren't
 										// created
 										text : nodeParam.text,
-										checked : true,
-										listeners: {
-											dblclick:function() {
-												Ext.Msg.alert('Hey','I\'m listening');
-											}
-										}
+										checked : true
 									});
 						} else {
 							node = new Ext.tree.TreeNode({

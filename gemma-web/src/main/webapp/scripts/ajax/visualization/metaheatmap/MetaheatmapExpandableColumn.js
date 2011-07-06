@@ -620,6 +620,17 @@ Gemma.MetaHeatmapExpandableColumn = Ext.extend(Ext.Panel, {
 
 	redraw_ : function() {
 		this.drawButton_('rgba(10,100,10, 0.8)');
+		
+		// apply filters
+		// TODO only apply filters if filters are dirty
+		if(this.applicationRoot.filters.applyFilters(this)){
+				this.filterHide();
+				this.updateParentsScores (true);	
+			}else{
+				this.filterShow();
+				this.updateParentsScores (false);	
+			}
+			
 		for (var geneGroupSubColumnIndex = 0; geneGroupSubColumnIndex < this._visualizationColumns.length; geneGroupSubColumnIndex++) {
 			this._visualizationColumns[geneGroupSubColumnIndex].drawHeatmapSubColumn_();
 		}		
