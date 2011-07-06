@@ -58,6 +58,7 @@ function GemmaMetaheatmapFilter(){
 	};
 	/**
 	 * updates the parameters of a filter
+	 * a filter isn't active until it's parameters are set (must not be null)
 	 * @param {Object} id
 	 * @param {Object} param array of parameters
 	 */
@@ -90,5 +91,11 @@ function GemmaMetaheatmapFilter(){
 	this.getFilterCount = function(){
 		// could use this._order.length instead
 		return this._length;
-	}
+	};
+	/**
+	 * clear params so that filters are reset (order and functions maintained)
+	 */
+	this.clearState = function(){
+		this.params = {};
+	};
 }
