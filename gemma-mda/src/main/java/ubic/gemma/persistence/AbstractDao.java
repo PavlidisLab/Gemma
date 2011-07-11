@@ -26,7 +26,7 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 /* AbstractDao can find the generic type at runtime and simplify the code
  * implementation of the BaseDao interface
  */
-public abstract class AbstractDao<T> extends HibernateDaoSupport {
+public abstract class AbstractDao<T> extends HibernateDaoSupport implements BaseDao<T> {
 
     // generic class
     private Class<T> elementClass;
@@ -49,10 +49,6 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport {
      * if ( cl.getGenericSuperclass() instanceof ParameterizedType ) { elementClass = ( Class<T> ) ( ( ParameterizedType
      * ) cl.getGenericSuperclass() ).getActualTypeArguments()[0]; } }
      */
-
-    public Class<T> getElementClass() {
-        return elementClass;
-    }
 
     public Collection<? extends T> create( Collection<? extends T> entities ) {
         this.getHibernateTemplate().saveOrUpdateAll( entities );
@@ -77,12 +73,12 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport {
     }
 
     public T load( Long id ) {
-        T entity = this.getHibernateTemplate().get( getElementClass(), id );
+        T entity = this.getHibernateTemplate().get( elementClass, id );
         return entity;
     }
 
     public Collection<T> loadAll() {
-        return this.getHibernateTemplate().loadAll( getElementClass() );
+        return this.getHibernateTemplate().loadAll( elementClass );
     }
 
     public void remove( Collection<? extends T> entities ) {
