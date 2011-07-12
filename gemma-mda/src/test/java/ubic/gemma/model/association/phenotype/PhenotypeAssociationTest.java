@@ -1,6 +1,10 @@
 package ubic.gemma.model.association.phenotype;
 
+import static org.junit.Assert.*;
+
 import java.util.Collection;
+
+import junit.tests.framework.AssertTest;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,39 +16,29 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Autowired
     private UrlEvidenceDao eviDao;
 
-    @Autowired
-    private LiteratureEvidenceDao litDao;
-
     @Test
-    public void createUrlEvidence() {
-        UrlEvidence entity = new UrlEvidenceImpl();
-        entity.setDescription( "testDescription" );
-        entity.setName( "testname" );
-        entity.setUrl( "www.test.com" );
-        eviDao.create( entity );
-    }
+    public void testUrlEvidence() {
 
-    @Test
-    public void createLiteratureEvidence() {
-        LiteratureEvidence entity = new LiteratureEvidenceImpl();
-        entity.setDescription( "testDescription2" );
-        entity.setName( "testname2" );
+        // create
+        UrlEvidence urlEvidence = new UrlEvidenceImpl();
+        urlEvidence.setDescription( "testDescription" );
+        urlEvidence.setName( "testname" );
+        urlEvidence.setUrl( "www.test.com" );
+        UrlEvidence entityReturn = eviDao.create( urlEvidence );
+        assertNotNull( entityReturn.getId() );
 
-        litDao.create( entity );
+        // update
+        urlEvidence.setUrl( "www.testupdate.com" );
+        eviDao.update( urlEvidence );
 
-        entity.setName( "testDescription2Update" );
+        // load
+        UrlEvidence urlEvidenceLoad = eviDao.load( entityReturn.getId() );
+        assertNotNull( urlEvidenceLoad );
+        assertTrue( urlEvidenceLoad.getUrl().equals( "www.testupdate.com" ) );
 
-        litDao.update( entity );
-    }
-
-    @Test
-    public void findAllLiteratureEvidence() {
-        Collection<LiteratureEvidence> c = ( Collection<LiteratureEvidence> ) litDao.loadAll();
-
-        // check all
-        for ( LiteratureEvidence literatureEvidence : c ) {
-            System.out.println( literatureEvidence.getDescription() );
-        }
+        // remove
+        eviDao.remove( entityReturn.getId() );
+        assertNull( eviDao.load( entityReturn.getId() ) );
     }
 
 }
