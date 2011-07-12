@@ -23,7 +23,7 @@
 
 		<div id="page">
 
-			<div id="header" class="clearfix">
+			<div id="headerclear" class="clearfix">
 				<jsp:include page="/common/header.inner.jsp" />
 			</div>
 
@@ -44,9 +44,10 @@
 					<decorator:body />
 				</div>
 
-				<div id="nav" style="z-index: 1">
+				<div id="nav" class="inner">
 					<!--  make sure menus are not in front of other things  -->
-					<div class="wrapper">
+					<div class="wrapper"
+						style="float: right; position: relative; right: 15px; top: 0px">
 						<h2 class="accessibility">
 							Navigation
 						</h2>

@@ -23,6 +23,13 @@ div#header {
 	background: white url(images/heatfade.inner.png) no-repeat;
 	background-position: right;
 }
+div#headerclear {
+	margin: 0 0 2em 0;
+	padding: 10px 0px 2px 20px;
+	text-align: left;
+	height: 50px; /* needed by IE 7 */
+	background-position: right;
+}
 
 div#homeheader {
 	margin: 0 0 2em 0;

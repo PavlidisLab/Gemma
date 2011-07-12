@@ -7,14 +7,12 @@
 		<a href="<c:url value='/home.html?locale=en'/>"><fmt:message key="webapp.name" /> in English</a>
 	</div>
 </c:if>
+
 <c:if test="${appConfig['maintenanceMode']}">
 	<div style="font-weight: bold; color: #AA4444; font-size: 1.3em">
 		Gemma is undergoing maintenance! Some functions may not be available.
 	</div>
 </c:if>
-<div id="search">
-	<%@ include file="/common/search.jsp"%>
-</div>
 
 <div id="branding">
 	<div id="headerLeft">

@@ -11,7 +11,9 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  * Constructor for a tree that builds its nodes from a parameter object the
  * parameter object must be an array of objects with two fields: text(mandatory)
  * and children (optional) For example: [{text:'parent1', children:
- * [{text:'child1', children: []}] },{ text: 'parent2' }, ...]
+ * [{text:'child1', children: []}] },{ text: 'parent2', children:[] }, ...]
+ * 
+ * used like this: this.tree = new Gemma.FactorSelectTree(treeData);
  * 
  * @param nodes
  *            objects to build the treeNodes from
@@ -121,6 +123,9 @@ Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
 				this.build();
 				var sorter = new Ext.tree.TreeSorter(this, {
 							sortType : function(node) {
+								if(typeof node === "string"){
+									return node.toLowerCase().replace(" ", "");	
+								}
 								return node.text.toLowerCase().replace(" ", "");// so
 								// that
 								// "deseaseState"

@@ -696,6 +696,7 @@ top: 0;
 left: 60px; /*position where enlarged image should offset horizontally */
 
 }
+/* end of hover thumbnails*/
 
 .x-form-trigger-paste-genes{
 	background-image: url("/Gemma/images/icons/page_upload.png")

@@ -44,7 +44,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				for (k = 0; k < obj.contrastsFactorValueIds.length; k++) {
 					values.push({
 								text : obj.contrastsFactorValues[obj.contrastsFactorValueIds[k]],
-								children : []
+								children : [],
+								leaf: true
 							});
 				}
 
@@ -54,8 +55,9 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 						});
 			}
 		}
-		// Display the tree.
+
 		this.tree = new Gemma.FactorSelectTree(this.treeData);
+			
 		Ext.apply(this.tree, {
 					autoScroll : true,
 					bodyStyle : 'padding-bottom:5px',
@@ -1125,7 +1127,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 		if(noGenes || noExperiments){
 			return null;
 		}
-		return url;
+		return url.replace('#',''); // added by IE sometimes
 	},		
 	getBookmarkableLinkMsg : function() {
 		

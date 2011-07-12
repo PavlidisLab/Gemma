@@ -24,4 +24,3 @@
 
 <%-- Put constants into request scope --%>
 <Gemma:constants scope="request" />
-
