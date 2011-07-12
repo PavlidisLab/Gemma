@@ -635,7 +635,7 @@ a.tooltip:hover .tooltiptext {
 .purple-btn .x-btn-tl, .purple-btn .x-btn-tr, .purple-btn .x-btn-tc, .purple-btn .x-btn-ml, .purple-btn .x-btn-mr, .purple-btn .x-btn-mc, .purple-btn .x-btn-bl, .purple-btn .x-btn-br, .purple-btn .x-btn-bc {
     background-image:url('/Gemma/images/default/button/btn-purple.png');
 }
-
+ 
 .x-tool-delete {
     background-image:url('/Gemma/images/icons/cross.png');
 	margin-left:10px;
