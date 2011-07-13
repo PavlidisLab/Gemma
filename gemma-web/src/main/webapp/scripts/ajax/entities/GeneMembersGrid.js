@@ -245,9 +245,9 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 				
 		var buttons = [];
-		if (Ext.get('hasUser').getValue()) {
+		//if (Ext.get('hasUser').getValue()) {
 			buttons.push(this.saveButton);
-		}
+		//}
 		if( this.allowSaveToSession ) {
 			buttons.push(this.doneButton);
 		}
@@ -332,6 +332,10 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (this.columnSet === "full") {
 			Ext.apply(this, this.getFullColumnModel());
 		}
+		
+		this.ajaxLogin = null;
+		this.ajaxRegister = null;
+		
 
 		Gemma.GeneGrid.superclass.initComponent.call(this);
 
@@ -496,6 +500,37 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		var downloadLink = String.format("/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds());
 		window.open(downloadLink);
 	},
+	
+	launchRegisterWidget : function(){
+		if (this.ajaxRegister == null){
+			this.ajaxRegister = new Gemma.AjaxRegister({					
+					name : 'ajaxRegister',									
+					closable : false,
+					closeAction : 'hide',													
+					title : 'Please Register'
+				
+					
+				});			
+			
+			this.ajaxRegister.on("register_cancelled",function(){
+				
+				this.ajaxRegister.hide();
+				this.getEl().unmask();				
+				
+			},this);
+			
+			this.ajaxRegister.on("register_success",function(){
+				
+				this.ajaxRegister.hide();
+				this.getEl().unmask();				
+				
+			},this);
+			
+						
+			}
+		this.getEl().mask();	
+		this.ajaxRegister.show();
+	},
 
 	/**
 	 * When user clicks 'save', figure out what kind of save to do
@@ -508,9 +543,49 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		// save button should only be visible if user is not logged in, but just
 		// to be safe:
 		if (!Ext.get('hasUser').getValue()) {
-			Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+
-							" however, your list will be available temporarily.");
-			this.createInSession();
+			//Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+" however, your list will be available temporarily.");
+			
+			
+		if (this.ajaxLogin == null){
+			this.ajaxLogin = new Gemma.AjaxLogin({					
+					name : 'ajaxLogin',									
+					closable : false,
+					//closeAction : 'hide',													
+					title : 'Please login to use this function'
+				
+					
+				});			
+			
+			
+			this.ajaxLogin.on("login_success",function(){
+				this.getEl().unmask();		
+				this.ajaxLogin.hide();
+				this.save();
+				
+				
+			},this);
+			
+			this.ajaxLogin.on("register_requested",function(){
+				
+				this.getEl().unmask();		
+				this.ajaxLogin.hide();
+				this.launchRegisterWidget();
+				
+				
+			},this);
+			
+			this.ajaxLogin.on("login_cancelled",function(){
+				
+				this.ajaxLogin.hide();
+				this.getEl().unmask();				
+				
+			},this);
+			
+			}
+		
+			this.getEl().mask();
+			this.ajaxLogin.show();
+			//this.createInSession();
 		} else {
 
 			// if geneGroupId is null, then there was no group to start with

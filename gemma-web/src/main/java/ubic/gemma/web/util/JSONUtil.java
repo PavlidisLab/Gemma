@@ -58,8 +58,16 @@ public class JSONUtil {
         out.close();
     }
 
-    public String getJSONErrorMessage( Exception e ) {
-        String errMsg = e.getLocalizedMessage();
+    public String getJSONErrorMessage( Exception e ) {       
+        
+        String errMsg;
+        
+        if (e.getCause()!=null){
+            errMsg = e.getCause().getMessage();
+        }
+        else{
+            errMsg = e.getLocalizedMessage();
+        }
         String jsonText = "{success:false, message:\"" + errMsg + "\"}";
         return jsonText;
     }

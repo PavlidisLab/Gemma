@@ -3,6 +3,9 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/AnalysisResultsSearch.js' />
 
+
+
+
 <script type="text/javascript">
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Ext.onReady(function() {
@@ -30,6 +33,8 @@ function hideTopBar(divID) {
 
 }
 </script>
+
+<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
 
 <div id="topBarUpdates"
 	style="background-color: #FFFFCC; border: 1px solid #FFCC66; float: left; margin-left: 150px; margin-top: -70px; padding: 5px; width: 84%; text-align: center;">
