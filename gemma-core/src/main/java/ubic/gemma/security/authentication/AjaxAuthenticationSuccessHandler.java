@@ -36,6 +36,8 @@ public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
             super.onAuthenticationSuccess( request, response, authentication );
 
             HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper( response );
+            
+            responseWrapper.setContentType( "application/json" );
 
             Writer out = responseWrapper.getWriter();
 

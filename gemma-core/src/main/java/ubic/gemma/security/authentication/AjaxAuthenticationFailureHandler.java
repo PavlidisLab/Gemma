@@ -36,10 +36,12 @@ public class AjaxAuthenticationFailureHandler extends SimpleUrlAuthenticationFai
             super.onAuthenticationFailure( request, response, exception );
 
             HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper( response );
+            
+            responseWrapper.setContentType( "application/json" );
 
             Writer out = responseWrapper.getWriter();
 
-            out.write( "{success:false}" );
+            out.write( "{success:false}");
             out.flush();
             out.close();
 
