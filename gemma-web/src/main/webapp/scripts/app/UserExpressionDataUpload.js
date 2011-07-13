@@ -272,7 +272,9 @@ Ext.onReady(function() {
 	 * Note we have two separate forms: one to do the file upload, and then a second form that pulls everything
 	 * together.
 	 */
-
+	var adminDataAvailabilityMessage = "Please note that experiment will be public.";
+	var userDataAvailabilityMessage = "Please note that experiment will be private but can be made public later.";
+	
 	var form = new Ext.Panel({
 		renderTo : 'form',
 		width : 600,
@@ -416,10 +418,11 @@ Ext.onReady(function() {
 									fieldLabel : 'Pubmed ID',
 									boxLabel : "If provided, your data will be made publicly viewable"
 								}, {
-									xtype : 'checkbox',
-									id : 'public',
-									boxLabel : "If checked, your data will immediately be viewable by anybody",
-									fieldLabel : "Make my data publicly available"
+									xtype : 'label',
+									style : 'color: #800000;',
+									text : (Ext.get('hasAdmin') !== null) ?
+									           (Ext.get('hasAdmin').getValue() ? adminDataAvailabilityMessage : userDataAvailabilityMessage) :
+									           userDataAvailabilityMessage
 								}, {
 									xtype : 'checkbox',
 									id : 'agree',
