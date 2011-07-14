@@ -389,6 +389,10 @@ ExpressionExperimentController.loadExpressionExperimentDetails = function(p0, ca
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperimentDetails', p0, callback);
 }
+ExpressionExperimentController.loadQuantitationTypes = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
+			'loadQuantitationTypes', p0, callback);
+}
 ExpressionExperimentController.loadExpressionExperiments = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController',
 			'loadExpressionExperiments', p0, callback);

@@ -152,6 +152,10 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 				this.getSelectionModel().selectLastRow();
 			},
+			
+			removeAllGenes : function() {
+				this.getStore().removeAll();
+			},
 
 			record : Ext.data.Record.create([{
 						name : 'id',

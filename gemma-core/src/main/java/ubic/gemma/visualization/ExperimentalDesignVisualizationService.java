@@ -380,9 +380,9 @@ public class ExperimentalDesignVisualizationService {
         StopWatch timer = new StopWatch();
         timer.start();
         for ( ExpressionExperiment ee : layouts.keySet() ) {
-            ee = expressionExperimentService.thawLite( ee );
             log.debug( "Thawing ee: " + timer.getTime() + "ms" );
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
+            ee = expressionExperimentService.thawLite( ee );
 
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
             List<BioMaterial> bmList = new ArrayList<BioMaterial>();

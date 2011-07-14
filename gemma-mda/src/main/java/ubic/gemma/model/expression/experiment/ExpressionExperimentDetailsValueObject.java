@@ -19,7 +19,6 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
-
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 /**
@@ -50,6 +49,16 @@ public class ExpressionExperimentDetailsValueObject extends
     private Boolean hasMultiplePreferredQuantitationTypes = false;
 
     private Boolean hasMultipleTechnologyTypes = false;
+    
+    private String QChtml;
+    
+    private boolean hasBatchInformation;
+    
+    private String batchConfound;
+    
+    private String batchEffect;
+    
+    private String lastArrayDesignUpdateDate;
 
     public Boolean getHasMultipleTechnologyTypes() {
         return hasMultipleTechnologyTypes;
@@ -152,6 +161,46 @@ public class ExpressionExperimentDetailsValueObject extends
 
     public Long getParentTaxonId() {
         return parentTaxonId;
+    }
+
+    public void setQChtml( String qChtml ) {
+        QChtml = qChtml;
+    }
+
+    public String getQChtml() {
+        return QChtml;
+    }
+
+    public boolean isHasBatchInformation() {
+        return hasBatchInformation;
+    }
+
+    public void setHasBatchInformation( boolean hasBatchInformation ) {
+        this.hasBatchInformation = hasBatchInformation;
+    }
+
+    public String getBatchConfound() {
+        return batchConfound;
+    }
+
+    public void setBatchConfound( String batchConfound ) {
+        this.batchConfound = batchConfound;
+    }
+
+    public String getBatchEffect() {
+        return batchEffect;
+    }
+
+    public void setBatchEffect( String batchEffect ) {
+        this.batchEffect = batchEffect;
+    }
+
+    public void setLastArrayDesignUpdateDate( String lastArrayDesignUpdateDate ) {
+        this.lastArrayDesignUpdateDate = lastArrayDesignUpdateDate;
+    }
+
+    public String getLastArrayDesignUpdateDate() {
+        return lastArrayDesignUpdateDate;
     }
 
 }

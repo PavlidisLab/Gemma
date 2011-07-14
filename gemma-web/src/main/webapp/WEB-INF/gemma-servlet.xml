@@ -850,6 +850,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getDiffExAnalysisDetails</value>
 								<value>loadExpressionExperiments</value>
 								<value>loadExpressionExperimentDetails</value>
+								<value>loadQuantitationTypes</value>
 								<value>loadStatusSummaries</value>
 								<value>getDescription</value>
 								<value>unmatchAllBioAssays</value>
@@ -1673,6 +1674,11 @@ gemma.max.fileupload.size.bytes=
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.web.common.QuantitationTypeValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>

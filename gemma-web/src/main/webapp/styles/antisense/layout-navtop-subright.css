@@ -44,9 +44,18 @@ div#sub ul#local>li a {
 	margin-left: -5px !important;
 }
 
-div#nav {
+div#nav.home {
 	position: absolute;
-	top: -25px;
+	top: -105px;
+	left: 150px;
+	width: 85%;
+	text-align: left;
+}
+
+div#nav.inner {
+	z-index: 1;
+	position: absolute;
+	top: -50px;
 	left: 0px;
 	width: 100%;
 	text-align: left;

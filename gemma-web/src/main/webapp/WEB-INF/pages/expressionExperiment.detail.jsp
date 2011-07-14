@@ -11,7 +11,24 @@
 		useRandomParam="false" />
 
 </head>
+		 
+	<script>
+	Ext.namespace('Gemma');
+	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 
+	Ext.onReady( function() {
+		Ext.QuickTips.init();
+		 
+		var k = new Gemma.ExpressionExperimentPage( {
+			renderTo : 'eepage',
+			eeId: Ext.get("eeId").getValue()
+		});
+	});
+	
+</script>
+
+<div id="eepage"></div>
 
 <div id="loading-mask" style=""></div>
 <div id="loading">
@@ -23,8 +40,9 @@
 <input id="eeId" type="hidden" value="${eeId}" />
 <input id="taxonName" type="hidden" value="${taxonName}  " />
 
-<div spellcheck="false" id="eedetails">
 
+
+<div spellcheck="false" id="eedetails">
 	<div id="messages"></div>
 	<div id="basics" style="padding: 5px;"></div>
 	<div id="annotator" style="padding: 5px;"></div>

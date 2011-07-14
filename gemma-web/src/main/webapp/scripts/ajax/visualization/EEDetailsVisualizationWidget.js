@@ -25,7 +25,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 
 	height : 220,
 	width : 550,
-
+	usingPanel: false, //whether we're using vizualisation window or panel
 	name : 'eedvw',
 
 	vizButtonId : "visualizeButton-" + Ext.id(),
@@ -53,16 +53,22 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 					}
 				});
 		Ext.apply(this, {
-			extraButtons : [this.geneGroupCombo, {
+			extraButtons : [this.geneGroupCombo, new Ext.Button({
+						text : "Clear",
+						tooltip : "Clear gene selection",
+						handler : this.clearButHandler,
+						scope : this
+					}),{
 						xtype : 'tbfill'
 					},
-
+					
 					new Ext.Button({
 						id : this.vizButtonId,
-						text : "Show",
+						text : "Visualize",
 						tooltip : "Click to display data for selected genes, or a 'random' selection of data from this experiment",
 						handler : this.showButHandler,
-						scope : this
+						scope : this,
+						cls: 'x-toolbar-standardbutton'
 					}), new Ext.Button({
 						icon : Gemma.ICONURL + 'information.png',
 						// text : 'help',
@@ -97,6 +103,9 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 
 	},
 
+	clearButHandler: function(){
+		this.removeAllGenes();
+	},
 	showButHandler : function() {
 
 		if (this.visWindow) {
@@ -105,7 +114,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 		}
 
 		var geneList = this.getGeneIds();
-		var eeId = Ext.get("eeId").getValue();
+		var eeId = (Ext.get("eeId"))?Ext.get("eeId").getValue():this.eeId;
 		var title = '';
 		var downloadLink = '';
 		if (geneList.length > 0) {
@@ -116,16 +125,22 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 			title = "Data for a 'random' sampling of probes"; 
 			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
 		}
-
-		this.visWindow = new Gemma.VisualizationWithThumbsWindow({
-					title : title,
-					thumbnails : false,
-					downloadLink : downloadLink
+		if (this.usingPanel && this.visPanel) {
+			this.visPanel.loadFromParam({
+					params: [[eeId], geneList]
 				});
-
-		this.visWindow.show({
-					params : [[eeId], geneList]
-				});
+		}
+		else {
+			this.visWindow = new Gemma.VisualizationWithThumbsWindow({
+				title: title,
+				thumbnails: false,
+				downloadLink: downloadLink
+			});
+			
+			this.visWindow.show({
+				params: [[eeId], geneList]
+			});
+		}
 	}
 
 });

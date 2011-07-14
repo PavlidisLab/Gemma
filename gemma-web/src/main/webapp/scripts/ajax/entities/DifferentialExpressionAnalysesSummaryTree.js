@@ -15,7 +15,6 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
 Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel, {
 	animate : true,
-	id : 'differentialExpressionAnalysesSummaryTreeEEPage',
 	rootVisible : false,
 	enableDD : false,
 	cls : 'x-tree-noicon',

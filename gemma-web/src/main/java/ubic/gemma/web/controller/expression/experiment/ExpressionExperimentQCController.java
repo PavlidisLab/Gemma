@@ -101,6 +101,7 @@ import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateT
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import cern.colt.list.DoubleArrayList;
 
 /**

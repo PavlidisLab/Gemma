@@ -113,9 +113,11 @@ import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
+import ubic.gemma.web.common.QuantitationTypeValueObject;
 import ubic.gemma.web.remote.EntityDelegator;
 import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.web.taglib.displaytag.ExpressionExperimentValueObjectComparator;
+import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
 
@@ -946,11 +948,66 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 log.warn( "Pubmed id not formatted correctly: " + accession );
             }
         }
+        
+        finalResult.setQChtml(getQCTagHTML(ee));
 
+        boolean hasBatchInformation = false;
+        for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+            if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
+                hasBatchInformation = true;
+                break;
+            }
+        }
+        finalResult.setHasBatchInformation( hasBatchInformation );
+        if ( hasBatchInformation ) {
+            finalResult.setBatchConfound( batchConfound( ee ) );
+            finalResult.setBatchEffect( batchEffect( ee ) );
+        }
+        
+
+        AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee, null );
+        if(lastArrayDesignUpdate != null){
+            finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.getDate().toString() );
+        }
         return finalResult;
 
     }
-
+    
+    /**
+     * AJAX - for display in tables
+     * 
+     * @param ids of EEs to load quantitation types for
+     * @return security-filtered set of value objects.
+     */
+    public Collection<QuantitationTypeValueObject> loadQuantitationTypes( Long eeid ) {
+        
+        ExpressionExperiment ee = expressionExperimentService.load( eeid );
+        // need to thaw?
+        ee = expressionExperimentService.thawLite( ee );
+        Collection<QuantitationType> qts = ee.getQuantitationTypes();
+        Collection<QuantitationTypeValueObject> qtvos = QuantitationTypeValueObject.convert2ValueObjects( qts );
+        
+        return qtvos;
+    }  
+        
+    /**
+     * Used to include the html for the qc table in an ext panel (without using a tag) (This method should probably be
+     * in a service?)
+     * 
+     * @param ee
+     */
+    public String getQCTagHTML( ExpressionExperiment ee ) {
+        ExperimentQCTag qc = new ExperimentQCTag();
+        qc.setEe( ee.getId() );
+        qc.setHasCorrDist( ExpressionExperimentQCUtils.hasCorrDistFile( ee ) );
+        qc.setHasCorrMat( ExpressionExperimentQCUtils.hasCorrMatFile( ee ) );
+        qc.setHasNodeDegreeDist( ExpressionExperimentQCUtils.hasNodeDegreeDistFile( ee ) );
+        qc.setHasPCA( svdService.hasPca( ee ) );
+        qc.setHasPvalueDist( ExpressionExperimentQCUtils.hasPvalueDistFiles( ee ) );
+        qc.setNumFactors( ExpressionExperimentQCUtils.numFactors( ee ) );
+        return qc.getQChtml();
+    }
+    
     /**
      * AJAX - for display in tables. Don't retrieve too much detail.
      * 
