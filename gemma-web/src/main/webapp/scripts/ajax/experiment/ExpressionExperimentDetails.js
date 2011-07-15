@@ -23,7 +23,6 @@ initComponent: function(){
 		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
 			this.editable = true;
 		}
-		this.editable = true;
 		/*
 		 * Load the EE information via an ajax call.
 		 */

@@ -33,7 +33,6 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
 			this.editable = true;
 		}
-		this.editable = true;
 		var windowPadding = 3;
 		var minWidth = 800;
 		var minHeight = 600;
