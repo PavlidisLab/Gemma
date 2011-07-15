@@ -23,7 +23,7 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 	defaults: {
 		autoScroll: true,
 		width: 850,
-		padding: 10
+		//padding: 10
 	},
 	deferredRender: true,
 	initComponent: function(){
@@ -33,7 +33,7 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
 			this.editable = true;
 		}
-		
+		this.editable = true;
 		var windowPadding = 3;
 		var minWidth = 800;
 		var minHeight = 600;
@@ -117,28 +117,23 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 				title = "Data for a 'random' sampling of probes";
 				downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
 				var viz = new Gemma.VisualizationWithThumbsPanel({
-					region: 'center',
-					title: 'Gene Expression',
 					thumbnails: false,
 					downloadLink: downloadLink,
-					draggable: true,
-					closable: false,
-					shadow: false,
-					resizable: true,
 					params: [[eeId], geneList]
 				});
-				var vizPanel = new Ext.Panel({
+				/*var vizPanel = new Ext.Panel({
 					padding: 0,
 					title: 'Visualize Expression',
 					layout: 'border',
-					items: [new Gemma.EEDetailsVisualizationWidget({
+					items: [new Gemma.VisualizationWidgetGeneSearch({
 						ref: 'vizSelect',
 						height: 150,
-						region: 'north',
+						width:200,
+						region: 'west',
+						split:true,
+						resizable:true,
 						collapsible: true,
 						autoScroll: true,
-						width: this.width - 3,
-						usingPanel: true,
 						eeId: eeId,
 						visPanel: viz,
 						title: 'Select Genes to Visualize',
@@ -147,13 +142,23 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 							id: experimentDetails.parentTaxonId
 						}
 					}), viz]
-				});
+				});*/
 				viz.on('render', function(){
 					viz.loadFromParam({
 						params: [[eeId], geneList]
 					});
 				});
-				this.add(vizPanel);
+				this.add({
+					items: viz,
+					layout:'fit',
+					padding: 0,
+					title: 'Visualize Expression',
+					tbar: new Gemma.VisualizationWidgetGeneSelectionToolbar({
+						eeId: eeId,
+						visPanel: viz,
+						taxonId: experimentDetails.parentTaxonId
+					})
+				});
 				
 				
 				/*DIAGNOSTICS TAB*/

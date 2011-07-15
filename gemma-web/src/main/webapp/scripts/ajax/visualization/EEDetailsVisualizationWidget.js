@@ -18,6 +18,8 @@ Ext.namespace('Gemma');
 /**
  * Basic form to allow user to search for genes or show 'random' set of vectors for the experiment.
  * 
+ * Used in GeneSearchVisualizationPage.js
+ * 
  * @author paul, based on older code.
  * @version $Id$
  */
@@ -25,7 +27,6 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 
 	height : 220,
 	width : 550,
-	usingPanel: false, //whether we're using vizualisation window or panel
 	name : 'eedvw',
 
 	vizButtonId : "visualizeButton-" + Ext.id(),
@@ -35,6 +36,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 		// has to be done after constructor is done creating the handler...
 		this.geneGroupCombo = new Gemma.GeneGroupCombo({
 					id : "visGeneGroupCombo",
+					hideTrigger:true,
 					listeners : {
 						'select' : {
 							fn : function(combo, record, index) {
@@ -87,7 +89,6 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 						}.createDelegate(this)
 					})]
 		});
-
 		Gemma.EEDetailsVisualizationWidget.superclass.initComponent.call(this);
 
 		this.on('ready', function() {
@@ -125,12 +126,6 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 			title = "Data for a 'random' sampling of probes"; 
 			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
 		}
-		if (this.usingPanel && this.visPanel) {
-			this.visPanel.loadFromParam({
-					params: [[eeId], geneList]
-				});
-		}
-		else {
 			this.visWindow = new Gemma.VisualizationWithThumbsWindow({
 				title: title,
 				thumbnails: false,
@@ -140,7 +135,231 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 			this.visWindow.show({
 				params: [[eeId], geneList]
 			});
-		}
 	}
 
 });
+
+Gemma.VisualizationWidgetGeneSelectionGrid = Ext.extend(Gemma.GeneMembersGrid, {
+
+	//height : 220,
+	width: 250,
+	name: 'eedvw',
+	
+	vizButtonId: "visualizeButton-" + Ext.id(),
+	getButtons: function(){
+		return [new Ext.Button({
+			id: this.vizButtonId,
+			text: "OK",
+			tooltip: "Click to display data for selected genes, or a 'random' selection of data from this experiment",
+			handler: this.showButHandler,
+			scope: this,
+			cls: 'x-toolbar-standardbutton'
+		}), new Ext.Button({
+			text: "Cancel",
+			handler: this.cancelHandler,
+			scope: this
+		})];
+	},
+	initComponent: function(){
+	
+		Gemma.VisualizationWidgetGeneSelectionGrid.superclass.initComponent.call(this);
+		
+		
+		Ext.apply(this, {
+			buttons: this.getButtons()
+		});
+
+	},
+	
+	clearButHandler: function(){
+		this.removeAllGenes();
+	},
+	
+	cancelHandler: function(){
+		// just close the window
+		
+		this.fireEvent('done');
+	},
+	showButHandler: function(){
+		this.fireEvent('geneListModified', this.getGeneIds());
+		this.fireEvent('done');
+	}
+	
+});
+
+
+/**
+ * toolbar for selecting genes or gene groups and adding them to a grid
+ * if this.taxonId is set, then searches will be limited by taxon  
+ */
+Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
+	extraButtons: [],
+	geneIds: [],
+	initComponent: function(){
+	
+		Gemma.VisualizationWidgetGeneSelectionToolbar.superclass.initComponent.call(this);
+		
+		this.visPanel.on('loadSucceeded', function(){
+			this.updateStatusText();
+		},this);
+		
+		this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
+			typeAhead: false,
+			width: this.geneComboWidth || 300,
+			listeners: {
+				'select': {
+					fn: function(combo, rec, index){
+						this.setGeneIds(rec.get('memberIds'));
+						this.editBtn.enable();
+						this.clearBtn.enable();
+						this.updateButtonText();
+						
+					}.createDelegate(this)
+				}
+			}
+		});
+		this.vizBtn = new Ext.Toolbar.Button({
+			tooltip: "Visualize selected genes(s)",
+			text: 'Visualize',
+			cls: 'x-toolbar-standardbutton',
+			handler: this.vizBtnHandler.createDelegate(this)
+		});
+		
+		
+		this.editBtn = new Ext.Toolbar.Button({
+			tooltip: "Edit your selection",
+			text: 'Modify Selection',
+			cls:'x-toolbar-outline',
+			disabled: true,
+			handler: this.launchGeneSelectionEditor.createDelegate(this)
+		});
+		
+		this.clearBtn = new Ext.Toolbar.Button({
+			tooltip: "Clear your selection",
+			text: 'Clear',
+			cls: 'x-toolbar-outline',
+			disabled: true,
+			handler: this.clearHandler.createDelegate(this)
+		});
+			
+		this.geneSelectionEditor = new Gemma.VisualizationWidgetGeneSelectionGrid({
+					name : 'geneSelectionEditor',
+					hideHeaders : true,
+					frame : false
+				});
+
+		
+		this.geneSelectionEditor.on('geneListModified', function(geneIds) {
+				this.setGeneIds(geneIds);
+				this.updateButtonText();
+				this.listModified = true;
+			}, this);
+
+		this.geneSelectionEditor.on('done', function() {
+					this.getEl().unmask();
+					this.geneSelectionEditorWindow.hide();
+				}, this);
+
+		this.geneSelectionEditorWindow = new Ext.Window({
+					closable : false,
+					layout : 'fit',
+					width : 450,
+					height : 500,
+					items : this.geneSelectionEditor,
+					title : 'Edit Your Gene Selection'
+				});
+		this.tbarText = new Ext.Panel({
+			xtype: 'panel',
+			html: 'Visualizing 20 \'random\' genes',
+			border: false,
+			bodyStyle: 'background-color:transparent; color:grey; padding-left:10px'
+		});
+	},
+	afterRender: function(c, l){
+		Gemma.GeneAndGroupAdderToolbar.superclass.afterRender.call(this, c, l);
+		this.add(this.geneCombo, this.editBtn);
+		this.addSpacer();
+		this.add(this.clearBtn, this.vizBtn);
+		this.addButton(this.extraButtons);
+		this.add(this.tbarText);
+	},	
+	launchGeneSelectionEditor : function() {
+
+		var geneIds = this.getGeneIds();
+		console.log("gis"+geneIds);
+		if (!geneIds || geneIds === null || geneIds.length === 0) {
+			return;
+		}
+		this.getEl().mask();
+
+		this.geneSelectionEditorWindow.show();
+
+		this.geneSelectionEditor.loadMask = new Ext.LoadMask(this.geneSelectionEditor.getEl(), {
+					msg : "Loading genes ..."
+				});
+		this.geneSelectionEditor.loadMask.show();
+		Ext.apply(this.geneSelectionEditor, {
+					taxonId : this.taxonId
+				});
+		this.geneSelectionEditor.loadGenes(geneIds, function() {
+					this.geneSelectionEditor.loadMask.hide();
+				}.createDelegate(this, [], false));
+	},
+	getGeneIds: function(){
+		return this.geneIds;
+	},
+	setGeneIds: function(ids){
+		this.geneIds = ids;
+		console.log("setting to"+ids);
+	},
+	updateButtonText: function(){
+		var numIds = this.getGeneIds().length;
+		if (numIds === 0) {
+			this.vizBtn.setText('Visualize \'random\' genes');
+		}else if (numIds === 1) {
+			this.vizBtn.setText('Visualize 1 gene');
+		}else {
+			this.vizBtn.setText('Visualize ' + numIds + ' genes');
+		}
+	},
+	updateStatusText: function(){
+		var numIds = this.getGeneIds().length;
+		if (numIds === 0) {
+			this.tbarText.update('Visualizing 20 \'random\' genes.');
+		}else if (numIds === 1) {
+			this.tbarText.update('Visualizaing selected gene.');
+		}else {
+			this.tbarText.update('Visualizaing selected genes. Note that not all genes are necessarily in the data set.');
+		}
+	},
+	clearHandler: function(){
+		// TODO reset the combo 
+		this.setGeneIds([]);
+		this.updateButtonText();
+		this.geneCombo.reset();
+	},
+	vizBtnHandler: function(){
+	
+		var geneList = this.getGeneIds();
+		var eeId = this.eeId;
+		var title = '';
+		var downloadLink = '';
+		if (geneList.length > 0) {
+			title = "Data for selected genes";
+			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", eeId, geneList.join(','));
+		}
+		else {
+			geneList = [];
+			title = "Data for a 'random' sampling of probes";
+			downloadLink = String.format("/Gemma/dedv/downloadDEDV.html?ee={0}", eeId);
+		}
+		Ext.apply(this.visPanel, {
+			downloadLink: downloadLink
+		});
+		this.visPanel.loadFromParam({
+						params: [[eeId], geneList]
+					});
+	}
+});
+
+

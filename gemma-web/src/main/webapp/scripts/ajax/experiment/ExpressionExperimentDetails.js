@@ -23,13 +23,63 @@ initComponent: function(){
 		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
 			this.editable = true;
 		}
-		
+		this.editable = true;
 		/*
 		 * Load the EE information via an ajax call.
 		 */
 		this.build(this.experimentDetails);
 },
 
+    
+    savePubMed: function(){
+        var pubmedId = Ext.getCmp('pubmed-id-field').getValue();
+        ExpressionExperimentController.updatePubMed(this.eeId, pubmedId, {
+            callback: function(data){
+                var k = new Gemma.WaitHandler();
+                k.on('done', function(e){
+                    // var html = this.getPubMedHtml(e);
+                    // Ext.getCmp('pubmed-region-wrap').remove(Ext.getCmp('pubmed-region'));
+                    // Ext.DomHelper.append('pubmed-region-wrap',
+                    // html);
+                    window.location.reload();
+                }, this);
+                k.handleWait(data, false);
+            }
+.createDelegate(this)
+        });
+        
+    },
+    
+    removePubMed: function(){
+        Ext.Msg.show({
+            title: 'Really delete?',
+            msg: 'Are you sure you want to delete the reference? This cannot be undone.',
+            buttons: Ext.Msg.YESNO,
+            fn: function(btn, text){
+                if (btn == 'yes') {
+                    ExpressionExperimentController.removePrimaryPublication(this.eeId, {
+                        callback: function(data){
+                            var k = new Gemma.WaitHandler();
+                            k.on('done', function(success){
+                            
+                                if (success) {
+                                    var r = Ext.getCmp('pubmed-region-wrap');
+                                    r.remove(Ext.getCmp('pubmed-region'));
+                                    var form = this.getPubMedForm(this.eeId);
+                                    r.add(form);
+                                    r.doLayout();
+                                }
+                                
+                            }, this);
+                            k.handleWait(data, false);
+                        }
+.createDelegate(this)
+                    });
+                }
+            },
+            scope: this
+        });
+    },
 	getPubMedHtml : function(e) {
 		var pubmedUrl = e.primaryCitation
 				+ '&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"'
@@ -382,7 +432,14 @@ initComponent: function(){
 	build : function(experimentDetails) {
 
 		var e = experimentDetails;
-
+		var currentDescription = e.description
+		var currentName = e.name;
+		var currentShortName = e.shortName;
+var manager = new Gemma.EEManager({
+					editable : this.editable,
+					id : "eemanager"
+				});
+		this.manager = manager;
 
 		adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp(\'eemanager\').updateEEReport('
 				+ e.id
@@ -417,7 +474,7 @@ initComponent: function(){
 
 		var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id + ','
 				+ e.taxonId + ',' + this.editable + ',' + (e.validatedAnnotations !== null)
-				+ ')"><img src="/Gemma/images/icons/magnifier.png" alt="view tags" title="view tags"/></span>';
+				+ ')"><img src="/Gemma/images/icons/pencil.png" alt="view tags" title="view tags"/></span>';
 
 		tagView = new Gemma.AnnotationDataView({
 					readParams : [{
@@ -426,18 +483,238 @@ initComponent: function(){
 							}]
 				});
 				
-		var descriptionPanel = new Ext.Panel({
-			//fieldLabel: 'Description',
-			height : 120,
-			border:true,
-			autoScroll:true,
-			html: e.description,
-			style:'padding-bottom:15px;padding-top:5px'
+		
+		manager.on('tagsUpdated', function() {
+					tagView.store.reload();
+				});
+
+		manager.on('done', function() {
+					/*
+					 * After a process that requires refreshing the page.
+					 */
+					window.location.reload();
+				});
+
+		manager.on('reportUpdated', function(data) {
+					ob = data[0];
+					var k = Ext.get('coexpressionLinkCount-region');
+					Ext.DomHelper.overwrite(k, {
+								html : ob.coexpressionLinkCount
+							});
+					k.highlight();
+					k = Ext.get('processedExpressionVectorCount-region');
+					Ext.DomHelper.overwrite(k, {
+								html : ob.processedExpressionVectorCount
+							});
+					k.highlight();
+				});
+
+		manager.on('differential', function() {
+					window.location.reload(true);
+				});
+				
+				   
+    save = function(){
+        var shortName = shortNameField.getValue();
+        var description = descriptionArea.getValue();
+        var name = nameArea.getValue();
+        
+        var entity = {
+            entityId: e.id
+        };
+        
+        if (shortName != shortNameField.originalValue) {
+            entity.shortName = shortName;
+        }
+        
+        if (description != descriptionArea.originalValue) {
+            entity.description = description;
+        }
+        
+        if (name != nameArea.originalValue) {
+            entity.name = name;
+        }
+        
+        ExpressionExperimentController.updateBasics(entity, function(data){
+            
+            shortNameField.setValue(data.shortName);
+            nameArea.setValue(data.name);
+            descriptionArea.setValue(data.description);
+			
+			currentShortName = data.shortName;
+			currentName = data.name;
+			currentDescription = data.description;
+            
+        }.createDelegate(this));
+    };
+
+		var descriptionArea = new Ext.form.TextArea({
+			allowBlank: true,
+			resizable: true,
+			readOnly: true,
+			disabled:true,
+			disabledClass: 'disabled-plain',
+			fieldClass: '',
+			emptyText: 'No description provided',
+			enableKeyEvents: true,
+			bubbleEvents:['changeMade'],
+			listeners: {
+				'keyup': function(field, e){
+					if (field.isDirty()) {
+						field.fireEvent('changeMade', field.isValid());
+					}
+				},
+				'toggleEditMode': function(editOn){
+					this.setReadOnly(!editOn);
+					this.setDisabled(!editOn);
+					if(editOn){
+						this.removeClass('x-bare-field');
+					}else{
+						this.addClass('x-bare-field');
+					}
+				}
+			},
+			style:'width: 100%; background-color: #fcfcfc; border: 1px solid #cccccc;',
+			height : 150,
+			value: currentDescription
 		});
 
+		var shortNameField = new Ext.form.TextField({
+			enableKeyEvents: true,
+			allowBlank: false,
+			disabledClass: 'disabled-plain',
+			readOnly: true,
+			disabled: true,
+			style: 'font-weight: bold; font-size:1.4em',
+			bubbleEvents:['changeMade'],
+			listeners: {
+				'keyup': function(field, e){
+					if (field.isDirty()) {
+						field.fireEvent('changeMade', field.isValid());
+					}
+				},
+				'toggleEditMode': function(editOn){
+					this.setReadOnly(!editOn);
+					this.setDisabled(!editOn);
+					if(editOn){
+						this.removeClass('x-bare-field');
+					}else{
+						this.addClass('x-bare-field');
+					}
+				}
+			},
+			value: currentShortName
+		});
 
+		var nameArea = new Ext.form.TextArea({
+			allowBlank: false,
+			grow: true,
+			growMin: 22,
+			growAppend: '',
+			readOnly : true,//!this.editable,
+			disabled:true,
+			disabledClass: 'disabled-plain',
+			emptyText: 'No description provided',
+			enableKeyEvents: true,
+			bubbleEvents:['changeMade'],
+			listeners: {
+				'keyup': function(field, e){
+					if (field.isDirty()) {
+						field.fireEvent('changeMade', field.isValid());
+					}
+				},
+				'toggleEditMode': function(editOn){
+					this.setReadOnly(!editOn);
+					this.setDisabled(!editOn);
+					if(editOn){
+						this.removeClass('x-bare-field');
+					}else{
+						this.addClass('x-bare-field');
+					}
+				}
+			},
+			style:'font-weight: bold; font-size:1.3em; width:100%',
+			value: currentName
+		});
+		
+		resetEditableFields = function(){
+			shortNameField.setValue(currentShortName);
+			nameArea.setValue(currentName);
+			descriptionArea.setValue(currentDescription);
+           	saveBtn.disable();
+           	cancelBtn.disable();
+		};
+		
+		var editBtn = new Ext.Button({
+					// would like to use on/off slider or swtich type control here
+					text: 'Start editing',
+					editOn:false,
+					handler: function(button, event){
+						this.fireEvent('toggleEditMode', true);
+					},
+					scope: this
+				});
+		var cancelBtn = new Ext.Button({
+				text: 'Cancel',
+				disabled: true,
+				toolTip:'Reset all fields to saved values',
+				handler: function(){
+					resetEditableFields();
+					this.fireEvent('toggleEditMode', false);
+				},scope:this
+			});
+					
+		var saveBtn = new Ext.Button({
+				text: 'Save',
+				disabled: true,
+				handler: function(){
+					save();
+					this.fireEvent('toggleEditMode', false);
+				},scope:this
+		});
+		var editEEButton = new Ext.Button({
+            text: 'More edit options',
+            icon: '/Gemma/images/icons/wrench.png',
+            toolTip: 'Go to editor page for this experiment',
+			disabled: !this.editable,
+            handler: function(){
+                window.open('/Gemma/expressionExperiment/editExpressionExperiment.html?id=' +
+                this.experimentDetails.id);
+            },
+            scope: this
+        });
+        var deleteEEButton = new Ext.Button({
+            text: 'Delete Experiment',
+            icon: '/Gemma/images/icons/cross.png',
+            toolTip: 'Delete the experiment from the system',
+			disabled: !this.editable,
+            handler: function(){
+                manager.deleteExperiment(this.experimentDetails.id);
+            },
+            scope: this
+        });
+
+		this.on('toggleEditMode', function(editOn){
+			// is there a way to make this even propagate to all children automatically?
+			editBtn.setText((editOn)?'Editing mode on':'Start editing');
+			editBtn.setDisabled(editOn);
+			nameArea.fireEvent('toggleEditMode', editOn);
+			descriptionArea.fireEvent('toggleEditMode', editOn);
+			shortNameField.fireEvent('toggleEditMode', editOn);
+			resetEditableFields();
+			saveBtn.setDisabled(!editOn);
+			cancelBtn.setDisabled(!editOn);
+		});
+				
+		this.on('changeMade', function(wasValid){
+			// enable save button
+			saveBtn.setDisabled(!wasValid);
+			cancelBtn.setDisabled(!wasValid);
+			
+		});
 		var basics = new Ext.Panel({
-			layout: 'form',
+			//layout: 'form',
+			ref: 'fieldPanel',
 			collapsible: false,
 			bodyBorder: false,
 			frame: false,
@@ -448,64 +725,82 @@ initComponent: function(){
 				baseCls: 'x-plain-panel',
 				fieldClass: 'x-bare-field'
 			},
-			items: [{html: '<h4><b>'+e.shortName+'</h4><h5> '+e.name+'</h5>'}, {
-				fieldLabel: "Taxon",
-				html: e.taxon
-			}, {
-				fieldLabel: 'Tags&nbsp;' + taggerurl,
-				items: [tagView]
-			}, {
-				fieldLabel: 'Samples',
-				html: this.renderSamples(e),
-				width: 60
-			}, {
-				fieldLabel: 'Profiles',
-				//id: 'processedExpressionVectorCount-region',
-				html: '<div id="downloads"> ' +
-				this.renderProcessedExpressionVectorCount(e) +
-				'&nbsp;&nbsp;' +
-				'<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,' +
-				e.id +
-				', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;' +
-				'<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,' +
-				e.id +
-				', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;' +
-				'<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\'); return false"> <img src="/Gemma/images/help.png" /> </a>' +
-				'</div>',
-				width: 400
-			}, {
-				fieldLabel: 'Array designs',
-				//id: 'arrayDesign-region',
-				html: this.renderArrayDesigns(e.arrayDesigns),
-				width: 480
-			},{
-				fieldLabel: 'Coexpr. Links',
-				//id: 'coexpressionLinkCount-region',
-				html: this.renderCoExpressionLinkCount(e),
-				width: 80
-			}, {
-				fieldLabel: 'Differential Expr. Analyses',
-				//id: 'DiffExpressedProbes-region',
-				items: new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
-			}, {
-				fieldLabel: 'Status',
-				html: this.renderStatus(e)
-			}, descriptionPanel, {
-				fieldLabel: 'Publication',
-				xtype: 'panel',
-				//id: 'pubmed-region-wrap',
-				layout: 'fit',
-				bodyBorder: false,
-				baseCls: 'x-plain-panel',
-				disabled: false,
-				items: [pubmedRegion]
-			}, 
+			tbar: new Ext.Toolbar({
+				//hidden: !this.editable,
+				items: [editBtn,' ',cancelBtn,' ', saveBtn,'-',editEEButton,'-',deleteEEButton]
+			}),
+			items: [shortNameField, nameArea, 
 			{
-				fieldLabel: 'Created',
-				html: Ext.util.Format.date(e.dateCreated) + ' from ' + this.renderSourceDatabaseEntry(e)
-			}, {
-				html: 'The last time an array design associated with this experiment was updated: '+e.lastArrayDesignUpdateDate,
-				hidden: !e.lastArrayDesignUpdateDate
+				layout: 'form',
+				defaults:{
+					border:false
+				},
+				items: [{
+					fieldLabel: "Taxon",
+					html: e.taxon
+				}, {
+					fieldLabel: 'Tags&nbsp;' + taggerurl,
+					items: [tagView]
+				}, {
+					fieldLabel: 'Samples',
+					html: this.renderSamples(e),
+					width: 60
+				}, {
+					fieldLabel: 'Profiles',
+					//id: 'processedExpressionVectorCount-region',
+					html: '<div id="downloads"> ' +
+					this.renderProcessedExpressionVectorCount(e) +
+					'&nbsp;&nbsp;' +
+					'<i>Downloads:</i> &nbsp;&nbsp; <span class="link"  ext:qtip="Download the tab delimited data" onClick="fetchData(true,' +
+					e.id +
+					', \'text\', null, null)">Filtered</span> &nbsp;&nbsp;' +
+					'<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,' +
+					e.id +
+					', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;' +
+					'<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. ' +
+					'The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\');' +
+					' return false"> <img src="/Gemma/images/help.png" /> </a>' +
+					'</div>',
+					width: 400
+				}, {
+					fieldLabel: 'Array designs',
+					//id: 'arrayDesign-region',
+					html: this.renderArrayDesigns(e.arrayDesigns),
+					width: 480
+				}, {
+					fieldLabel: 'Coexpr. Links',
+					//id: 'coexpressionLinkCount-region',
+					html: this.renderCoExpressionLinkCount(e),
+					width: 80
+				}, {
+					fieldLabel: 'Differential Expr. Analyses',
+					//id: 'DiffExpressedProbes-region',
+					items: new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
+				}, {
+					fieldLabel: 'Status',
+					html: this.renderStatus(e)
+				}]
+			}, descriptionArea, {
+				layout: 'form',
+				defaults:{
+					border:false
+				},
+				items: [{
+					fieldLabel: 'Publication',
+					xtype: 'panel',
+					//id: 'pubmed-region-wrap',
+					layout: 'fit',
+					bodyBorder: false,
+					baseCls: 'x-plain-panel',
+					disabled: false,
+					items: [pubmedRegion]
+				}, {
+					fieldLabel: 'Created',
+					html: Ext.util.Format.date(e.dateCreated) + ' from ' + this.renderSourceDatabaseEntry(e)
+				}, {
+					html: 'The last time an array design associated with this experiment was updated: ' + e.lastArrayDesignUpdateDate,
+					hidden: !e.lastArrayDesignUpdateDate
+				}]
 			}]
 		});
 	

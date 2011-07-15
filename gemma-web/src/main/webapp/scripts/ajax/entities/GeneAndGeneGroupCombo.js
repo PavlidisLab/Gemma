@@ -36,6 +36,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	forceSelection: true,
 	typeAhead: false,
 	taxonId:null,
+	hideTrigger:true,
 	
 	lastQuery: null, // used for query queue fix
 	
@@ -252,6 +253,13 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			return null;
 		}
 		return this.selectedGeneGroup;
+	},
+	
+	getGeneIds : function() {
+		if (this.selectedGeneGroup) {
+			return this.selectedGeneGroup.memberIds;
+		}
+		return [];
 	},
 
 	setGeneGroup : function(combo, geneGroup, index) {

@@ -296,7 +296,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			this._toolPanels._selectionTabPanel.setActiveTab(0);
 		});
 				
-		this.geneSelectionEditor = new Gemma.GeneMembersGrid({
+		this.geneSelectionEditor = new Gemma.GeneMembersSaveGrid({
 			name: 'geneSelectionEditor',
 			hideHeaders: true,
 			frame: false,
@@ -377,7 +377,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 				this.eeSelectionEditorWindow.show();
 		
 				this.eeSelectionEditor.loadMask = new Ext.LoadMask(this.eeSelectionEditor.getEl(), {
-							msg : "Loading ees ..."
+							msg : "Loading experiments ..."
 						});
 				this.eeSelectionEditor.loadMask.show();
 				Ext.apply(this.eeSelectionEditor, {

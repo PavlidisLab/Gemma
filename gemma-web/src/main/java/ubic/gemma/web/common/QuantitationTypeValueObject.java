@@ -78,13 +78,13 @@ public class QuantitationTypeValueObject {
          this.setName( qt.getName() );
          this.setDescription( qt.getDescription() );
          this.setGeneralType( qt.getGeneralType().toString() );
-         this.setIsBackground( qt.getIsBackground() );
-         this.setIsBackgroundSubtracted( qt.getIsBackgroundSubtracted() );
-         this.setIsBatchCorrected( qt.getIsBatchCorrected() );
-         this.setIsMaskedPreferred( qt.getIsMaskedPreferred() );
-         this.setIsNormalized( qt.getIsNormalized() );
-         this.setIsPreferred( qt.getIsPreferred() );
-         this.setIsRatio( qt.getIsRatio() );
+         this.setIsBackground( (qt.getIsBackground() != null)?qt.getIsBackground():false );
+         this.setIsBackgroundSubtracted( (qt.getIsBackgroundSubtracted() != null)?qt.getIsBackgroundSubtracted() : false );
+         this.setIsBatchCorrected( (qt.getIsBatchCorrected() != null)? qt.getIsBatchCorrected() : false );
+         this.setIsMaskedPreferred( (qt.getIsMaskedPreferred())?qt.getIsMaskedPreferred():false );
+         this.setIsNormalized( (qt.getIsNormalized())?qt.getIsNormalized():false );
+         this.setIsPreferred( (qt.getIsPreferred())?qt.getIsPreferred():false );
+         this.setIsRatio( (qt.getIsRatio())?qt.getIsRatio():false );
          this.setRepresentation( qt.getRepresentation().toString() );
          this.setScale( qt.getScale().toString() );
          this.setType( qt.getType().toString() );
@@ -94,8 +94,9 @@ public class QuantitationTypeValueObject {
          List<QuantitationTypeValueObject> results = new ArrayList<QuantitationTypeValueObject>();
 
          for ( QuantitationType qt : qts ) {
-             
+             if(qt!=null){
              results.add( new QuantitationTypeValueObject( qt ) );
+             }
          }
 
          Collections.sort( results, new Comparator<QuantitationTypeValueObject>() {
@@ -118,7 +119,7 @@ public class QuantitationTypeValueObject {
     /**
      * 
      */
-    public java.lang.Boolean getIsBackground()
+    public boolean getIsBackground()
     {
         return this.isBackground;
     }
@@ -126,7 +127,7 @@ public class QuantitationTypeValueObject {
     /**
      * 
      */
-    public java.lang.Boolean getIsBackgroundSubtracted()
+    public boolean getIsBackgroundSubtracted()
     {
         return this.isBackgroundSubtracted;
     }
@@ -134,7 +135,7 @@ public class QuantitationTypeValueObject {
     /**
      * 
      */
-    public java.lang.Boolean getIsBatchCorrected()
+    public boolean getIsBatchCorrected()
     {
         return this.isBatchCorrected;
     }
@@ -145,7 +146,7 @@ public class QuantitationTypeValueObject {
      * preferred data.
      * </p>
      */
-    public java.lang.Boolean getIsMaskedPreferred()
+    public boolean getIsMaskedPreferred()
     {
         return this.isMaskedPreferred;
     }
@@ -153,7 +154,7 @@ public class QuantitationTypeValueObject {
     /**
      * 
      */
-    public java.lang.Boolean getIsNormalized()
+    public boolean getIsNormalized()
     {
         return this.isNormalized;
     }
@@ -161,7 +162,7 @@ public class QuantitationTypeValueObject {
     /**
      * 
      */
-    public java.lang.Boolean getIsPreferred()
+    public boolean getIsPreferred()
     {
         return this.isPreferred;
     }
@@ -173,7 +174,7 @@ public class QuantitationTypeValueObject {
      * value is "absolute".
      * </p>
      */
-    public java.lang.Boolean getIsRatio()
+    public boolean getIsRatio()
     {
         return this.isRatio;
     }
@@ -201,37 +202,37 @@ public class QuantitationTypeValueObject {
         this.generalType = generalType;
     }
 
-    public void setIsBackground(java.lang.Boolean isBackground)
+    public void setIsBackground(boolean isBackground)
     {
         this.isBackground = isBackground;
     }
 
-    public void setIsBackgroundSubtracted(java.lang.Boolean isBackgroundSubtracted)
+    public void setIsBackgroundSubtracted(boolean isBackgroundSubtracted)
     {
         this.isBackgroundSubtracted = isBackgroundSubtracted;
     }
 
-    public void setIsBatchCorrected(java.lang.Boolean isBatchCorrected)
+    public void setIsBatchCorrected(boolean isBatchCorrected)
     {
         this.isBatchCorrected = isBatchCorrected;
     }
 
-    public void setIsMaskedPreferred(java.lang.Boolean isMaskedPreferred)
+    public void setIsMaskedPreferred(boolean isMaskedPreferred)
     {
         this.isMaskedPreferred = isMaskedPreferred;
     }
 
-    public void setIsNormalized(java.lang.Boolean isNormalized)
+    public void setIsNormalized(boolean isNormalized)
     {
         this.isNormalized = isNormalized;
     }
 
-    public void setIsPreferred(java.lang.Boolean isPreferred)
+    public void setIsPreferred(boolean isPreferred)
     {
         this.isPreferred = isPreferred;
     }
 
-    public void setIsRatio(java.lang.Boolean isRatio)
+    public void setIsRatio(boolean isRatio)
     {
         this.isRatio = isRatio;
     }
