@@ -13,15 +13,21 @@ import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
+import ubic.gemma.web.util.JSONUtil;
+
 public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     @Override
     public void onAuthenticationSuccess( HttpServletRequest request, HttpServletResponse response,
             Authentication authentication ) throws ServletException, IOException {
-
+        
+                
         String ajaxLoginTrue = request.getParameter( "ajaxLoginTrue" );
 
         if ( ajaxLoginTrue != null && ajaxLoginTrue.equals( "true" ) ) {
+            
+            JSONUtil jsonUtil = new JSONUtil( request, response );
+            String jsonText = null;
 
             this.setRedirectStrategy( new RedirectStrategy() {
 
@@ -34,17 +40,10 @@ public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
             } );
 
             super.onAuthenticationSuccess( request, response, authentication );
-
-            HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper( response );
+            authentication.getName();
             
-            responseWrapper.setContentType( "application/json" );
-
-            Writer out = responseWrapper.getWriter();
-
-            out.write( "{success:true}" );
-            out.flush();
-            out.close();
-
+            jsonText = "{success:true,user:\'"+ authentication.getName()+"\'}";
+            jsonUtil.writeToResponse( jsonText);
         } else {
 
             this.setRedirectStrategy( new DefaultRedirectStrategy() );

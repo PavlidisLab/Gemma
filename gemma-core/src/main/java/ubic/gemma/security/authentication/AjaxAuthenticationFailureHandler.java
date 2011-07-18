@@ -13,6 +13,8 @@ import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
+import ubic.gemma.web.util.JSONUtil;
+
 public class AjaxAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
     @Override
@@ -22,6 +24,9 @@ public class AjaxAuthenticationFailureHandler extends SimpleUrlAuthenticationFai
         String ajaxLoginTrue = request.getParameter( "ajaxLoginTrue" );
 
         if ( ajaxLoginTrue != null && ajaxLoginTrue.equals( "true" ) ) {
+            
+            JSONUtil jsonUtil = new JSONUtil( request, response );
+            String jsonText = null;
 
             this.setRedirectStrategy( new RedirectStrategy() {
 
@@ -34,17 +39,10 @@ public class AjaxAuthenticationFailureHandler extends SimpleUrlAuthenticationFai
             } );
 
             super.onAuthenticationFailure( request, response, exception );
-
-            HttpServletResponseWrapper responseWrapper = new HttpServletResponseWrapper( response );
             
-            responseWrapper.setContentType( "application/json" );
-
-            Writer out = responseWrapper.getWriter();
-
-            out.write( "{success:false}");
-            out.flush();
-            out.close();
-
+            jsonText = "{success:false}";
+            jsonUtil.writeToResponse( jsonText);
+           
         }
 
         else {
