@@ -1430,8 +1430,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * 
      * @param command
      * @return updated value object
+     * @throws Exception 
      */
-    public ExpressionExperimentDetailsValueObject updateBasics( UpdateEEDetailsCommand command ) {
+    public ExpressionExperimentDetailsValueObject updateBasics( UpdateEEDetailsCommand command ) throws Exception {
         if ( command.getEntityId() == null ) {
             throw new IllegalArgumentException( "Id cannot be null" );
         }
@@ -1460,6 +1461,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( StringUtils.isNotBlank( command.getDescription() )
                 && !command.getDescription().equals( ee.getDescription() ) ) {
             ee.setDescription( command.getDescription() );
+        }
+        if ( !command.isRemovePrimaryPublication() && StringUtils.isNotBlank( command.getPubMedId() )) {
+            updatePubMed( entityId, command.getPubMedId() );
+            
+        }else if(command.isRemovePrimaryPublication()){
+            removePrimaryPublication( entityId );
         }
 
         log.info( "Updating " + ee );

@@ -33,6 +33,10 @@ public class UpdateEEDetailsCommand extends TaskCommand {
     String name;
 
     String description;
+    
+    String pubMedId;
+    
+    boolean removePrimaryPublication;
 
     /**
      * @return the description
@@ -74,6 +78,22 @@ public class UpdateEEDetailsCommand extends TaskCommand {
      */
     public void setShortName( String shortName ) {
         this.shortName = shortName;
+    }
+
+    public String getPubMedId() {
+        return pubMedId;
+    }
+
+    public void setPubMedId( String pubMedId ) {
+        this.pubMedId = pubMedId;
+    }
+
+    public boolean isRemovePrimaryPublication() {
+        return removePrimaryPublication;
+    }
+
+    public void setRemovePrimaryPublication( boolean removePrimaryPublication ) {
+        this.removePrimaryPublication = removePrimaryPublication;
     }
 
 }

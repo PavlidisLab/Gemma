@@ -13,148 +13,6 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  */
 Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 
-    initComponent: function(){
-    
-    
-        Gemma.ExpressionExperimentDetails.superclass.initComponent.call(this);
-        
-        // if no permissions hasWritePermission is no set.
-        if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
-            this.editable = true;
-        }
-        /*
-         * Load the EE information via an ajax call.
-         */
-        this.build(this.experimentDetails);
-    },
-    
-    
-    savePubMed: function(){
-        var pubmedId = Ext.getCmp('pubmed-id-field').getValue();
-        ExpressionExperimentController.updatePubMed(this.eeId, pubmedId, {
-            callback: function(data){
-                var k = new Gemma.WaitHandler();
-                k.on('done', function(e){
-                    // var html = this.getPubMedHtml(e);
-                    // Ext.getCmp('pubmed-region-wrap').remove(Ext.getCmp('pubmed-region'));
-                    // Ext.DomHelper.append('pubmed-region-wrap',
-                    // html);
-                    window.location.reload();
-                }, this);
-                k.handleWait(data, false);
-            }.createDelegate(this)
-        });
-        
-    },
-    
-    removePubMed: function(){
-        Ext.Msg.show({
-            title: 'Really delete?',
-            msg: 'Are you sure you want to delete the reference? This cannot be undone.',
-            buttons: Ext.Msg.YESNO,
-            fn: function(btn, text){
-                if (btn == 'yes') {
-                    ExpressionExperimentController.removePrimaryPublication(this.eeId, {
-                        callback: function(data){
-                            var k = new Gemma.WaitHandler();
-                            k.on('done', function(success){
-                            
-                                if (success) {
-                                    var r = Ext.getCmp('pubmed-region-wrap');
-                                    r.remove(Ext.getCmp('pubmed-region'));
-                                    var form = this.getPubMedForm(this.eeId);
-                                    r.add(form);
-                                    r.doLayout();
-                                }
-                                
-                            }, this);
-                            k.handleWait(data, false);
-                        }.createDelegate(this)
-                    });
-                }
-            },
-            scope: this
-        });
-    },
-    getPubMedHtml: function(e){
-        var pubmedUrl = e.primaryCitation +
-        '&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"' +
-        ' href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=' +
-        e.pubmedId +
-        '&query_hl=2&itool=pubmed_docsum"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp';
-        
-        if (this.editable) {
-            // Add the 'delete' button.
-            pubmedUrl = pubmedUrl +
-            '<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').removePubMed()">' +
-            '<img src="/Gemma/images/icons/cross.png"  ext:qtip="Remove publication"  /></a>&nbsp;';
-        }
-        
-        var pubmedRegion = {
-            id: 'pubmed-region',
-            xtype: 'panel',
-            baseCls: 'x-plain-panel',
-            html: pubmedUrl,
-            width: 380
-        };
-        return pubmedRegion;
-    },
-    
-    getPubMedForm: function(e){
-        var pubmedRegion = new Ext.Panel({
-            baseCls: 'x-plain-panel',
-            disabledClass: 'disabled-plain',
-            //id : 'pubmed-region',
-            width: 150,
-            layout: 'table',
-            layoutConfig: {
-                columns: 2
-            },
-            defaults: {
-                disabled: !this.editable,
-                disabledClass: 'disabled-plain',
-                fieldClass: 'x-bare-field'
-            },
-            items: [{
-                xtype: 'numberfield',
-                allowDecimals: false,
-                minLength: 7,
-                maxLength: 9,
-                allowNegative: false,
-                emptyText: this.isAdmin || this.isUser ? 'Enter pubmed id' : 'Not Available',
-                width: 100,
-                id: 'pubmed-id-field',
-                enableKeyEvents: true,
-                listeners: {
-                    'keyup': {
-                        fn: function(e){
-                            if (Ext.getCmp('pubmed-id-field').isDirty() &&
-                            Ext.getCmp('pubmed-id-field').isValid()) {
-                                // show save
-                                // button
-                                this.saveButton.show();
-                                Ext.getCmp('update-pubmed-region').show(true);
-                            }
-                            else {
-                                Ext.getCmp('update-pubmed-region').hide(true);
-                            }
-                        },
-                        scope: this
-                    }
-                }
-            }, {
-                baseCls: 'x-plain-panel',
-                id: 'update-pubmed-region',
-                html: '<span style="cursor:pointer" onClick="Ext.getCmp(\'ee-details-panel\').savePubMed(' +
-                e.id +
-                ',[\'shortname\',\'name\',\'description\'])" ><img src="/Gemma/images/icons/database_save.png"'+
-					' title="Click to save changes" alt="Click to save changes"/></span>',
-                hidden: true
-            }]
-        });
-        return pubmedRegion;
-    },
-    
     renderArrayDesigns: function(arrayDesigns){
         var result = '';
         for (var i = 0; i < arrayDesigns.length; i++) {
@@ -307,7 +165,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     linkAnalysisRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doLinks(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doLinks(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
         if (ee.dateLinkAnalysis) {
@@ -339,7 +197,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     missingValueAnalysisRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doMissingValues(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
         
@@ -376,7 +234,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     processedVectorCreateRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doProcessedVectors(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
         
@@ -406,7 +264,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     differentialAnalysisRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doDifferential(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doDifferential(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
         
@@ -442,19 +300,31 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
     },
     
-    build: function(experimentDetails){
+
+    initComponent: function(){
     
-        var e = experimentDetails;
+    	this.panelId = this.getId();
+        Gemma.ExpressionExperimentDetails.superclass.initComponent.call(this);
+        
+        // if no permissions hasWritePermission is no set.
+        if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
+            this.editable = true;
+        }
+		    
+		var panelId = this.getId();
+        var e = this.experimentDetails;
         var currentDescription = e.description
         var currentName = e.name;
         var currentShortName = e.shortName;
+		var currentPubMedId = e.pubmedId;
+		var currentPrimaryCitation = e.primaryCitation;
         var manager = new Gemma.EEManager({
             editable: this.editable,
-            id: "eemanager"
+            id: panelId+"eemanager"
         });
         this.manager = manager;
         
-        adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp(\'eemanager\').updateEEReport(' +
+        adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp('+panelId+'\'eemanager\').updateEEReport(' +
         e.id +
         ',\'admin-links\'' +
         ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></span>' +
@@ -464,29 +334,97 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         
         if (this.isAdmin) {
             adminLinks = adminLinks +
-            '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').deleteExperiment(' +
+            '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').deleteExperiment(' +
             e.id +
             ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></span>&nbsp;';
         }
         
-        var pubmedRegion = {};
-        
-        if (e.pubmedId) {
-            // display the citation, with link out and delete
-            // button.
-            pubmedRegion = this.getPubMedHtml(e);
-        }
-        else {
-            // offer to create a citation link.
-            pubmedRegion = this.getPubMedForm(e);
-        }
+		/*PUB MED REGION*/
+		
+		var pubMedDisplay = new Ext.Panel({
+			xtype: 'panel',
+			fieldLabel:'Publication',
+			baseCls: 'x-plain-panel',
+			style:'padding-top:5px',
+			tpl: new Ext.XTemplate(
+					'<tpl if="pubAvailable==\'true\'">' +
+						'{primaryCitation}' +
+						'&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"' +
+						' href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=' +
+						'{pubMedId}' +
+						'&query_hl=2&itool=pubmed_docsum"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp' +
+					'</tpl>'+
+					'<tpl if="pubAvailable==\'false\'">' +
+						'Not Available'+
+					'</tpl>'),
+			data:{
+				pubAvailable: (currentPubMedId)? 'true':'false',
+				primaryCitation:currentPrimaryCitation,
+				pubMedId:currentPubMedId
+			},
+			/*html: (currentPubMedId)?currentPrimaryCitation +
+			'&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"' +
+			' href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=' +
+			currentPubMedId +
+			'&query_hl=2&itool=pubmed_docsum"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp': 'Not Available' ,
+			*/listeners: {
+				'toggleEditMode': function(editOn){
+					this.setVisible(!editOn);
+				}
+			}
+		});
+		var pubMedIdField = new Ext.form.NumberField({
+			xtype: 'numberfield',
+			allowDecimals: false,
+			minLength: 7,
+			maxLength: 9,
+			allowNegative: false,
+			emptyText: (this.isAdmin || this.editable) ? 'Enter pubmed id' : 'Not Available',
+			width: 100,
+			value:currentPubMedId,
+			enableKeyEvents: true,
+			listeners: {
+				'keyup': function(field, event){
+					if (field.isDirty()) {
+						this.pubMedDirty = true;
+						field.fireEvent('changeMade', field.isValid());
+					}
+				},
+				scope: this
+			
+			}
+		});
+		var pubMedDelete = {
+			xtype: 'button',
+			text:'Clear',
+			icon:'/Gemma/images/icons/cross.png',
+			tooltip: 'Remove this experiment\'s association with this publication',
+			handler: function(){
+				pubMedIdField.setValue('');
+			},
+			scope:this
+		};
+		var pubMedForm = new Ext.Panel({
+			fieldLabel:'Publication',
+			xtype : 'panel',
+			layout:'hbox',
+			hidden: true,// hide until edit mode is activated
+			padding:3,
+			items : [pubMedIdField,pubMedDelete],
+			listeners:{
+                'toggleEditMode': function(editOn){
+					this.setVisible(editOn);
+					this.doLayout();
+                }
+			}
+		});
         
         /*
          * This is needed to make the annotator initialize properly.
          */
         new Gemma.MGEDCombo({});
         
-        var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').tagger(' + e.id + ',' +
+        var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').tagger(' + e.id + ',' +
         e.taxonId +
         ',' +
         this.editable +
@@ -533,9 +471,17 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         
         
         save = function(){
+			if (!this.saveMask) {
+				this.saveMask = new Ext.LoadMask(this.getEl(), {
+					msg: "Saving ..."
+					//,msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+				});
+			}
+			this.saveMask.show();
             var shortName = shortNameField.getValue();
             var description = descriptionArea.getValue();
             var name = nameArea.getValue();
+			var newPubMedId = pubMedIdField.getValue();
             
             var entity = {
                 entityId: e.id
@@ -552,20 +498,39 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             if (name != nameArea.originalValue) {
                 entity.name = name;
             }
-            
+			
+			if (!newPubMedId) {
+				entity.pubMedId = currentPubMedId;
+				entity.removePrimaryPublication = true;
+			}
+			else {
+				entity.pubMedId = newPubMedId;
+				entity.removePrimaryPublication = false;
+			}
+			// returns ee details object
             ExpressionExperimentController.updateBasics(entity, function(data){
             
                 shortNameField.setValue(data.shortName);
                 nameArea.setValue(data.name);
                 descriptionArea.setValue(data.description);
+				pubMedIdField.setValue(data.pubmedId);
+				pubMedDisplay.update({
+					pubAvailable: (data.pubmedId) ? 'true' : 'false',
+					primaryCitation: data.primaryCitation,
+					pubMedId: data.pubmedId
+				});
                 
                 currentShortName = data.shortName;
                 currentName = data.name;
                 currentDescription = data.description;
+				currentPubMedId = data.pubmedId;
+				currentPrimaryCitation = data.primaryCitation;
+				
+			this.saveMask.hide();
                 
-            }
-.createDelegate(this));
-        };
+            }.createDelegate(this));
+			
+        }.createDelegate(this);
         
         var descriptionArea = new Ext.form.TextArea({
             allowBlank: true,
@@ -663,6 +628,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             shortNameField.setValue(currentShortName);
             nameArea.setValue(currentName);
             descriptionArea.setValue(currentDescription);
+			pubMedIdField.setValue(currentPubMedId);
             saveBtn.disable();
             cancelBtn.disable();
         };
@@ -694,8 +660,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             handler: function(){
                 save();
                 this.fireEvent('toggleEditMode', false);
-            },
-            scope: this
+            }
+			,scope: this
         });
         var editEEButton = new Ext.Button({
             text: 'More edit options',
@@ -726,6 +692,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             nameArea.fireEvent('toggleEditMode', editOn);
             descriptionArea.fireEvent('toggleEditMode', editOn);
             shortNameField.fireEvent('toggleEditMode', editOn);
+			pubMedForm.fireEvent('toggleEditMode', editOn);
+			pubMedDisplay.fireEvent('toggleEditMode', editOn);
             resetEditableFields();
             saveBtn.setDisabled(!editOn);
             cancelBtn.setDisabled(!editOn);
@@ -788,17 +756,14 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                     width: 400
                 }, {
                     fieldLabel: 'Array designs',
-                    //id: 'arrayDesign-region',
                     html: this.renderArrayDesigns(e.arrayDesigns),
                     width: 480
                 }, {
                     fieldLabel: 'Coexpr. Links',
-                    //id: 'coexpressionLinkCount-region',
                     html: this.renderCoExpressionLinkCount(e),
                     width: 80
                 }, {
                     fieldLabel: 'Differential Expr. Analyses',
-                    //id: 'DiffExpressedProbes-region',
                     items: new Gemma.DifferentialExpressionAnalysesSummaryTree(e)
                 }, {
                     fieldLabel: 'Status',
@@ -809,16 +774,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 defaults: {
                     border: false
                 },
-                items: [{
-                    fieldLabel: 'Publication',
-                    xtype: 'panel',
-                    //id: 'pubmed-region-wrap',
-                    layout: 'fit',
-                    bodyBorder: false,
-                    baseCls: 'x-plain-panel',
-                    disabled: false,
-                    items: [pubmedRegion]
-                }, {
+                items: [pubMedDisplay,pubMedForm, {
                     fieldLabel: 'Created',
                     html: Ext.util.Format.date(e.dateCreated) + ' from ' + this.renderSourceDatabaseEntry(e)
                 }, {
