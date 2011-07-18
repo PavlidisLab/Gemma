@@ -6,14 +6,13 @@ import java.io.Writer;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
 
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 
-import ubic.gemma.web.util.JSONUtil;
+import ubic.gemma.util.JSONUtil;
 
 public class AjaxAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 

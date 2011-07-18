@@ -1,19 +1,19 @@
 package ubic.gemma.security.authentication;
 
 import java.io.IOException;
-import java.io.Writer;
+
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
-import ubic.gemma.web.util.JSONUtil;
+import ubic.gemma.util.JSONUtil;
 
 public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
