@@ -40,7 +40,7 @@ import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.JSONUtil;
+import ubic.gemma.util.JSONUtil;
 
 /**
  * Controller to signup new users. See also the {@see UserListController}.

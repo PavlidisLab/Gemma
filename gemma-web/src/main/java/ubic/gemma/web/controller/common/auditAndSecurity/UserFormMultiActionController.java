@@ -41,7 +41,7 @@ import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.util.JSONUtil;
+import ubic.gemma.util.JSONUtil;
 
 import org.apache.commons.validator.EmailValidator;
 
