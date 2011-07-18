@@ -28,7 +28,6 @@
 	
 </script>
 
-<div id="eepage"></div>
 
 <div id="loading-mask" style=""></div>
 <div id="loading">
@@ -40,10 +39,13 @@
 <input id="eeId" type="hidden" value="${eeId}" />
 <input id="taxonName" type="hidden" value="${taxonName}  " />
 
-
-
 <div spellcheck="false" id="eedetails">
 	<div id="messages"></div>
+</div>
+
+<div id="eepage"></div>
+
+<div spellcheck="false" id="eedetails">
 	<div id="basics" style="padding: 5px;"></div>
 	<div id="annotator" style="padding: 5px;"></div>
 

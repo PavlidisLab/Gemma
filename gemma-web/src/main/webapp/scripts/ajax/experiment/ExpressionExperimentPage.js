@@ -33,6 +33,8 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
 			this.editable = true;
 		}
+		var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
+		
 		var windowPadding = 3;
 		var minWidth = 800;
 		var minHeight = 600;
@@ -88,7 +90,7 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 				}
 				
 				this.add({
-					title: 'Experiment Design',
+					title: 'Experimental Design',
 					tbar: [{
 						text: 'Show Details',
 						tooltip: 'Go to the design details',
@@ -120,28 +122,6 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 					downloadLink: downloadLink,
 					params: [[eeId], geneList]
 				});
-				/*var vizPanel = new Ext.Panel({
-					padding: 0,
-					title: 'Visualize Expression',
-					layout: 'border',
-					items: [new Gemma.VisualizationWidgetGeneSearch({
-						ref: 'vizSelect',
-						height: 150,
-						width:200,
-						region: 'west',
-						split:true,
-						resizable:true,
-						collapsible: true,
-						autoScroll: true,
-						eeId: eeId,
-						visPanel: viz,
-						title: 'Select Genes to Visualize',
-						taxon: {
-							commonName: experimentDetails.parentTaxon,
-							id: experimentDetails.parentTaxonId
-						}
-					}), viz]
-				});*/
 				viz.on('render', function(){
 					viz.loadFromParam({
 						params: [[eeId], geneList]
@@ -161,12 +141,15 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 				
 				
 				/*DIAGNOSTICS TAB*/
+				var refreshDiagnosticsLink = '';
+				if(this.editable || isAdmin){
+					refreshDiagnosticsLink = '<a href="refreshCorrMatrix.html?id=' + experimentDetails.id + '"><img ' +
+					'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh" ' +
+					'alt="refresh" />Refresh</a><br>'
+				}
 				this.add({
 					title: 'Diagnostics',
-					html: '<a href="refreshCorrMatrix.html?id=' + experimentDetails.id + '"><img ' +
-					'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh" ' +
-					'alt="refresh" />Refresh</a><br>' +
-					experimentDetails.QChtml
+					html:  refreshDiagnosticsLink + experimentDetails.QChtml
 				});
 				
 				/*QUANTITATION TYPES TAB*/
@@ -176,7 +159,7 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 				}));
 				
 				/*HISTORY TAB*/
-				if (this.editable) {
+				if (isAdmin || this.editable) {
 					var history = new Gemma.AuditTrailGrid({
 						title: 'History',
 						bodyBorder: false,
@@ -194,7 +177,7 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 				}
 				
 				/*ADMIN TOOLS TAB*/
-				if (this.editable) {
+				if (isAdmin || this.editable) {
 					this.add(new Gemma.ExpressionExperimentTools({
 						experimentDetails: experimentDetails,
 						title: 'Admin',
@@ -208,3 +191,25 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 		});
 	}
 });
+
+/**
+ * Used to make the correlation heatmap clickable. See ExperimentQCTag.java
+ * 
+ * @param {Object}
+ *            bigImageUrl
+ */
+var popupImage = function(url, width, height) {
+	url = url + "&nocache=" + Math.floor(Math.random() * 1000);
+	var b = new Ext.Window({
+				modal : true,
+				stateful : false,
+				resizable : true,
+				autoScroll : true,
+				autoHeight : height, // or false.
+				width : width || 200,
+				// x : 50,
+				padding : 10,
+				html : '<img src=\"' + url + '"\" />'
+			});
+	b.show();
+}

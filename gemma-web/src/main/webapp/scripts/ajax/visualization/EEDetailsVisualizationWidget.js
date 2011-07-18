@@ -37,6 +37,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 		this.geneGroupCombo = new Gemma.GeneGroupCombo({
 					id : "visGeneGroupCombo",
 					hideTrigger:true,
+					emptyText:'Search for genes to visualize',
 					listeners : {
 						'select' : {
 							fn : function(combo, record, index) {
@@ -206,6 +207,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
 			typeAhead: false,
 			width: this.geneComboWidth || 300,
+			taxonId: this.taxonId,
 			listeners: {
 				'select': {
 					fn: function(combo, rec, index){
@@ -219,7 +221,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			}
 		});
 		this.vizBtn = new Ext.Toolbar.Button({
-			tooltip: "Visualize selected genes(s)",
+			tooltip: "Visualize selected gene(s)",
 			text: 'Visualize',
 			cls: 'x-toolbar-standardbutton',
 			handler: this.vizBtnHandler.createDelegate(this)
@@ -245,7 +247,8 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		this.geneSelectionEditor = new Gemma.VisualizationWidgetGeneSelectionGrid({
 					name : 'geneSelectionEditor',
 					hideHeaders : true,
-					frame : false
+					frame : false,
+					taxonId: this.taxonId
 				});
 
 		
@@ -286,7 +289,6 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 	launchGeneSelectionEditor : function() {
 
 		var geneIds = this.getGeneIds();
-		console.log("gis"+geneIds);
 		if (!geneIds || geneIds === null || geneIds.length === 0) {
 			return;
 		}
@@ -310,7 +312,6 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 	},
 	setGeneIds: function(ids){
 		this.geneIds = ids;
-		console.log("setting to"+ids);
 	},
 	updateButtonText: function(){
 		var numIds = this.getGeneIds().length;

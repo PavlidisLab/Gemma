@@ -203,7 +203,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			tbar: new Gemma.GeneAndGroupAdderToolbar({
 				extraButtons: this.extraButtons,
 				geneComboWidth: this.width - 50,
-				geneGrid : this
+				geneGrid : this,
+				taxonId: this.taxonId
 			})
 		});
 		// Create RowActions Plugin
@@ -490,7 +491,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			tbar: new Gemma.GeneAndGroupAdderToolbar({
 				extraButtons: this.extraButtons,
 				geneComboWidth: this.width - 50,
-				geneGrid : this
+				geneGrid : this,
+				taxonId: this.taxonId
 			})
 		});
 		// Create RowActions Plugin
@@ -974,6 +976,7 @@ Gemma.GeneAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 				
 				this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
 					typeAhead : false,
+					taxonId: this.taxonId,
 					width : 300,
 					listeners : {
 								'select' : {
