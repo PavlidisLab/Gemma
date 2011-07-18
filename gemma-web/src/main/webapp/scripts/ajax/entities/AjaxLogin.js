@@ -22,8 +22,7 @@ Gemma.AjaxLogin = Ext.extend(Ext.Window, {
 			items:[new Ext.FormPanel(
 		{
 			labelWidth :90,			
-			id :'_loginForm',
-			//standardSubmit :true,
+			id :'_loginForm',			
 			frame : true,
 			bodyStyle :'padding:5px 5px 0',
 			iconCls :'user-suit',
@@ -95,9 +94,10 @@ Gemma.AjaxLogin = Ext.extend(Ext.Window, {
 							text :'Login',
 							formBind:true,
 							type :'submit',
+							method : 'POST',
 							minWidth: 75,
-							handler : this.submitHandler,
-							scope: this
+							handler : this.submitHandler
+							
 						}
 						
 					]
@@ -141,20 +141,25 @@ Gemma.AjaxLogin = Ext.extend(Ext.Window, {
 						var sb = Ext.getCmp('my-status');
 						sb.clearStatus();
 						
+						
 						var link = Ext.getDom('footer-login-link');
 						link.href="/Gemma/j_spring_security_logout";
 						link.innerHTML="Logout";
 						
-						var hasuser = Ext.getDom('hasUser');
+						var dataMsg = Ext.util.JSON.decode(action.response.responseText);
 						
-						hasuser.value= true;
+						var loggedInAs = Ext.getDom('footer-login-status');
+						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
 						
-						//this.fireEvent("login_success");
+						var hasuser = Ext.getDom('hasUser');						
+						hasuser.value= true;						
 						
 						var loginWidget = Ext.getCmp("_ajaxLogin");
-						loginWidget.fireEvent("login_success");
+						loginWidget.fireEvent("login_success");						
 						
-						Ext.Msg.alert("Authentication Success","You are now logged in");
+						var dataMsg = Ext.util.JSON.decode(action.response.responseText);							
+						
+						Ext.Msg.alert("Authentication Success","You are now logged in as "+dataMsg.user);
 						
 	
 					},

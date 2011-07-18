@@ -211,66 +211,21 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			scope: this,
 			disabled: false
 		});
-		this._noSavePanel = new Ext.Panel({
-			layout: 'hbox',
-			width: 250,
-			border: false,
-			bodyBorder: false,
-			bodyStyle: 'background: transparent',
-			padding: 0,
-			defaults: {
-				border: false,
-				bodyBorder: false,
-				bodyStyle: 'background: transparent',
-				padding: 0
-			},
-			items: [{
-				html: 'You must be logged in',
-				style: 'padding-top:3px'
-			}, 
-			/*new Ext.LinkButton({
-				text: 'logged in',
-				handler: this.login,
-				scope: this
-			}),*/ {
-				html: 'to save this selection.',
-				style: 'padding-top:3px'
-			}/*, {
-				xtype: 'button',
-				icon: '/Gemma/images/icons/arrow_refresh_small.png',
-				qtip: 'Refresh your login state',
-				handler: function(){
-					// TODO re-evaluate what buttons they can see
-					this.setButtonVisibilities();
-					//console.log("logged in :"+Ext.get('hasUser').getValue());
-					this.doLayout();
-				},
-				scope: this
-			}*/]
-		});
+	
 		Ext.apply(this, {
 		
 			setButtonVisibilities: function(){
-				if (Ext.get('hasUser').getValue()) {
-					this.saveButton.show();
-				}
-				else {
-					this.saveButton.hide();
-				}
+				
+				this.saveButton.show();
+				
 				if (this.allowSaveToSession) {
 					this.doneButton.show();
 				}
 				else {
 					this.doneButton.hide();
-				}
-				if (!Ext.get('hasUser').getValue() && !this.allowSaveToSession) {
-					this._noSavePanel.show();
-				}
-				else {
-					this._noSavePanel.hide();
-				}
+				}				
 			},
-			buttons: [this.saveButton, this.doneButton, this._noSavePanel, this.exportButton, {
+			buttons: [this.saveButton, this.doneButton, this.exportButton, {
 				text: "Cancel",
 				handler: this.cancel,
 				scope: this
@@ -322,6 +277,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			plugins : [this.action]
 		});
 
+		
+		this.ajaxLogin = null;
+		this.ajaxRegister = null;
+		
 		Gemma.ExpressionExperimentMembersGrid.superclass.initComponent.call(this);
 
 		this.on('doneModification', function() {
@@ -440,6 +399,52 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		window.open(downloadLink);
 	},
 
+	
+	launchRegisterWidget : function(){
+		if (this.ajaxRegister == null){
+			
+			//Check to see if another register widget is open (rare case but possible)
+			var otherOpenRegister = Ext.getCmp('_ajaxRegister');				
+				
+			//if another register widget is open, fire its event to close it and destroy it before launching this one
+			if (otherOpenRegister!=null){
+				otherOpenRegister.fireEvent("register_cancelled");
+			}	
+			
+			
+			
+			this.ajaxRegister = new Gemma.AjaxRegister({					
+					name : 'ajaxRegister',									
+					closable : false,
+					//closeAction : 'hide',													
+					title : 'Please Register'
+				
+					
+				});			
+			
+			this.ajaxRegister.on("register_cancelled",function(){
+				
+				this.ajaxRegister.destroy();
+				this.ajaxRegister = null;
+				this.getEl().unmask();				
+				
+			},this);
+			
+			this.ajaxRegister.on("register_success",function(){
+				
+				this.ajaxRegister.destroy();
+				this.ajaxRegister = null;
+				this.getEl().unmask();				
+				
+			},this);
+			
+						
+			}
+		this.getEl().mask();	
+		this.ajaxRegister.show();
+	},
+	
+	
 	/**
 	 * When user clicks 'save', figure out what kind of save to do
 	 */
@@ -453,9 +458,64 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// save button should only be visible if user is logged in, but just to
 		// be safe:
 		if (!Ext.get('hasUser').getValue()) {
-			Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+
-							" however, your list will be available temporarily.");
-			this.saveToSession();
+			
+			if (this.ajaxLogin == null){				
+				
+				//Check to see if another login widget is open (rare case but possible)
+				var otherOpenLogin = Ext.getCmp('_ajaxLogin');				
+				
+				//if another login widget is open, fire its event to close it and destroy it before launching this one
+				if (otherOpenLogin!=null){
+					otherOpenLogin.fireEvent("login_cancelled");
+				}				
+				
+				
+				this.ajaxLogin = new Gemma.AjaxLogin({					
+					name : 'ajaxLogin',									
+					closable : false,
+					//closeAction : 'hide',													
+					title : 'Please login to use this function'
+				
+					
+				});			
+			
+			
+				this.ajaxLogin.on("login_success",function(){
+					this.getEl().unmask();		
+					this.ajaxLogin.destroy();
+					this.ajaxLogin = null;
+					this.save();
+				
+				
+				},this);
+			
+				this.ajaxLogin.on("register_requested",function(){
+				
+					this.getEl().unmask();		
+					this.ajaxLogin.destroy();
+					this.ajaxLogin = null;
+					this.launchRegisterWidget();
+				
+				
+				},this);
+			
+				this.ajaxLogin.on("login_cancelled",function(){
+				
+					this.ajaxLogin.destroy();
+					this.ajaxLogin = null;
+					this.getEl().unmask();				
+				
+				},this);
+				
+				
+				this.getEl().mask();
+				this.ajaxLogin.show();
+			
+				
+		
+			
+			}
+			
 		} else {
 
 			// if geneGroupId is null, then there was no group to start with

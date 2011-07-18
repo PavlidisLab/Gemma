@@ -20,8 +20,7 @@ Gemma.AjaxRegister = Ext.extend(Ext.Window, {
 		items:[new Ext.FormPanel({
 			id : '_registerForm',
 			labelWidth : 140, // label settings here cascade unless overridden
-			url : '/Gemma/signup.html',
-			//renderTo : 'signup',
+			url : '/Gemma/signup.html',			
 			frame : true,
 			monitorValid : true, // use with formBind in Button for client side validation
 			bodyStyle : 'padding:5px 5px 0',

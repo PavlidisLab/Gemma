@@ -177,20 +177,13 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 				
 		var buttons = [];
-		//if (Ext.get('hasUser').getValue()) {
+		
 			buttons.push(this.saveButton);
-		//}
+		
 		if( this.allowSaveToSession ) {
 			buttons.push(this.doneButton);
 		}
-		if(!Ext.get('hasUser').getValue() && !this.allowSaveToSession){
-			buttons.push({
-					xtype: 'panel',
-					html: 'You must be logged in to save this selection.',
-					border:false,
-					bodyStyle:'background: transparent'
-			});
-		}
+		
 		buttons.push(this.exportButton,{
 			text: "Cancel",
 			handler: this.cancel,
@@ -465,20 +458,13 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		});
 				
 		var buttons = [];
-		//if (Ext.get('hasUser').getValue()) {
+		
 			buttons.push(this.saveButton);
-		//}
+		
 		if( this.allowSaveToSession ) {
 			buttons.push(this.doneButton);
 		}
-		if(!Ext.get('hasUser').getValue() && !this.allowSaveToSession){
-			buttons.push({
-					xtype: 'panel',
-					html: 'You must be logged in to save this selection.',
-					border:false,
-					bodyStyle:'background: transparent'
-			});
-		}
+		
 		buttons.push(this.exportButton,{
 			text: "Cancel",
 			handler: this.cancel,
@@ -742,6 +728,16 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	
 	launchRegisterWidget : function(){
 		if (this.ajaxRegister == null){
+			
+			//Check to see if another register widget is open (rare case but possible)
+				var otherOpenRegister = Ext.getCmp('_ajaxRegister');				
+				
+				//if another register widget is open, fire its event to close it and destroy it before launching this one
+				if (otherOpenRegister!=null){
+					otherOpenRegister.fireEvent("register_cancelled");
+				}	
+			
+			
 			this.ajaxRegister = new Gemma.AjaxRegister({					
 					name : 'ajaxRegister',									
 					closable : false,
@@ -753,14 +749,16 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			
 			this.ajaxRegister.on("register_cancelled",function(){
 				
-				this.ajaxRegister.hide();
+				this.ajaxRegister.destroy();
+				this.ajaxRegister = null;
 				this.getEl().unmask();				
 				
 			},this);
 			
 			this.ajaxRegister.on("register_success",function(){
 				
-				this.ajaxRegister.hide();
+				this.ajaxRegister.destroy();
+				this.ajaxRegister = null;
 				this.getEl().unmask();				
 				
 			},this);
@@ -786,6 +784,16 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			
 			
 		if (this.ajaxLogin == null){
+			
+			//Check to see if another login widget is open (rare case but possible)
+				var otherOpenLogin = Ext.getCmp('_ajaxLogin');				
+				
+				//if another login widget is open, fire its event to close it and destroy it before launching this one
+				if (otherOpenLogin!=null){
+					otherOpenLogin.fireEvent("login_cancelled");
+				}		
+			
+			
 			this.ajaxLogin = new Gemma.AjaxLogin({					
 					name : 'ajaxLogin',									
 					closable : false,
@@ -798,7 +806,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			
 			this.ajaxLogin.on("login_success",function(){
 				this.getEl().unmask();		
-				this.ajaxLogin.hide();
+				this.ajaxLogin.destroy();
+				this.ajaxLogin=null;
 				this.save();
 				
 				
@@ -807,7 +816,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			this.ajaxLogin.on("register_requested",function(){
 				
 				this.getEl().unmask();		
-				this.ajaxLogin.hide();
+				this.ajaxLogin.destroy();
+				this.ajaxLogin=null;
 				this.launchRegisterWidget();
 				
 				
@@ -815,7 +825,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			
 			this.ajaxLogin.on("login_cancelled",function(){
 				
-				this.ajaxLogin.hide();
+				this.ajaxLogin.destroy();
+				this.ajaxLogin=null;
 				this.getEl().unmask();				
 				
 			},this);
@@ -824,7 +835,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 			this.getEl().mask();
 			this.ajaxLogin.show();
-			//this.createInSession();
+			
 		} else {
 
 			// if geneGroupId is null, then there was no group to start with
