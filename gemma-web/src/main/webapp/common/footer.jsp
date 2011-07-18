@@ -10,13 +10,13 @@
 	<span class="left">Centre for High-Throughput Biology&nbsp;|&nbsp;Copyright &copy; 2007-2011 &nbsp;</span>
 
 	<c:if test="${not empty pageContext.request.remoteUser}">
-		<span class="right"> <fmt:message key="user.status" /> <security:authentication property="principal.username" />
-			| <a href="<c:url value="/j_spring_security_logout"/>"> <fmt:message key="user.logout" /> </a> </span>
+		<span class="right"> <div id="footer-login-status"><fmt:message key="user.status" /> <security:authentication property="principal.username" /></div>
+			| <a id="footer-login-link" href="<c:url value="/j_spring_security_logout"/>"> <fmt:message key="user.logout" /> </a> </span>
 
 	</c:if>
 	<span class="left"><a href='<c:url value="/static/termsAndConditions.html" />'>Terms and conditions</a> </span>
 	<c:if test="${empty pageContext.request.remoteUser}">
-		<span class="right"> | <a title="Login is not needed for use of Gemma" href="<c:url value="/login.jsp"/>"
+		<span class="right"><div id="footer-login-status"></div> | <a id="footer-login-link" title="Login is not needed for use of Gemma" href="<c:url value="/login.jsp"/>"
 			class="current"><fmt:message key="login.title" /> </a> </span>
 	</c:if>
 
