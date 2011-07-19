@@ -26,6 +26,18 @@ Gemma.ExpressionExperimentPage =  Ext.extend(Ext.TabPanel, {
 		//padding: 10
 	},
 	deferredRender: true,
+	listeners: {
+		'tabchange': function(tabPanel, newTab){
+			newTab.fireEvent('tabChanged');
+		},
+		'beforetabchange': function(tabPanel, newTab, currTab){
+			// if false is returned, tab isn't changed
+			if(currTab){
+				return currTab.fireEvent('leavingTab');
+			}
+			return true;
+		}
+	},
 	initComponent: function(){
 	
 		var eeId = this.eeId;

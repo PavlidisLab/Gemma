@@ -12,6 +12,22 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  *
  */
 Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
+	
+	listeners:{
+		leavingTab: function(){
+			if(this.editModeOn){
+				var leave = confirm("You are still in edit mode. Unsaved changes will be discarded when you switch tabs. Do you want to continue?");
+				if(leave){
+					return true;
+				}
+				return false;
+			}
+			return true;
+		},
+		tabChanged: function(){
+			this.fireEvent('toggleEditMode', false);
+		}
+	},
 
     renderArrayDesigns: function(arrayDesigns){
         var result = '';
@@ -165,7 +181,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     linkAnalysisRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doLinks(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''+panelId+'eemanager\').doLinks(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
         if (ee.dateLinkAnalysis) {
@@ -197,7 +213,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     missingValueAnalysisRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doMissingValues(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''+panelId+'eemanager\').doMissingValues(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
         
@@ -234,7 +250,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     processedVectorCreateRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doProcessedVectors(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''+panelId+'eemanager\').doProcessedVectors(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
         
@@ -264,7 +280,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     differentialAnalysisRenderer: function(ee){
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').doDifferential(' +
+        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''+panelId+'eemanager\').doDifferential(' +
         id +
         ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
         
@@ -324,7 +340,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         });
         this.manager = manager;
         
-        adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp('+panelId+'\'eemanager\').updateEEReport(' +
+        adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp(\''+panelId+'eemanager\').updateEEReport(' +
         e.id +
         ',\'admin-links\'' +
         ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></span>' +
@@ -334,7 +350,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         
         if (this.isAdmin) {
             adminLinks = adminLinks +
-            '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').deleteExperiment(' +
+            '<span style="cursor:pointer" onClick="return Ext.getCmp(\''+panelId+'eemanager\').deleteExperiment(' +
             e.id +
             ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></span>&nbsp;';
         }
@@ -424,7 +440,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
          */
         new Gemma.MGEDCombo({});
         
-        var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp('+panelId+'\'eemanager\').tagger(' + e.id + ',' +
+        var taggerurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\''+panelId+'eemanager\').tagger(' + e.id + ',' +
         e.taxonId +
         ',' +
         this.editable +
@@ -474,7 +490,6 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 			if (!this.saveMask) {
 				this.saveMask = new Ext.LoadMask(this.getEl(), {
 					msg: "Saving ..."
-					//,msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 				});
 			}
 			this.saveMask.show();
@@ -487,24 +502,25 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 entityId: e.id
             };
             
-            if (shortName != shortNameField.originalValue) {
+            if (shortName != currentShortName) {
                 entity.shortName = shortName;
             }
             
-            if (description != descriptionArea.originalValue) {
+            if (description != currentDescription) {
                 entity.description = description;
             }
             
-            if (name != nameArea.originalValue) {
+            if (name != currentName) {
                 entity.name = name;
             }
 			
 			if (!newPubMedId) {
 				entity.pubMedId = currentPubMedId;
 				entity.removePrimaryPublication = true;
-			}
-			else {
+			}else if(newPubMedId !== currentPubMedId){
 				entity.pubMedId = newPubMedId;
+				entity.removePrimaryPublication = false;
+			}else {
 				entity.removePrimaryPublication = false;
 			}
 			// returns ee details object
@@ -648,7 +664,6 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             disabled: true,
             toolTip: 'Reset all fields to saved values',
             handler: function(){
-                resetEditableFields();
                 this.fireEvent('toggleEditMode', false);
             },
             scope: this
@@ -687,6 +702,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         
         this.on('toggleEditMode', function(editOn){
             // is there a way to make this even propagate to all children automatically?
+			this.editModeOn = editOn; // needed to warn user before tab change
             editBtn.setText((editOn) ? 'Editing mode on' : 'Start editing');
             editBtn.setDisabled(editOn);
             nameArea.fireEvent('toggleEditMode', editOn);
@@ -697,6 +713,9 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             resetEditableFields();
             saveBtn.setDisabled(!editOn);
             cancelBtn.setDisabled(!editOn);
+			if(!editOn){
+                resetEditableFields();
+			}
         });
         
         this.on('changeMade', function(wasValid){
@@ -706,7 +725,6 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             
         });
         var basics = new Ext.Panel({
-            //layout: 'form',
             ref: 'fieldPanel',
             collapsible: false,
             bodyBorder: false,
@@ -720,7 +738,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             },
             tbar: new Ext.Toolbar({
                 hidden: !this.editable,
-                items: [editBtn, ' ', cancelBtn, ' ', saveBtn, '-', editEEButton, '-', deleteEEButton]
+                items: [editBtn, ' ', saveBtn, ' ', cancelBtn, '-', editEEButton, '-', deleteEEButton]
             }),
             items: [shortNameField, nameArea, {
                 layout: 'form',
