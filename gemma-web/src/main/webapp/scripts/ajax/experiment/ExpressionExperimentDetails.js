@@ -13,10 +13,11 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  */
 Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 	
+	dirtyForm : false,
 	listeners:{
 		leavingTab: function(){
-			if(this.editModeOn){
-				var leave = confirm("You are still in edit mode. Unsaved changes will be discarded when you switch tabs. Do you want to continue?");
+			if(this.editModeOn && this.dirtyForm){
+				var leave = confirm("You are still in edit mode. Your unsaved changes will be discarded when you switch tabs. Do you want to continue?");
 				if(leave){
 					return true;
 				}
@@ -340,21 +341,6 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         });
         this.manager = manager;
         
-        adminLinks = '<span style="cursor:pointer" onClick="Ext.getCmp(\''+panelId+'eemanager\').updateEEReport(' +
-        e.id +
-        ',\'admin-links\'' +
-        ')"><img src="/Gemma/images/icons/arrow_refresh_small.png" ext:qtip="Refresh statistics"  title="refresh"/></span>' +
-        '&nbsp;<a href="/Gemma/expressionExperiment/editExpressionExperiment.html?id=' +
-        e.id +
-        '"  ><img src="/Gemma/images/icons/wrench.png" ext:qtip="Go to editor page for this experiment" title="edit"/></span>&nbsp;';
-        
-        if (this.isAdmin) {
-            adminLinks = adminLinks +
-            '<span style="cursor:pointer" onClick="return Ext.getCmp(\''+panelId+'eemanager\').deleteExperiment(' +
-            e.id +
-            ')"><img src="/Gemma/images/icons/cross.png" ext:qtip="Delete the experiment from the system" title="delete" /></span>&nbsp;';
-        }
-        
 		/*PUB MED REGION*/
 		
 		var pubMedDisplay = new Ext.Panel({
@@ -399,10 +385,10 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 			width: 100,
 			value:currentPubMedId,
 			enableKeyEvents: true,
+            bubbleEvents: ['changeMade'],
 			listeners: {
 				'keyup': function(field, event){
 					if (field.isDirty()) {
-						this.pubMedDirty = true;
 						field.fireEvent('changeMade', field.isValid());
 					}
 				},
@@ -415,8 +401,10 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 			text:'Clear',
 			icon:'/Gemma/images/icons/cross.png',
 			tooltip: 'Remove this experiment\'s association with this publication',
+            bubbleEvents: ['changeMade'],
 			handler: function(){
 				pubMedIdField.setValue('');
+				field.fireEvent('changeMade', true);
 			},
 			scope:this
 		};
@@ -542,9 +530,11 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 				currentPubMedId = data.pubmedId;
 				currentPrimaryCitation = data.primaryCitation;
 				
+			this.dirtyForm = false;
 			this.saveMask.hide();
                 
             }.createDelegate(this));
+			
 			
         }.createDelegate(this);
         
@@ -553,6 +543,10 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             resizable: true,
             readOnly: true,
             disabled: true,
+			growMin:1,
+			growMax:150,
+			growAppend:'',
+			grow : true,
             disabledClass: 'disabled-plain',
             fieldClass: '',
             emptyText: 'No description provided',
@@ -576,7 +570,6 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 }
             },
             style: 'width: 100%; background-color: #fcfcfc; border: 1px solid #cccccc;',
-            height: 150,
             value: currentDescription
         });
         
@@ -695,7 +688,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             toolTip: 'Delete the experiment from the system',
             disabled: !this.editable,
             handler: function(){
-                manager.deleteExperiment(this.experimentDetails.id);
+                manager.deleteExperiment(this.experimentDetails.id, true);
             },
             scope: this
         });
@@ -715,6 +708,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             cancelBtn.setDisabled(!editOn);
 			if(!editOn){
                 resetEditableFields();
+				this.dirtyForm = false;
 			}
         });
         
@@ -722,6 +716,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             // enable save button
             saveBtn.setDisabled(!wasValid);
             cancelBtn.setDisabled(!wasValid);
+			this.dirtyForm = true;
             
         });
         var basics = new Ext.Panel({

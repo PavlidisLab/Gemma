@@ -5,6 +5,8 @@ Ext.namespace('Gemma');
  * <p>
  * See http://www.extjs.com/forum/showthread.php?t=71532.
  * 
+ * sortData function override revised to suit new ext version (Thea)
+ * 
  * @class Ext.ux.data.PagingStore
  * @extends Ext.data.Store
  * @version $Id$
@@ -194,21 +196,50 @@ Ext.ux.data.PagingStore = Ext.extend(Ext.data.Store, {
 	getTotalCount : function() {
 		return this.allData ? this.allData.getCount() : this.totalLength || 0;
 	},
+	
 	sortData : function(f, direction) {
-		direction = direction || 'ASC';
-		var st = this.fields.get(f).sortType;
-		var fn = function(r1, r2) {
-			var v1 = st(r1.data[f]), v2 = st(r2.data[f]);
-			return v1 > v2 ? 1 : (v1 < v2 ? -1 : 0);
-		};
-		if (this.allData) {
-			this.data = this.allData;
-			delete this.allData;
-		}
-		this.data.sort(direction, fn);
-		if (this.snapshot && this.snapshot != this.data) {
-			this.snapshot.sort(direction, fn);
-		}
+		 var sortInfo  = this.hasMultiSort ? this.multiSortInfo : this.sortInfo,
+            direction = sortInfo.direction || "ASC",
+            sorters   = sortInfo.sorters,
+            sortFns   = [];
+
+        //if we just have a single sorter, pretend it's the first in an array
+        if (!this.hasMultiSort) {
+            sorters = [{direction: direction, field: sortInfo.field}];
+        }
+
+        //create a sorter function for each sorter field/direction combo
+        for (var i=0, j = sorters.length; i < j; i++) {
+            sortFns.push(this.createSortFunction(sorters[i].field, sorters[i].direction));
+        }
+        
+        if (sortFns.length == 0) {
+            return;
+        }
+
+        //the direction modifier is multiplied with the result of the sorting functions to provide overall sort direction
+        //(as opposed to direction per field)
+        var directionModifier = direction.toUpperCase() == "DESC" ? -1 : 1;
+
+        //create a function which ORs each sorter together to enable multi-sort
+        var fn = function(r1, r2) {
+          var result = sortFns[0].call(this, r1, r2);
+
+          //if we have more than one sorter, OR any additional sorter functions together
+          if (sortFns.length > 1) {
+              for (var i=1, j = sortFns.length; i < j; i++) {
+                  result = result || sortFns[i].call(this, r1, r2);
+              }
+          }
+
+          return directionModifier * result;
+        };
+
+        //sort the data
+        this.data.sort(direction, fn);
+        if (this.snapshot && this.snapshot != this.data) {
+            this.snapshot.sort(direction, fn);
+        }
 		this.applyPaging();
 	},
 	filterBy : function(fn, scope) {

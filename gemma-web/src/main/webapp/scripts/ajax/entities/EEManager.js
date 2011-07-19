@@ -329,7 +329,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 		w.show();
 	},
 
-	deleteExperiment : function(id) {
+	deleteExperiment : function(id, redirectHome) {
 		Ext.Msg.show({
 					title : 'Really delete?',
 					msg : 'Are you sure you want to delete the experiment? This cannot be undone.',
@@ -355,9 +355,12 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
-							/* after deletion, clear bottom details pane */
-							Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
-
+							if(redirectHome){
+								window.location = '/Gemma/home.html';
+							}else{
+								/* after deletion, clear bottom details pane */
+								Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
+							}
 						}
 					},
 					scope : this,
