@@ -112,6 +112,8 @@ public interface UserManager extends UserDetailsManager, GroupManager {
      */
     public Collection<User> loadAll();
 
+    public boolean loggedIn();
+    
     /**
      * Sign in the user identified
      * 

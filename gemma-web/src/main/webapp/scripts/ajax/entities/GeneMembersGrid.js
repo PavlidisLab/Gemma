@@ -773,10 +773,49 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	 * When user clicks 'save', figure out what kind of save to do
 	 */
 	save : function() {
+				
+		Ext.Ajax.request({
+         	url : '/Gemma/ajaxLoginCheck.html',
+            method: 'GET',                  
+            success: function ( response, options ) {			
+					
+                    var dataMsg = Ext.util.JSON.decode(response.responseText);                    
+                    var link = Ext.getDom('footer-login-link');
+                    var loggedInAs = Ext.getDom('footer-login-status');
+                    var hasuser = Ext.getDom('hasUser');
+                    
+                    if (dataMsg.success){
+						link.href="/Gemma/j_spring_security_logout";
+						link.innerHTML="Logout"; 
+						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
+						hasuser.value= true;
+					}
+                    else{
+                    	link.href="/Gemma/login.jsp";
+						link.innerHTML="Login";
+						loggedInAs.innerHTML=" ";
+						hasuser.value= "";                    	
+                    }
+					this.saveAfterCheck();
+                      
+            },
+            failure: function ( response, options ) {            	   					
+					this.saveAfterCheck();
+            },
+            scope: this,
+            disableCaching: true
+       });
 
+		
+
+		
+
+	},
+	saveAfterCheck : function () {
+		
 		// get name and description set up
 		this.createDetails();
-
+		
 		// save button should only be visible if user is not logged in, but just
 		// to be safe:
 		if (!Ext.get('hasUser').getValue()) {
@@ -879,7 +918,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 				}
 			}
 		}
-
+		
 	},
 	createInSession : function() {
 		var ids = this.getGeneIds();

@@ -159,7 +159,7 @@ Gemma.AjaxLogin = Ext.extend(Ext.Window, {
 						
 						var dataMsg = Ext.util.JSON.decode(action.response.responseText);							
 						
-						Ext.Msg.alert("Authentication Success","You are now logged in as "+dataMsg.user);
+						
 						
 	
 					},

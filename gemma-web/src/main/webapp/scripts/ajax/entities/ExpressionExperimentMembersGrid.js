@@ -446,9 +446,51 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	
 	
 	/**
-	 * When user clicks 'save', figure out what kind of save to do
+	 * When user clicks 'save', check if they are logged in or not, then in the callback, call saveAfterCheck
 	 */
 	save : function() {
+				
+		Ext.Ajax.request({
+         	url : '/Gemma/ajaxLoginCheck.html',
+            method: 'GET',                  
+            success: function ( response, options ) {			
+					
+                    var dataMsg = Ext.util.JSON.decode(response.responseText);                    
+                    var link = Ext.getDom('footer-login-link');
+                    var loggedInAs = Ext.getDom('footer-login-status');
+                    var hasuser = Ext.getDom('hasUser');
+                    
+                    if (dataMsg.success){
+						link.href="/Gemma/j_spring_security_logout";
+						link.innerHTML="Logout"; 
+						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
+						hasuser.value= true;
+					}
+                    else{
+                    	link.href="/Gemma/login.jsp";
+						link.innerHTML="Login";
+						loggedInAs.innerHTML=" ";
+						hasuser.value= "";                    	
+                    }
+					this.saveAfterCheck();
+                      
+            },
+            failure: function ( response, options ) {            	   					
+					this.saveAfterCheck();
+            },
+            scope: this,
+            disableCaching: true
+       });
+
+		
+
+		
+
+	},
+	
+	
+	
+	saveAfterCheck : function() {
 
 		// if the user hasn't made any changes, save anyway
 

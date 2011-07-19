@@ -241,4 +241,24 @@ public class SignupController extends BaseController {
         ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer( remoteAddr, rcChallenge, rcResponse );
         return reCaptchaResponse.isValid();
     }
+    
+    @RequestMapping(value = "/ajaxLoginCheck.html")
+    public void ajaxLoginCheck( HttpServletRequest request, HttpServletResponse response ) throws Exception {
+
+        JSONUtil jsonUtil = new JSONUtil( request, response );
+        
+        String jsonText = null;
+        String userName = null;
+        
+        if (userManager.loggedIn()){            
+            userName = userManager.getCurrentUser().getUserName();            
+            jsonText = "{success:true,user:\'"+ userName +"\'}";            
+        }
+        else{
+            jsonText = "{success:false}";
+        }
+        jsonUtil.writeToResponse( jsonText );
+        return;
+       
+    }
 }
