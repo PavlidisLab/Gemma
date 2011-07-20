@@ -50,14 +50,20 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
+import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.WebConstants;
+import ubic.gemma.web.genome.gene.GeneDetailsValueObject;
+import ubic.gemma.web.image.aba.ImageValueObject;
 import ubic.gemma.web.view.TextView;
 
 /**
@@ -93,6 +99,8 @@ public class GeneController extends BaseController {
     @Autowired
     private GeneSetService geneSetService = null;
 
+    @Autowired
+    private GeneSetSearch geneSetSearch;
     /**
      * For ajax
      * 
@@ -146,6 +154,49 @@ public class GeneController extends BaseController {
         return gene.getProducts();
     }
 
+    /**
+     * AJAX used for gene page
+     * @param geneId
+     * @return
+     */
+    public GeneDetailsValueObject loadGeneDetails(Long geneId){
+        
+        Gene gene = geneService.load( geneId );
+        // need to thaw for aliases (at least)
+        gene = geneService.thaw( gene );
+        
+        Collection<Long> ids = new HashSet<Long>();
+        ids.add( gene.getId() );
+        Collection<GeneValueObject> initialResults = geneService.loadValueObjects( ids );
+
+        if ( initialResults.size() == 0 ) {
+            return null;
+        }
+
+        GeneValueObject initialResult = initialResults.iterator().next();
+        GeneDetailsValueObject details = new GeneDetailsValueObject( initialResult );
+        
+        Collection<GeneAlias> aliasObjs = gene.getAliases();
+        Collection<String> aliasStrs = new ArrayList<String>();
+        for(GeneAlias ga : aliasObjs){
+            aliasStrs.add( ga.getAlias() );
+        }
+        details.setAliases( aliasStrs );
+        
+        Long compositeSequenceCount = geneService.getCompositeSequenceCountById( geneId );
+        details.setCompositeSequenceCount( compositeSequenceCount );
+                
+        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
+        Collection<GeneSetValueObject> gsvos = GeneSetValueObject.convert2ValueObjects( genesets, false );
+        details.setGeneSets( gsvos );
+        
+        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
+        details.setHomologues( homologues );
+                
+        return details;
+        
+    }
     /**
      * @param request
      * @param response
@@ -338,6 +389,40 @@ public class GeneController extends BaseController {
             }
 
         }
+    }
+    /**
+     * AJAX
+     * NOTE: this method updates the value object passed in
+     * @param gene
+     * @param GeneDetailsValueObject gdvo the details object to set the values for
+     */
+    public Collection<ImageValueObject> loadAllenBrainImages( Long geneId ) {
+        Collection<ImageValueObject> images = new ArrayList<ImageValueObject>();
+        Gene gene = geneService.load( geneId );
+        // need to thaw for aliases (at least)
+        gene = geneService.thaw( gene );
+        
+        final Taxon mouse = this.taxonService.findByCommonName( "mouse" );
+        Gene mouseGene = gene;
+        if ( !gene.getTaxon().equals( mouse ) ) {
+            mouseGene = this.homologeneService.getHomologue( gene, mouse );
+        }
+
+        if ( mouseGene != null ) {
+            Collection<ImageSeries> imageSeries = null;
+
+            try {
+                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
+                String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
+
+                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject( mouseGene ) );
+                
+            } catch ( IOException e ) {
+                log.warn( "Could not get ABA data: " + e );
+            }
+        }
+        return images;
     }
 
     /**

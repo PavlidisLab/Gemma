@@ -5,10 +5,12 @@ Ext.namespace('Gemma');
  * Top level container for all sections of expression experiment info
  * Sections are:
  * 1. Details 
- * 2. Data
- * 3. Diagnostics
- * 4. Quantitation Types ?
- * 5. Tools (admin only)
+ * 2. Experimental design
+ * 3. Expression visualisation
+ * 4. Diagnostics
+ * 5. Quantitation Types ?
+ * 6. History (admin only)
+ * 7. Admin (running analyses)
  * 
  * @class Gemma.ExpressionExperimentPage
  * @extends Ext.TabPanel

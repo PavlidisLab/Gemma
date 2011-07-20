@@ -22,6 +22,7 @@ package ubic.gemma.model.genome.gene;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import ubic.gemma.model.genome.Gene;
 
@@ -42,7 +43,7 @@ public class GeneValueObject implements java.io.Serializable {
 
         for ( Gene g : genes ) {
             if ( g == null ) continue;
-            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g.getAliases()), g.getNcbiId(), g.getOfficialSymbol(), g
+            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiId(), g.getOfficialSymbol(), g
                     .getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g.getTaxon()
                     .getScientificName(), g.getTaxon().getCommonName() ) );
         }
@@ -105,7 +106,7 @@ public class GeneValueObject implements java.io.Serializable {
         this.name = gene.getName();
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
-        this.aliases = getAliasStrings( gene.getAliases() );
+        this.aliases = getAliasStrings( gene );
     }
 
     /**
@@ -116,7 +117,7 @@ public class GeneValueObject implements java.io.Serializable {
     public GeneValueObject( GeneSetMember otherBean ) {
 
 
-        this( otherBean.getGene().getId(), otherBean.getGene().getName(), getAliasStrings( otherBean.getGene().getAliases() ), 
+        this( otherBean.getGene().getId(), otherBean.getGene().getName(), getAliasStrings( otherBean.getGene() ), 
                 otherBean.getGene().getNcbiId(), otherBean
                 .getGene().getOfficialSymbol(), otherBean.getGene().getOfficialName(), otherBean.getGene()
                 .getDescription(), otherBean.getScore(), otherBean.getGene().getTaxon().getId(), otherBean.getGene()
@@ -169,16 +170,19 @@ public class GeneValueObject implements java.io.Serializable {
     }
     
 
-    public static Collection<String> getAliasStrings(Collection<GeneAlias> aliasObjs){
+    public static Collection<String> getAliasStrings(Gene gene){
         Collection<java.lang.String> aliases = new ArrayList<String>();
-        // catch doesn't prevent error messages in logs
-//        try{
-//           for(GeneAlias alias : aliasObjs){
-//               aliases.add( alias.getAlias() );
-//           }
-//        }catch(org.hibernate.LazyInitializationException e){
-//            return aliases;
-//        }
+        // catch doesn't prevent error messages in logs -- why?
+       /* try{
+            
+            Collection<GeneAlias> aliasObjs = gene.getAliases();
+            Iterator<GeneAlias> iter = aliasObjs.iterator();
+            while( iter.hasNext()){
+               aliases.add( iter.next().getAlias() );
+            }
+        }catch(org.hibernate.LazyInitializationException e){
+            return aliases;
+        }*/
         return aliases;
 
     }

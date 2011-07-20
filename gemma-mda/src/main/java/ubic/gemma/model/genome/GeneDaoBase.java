@@ -790,7 +790,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         target.setOfficialSymbol( source.getOfficialSymbol() );
         target.setOfficialName( source.getOfficialName() );
         target.setDescription( source.getDescription() );
-        target.setAliases( GeneValueObject.getAliasStrings( source.getAliases()) );
+        target.setAliases( GeneValueObject.getAliasStrings( source ) );
     }
 
     /**

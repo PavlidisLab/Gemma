@@ -13,8 +13,17 @@
 
 	Ext.onReady( function() {
 		Ext.QuickTips.init();
-		 
-		var k = new Gemma.DatasetGroupCombo( {
+		 /*
+		var k = new Gemma.ExpressionExperimentPage( {
+			renderTo : 'eepage',
+			eeId: '2763'
+		});*/
+		var k = new Gemma.GenePage( {
+			renderTo : 'eepage',
+			geneId: '57347' // for testing
+		});
+		/*
+		k = new Gemma.DatasetGroupCombo( {
 			renderTo : 'eesetcombo'
 		});
 
@@ -45,6 +54,7 @@
 		k = new Gemma.TaxonCombo( {
 			renderTo : 'taxoncombo'
 		});
+		
 		k = new Gemma.GeneGrid( {
 			renderTo : 'genepicker',
 			height : 200
@@ -110,7 +120,7 @@
 				}, 
 			}
 		});
-
+/*
 
 		var v = new Gemma.ProgressWidget({renderTo : 'progressWidget', width : 400});
 		v.allMessages = "Here are some messages for you, widget test.";
@@ -127,6 +137,7 @@
 			})
 		}) ;
 		viswin.show({});
+	*/
 	});
 	
 </script>
@@ -139,6 +150,13 @@
 }
 </style>
 </head>
+
+
+
+<h2>
+	EE Page
+</h2>
+<div class="widget" id="eepage"></div>
 
 <h1>
 	ComboBoxes
