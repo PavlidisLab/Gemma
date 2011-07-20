@@ -70,6 +70,12 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			geneId: geneId
 		}));
 		
+		/*ALLEN BRAIN ATLAS IMAGES*/
+		this.add({
+			xtype:'geneallenbrainatlasimages',
+			geneId: geneId,
+			title:'Expression Images'
+		});
 		
 		// diff expression grid
 		

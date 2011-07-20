@@ -13,7 +13,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	loadMask : true,
 	stateful : false,
 	viewConfig : {
-// forceFit : true
+	 forceFit : true
 	},
 
 	readMethod : DifferentialExpressionSearchController.getDifferentialExpressionWithoutBatch,
@@ -94,7 +94,8 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 						dataIndex : "expressionExperiment",
 						toolTip : "The study/expression experiment the result came from",
 						sortable : true,
-						renderer : Gemma.ProbeLevelDiffExGrid.getEEStyler()
+						renderer : Gemma.ProbeLevelDiffExGrid.getEEStyler(),
+						width : 50
 					}, {
 						id : 'visualize',
 						hidden : true,

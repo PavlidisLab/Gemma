@@ -1,6 +1,10 @@
 Ext.namespace('Gemma');
 
 Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
+	
+	viewConfig : {
+		forceFit : true
+	},
 			record : Ext.data.Record.create([{
 						name : "id",
 						type : "int"

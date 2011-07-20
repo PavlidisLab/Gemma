@@ -68,13 +68,14 @@ public class ImageValueObject implements java.io.Serializable {
     private int width;
     private String abaGeneURL;
     private GeneValueObject abaHomologousMouseGene;
+    private String queryGeneSymbol;
+    private boolean usingHomologue;
     
     /**
      * needed for javabean contract
      */
     public ImageValueObject() {
     }
-   
 
     /**
      * @param displayName
@@ -90,11 +91,13 @@ public class ImageValueObject implements java.io.Serializable {
      * @param width
      * @param abaGeneURL
      * @param abaHomologousMouseGene
+     * @param queryGeneSymbol
+     * @param usingHomologue
      */
     public ImageValueObject( String displayName, int id, int position, int referenceAtlasIndex, String thumbnailUrl,
             String zoomifiedNisslUrl, String expressionThumbnailUrl, String downloadImagePath,
             String downloadExpressionPath, int height, int width, String abaGeneURL,
-            GeneValueObject abaHomologousMouseGene ) {
+            GeneValueObject abaHomologousMouseGene, String queryGeneSymbol, boolean usingHomologue ) {
         this.displayName = displayName;
         this.id = id;
         this.position = position;
@@ -108,11 +111,11 @@ public class ImageValueObject implements java.io.Serializable {
         this.width = width;
         this.abaGeneURL = abaGeneURL;
         this.abaHomologousMouseGene = abaHomologousMouseGene;
+        this.queryGeneSymbol = queryGeneSymbol;
+        this.usingHomologue = usingHomologue;
     }
 
-
-
-    public static Collection<ImageValueObject> convert2ValueObjects( Collection<Image> images, String abaGeneURL, GeneValueObject abaHomologousMouseGene ){
+    public static Collection<ImageValueObject> convert2ValueObjects( Collection<Image> images, String abaGeneURL, GeneValueObject abaHomologousMouseGene, String queryGeneSymbol, boolean usingHomologue ){
         Collection<ImageValueObject> converted = new HashSet<ImageValueObject>();
         if ( images == null ) return converted;
 
@@ -120,7 +123,7 @@ public class ImageValueObject implements java.io.Serializable {
             if ( i == null ) continue;
             converted.add( new ImageValueObject( i.getDisplayName(), i.getId(), i.getPosition(), i.getReferenceAtlasIndex(), 
                     i.getThumbnailUrl(), i.getZoomifiedNisslUrl(), i.getExpressionThumbnailUrl(), i.getDownloadImagePath(), 
-                    i.getDownloadExpressionPath(), i.getHeight(), i.getWidth(), abaGeneURL, abaHomologousMouseGene) );
+                    i.getDownloadExpressionPath(), i.getHeight(), i.getWidth(), abaGeneURL, abaHomologousMouseGene, queryGeneSymbol, usingHomologue ) );
         }
 
         return converted;
@@ -284,5 +287,37 @@ public class ImageValueObject implements java.io.Serializable {
      */
     public void setAbaHomologousMouseGene( GeneValueObject abaHomologousMouseGene ) {
         this.abaHomologousMouseGene = abaHomologousMouseGene;
+    }
+
+
+    /**
+     * @return the queryGeneSymbol
+     */
+    public String getQueryGeneSymbol() {
+        return queryGeneSymbol;
+    }
+
+
+    /**
+     * @param queryGeneSymbol the queryGeneSymbol to set
+     */
+    public void setQueryGeneSymbol( String queryGeneSymbol ) {
+        this.queryGeneSymbol = queryGeneSymbol;
+    }
+
+
+    /**
+     * @return the usingHomologue
+     */
+    public boolean isUsingHomologue() {
+        return usingHomologue;
+    }
+
+
+    /**
+     * @param usingHomologue the usingHomologue to set
+     */
+    public void setUsingHomologue( boolean usingHomologue ) {
+        this.usingHomologue = usingHomologue;
     }
 }

@@ -401,11 +401,13 @@ public class GeneController extends BaseController {
         Gene gene = geneService.load( geneId );
         // need to thaw for aliases (at least)
         gene = geneService.thaw( gene );
-        
+        String queryGeneSymbol = gene.getOfficialSymbol();
         final Taxon mouse = this.taxonService.findByCommonName( "mouse" );
         Gene mouseGene = gene;
+        boolean usingHomologue = false;
         if ( !gene.getTaxon().equals( mouse ) ) {
             mouseGene = this.homologeneService.getHomologue( gene, mouse );
+            usingHomologue = true;
         }
 
         if ( mouseGene != null ) {
@@ -416,7 +418,7 @@ public class GeneController extends BaseController {
                 String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
 
                 Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject( mouseGene ) );
+                images = ImageValueObject.convert2ValueObjects( representativeImages, abaGeneUrl, new GeneValueObject( mouseGene ), queryGeneSymbol, usingHomologue );
                 
             } catch ( IOException e ) {
                 log.warn( "Could not get ABA data: " + e );
