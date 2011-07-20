@@ -10,7 +10,7 @@
 	<jwr:script src='/scripts/app/gene.detail.js' />
 
 	<security:authorize access="hasRole('GROUP_ADMIN')">
-		<script type="text/javascript">
+		<!-- script type="text/javascript">
 Ext.namespace('Gemma');
 Ext.onReady(function() {
 	Ext.QuickTips.init();
@@ -27,9 +27,25 @@ Ext.onReady(function() {
 		renderTo : 'auditTrail',
 		auditable : auditable
 	});
+	
+	var k = new Gemma.GenePage( {
+			renderTo : 'newGenePageWidget',
+			geneId: '57347' // for testing //Ext.get("gene").getValue()
+		});
+});
+</script-->
+	</security:authorize>
+			<script type="text/javascript">
+Ext.namespace('Gemma');
+Ext.onReady(function() {
+	Ext.QuickTips.init();
+	
+	var k = new Gemma.GenePage( {
+			renderTo : 'newGenePageWidget',
+			geneId: Ext.get("gene").getValue()
+		});
 });
 </script>
-	</security:authorize>
 
 	<title><c:if test="${not empty gene.officialSymbol}">
 			<jsp:getProperty name="gene" property="officialSymbol" />
@@ -41,6 +57,9 @@ Ext.onReady(function() {
 	<input type="hidden" name="gene" id="gene" value="${gene.id}" />
 	<input type="hidden" name="geneName" id="geneName" value="${gene.name}" />
 	<input type="hidden" name="taxon" id="taxon" value="${gene.taxon.id}" />
+	
+	<div id="newGenePageWidget"></div>
+	
 	<h3>
 		<c:if test="${not empty gene.officialSymbol}">
 		${gene.officialSymbol }
