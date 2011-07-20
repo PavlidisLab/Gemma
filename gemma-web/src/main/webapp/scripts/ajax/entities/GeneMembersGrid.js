@@ -950,7 +950,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						return;
 					} else {
 						geneSets[0].type = "usergeneSetSession"; // TODO I want to use type from backend
-						this.fireEvent('geneListModified', geneSets);
+						this.fireEvent('geneListModified', geneSets, geneSets[0].geneIds);
 						this.fireEvent('doneModification');
 					}
 				}.createDelegate(this));
@@ -988,7 +988,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 					}
 					else {
 						geneSets[0].type = "usergeneSet"; // TODO I want to use type from backend
-						this.fireEvent('geneListModified', geneSets);
+						this.fireEvent('geneListModified', geneSets, geneSets[0].geneIds);
 						this.fireEvent('doneModification');
 					}
 				}.createDelegate(this));
@@ -1005,7 +1005,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 					this.selectedGeneGroup.memberIds = geneIds;
 					this.selectedGeneGroup.geneIds = geneIds;
 
-					this.fireEvent('geneListModified', [this.selectedGeneGroup]);
+					this.fireEvent('geneListModified', [this.selectedGeneGroup], this.selectedGeneGroup.memberIds);
 					this.fireEvent('doneModification');
 				}.createDelegate(this));
 	}

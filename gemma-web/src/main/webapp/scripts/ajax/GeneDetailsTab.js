@@ -38,7 +38,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 		var i, geneSet;
 		for(i=0;i<geneSets.length;i++){
 			geneSet = geneSets[i];
-			geneSetStr += "<a title=\""+geneSet.description+"\" href=\"/Gemma/geneGroupManager.html\">"
+			geneSetStr += "<a title=\"Description: "+geneSet.description+"\" href=\"/Gemma/geneGroupManager.html\">"
 						       + geneSet.name + "</a>&nbsp;&nbsp;&nbsp;";
 		}
 		if(geneSetStr === ''){

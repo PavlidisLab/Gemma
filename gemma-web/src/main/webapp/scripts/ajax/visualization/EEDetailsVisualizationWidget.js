@@ -140,54 +140,6 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 
 });
 
-Gemma.VisualizationWidgetGeneSelectionGrid = Ext.extend(Gemma.GeneMembersGrid, {
-
-	//height : 220,
-	width: 250,
-	name: 'eedvw',
-	
-	vizButtonId: "visualizeButton-" + Ext.id(),
-	getButtons: function(){
-		return [new Ext.Button({
-			id: this.vizButtonId,
-			text: "OK",
-			tooltip: "Click to display data for selected genes, or a 'random' selection of data from this experiment",
-			handler: this.showButHandler,
-			scope: this,
-			cls: 'x-toolbar-standardbutton'
-		}), new Ext.Button({
-			text: "Cancel",
-			handler: this.cancelHandler,
-			scope: this
-		})];
-	},
-	initComponent: function(){
-	
-		Gemma.VisualizationWidgetGeneSelectionGrid.superclass.initComponent.call(this);
-		
-		
-		Ext.apply(this, {
-			buttons: this.getButtons()
-		});
-
-	},
-	
-	clearButHandler: function(){
-		this.removeAllGenes();
-	},
-	
-	cancelHandler: function(){
-		// just close the window
-		
-		this.fireEvent('done');
-	},
-	showButHandler: function(){
-		this.fireEvent('geneListModified', this.getGeneIds());
-		this.fireEvent('done');
-	}
-	
-});
-
 
 /**
  * toolbar for selecting genes or gene groups and adding them to a grid
@@ -230,7 +182,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		
 		this.editBtn = new Ext.Toolbar.Button({
 			tooltip: "Edit your selection",
-			text: 'Modify Selection',
+			text: 'Edit Selection',
 			cls:'x-toolbar-outline',
 			disabled: true,
 			handler: this.launchGeneSelectionEditor.createDelegate(this)
@@ -244,7 +196,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			handler: this.clearHandler.createDelegate(this)
 		});
 			
-		this.geneSelectionEditor = new Gemma.VisualizationWidgetGeneSelectionGrid({
+		this.geneSelectionEditor = new Gemma.GeneMembersSaveGrid({
 					name : 'geneSelectionEditor',
 					hideHeaders : true,
 					frame : false,
@@ -252,13 +204,13 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 				});
 
 		
-		this.geneSelectionEditor.on('geneListModified', function(geneIds) {
+		this.geneSelectionEditor.on('geneListModified', function(geneSetIds, geneIds) {
 				this.setGeneIds(geneIds);
 				this.updateButtonText();
 				this.listModified = true;
 			}, this);
 
-		this.geneSelectionEditor.on('done', function() {
+		this.geneSelectionEditor.on('doneModification', function() {
 					this.getEl().unmask();
 					this.geneSelectionEditorWindow.hide();
 				}, this);
@@ -275,7 +227,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			xtype: 'panel',
 			html: 'Visualizing 20 \'random\' genes',
 			border: false,
-			bodyStyle: 'background-color:transparent; color:grey; padding-left:10px'
+			bodyStyle: 'background-color:transparent; color:black; padding-right:5px'
 		});
 	},
 	afterRender: function(c, l){
@@ -284,6 +236,7 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 		this.addSpacer();
 		this.add(this.clearBtn, this.vizBtn);
 		this.addButton(this.extraButtons);
+		this.addFill();
 		this.add(this.tbarText);
 	},	
 	launchGeneSelectionEditor : function() {

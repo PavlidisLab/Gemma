@@ -27,11 +27,6 @@ Ext.onReady(function() {
 		renderTo : 'auditTrail',
 		auditable : auditable
 	});
-	
-	var k = new Gemma.GenePage( {
-			renderTo : 'newGenePageWidget',
-			geneId: '57347' // for testing //Ext.get("gene").getValue()
-		});
 });
 </script-->
 	</security:authorize>
