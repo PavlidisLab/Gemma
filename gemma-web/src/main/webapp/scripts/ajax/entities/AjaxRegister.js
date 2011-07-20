@@ -11,10 +11,9 @@ Gemma.AjaxRegister = Ext.extend(Ext.Window, {
 	title:'register',
 	
 	closeAction : 'hide',
+	resizable: false,
 	
-	initComponent : function(){	
-	
-	
+	initComponent : function(){
 	
 	Ext.apply(this, {
 		items:[new Ext.FormPanel({

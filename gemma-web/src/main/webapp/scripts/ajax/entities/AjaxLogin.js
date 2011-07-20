@@ -11,8 +11,7 @@ Gemma.AjaxLogin = Ext.extend(Ext.Window, {
 			
 	width : 350,
 	shadow : true,
-	
-	
+	resizable: false,	
 
 	initComponent : function() {
 	
