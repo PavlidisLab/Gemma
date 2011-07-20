@@ -21,7 +21,6 @@ Gemma.GeneAllenBrainAtlasImages =  Ext.extend(Ext.Panel, {
 			}
 			this.loadMask.show();
 			GeneController.loadAllenBrainImages(this.geneId, function(imageObjects){
-			console.log(imageObjects[0]);
 			
 			this.loadMask.hide();
 			if(!imageObjects || imageObjects.length === 0){
