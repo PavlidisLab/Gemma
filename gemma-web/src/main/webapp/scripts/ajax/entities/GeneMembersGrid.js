@@ -67,6 +67,9 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.getColumnModel().setHidden(this.getColumnModel().getIndexById("taxon"), false);
 		this.getColumnModel().setHidden(this.getColumnModel().getIndexById("inList"), false);
 	},
+	setSelectedGeneGroup: function(data){
+		this.selectedGeneGroup = data;
+	},
 	/**
 	 * Add to table.
 	 * 
@@ -769,7 +772,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		Ext.Ajax.request({
          	url : '/Gemma/ajaxLoginCheck.html',
             method: 'GET',                  
-            success: function ( response, options ) {			
+            success: function ( response, options ) {		
                     var dataMsg = Ext.util.JSON.decode(response.responseText);                    
                     var link = Ext.getDom('footer-login-link');
                     var loggedInAs = Ext.getDom('footer-login-status');
@@ -859,6 +862,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 		// check if user is editing a non-existant or session-bound group
 		
+				console.log(this.selectedGeneGroup);
 		// check if group is db-backed and whether current user has editing priveleges
 		if(this.selectedGeneGroup && this.selectedGeneGroup.reference){
 			

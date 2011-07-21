@@ -959,6 +959,7 @@ gemma.max.fileupload.size.bytes=
 								<value>loadAllSessionGroups</value>
 								<value>addSessionGroups</value>
 								<value>addNonModificationBasedSessionBoundGroups</value>
+								<value>canCurrentUserEditGroup</value>
 							</list>
 						</property>
 					</bean>
@@ -1158,6 +1159,7 @@ gemma.max.fileupload.size.bytes=
 								<value>updateUserAndSessionGroups</value>
 								<value>findGeneSetsByGene</value>
 								<value>findGeneSetsByName</value>
+								<value>canCurrentUserEditGroup</value>
 							</list>
 						</property>
 					</bean>

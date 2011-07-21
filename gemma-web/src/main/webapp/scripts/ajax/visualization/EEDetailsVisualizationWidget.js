@@ -163,7 +163,9 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 			listeners: {
 				'select': {
 					fn: function(combo, rec, index){
+						console.log(rec);
 						this.setGeneIds(rec.get('memberIds'));
+						this.setSelectedComboRecord(rec.data);
 						this.editBtn.enable();
 						this.clearBtn.enable();
 						this.updateButtonText();
@@ -249,6 +251,8 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 
 		this.geneSelectionEditorWindow.show();
 
+		this.geneSelectionEditor.setSelectedGeneGroup(this.getSelectedComboRecord()); // for possible saving
+					
 		this.geneSelectionEditor.loadMask = new Ext.LoadMask(this.geneSelectionEditor.getEl(), {
 					msg : "Loading genes ..."
 				});
@@ -265,6 +269,12 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 	},
 	setGeneIds: function(ids){
 		this.geneIds = ids;
+	},
+	setSelectedComboRecord: function(record){
+		this.selectedComboRecord = record;
+	},
+	getSelectedComboRecord: function(){
+		return this.selectedComboRecord;
 	},
 	updateButtonText: function(){
 		var numIds = this.getGeneIds().length;

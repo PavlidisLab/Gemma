@@ -510,6 +510,11 @@ ExpressionExperimentSetController.getExperimentIdsInSet = function(p0, callback)
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
 			'getExperimentIdsInSet', p0, callback);
 }
+ExpressionExperimentSetController.canCurrentUserEditGroup = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController',
+			'canCurrentUserEditGroup', p0, callback);
+}
+
 // ====================================================================================
 
 if (ExpressionExperimentReportGenerationController == null)
@@ -733,6 +738,9 @@ GeneSetController.findGeneSetsByGene = function(p0, callback) {
 }
 GeneSetController.findGeneSetsByName = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'findGeneSetsByName', p0, p1, callback);
+}
+GeneSetController.canCurrentUserEditGroup = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'canCurrentUserEditGroup', p0, callback);
 }
 // ====================================================================================
 if (SystemMonitorController == null)

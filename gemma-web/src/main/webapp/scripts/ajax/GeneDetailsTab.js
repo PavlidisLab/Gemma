@@ -75,7 +75,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 			});
 		}
 		if(geneSetBtns.length === 0){
-			geneSetBtns.push({html: 'Not currently a member of any gene group'});
+			geneSetBtns.push({html: 'Not currently a member of any gene group', border:false});
 		}
 		return geneSetBtns;
 	},
@@ -125,6 +125,9 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							'<img src="/Gemma/images/help.png" /> </a>',
 							html: geneDetails.compositeSequenceCount + ' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id=' + geneDetails.id + '">' +
 							'<img src="/Gemma/images/magnifier.png"> </a>'
+						}, {
+							fieldLabel: 'Notes',
+							html: geneDetails.description
 						}]
 					}, {
 						html: '<h4>Gene Ontology Terms</h4>'
