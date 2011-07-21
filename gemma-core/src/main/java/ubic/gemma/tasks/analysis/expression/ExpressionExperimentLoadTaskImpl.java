@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
@@ -67,6 +68,9 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
 
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
+
+    @Autowired
+    private SVDService svdService;
 
     /*
      * (non-Javadoc)
@@ -168,20 +172,8 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
         ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
         processForMissingValues( ee, arrayDesignUsed );
         processForSampleCorrelation( ee );
-    }
-
-    /**
-     * Create the heatmaps used to judge similarity among samples.
-     * 
-     * @param ee
-     */
-    private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
-
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
-                dataVectors );
-        ExpressionDataSampleCorrelation.process( datamatrix, ee );
+        // we could do the batch (raw data) processing here, but it's often slow.
+        processForPca( ee );
     }
 
     /**
@@ -201,6 +193,27 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
         }
 
         return wasProcessed;
+    }
+
+    /**
+     * @param ee
+     */
+    private void processForPca( ExpressionExperiment ee ) {
+        svdService.svd( ee );
+    }
+
+    /**
+     * Create the heatmaps used to judge similarity among samples.
+     * 
+     * @param ee
+     */
+    private void processForSampleCorrelation( ExpressionExperiment ee ) {
+        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
+                dataVectors );
+        ExpressionDataSampleCorrelation.process( datamatrix, ee );
     }
 
 }
