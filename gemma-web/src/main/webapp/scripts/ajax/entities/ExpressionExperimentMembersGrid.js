@@ -59,6 +59,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					if (callback) {
 						callback(args);
 					}
+					this.fireEvent('experimentsLoaded');
 				}.createDelegate(this));
 	},
 	addExperiments : function(data) { // maybe this won't work b/c combo returns search objects?
@@ -192,7 +193,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		this.saveButton = new Ext.Button({
 			text: "Save",
-			handler: this.save,
+			handler: this.saveBtnHandler,
 			qtip: 'Save your selection before returning to search.',
 			scope: this,
 			disabled: false
@@ -310,8 +311,20 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						params : [this.eeids]
 					});
 		}
+		
+				
+		this.on('experimentsLoaded',function(){
+			if (this.selectedExperimentGroup && this.selectedExperimentGroup.reference) {
+				ExpressionExperimentSetController.canCurrentUserEditGroup(this.selectedExperimentGroup.reference, function(response){
+					var dataMsg = Ext.util.JSON.decode(response);
+					if (!dataMsg.userCanEditGroup || !dataMsg.groupIsDBBacked) {
+						this.saveButton.setText("Save As");
+					}
+				}.createDelegate(this));
+			}
+		});
 
-	},
+	}, //EO init
 
 	formatEE : function(value, metadata, record, row, col, ds) {
 		// fixme: this is duplicated code.
@@ -448,7 +461,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	/**
 	 * When user clicks 'save', check if they are logged in or not, then in the callback, call saveAfterCheck
 	 */
-	save : function() {
+	saveBtnHandler : function() {
 				
 		Ext.Ajax.request({
          	url : '/Gemma/ajaxLoginCheck.html',
@@ -465,123 +478,94 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						link.innerHTML="Logout"; 
 						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
 						hasuser.value= true;
+						this.loggedInSaveHandler();
 					}
                     else{
                     	link.href="/Gemma/login.jsp";
 						link.innerHTML="Login";
 						loggedInAs.innerHTML=" ";
-						hasuser.value= "";                    	
+						hasuser.value= "";
+						this.promptLoginForSave();                      	
                     }
-					this.saveAfterCheck();
-                      
             },
-            failure: function ( response, options ) {            	   					
-					this.saveAfterCheck();
+            failure: function ( response, options ) {   
+				this.promptLoginForSave();  
             },
             scope: this,
             disableCaching: true
        });
-
-		
-
-		
-
 	},
 	
-	
-	
-	saveAfterCheck : function() {
-
-		// if the user hasn't made any changes, save anyway
-
-		// get name and description set up
-		this.createDetails();
-
-		// save button should only be visible if user is logged in, but just to
-		// be safe:
-		if (!Ext.get('hasUser').getValue()) {
-			
-			if (this.ajaxLogin == null){				
-				
-				//Check to see if another login widget is open (rare case but possible)
-				var otherOpenLogin = Ext.getCmp('_ajaxLogin');				
-				
-				//if another login widget is open, fire its event to close it and destroy it before launching this one
-				if (otherOpenLogin!=null){
-					otherOpenLogin.fireEvent("login_cancelled");
-				}				
-				
-				
-				this.ajaxLogin = new Gemma.AjaxLogin({					
-					name : 'ajaxLogin',									
-					closable : false,
-					//closeAction : 'hide',													
-					title : 'Please login to use this function'
-				
-					
-				});			
-			
-			
-				this.ajaxLogin.on("login_success",function(){
-					this.getEl().unmask();		
-					this.ajaxLogin.destroy();
-					this.ajaxLogin = null;
-					this.save();
-				
-				
-				},this);
-			
-				this.ajaxLogin.on("register_requested",function(){
-				
-					this.getEl().unmask();		
-					this.ajaxLogin.destroy();
-					this.ajaxLogin = null;
-					this.launchRegisterWidget();
-				
-				
-				},this);
-			
-				this.ajaxLogin.on("login_cancelled",function(){
-				
-					this.ajaxLogin.destroy();
-					this.ajaxLogin = null;
-					this.getEl().unmask();				
-				
-				},this);
-				
-				
-				this.getEl().mask();
-				this.ajaxLogin.show();
-			
-				
+	promptLoginForSave: function(){
+		if (this.ajaxLogin == null) {
 		
+			//Check to see if another login widget is open (rare case but possible)
+			var otherOpenLogin = Ext.getCmp('_ajaxLogin');
 			
+			//if another login widget is open, fire its event to close it and destroy it before launching this one
+			if (otherOpenLogin != null) {
+				otherOpenLogin.fireEvent("login_cancelled");
 			}
 			
-		} else {
-
-			// if geneGroupId is null, then there was no group to start with
-			// if user has made any changes, a new gene set will be created
-			if (!this.selectedExperimentGroup ||this.selectedExperimentGroup === null || 
-					this.selectedExperimentGroup.reference === null || this.selectedExperimentGroup.reference.id === null) {
-				// ask user if they want to save changes
-				this.editedExistingGroup('yes'); // yes means 'save as'
-
-			} else {// if this is an edit of an existing gene group, give
-				// options to create or edit
-
-				// if group being edited is session-bound, only offer to save to
-				// database
-				if (this.selectedExperimentGroup !== null
-						&& (this.selectedExperimentGroup.type.toLowerCase().indexOf('session') >= 0 )) {
-
-					this.editedExistingGroup('yes'); // yes means 'save as'
-				}
-
-				// if group of genes being edited belongs to the user, ask if
-				// they want to save changes
-				else if (this.selectedExperimentGroup !== null
-						&& (this.selectedExperimentGroup.type.toLowerCase().indexOf('user') >= 0 )) {
+			
+			this.ajaxLogin = new Gemma.AjaxLogin({
+				name: 'ajaxLogin',
+				closable: false,
+				//closeAction : 'hide',													
+				title: 'Please login to use this function'
+			
+			
+			});
+			
+			
+			this.ajaxLogin.on("login_success", function(){
+				this.getEl().unmask();
+				this.ajaxLogin.destroy();
+				this.ajaxLogin = null;
+				this.saveBtnHandler();
+				
+				
+			}, this);
+			
+			this.ajaxLogin.on("register_requested", function(){
+			
+				this.getEl().unmask();
+				this.ajaxLogin.destroy();
+				this.ajaxLogin = null;
+				this.launchRegisterWidget();
+				
+				
+			}, this);
+			
+			this.ajaxLogin.on("login_cancelled", function(){
+			
+				this.ajaxLogin.destroy();
+				this.ajaxLogin = null;
+				this.getEl().unmask();
+				
+			}, this);
+			
+			}
+			this.getEl().mask();
+			this.ajaxLogin.show();
+		
+		
+	},
+	loggedInSaveHandler : function () {
+		
+		// get name and description set up
+		this.createDetails();
+		
+		// check if user is editing a non-existant or session-bound group
+		
+		// check if group is db-backed and whether current user has editing priveleges
+		if(this.selectedExperimentGroup && this.selectedExperimentGroup.reference){
+			
+			// if group is db-bound and user has editing privileges, they can either save or save as
+			// in all other cases, user can only save as
+			ExpressionExperimentSetController.canCurrentUserEditGroup(this.selectedExperimentGroup.reference, function(response){
+				var dataMsg = Ext.util.JSON.decode(response);
+				if(dataMsg.userCanEditGroup && dataMsg.groupIsDBBacked){
 					// ask user if they want to save changes
 					Ext.Msg.show({
 								title : 'Save Changes?',
@@ -590,20 +574,53 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								buttons : {
 									ok : 'Save over',
 									yes : 'Save as...',
-									//,no : 'Don\'t save'
 									no : 'Cancel'
 								},
-								// buttons: {yes:'Save As...', no:'Don\'t
-								// save'},
-								fn : this.editedExistingGroup,
+								fn : function(btnId){
+									if(btnId === 'ok'){
+										this.saveHandler();
+									}else if(btnId === 'yes'){
+										this.saveAsHandler();
+									}else if(btnId === 'no'){
+										// just close the prompt
+									}
+								},
+								scope:this,
 								icon : Ext.MessageBox.QUESTION
 							});
-				} else {
-					this.editedExistingGroup('yes'); // yes means 'save as'
+				}else{
+					this.saveAsHandler();
 				}
-			}
+			}.createDelegate(this));
+			
+		}else{
+			// if reference is null, then there was no group to start with
+			// only save option is to save as
+			this.saveAsHandler();
 		}
-
+	},
+	saveAsHandler: function(){
+		// input window for creation of new groups
+		var detailsWin = new Gemma.GeneSetDetailsDialog({
+			title: 'Provide or edit experiment group details'
+		});
+		detailsWin.on("hide", function(args){
+			this.close();
+		});
+		detailsWin.on("commit", function(args){
+			this.newGroupName = args.name;
+			this.newGroupDescription = args.description;
+			this.createInDatabase();
+		}, this);
+		
+		detailsWin.name = this.groupName;
+		detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
+		(new Date()).toString();
+		
+		detailsWin.show();
+	},
+	saveHandler: function(){
+		this.updateDatabase();
 	},
 	saveToSession : function() {
 		var editedGroup;

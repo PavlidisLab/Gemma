@@ -81,8 +81,15 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		if (!geneIds || geneIds.length === 0) {
 			return;
 		}
+		
+		this.loadMask = new Ext.LoadMask(this.getEl(), {
+			msg: "Loading genes ...",
+			msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+		});
+		this.loadMask.show();
 
 		GenePickerController.getGenes(geneIds, function(genes) {
+			this.loadMask.hide();
 					var geneData = [];
 					var i = 0;
 					for (i = 0; i < genes.length; i++) {
@@ -97,6 +104,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					if (callback) {
 						callback(args);
 					}
+					this.fireEvent('genesLoaded');
 				}.createDelegate(this));
 	},
 
@@ -156,7 +164,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	getButtons: function(){
 		this.saveButton = new Ext.Button({
 			text: "Save",
-			handler: this.save,
+			handler: this.saveBtnHandler,
 			qtip: 'Save your selection before returning to search.',
 			scope: this,
 			disabled: false
@@ -316,10 +324,14 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		// load genes stored in genes var, which can either be an array or comma
 		// separated list of gene ids
-		if (this.genes) {
-			var genes = this.genes instanceof Array ? this.genes : this.genes.split(",");
-			this.loadGenes(genes);
+		this.on('render', function(){
+			if (this.genes || this.geneIds) {
+			var gis = ((this.genes)?this.genes:this.geneIds)
+			var genes = gis instanceof Array ? gis : gis.split(",");
+			this.loadGenes(gis);
 		}
+		}, this);
+		
 
 	},// eo initComponent
 
@@ -437,7 +449,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	getButtons: function(){
 		this.saveButton = new Ext.Button({
 			text: "Save",
-			handler: this.save,
+			handler: this.saveBtnHandler,
 			qtip: 'Save your selection before returning to search.',
 			scope: this,
 			disabled: false
@@ -514,37 +526,6 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						return true;
 					}
 				});
-
-		// function to deal with user choice of what to do after editing an
-		// existing group
-		this.editedExistingGroup = function(btn) {
-			if (btn === 'no') { // no is don't save
-				//this.createInSession();
-			} else if (btn === 'ok') { // ok is save
-				this.updateDatabase();
-			} else if (btn === 'yes') { // yes is save as
-				// input window for creation of new groups
-				var detailsWin = new Gemma.GeneSetDetailsDialog();
-				detailsWin.on("commit", function(args){
-					this.newGroupName = args.name;
-					this.newGroupDescription = args.description;
-					this.createInDatabase();
-				}, this);
-				detailsWin.on("hide", function(args){
-					this.close();
-				});
-				
-				detailsWin.name = this.groupName;
-				detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
-				(new Date()).toString();
-				
-				//this.detailsWin.name = '';
-				//this.detailsWin.description = '';
-				detailsWin.show();
-			} else {
-				return;
-			}
-		}.createDelegate(this);
 
 		var btns = this.getButtons();
 		Ext.apply(this, {
@@ -655,6 +636,17 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			var genes = this.genes instanceof Array ? this.genes : this.genes.split(",");
 			this.loadGenes(genes);
 		}
+		
+		this.on('genesLoaded',function(){
+			if (this.selectedGeneGroup && this.selectedGeneGroup.reference) {
+				GeneSetController.canCurrentUserEditGroup(this.selectedGeneGroup.reference, function(response){
+					var dataMsg = Ext.util.JSON.decode(response);
+					if (!dataMsg.userCanEditGroup || !dataMsg.groupIsDBBacked) {
+						this.saveButton.setText("Save As");
+					}
+				}.createDelegate(this));
+			}
+		});
 
 	},// eo initComponent
 
@@ -772,13 +764,12 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	/**
 	 * When user clicks 'save', figure out what kind of save to do
 	 */
-	save : function() {
+	saveBtnHandler : function() {
 				
 		Ext.Ajax.request({
          	url : '/Gemma/ajaxLoginCheck.html',
             method: 'GET',                  
             success: function ( response, options ) {			
-					
                     var dataMsg = Ext.util.JSON.decode(response.responseText);                    
                     var link = Ext.getDom('footer-login-link');
                     var loggedInAs = Ext.getDom('footer-login-status');
@@ -789,38 +780,26 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						link.innerHTML="Logout"; 
 						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
 						hasuser.value= true;
+						this.loggedInSaveHandler();
 					}
                     else{
                     	link.href="/Gemma/login.jsp";
 						link.innerHTML="Login";
 						loggedInAs.innerHTML=" ";
-						hasuser.value= "";                    	
+						hasuser.value= "";
+						this.promptLoginForSave();  
                     }
-					this.saveAfterCheck();
                       
             },
-            failure: function ( response, options ) {            	   					
-					this.saveAfterCheck();
+            failure: function ( response, options ) {  
+				this.promptLoginForSave();  
             },
             scope: this,
             disableCaching: true
        });
-
-		
-
-		
-
+	   
 	},
-	saveAfterCheck : function () {
-		
-		// get name and description set up
-		this.createDetails();
-		
-		// save button should only be visible if user is not logged in, but just
-		// to be safe:
-		if (!Ext.get('hasUser').getValue()) {
-			//Ext.Msg.alert("Not logged in", "You cannot save this list because you are not logged in, "+" however, your list will be available temporarily.");
-			
+	promptLoginForSave : function () {
 			
 		if (this.ajaxLogin == null){
 			
@@ -838,8 +817,6 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 					closable : false,
 					//closeAction : 'hide',													
 					title : 'Please login to use this function'
-				
-					
 				});			
 			
 			
@@ -847,7 +824,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 				this.getEl().unmask();		
 				this.ajaxLogin.destroy();
 				this.ajaxLogin=null;
-				this.save();
+				this.saveBtnHandler();
 				
 				
 			},this);
@@ -874,31 +851,22 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 			this.getEl().mask();
 			this.ajaxLogin.show();
+	},
+	loggedInSaveHandler : function () {
+		
+		// get name and description set up
+		this.createDetails();
+		
+		// check if user is editing a non-existant or session-bound group
+		
+		// check if group is db-backed and whether current user has editing priveleges
+		if(this.selectedGeneGroup && this.selectedGeneGroup.reference){
 			
-		} else {
-
-			// if geneGroupId is null, then there was no group to start with
-			// if user has made any changes, a new gene set will be created
-			if (!this.selectedGeneGroup ||this.selectedGeneGroup === null || 
-					this.selectedGeneGroup.reference === null || this.selectedGeneGroup.reference.id === null) {
-				// ask user if they want to save changes
-				this.editedExistingGroup('yes'); // yes means 'save as'
-
-			} else {// if this is an edit of an existing gene group, give
-				// options to create or edit
-
-				// if group being edited is session-bound, only offer to save to
-				// database
-				if (this.selectedGeneGroup !== null
-						&& (this.selectedGeneGroup.type.toLowerCase().indexOf('session') >= 0 )) {
-
-					this.editedExistingGroup('yes'); // yes means 'save as'
-				}
-
-				// if group of genes being edited belongs to the user, ask if
-				// they want to save changes
-				else if (this.selectedGeneGroup !== null
-						&& (this.selectedGeneGroup.type.toLowerCase().indexOf('user') >= 0 )) {
+			// if group is db-bound and user has editing privileges, they can either save or save as
+			// in all other cases, user can only save as
+			GeneSetController.canCurrentUserEditGroup(this.selectedGeneGroup.reference, function(response){
+				var dataMsg = Ext.util.JSON.decode(response);
+				if(dataMsg.userCanEditGroup && dataMsg.groupIsDBBacked){
 					// ask user if they want to save changes
 					Ext.Msg.show({
 								title : 'Save Changes?',
@@ -907,18 +875,54 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 								buttons : {
 									ok : 'Save over',
 									yes : 'Save as...',
-									//,no : 'Don\'t save'
 									no : 'Cancel'
 								},
-								fn : this.editedExistingGroup,
+								fn : function(btnId){
+									if(btnId === 'ok'){
+										this.saveHandler();
+									}else if(btnId === 'yes'){
+										this.saveAsHandler();
+									}else if(btnId === 'no'){
+										// just close the prompt
+									}
+								},
+								scope:this,
 								icon : Ext.MessageBox.QUESTION
 							});
-				} else {
-					this.editedExistingGroup('yes'); // yes means 'save as'
+				}else{
+					this.saveAsHandler();
 				}
-			}
+			}.createDelegate(this));
+			
+		}else{
+			// if reference is null, then there was no group to start with
+			// only save option is to save as
+			this.saveAsHandler();
 		}
-		
+	},
+	
+	saveAsHandler: function(){
+		// input window for creation of new groups
+				var detailsWin = new Gemma.GeneSetDetailsDialog();
+				detailsWin.on("commit", function(args){
+					this.newGroupName = args.name;
+					this.newGroupDescription = args.description;
+					this.createInDatabase();
+				}, this);
+				detailsWin.on("hide", function(args){
+					this.close();
+				});
+				
+				detailsWin.name = this.groupName;
+				detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
+				(new Date()).toString();
+				
+				//this.detailsWin.name = '';
+				//this.detailsWin.description = '';
+				detailsWin.show();
+	},
+	saveHandler: function(){
+		this.updateDatabase();
 	},
 	createInSession : function() {
 		var ids = this.getGeneIds();

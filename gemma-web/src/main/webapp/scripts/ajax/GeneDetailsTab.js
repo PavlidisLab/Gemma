@@ -34,17 +34,50 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 		return homologueStr;
 	},
 	renderGeneSets:function(geneSets){
-		var geneSetStr = '';
+		var geneSetBtns = [];
 		var i, geneSet;
 		for(i=0;i<geneSets.length;i++){
 			geneSet = geneSets[i];
-			geneSetStr += "<a title=\"Description: "+geneSet.description+"\" href=\"/Gemma/geneGroupManager.html\">"
-						       + geneSet.name + "</a>&nbsp;&nbsp;&nbsp;";
+			geneSetBtns.push({
+				xtype:'button',
+				text: geneSet.name,
+				ctCls : 'right-align-btn transparent-btn transparent-btn-link',
+				handler: function(){
+					console.log(geneSet);
+					var grid = new Gemma.GeneMembersSaveGrid({
+						geneGroupId : geneSet.id,
+						selectedGeneGroup : geneSet,
+						groupName : geneSet.name,
+						taxonId : geneSet.taxonId,
+						taxonName : geneSet.taxonName,
+						geneIds: geneSet.geneIds,
+						hideHeaders: true,
+						frame:false,
+						allowSaveToSession:false
+					});
+
+					var win = new Ext.Window({
+								// id : 'geneSelectionEditorWindow',
+								// closeAction: 'hide',
+								closable : false,
+								layout : 'fit',
+								width : 450,
+								height : 500,
+								items : grid,
+								title : geneSet.name
+							});
+					grid.on('doneModification', function() {
+						win.hide();
+					}, this);
+					win.show();
+	
+				}.createDelegate(this)
+			});
 		}
-		if(geneSetStr === ''){
-			geneSetStr = 'Not currently a member of any gene group';
+		if(geneSetBtns.length === 0){
+			geneSetBtns.push({html: 'Not currently a member of any gene group'});
 		}
-		return geneSetStr;
+		return geneSetBtns;
 	},
 	initComponent: function(){
 		Gemma.GeneDetails.superclass.initComponent.call(this);
@@ -84,7 +117,8 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: this.renderHomologues(geneDetails.homologues, geneDetails.name)
 						}, {
 							fieldLabel: 'Gene Groups',
-							html: this.renderGeneSets(geneDetails.geneSets)
+							layout:'hbox',
+							items: this.renderGeneSets(geneDetails.geneSets)
 						}, {
 							fieldLabel: 'Probes' + '<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
 							'\'Number of probes for this gene on expression platforms in Gemma\'); return false">' +

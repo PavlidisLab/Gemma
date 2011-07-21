@@ -67,7 +67,7 @@ public class GeneSetController {
     private GeneSetService geneSetService = null;
 
     @Autowired
-    private SecurityService securityService = null;
+    private SecurityService securityService = null; 
 
     @Autowired
     private TaxonService taxonService = null;
@@ -82,7 +82,6 @@ public class GeneSetController {
      * @return id of the new gene group
      */
     public Collection<GeneSetValueObject> create( Collection<GeneSetValueObject> geneSetVos ) {
-
         Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
         for ( GeneSetValueObject geneSetVo : geneSetVos ) {
 
@@ -256,6 +255,29 @@ public class GeneSetController {
         return GeneSetValueObject.convert2ValueObjects( foundGeneSets, false );
     }
 
+    /**
+     * AJAX 
+     * returns a JSON string encoding whether the current user owns the group and whether the group is db-backed
+     * @param ref reference for a gene set
+     * @return
+     */
+    public String canCurrentUserEditGroup(Reference ref){
+        boolean userCanEditGroup = false;
+        boolean groupIsDBBacked = false;
+        // TODO implement check to make sure the reference being passed in is for a gene set!!
+        if(ref.isDatabaseBacked()){
+            groupIsDBBacked = true;
+            try{
+                userCanEditGroup = securityService.isEditable( geneSetService.load( ref.getId() ) );
+            }catch(org.springframework.security.access.AccessDeniedException ade){
+                return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+false+"}";
+            }
+        }
+        
+        return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+userCanEditGroup+"}";
+    }
+    
+    
     /**
      * AJAX If the current user has access to given gene group will return the gene ids in the gene group
      * 

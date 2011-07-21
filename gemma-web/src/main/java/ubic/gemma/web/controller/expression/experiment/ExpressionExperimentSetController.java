@@ -246,6 +246,30 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         return valueObjects;
     }
+    
+
+    /**
+     * AJAX 
+     * returns a JSON string encoding whether the current user owns the group and whether the group is db-backed
+     * @param ref reference for a gene set
+     * @return
+     */
+    public String canCurrentUserEditGroup(Reference ref){
+        boolean userCanEditGroup = false;
+        boolean groupIsDBBacked = false;
+        // TODO implement check to make sure the reference being passed in is for an experiment set!!
+        if(ref.isDatabaseBacked()){
+            groupIsDBBacked = true;
+            try{
+                userCanEditGroup = securityService.isEditable( expressionExperimentService.load( ref.getId() ) );
+            }catch(org.springframework.security.access.AccessDeniedException ade){
+                return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+false+"}";
+            }
+        }
+        
+        return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+userCanEditGroup+"}";
+    }
+    
 
     /**
      * @param entities
