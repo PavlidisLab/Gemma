@@ -113,10 +113,16 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
         Ensembl2NcbiValueObject bioMartEnsembleNcbi = new Ensembl2NcbiValueObject();
         String entrezGene = fields[2].trim();
         String ensemblProteinId = fields[3].trim();
+
+        if ( StringUtils.isBlank( ensemblProteinId ) ) {
+            log.warn( "Blank protein id for line: " + StringUtils.join( fields, " " ) );
+            return null;
+        }
+
         // if there is no entrezgene skip as that is what we want
-        if ( entrezGene == null || entrezGene.isEmpty() ) {
+        if ( StringUtils.isBlank( entrezGene ) ) {
             log.debug( ensemblProteinId + " has no entrez gene mapping" );
-            return bioMartEnsembleNcbi;
+            return null;
         }
 
         String ensemblGeneID = fields[0].trim();
@@ -134,16 +140,17 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
         if ( !containsKey( ensemblProteinId ) ) {
             bioMartEnsembleNcbi.getEntrezgenes().add( entrezGene );
             results.put( ensemblProteinId, bioMartEnsembleNcbi );
-            log.debug( ensemblProteinId + " has no existing  entrez gene mapping" );
+            if ( log.isDebugEnabled() ) log.debug( ensemblProteinId + " has no existing  entrez gene mapping" );
         } else {
             Ensembl2NcbiValueObject bioMartEnsembleNcbiDup = this.get( ensemblProteinId );
             // check that the this duplicate record also is the same for ensembl id
             if ( ensemblGeneID.equals( bioMartEnsembleNcbiDup.getEnsemblGeneId() ) ) {
                 this.get( ensemblProteinId ).getEntrezgenes().add( entrezGene );
-                log.debug( ensemblProteinId + "added gene to duplicate  " );
+                if ( log.isDebugEnabled() ) log.debug( ensemblProteinId + "added gene to duplicate  " );
             } else {
-                throw new FileFormatException( "A duplicate ensemblProteinId has been found " + ensemblProteinId
-                        + "but it does not match with the exisiting objects gene id " + ensemblGeneID );
+                throw new FileFormatException( "A duplicate ensemblProteinId has been found: " + ensemblProteinId
+                        + " but it does not match with the exisiting objects gene id " + ensemblGeneID + ", it was "
+                        + bioMartEnsembleNcbiDup.getEnsemblGeneId() + ", line was:\n" + StringUtils.join( fields, " " ) );
             }
         }
         return bioMartEnsembleNcbi;
