@@ -783,27 +783,33 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						link.innerHTML="Logout"; 
 						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
 						hasuser.value= true;
-						this.loggedInSaveHandler();
+						
 					}
-                    else{
+                    else if (typeof(response.responseText)!=='undefined'){
                     	link.href="/Gemma/login.jsp";
 						link.innerHTML="Login";
 						loggedInAs.innerHTML=" ";
 						hasuser.value= "";
-						this.promptLoginForSave();  
+						 
                     }
+                    
+                    this.saveCheckMethod();
                       
             },
             failure: function ( response, options ) {  
-				this.promptLoginForSave();  
+				
+				this.saveCheckMethod();
             },
             scope: this,
-            disableCaching: true
+            disableCaching: true,
+            timeout: 10000
        });
 	   
 	},
-	promptLoginForSave : function () {
-			
+	saveCheckMethod : function () {
+		
+	if (!Ext.get('hasUser').getValue()) {
+		
 		if (this.ajaxLogin == null){
 			
 			//Check to see if another login widget is open (rare case but possible)
@@ -827,7 +833,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 				this.getEl().unmask();		
 				this.ajaxLogin.destroy();
 				this.ajaxLogin=null;
-				this.saveBtnHandler();
+				this.saveCheckMethod();
 				
 				
 			},this);
@@ -854,15 +860,13 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 			this.getEl().mask();
 			this.ajaxLogin.show();
-	},
-	loggedInSaveHandler : function () {
+	} else{	
 		
 		// get name and description set up
 		this.createDetails();
 		
 		// check if user is editing a non-existant or session-bound group
 		
-				console.log(this.selectedGeneGroup);
 		// check if group is db-backed and whether current user has editing priveleges
 		if(this.selectedGeneGroup && this.selectedGeneGroup.reference){
 			
@@ -903,6 +907,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			// only save option is to save as
 			this.saveAsHandler();
 		}
+	}
 	},
 	
 	saveAsHandler: function(){

@@ -477,26 +477,29 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						link.href="/Gemma/j_spring_security_logout";
 						link.innerHTML="Logout"; 
 						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
-						hasuser.value= true;
-						this.loggedInSaveHandler();
+						hasuser.value= true;						
 					}
-                    else{
+                    else if (typeof(response.responseText)!=='undefined'){
                     	link.href="/Gemma/login.jsp";
 						link.innerHTML="Login";
 						loggedInAs.innerHTML=" ";
 						hasuser.value= "";
-						this.promptLoginForSave();                      	
+						               	
                     }
+                    this.saveCheckMethod();
             },
             failure: function ( response, options ) {   
-				this.promptLoginForSave();  
+				
+            	this.saveCheckMethod();
             },
             scope: this,
             disableCaching: true
        });
 	},
 	
-	promptLoginForSave: function(){
+	saveCheckMethod: function(){
+		
+	if (!Ext.get('hasUser').getValue()) {
 		if (this.ajaxLogin == null) {
 		
 			//Check to see if another login widget is open (rare case but possible)
@@ -511,7 +514,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.ajaxLogin = new Gemma.AjaxLogin({
 				name: 'ajaxLogin',
 				closable: false,
-				//closeAction : 'hide',													
+																
 				title: 'Please login to use this function'
 			
 			
@@ -522,7 +525,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				this.getEl().unmask();
 				this.ajaxLogin.destroy();
 				this.ajaxLogin = null;
-				this.saveBtnHandler();
+				this.saveCheckMethod();
 				
 				
 			}, this);
@@ -550,8 +553,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.ajaxLogin.show();
 		
 		
-	},
-	loggedInSaveHandler : function () {
+	} else {
 		
 		// get name and description set up
 		this.createDetails();
@@ -598,6 +600,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			// only save option is to save as
 			this.saveAsHandler();
 		}
+	}
 	},
 	saveAsHandler: function(){
 		// input window for creation of new groups
@@ -624,7 +627,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	saveToSession : function() {
 		var editedGroup;
-		if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
+		if (this.selectedExperimentGroup === null || typeof this.selectedExperimentGroup === 'undefined') {
 			//group wasn't made before launching 
 			editedGroup = {
 				reference: {
@@ -634,7 +637,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			};
 		}
 		else {
-			editedGroup = this.selectedGeneGroup;
+			editedGroup = this.selectedExperimentGroup;
 		// reference has the right type already
 		}
 			
@@ -663,7 +666,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	createInDatabase: function(){
 		var editedGroup;
-		if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
+		if (this.selectedExperimentGroup === null || typeof this.selectedExperimentGroup === 'undefined') {
 			//group wasn't made before launching 
 			editedGroup = {
 				reference: {
@@ -673,7 +676,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			};
 		}
 		else {
-			editedGroup = this.selectedGeneGroup;
+			editedGroup = this.selectedExperimentGroup;
 		// reference has the right type already
 		}
 		
