@@ -322,7 +322,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 
 		linkText += '</span>';
 		/* provide link for visualization. */
-		linkText += '<span class="link" onClick="Ext.getCmp(\'ee-details-panel\').visualizeDiffExpressionHandler(\''
+		linkText += '<span class="link" onClick="visualizeDiffExpressionHandler(\''
 				+ eeID + '\',\'' + resultSet.resultSetId + '\',\'' + factor
 				+ '\')" ext:qtip="Click to visualize differentially expressed probes for: ' + factor
 				+ ' (FDR threshold=' + resultSet.threshold
@@ -401,8 +401,27 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 
 			}
 		}
-	}
+	}   
 });
 
 // register panel as xtype
 Ext.reg('differentialExpressionAnalysesSummaryTree', Gemma.DifferentialExpressionAnalysesSummaryTree);
+
+
+	    /**
+     * fix for now, should replace visualize 'button' with ext button that calls this function, and move function inside Gemma.DifferentialExpressionAnalysesSummaryTree
+     */
+function visualizeDiffExpressionHandler(eeid, diffResultId, factorDetails){
+    
+        var params = {};
+        this.visDiffWindow = new Gemma.VisualizationWithThumbsWindow({
+            thumbnails: false,
+            readMethod: DEDVController.getDEDVForDiffExVisualizationByThreshold,
+            title: "Top diff. ex. probes for " + factorDetails,
+            showLegend: false,
+            downloadLink: String.format("/Gemma/dedv/downloadDEDV.html?ee={0}&rs={1}&thresh={2}&diffex=1", eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD)
+        });
+        this.visDiffWindow.show({
+            params: [eeid, diffResultId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
+        });
+    }
