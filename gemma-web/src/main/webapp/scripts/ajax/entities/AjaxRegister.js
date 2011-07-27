@@ -83,6 +83,12 @@ Gemma.AjaxRegister = Ext.extend(Ext.Window, {
 					lang : 'en',
 					allowBlank : false
 
+				},{
+					id : 'ajaxRegisterTrue',
+					name : 'ajaxRegisterTrue',
+					hidden : true,
+					value:'true'
+					
 				}],
 
 		buttons : [{

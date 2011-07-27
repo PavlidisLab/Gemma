@@ -218,8 +218,17 @@ public class SignupController extends BaseController {
              */
             String templateName = "accountCreated.vm";
             sendEmail( u.getUsername(), u.getEmail(), "Successful registration for Gemma", templateName, model );
-            this.saveMessage( request, "signup.email.sent", u.getEmail(),
-                    "A confirmation email was sent. Please check your mail and click the link it contains" );
+
+            //See if this comes from AjaxRegister.js, if it does don't save confirmation message
+            String ajaxRegisterTrue = request.getParameter( "ajaxRegisterTrue" );
+
+            if ( ajaxRegisterTrue == null || !ajaxRegisterTrue.equals( "true" ) ) {
+
+                this.saveMessage( request, "signup.email.sent", u.getEmail(),
+                        "A confirmation email was sent. Please check your mail and click the link it contains" );
+
+            }
+
         } catch ( Exception e ) {
             log.error( "Couldn't send email to " + u.getEmail(), e );
         }
@@ -241,24 +250,23 @@ public class SignupController extends BaseController {
         ReCaptchaResponse reCaptchaResponse = reCaptcha.checkAnswer( remoteAddr, rcChallenge, rcResponse );
         return reCaptchaResponse.isValid();
     }
-    
+
     @RequestMapping(value = "/ajaxLoginCheck.html")
     public void ajaxLoginCheck( HttpServletRequest request, HttpServletResponse response ) throws Exception {
 
         JSONUtil jsonUtil = new JSONUtil( request, response );
-        
+
         String jsonText = null;
         String userName = null;
-        
-        if (userManager.loggedIn()){            
-            userName = userManager.getCurrentUser().getUserName();            
-            jsonText = "{success:true,user:\'"+ userName +"\'}";            
-        }
-        else{
+
+        if ( userManager.loggedIn() ) {
+            userName = userManager.getCurrentUser().getUserName();
+            jsonText = "{success:true,user:\'" + userName + "\'}";
+        } else {
             jsonText = "{success:false}";
         }
         jsonUtil.writeToResponse( jsonText );
         return;
-       
+
     }
 }
