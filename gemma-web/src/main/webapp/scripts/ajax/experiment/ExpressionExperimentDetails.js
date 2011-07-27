@@ -60,7 +60,6 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     /**
      *
-     */
     visualizeDiffExpressionHandler: function(eeid, diffResultId, factorDetails){
     
         var params = {};
@@ -76,6 +75,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         });
         
     },
+     */
     
     /**
      *
