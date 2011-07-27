@@ -56,13 +56,12 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 		var sorter = new Ext.tree.TreeSorter(this, {
 					dir : 'ASC',
 					sortType : function(node) {
-						if (node.attributes.numberOfFactors) {
+						if (node && node.attributes && node.attributes.numberOfFactors && node.attributes.text) {
 							return parseInt(node.attributes.numberOfFactors, 10) + node.attributes.text;
 						}
-						return node.attributes.text;
+						return (node.attributes)?node.attributes.text:'';
 					}
 				});
-		// sorter.doSort(this.getRootNode());
 	},
 	build : function() {
 		var analyses = this.ee.differentialExpressionAnalyses;
@@ -241,7 +240,10 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 			var sorter = new Ext.tree.TreeSorter(this, {
 						dir : 'ASC',
 						sortType : function(node) {
-							return parseInt(node.attributes.numberOfFactors, 10);
+							if(node.attributes){
+								return parseInt(node.attributes.numberOfFactors, 10);
+							}
+							return 0;
 						}
 					});
 			sorter.doSort(parentNode);
@@ -258,7 +260,8 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 	getExpressionNumbers : function(resultSet, nodeId, showThreshold) {
 		/* Show how many probes are differentially expressed; */
 
-		var numbers = resultSet.numberOfDiffExpressedProbes + ' differentially expressed probes<br>';
+		var numbers = resultSet.numberOfDiffExpressedProbes + ' of '+this.totalProbes+
+			 ' probes were differentially expressed<br>';
 
 		// if (resultSet.upregulatedCount != 0) {
 		numbers += resultSet.upregulatedCount + "&nbsp;Up";
@@ -296,7 +299,7 @@ Gemma.DifferentialExpressionAnalysesSummaryTree = Ext.extend(Ext.tree.TreePanel,
 	getActionLinks : function(resultSet, factor, eeID, nodeId) {
 		/* link for details */
 		var numbers = this.getExpressionNumbers(resultSet, nodeId, true);
-		var linkText = '&nbsp;' + '<span class="link" onClick="Ext.Msg.alert(\'Probe Contrast Details\', \'' + numbers
+		var linkText = '&nbsp;' + '<span class="link" onClick="Ext.Msg.alert(\'Differential Expression Specificity and Contrast Ratio\', \'' + numbers
 				+ '\')" ext:qtip=\"' + numbers + '\">' + '&nbsp;<canvas height=20 width=20 id="chartDiv' + nodeId
 				+ '"></canvas>';
 
