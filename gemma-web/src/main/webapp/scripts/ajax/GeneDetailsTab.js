@@ -33,45 +33,44 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 		}
 		return homologueStr;
 	},
+	
 	renderGeneSets:function(geneSets){
 		var geneSetBtns = [];
 		var i, geneSet;
 		for(i=0;i<geneSets.length;i++){
-			geneSet = geneSets[i];
 			geneSetBtns.push({
 				xtype:'button',
 				text: geneSet.name,
 				ctCls : 'right-align-btn transparent-btn transparent-btn-link',
-				handler: function(){
-					console.log(geneSet);
-					var grid = new Gemma.GeneMembersSaveGrid({
-						geneGroupId : geneSet.id,
-						selectedGeneGroup : geneSet,
-						groupName : geneSet.name,
-						taxonId : geneSet.taxonId,
-						taxonName : geneSet.taxonName,
-						geneIds: geneSet.geneIds,
-						hideHeaders: true,
-						frame:false,
-						allowSaveToSession:false
-					});
-
-					var win = new Ext.Window({
-								// id : 'geneSelectionEditorWindow',
-								// closeAction: 'hide',
-								closable : false,
-								layout : 'fit',
-								width : 450,
-								height : 500,
-								items : grid,
-								title : geneSet.name
-							});
-					grid.on('doneModification', function() {
-						win.hide();
-					}, this);
-					win.show();
-	
-				}.createDelegate(this)
+				geneSet: geneSets[i],
+				listeners: {
+					click: function(){
+						var grid = new Gemma.GeneMembersSaveGrid({
+							geneGroupId: this.geneSet.id,
+							selectedGeneGroup: this.geneSet,
+							groupName: this.geneSet.name,
+							taxonId: this.geneSet.taxonId,
+							taxonName: this.geneSet.taxonName,
+							geneIds: this.geneSet.geneIds,
+							hideHeaders: true,
+							frame: false,
+							allowSaveToSession: false
+						});
+						
+						var win = new Ext.Window({
+							closable: false,
+							layout: 'fit',
+							width: 450,
+							height: 500,
+							items: grid,
+							title: this.geneSet.name
+						});
+						grid.on('doneModification', function(){
+							win.close();
+						}, this);
+						win.show();
+					}
+				}
 			});
 		}
 		if(geneSetBtns.length === 0){
