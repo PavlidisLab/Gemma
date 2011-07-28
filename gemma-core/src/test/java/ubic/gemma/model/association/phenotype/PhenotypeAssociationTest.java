@@ -1,15 +1,23 @@
 package ubic.gemma.model.association.phenotype;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 
+import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.association.GOEvidenceCode;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
@@ -21,20 +29,32 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private UrlEvidenceDao urlDao;
 
     @Autowired
-    private PhenotypeAssociationManagerService phenoAssoService;;
+    private PhenotypeAssociationManagerService phenoAssoService;
+
+    private String geneNCBI = "";
+    private Collection<String> phenotypes = null;
+    private UrlEvidenceValueObject evidence = null;
+    private String phenotypeValue = "GOTestPhenotype";
+
+    @Before
+    public void setup() {
+
+        // Gene NCBI used
+        geneNCBI = "44444444";
+        // Phenotype
+        phenotypeValue = "GOTestPhenotype";
+        phenotypes = new HashSet<String>();
+        phenotypes.add( phenotypeValue );
+        // Evidence
+        evidence = new UrlEvidenceValueObject( "test_name", "test_description", false,
+                GOEvidenceCode.fromString( "IC" ), phenotypes, "www.test.com" );
+
+        // Make sure a Gene exist in the database with the NCBI id
+        makeGene( geneNCBI );
+    }
 
     @Test
     public void testPhenotypeAssociation() {
-
-        // Gene id used
-        String geneNCBI = "1";
-        // Phenotype
-        String phenotypeValue = "GOTestPhenotype";
-        Collection<String> phenotypes = new HashSet<String>();
-        phenotypes.add( phenotypeValue );
-        // 3- Evidence
-        UrlEvidenceValueObject evidence = new UrlEvidenceValueObject( "test_name", "test_description", false,
-                GOEvidenceCode.fromString( "IC" ), phenotypes, "www.test.com" );
 
         // ********************************************************************************************
         // 1 - call the service to add the phenotype association and save the results to the database
@@ -60,7 +80,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertTrue( phenoAssoService.findCandidateGenes( phenotypeValue ).size() == 0 );
     }
 
-    @Test
+    // @Test
     public void testDaoUrlEvidence() {
 
         // create
@@ -139,6 +159,28 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
                 System.out.println();
             }
         }
+    }
+
+    private Gene makeGene( String ncbiId ) {
+
+        Taxon rat = Taxon.Factory.newInstance();
+        rat.setIsGenesUsable( true );
+        rat.setNcbiId( 10116 );
+        rat.setScientificName( "Rattus norvegicus" );
+        rat.setIsSpecies( true );
+        persisterHelper.persist( rat );
+
+        Gene g = Gene.Factory.newInstance();
+        g.setName( "RAT1" );
+        g.setOfficialName( "RAT1" );
+        g.setOfficialSymbol( "RAT1" );
+        g.setNcbiId( ncbiId );
+        g.setTaxon( rat );
+        List<GeneProduct> ggg = new ArrayList<GeneProduct>();
+        ggg.add( super.getTestPersistentGeneProduct( g ) );
+        g.setProducts( ggg );
+        g = ( Gene ) persisterHelper.persist( g );
+        return g;
     }
 
 }
