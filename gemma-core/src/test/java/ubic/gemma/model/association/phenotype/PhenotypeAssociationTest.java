@@ -23,29 +23,18 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     @Autowired
     private PhenotypeAssociationManagerService phenoAssoService;;
 
-    private String geneNCBI = "";
-    private UrlEvidenceValueObject evidence = null;
-    private String phenotypeValue = null;
-    private Collection<String> phenotypes = null;
-
-    @Before
-    public void setup() throws Exception {
-
-        // 1- Gene we will use for test
-        geneNCBI = "1";
-
-        // 2 - Phenotype
-        phenotypeValue = "GOTestPhenotype";
-        phenotypes = new HashSet<String>();
-        phenotypes.add( phenotypeValue );
-
-        // 3- Evidence
-        evidence = new UrlEvidenceValueObject( "test_name", "test_description", false,
-                GOEvidenceCode.fromString( "IC" ), phenotypes, "www.test.com" );
-    }
-
     @Test
     public void testPhenotypeAssociation() {
+
+        // Gene id used
+        String geneNCBI = "1";
+        // Phenotype
+        String phenotypeValue = "GOTestPhenotype";
+        Collection<String> phenotypes = new HashSet<String>();
+        phenotypes.add( phenotypeValue );
+        // 3- Evidence
+        UrlEvidenceValueObject evidence = new UrlEvidenceValueObject( "test_name", "test_description", false,
+                GOEvidenceCode.fromString( "IC" ), phenotypes, "www.test.com" );
 
         // ********************************************************************************************
         // 1 - call the service to add the phenotype association and save the results to the database
