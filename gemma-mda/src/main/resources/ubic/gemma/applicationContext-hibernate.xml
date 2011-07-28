@@ -13,7 +13,7 @@
 
 	<!-- DONT include gemma.web here, it is brought in by gemma-servlet.xml -->
 	<context:component-scan
-		base-package="ubic.gemma.analysis,ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology,ubic.gemma.annotation,ubic.gemma.job,ubic.gemma.tasks"
+		base-package="ubic.gemma.analysis,ubic.gemma.association, ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology,ubic.gemma.annotation,ubic.gemma.job,ubic.gemma.tasks"
 		name-generator="ubic.gemma.util.BeanNameGenerator" />
 
 	<!--

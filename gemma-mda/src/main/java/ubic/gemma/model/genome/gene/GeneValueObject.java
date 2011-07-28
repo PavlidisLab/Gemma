@@ -22,9 +22,9 @@ package ubic.gemma.model.genome.gene;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.association.phenotype.valueObject.EvidenceValueObject;
 
 /**
  * @author kelsey
@@ -42,10 +42,15 @@ public class GeneValueObject implements java.io.Serializable {
         if ( genes == null ) return converted;
 
         for ( Gene g : genes ) {
-            if ( g == null ) continue;
-            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiId(), g.getOfficialSymbol(), g
-                    .getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g.getTaxon()
-                    .getScientificName(), g.getTaxon().getCommonName() ) );
+            if ( g != null ) {
+
+                Collection<EvidenceValueObject> evidencesFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
+                        .getPhenotypeAssociations() );
+
+                converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiId(), g
+                        .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
+                        .getTaxon().getScientificName(), g.getTaxon().getCommonName(), evidencesFromPhenotype ) );
+            }
         }
 
         return converted;
@@ -77,7 +82,7 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.String name;
 
     private Collection<java.lang.String> aliases;
-    
+
     private java.lang.String ncbiId;
 
     private java.lang.String officialName;
@@ -91,7 +96,9 @@ public class GeneValueObject implements java.io.Serializable {
     private java.lang.Long taxonId;
 
     private java.lang.String taxonScientificName;
-    
+
+    /** Added field for the Candidate Gene Management System */
+    private Collection<EvidenceValueObject> evidences;
 
     public GeneValueObject() {
     }
@@ -107,6 +114,7 @@ public class GeneValueObject implements java.io.Serializable {
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
         this.aliases = getAliasStrings( gene );
+        this.evidences = EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
 
     /**
@@ -116,12 +124,11 @@ public class GeneValueObject implements java.io.Serializable {
      */
     public GeneValueObject( GeneSetMember otherBean ) {
 
-
-        this( otherBean.getGene().getId(), otherBean.getGene().getName(), getAliasStrings( otherBean.getGene() ), 
-                otherBean.getGene().getNcbiId(), otherBean
-                .getGene().getOfficialSymbol(), otherBean.getGene().getOfficialName(), otherBean.getGene()
-                .getDescription(), otherBean.getScore(), otherBean.getGene().getTaxon().getId(), otherBean.getGene()
-                .getTaxon().getScientificName(), otherBean.getGene().getTaxon().getCommonName() );
+        this( otherBean.getGene().getId(), otherBean.getGene().getName(), getAliasStrings( otherBean.getGene() ),
+                otherBean.getGene().getNcbiId(), otherBean.getGene().getOfficialSymbol(), otherBean.getGene()
+                        .getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(), otherBean
+                        .getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName(), otherBean
+                        .getGene().getTaxon().getCommonName() );
     }
 
     /**
@@ -131,15 +138,15 @@ public class GeneValueObject implements java.io.Serializable {
      * @throws java.lang.NullPointerException if the argument is <code>null</code>
      */
     public GeneValueObject( GeneValueObject otherBean ) {
-        this( otherBean.getId(), otherBean.getName(), otherBean.getAliases(), otherBean.getNcbiId(), otherBean.getOfficialSymbol(), otherBean
-                .getOfficialName(), otherBean.getDescription(), otherBean.getScore(), otherBean.getTaxonId(), otherBean
-                .getTaxonScientificName(), otherBean.getTaxonCommonName() );
+        this( otherBean.getId(), otherBean.getName(), otherBean.getAliases(), otherBean.getNcbiId(), otherBean
+                .getOfficialSymbol(), otherBean.getOfficialName(), otherBean.getDescription(), otherBean.getScore(),
+                otherBean.getTaxonId(), otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName(), otherBean
+                        .getEvidences() );
     }
 
     public GeneValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
-            java.lang.String ncbiId,
-            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score,
-            Long taxonId, String taxonScientificName, String taxonCommonName ) {
+            java.lang.String ncbiId, java.lang.String officialSymbol, java.lang.String officialName,
+            java.lang.String description, Double score, Long taxonId, String taxonScientificName, String taxonCommonName ) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
@@ -151,6 +158,24 @@ public class GeneValueObject implements java.io.Serializable {
         this.taxonScientificName = taxonScientificName;
         this.taxonCommonName = taxonCommonName;
         this.aliases = aliases;
+    }
+
+    public GeneValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
+            java.lang.String ncbiId, java.lang.String officialSymbol, java.lang.String officialName,
+            java.lang.String description, Double score, Long taxonId, String taxonScientificName,
+            String taxonCommonName, Collection<EvidenceValueObject> evidences ) {
+        this.id = id;
+        this.name = name;
+        this.ncbiId = ncbiId;
+        this.officialSymbol = officialSymbol;
+        this.officialName = officialName;
+        this.description = description;
+        this.score = score;
+        this.taxonId = taxonId;
+        this.taxonScientificName = taxonScientificName;
+        this.taxonCommonName = taxonCommonName;
+        this.aliases = aliases;
+        this.evidences = evidences;
     }
 
     /**
@@ -166,23 +191,20 @@ public class GeneValueObject implements java.io.Serializable {
             this.setDescription( otherBean.getDescription() );
             this.setScore( otherBean.getScore() );
             this.setAliases( otherBean.getAliases() );
+            this.setEvidences( otherBean.getEvidences() );
         }
     }
-    
 
-    public static Collection<String> getAliasStrings(Gene gene){
+    public static Collection<String> getAliasStrings( Gene gene ) {
         Collection<java.lang.String> aliases = new ArrayList<String>();
         // catch doesn't prevent error messages in logs -- why?
-       /* try{
-            
-            Collection<GeneAlias> aliasObjs = gene.getAliases();
-            Iterator<GeneAlias> iter = aliasObjs.iterator();
-            while( iter.hasNext()){
-               aliases.add( iter.next().getAlias() );
-            }
-        }catch(org.hibernate.LazyInitializationException e){
-            return aliases;
-        }*/
+        /*
+         * try{
+         * 
+         * Collection<GeneAlias> aliasObjs = gene.getAliases(); Iterator<GeneAlias> iter = aliasObjs.iterator(); while(
+         * iter.hasNext()){ aliases.add( iter.next().getAlias() ); } }catch(org.hibernate.LazyInitializationException
+         * e){ return aliases; }
+         */
         return aliases;
 
     }
@@ -298,6 +320,14 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setTaxonScientificName( java.lang.String taxonScientificName ) {
         this.taxonScientificName = taxonScientificName;
+    }
+
+    public Collection<EvidenceValueObject> getEvidences() {
+        return evidences;
+    }
+
+    public void setEvidences( Collection<EvidenceValueObject> evidences ) {
+        this.evidences = evidences;
     }
 
 }
