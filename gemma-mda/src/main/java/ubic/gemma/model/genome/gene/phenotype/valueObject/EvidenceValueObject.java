@@ -1,4 +1,4 @@
-package ubic.gemma.association.phenotype.valueObject;
+package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -34,6 +34,7 @@ public abstract class EvidenceValueObject {
      * @param phenotypeAssociations The List of entity we need to convert
      * @return A list of Evidence Value objects
      */
+
     public static Collection<EvidenceValueObject> convert2ValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
@@ -71,6 +72,7 @@ public abstract class EvidenceValueObject {
         }
         return returnEvidences;
     }
+
 
     public EvidenceValueObject( String name, String description, GOEvidenceCode evidenceCode,
             Boolean isNegativeEvidence, Collection<Characteristic> characteristics, Long databaseId ) {

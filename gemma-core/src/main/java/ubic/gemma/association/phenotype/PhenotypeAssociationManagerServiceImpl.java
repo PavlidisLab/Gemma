@@ -5,12 +5,13 @@ import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import ubic.gemma.association.phenotype.valueObject.EvidenceValueObject;
+
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Component
@@ -39,7 +40,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         PhenotypeAssociation phenotypeAssociation = evidence.createEntity();
 
         // add the new phenotype association to the gene
-        gene.addPhenotypeAssociation( phenotypeAssociation );
+        gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
         // save result
         geneService.update( gene );

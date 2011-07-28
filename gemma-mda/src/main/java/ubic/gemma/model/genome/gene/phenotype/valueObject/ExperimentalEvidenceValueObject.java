@@ -1,4 +1,4 @@
-package ubic.gemma.association.phenotype.valueObject;
+package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 

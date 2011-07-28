@@ -4,8 +4,9 @@ import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.association.phenotype.valueObject.EvidenceValueObject;
+
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 
 @Service
 public interface PhenotypeAssociationManagerService {

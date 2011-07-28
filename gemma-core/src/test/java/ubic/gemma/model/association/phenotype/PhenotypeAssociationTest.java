@@ -8,10 +8,11 @@ import java.util.HashSet;
 import org.junit.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.association.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.association.phenotype.valueObject.UrlEvidenceValueObject;
+
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 public class PhenotypeAssociationTest extends BaseSpringContextTest {

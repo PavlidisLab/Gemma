@@ -1,14 +1,14 @@
-package ubic.gemma.association.phenotype.valueObject;
+package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 
-//TODO stgeorgn
-public class DifferentialExpressionValueObject extends EvidenceValueObject {
+// TODO stgeorgn
+public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
-    public DifferentialExpressionValueObject( String name, String description, Boolean isNegativeEvidence,
+    public LiteratureEvidenceValueObject( String name, String description, Boolean isNegativeEvidence,
             GOEvidenceCode evidenceCode, Collection<String> phenotypes ) {
         super( name, description, isNegativeEvidence, evidenceCode, phenotypes );
         // TODO Auto-generated constructor stub
@@ -19,8 +19,5 @@ public class DifferentialExpressionValueObject extends EvidenceValueObject {
         // TODO Auto-generated method stub
         return null;
     }
-
-
-    
 
 }

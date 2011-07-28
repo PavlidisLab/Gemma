@@ -24,7 +24,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.association.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+
 
 /**
  * @author kelsey
