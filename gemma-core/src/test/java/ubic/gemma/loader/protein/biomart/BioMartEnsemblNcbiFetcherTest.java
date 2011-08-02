@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -58,6 +59,9 @@ public class BioMartEnsemblNcbiFetcherTest {
             File ratBiomartFile = biomartEnsemblNcbiFetcher.fetchFileForProteinQuery( "rnorvegicus" );
             assertNotNull( ratBiomartFile );
             assertTrue( ratBiomartFile.canRead() );
+
+        } catch ( ConnectException e ) {
+            log.warn( "Connection error, skipping test" );
         } catch ( IOException e ) {
             if ( e.getMessage().startsWith( "Error from BioMart" ) ) {
                 log.warn( e.getMessage() );

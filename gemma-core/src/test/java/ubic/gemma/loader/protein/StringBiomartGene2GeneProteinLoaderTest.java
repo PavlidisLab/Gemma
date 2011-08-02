@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -260,6 +261,8 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         try {
             stringBiomartGene2GeneProteinAssociationLoader.load( new File( testPPisURL.getFile() ), null, new File(
                     biomartTestfileURL.getFile() ), getTaxonToProcess() );
+        } catch ( ConnectException e ) {
+            log.warn( "Connection error, skipping test" );
         } catch ( IOException e ) {
             if ( e.getMessage().startsWith( "Error from BioMart" ) ) {
                 log.warn( e.getMessage() );
@@ -308,6 +311,8 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         try {
             stringBiomartGene2GeneProteinAssociationLoader.load( new File( fileNameStringZebraFishURL.getFile() ),
                     null, null, taxaZebraFish );
+        } catch ( ConnectException e ) {
+            log.warn( "Connection error, skipping test" );
         } catch ( IOException e ) {
             if ( e.getMessage().startsWith( "Error from BioMart" ) ) {
                 log.warn( e.getMessage() );
