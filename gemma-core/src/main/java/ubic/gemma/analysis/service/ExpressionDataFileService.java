@@ -527,8 +527,8 @@ public class ExpressionDataFileService {
             factorColumnName = StringUtils.chomp( factorColumnName, "," ) + ")";
 
             // Generate headers
-            buf.append( "QValue" + factorColumnName + "\t" );
-            buf.append( "PValue" + factorColumnName + "\t" );
+            buf.append( "\tQValue" + factorColumnName );
+            buf.append( "\tPValue" + factorColumnName );
 
             // Generate probe details
             for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
@@ -543,15 +543,15 @@ public class ExpressionDataFileService {
                     if ( probe2String.containsKey( csid ) ) {
                         probeBuffer = probe2String.get( csid );
                     } else {// no entry for probe yet
-                        probeBuffer.append( cs.getName() + "\t" );
+                        probeBuffer.append( cs.getName() );
                         if ( geneAnnotations.containsKey( csid ) )
-                            probeBuffer.append( geneAnnotations.get( csid )[1] + "\t" + geneAnnotations.get( csid )[2]
-                                    + "\t" );
+                            probeBuffer.append( "\t" + geneAnnotations.get( csid )[1] + "\t"
+                                    + geneAnnotations.get( csid )[2] );
                         probe2String.put( csid, probeBuffer );
                     }
 
-                    probeBuffer.append( String.format( DECIMAL_FORMAT, dear.getCorrectedPvalue() ) + "\t"
-                            + String.format( DECIMAL_FORMAT, dear.getPvalue() ) + "\t" );
+                    probeBuffer.append( "\t" + String.format( DECIMAL_FORMAT, dear.getCorrectedPvalue() ) + "\t"
+                            + String.format( DECIMAL_FORMAT, dear.getPvalue() ) );
                 } else {
                     log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                             + dear.getClass() + " with id: " + dear.getId() );
@@ -631,9 +631,9 @@ public class ExpressionDataFileService {
             log.info( "Annotation file is missing for this experiment, unable to include gene annotation information" );
             buf
                     .append( "# The annotation file is missing for this Experiment, unable to include gene annotation information \n" );
-            buf.append( "Probe_Name\t" );
+            buf.append( "Probe_Name" );
         } else {
-            buf.append( "Probe_Name\tGene_Name\tGene_Symbol\t" );// column information
+            buf.append( "Probe_Name\tGene_Name\tGene_Symbol" );// column information
         }
 
         return buf.toString();

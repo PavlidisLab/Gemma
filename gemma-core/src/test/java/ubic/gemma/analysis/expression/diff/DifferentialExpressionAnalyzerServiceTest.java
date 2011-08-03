@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,6 +32,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
 
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -41,7 +45,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * @author keshav, paul
@@ -59,14 +62,15 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     private ProcessedExpressionDataVectorService processedDataVectorService;
 
     @Autowired
+    ExpressionDataFileService expressionDataFileService;
+
+    @Autowired
     protected GeoDatasetService geoService;
 
     @Autowired
     GenericAncovaAnalyzer analyzer;
 
     ExpressionExperiment ee = null;
-
-    boolean rReady = true;
 
     /*
      * (non-Javadoc)
@@ -75,17 +79,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      */
     @Before
     public void setup() throws Exception {
-
-        try {
-            if ( ConfigUtils.getBoolean( "gemma.linearmodels.useR" ) ) {
-                analyzer.connectToR();
-            } else {
-                this.rReady = true; // cuz we're not using R, we just make so
-            }
-        } catch ( Exception e ) {
-            this.rReady = false;
-        }
-        analyzer.disconnectR();
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
 
@@ -115,17 +108,10 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     /**
-     * This requires that R is set up.
-     * 
      * @throws Exception
      */
     @Test
     public void testAnalyzeAndDelete() throws Exception {
-
-        if ( !this.rReady ) {
-            log.info( "R is not available for the test" );
-            return;
-        }
 
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee );
@@ -133,21 +119,29 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         assertTrue( !analyses.isEmpty() );
         assertNotNull( analyses.iterator().next() );
 
+        /*
+         * Exercise the matrix output services.
+         */
+        File outputLocation = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, true );
+        log.info( outputLocation );
+        DoubleMatrixReader r = new DoubleMatrixReader();
+        DoubleMatrix<String, String> readIn = r.read( outputLocation.getAbsolutePath() );
+
+        assertEquals( 100, readIn.rows() );
+        assertEquals( 6, readIn.columns() );
+
+        // / delete the analysis
         int numDeleted = differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
         assertTrue( numDeleted > 0 );
     }
 
     /**
-     * This requires that R is set up. Test for bug 2026, not a subsetted analysis.
+     * Test for bug 2026, not a subsetted analysis.
      * 
      * @throws Exception
      */
     @Test
     public void testAnalyzeAndDeleteSpecificAnalysis() throws Exception {
-        if ( !this.rReady ) {
-            log.info( "R is not available for the test" );
-            return;
-        }
 
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee );
@@ -165,10 +159,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     @SuppressWarnings("unchecked")
     @Test
     public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() throws Exception {
-        if ( !this.rReady ) {
-            log.info( "R is not available for the test" );
-            return;
-        }
 
         ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors().toArray(
                 new ExperimentalFactor[] {} );
@@ -190,14 +180,11 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     }
 
     /**
-     * This requires that R is set up.
+     * 
      */
     @Test
     public void testWritePValuesHistogram() throws Exception {
-        if ( !this.rReady ) {
-            log.info( "R is not available for the test" );
-            return;
-        }
+
         differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee );
         differentialExpressionAnalyzerService.updateScoreDistributionFiles( ee );
 
