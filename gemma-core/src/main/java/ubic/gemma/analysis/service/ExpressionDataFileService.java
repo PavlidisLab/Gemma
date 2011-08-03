@@ -42,10 +42,12 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExperimentalDesignWriter;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
+import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -63,6 +65,7 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.ConfigUtils;
@@ -367,8 +370,12 @@ public class ExpressionDataFileService {
 
     }
 
+    /**
+     * @param ee
+     * @return
+     */
     private String getDiffExFileName( ExpressionExperiment ee ) {
-        return ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_diffExp" + DATA_FILE_SUFFIX;
+        return ee.getId() + "_" + ee.getShortName().replaceAll( "[\\s\\/]+", "_" ) + "_diffExp" + DATA_FILE_SUFFIX;
     }
 
     /**
@@ -398,7 +405,8 @@ public class ExpressionDataFileService {
 
         ee = expressionExperimentService.thawLite( ee );
 
-        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "\\s+", "_" ) + "_coExp" + DATA_FILE_SUFFIX;
+        String filename = ee.getId() + "_" + ee.getShortName().replaceAll( "[\\s\\/]+", "_" ) + "_coExp"
+                + DATA_FILE_SUFFIX;
         try {
             File f = getOutputFile( filename );
             if ( !forceWrite && f.canRead() ) {
@@ -472,7 +480,7 @@ public class ExpressionDataFileService {
     }
 
     /**
-     * Loads the differential expression Data from the DB and writes it to disk.
+     * Loads the differential expression Data for the experiment from the DB and writes it to disk.
      * 
      * @param file
      * @param ee
@@ -498,6 +506,10 @@ public class ExpressionDataFileService {
 
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
 
+        /*
+         * See bug 2085
+         */
+
         for ( ExpressionAnalysisResultSet ears : results ) {
             differentialExpressionResultService.thaw( ears );
 
@@ -507,7 +519,7 @@ public class ExpressionDataFileService {
                         .newInstance() );
             }
 
-            // Generate a descrition of the factors involved "(factor1, factor2, ...., factorN)"
+            // Generate a description of the factors involved "(factor1, factor2, ...., factorN)"
             String factorColumnName = "(";
             for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
                 factorColumnName += ef.getName() + ",";
@@ -577,6 +589,31 @@ public class ExpressionDataFileService {
     }
 
     /**
+     * @param probeAnalysisResult
+     * @return
+     */
+    private String formatDiffExResult( ExpressionExperiment ee, ProbeAnalysisResult probeAnalysisResult,
+            String factorName, String factorURI, String baselineDescription ) {
+
+        CompositeSequence cs = probeAnalysisResult.getProbe();
+
+        Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+
+        StringBuilder buf = new StringBuilder();
+        for ( ContrastResult cr : contrasts ) {
+            FactorValue factorValue = cr.getFactorValue();
+
+            String direction = cr.getLogFoldChange() < 0 ? "-" : "+";
+
+            String factorValueDescription = ExperimentalDesignUtils.prettyString( factorValue );
+
+            // FIXME
+        }
+
+        return buf.toString();
+    }
+
+    /**
      * @param ee
      * @param geneAnnotations
      * @param buf
@@ -591,13 +628,12 @@ public class ExpressionDataFileService {
 
         // Different Headers if Gene Annotations missing.
         if ( geneAnnotations.isEmpty() ) {
-            log
-                    .info( "Microarray annotation file is missing for this experiment, unable to include gene annotation information" );
+            log.info( "Annotation file is missing for this experiment, unable to include gene annotation information" );
             buf
-                    .append( "# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
-            buf.append( "Probe_Name \t" );
+                    .append( "# The annotation file is missing for this Experiment, unable to include gene annotation information \n" );
+            buf.append( "Probe_Name\t" );
         } else {
-            buf.append( "Probe_Name \t  Gene_Name \t Gene_Symbol \t" );// column information
+            buf.append( "Probe_Name\tGene_Name\tGene_Symbol\t" );// column information
         }
 
         return buf.toString();
