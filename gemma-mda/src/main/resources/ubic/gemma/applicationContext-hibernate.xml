@@ -211,6 +211,7 @@
 				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
 				<prop key="hibernate.use_streams_for_binary">true</prop>
 				<prop key="hibernate.cache.use_query_cache">false</prop>
+				<prop key="hibernate.cache.use_second_level_cache">false</prop>
 				<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
 				<prop key="hibernate.generate_statistics">true</prop>
 				<prop key="hibernate.cache.use_structured_entries">true</prop>
