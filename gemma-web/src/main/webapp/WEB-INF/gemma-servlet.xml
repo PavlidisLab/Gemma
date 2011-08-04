@@ -2,6 +2,7 @@
 	<!--
   @author Gemma @version $Id$
 	-->
+	
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc"
 	xmlns:aop="http://www.springframework.org/schema/aop"
@@ -171,11 +172,11 @@ gemma.max.fileupload.size.bytes=
 		</property>
 	</bean>
 	
-	<bean id="geneSetListContainer" class="ubic.gemma.web.session.GeneSetListContainer" scope="session">
+	<bean id="geneSetListContainer" class="ubic.gemma.web.persistence.GeneSetListContainer" scope="session">
 		<aop:scoped-proxy/>
 	</bean>
 	
-	<bean id="experimentSetListContainer" class="ubic.gemma.web.session.ExperimentSetListContainer" scope="session">
+	<bean id="experimentSetListContainer" class="ubic.gemma.web.persistence.ExperimentSetListContainer" scope="session">
 		<aop:scoped-proxy/>
 	</bean>
 	
@@ -296,7 +297,7 @@ gemma.max.fileupload.size.bytes=
 	<bean id="arrayDesignSequenceAddValidator" class="ubic.gemma.web.validation.expression.arrayDesign.ArrayDesignSeqeunceAddValidator" />
 
 	<bean id="arrayDesignFormController" class="ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController">
-
+	
 		<property name="commandName">
 			<value>arrayDesign</value>
 		</property>
@@ -367,13 +368,22 @@ gemma.max.fileupload.size.bytes=
 			<value>expressionExperiment</value>
 		</property>
 	</bean>
+	
+<!--bean id="geneSetValueObject" class="ubic.gemma.genome.gene.GeneSetValueObject"/-->
+<bean id="freeTextGeneResultsValueObject" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject"/>
+<bean id="goGroupValueObject" class="ubic.gemma.genome.gene.GOGroupValueObject"/>
+<bean id="databaseBackedGeneSetValueObject" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject"/>
+<bean id="sessionBoundGeneSetValueObject" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject"/>
+<!--bean id="expressionExperimentSetValueObject" class="ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject"/-->
+<bean id="freeTextExpressionExperimentResultsValueObject" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject"/>
+<bean id="databaseBackedExpressionExperimentSetValueObject" class="ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject"/>
+<bean id="sessionBoundExpressionExperimentSetValueObject" class="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject"/>
+
 
 
 	<!--  ============================================ -->
 	<!--             DWR CONFIGURATION                 -->
 	<!--  ============================================ -->
-
-
 
 	<bean id="dwrController" class="org.directwebremoting.spring.DwrController">
 		<property name="configurators">
@@ -384,6 +394,7 @@ gemma.max.fileupload.size.bytes=
 		<property name="configParams">
 			<map>
 				<entry key="allowScriptTagRemoting" value="true"></entry>
+				<entry key="generateDtoClasses" value="dtoall"></entry>
 
 				<!--Uncomment for development if you are getting DWR
 					security errors-->
@@ -422,6 +433,126 @@ gemma.max.fileupload.size.bytes=
 		</property>
 		<property name="creators">
 			<map>
+				<!--entry key="GeneSetValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="geneSetValueObject" />
+							</bean>
+						</property>
+					</bean>
+				</entry-->
+				<entry key="FreeTextGeneResultsValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="freeTextGeneResultsValueObject" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getQueryString</value>
+								<value>isModified</value>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="GOGroupValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="goGroupValueObject" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="DatabaseBackedGeneSetValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="databaseBackedGeneSetValueObject" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="SessionBoundGeneSetValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="sessionBoundGeneSetValueObject" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>					
+				<!--entry key="ExpressionExperimentSetValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="expressionExperimentSetValueObject" />
+							</bean>
+						</property>
+					</bean>
+				</entry-->
+				<entry key="FreeTextExpressionExperimentResultsValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="freeTextExpressionExperimentResultsValueObject" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getQueryString</value>
+								<value>isModified</value>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="DatabaseBackedExpressionExperimentSetValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="databaseBackedExpressionExperimentSetValueObject" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
+				<entry key="SessionBoundExpressionExperimentSetValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="sessionBoundExpressionExperimentSetValueObject" />
+							</bean>
+						</property>
+						<property name="includes">
+							<list>
+								<value>getDescription</value>
+							</list>
+						</property>
+					</bean>
+				</entry>
 				<entry key="GeneController">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
@@ -1284,17 +1415,6 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.model.Reference">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-						<property name="includes">
-							<list>
-								<value>id</value>
-								<value>type</value>
-							</list>
-						</property>
-					</bean>
-				</entry>
 				<entry key="ubic.gemma.model.genome.gene.GeneProductValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
@@ -1308,9 +1428,10 @@ gemma.max.fileupload.size.bytes=
 				<entry key="ubic.gemma.model.genome.gene.GeneValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="GeneValueObject"/>
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.web.genome.gene.GeneDetailsValueObject">
+				<entry key="ubic.gemma.genome.gene.GeneDetailsValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
@@ -1680,6 +1801,7 @@ gemma.max.fileupload.size.bytes=
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="ExpressionExperimentValueObject"/>
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.expression.experiment.ExpressionExperimentDetailsValueObject">
@@ -1687,12 +1809,7 @@ gemma.max.fileupload.size.bytes=
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.web.common.QuantitationTypeValueObject">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-					</bean>
-				</entry>
-				<entry key="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject">
+				<entry key="ubic.gemma.expression.experiment.QuantitationTypeValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
@@ -2099,9 +2216,58 @@ gemma.max.fileupload.size.bytes=
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
-				<entry key="ubic.gemma.model.genome.gene.GeneSetValueObject">
+				<entry key="ubic.gemma.genome.gene.GeneSetValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="GeneSetValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="FreeTextGeneResultsValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.genome.gene.GOGroupValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="GOGroupValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="DatabaseBackedGeneSetValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="SessionBoundGeneSetValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="ExpressionExperimentSetValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="javascriptClassName" value="FreeTextExpressionExperimentResultsValueObject"/>
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="DatabaseBackedExpressionExperimentSetValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="SessionBoundExpressionExperimentSetValueObject"/>
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.genome.gene.GeneSetMemberImpl">

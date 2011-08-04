@@ -20,12 +20,8 @@ Gemma.SessionDatasetGroupStore = function(config) {
 	 * Leave this here so copies of records can be constructed.
 	 */
 	this.record = Ext.data.Record.create([{
-				name: "reference"
-			},{
 				name : "id",
 				type : "int"
-			},{
-				name : "reference"
 			},{
 				name : "name",
 				type : "string"

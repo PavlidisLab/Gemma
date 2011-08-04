@@ -62,27 +62,21 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.fireEvent('experimentsLoaded');
 				}.createDelegate(this));
 	},
-	addExperiments : function(data) { // maybe this won't work b/c combo returns search objects?
-				if (!data) {
+	/**
+	 * @param {Object} data eeSetValueObject
+	 */
+	addExperiments : function(eeSetvalObj) {
+				if (!eeSetvalObj) {
 					return;
 				}
-				this.selectedExperimentOrGroupRecord = data;
+				this.selectedExperimentSetValueObject = eeSetvalObj.resultValueObject;
 
-				var id = data.reference.id;
-				var isGroup = data.isGroup;
-				var reference = data.reference;
-				var name = data.name;
-		
-				var taxonId = data.taxonId;
-				var taxonName = data.taxonName;
+				var id = eeSetvalObj.resultValueObject.id;
+				var name = eeSetvalObj.resultValueObject.name;
 						
 				var eeIdsToAdd = [];
-				// load preview of group if group was selected
-				if (isGroup) {
-					eeIdsToAdd = data.memberIds;
-				}else{
-					eeIdsToAdd = [id];
-				}
+				eeIdsToAdd = eeSetvalObj.memberIds;
+				
 				if (!eeIdsToAdd || eeIdsToAdd === null || eeIdsToAdd.length === 0) {
 					return;
 				}
@@ -314,8 +308,34 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 				
 		this.on('experimentsLoaded',function(){
-			if (this.selectedExperimentGroup && this.selectedExperimentGroup.reference) {
-				ExpressionExperimentSetController.canCurrentUserEditGroup(this.selectedExperimentGroup.reference, function(response){
+			if (this.selectedExperimentSetValueObject) {
+				var svo = this.selectedExperimentSetValueObject;
+				/*
+				var boo = new DatabaseBackedExpressionExperimentSetValueObject();
+				
+				console.log( this.selectedExperimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject);
+				console.log( boo instanceof DatabaseBackedExpressionExperimentSetValueObject);
+				console.log( boo instanceof ExpressionExperimentSetValueObject);
+				
+				var one = typeof svo;
+				//var two = svo instanceof ExpressionExperimentSetValueObject;
+				console.log(boo);
+				var testObj = {
+					currentUserHasWritePermission: svo.currentUserHasWritePermission,
+					publik: svo.publik,
+					shared: svo.shared,
+					description: svo.description,
+					expressionExperimentIds: svo.expressionExperimentIds,
+					id: svo.id,
+					modifiable: svo.modifiable,
+					name: svo.name,
+					numExperiments: svo.numExperiments,
+					taxonId: svo.taxonId,
+					taxonName: svo.taxonName,
+				  $dwrClassName: "SessionBoundExpressionExperimentSetValueObject"
+
+				};*/
+				ExpressionExperimentSetController.canCurrentUserEditGroup(svo, function(response){
 					var dataMsg = Ext.util.JSON.decode(response);
 					if (!dataMsg.userCanEditGroup || !dataMsg.groupIsDBBacked) {
 						this.saveButton.setText("Save As");
@@ -477,29 +497,26 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						link.href="/Gemma/j_spring_security_logout";
 						link.innerHTML="Logout"; 
 						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
-						hasuser.value= true;						
+						hasuser.value= true;
+						this.loggedInSaveHandler();
 					}
-                    else if (typeof(response.responseText)!=='undefined'){
+                    else{
                     	link.href="/Gemma/login.jsp";
 						link.innerHTML="Login";
 						loggedInAs.innerHTML=" ";
 						hasuser.value= "";
-						               	
+						this.promptLoginForSave();                      	
                     }
-                    this.saveCheckMethod();
             },
             failure: function ( response, options ) {   
-				
-            	this.saveCheckMethod();
+				this.promptLoginForSave();  
             },
             scope: this,
             disableCaching: true
        });
 	},
 	
-	saveCheckMethod: function(){
-		
-	if (!Ext.get('hasUser').getValue()) {
+	promptLoginForSave: function(){
 		if (this.ajaxLogin == null) {
 		
 			//Check to see if another login widget is open (rare case but possible)
@@ -514,7 +531,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.ajaxLogin = new Gemma.AjaxLogin({
 				name: 'ajaxLogin',
 				closable: false,
-																
+				//closeAction : 'hide',													
 				title: 'Please login to use this function'
 			
 			
@@ -525,7 +542,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				this.getEl().unmask();
 				this.ajaxLogin.destroy();
 				this.ajaxLogin = null;
-				this.saveCheckMethod();
+				this.saveBtnHandler();
 				
 				
 			}, this);
@@ -553,7 +570,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			this.ajaxLogin.show();
 		
 		
-	} else {
+	},
+	loggedInSaveHandler : function () {
 		
 		// get name and description set up
 		this.createDetails();
@@ -561,11 +579,11 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		// check if user is editing a non-existant or session-bound group
 		
 		// check if group is db-backed and whether current user has editing priveleges
-		if(this.selectedExperimentGroup && this.selectedExperimentGroup.reference){
+		if(this.selectedExperimentSetValueObject ){
 			
 			// if group is db-bound and user has editing privileges, they can either save or save as
 			// in all other cases, user can only save as
-			ExpressionExperimentSetController.canCurrentUserEditGroup(this.selectedExperimentGroup.reference, function(response){
+			ExpressionExperimentSetController.canCurrentUserEditGroup(this.selectedExperimentSetValueObject, function(response){
 				var dataMsg = Ext.util.JSON.decode(response);
 				if(dataMsg.userCanEditGroup && dataMsg.groupIsDBBacked){
 					// ask user if they want to save changes
@@ -596,11 +614,9 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}.createDelegate(this));
 			
 		}else{
-			// if reference is null, then there was no group to start with
 			// only save option is to save as
 			this.saveAsHandler();
 		}
-	}
 	},
 	saveAsHandler: function(){
 		// input window for creation of new groups
@@ -627,38 +643,25 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	saveToSession : function() {
 		var editedGroup;
-		if (this.selectedExperimentGroup === null || typeof this.selectedExperimentGroup === 'undefined') {
-			//group wasn't made before launching 
-			editedGroup = {
-				reference: {
-					id: null,
-					type: null
-				}
-			};
-		}
-		else {
-			editedGroup = this.selectedExperimentGroup;
-		// reference has the right type already
-		}
-			
+		editedGroup = new SessionBoundExpressionExperimentSetValueObject();
+		editedGroup.id = null;	
 		editedGroup.name = this.newGroupName;
 		editedGroup.description = this.newGroupDescription;
 		editedGroup.expressionExperimentIds = this.getEEIds();
-		editedGroup.memberIds = this.getEEIds();
 		editedGroup.taxonId = this.taxonId;
-		editedGroup.type = 'userexperimentSetSession';
+		editedGroup.numExperiments = this.getEEIds().length;
+		editedGroup.modified = true;
+		
 
 		ExpressionExperimentSetController.addSessionGroups(
 				[editedGroup], // returns datasets added
-				function(datasetSets) {
+				function(newValueObjects) {
 					// should be at least one datasetSet
-					if (datasetSets === null || datasetSets.length === 0) {
+					if (newValueObjects === null || newValueObjects.length === 0) {
 						// TODO error message
 						return;
 					} else {
-						datasetSets[0].type = 'userexperimentSetSession';
-						var newRecordData = datasetSets;
-						this.fireEvent('experimentListModified', newRecordData);
+						this.fireEvent('experimentListModified', newValueObjects);
 						this.fireEvent('doneModification');
 					}
 				}.createDelegate(this));
@@ -666,37 +669,31 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	createInDatabase: function(){
 		var editedGroup;
-		if (this.selectedExperimentGroup === null || typeof this.selectedExperimentGroup === 'undefined') {
+		if (this.selectedExperimentSetValueObject === null || typeof this.selectedExperimentSetValueObject === 'undefined' || 
+				!(this.selectedExperimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject)) {
 			//group wasn't made before launching 
-			editedGroup = {
-				reference: {
-					id: null,
-					type: null
-				}
-			};
+			editedGroup = new DatabaseBackedExpressionExperimentSetValueObject();
 		}
 		else {
-			editedGroup = this.selectedExperimentGroup;
-		// reference has the right type already
+			editedGroup = Object.clone(this.selectedExperimentSetValueObject);
 		}
 		
+		editedGroup.id = null;	
 		editedGroup.name = this.newGroupName;
 		editedGroup.description = this.newGroupDescription;
 		editedGroup.expressionExperimentIds = this.getEEIds();
-		editedGroup.memberIds = this.getEEIds();
-		editedGroup.type = 'userexperimentSet';
+		editedGroup.taxonId = this.taxonId;
+		editedGroup.numExperiments = this.getEEIds().length;
 		
 		ExpressionExperimentSetController.create([editedGroup], // returns datasets added
- 			function(datasetSets){
+ 			function(newValueObjects){
 				// should be at least one datasetSet
-				if (datasetSets === null || datasetSets.length === 0) {
+				if (newValueObjects === null || newValueObjects.length === 0) {
 					// TODO error message
 					return;
 				}
 				else {
-					datasetSets[0].type = 'userexperimentSet';
-					var newRecordData = datasetSets;
-					this.fireEvent('experimentListModified', newRecordData);
+					this.fireEvent('experimentListModified', newValueObjects);
 					this.fireEvent('doneModification');
 				}
 			}.createDelegate(this));
@@ -706,16 +703,13 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 	},
 	updateDatabase : function() {
-		var groupId = this.selectedExperimentGroup.reference.id;
-		this.newGroupName = this.groupName;
+		var id = this.selectedExperimentSetValueObject.id;
 		var eeIds = this.getEEIds();
 
-		ExpressionExperimentSetController.updateMembers(groupId, eeIds, function(msg) {
-					this.selectedExperimentGroup.memberIds = eeIds;
-					this.selectedExperimentGroup.eeIds = eeIds;
-					this.selectedExperimentGroup.expressionExperimentIds = eeIds;
+		ExpressionExperimentSetController.updateMembers(id, eeIds, function(msg) {
+					this.selectedExperimentSetValueObject.expressionExperimentIds = eeIds;
 
-					this.fireEvent('experimentListModified', [this.selectedExperimentGroup]);
+					this.fireEvent('experimentListModified', [this.selectedExperimentSetValueObject]);
 					this.fireEvent('doneModification');
 				}.createDelegate(this));
 	}

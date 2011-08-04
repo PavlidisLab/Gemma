@@ -8,27 +8,30 @@ Ext.namespace('Gemma');
 Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	taxonId: null, // might be set by parent to control combo
 	listModified: false,
+	getSelectedExperimentOrExperimentSetValueObject:function(){
+		return (this.selectedExperimentOrGroup)? this.selectedExperimentOrGroup.resultValueObject : null;
+	},
 	/**
 	 * Show the selected eeset members
 	 */
 	loadExperimentOrGroup : function(record, query) {
 
-		this.selectedExperimentOrGroupRecord = record.data;
+		this.selectedExperimentOrGroup = record.data;
 
-		var id = record.data.reference.id;
-		this.queryUsedToGetSessionGroup = (id === null)? query : null;
+		var id = record.get("resultValueObject").id;
+		this.queryUsedToGetSessionGroup = (id === null || id === -1)? query : null;
 		
 		var isGroup = record.get("isGroup");
 		var type = record.get("type");
-		var reference = record.get("reference");
+		var resultValueObject = record.get("resultValueObject");
 		var name = record.get("name");
-
 		var taxonId = record.get("taxonId");
 		var taxonName = record.get("taxonName");
 		
-		if (id === null) {
+		// for bookmarking
+		if (id === null || id === -1) {
 			var queryToGetSelected = name;
-			if(type === 'freeText' && name.indexOf(query)!=-1){
+			if(resultValueObject instanceof FreeTextExpressionExperimentResultsValueObject && name.indexOf(query)!=-1){
 				queryToGetSelected = "taxon:"+taxonId+"query:"+query;
 			}
 			this.queryUsedToGetSessionGroup = queryToGetSelected;
@@ -56,7 +59,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.previewPart.experimentPreviewContent.update({
 						shortName : record.get("name"),
 						name : record.get("description"),
-						id : record.data.reference.id,
+						id : record.get("resultValueObject").id,
 						taxon : record.get("taxonName")
 					});
 			this.updateTitle(this.experimentCombo.getRawValue(), 1);
@@ -117,7 +120,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var j = 0; j < ees.size(); j++) {
 						this.previewPart.experimentPreviewContent.update(ees[j]);
 					}
-					this.updateTitle(this.selectedExperimentOrGroupRecord.name,ids.size());
+					this.updateTitle(this.selectedExperimentOrGroup.name,ids.size());
 					this.showExperimentPreview();
 					if (ids.size() <= this.searchForm.PREVIEW_SIZE) {
 						this.previewPart.moreIndicator.update('');
@@ -149,10 +152,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.experimentSelectionEditor.loadMask.show();
 		Ext.apply(this.experimentSelectionEditor, {
 					experimentGroupId : this.experimentGroupId,
-					selectedExperimentGroup : this.selectedExperimentOrGroupRecord,
-					groupName : this.selectedExperimentOrGroupRecord.name
+					selectedExperimentSetValueObject : this.selectedExperimentOrGroup.resultValueObject,
+					groupName : this.selectedExperimentOrGroup.name
 				});
-		this.experimentSelectionEditor.loadExperiments(this.experimentIds, function() {
+		this.experimentSelectionEditor.loadExperiments(this.selectedExperimentOrGroup.resultValueObject.expressionExperimentIds, function() {
 					this.experimentSelectionEditor.loadMask.hide();
 				}.createDelegate(this, [], false));
 	},
@@ -245,17 +248,17 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					queryText : this.experimentCombo.getValue()
 				});
 
-		this.experimentSelectionEditor.on('experimentListModified', function(newRecords) {
+		this.experimentSelectionEditor.on('experimentListModified', function(newValueObjects) {
 					var i;
-					for (i = 0; i < newRecords.length; i++) { // should only
+					for (i = 0; i < newValueObjects.length; i++) { // should only
 						// be one
-						if (newRecords[i]) {
-							this.loadExperiments(newRecords[i].expressionExperimentIds);
-							// update record
-							this.selectedExperimentOrGroupRecord = newRecords[i];
+						if (newValueObjects[i]) {
+							this.loadExperiments(newValueObjects[i].expressionExperimentIds);
+							// update selected record
+							this.selectedExperimentOrGroup.resultValueObject = newValueObjects[i];
 						}
-						if (newRecords[i].name) {
-							this.updateTitle(newRecords[i].name,newRecords[i].size);
+						if (newValueObjects[i].name) {
+							this.updateTitle(newValueObjects[i].name,newValueObjects[i].size);
 						}
 					}
 					this.listModified = true;

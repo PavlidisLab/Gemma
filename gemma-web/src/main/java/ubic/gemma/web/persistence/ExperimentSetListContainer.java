@@ -1,4 +1,4 @@
-package ubic.gemma.web.session;
+package ubic.gemma.web.persistence;
 
 import java.io.Serializable;
 
@@ -10,6 +10,6 @@ public class ExperimentSetListContainer extends AbstractSetListContainer impleme
 		
 		super();
 			
-	}	
-
+	}
+	
 }

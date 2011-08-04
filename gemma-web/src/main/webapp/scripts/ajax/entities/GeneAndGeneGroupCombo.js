@@ -102,91 +102,101 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		return [query, this.getTaxonId()]; // default taxon is human
 	},
 	
-	initComponent : function() {
-
+	initComponent: function(){
+	
+		var geneTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ' +
+							'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>');
+		var goGroupTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" ' +
+							'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var freeTxtTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ' +
+							'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var modifiedSessionTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ' +
+									'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var userOwnedDbGeneSetTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ' +
+										'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		// these last three are all the same for now 				
+		var dbGeneSetTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ' +
+								'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var sessionGeneSetTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ' +
+									'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var defaultTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ' +
+							'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
 		Ext.apply(this, {
-					// format fields to show in combo, only show size in brakets if the entry is a group
-					tpl: new Ext.XTemplate('<tpl for=".">' +
-					'<tpl if="type==\'gene\'">' +
-						'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" '+
-						'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>'+
-					'<tpl if="type==\'geneSet\'">' +
-					'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" '+
-						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +
-					'<tpl if="type==\'usersgeneSet\'">' +
-					'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" '+
-						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +	
-					'<tpl if="type==\'usersgeneSetSession\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" '+
-						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +	
-					'<tpl if="type==\'GOgroup\'">' +
-					'	<div style="font-size:11px;background-color:#E3FBE9" class="x-combo-list-item" '+
-						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +
-					'<tpl if="type==\'freeText\'">' +
-					'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" '+
-						'ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-					'</tpl>' +
-					'</tpl>'),
-					//tpl: new Ext.XTemplate('<tpl for=".">' +
-					//'<div style="font-size:11px" class="x-combo-list-item" ext:qtip="{name} ({size})">{name} - {description}</div></tpl>' ),
-					store:{
-						reader : new Ext.data.ListRangeReader({}, 
-							Ext.data.Record.create([{
-								name : "reference"
-							},{
-								name : "name",
-								type : "string"
-							},{
-								name : "description",
-								type : "string"
-							},{
-								name: "isGroup",
-								type: "boolean"
-							},{
-								name: "size",
-								type: "int"
-							},{
-								name: "taxonId",
-								type: "int",
-								defaultValue: "-1"
-							},{
-								name: "taxonName",
-								type: "string",
-								defaultValue: ""
-							},{
-								name: "type",
-								type: "string"
-							},{
-								name: "memberIds",
-								defaultValue: []
-							},{
-								name: "comboText",
-								type: "string",
-								convert: function(v, record){
-									if (record.type === 'GOgroup') {
-										return record.name + ": " + record.description;
-									}
-									else {
-										return record.name;
-									}
-								}
-							}	
-							])),
-					
-						proxy : new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups),
-						autoLoad : false
+			// format fields to show in combo, only show size in brakets if the entry is a group
+			tpl: new Ext.XTemplate('<tpl for=".">' +
+			'{[ this.renderItem(values) ]}' +
+			'</tpl>', {
+				renderItem: function(values){
+					if (values.resultValueObject instanceof GeneValueObject) {
+						return geneTpl.apply(values);
+					}else if (values.resultValueObject instanceof DatabaseBackedGeneSetValueObject) {
+						if (values.userOwned) {
+							return userOwnedDbGeneSetTpl.apply(values)
+						} else {
+							return dbGeneSetTpl.apply(values);
+						}
+					}else if (values.resultValueObject instanceof GOGroupValueObject) {
+							return goGroupTpl.apply(values);
+					}else if (values.resultValueObject instanceof FreeTextGeneResultsValueObject) {
+						return freeTxtTpl.apply(values);
+					}else if (values.resultValueObject instanceof SessionBoundGeneSetValueObject) {
+						if (values.resultValueObject.modified) {
+							return modifiedSessionTpl.apply(values);
+						}else {
+							return sessionGeneSetTpl.apply(values);
+						}
 					}
-				});
-
-		Gemma.GeneAndGeneGroupCombo.superclass.initComponent.call(this);
-
-		this.on('select', this.setGeneGroup, this);
+					return defaultTpl.apply(values);
+				}
+			}),
+			store: {
+				reader: new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
+					name: "name",
+					type: "string"
+				}, {
+					name: "description",
+					type: "string"
+				}, {
+					name: "isGroup",
+					type: "boolean"
+				}, {
+					name: "size",
+					type: "int"
+				}, {
+					name: "taxonId",
+					type: "int",
+					defaultValue: "-1"
+				}, {
+					name: "taxonName",
+					type: "string",
+					defaultValue: ""
+				}, {
+					name: "memberIds",
+					defaultValue: []
+				}, {
+					name: "comboText",
+					type: "string",
+					convert: function(v, record){
+						if (record.resultValueObject instanceof GOGroupValueObject) {
+							return record.name + ": " + record.description;
+						}
+						else {
+							return record.name;
+						}
+					}
+				}, {
+					name: "resultValueObject"
+				}])),
 				
+				proxy: new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups),
+				autoLoad: false
+			}
+		});
+		
+		Gemma.GeneAndGeneGroupCombo.superclass.initComponent.call(this);
+		
+		this.on('select', this.setGeneGroup, this);
+		
 		/***** start of query queue fix *****/
 		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
 		// this needs the lastQuery property to be initialised as null
@@ -196,14 +206,15 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		}, this);
 		
 		this.getStore().on('load', function(store, records, options){
-			var query = ( options.params)? options.params[0]: null;
-			if( (query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery) ){
+			var query = (options.params) ? options.params[0] : null;
+			if ((query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery)) {
 				store.removeAll();
 				store.add(this.records);
-				if(this.records === null || this.records.length === 0){
+				if (this.records === null || this.records.length === 0) {
 					this.doQuery(this.lastQuery);
 				}
-			}else{
+			}
+			else {
 				this.records = this.store.getRange();
 			}
 		}, this);
@@ -211,32 +222,30 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		
 		this.on('focus', function(field){
 			// if the text field is blank, show the automatically generated groups (like 'All human', 'All rat' etc)
-			if(this.getValue() ===''){
-				
-				this.doQuery('',true);
+			if (this.getValue() === '') {
+			
+				this.doQuery('', true);
 				this.lastQuery = null; // needed for query queue fix
-				
-				//	field.lastQuery = null; // needed for query queue fix
-					// passing in taxon instead of taxonId breaks this call
-				/*	GenePickerController.searchGenesAndGeneGroups("", this.getTaxonId(),
-						function(records) {
-										this.getStore().loadData(records);
-									}.createDelegate(this)
-						);
-				*/
-				/* only allowing taxon searches for now
-				 * else{
-					GenePickerController.searchGenesAndGeneGroups("", null,
-						function(records) {
-										this.getStore().loadData(records);
-									}.createDelegate(this)
-						);
-				}*/
-				
+			//	field.lastQuery = null; // needed for query queue fix
+			// passing in taxon instead of taxonId breaks this call
+			/*	GenePickerController.searchGenesAndGeneGroups("", this.getTaxonId(),
+			 function(records) {
+			 this.getStore().loadData(records);
+			 }.createDelegate(this)
+			 );
+			 */
+			/* only allowing taxon searches for now
+			 * else{
+			 GenePickerController.searchGenesAndGeneGroups("", null,
+			 function(records) {
+			 this.getStore().loadData(records);
+			 }.createDelegate(this)
+			 );
+			 }*/
 			}
-		},this);
-
-	},
+		}, this);
+		
+	}, // end of initComponent
 
 	reset : function() {
 		Gemma.GeneAndGeneGroupCombo.superclass.reset.call(this);

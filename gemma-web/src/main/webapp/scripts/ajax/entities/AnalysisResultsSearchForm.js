@@ -73,35 +73,35 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * 
 	 * after optional trimming, call the search function (doSearch)
 	 * 
-	 * @param {Object} geneRecords
-	 * @param {Object} experimentRecords
+	 * @param {Object} geneSetValueObjects
+	 * @param {Object} experimentSetValueObjects
 	 * @return 
 	 */
-	validateSearch: function(geneRecords, experimentRecords){
-		if (geneRecords.length === 0) {
+	validateSearch: function(geneSetValueObjects, experimentSetValueObjects){
+		if (geneSetValueObjects.length === 0) {
 			Ext.Msg.alert("Error", "Gene(s) must be selected before continuing.");
 			return;
 		}
 
-		if (experimentRecords.length === 0) {
+		if (experimentSetValueObjects.length === 0) {
 			Ext.Msg.alert("Error", "Experiment(s) must be selected before continuing.");
 			return;
 		}
 		//get the total number of genes 
-		var i; var rec;
+		var i; var vo;
 		var geneCount = 0;
-		for(i = 0; i< geneRecords.length; i++){
-			rec = geneRecords[i];
-			if(rec.memberIds){
-				geneCount += rec.memberIds.length;
+		for(i = 0; i< geneSetValueObjects.length; i++){
+			vo = geneSetValueObjects[i];
+			if(vo.geneIds){
+				geneCount += vo.geneIds.length;
 			}
 		}
 		//get the total number of experiments 
 		var experimentCount = 0;
-		for(i = 0; i< experimentRecords.length; i++){
-			rec = experimentRecords[i];
-			if(rec.memberIds){
-				experimentCount += rec.memberIds.length;
+		for(i = 0; i< experimentSetValueObjects.length; i++){
+			vo = experimentSetValueObjects[i];
+			if(vo.expressionExperimentIds){
+				experimentCount += vo.expressionExperimentIds.length;
 			}
 		}
 		var stateText = "";
@@ -139,12 +139,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					tooltip:'Your query will be trimmed to '+maxText,
 					handler: function(){
 						if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY){
-							geneRecords = this.trimRecordSelection(geneRecords, Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY);
+							geneSetValueObjects = this.trimGeneValObjs(geneSetValueObjects, Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY);
 						}
 						if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
-							experimentRecords = this.trimRecordSelection(experimentRecords, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY);
+							experimentSetValueObjects = this.trimExperimentValObjs(experimentSetValueObjects, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY);
 						}
-						this.doSearch(geneRecords, experimentRecords);
+						this.doSearch( geneSetValueObjects, experimentSetValueObjects );
 						warningWindow.close();
 						return;
 					},
@@ -153,7 +153,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					text: 'Don\'t trim',
 					tooltip:'Continue with your search as is',
 					handler: function(){
-						this.doSearch(geneRecords, experimentRecords);
+						
+						this.doSearch(geneSetValueObjects, experimentSetValueObjects);
 						warningWindow.close();
 						return;
 					},
@@ -170,36 +171,71 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			});
 			warningWindow.show();
 		}else{
-			this.doSearch(geneRecords, experimentRecords);
+			this.doSearch(geneSetValueObjects, experimentSetValueObjects);
 			return;
 		}
 		
 	},
-	trimRecordSelection: function(records, max){
+	/**
+	 * returns a subset of the param list of valueObjects, with one set potentially trimmed 
+	 * @param {Object} valueObjects
+	 * @param {Object} max
+	 */
+	trimGeneValObjs: function(valueObjects, max){
 		var runningCount = 0;
-		var i; var rec;
-		var trimmedRecords = [];
-		for(i = 0; i< records.length; i++){
-			rec = records[i];
-			if(rec.memberIds && (runningCount+rec.memberIds.length)<max){
-				runningCount += rec.memberIds.length;
-				trimmedRecords.push(rec);
-			}else if(rec.memberIds){
-				var trimmedIds = rec.memberIds.slice(0, (max - runningCount));
-				// clone the record so you don't effect the original
-				var trimmedRec = Object.clone(rec);
-
-				trimmedRec.memberIds = trimmedIds;
-			 	trimmedRec.reference = null;
-				trimmedRec.type = null;
-			 	trimmedRec.name = "Trimmed " + rec.name;
-				trimmedRecords.push(trimmedRec);
+		var i; var valObj;
+		var trimmedValueObjects = [];
+		for(i = 0; i< valueObjects.length; i++){
+			valObj = valueObjects[i];
+			if(valObj.geneIds && (runningCount+valObj.geneIds.length)<max){
+				runningCount += valObj.geneIds.length;
+				trimmedValueObjects.push(valObj);
+			}else if(valObj.geneIds){
+				var trimmedIds = valObj.geneIds.slice(0, (max - runningCount));
+				// clone the object so you don't effect the original
+				var trimmedValObj = Object.clone(valObj);
+				trimmedValObj.geneIds = trimmedIds;
+				trimmedValObj.id = null;
+				trimmedValObj.name = "Trimmed " + valObj.name;
+				trimmedValObj.description = "Trimmed " + valObj.name+" for search";
+				trimmedValObj.modified = true;
+				trimmedValueObjects.push(trimmedRec);
+				return trimmedValueObjects;
 			}
 		}
-		return trimmedRecords;
+		return trimmedValueObjects;
+	},
+	/**
+	 * returns a subset of the param list of valueObjects, with one set potentially trimmed 
+	 * @param {Object} valueObjects
+	 * @param {Object} max
+	 */
+	trimExperimentValObjs: function(valueObjects, max){
+		var runningCount = 0;
+		var i; var valObj;
+		var trimmedValueObjects = [];
+		for(i = 0; i< valueObjects.length; i++){
+			valObj = valueObjects[i];
+			if(valObj.expressionExperimentIds && (runningCount+valObj.expressionExperimentIds.length)<max){
+				runningCount += valObj.expressionExperimentIds.length;
+				trimmedValueObjects.push(valObj);
+			}else if(valObj.expressionExperimentIds){
+				var trimmedIds = valObj.expressionExperimentIds.slice(0, (max - runningCount));
+				// clone the object so you don't effect the original
+				var trimmedValObj = Object.clone(valObj);
+				trimmedValObj.expressionExperimentIds = trimmedIds;
+				trimmedValObj.id = null;
+				trimmedValObj.name = "Trimmed " + valObj.name;
+				trimmedValObj.description = "Trimmed " + valObj.name+" for search";
+				trimmedValObj.modified = true;
+				trimmedValueObjects.push(trimmedRec);
+				return trimmedValueObjects;
+			}
+		}
+		return trimmedValueObjects;
 	},
 
-	doSearch : function(geneRecords, experimentRecords) {
+	doSearch : function(geneSetValueObjects, experimentSetValueObjects) {
 		
 		this.fireEvent('beforesearch', this);
 		this.collapsePreviews();
@@ -215,91 +251,63 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.doneCoex = false;
 		this.doneDiffEx = false;
 
-		// if using a GO group or 'all results' group for a search, make a
-		// session-bound copy of it
-		// and store the new reference
-		var geneGroupsToMake = [];
-		var geneGroupsAlreadyMade = [];
+		// if using a GO group or 'all results' group for a search, register the geneSetValObj as a set in the session
+		var geneSetValObjsToRegister = [];
+		var geneSetValObjsAlreadyRegistered = [];
 		var i;
-		var record;
-		var recordToPass;
-		for (i = 0; i < geneRecords.length; i++) {
-			record = geneRecords[i];
-			if (typeof record !== 'undefined' && (!record.reference || record.reference.id === null)) {
+		var gsvo;
+		for (i = 0; i < geneSetValueObjects.length; i++) {
+			gsvo = geneSetValueObjects[i];
+			if (typeof gsvo !== 'undefined' && (gsvo.id === null || gsvo.id === -1)) {
 				// addNonModificationBasedSessionBoundGroups() takes a
-				// genesetvalueobject, so add needed field
-				// record will already have geneIds if search was already run
-				if(record.memberIds && record.memberIds !== null && typeof record.memberIds !== 'undefined'){
-					record.geneIds = record.memberIds;
-				}
-								
-				// no java bean properties to match these javascript properties 
-				recordToPass = Object.clone(record);
-				delete recordToPass.memberIds; // need to keep this one for later
-				delete recordToPass.comboText;
-				delete recordToPass.isGroup;
-				delete recordToPass.type;			
-				
-				geneGroupsToMake.push(recordToPass);
+				// genesetvalueobject			
+				geneSetValObjsToRegister.push(gsvo);
 
 			} else {
-				geneGroupsAlreadyMade.push(record);
+				geneSetValObjsAlreadyRegistered.push(gsvo);
 			}
 		}
-		if (geneGroupsToMake.length > 0) {
-			geneRecords = geneGroupsAlreadyMade;
+		if (geneSetValObjsToRegister.length > 0) {
+			geneSetValueObjects = geneSetValObjsAlreadyRegistered;
 			this.waitingForGeneSessionGroupBinding = true;
-			GeneSetController.addNonModificationBasedSessionBoundGroups(geneGroupsToMake, function(geneSets) {
+			GeneSetController.addNonModificationBasedSessionBoundGroups(geneSetValObjsToRegister, function(geneSets) {
 						// should be at least one geneset
 						if (geneSets === null || geneSets.length === 0) {
 							// TODO error message
 							return;
 						} else {
 							for (j = 0; j < geneSets.length; j++) {
-								geneRecords.push(geneSets[j]);
+								geneSetValueObjects.push(geneSets[j]);
 							}
 						}
 						this.waitingForGeneSessionGroupBinding = false;
 						/*
 						 * recurse so once all session-bound groups are made, search runs
 						 */
-						this.doSearch(geneRecords, experimentRecords);
+						this.doSearch(geneSetValueObjects, experimentSetValueObjects);
 						return;
 					}.createDelegate(this));
 			return;
 		}
-		var experimentGroupsToMake = [];
-		var experimentGroupsAlreadyMade = [];
-
-		for (i = 0; i < experimentRecords.length; i++) {
-			record = experimentRecords[i];
-			// if the group has a null value for reference.id, then it hasn't
-			// been
+		var experimentGroupsToRegister = [];
+		var experimentGroupsAlreadyRegistered = [];
+		var esvo;
+		for (i = 0; i < experimentSetValueObjects.length; i++) {
+			esvo = experimentSetValueObjects[i];
+			// if the group has a null value for id, then it hasn't been
 			// created as a group in the database nor session
-			if (typeof record !== 'undefined' && (!record.reference || record.reference.id === null)) {
+			if (typeof esvo !== 'undefined' && (esvo.id === -1 || esvo.id === null)) {
 				// addNonModificationBasedSessionBoundGroups() takes an
-				// experimentSetValueObject, so add needed field
-				// record will already have geneIds if search was already run
-				if(record.memberIds && record.memberIds !== null && typeof record.memberIds !== 'undefined'){
-					record.expressionExperimentIds = record.memberIds;
-				}
-								
-				// no java bean properties to match these javascript properties 
-				recordToPass = Object.clone(record);
-				delete recordToPass.memberIds; // need to keep this one for later
-				delete recordToPass.comboText;
-				delete recordToPass.isGroup;
-				delete recordToPass.type;				
-				
-				experimentGroupsToMake.push(recordToPass);
+				// experimentSetValueObject 	
+				experimentGroupsToRegister.push(esvo);
 			} else {
-				experimentGroupsAlreadyMade.push(record);
+				experimentGroupsAlreadyRegistered.push(esvo);
 			}
 		}
-		if (experimentGroupsToMake.length > 0) {
-			experimentRecords = experimentGroupsAlreadyMade;
+		if (experimentGroupsToRegister.length > 0) {
+			experimentSetValueObjects = experimentGroupsAlreadyRegistered;
 			this.waitingForExperimentSessionGroupBinding = true;
-			ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups(experimentGroupsToMake,
+			ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups(experimentGroupsToRegister,
 					function(datasetSets) {
 						// should be at least one datasetSet
 						if (datasetSets === null || datasetSets.length === 0) {
@@ -307,19 +315,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							return;
 						} else {
 							for (j = 0; j < datasetSets.length; j++) {
-								experimentRecords.push(datasetSets[j]);
+								experimentSetValueObjects.push(datasetSets[j]);
 							}
 						}
-						this.doSearch(geneRecords, experimentRecords); // recurse
-						// so
-						// once
-						// all
-						// session-bound
-						// groups
-						// are
-						// made,
-						// search
-						// runs
+						
+						/*
+						 * recurse so once all session-bound groups are made, search runs
+						 */
+						this.doSearch(geneSetValueObjects, experimentSetValueObjects); 
 						return;
 					}.createDelegate(this));
 			return;
@@ -337,7 +340,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if(this.showClassicDiffExResults){
 				this.doDifferentialExpressionSearch();
 			}else{
-				var data = this.getDataForDiffVisualization(geneRecords, experimentRecords);
+				var data = this.getDataForDiffVisualization(geneSetValueObjects, experimentSetValueObjects);
 			}
 			
 			this.fireEvent('showDiffExResults', this, null, data);
@@ -470,7 +473,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			 * runningCount)); runningCount += chooser.geneIds.length;
 			 * chooser.selectedGeneOrGroupRecord.geneIds = chooser.geneIds;
 			 * chooser.selectedGeneOrGroupRecord.memberIds = chooser.geneIds;
-			 * chooser.selectedGeneOrGroupRecord.reference = null;
 			 * chooser.selectedGeneOrGroupRecord.type = 'usersgeneSetSession';
 			 * chooser.selectedGeneOrGroupRecord.name = "Trimmed " +
 			 * chooser.selectedGeneOrGroupRecord.name;
@@ -570,7 +572,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * asynchronously, so listen for the factors-chosen event.
 	 */
 	chooseFactors : function() {
-		if (this.getSelectedExperimentRecords().length <= 0) {
+		if (this.getSelectedExperimentSetValueObjects().length <= 0) {
 			Ext.Msg.alert("Warning",
 					"You must select an expression experiment set before choosing factors. Scope must be specified.");
 		} else if (this.getExperimentIds().length === 0) {
@@ -735,31 +737,28 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
 	},
 
-	getDataForDiffVisualization : function(geneRecords, experimentRecords) {
-		var geneRecordReferences = [];
+	getDataForDiffVisualization : function(geneSetValueObjects, experimentSetValueObjects) {
 		var geneNames = [];
+		var geneResultValueObjects = [];
 		var i;
-		if (geneRecords.length > 0) {
-			for (i = 0; i < geneRecords.length; i++) {
-				geneRecordReferences.push(geneRecords[i].reference);
-				geneNames.push(geneRecords[i].name);
+		if (geneSetValueObjects.length > 0) {
+			for (i = 0; i < geneSetValueObjects.length; i++) {
+				geneNames.push(geneSetValueObjects[i].name);
 			}
 		}
-		var experimentRecordReferences = [];
 		var experimentNames = [];
 		var experimentCount = 0;
-		if (experimentRecords.length > 0) {
-			for (i = 0; i < experimentRecords.length; i++) {
-				experimentRecordReferences.push(experimentRecords[i].reference);
-				experimentNames.push(experimentRecords[i].name);
-				experimentCount += experimentRecords[i].memberIds.size();
+		if (experimentSetValueObjects.length > 0) {
+			for (i = 0; i < experimentSetValueObjects.length; i++) {
+				experimentNames.push(experimentSetValueObjects[i].name);
+				experimentCount += experimentSetValueObjects[i].expressionExperimentIds.size();
 			}
 		}
 		var data = {
-			geneReferences : geneRecordReferences,
+			experimentSetValueObjects: experimentSetValueObjects,
+			geneSetValueObjects: geneSetValueObjects,
 			geneSessionGroupQueries : this.getGeneSessionGroupQueries(),
 			experimentSessionGroupQueries : this.getExperimentSessionGroupQueries(),
-			datasetReferences : experimentRecordReferences,
 			geneNames : geneNames,
 			datasetNames : experimentNames,
 			taxonId : this.getTaxonId(),
@@ -779,7 +778,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if (!this.doneDiffEx) {
 				return;
 			} else {
-				var data = this.getDataForDiffVisualization();
+				//var data = this.getDataForDiffVisualization();
 				this.fireEvent('showDiffExResults', this, result, data);
 			}
 		}
@@ -809,7 +808,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 		var data;
 		if(!this.showClassicDiffExResults){
-			data = this.getDataForDiffVisualization();
+			//data = this.getDataForDiffVisualization();
 		}else{
 			data = null;
 		}
@@ -818,7 +817,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	wereSelectionsModified: function(){
 		var wereModified = false;
 		this.geneChoosers.items.each(function(){
-			if (this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined') {
+			if (this.xtype === 'geneSearchAndPreview' && this.getSelectedGeneOrGeneSetValueObject()) {
 				if( this.listModified){
 					wereModified = true;
 				}
@@ -826,7 +825,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 		if(!wereModified){
 			this.experimentChoosers.items.each(function(){
-				if (this.xtype === 'experimentSearchAndPreview' && typeof this.selectedExperimentOrGroupRecord !== 'undefined') {
+				if (this.xtype === 'experimentSearchAndPreview' && this.getSelectedExperimentOrExperimentSetValueObject()) {
 					if( this.listModified){
 						wereModified = true;
 					}
@@ -839,7 +838,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getGeneSessionGroupQueries: function(){
 		var queries = [];
 		this.geneChoosers.items.each(function(){
-			if (this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined') {
+			if (this.xtype === 'geneSearchAndPreview' && this.getSelectedGeneOrGeneSetValueObject()) {
 				if( this.queryUsedToGetSessionGroup !== null ){
 					queries.push(this.queryUsedToGetSessionGroup);
 				}
@@ -850,7 +849,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getExperimentSessionGroupQueries: function(){
 		var queries = [];
 		this.experimentChoosers.items.each(function(){
-			if (this.xtype === 'experimentSearchAndPreview' && typeof this.selectedExperimentOrGroupRecord !== 'undefined') {
+			if (this.xtype === 'experimentSearchAndPreview' && this.getSelectedExperimentOrExperimentSetValueObject()) {
 				if( this.queryUsedToGetSessionGroup !== null ){
 					queries.push(this.queryUsedToGetSessionGroup);
 				}
@@ -858,52 +857,104 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 		return queries;
 	},
-	getSelectedGeneRecords : function() {
-		var selectedGeneRecords = [];
+	getSelectedGeneAndGeneSetValueObjects : function() {
+		var selectedVOs = [];
 		this.geneChoosers.items.each(function(){
-			if (this.xtype === 'geneSearchAndPreview' && typeof this.selectedGeneOrGroupRecord !== 'undefined') {
-				selectedGeneRecords.push(this.selectedGeneOrGroupRecord);
+			if (this.xtype === 'geneSearchAndPreview' && this.getSelectedGeneOrGeneSetValueObject() ) {
+				selectedVOs.push(this.getSelectedGeneOrGeneSetValueObject());
 			}
 		});
-		return selectedGeneRecords;
+		return selectedVOs;
+	},
+	/**
+	 * get selections as geneSetValueObjects (selected single genes will be wrapped as single-member geneSets)
+	 */
+	getSelectedAsGeneSetValueObjects : function() {
+		var selectedVOs = this.getSelectedGeneAndGeneSetValueObjects();
+		var selectedAsGeneSets = [];
+		var i;
+		for(i = 0; i<selectedVOs.length;i++){
+			if(selectedVOs[i] instanceof GeneValueObject){
+				var gene = selectedVOs[i];
+				var singleGeneSet = new SessionBoundGeneSetValueObject();
+				singleGeneSet.id = null;
+				singleGeneSet.geneIds = [gene.id];
+				singleGeneSet.name = gene.officialSymbol;
+				singleGeneSet.description = gene.officialName;
+				singleGeneSet.size = gene.size;
+				singleGeneSet.taxonName = gene.taxonCommonName;
+				singleGeneSet.taxonId = gene.taxonId;
+				singleGeneSet.modified = false;
+				selectedAsGeneSets.push(singleGeneSet);
+			}else{
+				selectedAsGeneSets.push(selectedVOs[i]);
+			}
+		}
+		return selectedAsGeneSets;
 	},
 
-	getSelectedExperimentRecords : function() {
-		var selectedExperimentRecords = [];
+	getSelectedExperimentAndExperimentSetValueObjects : function() {
+		var selectedVOs = [];
 		this.experimentChoosers.items.each(function() {
-					if (this.xtype === 'experimentSearchAndPreview' &&
-						typeof this.selectedExperimentOrGroupRecord !== 'undefined') {
-						selectedExperimentRecords.push(this.selectedExperimentOrGroupRecord);
-					}
-				});
-		return selectedExperimentRecords;
+			if (this.xtype === 'experimentSearchAndPreview' && this.getSelectedExperimentOrExperimentSetValueObject() ) {
+				selectedVOs.push(this.getSelectedExperimentOrExperimentSetValueObject());
+			}
+		});
+		return selectedVOs;
 	},
+	/**
+	 * get selections as expressionExperimentSetValueObjects (selected single genes will be wrapped as single-member experimentSets)
+	 */
+	getSelectedAsExperimentSetValueObjects : function() {
+		var selectedVOs = this.getSelectedExperimentAndExperimentSetValueObjects();
+		var selectedAsExperimentSets = [];
+		var i;
+		for(i = 0; i<selectedVOs.length;i++){
+			if(selectedVOs[i] instanceof ExpressionExperimentValueObject){
+				var ee = selectedVOs[i];
+				// maybe this should be a call to the backend?
+				var singleExperimentSet = new SessionBoundExperimentSetValueObject();
+				singleExperimentSet.id = null;
+				singleExperimentSet.expressionExperimentIds = [ee.id];
+				singleExperimentSet.name = ee.shortName;
+				singleExperimentSet.description = ee.name;
+				singleExperimentSet.size = ee.numExperiments;
+				singleExperimentSet.taxonName = ee.taxon;
+				singleExperimentSet.taxonId = ee.taxonId;
+				singleExperimentSet.modified = false;
+				selectedAsExperimentSets.push(singleExperimentSet);
+			}else{
+				selectedAsExperimentSets.push(selectedVOs[i]);
+			}
+		}
+		return selectedAsExperimentSets;
+	},
+
 	getExperimentIds : function() {
 		var eeIds = [];
 		var i;
 		var j;
-		var records = this.getSelectedExperimentRecords();
-		for (i = 0; i < records.length; i++) {
-			var record = records[i];
-			for (j = 0; j < record.memberIds.length; j++) {
-				eeIds.push(record.memberIds[j]);
+		var vos = this.getSelectedExperimentAndExperimentSetValueObjects();
+		for (i = 0; i < vos.length; i++) {
+			if (selectedVOs[i] instanceof ExpressionExperimentValueObject) {
+				eeIds.push(vo.id);
+			} else if (selectedVOs[i] instanceof ExpressionExperimentSetValueObject) {
+				eeIds = eeIds.concat(vo.expressionExperimentIds);
 			}
 		}
 		return eeIds;
 	},
 
 	getGeneIds : function() {
+		var geneIds = [];
 		var i;
 		var j;
-		var geneIds = [];
-		var records = this.getSelectedGeneRecords();
-		for (i = 0; i < records.length; i++) {
-			var record = records[i];
-			if(typeof record.memberIds === 'undefined' && typeof record.geneIds !== 'undefined'){
-				record.memberIds = record.geneIds;
-			}
-			for (j = 0; j < record.memberIds.length; j++) {
-				geneIds.push(record.memberIds[j]);
+		var vos = this.getSelectedGeneAndGeneSetValueObjects();
+		for (i = 0; i < vos.length; i++) {
+			if (selectedVOs[i] instanceof GeneValueObject) {
+				geneIds.push(vo.id);
+			} else if (selectedVOs[i] instanceof GeneSetValueObject) {
+				geneIds = geneIds.concat(vo.geneIds);
 			}
 		}
 		return geneIds;
@@ -1093,7 +1144,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							scale: 'medium',
 							listeners: {
 								click: function(){
-									this.validateSearch(this.getSelectedGeneRecords(), this.getSelectedExperimentRecords());
+									this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
 								}.createDelegate(this, [], false)
 							}
 						
@@ -1259,7 +1310,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.geneChoosers.remove(panelId, true);
 		this.geneChoosers.doLayout();
 		
-		if(this.getSelectedExperimentRecords().length === 0 && this.getSelectedGeneRecords().length === 0){
+		if(this.getSelectedExperimentAndExperimentSetValueObjects().length === 0 && this.getSelectedGeneAndGeneSetValueObjects().length === 0){
 			this.reset();
 		}
 	},
@@ -1292,7 +1343,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.experimentChoosers.remove(panelId, true);
 		this.experimentChoosers.doLayout();
 		
-		if(this.getSelectedExperimentRecords().length === 0 && this.getSelectedGeneRecords().length === 0){
+		if(this.getSelectedExperimentAndExperimentSetValueObjects().length === 0 && this.getSelectedGeneAndGeneSetValueObjects().length === 0){
 			this.reset();
 		}
 

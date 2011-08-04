@@ -31,8 +31,6 @@ Gemma.SessionGeneGroupStore = function(config) {
 	 */
 	this.record = Ext.data.Record.create([
 			{
-				name : "reference"
-			},{
 				name : "id",
 				type : "int"
 			},{

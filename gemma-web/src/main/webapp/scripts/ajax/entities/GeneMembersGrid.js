@@ -67,8 +67,8 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.getColumnModel().setHidden(this.getColumnModel().getIndexById("taxon"), false);
 		this.getColumnModel().setHidden(this.getColumnModel().getIndexById("inList"), false);
 	},
-	setSelectedGeneGroup: function(data){
-		this.selectedGeneGroup = data;
+	setSelectedGeneSetValueObject: function(data){
+		this.selectedGeneSetValueObject = data;
 	},
 	/**
 	 * Add to table.
@@ -111,27 +111,18 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 				}.createDelegate(this));
 	},
 
-	addGenes : function(data) { // for adding from combo
-				if (!data) {
+	addGenes : function(geneSetValObj) { // for adding from combo
+				if (!geneSetValObj) {
 					return;
 				}
-				this.selectedRecord = data;
+				this.selectedGeneSetValueObject = geneSetValObj.resultValueObject;
 
-				var id = data.reference.id;
-				var isGroup = data.isGroup;
-				var reference = data.reference;
-				var name = data.name;
-		
-				var taxonId = data.taxonId;
-				var taxonName = data.taxonName;
+				var id = geneSetValObj.resultValueObject.id;
 						
 				var geneIdsToAdd = [];
 				// load preview of group if group was selected
-				if (isGroup) {
-					geneIdsToAdd = data.memberIds;
-				}else{
-					geneIdsToAdd = [id];
-				}
+				geneIdsToAdd = geneSetValObj.memberIds;
+				
 				if (!geneIdsToAdd || geneIdsToAdd === null || geneIdsToAdd.length === 0) {
 					return;
 				}
@@ -641,8 +632,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		}
 		
 		this.on('genesLoaded',function(){
-			if (this.selectedGeneGroup && this.selectedGeneGroup.reference) {
-				GeneSetController.canCurrentUserEditGroup(this.selectedGeneGroup.reference, function(response){
+			if (this.selectedGeneSetValueObject) {
+				GeneSetController.canCurrentUserEditGroup(this.selectedGeneSetValueObject, function(response){
 					var dataMsg = Ext.util.JSON.decode(response);
 					if (!dataMsg.userCanEditGroup || !dataMsg.groupIsDBBacked) {
 						this.saveButton.setText("Save As");
@@ -783,33 +774,27 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						link.innerHTML="Logout"; 
 						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
 						hasuser.value= true;
-						
+						this.loggedInSaveHandler();
 					}
-                    else if (typeof(response.responseText)!=='undefined'){
+                    else{
                     	link.href="/Gemma/login.jsp";
 						link.innerHTML="Login";
 						loggedInAs.innerHTML=" ";
 						hasuser.value= "";
-						 
+						this.promptLoginForSave();  
                     }
-                    
-                    this.saveCheckMethod();
                       
             },
             failure: function ( response, options ) {  
-				
-				this.saveCheckMethod();
+				this.promptLoginForSave();  
             },
             scope: this,
-            disableCaching: true,
-            timeout: 10000
+            disableCaching: true
        });
 	   
 	},
-	saveCheckMethod : function () {
-		
-	if (!Ext.get('hasUser').getValue()) {
-		
+	promptLoginForSave : function () {
+			
 		if (this.ajaxLogin == null){
 			
 			//Check to see if another login widget is open (rare case but possible)
@@ -860,7 +845,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 			this.getEl().mask();
 			this.ajaxLogin.show();
-	} else{	
+	},
+	loggedInSaveHandler : function () {
 		
 		// get name and description set up
 		this.createDetails();
@@ -868,11 +854,11 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		// check if user is editing a non-existant or session-bound group
 		
 		// check if group is db-backed and whether current user has editing priveleges
-		if(this.selectedGeneGroup && this.selectedGeneGroup.reference){
+		if(this.selectedGeneSetValueObject){
 			
 			// if group is db-bound and user has editing privileges, they can either save or save as
 			// in all other cases, user can only save as
-			GeneSetController.canCurrentUserEditGroup(this.selectedGeneGroup.reference, function(response){
+			GeneSetController.canCurrentUserEditGroup(this.selectedGeneSetValueObject, function(response){
 				var dataMsg = Ext.util.JSON.decode(response);
 				if(dataMsg.userCanEditGroup && dataMsg.groupIsDBBacked){
 					// ask user if they want to save changes
@@ -903,11 +889,9 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			}.createDelegate(this));
 			
 		}else{
-			// if reference is null, then there was no group to start with
 			// only save option is to save as
 			this.saveAsHandler();
 		}
-	}
 	},
 	
 	saveAsHandler: function(){
@@ -934,25 +918,16 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		this.updateDatabase();
 	},
 	createInSession : function() {
-		var ids = this.getGeneIds();
 		var editedGroup;
-		if(this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined' ){ //group wasn't made before launching 
-			editedGroup = {
-				reference: {
-					id : null,
-					type : null
-				}
-			};
-		}else{
-			editedGroup = this.selectedGeneGroup; 
-			// reference has the right type already
-		}
-
+		editedGroup = new SessionBoundGeneSetValueObject();
+		editedGroup.id = null;	
 		editedGroup.name = this.newGroupName;
 		editedGroup.description = this.newGroupDescription;
-		editedGroup.geneIds = ids;
-		editedGroup.memberIds = ids;
-		editedGroup.type = 'usergeneSetSession';
+		editedGroup.geneIds = this.getGeneIds();
+		editedGroup.taxonId = this.taxonId;
+		editedGroup.size = this.getGeneIds().length;
+		editedGroup.modified = true;
+		
 
 		GeneSetController.addSessionGroups(
 				[editedGroup], // returns datasets added
@@ -962,7 +937,6 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						// TODO error message
 						return;
 					} else {
-						geneSets[0].type = "usergeneSetSession"; // TODO I want to use type from backend
 						this.fireEvent('geneListModified', geneSets, geneSets[0].geneIds);
 						this.fireEvent('doneModification');
 					}
@@ -970,27 +944,22 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
 	},
 	createInDatabase: function(){
-			var ids = this.getGeneIds();
-			
-			var editedGroup;
-			if (this.selectedGeneGroup === null || typeof this.selectedGeneGroup === 'undefined') {
-				//group wasn't made before launching 
-				editedGroup = {
-					reference: {
-						id: null,
-						type: null
-					}
-				};
-			}
-			else {
-				editedGroup = this.selectedGeneGroup;
-			// reference has the right type already
-			}
-			editedGroup.name = this.newGroupName;
-			editedGroup.description = this.newGroupDescription;
-			editedGroup.geneIds = ids;
-			editedGroup.memberIds = ids;
-			editedGroup.type = 'usergeneSet';
+		var editedGroup;
+		if (this.selectedGeneSetValueObject === null || typeof this.selectedGeneSetValueObject === 'undefined' || 
+				!(this.selectedGeneSetValueObject instanceof DatabaseBackedGeneSetValueObject)) {
+			//group wasn't made before launching 
+			editedGroup = new DatabaseBackedGeneSetValueObject();
+		}
+		else {
+			editedGroup = Object.clone(this.selectedGeneSetValueObject);
+		}
+		
+		editedGroup.id = null;	
+		editedGroup.name = this.newGroupName;
+		editedGroup.description = this.newGroupDescription;
+		editedGroup.geneIds = this.getGeneIds();
+		editedGroup.taxonId = this.taxonId;
+		editedGroup.size = this.getGeneIds().length;
 			
 			GeneSetController.create([editedGroup], // returns datasets added
  				function(geneSets){
@@ -1000,7 +969,6 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						return;
 					}
 					else {
-						geneSets[0].type = "usergeneSet"; // TODO I want to use type from backend
 						this.fireEvent('geneListModified', geneSets, geneSets[0].geneIds);
 						this.fireEvent('doneModification');
 					}
@@ -1010,15 +978,13 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 	},
 	updateDatabase : function() {
-		var groupId = this.selectedGeneGroup.reference.id;
-		this.newGroupName = this.groupName;
+		var groupId = this.selectedGeneSetValueObject.id;
 		var geneIds = this.getGeneIds();
 
 		GeneSetController.updateMembers(groupId, geneIds, function(msg) {
-					this.selectedGeneGroup.memberIds = geneIds;
-					this.selectedGeneGroup.geneIds = geneIds;
+					this.selectedGeneSetValueObject.geneIds = geneIds;
 
-					this.fireEvent('geneListModified', [this.selectedGeneGroup], this.selectedGeneGroup.memberIds);
+					this.fireEvent('geneListModified', [this.selectedGeneSetValueObject], this.selectedGeneSetValueObject.geneIds);
 					this.fireEvent('doneModification');
 				}.createDelegate(this));
 	}
@@ -1031,7 +997,6 @@ Ext.reg('geneMembersSaveGrid', Gemma.GeneMembersSaveGrid);
  * if this.taxonId is set, then searches will be limited by taxon  
  */
 Gemma.GeneAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
-		//name : "eeChooserTb",
 		extraButtons: [],
 			initComponent : function() {
 
@@ -1039,7 +1004,6 @@ Gemma.GeneAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 				
 				this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
 					typeAhead : false,
-					taxonId: this.taxonId,
 					width : 300,
 					listeners : {
 								'select' : {

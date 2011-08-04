@@ -62,7 +62,8 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BioSequenceValueObject;
 import ubic.gemma.search.SearchResult;
@@ -72,7 +73,6 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject;
-import ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.web.propertyeditor.TaxonPropertyEditor;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
@@ -287,7 +287,7 @@ public class GeneralSearchController extends BaseFormController {
     }
 
     @Override
-    protected Map referenceData( HttpServletRequest request ) {
+    protected Map<String, List<? extends Object>> referenceData( HttpServletRequest request ) {
         Map<String, List<? extends Object>> mapping = new HashMap<String, List<? extends Object>>();
 
         // add species
@@ -390,9 +390,9 @@ public class GeneralSearchController extends BaseFormController {
         } else if ( BioSequenceValueObject.class.isAssignableFrom( entityClass ) ) {
             return;
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
-            vos = GeneSetValueObject.convert2ValueObjects( geneSetService.load( EntityUtils.getIds( results ) ), false );
+            vos = DatabaseBackedGeneSetValueObject.convert2ValueObjects( geneSetService.load( EntityUtils.getIds( results ) ), false );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-            vos = ExpressionExperimentSetValueObject.makeValueObjects( experimentSetService.load( EntityUtils
+            vos = DatabaseBackedExpressionExperimentSetValueObject.makeValueObjects( experimentSetService.load( EntityUtils
                     .getIds( results ) ) );
         } else {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );

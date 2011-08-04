@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.common;
+package ubic.gemma.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -24,15 +24,21 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
-import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchResult;
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GOGroupValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 
 /**
  * Object to store search results of different classes in a similar way for displaying to user (ex: enables genes and
@@ -46,67 +52,65 @@ import ubic.gemma.search.SearchResult;
  * @version $Id$
  */
 public class SearchResultDisplayObject implements Comparable<SearchResultDisplayObject> {
+    
+    private Class<?> resultClass;
+    
+    //private boolean isSession;
+
+    private Boolean isGroup; // whether this search result represents a group of entities or not
+
+    private String name;
+
+    private String description;
+
+    private int size; // the number of items; 1 if not a group
+
+    private String taxonName; // the common name of the associated taxon
+
+    private Long taxonId;
 
     /**
-     * Method to create a display object from scratch
-     * 
-     * @param resultClass cannot be null
-     * @param reference can be null if result record is temporary (ex GO groups)
-     * @param name cannot be null
-     * @param description should not be null
-     * @param isGroup cannot be null
-     * @param size should not be null (should be 1 for non-groups)
-     * @param taxonId can be null
-     * @param taxonName can be null
-     * @param type can be null
-     * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
+     * for genes and experiments, the memeberIds field is a collection containing just their id
      */
-    public SearchResultDisplayObject( Class<?> resultClass, Reference reference, String name, 
-            String description, Boolean isGroup, int size, Long taxonId, String taxonName,String type, 
-            Collection<Long> memberIds ) {
+    private Collection<Long> memberIds = new HashSet<Long>(); 
 
-        this.resultClass = resultClass;
-        this.reference = reference;
-        this.name = name;
-        this.description = description;
-        this.isGroup = isGroup;
-        this.size = size;
-        this.taxonId = taxonId;
-        this.taxonName = taxonName;
-        this.type = type;
-        this.memberIds = memberIds;
+    private Object resultValueObject;
+    
+    private boolean userOwned = false;
+    
+
+    /**
+     * satisfy javaBean contract
+     */
+    public SearchResultDisplayObject() {
     }
-
     /**
      * @param searchResult
      */
     public SearchResultDisplayObject( SearchResult searchResult ) {
 
         // if it's a search result, grab the underlying object
-        this.resultClass = searchResult.getResultClass();
-
+        Class<?> searchResultClass = searchResult.getResultClass();
         // class-specific construction
-        if ( this.resultClass == Gene.class ) {
+        if ( searchResultClass == Gene.class ) {
             Gene gene = ( Gene ) searchResult.getResultObject();
             setValues( gene );
-        } else if ( this.resultClass == GeneSet.class ) {
+        } else if ( searchResultClass == GeneSet.class ) {
             GeneSet geneSet = ( GeneSet ) searchResult.getResultObject();
             setValues( geneSet );
-        } else if ( this.resultClass == ExpressionExperiment.class ) {
+        } else if ( searchResultClass == ExpressionExperiment.class ) {
             ExpressionExperiment ee = ( ExpressionExperiment ) searchResult.getResultObject();
             setValues( ee );
-        } else if ( this.resultClass == ExpressionExperimentSet.class ) {
+        } else if ( searchResultClass == ExpressionExperimentSet.class ) {
             ExpressionExperimentSet eeSet = ( ExpressionExperimentSet ) searchResult.getResultObject();
             setValues( eeSet );
         } else {
-            this.reference = null;
             this.isGroup = false;
             this.size = -1;
             this.taxonId = new Long( -1 );
             this.taxonName = "unknown";
             this.name = "Unhandled type";
-            this.description = "Unhandled result type: " + this.resultClass;
-            this.type = this.getClass().getSimpleName();
+            this.description = "Unhandled result type: " + searchResultClass;
             this.memberIds = null;
         }
     }
@@ -128,7 +132,21 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     /**
      * @param geneSet
      */
+    public SearchResultDisplayObject( DatabaseBackedGeneSetValueObject geneSet ) {
+        setValues( geneSet );
+    }
+    
+    /**
+     * @param geneSet
+     */
     public SearchResultDisplayObject( GeneSetValueObject geneSet ) {
+        setValues( geneSet );
+    }
+    
+    /**
+     * @param geneSet
+     */
+    public SearchResultDisplayObject( SessionBoundGeneSetValueObject geneSet ) {
         setValues( geneSet );
     }
 
@@ -148,18 +166,23 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     }
 
     /**
+     * @param expressionExperimentSet
+     */
+    public SearchResultDisplayObject( ExpressionExperimentSetValueObject expressionExperimentSet ) {
+        setValues( expressionExperimentSet );
+    }
+
+    /**
      * @param gene
      */
     private void setValues( Gene gene ) {
-        this.reference = new Reference( gene.getId(), Reference.DB_GENE );
-        this.resultClass = Gene.class;
+        setResultValueObject(new GeneValueObject(gene));
         this.isGroup = false;
         this.size = 1;
         this.taxonId = ( gene.getTaxon() != null ) ? gene.getTaxon().getId() : null;
         this.taxonName = ( gene.getTaxon() != null ) ? gene.getTaxon().getCommonName() : null;
         this.name = gene.getOfficialSymbol();
         this.description = gene.getOfficialName();
-        this.type = "gene";
         this.memberIds.add(gene.getId());
     }
 
@@ -167,15 +190,13 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param geneSet
      */
     private void setValues( GeneSet geneSet ) {
-        this.reference = new Reference(geneSet.getId(), Reference.DATABASE_BACKED_GROUP);
-        this.resultClass = GeneSet.class;
+        setResultValueObject( new DatabaseBackedGeneSetValueObject(geneSet) );
         this.isGroup = true;
         this.size = ( geneSet.getMembers() != null ) ? geneSet.getMembers().size() : null;
         this.taxonId = null;
         this.taxonName = null;
         this.name = geneSet.getName();
         this.description = geneSet.getDescription();
-        this.type = "geneSet";
         for ( GeneSetMember gm : geneSet.getMembers() ) {
             this.memberIds.add( gm.getGene().getId() );
         }
@@ -185,50 +206,49 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
      * @param geneSet
      */
     private void setValues( GeneSetValueObject geneSet ) {
-        if(geneSet.getReference() == null){
-            if(geneSet.isSessionBound()){
-                this.reference = new Reference(geneSet.getReference().getId(), Reference.SESSION_BOUND_GROUP) ;
-            }else{
-                this.reference = new Reference(geneSet.getReference().getId(), Reference.DATABASE_BACKED_GROUP) ;
-            }
-        }else{
-            this.reference = geneSet.getReference();
-        }
-        this.resultClass = GeneSet.class;
         this.isGroup = true;
         this.size = ( geneSet.getGeneIds() != null ) ? geneSet.getGeneIds().size() : null;
         this.taxonId = geneSet.getTaxonId();
         this.taxonName = geneSet.getTaxonName();
         this.name = geneSet.getName();
         this.description = geneSet.getDescription();
-        this.type = ( geneSet.isSessionBound() ) ? "geneSetSession" : "geneSet";
         this.memberIds = geneSet.getGeneIds();
+        this.setResultValueObject( geneSet );
+    }
+    
+    /**
+     * @param geneSet
+     */
+    private void setValues( ExpressionExperimentSetValueObject eeSet ) {
+        this.isGroup = true;
+        this.size = ( eeSet.getExpressionExperimentIds() != null ) ? eeSet.getExpressionExperimentIds().size() : null;
+        this.taxonId = eeSet.getTaxonId();
+        this.taxonName = eeSet.getTaxonName();
+        this.name = eeSet.getName();
+        this.description = eeSet.getDescription();
+        this.memberIds = eeSet.getExpressionExperimentIds();
+        this.setResultValueObject( eeSet );
     }
 
     /**
      * @param expressionExperiment
      */
     private void setValues( ExpressionExperiment expressionExperiment ) {
-        this.reference = new Reference( expressionExperiment.getId(), Reference.DB_EXPERIMENT ) ;
-        this.resultClass = ExpressionExperiment.class;
         this.isGroup = false;
         this.size = 1;
         this.taxonId = null;
         this.taxonName = null;
         this.name = expressionExperiment.getShortName();
         this.description = expressionExperiment.getName();
-        this.type = "experiment";
         this.memberIds.add(expressionExperiment.getId());
-
+        setResultValueObject(new ExpressionExperimentValueObject( expressionExperiment ));
     }
 
     /**
      * @param expressionExperimentSet
      */
     private void setValues( ExpressionExperimentSet expressionExperimentSet ) {
- ///       this.id = expressionExperimentSet.getId();
-        this.reference =  new Reference( expressionExperimentSet.getId(), Reference.DATABASE_BACKED_GROUP ) ;
-        this.resultClass = ExpressionExperimentSet.class;
+        setResultValueObject(new DatabaseBackedExpressionExperimentSetValueObject( expressionExperimentSet ) );
         this.isGroup = true;
         this.size = ( expressionExperimentSet.getExperiments() != null ) ? expressionExperimentSet.getExperiments()
                 .size() : null;
@@ -238,47 +258,13 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
                 : null;
         this.name = expressionExperimentSet.getName();
         this.description = expressionExperimentSet.getDescription();
-        this.type = "experimentSet";
         for ( BioAssaySet bas : expressionExperimentSet.getExperiments() ) {
             this.memberIds.add( bas.getId() );
         }
     }
-
-    private Class<?> resultClass;
-    
-    private Reference reference;
-
-    //private boolean isSession;
-
-    private Boolean isGroup; // whether this search result represents a group of entities or not
-
-    private String name;
-
-    private String description;
-
-    private int size; // the number of items; 1 if not a group
-
-    private String taxonName; // the common name of the associated taxon
-
-    private Long taxonId;
-
-    /**
-     * for genes and experiments, the memeberIds field is a collection containing just their id
-     */
-    private Collection<Long> memberIds = new HashSet<Long>(); 
-
-    private String type;
-    
+     
     public Class<?> getResultClass() {
         return this.resultClass;
-    }
-  
-    public Reference getReference() {
-        return this.reference;
-    }
-
-    public void setReference( Reference reference ) {
-        this.reference = reference;
     }
 
     public Boolean getIsGroup() {
@@ -313,14 +299,6 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.taxonName = name;
     }
 
-    public String getType() {
-        return this.type;
-    }
-
-    public void setType( String type ) {
-        this.type = type;
-    }
-
     public Collection<Long> getMemberIds() {
         return this.memberIds;
     }
@@ -329,6 +307,35 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
         this.memberIds = memberIds;
     }
     
+
+    /**
+     * @param resultValueObject the resultValueObject to set
+     */
+    public void setResultValueObject( Object resultValueObject ) {
+        this.resultValueObject = resultValueObject;
+        this.resultClass = resultValueObject.getClass();
+    }
+
+    /**
+     * @return the resultValueObject
+     */
+    public Object getResultValueObject() {
+        return resultValueObject;
+    }
+
+    /**
+     * @param userOwned the userOwned to set
+     */
+    public void setUserOwned( boolean userOwned ) {
+        this.userOwned = userOwned;
+    }
+
+    /**
+     * @return the userOwned
+     */
+    public boolean isUserOwned() {
+        return userOwned;
+    }
 
     /**
      * Creates a collection of SearchResultDisplayObjects from a collection of objects object types handled are: Gene,
@@ -364,12 +371,12 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
             return -1;
         }
         // sort GO groups by their text name, not their GO id
-        if(o.getType()=="GOgroup"){
+        if(o.getResultValueObject() instanceof GOGroupValueObject){
             int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
             return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;    
         }
         // sort experiments by their text name, not their GSE id
-        if(o.getType()=="experiment"){
+        if(o.getResultValueObject() instanceof ExpressionExperimentValueObject){
             int result = this.description.toLowerCase().compareTo( o.description.toLowerCase() );
             return ( result == 0 ) ? this.name.toLowerCase().compareTo( o.name.toLowerCase() ) : result;    
         }

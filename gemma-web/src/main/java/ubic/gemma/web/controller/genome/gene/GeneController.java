@@ -56,13 +56,14 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.search.GeneSetSearch;
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GeneDetailsValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.controller.WebConstants;
-import ubic.gemma.web.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.web.image.aba.ImageValueObject;
 import ubic.gemma.web.view.TextView;
 
@@ -187,7 +188,8 @@ public class GeneController extends BaseController {
         details.setCompositeSequenceCount( compositeSequenceCount );
                 
         Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = GeneSetValueObject.convert2ValueObjects( genesets, false );
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
         details.setGeneSets( gsvos );
         
         Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );

@@ -27,6 +27,8 @@ Gemma.GeneProductGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					}, {
 						name : "description"
 					}, {
+						name : "accessions"
+					}, {
 						name : "type",
 						convert : function(d) {
 							return d.value;
@@ -44,7 +46,10 @@ Gemma.GeneProductGrid = Ext.extend(Gemma.GemmaGridPanel, {
 									}, {
 										header : "Description",
 										dataIndex : "description"
-									}],
+									}, {
+						dataIndex : "accessions",
+						header : "accessions"
+					}],
 
 							store : new Ext.data.Store({
 										proxy : new Ext.data.DWRProxy(GeneController.getProducts),

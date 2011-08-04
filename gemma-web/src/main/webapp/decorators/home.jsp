@@ -16,11 +16,16 @@
 		<jwr:style src="/bundles/gemma-all.css" />
 		<script type='text/javascript' src='/Gemma/dwr/engine.js'></script>
 		<script type='text/javascript' src='/Gemma/dwr/util.js'></script>
+		
+		<%-- for dwr --%>
+		<script type='text/javascript' src='/Gemma/dwr/interface/DatabaseBackedExpressionExperimentSetValueObject.js'></script>
+		<script type='text/javascript' src='/Gemma/scripts/app/valueObjectsInheritanceStructure.js'></script>
 
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
 
 		<decorator:head />
+
 	</head>
 	<body
 		<decorator:getProperty property="body.id" writeEntireProperty="true"/>

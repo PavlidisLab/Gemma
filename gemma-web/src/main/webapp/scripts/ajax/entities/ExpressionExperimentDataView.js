@@ -19,8 +19,6 @@ Gemma.ExpressionExperimentDataView = Ext.extend(Ext.DataView, {
 				name : "shortName",
 				type : "string"
 			}, {
-				name : "reference"
-			}, {
 				name : "name",
 				type : "string"
 			}, {

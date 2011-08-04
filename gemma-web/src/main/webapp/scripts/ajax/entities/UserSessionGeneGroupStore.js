@@ -11,10 +11,8 @@ Gemma.UserSessionGeneGroupStore = function(config) {
 	 */
 	this.record = Ext.data.Record.create([
 			{
-	//			name : "id",
-	//			type : "int"
-	//		},{
-				name : "reference"
+				name : "id",
+				type : "int"
 			},{
 				name : "taxonId",
 				type : "int"

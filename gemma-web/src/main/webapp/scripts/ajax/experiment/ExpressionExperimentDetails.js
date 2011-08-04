@@ -604,7 +604,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         var nameArea = new Ext.form.TextArea({
             allowBlank: false,
             grow: true,
-            growMin: 22,
+            //growMin: 22,
             growAppend: '',
             readOnly: true,//!this.editable,
             disabled: true,

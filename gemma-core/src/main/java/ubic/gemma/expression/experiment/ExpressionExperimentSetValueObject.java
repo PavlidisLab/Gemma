@@ -16,15 +16,13 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.expression.experiment;
+package ubic.gemma.expression.experiment;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.persistence.GemmaSessionBackedValueObject;
 import ubic.gemma.util.EntityUtils;
 
 
@@ -32,20 +30,20 @@ import ubic.gemma.util.EntityUtils;
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentSetValueObject implements Serializable, GemmaSessionBackedValueObject, Comparable<ExpressionExperimentSetValueObject> {
+public class ExpressionExperimentSetValueObject implements Serializable, Comparable<ExpressionExperimentSetValueObject> {
 
     private static final long serialVersionUID = -6852364688337216390L;
-
+        
     private boolean currentUserHasWritePermission = false;
 
     private boolean publik;
 
     private boolean shared;
         
-    private Reference reference;
-
     private String description;
+    
     private Collection<Long> expressionExperimentIds;
+    
     private Long id;
     
     /**
@@ -59,7 +57,7 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
     private Long taxonId;
 
     private String taxonName;
-
+    
 
     /**
      * @return the publik
@@ -88,30 +86,6 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
     public void setShared( boolean shared ) {
         this.shared = shared;
     }
-    
-    public boolean isSessionBound() {
-        return getReference().isSessionBound();
-    }
-        
-    public void setReference( Reference reference) {
-        this.reference = reference;
-    }
-    
-    public Reference getReference(){
-        return this.reference;
-    }
-
-    
-    public static Collection<ExpressionExperimentSetValueObject> makeValueObjects(
-            Collection<ExpressionExperimentSet> entities ) {
-        Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
-
-        for ( ExpressionExperimentSet eeset : entities ) {
-            results.add( new ExpressionExperimentSetValueObject( eeset ) );
-        }
-
-        return results;
-    }
 
     public ExpressionExperimentSetValueObject( ExpressionExperimentSet set ) {
         this.id = set.getId();
@@ -120,8 +94,6 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
         this.taxonId = set.getTaxon().getId();
         this.numExperiments = set.getExperiments().size();
         this.expressionExperimentIds = EntityUtils.getIds( set.getExperiments() );
-        this.reference = new Reference( set.getId(), Reference.DATABASE_BACKED_GROUP );
-
     }
 
     public ExpressionExperimentSetValueObject() {
@@ -155,10 +127,6 @@ public class ExpressionExperimentSetValueObject implements Serializable, GemmaSe
     }
 
     public Collection<Long> getExpressionExperimentIds() {
-        return expressionExperimentIds;
-    }
-
-    public Collection<Long> getMemberIds() {
         return expressionExperimentIds;
     }
 

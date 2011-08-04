@@ -788,8 +788,6 @@ Gemma.GeneGroupStore = function(config) {
 				name : "id",
 				type : "int"
 			}, {
-				name : "reference"
-			}, {
 				name : "name",
 				type : "string",
 				convert : function(v, rec) {

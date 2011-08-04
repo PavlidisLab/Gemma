@@ -14,20 +14,20 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
 	_selectedDatasetGroups : [],
 	_selectedGeneGroups : [],
+	geneGroupValueObjects: [],
+	experimentGroupValueObjects:[],
 	waitingForGeneSessionGroupBinding : false,
 	waitingForDatasetSessionGroupBinding : false,
 	geneGroupNames : [],
-	geneGroupReferences : [],
 	datasetGroupNames : [],
-	datasetGroupReferences : [],
 	taxonId : null,
 
 	prepareVisualization : function(target) {
 
 		this.geneGroupNames = [];
-		this.geneGroupReferences = [];
 		this.datasetGroupNames = [];
-		this.datasetGroupReferences = [];
+		this.geneGroupValueObjects = [];
+		this.experimentGroupValueObjects = [];
 		this._selectedGeneGroups = [];
 		this._selectedDatasetGroups = [];
 		// control variables used if asynchronous session group creation is
@@ -50,14 +50,14 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		for (i = 0; i < this._selectedGeneGroups.length; i++) {
 
 			if (this._selectedGeneGroups[i] && this._selectedGeneGroups[i] !== null) {
-				// if the group has a null value for reference.id, then it
+				// if the group has a null value for id, then it
 				// hasn't been
 				// created as a group in the database nor session
-				if (this._selectedGeneGroups[i].reference.id === null) {
+				if (this._selectedGeneGroups[i].id === null || this._selectedGeneGroups[i].id === -1) {
 					this._selectedGeneGroups[i].geneIds = this._selectedGeneGroups[i].memberIds;
 					geneGroupsToBindToSession.push(this._selectedGeneGroups[i]);
 				} else {
-					this.geneGroupReferences.push(this._selectedGeneGroups[i].reference);
+					this.geneGroupValueObjects.push(this._selectedGeneGroups[i]);
 					this.geneGroupNames.push(this._selectedGeneGroups[i].name);
 				}
 			}
@@ -72,7 +72,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 							return;
 						} else {
 							for (j = 0; j < geneSets.length; j++) {
-								this.geneGroupReferences.push(geneSets[j].reference);
+								this.geneGroupValueObjects.push(geneSets[j]);
 								this.geneGroupNames.push(geneSets[j].name);
 							}
 						}
@@ -84,14 +84,14 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		var datasetGroupsToBindToSession = [];
 		for (i = 0; i < this._selectedDatasetGroups.length; i++) {
 			if (this._selectedDatasetGroups[i] && this._selectedDatasetGroups[i] !== null) {
-				// if the group has a null value for reference.id, then it
+				// if the group has a null value for id, then it
 				// hasn't been
 				// created as a group in the database nor session
-				if (this._selectedDatasetGroups[i].reference.id === null) {
+				if (this._selectedDatasetGroups[i].id === null || this._selectedDatasetGroups[i].id === -1 ) {
 					this._selectedDatasetGroups[i].expressionExperimentIds = this._selectedDatasetGroups[i].memberIds;
 					datasetGroupsToBindToSession.push(this._selectedDatasetGroups[i]);
 				} else {
-					this.datasetGroupReferences.push(this._selectedDatasetGroups[i].reference);
+					this.experimentGroupValueObjects.push(this._selectedDatasetGroups[i]);
 					this.datasetGroupNames.push(this._selectedDatasetGroups[i].name);
 				}
 			}
@@ -106,7 +106,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 							return;
 						} else {
 							for (j = 0; j < datasetSets.length; j++) {
-								this.datasetGroupReferences.push(datasetSets[j].reference);
+								this.experimentGroupValueObjects.push(datasetSets[j]);
 								this.datasetGroupNames.push(datasetSets[j].name);
 							}
 						}
@@ -133,20 +133,20 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		if (!this.taxonId || this.taxonId === null) {
 			// DO SOMETHING!!
 		}
-		this.geneReferences = this.geneGroupReferences;
-		this.datasetReferences = this.datasetGroupReferences;
+		this.geneGroupValueObjects = this.geneGroupValueObjects;
+		this.experimentGroupValueObjects = this.experimentGroupValueObjects;
 		
-		if(this.initExperimentGroupReferences){
-			this.datasetReferences = this.datasetReferences.concat(this.initExperimentGroupReferences);
+		if(this.initexperimentGroupValueObjects){
+			this.experimentGroupValueObjects = this.experimentGroupValueObjects.concat(this.initExperimentGroupResultValueObjects);
 		}
-		if(this.initExperimentReferences){
-			this.datasetReferences= this.datasetReferences.concat(this.initExperimentReferences);
+		if(this.initexperimentGroupValueObjects){
+			this.experimentGroupValueObjects = this.experimentGroupValueObjects.concat(this.initexperimentGroupValueObjects);
 		}
-		if(this.initGeneGroupReferences){
-			this.geneReferences = this.geneReferences.concat(this.initGeneGroupReferences);
+		if(this.initGeneGroupValueObjects){
+			this.geneGroupValueObjects = this.geneGroupValueObjects.concat(this.initGeneGroupValueObjects);
 		}
-		if(this.initGeneReferences){
-			this.geneReferences = this.geneReferences.concat(this.initGeneReferences);
+		if(this.initGeneValueObjects){
+			this.geneGroupValueObjects = this.geneGroupValueObjects.concat(this.initGeneValueObjects);
 		}
 		if(typeof this.initGeneSessionGroupQueries === 'undefined'){
 			this.initGeneSessionGroupQueries = [];
@@ -158,9 +158,13 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		}else{
 			this.experimentSessionGroupQueries = this.initExperimentSessionGroupQueries;
 		}
-
+		
+//		DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId,
+//				this.datasetReferences, this.geneReferences, this.initGeneSessionGroupQueries,
+//				this.initExperimentSessionGroupQueries, function(data) {
+		
 		DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId,
-				this.datasetReferences, this.geneReferences, this.initGeneSessionGroupQueries,
+				this.experimentGroupValueObjects, this.geneGroupValueObjects, this.initGeneSessionGroupQueries,
 				this.initExperimentSessionGroupQueries, function(data) {
 
 					//progressWindow.hide();
@@ -171,8 +175,6 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					// to trigger loadmask on search form to hide
 					this.fireEvent('visualizationLoaded');
 					
-					data.geneGroupReferences = this.geneReferences;
-					data.datasetGroupReferences = this.datasetReferences;
 					data.taxonId = this.taxonId;
 					
 					var experimentCount = 0;
@@ -212,7 +214,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 									initExperimentSort: (this.initExperimentSort)? this.initExperimentSort:null,
 									initFactorFilter: (this.initFactorFilter)? this.initFactorFilter:null,
 									applyTo : 'meta-heatmap-div',
-									//pvalue : this.pvalue, //we don't use this yet // should be renamed to p value threshold or something like that
+									//threshold : threshold, //we don't use this yet // should be renamed to p value threshold or something like that
 									geneSessionGroupQueries :this.geneSessionGroupQueries,
 									experimentSessionGroupQueries :this.experimentSessionGroupQueries,
 									loadedFromURL: this.loadedFromURL
@@ -231,6 +233,9 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 	 * @return {}
 	 */
 	initializeSearchFromURL : function(url) {
+		
+		alert("TODO initializeSearchFromURL");
+		
 		var param = Ext.urlDecode(url);
 		var arrs; var i;
 		
@@ -254,7 +259,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		if (param.eq) {
 			this.initExperimentSessionGroupQueries = param.gq.split(',');
 		}
-		if (param.g) {
+		/*if (param.g) {
 			arrs = param.g.split(',');
 			for(i = 0; i< arrs.length; i++){
 				// make a reference object for each id
@@ -298,10 +303,11 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			}
 			this.initExperimentGroupReferences = arrs;
 		}
+		*/
 	},
 	initComponent : function() {
 
-		this.on('geneGroupsReadyForVisualization', function(geneReferences, geneNames) {
+		this.on('geneGroupsReadyForVisualization', function() {
 					if (!this.waitingForDatasetSessionGroupBinding) {
 						this.doVisualization();
 					}
@@ -313,47 +319,34 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 				}, this);
 		
 		// FOR TESTING !!!!!
-		this.param2 = {
-			geneReferences : [{
-				id : 96,
-				type : "databaseBackedGroup"
-			}
-				 ,{ id: 94, type: "databaseBackedGroup" }
-				 
-			],
-			datasetReferences : [{
-						id : 6137,
-						type : "databaseBackedGroup"
-					}
+		/*this.param2 = {
 			
-			  ,{ id: 6110, type: "databaseBackedGroup" }
-			 
-			],
 			geneNames : ["gene TEST", "gene TEST 2"],
 			datasetNames : ["dataset TEST", "dataset TEST2"],
 			taxonId : 2,
 			pvalue : Gemma.DEFAULT_THRESHOLD
-		};
+		};*/
 
 		this.loadedFromURL = false;
 		var queryStart = document.URL.indexOf("?");
-		if (queryStart > -1) {
+		/*if (queryStart > -1) {
 			this.initializeSearchFromURL(document.URL.substr(queryStart + 1));
-			if((this.initGeneSessionGroupQueries || this.initGeneReferences || this.initGeneGroupReferences) &&
-			   (this.initExperimentSessionGroupQueries || this.initExperimentReferences || this.initExperimentGroupReferences)){
+			if((this.initGeneSessionGroupQueries || this.initGeneValueObjects || this.initGeneGroupValueObjects) &&
+			   (this.initExperimentSessionGroupQueries || this.initExperimentValueObjects || this.initExperimentGroupValueObjects)){
 				this.loadedFromURL = true;
 			}
 		}
+		*/
 		
 		if (this.param && !this.loadedFromURL) { // if from search form
-			if (this.param.geneReferences) {
-				this.geneGroupReferences = this.param.geneReferences;
+			if (this.param.experimentSetValueObjects) {
+				this.experimentGroupValueObjects = this.param.experimentSetValueObjects;
+			}
+			if (this.param.geneSetValueObjects) {
+				this.geneGroupValueObjects = this.param.geneSetValueObjects;
 			}
 			if (this.param.geneNames) {
 				this.geneGroupNames = this.param.geneNames;
-			}
-			if (this.param.datasetReferences) {
-				this.datasetGroupReferences = this.param.datasetReferences;
 			}
 			if (this.param.datasetNames) {
 				this.datasetGroupNames = this.param.datasetNames;
@@ -376,6 +369,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			/*if (this.param.pvalue) { //we don't use this yet
 				this.pvalue = this.param.pvalue;
 			}*/
+			// need to know for bookmarking
 			if (this.param.selectionsModified){
 				this.selectionsModified = this.param.selectionsModified;
 			}
@@ -383,11 +377,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
 		Gemma.MetaHeatmapDataSelection.superclass.initComponent.apply(this, arguments);
 
-		if(this.loadedFromURL){
-			this.doVisualization();
-		}	
-		else if (this.param && this.param.geneReferences && this.param.geneNames && this.param.datasetReferences &&
-			this.param.datasetNames && this.param.taxonId) {
+		if(this.geneGroupValueObjects && this.experimentGroupValueObjects){
 			this.doVisualization();
 		}
 	},

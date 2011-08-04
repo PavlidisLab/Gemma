@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.web.controller.expression.experiment;
+package ubic.gemma.web.controller.genome.gene;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,7 +31,9 @@ import org.springframework.stereotype.Controller;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 
-import ubic.gemma.model.Reference;
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -40,11 +42,10 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetImpl;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
+import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.web.session.SessionListManager;
 
 /**
  * Exposes GeneServices methods over ajax
@@ -90,16 +91,16 @@ public class GeneSetController {
             }
 
             GeneSet gset = create( geneSetVo );
-            results.add( new GeneSetValueObject( gset ) );
+            results.add( new DatabaseBackedGeneSetValueObject( gset ) );
 
         }
         return results;
     }
     
-    private Collection<GeneSetValueObject> setSessionGroupTaxonValues( Collection<GeneSetValueObject> geneSetVos ){
+    private Collection<SessionBoundGeneSetValueObject> setSessionGroupTaxonValues( Collection<SessionBoundGeneSetValueObject> geneSetVos ){
 
         
-        for ( GeneSetValueObject gsvo : geneSetVos ) {
+        for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
             
             // get taxon from members
             for (Long l : gsvo.getGeneIds()){
@@ -124,13 +125,13 @@ public class GeneSetController {
      * @param geneSetVo value object constructed on the client.
      * @return collection of added session groups (with updated reference.id etc)
      */
-    public Collection<GeneSetValueObject> addSessionGroups( Collection<GeneSetValueObject> geneSetVos ) {
+    public Collection<SessionBoundGeneSetValueObject> addSessionGroups( Collection<SessionBoundGeneSetValueObject> geneSetVos ) {
 
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        Collection<SessionBoundGeneSetValueObject> results = new HashSet<SessionBoundGeneSetValueObject>();
         
         geneSetVos = setSessionGroupTaxonValues( geneSetVos );
 
-        for ( GeneSetValueObject gsvo : geneSetVos ) {
+        for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
                         
             // sets the reference and stores the group
             results.add( sessionListManager.addGeneSet( gsvo ) );
@@ -148,16 +149,16 @@ public class GeneSetController {
      * @param geneSetVo value object constructed on the client.
      * @return collection of added session groups (with updated reference.id etc)
      */
-    public Collection<GeneSetValueObject> addNonModificationBasedSessionBoundGroups( Collection<GeneSetValueObject> geneSetVos ) {
+    public Collection<SessionBoundGeneSetValueObject> addNonModificationBasedSessionBoundGroups( Collection<SessionBoundGeneSetValueObject> geneSetVos ) {
 
-        Collection<GeneSetValueObject> results = new HashSet<GeneSetValueObject>();
+        Collection<SessionBoundGeneSetValueObject> results = new HashSet<SessionBoundGeneSetValueObject>();
 
         geneSetVos = setSessionGroupTaxonValues( geneSetVos );
         
-        for ( GeneSetValueObject gsvo : geneSetVos ) {
+        for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
 
             // sets the reference and stores the group
-            results.add( sessionListManager.addGeneSet( gsvo , Reference.UNMODIFIED_SESSION_BOUND_GROUP) );
+            results.add( sessionListManager.addGeneSet( gsvo , false) );
 
         }
 
@@ -174,12 +175,12 @@ public class GeneSetController {
 
         Collection<GeneSetValueObject> result = new HashSet<GeneSetValueObject>();
 
-        Collection<GeneSetValueObject> sessionResult = new HashSet<GeneSetValueObject>();
+        Collection<SessionBoundGeneSetValueObject> sessionResult = new HashSet<SessionBoundGeneSetValueObject>();
 
         for ( GeneSetValueObject gsvo : geneSetVos ) {
 
-            if ( gsvo.isSessionBound() ) {
-                sessionResult.add( gsvo );
+            if ( gsvo instanceof SessionBoundGeneSetValueObject ) {
+                sessionResult.add( (SessionBoundGeneSetValueObject) gsvo );
             } else {
                 result.add( gsvo );
             }
@@ -205,7 +206,9 @@ public class GeneSetController {
 
         Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
 
-        return GeneSetValueObject.convert2ValueObjects( genesets, false );
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
+        return gsvos;
     }
 
     /**
@@ -252,7 +255,9 @@ public class GeneSetController {
             }
         }
 
-        return GeneSetValueObject.convert2ValueObjects( foundGeneSets, false );
+        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
+        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( foundGeneSets, false ) );
+        return gsvos;
     }
 
     /**
@@ -261,14 +266,13 @@ public class GeneSetController {
      * @param ref reference for a gene set
      * @return
      */
-    public String canCurrentUserEditGroup(Reference ref){
+    public String canCurrentUserEditGroup(GeneSetValueObject gsvo){
         boolean userCanEditGroup = false;
         boolean groupIsDBBacked = false;
-        // TODO implement check to make sure the reference being passed in is for a gene set!!
-        if(ref.isDatabaseBacked()){
+        if(gsvo instanceof DatabaseBackedGeneSetValueObject){
             groupIsDBBacked = true;
             try{
-                userCanEditGroup = securityService.isEditable( geneSetService.load( ref.getId() ) );
+                userCanEditGroup = securityService.isEditable( geneSetService.load( gsvo.getId() ) );
             }catch(org.springframework.security.access.AccessDeniedException ade){
                 return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+false+"}";
             }
@@ -304,7 +308,7 @@ public class GeneSetController {
      * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
      * @return
      */
-    public Collection<GeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
+    public Collection<DatabaseBackedGeneSetValueObject> getUsersGeneGroups( boolean privateOnly, Long taxonId ) {
 
         Taxon tax = null;
         if ( taxonId != null ) {
@@ -327,7 +331,7 @@ public class GeneSetController {
             geneSets = geneSetService.loadAll( tax );
         }
 
-        Collection<GeneSetValueObject> result = makeValueObects( geneSets );
+        Collection<DatabaseBackedGeneSetValueObject> result = makeValueObects( geneSets );
         return result;
     }
 
@@ -340,11 +344,14 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> getUserAndSessionGeneGroups( boolean privateOnly, Long taxonId ) {
 
-        Collection<GeneSetValueObject> result = getUsersGeneGroups( privateOnly, taxonId );
+        Collection<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
+        
+        Collection<DatabaseBackedGeneSetValueObject> dbresult = getUsersGeneGroups( privateOnly, taxonId );
 
         // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-        Collection<GeneSetValueObject> sessionResult = sessionListManager.getAllGeneSets(taxonId);
+        Collection<SessionBoundGeneSetValueObject> sessionResult = sessionListManager.getAllGeneSets(taxonId);
 
+        result.addAll( dbresult );
         result.addAll( sessionResult );
 
         return result;
@@ -357,10 +364,10 @@ public class GeneSetController {
      * @param taxonId if non-null, restrict the groups by ones which have genes in the given taxon.
      * @return
      */
-    public Collection<GeneSetValueObject> getUserSessionGeneGroups( boolean privateOnly, Long taxonId ) {
+    public Collection<SessionBoundGeneSetValueObject> getUserSessionGeneGroups( boolean privateOnly, Long taxonId ) {
 
         // TODO implement taxonId filtering when taxon gets added to GeneSetValueObject
-        Collection<GeneSetValueObject> result = sessionListManager.getAllGeneSets(taxonId);
+        Collection<SessionBoundGeneSetValueObject> result = sessionListManager.getAllGeneSets(taxonId);
         return result;
     }
 
@@ -369,12 +376,12 @@ public class GeneSetController {
      * 
      * @param groups
      */
-    public Collection<GeneSetValueObject> remove( Collection<GeneSetValueObject> vos ) {
-        for ( GeneSetValueObject geneSetValueObject : vos ) {
-            GeneSet gset = geneSetService.load( geneSetValueObject.getReference().getId() );
+    public Collection<DatabaseBackedGeneSetValueObject> remove( Collection<DatabaseBackedGeneSetValueObject> vos ) {
+        for ( DatabaseBackedGeneSetValueObject geneSetValueObject : vos ) {
+            GeneSet gset = geneSetService.load( geneSetValueObject.getId() );
             if ( gset != null ) geneSetService.remove( gset );
         }
-        return new HashSet<GeneSetValueObject>();
+        return new HashSet<DatabaseBackedGeneSetValueObject>();
     }
 
     /**
@@ -382,12 +389,12 @@ public class GeneSetController {
      * 
      * @param groups
      */
-    public Collection<GeneSetValueObject> removeSessionGroups( Collection<GeneSetValueObject> vos ) {
-        for ( GeneSetValueObject geneSetValueObject : vos ) {
+    public Collection<SessionBoundGeneSetValueObject> removeSessionGroups( Collection<SessionBoundGeneSetValueObject> vos ) {
+        for ( SessionBoundGeneSetValueObject geneSetValueObject : vos ) {
             sessionListManager.removeGeneSet( geneSetValueObject );
         }
 
-        return new HashSet<GeneSetValueObject>();
+        return new HashSet<SessionBoundGeneSetValueObject>();
     }
 
     /**
@@ -396,24 +403,26 @@ public class GeneSetController {
      * @param groups
      */
     public Collection<GeneSetValueObject> removeUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
-        Collection<GeneSetValueObject> databaseCollection = new HashSet<GeneSetValueObject>();
-        Collection<GeneSetValueObject> sessionCollection = new HashSet<GeneSetValueObject>();
+
+        Collection<GeneSetValueObject> removedSets = new HashSet<GeneSetValueObject>();
+        Collection<DatabaseBackedGeneSetValueObject> databaseCollection = new HashSet<DatabaseBackedGeneSetValueObject>();
+        Collection<SessionBoundGeneSetValueObject> sessionCollection = new HashSet<SessionBoundGeneSetValueObject>();
 
         for ( GeneSetValueObject geneSetValueObject : vos ) {
-            if ( geneSetValueObject.isSessionBound() ) {
-                sessionCollection.add( geneSetValueObject );
-            } else {
-                databaseCollection.add( geneSetValueObject );
+            if ( geneSetValueObject instanceof SessionBoundGeneSetValueObject ) {
+                sessionCollection.add( (SessionBoundGeneSetValueObject) geneSetValueObject );
+            } else if (geneSetValueObject instanceof DatabaseBackedGeneSetValueObject) {
+                databaseCollection.add( (DatabaseBackedGeneSetValueObject) geneSetValueObject );
             }
-
         }
 
         sessionCollection = removeSessionGroups( sessionCollection );
         databaseCollection = remove( databaseCollection );
 
-        databaseCollection.addAll( sessionCollection );
+        removedSets.addAll( sessionCollection );
+        removedSets.addAll( databaseCollection );
 
-        return databaseCollection;
+        return removedSets;
     }
 
     /**
@@ -421,8 +430,8 @@ public class GeneSetController {
      * 
      * @param groups
      */
-    public Collection<GeneSetValueObject> updateSessionGroups( Collection<GeneSetValueObject> vos ) {
-        for ( GeneSetValueObject geneSetValueObject : vos ) {
+    public Collection<SessionBoundGeneSetValueObject> updateSessionGroups( Collection<SessionBoundGeneSetValueObject> vos ) {
+        for ( SessionBoundGeneSetValueObject geneSetValueObject : vos ) {
             sessionListManager.updateGeneSet( geneSetValueObject );
         }
         return vos;
@@ -435,24 +444,25 @@ public class GeneSetController {
      */
     public Collection<GeneSetValueObject> updateUserAndSessionGroups( Collection<GeneSetValueObject> vos ) {
 
-        Collection<GeneSetValueObject> databaseCollection = new HashSet<GeneSetValueObject>();
-        Collection<GeneSetValueObject> sessionCollection = new HashSet<GeneSetValueObject>();
+        Collection<GeneSetValueObject> updatedSets = new HashSet<GeneSetValueObject>();
+        Collection<DatabaseBackedGeneSetValueObject> databaseCollection = new HashSet<DatabaseBackedGeneSetValueObject>();
+        Collection<SessionBoundGeneSetValueObject> sessionCollection = new HashSet<SessionBoundGeneSetValueObject>();
 
         for ( GeneSetValueObject geneSetValueObject : vos ) {
-            if ( geneSetValueObject.isSessionBound() ) {
-                sessionCollection.add( geneSetValueObject );
-            } else {
-                databaseCollection.add( geneSetValueObject );
+            if ( geneSetValueObject instanceof SessionBoundGeneSetValueObject ) {
+                sessionCollection.add( (SessionBoundGeneSetValueObject) geneSetValueObject );
+            } else if (geneSetValueObject instanceof DatabaseBackedGeneSetValueObject) {
+                databaseCollection.add( (DatabaseBackedGeneSetValueObject) geneSetValueObject );
             }
-
         }
 
         sessionCollection = updateSessionGroups( sessionCollection );
         databaseCollection = update( databaseCollection );
 
-        databaseCollection.addAll( sessionCollection );
+        updatedSets.addAll( sessionCollection );
+        updatedSets.addAll( databaseCollection );
 
-        return databaseCollection;
+        return updatedSets;
 
     }
 
@@ -463,12 +473,12 @@ public class GeneSetController {
      * @param groupId
      * @param geneIds
      */
-    public Collection<GeneSetValueObject> update( Collection<GeneSetValueObject> geneSetVos ) {
+    public Collection<DatabaseBackedGeneSetValueObject> update( Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
 
         Collection<GeneSet> updated = new HashSet<GeneSet>();
-        for ( GeneSetValueObject geneSetVo : geneSetVos ) {
+        for ( DatabaseBackedGeneSetValueObject geneSetVo : geneSetVos ) {
 
-            Long groupId = geneSetVo.getReference().getId();
+            Long groupId = geneSetVo.getId();
             GeneSet gset = geneSetService.load( groupId );
             if ( gset == null ) {
                 throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
@@ -613,12 +623,12 @@ public class GeneSetController {
      * @param secs
      * @return
      */
-    private Collection<GeneSetValueObject> makeValueObects( Collection<GeneSet> secs ) {
+    private Collection<DatabaseBackedGeneSetValueObject> makeValueObects( Collection<GeneSet> secs ) {
         // Create valueobject (need to add security info or would move this out into the valueobject...
-        List<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
+        List<DatabaseBackedGeneSetValueObject> result = new ArrayList<DatabaseBackedGeneSetValueObject>();
         for ( GeneSet gs : secs ) {
 
-            GeneSetValueObject gsvo = new GeneSetValueObject( gs );
+            DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
 
             gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
             gsvo.setPublik( securityService.isPublic( gs ) );

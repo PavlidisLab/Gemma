@@ -295,7 +295,7 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			}
 			this._toolPanels._selectionTabPanel.setActiveTab(0);
 		});
-				
+		
 		this.geneSelectionEditor = new Gemma.GeneMembersSaveGrid({
 			name: 'geneSelectionEditor',
 			hideHeaders: true,
@@ -331,12 +331,11 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							msg : "Loading genes ..."
 						});
 				this.geneSelectionEditor.loadMask.show();
+				this.geneSelectionEditor.setTaxonId(this.visualizationData.taxonId);
 				Ext.apply(this.geneSelectionEditor, {
 							geneGroupId : null,
 							selectedGeneGroup : null,
-							groupName : null,
-							taxonId : this.taxonId,
-							taxonName : this.taxonName
+							groupName : null
 						});
 				this.geneSelectionEditor.loadGenes(this._selectedGenes, function() {
 							this.geneSelectionEditor.loadMask.hide();
@@ -349,7 +348,8 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 			height: 200,
 			hideHeaders: true,
 			frame: false,
-			allowSaveToSession: false
+			allowSaveToSession: false,
+			taxonId: this.visualizationData.taxonId
 		});
 
 		this.eeSelectionEditorWindow = new Ext.Window({
@@ -380,12 +380,11 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 							msg : "Loading experiments ..."
 						});
 				this.eeSelectionEditor.loadMask.show();
+				this.eeSelectionEditor.setTaxonId(this.visualizationData.taxonId);
 				Ext.apply(this.eeSelectionEditor, {
 							eeGroupId : null,
-							selectedExperimentGroup : null,
-							groupName : null,
-							taxonId : this.taxonId,
-							taxonName : this.taxonName
+							selectedExperimentSetValueObject : null,
+							groupName : null
 						});
 				this.eeSelectionEditor.loadExperiments(this._selectedExperiments, function() {
 							this.eeSelectionEditor.loadMask.hide();

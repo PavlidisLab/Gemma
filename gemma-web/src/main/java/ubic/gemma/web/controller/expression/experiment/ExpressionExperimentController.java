@@ -62,7 +62,11 @@ import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
-import ubic.gemma.model.Reference;
+import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
+import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
+import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -105,7 +109,6 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
-import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
@@ -113,9 +116,8 @@ import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
-import ubic.gemma.web.common.QuantitationTypeValueObject;
+import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.remote.EntityDelegator;
-import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.web.taglib.displaytag.ExpressionExperimentValueObjectComparator;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
@@ -433,9 +435,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
                         // if set was automatically generated, don't label as user-created (technically was created by
                         // admin user)
                         if ( newSRDO.getName().indexOf( "All" ) != 0 ) {
-                            newSRDO.setType( "usersExperimentSet" );
+                            newSRDO.setUserOwned( true );
                             usersResults.add( newSRDO );
                         } else {
+                            newSRDO.setUserOwned( false );
                             // autoGenResults.add( newSRDO );
                         }
                     }
@@ -480,7 +483,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
              * } } }
              */
             // get any session-bound groups
-            Collection<ExpressionExperimentSetValueObject> sessionResult = sessionListManager
+            Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = sessionListManager
                     .getModifiedExperimentSets();
 
             List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
@@ -488,19 +491,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
             if ( sessionResult != null && sessionResult.size() > 0 ) {
                 Collection<ExpressionExperimentSetValueObject> toRmv = new ArrayList<ExpressionExperimentSetValueObject>();
                 // for every object passed in, create a SearchResultDisplayObject
-                for ( ExpressionExperimentSetValueObject eevo : sessionResult ) {
+                for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
                     if ( eevo.getTaxonId() == null ) {
                         toRmv.add( eevo );
                     } else {
                         if ( !taxonLimited || eevo.getTaxonId().equals( taxonId ) ) {
-                            Reference ref = eevo.getReference();
-                            if ( ref == null ) {
-                                ref = new Reference( eevo.getId(), Reference.SESSION_BOUND_GROUP );
-                            }
-                            SearchResultDisplayObject srdo = new SearchResultDisplayObject(
-                                    ExpressionExperimentSet.class, ref, eevo.getName(), eevo.getDescription(), true,
-                                    eevo.getExpressionExperimentIds().size(), eevo.getTaxonId(), eevo.getTaxonName(),
-                                    "userexperimentSetSession", eevo.getExpressionExperimentIds() );
+                            SearchResultDisplayObject srdo = new SearchResultDisplayObject(eevo);
+                            srdo.setUserOwned( true );
                             sessionSets.add( srdo );
                         }
                     }
@@ -556,7 +553,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             // to fix this, if 1 ee is returned and the group only has 1 member and it's member has the
             // same Id as the 1 ee returned, then don't return the ee set
             if ( experiments.size() == 1 && experimentSets.size() > 0 ) {
-                Long eid = experiments.iterator().next().getReference().getId();
+                Long eid = ((ExpressionExperimentValueObject) experiments.iterator().next().getResultValueObject()).getId();
                 Collection<SearchResultDisplayObject> toRmv = new ArrayList<SearchResultDisplayObject>();
                 for ( SearchResultDisplayObject srdo : experimentSets ) {
                     if ( srdo.getMemberIds().size() == 1 && ( srdo.getMemberIds().toArray() )[0].equals( eid ) ) {
@@ -567,17 +564,20 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
 
             Taxon taxon = null;
-            // for each experiment search result display object, set the taxon -- pretty hacky
+            // for each experiment search result display object, set the taxon -- pretty hacky, 
+            // but only way to get experiment's taxon is using service
+            // can I do this in the SRDO constructor?
             Collection<SearchResultDisplayObject> toRmv = new ArrayList<SearchResultDisplayObject>();
             for ( SearchResultDisplayObject srdo : experiments ) {
+                
                 if ( taxonLimited ) {
                     taxon = taxonParam;
                 } else {
-                    taxon = expressionExperimentService.getTaxon( srdo.getReference().getId() );
+                    taxon = expressionExperimentService.getTaxon( ((ExpressionExperimentValueObject) srdo.getResultValueObject()).getId() );
                 }
                 if ( taxon == null ) {
                     log.warn( "Experiment had null taxon, was excluded from results: experiment id="
-                            + srdo.getReference().getId() + " shortname=" + srdo.getName() );
+                            + ((ExpressionExperimentValueObject) srdo.getResultValueObject()).getId() + " shortname=" + srdo.getName() );
                     toRmv.add( srdo );
                 } else {
                     srdo.setTaxonId( taxon.getId() );
@@ -602,9 +602,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 for ( SearchResultDisplayObject srdo : experimentSets ) {
                     // if set was automatically generated, don't label as user-created (technically was created by admin
                     // user)
-                    if ( userSetsIds.contains( srdo.getReference().getId() )
+                    if ( userSetsIds.contains( ((ExpressionExperimentSetValueObject)srdo.getResultValueObject()).getId() )
                             && srdo.getDescription().indexOf( "Automatically generated" ) < 0 ) {
-                        srdo.setType( "usersExperimentSet" );
+                        srdo.setUserOwned( true );
                     }
                 }
             }
@@ -626,9 +626,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     if ( !eeIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
                         eeIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
                     }
-                    eeIdsByTaxonId.get( srdo.getTaxonId() ).add( srdo.getReference().getId() );
+                    ExpressionExperimentValueObject eevo = (ExpressionExperimentValueObject)srdo.getResultValueObject();
+                    eeIdsByTaxonId.get( srdo.getTaxonId() ).add( eevo.getId() );
 
-                    eeIds.add( srdo.getReference().getId() );
+                    eeIds.add( eevo.getId() );
                 }
 
                 // if there's a group, get the number of members
@@ -658,12 +659,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 for ( Map.Entry<Long, HashSet<Long>> entry : eeIdsByTaxonId.entrySet() ) {
                     taxonId2 = entry.getKey();
                     taxon = taxonService.load( taxonId2 );
-                    Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
                     if ( taxon != null && entry.getValue().size() > 0 ) {
-                        displayResults.add( new SearchResultDisplayObject( ExpressionExperimentSet.class, ref, "All "
+                        FreeTextExpressionExperimentResultsValueObject ftvo = new FreeTextExpressionExperimentResultsValueObject( "All "
                                 + taxon.getCommonName() + " results for '" + query + "'", "All "
-                                + taxon.getCommonName() + " experiments found for your query", true, entry.getValue()
-                                .size(), taxon.getId(), taxon.getCommonName(), "freeText", entry.getValue() ) );
+                                + taxon.getCommonName() + " experiments found for your query", taxon.getId(), taxon.getCommonName(),  entry.getValue(), query );
+                        displayResults.add( new SearchResultDisplayObject( ftvo ));
                     }
                 }
             }
@@ -675,8 +675,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 log.info( "No results for search: " + query );
             } else {
                 log.info( "Results for search: " + query + " size=" + displayResults.size() + " entry0: "
-                        + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getName() + " id:"
-                        + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getReference().getId() );
+                        + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getName() + " valueObject:"
+                        + ( ( SearchResultDisplayObject ) ( displayResults.toArray() )[0] ).getResultValueObject().toString() );
             }
             return displayResults;
         }

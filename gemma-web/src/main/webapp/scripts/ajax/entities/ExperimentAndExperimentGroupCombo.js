@@ -103,29 +103,46 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	
 	initComponent: function(){
 	
+		var eeTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" '+
+					'ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>');
+		var modifiedSessionTpl  = new Ext.XTemplate('	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}:'+
+					' {description} ({size}) ({taxonName})"><b>{name}</b>:  <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var freeTxtTpl = new Ext.XTemplate('<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})">'+
+					'<b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var userOwnedDbSetTpl  = new Ext.XTemplate('<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})">'+
+					'<b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var dbSetTpl  = new Ext.XTemplate('<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})">'+
+					'<b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>');
+		var sessionSetTpl = dbSetTpl;
+		var defaultTpl = dbSetTpl;
 		Ext.apply(this, {
-			// format fields to show in combo, only show size in brakets if the entry is a group
+			// format fields to show in combo, only show size in brackets if the entry is a group
 			tpl: new Ext.XTemplate('<tpl for=".">' +
-			'<tpl if="type==\'experiment\'">' +
-			'<div style="font-size:11px;background-color:#ECF4FF" class="x-combo-list-item" ext:qtip="{name}: {description} ({taxonName})"><b>{name}</b>: {description} <span style="color:grey">({taxonName})</span></div>' +
-			'</tpl>' +
-			'<tpl if="type==\'usersExperimentSet\'">' +
-			'	<div style="font-size:11px;background-color:#FFECEC" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-			'</tpl>' +
-			'<tpl if="type==\'userexperimentSetSession\'">' +
-			'	<div style="font-size:11px;background-color:#FFFFFF" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>:  <span style="color:red">Unsaved</span> {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-			'</tpl>' +
-			'<tpl if="type==\'experimentSet\'">' +
-			'	<div style="font-size:11px;background-color:#EBE3F6" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-			'</tpl>' +
-			'<tpl if="type==\'freeText\'">' +
-			'	<div style="font-size:11px;background-color:#FFFFE3" class="x-combo-list-item" ext:qtip="{name}: {description} ({size}) ({taxonName})"><b>{name}</b>: {description} ({size}) <span style="color:grey">({taxonName})</span></div>' +
-			'</tpl>' +
-			'</tpl>'),
+				'{[ this.renderItem(values) ]}' +
+			'</tpl>',{
+				renderItem: function(values){
+					if (values.resultValueObject instanceof ExpressionExperimentValueObject) {
+						return eeTpl.apply(values);
+					}else if (values.resultValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
+						if (values.userOwned) {
+							return userOwnedDbSetTpl.apply(values)
+						} else {
+							return dbSetTpl.apply(values);
+						}
+					}else if (values.resultValueObject instanceof FreeTextExpressionExperimentResultsValueObject) {
+						return freeTxtTpl.apply(values);
+					}else if (values.resultValueObject instanceof SessionBoundExpressionExperimentSetValueObject) {
+						if (values.resultValueObject.modified) {
+							return modifiedSessionTpl.apply(values);
+						}else {
+							return sessionSetTpl.apply(values);
+						}
+					}
+					return defaultTpl.apply(values);
+				}
+			}),
 			store: {
 				reader: new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
-					name: "reference"
-				}, {
 					name: "name",
 					type: "string"
 				}, {
@@ -146,11 +163,10 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					type: "string",
 					defaultValue: ""
 				}, {
-					name: "type",
-					type: "string"
-				}, {
 					name: "memberIds",
 					defaultValue: []
+				}, {
+					name: "resultValueObject"
 				}])),
 				proxy: new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
 				autoLoad: false

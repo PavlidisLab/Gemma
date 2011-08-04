@@ -29,24 +29,21 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.model.Reference;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.model.genome.gene.GeneSetImpl;
-import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.web.controller.BaseFormController;
-import ubic.gemma.web.session.SessionListManager;
+import ubic.gemma.web.persistence.SessionListManager;
 
 /**
  * For fetching and manipulating ExpressionExperimentSets
@@ -87,14 +84,14 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @param eeSetVos value object constructed on the client.
      * @return collection of added session groups (with updated reference.id etc)
      */
-    public Collection<ExpressionExperimentSetValueObject> addSessionGroups(
-            Collection<ExpressionExperimentSetValueObject> eeSetVos ) {
+    public Collection<SessionBoundExpressionExperimentSetValueObject> addSessionGroups(
+            Collection<SessionBoundExpressionExperimentSetValueObject> eeSetVos ) {
 
-        Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<SessionBoundExpressionExperimentSetValueObject> results = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
-        for ( ExpressionExperimentSetValueObject eesvo : eeSetVos ) {
+        for ( SessionBoundExpressionExperimentSetValueObject eesvo : eeSetVos ) {
 
-            results.add( sessionListManager.addExperimentSet( eesvo ) );
+            results.add( sessionListManager.addExperimentSet( eesvo, true ) );
         }
 
         return results;
@@ -106,14 +103,14 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @param eeSetVos value object constructed on the client.
      * @return collection of added session groups (with updated reference.id etc)
      */
-    public Collection<ExpressionExperimentSetValueObject> addNonModificationBasedSessionBoundGroups(
-            Collection<ExpressionExperimentSetValueObject> eeSetVos ) {
+    public Collection<SessionBoundExpressionExperimentSetValueObject> addNonModificationBasedSessionBoundGroups(
+            Collection<SessionBoundExpressionExperimentSetValueObject> eeSetVos ) {
 
-        Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<SessionBoundExpressionExperimentSetValueObject> results = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
-        for ( ExpressionExperimentSetValueObject eesvo : eeSetVos ) {
+        for ( SessionBoundExpressionExperimentSetValueObject eesvo : eeSetVos ) {
 
-            results.add( sessionListManager.addExperimentSet( eesvo, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
+            results.add( sessionListManager.addExperimentSet( eesvo, false) );
         }
 
         return results;
@@ -130,12 +127,12 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
 
-        Collection<ExpressionExperimentSetValueObject> sessionResult = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject eesvo : entities ) {
 
-            if ( eesvo.isSessionBound() ) {
-                sessionResult.add( eesvo );
+            if ( eesvo instanceof SessionBoundExpressionExperimentSetValueObject ) {
+                sessionResult.add( (SessionBoundExpressionExperimentSetValueObject) eesvo );
             } else {
                 result.add( eesvo );
             }
@@ -207,7 +204,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         Collection<ExpressionExperimentSetValueObject> results = loadAll();
 
-        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
 
         results.addAll( sessionResults );
 
@@ -220,9 +217,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @return all available sets that have at least 2 experiments (so not really all) from db and also session backed
      *         sets
      */
-    public Collection<ExpressionExperimentSetValueObject> loadAllSessionGroups() {
+    public Collection<SessionBoundExpressionExperimentSetValueObject> loadAllSessionGroups() {
 
-        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
 
         return sessionResults;
     }
@@ -235,14 +232,12 @@ public class ExpressionExperimentSetController extends BaseFormController {
      */
     public Collection<ExpressionExperimentSetValueObject> loadAllUserOwnedAndSessionGroups() {
 
+        Collection<ExpressionExperimentSetValueObject> valueObjects = new ArrayList<ExpressionExperimentSetValueObject>();
+        
         Collection<ExpressionExperimentSet> results = expressionExperimentSetService.loadMySets(); // expressionExperimentSetService
-                                                                                                   // is null
-        Collection<ExpressionExperimentSetValueObject> valueObjects = ExpressionExperimentSetValueObject
-                .makeValueObjects( results );
-
-        Collection<ExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
-
-        valueObjects.addAll( sessionResults );
+                                                                                                   // is null?
+        valueObjects.addAll( DatabaseBackedExpressionExperimentSetValueObject.makeValueObjects( results ));
+        valueObjects.addAll( sessionListManager.getAllExperimentSets() );
 
         return valueObjects;
     }
@@ -254,19 +249,17 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @param ref reference for a gene set
      * @return
      */
-    public String canCurrentUserEditGroup(Reference ref){
+    public String canCurrentUserEditGroup(ExpressionExperimentSetValueObject eesvo){
         boolean userCanEditGroup = false;
         boolean groupIsDBBacked = false;
-        // TODO implement check to make sure the reference being passed in is for an experiment set!!
-        if(ref.isDatabaseBacked()){
+        if(eesvo instanceof DatabaseBackedExpressionExperimentSetValueObject){
             groupIsDBBacked = true;
             try{
-                userCanEditGroup = securityService.isEditable( expressionExperimentService.load( ref.getId() ) );
+                userCanEditGroup = securityService.isEditable( expressionExperimentService.load( eesvo.getId() ) );
             }catch(org.springframework.security.access.AccessDeniedException ade){
                 return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+false+"}";
             }
         }
-        
         return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+userCanEditGroup+"}";
     }
     
@@ -275,9 +268,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @param entities
      * @return the entities which were removed.
      */
-    public Collection<ExpressionExperimentSetValueObject> remove(
-            Collection<ExpressionExperimentSetValueObject> entities ) {
-        for ( ExpressionExperimentSetValueObject ees : entities ) {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> remove(
+            Collection<DatabaseBackedExpressionExperimentSetValueObject> entities ) {
+        for ( DatabaseBackedExpressionExperimentSetValueObject ees : entities ) {
             this.remove( ees );
         }
         return entities;
@@ -288,9 +281,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * 
      * @param groups
      */
-    public Collection<ExpressionExperimentSetValueObject> removeSessionGroups(
-            Collection<ExpressionExperimentSetValueObject> vos ) {
-        for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
+    public Collection<SessionBoundExpressionExperimentSetValueObject> removeSessionGroups(
+            Collection<SessionBoundExpressionExperimentSetValueObject> vos ) {
+        for ( SessionBoundExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
             sessionListManager.removeExperimentSet( experimentSetValueObject );
         }
 
@@ -304,24 +297,25 @@ public class ExpressionExperimentSetController extends BaseFormController {
      */
     public Collection<ExpressionExperimentSetValueObject> removeUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> vos ) {
-        Collection<ExpressionExperimentSetValueObject> databaseCollection = new HashSet<ExpressionExperimentSetValueObject>();
-        Collection<ExpressionExperimentSetValueObject> sessionCollection = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<ExpressionExperimentSetValueObject> removedSets = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> databaseCollection = new HashSet<DatabaseBackedExpressionExperimentSetValueObject>();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionCollection = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
-            if ( experimentSetValueObject.isSessionBound() ) {
-                sessionCollection.add( experimentSetValueObject );
-            } else {
-                databaseCollection.add( experimentSetValueObject );
+            if ( experimentSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject ) {
+                sessionCollection.add( (SessionBoundExpressionExperimentSetValueObject) experimentSetValueObject );
+            } else if (experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
+                databaseCollection.add( (DatabaseBackedExpressionExperimentSetValueObject) experimentSetValueObject );
             }
-
         }
 
         sessionCollection = removeSessionGroups( sessionCollection );
         databaseCollection = remove( databaseCollection );
 
-        databaseCollection.addAll( sessionCollection );
+        removedSets.addAll( sessionCollection );
+        removedSets.addAll( databaseCollection );
 
-        return databaseCollection;
+        return removedSets;
     }
 
     public void setExpressionExperimentReportService(
@@ -356,9 +350,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @param entities
      * @return the entities which were updated (even if they weren't actually updated)
      */
-    public Collection<ExpressionExperimentSetValueObject> update(
-            Collection<ExpressionExperimentSetValueObject> entities ) {
-        for ( ExpressionExperimentSetValueObject ees : entities ) {
+    public Collection<DatabaseBackedExpressionExperimentSetValueObject> update(
+            Collection<DatabaseBackedExpressionExperimentSetValueObject> entities ) {
+        for ( DatabaseBackedExpressionExperimentSetValueObject ees : entities ) {
             update( ees );
         }
         return entities;
@@ -429,9 +423,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * 
      * @param groups
      */
-    public Collection<ExpressionExperimentSetValueObject> updateSessionGroups(
-            Collection<ExpressionExperimentSetValueObject> vos ) {
-        for ( ExpressionExperimentSetValueObject expressionExperimentSetValueObject : vos ) {
+    public Collection<SessionBoundExpressionExperimentSetValueObject> updateSessionGroups(
+            Collection<SessionBoundExpressionExperimentSetValueObject> vos ) {
+        for ( SessionBoundExpressionExperimentSetValueObject expressionExperimentSetValueObject : vos ) {
             sessionListManager.updateExperimentSet( expressionExperimentSetValueObject );
         }
         return vos;
@@ -445,24 +439,25 @@ public class ExpressionExperimentSetController extends BaseFormController {
     public Collection<ExpressionExperimentSetValueObject> updateUserAndSessionGroups(
             Collection<ExpressionExperimentSetValueObject> vos ) {
 
-        Collection<ExpressionExperimentSetValueObject> databaseCollection = new HashSet<ExpressionExperimentSetValueObject>();
-        Collection<ExpressionExperimentSetValueObject> sessionCollection = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<ExpressionExperimentSetValueObject> updatedSets = new HashSet<ExpressionExperimentSetValueObject>();
+        Collection<DatabaseBackedExpressionExperimentSetValueObject> databaseCollection = new HashSet<DatabaseBackedExpressionExperimentSetValueObject>();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionCollection = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
-            if ( experimentSetValueObject.isSessionBound() ) {
-                sessionCollection.add( experimentSetValueObject );
-            } else {
-                databaseCollection.add( experimentSetValueObject );
+            if ( experimentSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject ) {
+                sessionCollection.add( (SessionBoundExpressionExperimentSetValueObject) experimentSetValueObject );
+            } else if (experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
+                databaseCollection.add( (DatabaseBackedExpressionExperimentSetValueObject) experimentSetValueObject );
             }
-
         }
 
         sessionCollection = updateSessionGroups( sessionCollection );
         databaseCollection = update( databaseCollection );
 
-        databaseCollection.addAll( sessionCollection );
+        updatedSets.addAll( sessionCollection );
+        updatedSets.addAll( databaseCollection );
 
-        return databaseCollection;
+        return updatedSets;
 
     }
 
@@ -530,10 +525,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         expressionExperimentSetService.thaw( set );
 
-        ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
+        ExpressionExperimentSetValueObject vo = new DatabaseBackedExpressionExperimentSetValueObject();
         vo.setName( set.getName() );
         vo.setId( set.getId() );
-        vo.setReference( new Reference(set.getId(), Reference.DATABASE_BACKED_GROUP) );
         Taxon taxon = set.getTaxon();
         if ( taxon == null ) {
             // happens in test databases that aren't properly populated.
@@ -569,7 +563,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @return true if it was deleted.
      * @throw IllegalArgumentException it has analyses associated with it
      */
-    private boolean remove( ExpressionExperimentSetValueObject obj ) {
+    private boolean remove( DatabaseBackedExpressionExperimentSetValueObject obj ) {
         Long id = obj.getId();
         if ( id == null || id < 0 ) {
             throw new IllegalArgumentException( "Cannot delete eeset with id=" + id );
@@ -611,7 +605,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
     /**
      * @param obj
      */
-    private void update( ExpressionExperimentSetValueObject obj ) {
+    private void update( DatabaseBackedExpressionExperimentSetValueObject obj ) {
 
         if ( obj.getId() == null ) {
             throw new IllegalArgumentException( "Can only update an existing eeset (passed id=" + obj.getId() + ")" );

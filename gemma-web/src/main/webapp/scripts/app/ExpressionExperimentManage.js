@@ -684,7 +684,7 @@ Gemma.EEReportPanel = Ext.extend(Ext.grid.GridPanel, {
 				this.ids = record.get('memberIds');
 				// if user selected an experiment instead of an experiment set, member ids will be null
 				if(this.ids === null){
-					this.ids = [record.data.reference.id];
+					this.ids = [record.get('id')];
 				}
 				// can't do "50 recently updated" and search results
 				this.limitCombo.clearValue();

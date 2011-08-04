@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 
-import ubic.gemma.model.Reference;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Gene;
@@ -50,15 +49,19 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetService;
-import ubic.gemma.model.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.search.SearchResult;
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.FreeTextGeneResultsValueObject;
+import ubic.gemma.genome.gene.GOGroupValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 import ubic.gemma.search.SearchResultDisplayObject;
+import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.web.session.SessionListManager;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
@@ -305,11 +308,11 @@ public class GenePickerController {
                     userGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService
                             .loadMyGeneSets();
                 }
-                result = GeneSetValueObject.convert2ValueObjects( userGeneSets, false );
+                result.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( userGeneSets, false ) );
             }
             // get any session-bound groups
 
-            Collection<GeneSetValueObject> sessionResult = ( taxon != null ) ? sessionListManager.getModifiedGeneSets( taxonId )
+            Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxon != null ) ? sessionListManager.getModifiedGeneSets( taxonId )
                                                                                 : sessionListManager.getModifiedGeneSets( );
 
             result.addAll( sessionResult );
@@ -317,7 +320,7 @@ public class GenePickerController {
             SearchResultDisplayObject newSRDO = null;
             for ( GeneSetValueObject registeredUserSet : result ) {
                 newSRDO = new SearchResultDisplayObject( registeredUserSet );
-                newSRDO.setType( "users" + newSRDO.getType() ); // will either end up usergeneSet or usergeneSetSession
+                newSRDO.setUserOwned( true );
                 displayResults.add( newSRDO );
             }
             Collections.sort( displayResults );
@@ -358,7 +361,7 @@ public class GenePickerController {
                 List<SearchResult> taxonCheckedSets = new ArrayList<SearchResult>();
                 for ( SearchResult sr : geneSetSearchResults ) {
                     GeneSet gs = ( GeneSet ) sr.getResultObject();
-                    GeneSetValueObject gsvo = new GeneSetValueObject( gs );
+                    GeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
                     if ( gsvo.getTaxonId() == taxonId ) {
                         taxonCheckedSets.add( sr );
                     }
@@ -404,8 +407,10 @@ public class GenePickerController {
                 }
                 // tag search result display objects appropriately
                 for ( SearchResultDisplayObject srdo : geneSets ) {
-                    if ( userSetsIds.contains( srdo.getReference().getId() ) ) {
-                        srdo.setType( "usersgeneSet" );
+                    Long id = (srdo.getResultValueObject() instanceof GeneSetValueObject)? 
+                            ((GeneSetValueObject) srdo.getResultValueObject()).getId(): new Long(-1);
+                    if ( userSetsIds.contains( id ) ) {
+                        srdo.setUserOwned( true );
                     }
                 }
             }
@@ -428,10 +433,9 @@ public class GenePickerController {
                 if ( query.toUpperCase().startsWith( "GO" ) ) {
                     GeneSet goSet = this.geneSetSearch.findByGoId( query, taxonForGo );
                     if ( goSet != null ) {
-                        SearchResultDisplayObject sdo = new SearchResultDisplayObject( goSet );
-                        sdo.setReference( new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
-                        sdo.setTaxonId( taxonForGo.getId() );
-                        sdo.setTaxonName( taxonForGo.getCommonName() );
+                        GOGroupValueObject ggvo = new GOGroupValueObject( goSet, query, query );
+                        SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
+                        sdo.setUserOwned( false );
                         goSRDOs.add( sdo );
                         goSets.add( goSet );
                     }
@@ -440,11 +444,8 @@ public class GenePickerController {
                         // don't bother adding empty GO groups
                         // (should probably do this check elsewhere in case it speeds things up)
                         if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
-                            SearchResultDisplayObject sdo = new SearchResultDisplayObject( geneSet );
-                            sdo.setReference( new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP ) );
-                            sdo.setType( "GOgroup" );
-                            sdo.setTaxonId( taxonForGo.getId() );
-                            sdo.setTaxonName( taxonForGo.getCommonName() );
+                            GOGroupValueObject ggvo = new GOGroupValueObject( geneSet, null, query );
+                            SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
                             goSRDOs.add( sdo );
                             goSets.add( geneSet );
                         }
@@ -471,9 +472,14 @@ public class GenePickerController {
                     if ( !geneIdsByTaxonId.containsKey( srdo.getTaxonId() ) ) {
                         geneIdsByTaxonId.put( srdo.getTaxonId(), new HashSet<Long>() );
                     }
-                    geneIdsByTaxonId.get( srdo.getTaxonId() ).add( srdo.getReference().getId() );
-
-                    geneIds.add( srdo.getReference().getId() );
+                    Long id = ( srdo.getResultValueObject() instanceof GeneValueObject ) 
+                                ? ( ( GeneValueObject ) srdo.getResultValueObject() ).getId()
+                                        : new Long( -1 );
+                    if ( id != -1 ) {
+                        geneIdsByTaxonId.get( srdo.getTaxonId() ).add( id );
+                        geneIds.add( id );
+                    }
+                    
                 }
 
                 // if there's a group, get the number of members
@@ -503,13 +509,13 @@ public class GenePickerController {
                     taxonId2 = entry.getKey();
                     taxon = taxonService.load( taxonId2 );
       
-                    Reference ref = new Reference( null, Reference.UNMODIFIED_SESSION_BOUND_GROUP );
+                    FreeTextGeneResultsValueObject byTaxFTVO = new FreeTextGeneResultsValueObject(
+                            "All " + taxon.getCommonName() + " results for '" + query + "'",
+                            "All " + taxon.getCommonName() + " genes found for your query",
+                            taxon.getId(), taxon.getCommonName(), entry.getValue(), query);
                     // don't make groups for 1 gene
                     if ( taxon != null && entry.getValue().size() > 1 ) {
-                        displayResults.add( new SearchResultDisplayObject( GeneSet.class, ref, "All "
-                                + taxon.getCommonName() + " results for '" + query + "'", "All " + taxon.getCommonName()
-                                + " genes found for your query", true, entry.getValue().size(), taxon.getId(), taxon
-                                .getCommonName(), "freeText", entry.getValue() ) );
+                        displayResults.add( new SearchResultDisplayObject( byTaxFTVO ) );
                     }
                 }
             }

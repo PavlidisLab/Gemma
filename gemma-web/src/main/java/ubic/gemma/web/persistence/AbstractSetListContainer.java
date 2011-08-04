@@ -17,14 +17,13 @@
  *
  */
 
-package ubic.gemma.web.session;
+package ubic.gemma.web.persistence;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import ubic.gemma.model.Reference;
-import ubic.gemma.persistence.GemmaSessionBackedValueObject;
+import ubic.gemma.session.GemmaSessionBackedValueObject;
 
 public abstract class AbstractSetListContainer implements Serializable {
 
@@ -65,51 +64,34 @@ public abstract class AbstractSetListContainer implements Serializable {
     }
 
     /**
-     * Sets the reference (generates an id and assumes this group was made as a result of a modification for the type value) 
-     * for the group then adds it to the session-bound list(s) for session-bound groups
+     * Sets the reference (generates an id and assumes this group was made as a result of a modification for the type
+     * value) for the group then adds it to the session-bound list(s) for session-bound groups
+     * 
      * @param vo
      * @return
      */
-    public GemmaSessionBackedValueObject addSet( GemmaSessionBackedValueObject vo ) {
+    public GemmaSessionBackedValueObject addSet( GemmaSessionBackedValueObject vo, boolean modified ) {
 
-        return addSet(vo, Reference.MODIFIED_SESSION_BOUND_GROUP);
-
-    }
-
-    /**
-     * Sets the reference (id and type) for the group then adds it to the session-bound list or session-bound groups
-     * @param vo
-     * @param referenceType
-     * @return
-     */
-    public GemmaSessionBackedValueObject addSet( GemmaSessionBackedValueObject vo , String referenceType) {
-
-        boolean setExists = false;
-        
-        // check if the set's reference is already in setList, 
+        // check if the set's reference is already in setList,
         // if it is, replace the old list with the new one
-        if(vo.getReference() != null && vo.getReference().getId() != null && vo.getReference().isSessionBound()){
+        if ( vo.getId() != null ) {
             for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
 
-                Reference setRef = allSessionBoundGroups.get( i ).getReference();
-                
-                if ( setRef != null && setRef.equals( vo.getReference() ) ) {
+                if ( allSessionBoundGroups.get( i ).equals( vo ) ) {
                     allSessionBoundGroups.remove( i );
                     allSessionBoundGroups.add( i, vo );
-                    setExists = true;
-                    break;
+                    return vo;
                 }
 
             }
         }
 
-        if ( !setExists ) {
-
             Long newId = incrementAndGetLargestSessionId();
-            vo.setReference( new Reference( newId, referenceType ) );
-            
+            vo.setModified(modified);
+            vo.setId( newId );
+
             // add it to the special list of groups the user has modified
-            if(referenceType.equals( Reference.MODIFIED_SESSION_BOUND_GROUP )){
+            if ( modified ) {
                 sessionBoundModifiedGroups.add( vo );
                 if ( sessionBoundModifiedGroups.size() > MAX_MODIFIED_GROUPS ) {
                     sessionBoundModifiedGroups.remove( 0 );
@@ -119,19 +101,18 @@ public abstract class AbstractSetListContainer implements Serializable {
             if ( allSessionBoundGroups.size() > MAX_TOTAL ) {
                 allSessionBoundGroups.remove( 0 );
             }
-            
-        }
-        return vo;
 
+        return vo;
     }
+
 
     public void removeSet( GemmaSessionBackedValueObject vo ) {
 
-        if ( vo.getReference() != null ) {
+        if ( vo != null ) {
 
             for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
 
-                if ( allSessionBoundGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                if ( allSessionBoundGroups.get( i ).equals( vo ) ) {
                     allSessionBoundGroups.remove( i );
                     break;
                 }
@@ -139,11 +120,11 @@ public abstract class AbstractSetListContainer implements Serializable {
             }
 
         }
-        if ( vo.getReference() != null ) {
+        if ( vo != null ) {
 
             for ( int i = 0; i < sessionBoundModifiedGroups.size(); i++ ) {
 
-                if ( sessionBoundModifiedGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                if ( sessionBoundModifiedGroups.get( i ).equals( vo ) ) {
                     sessionBoundModifiedGroups.remove( i );
                     break;
                 }
@@ -156,11 +137,11 @@ public abstract class AbstractSetListContainer implements Serializable {
 
     public void updateSet( GemmaSessionBackedValueObject vo ) {
 
-        if ( vo.getReference() != null ) {
+        if ( vo != null ) {
 
             for ( int i = 0; i < allSessionBoundGroups.size(); i++ ) {
 
-                if ( allSessionBoundGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                if ( allSessionBoundGroups.get( i ).equals( vo ) ) {
                     allSessionBoundGroups.remove( i );
                     allSessionBoundGroups.add( i, vo );
                     break;
@@ -169,11 +150,11 @@ public abstract class AbstractSetListContainer implements Serializable {
             }
 
         }
-        if ( vo.getReference() != null ) {
+        if ( vo != null ) {
 
             for ( int i = 0; i < sessionBoundModifiedGroups.size(); i++ ) {
 
-                if ( sessionBoundModifiedGroups.get( i ).getReference().equals( vo.getReference() ) ) {
+                if ( sessionBoundModifiedGroups.get( i ).equals( vo ) ) {
                     sessionBoundModifiedGroups.remove( i );
                     sessionBoundModifiedGroups.add( i, vo );
                     break;

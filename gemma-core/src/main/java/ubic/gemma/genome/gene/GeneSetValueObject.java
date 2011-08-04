@@ -17,23 +17,14 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene;
+package ubic.gemma.genome.gene;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 
-import org.apache.commons.lang.RandomStringUtils;
-
-import edu.emory.mathcs.backport.java.util.Collections;
-
-import ubic.gemma.model.Reference;
 import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
-import ubic.gemma.persistence.GemmaSessionBackedValueObject;
 
 
 /**
@@ -42,43 +33,9 @@ import ubic.gemma.persistence.GemmaSessionBackedValueObject;
  * @author kelsey
  * @version $Id$
  */
-public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serializable {
+public abstract class GeneSetValueObject implements Serializable {
 
     private static final long serialVersionUID = 6212231006289412683L;
-
-    /**
-     * @param genesets
-     * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be included.
-     * @return
-     */
-    public static Collection<GeneSetValueObject> convert2ValueObjects( Collection<GeneSet> genesets,
-            boolean includeOnesWithoutGenes ) {
-        List<GeneSetValueObject> results = new ArrayList<GeneSetValueObject>();
-
-        for ( GeneSet gs : genesets ) {
-            if ( !includeOnesWithoutGenes && gs.getMembers().isEmpty() ) {
-                continue;
-            }
-
-            if ( gs.getId() == null ) {
-                /*
-                 * GO terms, for example. We need a unique ID that also is different from IDs of things in the database.
-                 * This isn't an entirely satisfactory implementation, it should be made bulletproof.
-                 */
-                gs.setId( Long.parseLong( RandomStringUtils.randomNumeric( 16 ) ) + 100000L );
-            }
-
-            results.add( new GeneSetValueObject( gs ) );
-        }
-
-        Collections.sort( results, new Comparator<GeneSetValueObject>() {
-            @Override
-            public int compare( GeneSetValueObject o1, GeneSetValueObject o2 ) {
-                return -o1.getSize().compareTo( o2.getSize() );
-            }
-        } );
-        return results;
-    }
 
     private boolean currentUserHasWritePermission = false;
     private String description;
@@ -89,8 +46,7 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     private boolean shared;
     private Integer size;
     private String taxonName;
-    private long taxonId;
-    private Reference reference;
+    private Long taxonId;
     
     /**
      * default constructor to satisfy java bean contract
@@ -123,8 +79,6 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
             this.setTaxonName ( gs.getMembers().iterator().next().getGene().getTaxon().getCommonName() );
             this.setTaxonId ( gs.getMembers().iterator().next().getGene().getTaxon().getId() );
         }   
-        
-        this.reference = new Reference( gs.getId(), Reference.DATABASE_BACKED_GROUP );
     }
    
     public String getTaxonName() {
@@ -135,7 +89,7 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
         this.taxonName = taxonName;        
     }
 
-    public long getTaxonId() {
+    public Long getTaxonId() {
         return this.taxonId;
     }    
 
@@ -160,29 +114,11 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     /**
      * @return
      */
-    public Collection<Long> getMemberIds() {
-        return geneIds;
-    }
-
-    /**
-     * @return
-     */
     public Long getId() {
         return id;
     }
 
-
-    /**
-     * @return
-     */
-    public Reference getReference() {
-        return reference;
-    }
-
-
-    public boolean isSessionBound() {
-        return getReference().isSessionBound();
-    }
+    public abstract boolean isSessionBound();
         
 
     /**
@@ -243,13 +179,6 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
     public void setId( Long id ) {
         this.id = id;
     }
-    
-    /**
-     * @param reference
-     */
-    public void setReference( Reference reference ) {
-        this.reference = reference;
-    }
 
     /**
      * @param name
@@ -273,4 +202,10 @@ public class GeneSetValueObject implements GemmaSessionBackedValueObject, Serial
         this.size = size;
     }
 
+    public boolean equals( GeneSetValueObject ervo ) {
+        if(ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() )){
+            return true;
+        }
+       return false;
+    }
 }

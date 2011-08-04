@@ -6,6 +6,9 @@ Ext.namespace('Gemma');
 
 Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	listModified : false,
+	getSelectedGeneOrGeneSetValueObject:function(){
+		return (this.selectedGeneOrGroup)?this.selectedGeneOrGroup.resultValueObject:null;
+	},
 	resetGenePreview : function() {
 		Ext.DomHelper.overwrite(this.previewPart.genePreviewContent.body, {
 					cn : ''
@@ -42,8 +45,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneSelectionEditor.loadMask.show();
 		Ext.apply(this.geneSelectionEditor, {
 					geneGroupId : this.geneGroupId,
-					selectedGeneGroup : this.selectedGeneOrGroupRecord,
-					groupName : this.selectedGeneOrGroupRecord.name,
+					selectedGeneGroup : this.selectedGeneOrGroup,
+					groupName : this.selectedGeneOrGroup.name,
 					taxonId : this.searchForm.getTaxonId(),
 					taxonName : this.searchForm.getTaxonName()
 				});
@@ -54,13 +57,11 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 	loadGeneOrGroup : function(record, query) {
 
-		this.selectedGeneOrGroupRecord = record.data;
+		this.selectedGeneOrGroup = record.data;
 
-		var id = record.data.reference.id;
+		var id = record.get("resultValueObject").id;
 		var isGroup = record.get("isGroup");
-		var type = record.get("type");
 		var size = record.get("size");
-		var reference = record.get("reference");
 		var name = record.get("name");
 		var taxonId = this.searchForm.getTaxonId();
 		
@@ -68,7 +69,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			var queryToGetSelected = "";
 			if (name.match(/^GO_\d+/)) {
 				queryToGetSelected = "taxon:"+taxonId+";GO:"+name;
-			}else if(type === 'freeText' && name.indexOf(query)!=-1){
+			}else if(resultValueObject instanceof FreeTextGeneResultsValueObject && name.indexOf(query)!=-1){
 				queryToGetSelected = "taxon:"+taxonId+";query:"+query;
 			}
 			this.queryUsedToGetSessionGroup = queryToGetSelected;
@@ -90,7 +91,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		}
 		// load single gene if gene was selected
 		else {
-			this.selectedGeneOrGroupRecord.memberIds = [this.selectedGeneOrGroupRecord.reference.id];
+			this.selectedGeneOrGroup.memberIds = [id];
 			this.geneIds = [id];
 
 			this.geneGroupId = null;
@@ -103,10 +104,10 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.previewPart.genePreviewContent.update({
 						officialSymbol : record.get("name"),
 						officialName : record.get("description"),
-						id : record.data.reference.id,
+						id : record.get("resultValueObject").id,
 						taxonCommonName : record.get("taxonName")
 					});
-			this.updateTitle(this.selectedGeneOrGroupRecord.name, 1);
+			this.updateTitle(this.selectedGeneOrGroup.name, 1);
 			this.geneSelectionEditorBtn.setText('0 more - Edit');
 			this.previewPart.moreIndicator.update('');
 			this.geneSelectionEditorBtn.enable();
@@ -156,10 +157,10 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var i = 0; i < genes.size(); i++) {
 						this.previewPart.genePreviewContent.update(genes[i]);
 					}
-					var title = this.selectedGeneOrGroupRecord.name;
+					var title = this.selectedGeneOrGroup.name;
 					var goPattern = /^GO_\d+$/;
-					if(goPattern.test(this.selectedGeneOrGroupRecord.name)){
-						title = this.selectedGeneOrGroupRecord.name +": "+this.selectedGeneOrGroupRecord.description
+					if(goPattern.test(this.selectedGeneOrGroup.name)){
+						title = this.selectedGeneOrGroup.name +": "+this.selectedGeneOrGroup.description
 					}
 					this.updateTitle(title,ids.size());
 				
@@ -260,20 +261,17 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 				this.searchForm.geneIds = geneIds;
 				this.geneIds = geneIds;
-				var mockGeneSet = {
-					data : {
-						memberIds : geneIds,
-						taxonId : taxonId,
-						reference : {
-							type : null,
-							id : null
-						},
-						name : 'From Symbol List',
-						description : 'Group made from gene symbols entered.',
-						size : geneIds.length
-					}
-				};
-				this.selectedGeneOrGroupRecord = mockGeneSet.data;
+				var newGeneSet = new SessionBoundGeneSetValueObject();
+				newGeneSet.modified = false;
+				newGeneSet.geneIds = geneIds;
+				newGeneSet.taxonId = taxonId;
+				newGeneSet.name = 'From Symbol List';
+				newGeneSet.description = 'Group made from gene symbols entered.';
+				newGeneSet.size = geneIds.length;
+				newGeneSet.id = null;
+				this.selectedGeneOrGroup = newGeneSet;
+				this.selectedGeneOrGroup.memberIds = geneIds;
+				this.selectedGeneOrGroup.resultValueObject = newGeneSet;
 
 				// if some genes weren't found or some gene matches were
 				// inexact,
@@ -455,16 +453,16 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					frame : false
 				});
 
-		this.geneSelectionEditor.on('geneListModified', function(newRecords) {
+		this.geneSelectionEditor.on('geneListModified', function(newSets) {
 			var i;
-			for (i = 0; i < newRecords.length; i++) { // should only be one
-				if (typeof newRecords[i].geneIds !== 'undefined') {
-					this.loadGenes(newRecords[i].geneIds);
+			for (i = 0; i < newSets.length; i++) { // should only be one
+				if (typeof newSets[i].geneIds !== 'undefined') {
+					this.loadGenes(newSets[i].geneIds);
 					// update record
-					this.selectedGeneOrGroupRecord = newRecords[i];
+					this.selectedGeneOrGroup = newSets[i];
 				}
-				if (newRecords[i].name) {
-					this.updateTitle(newRecords[i].name, newRecords[i].size);
+				if (newSets[i].name) {
+					this.updateTitle(newSets[i].name, newSets[i].size);
 				}
 			}
 				this.listModified = true;

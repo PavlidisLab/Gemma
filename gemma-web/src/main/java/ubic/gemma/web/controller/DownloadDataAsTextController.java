@@ -14,7 +14,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
-import ubic.gemma.model.Reference;
 import ubic.gemma.web.controller.diff.DifferentialExpressionSearchController;
 import ubic.gemma.web.view.TextView;
 import ubic.gemma.web.visualization.DifferentialExpressionVisualizationValueObject;
@@ -53,23 +52,24 @@ public class DownloadDataAsTextController {
         List<Long> geneGroupIds = extractIds( request.getParameter( "gg" ) ); // gene group
         List<Long> experimentGroupIds = extractIds( request.getParameter( "eg" ) ); //experiment group
 
+        /* TODO REWORK BOOKMARKS THEN UNCOMMENT THIS SECTION
         Collection<Reference> datasetGroupReferences = new LinkedList<Reference> (); 
         Collection<Reference> geneGroupReferences = new LinkedList<Reference> ();
 
         for (Long geneId : geneIds) {
-            geneGroupReferences.add( new Reference(geneId, Reference.DB_GENE) );
+            geneGroupReferences.add( new GeneReference( geneId ) );
         }
 
         for (Long eeId : eeIds) {
-            datasetGroupReferences.add( new Reference(eeId, Reference.DB_EXPERIMENT) );
+            datasetGroupReferences.add( new ExpressionExperimentReference( eeId ) );
         }
        
         for (Long geneGroupId : geneGroupIds) {
-            geneGroupReferences.add( new Reference(geneGroupId, Reference.DATABASE_BACKED_GROUP) );
+            geneGroupReferences.add( new DatabaseBackedGeneSetReference( geneGroupId ) );
         }
 
         for (Long experimentGroupId : experimentGroupIds) {
-            datasetGroupReferences.add( new Reference(experimentGroupId, Reference.DATABASE_BACKED_GROUP) );
+            datasetGroupReferences.add( new DatabaseBackedExpressionExperimentSetReference( experimentGroupId ) );
         }
 
         DifferentialExpressionVisualizationValueObject searchResult = diffExSearch.differentialExpressionAnalysisVisualizationSearch(taxonId, datasetGroupReferences, geneGroupReferences,
@@ -80,6 +80,8 @@ public class DownloadDataAsTextController {
         // Convert result to text        
         ModelAndView mav = new ModelAndView( new TextView() );
         mav.addObject( "text", text );
+        */
+        ModelAndView mav = new ModelAndView( new TextView() );
         return mav;
 
     }
