@@ -15,7 +15,7 @@
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
 		
-		<%-- for dwr --%>
+		<%-- for dwr creation of javascript objects to mirror java value objects--%>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DatabaseBackedExpressionExperimentSetValueObject.js'></script>
 		<script type='text/javascript' src='/Gemma/scripts/app/valueObjectsInheritanceStructure.js'></script>
 

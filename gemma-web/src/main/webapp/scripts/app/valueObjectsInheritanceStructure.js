@@ -1,5 +1,6 @@
 
-//Set up inheritance structures for value objects
+// Set up inheritance structures for value objects
+// see http://directwebremoting.org/dwr/documentation/server/configuration/dwrxml/converters/bean.html#interfacesAndAbstractClasses
 
 DatabaseBackedExpressionExperimentSetValueObject.prototype = new ExpressionExperimentSetValueObject();
 DatabaseBackedExpressionExperimentSetValueObject.prototype.constructor = DatabaseBackedExpressionExperimentSetValueObject;
