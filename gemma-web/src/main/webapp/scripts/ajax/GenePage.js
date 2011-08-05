@@ -5,7 +5,6 @@ Gemma.MAX_DIFF_RESULTS = 75;
 /**
  * 
  * Top level container for all sections of gene info
- * Sections are:
  * 
  * @class Gemma.GenePage
  * @extends Ext.TabPanel
@@ -85,6 +84,14 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		diffExGrid.on('render', function(){
 			var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
 			diffExGrid.getColumnModel().setHidden(visColumnIndex, false);
+			// this should go in grid itself, but it wasn't working properly (or at all)
+			if (!this.loadMask) {
+				this.loadMask = new Ext.LoadMask(this.getEl(), {
+					msg : "Loading ...",
+					msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+				});
+			}
+			this.loadMask.show();
 			diffExGrid.getStore().load({
 				params: [geneId, Gemma.DIFF_THRESHOLD, Gemma.MAX_DIFF_RESULTS]
 			});
