@@ -59,6 +59,8 @@ public class ExpressionExperimentDetailsValueObject extends
     private String batchEffect;
     
     private String lastArrayDesignUpdateDate;
+    
+    private boolean canCurrentUserEditExperiment;
 
     public Boolean getHasMultipleTechnologyTypes() {
         return hasMultipleTechnologyTypes;
@@ -201,6 +203,20 @@ public class ExpressionExperimentDetailsValueObject extends
 
     public String getLastArrayDesignUpdateDate() {
         return lastArrayDesignUpdateDate;
+    }
+
+    /**
+     * @param canCurrentUserEditExperiment the canCurrentUserEditExperiment to set
+     */
+    public void setCanCurrentUserEditExperiment( boolean canCurrentUserEditExperiment ) {
+        this.canCurrentUserEditExperiment = canCurrentUserEditExperiment;
+    }
+
+    /**
+     * @return the canCurrentUserEditExperiment
+     */
+    public boolean isCanCurrentUserEditExperiment() {
+        return canCurrentUserEditExperiment;
     }
 
 }

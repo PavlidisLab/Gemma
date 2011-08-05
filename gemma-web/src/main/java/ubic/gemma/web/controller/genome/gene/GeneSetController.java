@@ -263,7 +263,7 @@ public class GeneSetController {
     /**
      * AJAX 
      * returns a JSON string encoding whether the current user owns the group and whether the group is db-backed
-     * @param ref reference for a gene set
+     * @param s
      * @return
      */
     public String canCurrentUserEditGroup(GeneSetValueObject gsvo){

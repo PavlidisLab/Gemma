@@ -421,6 +421,10 @@ ExpressionExperimentController.unmatchAllBioAssays = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'unmatchAllBioAssays',
 			p0, callback);
 }
+ExpressionExperimentController.canCurrentUserEditExperiment = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'canCurrentUserEditExperiment',
+			p0, callback);
+}
 // ====================================================================================
 if (ExpressionExperimentDataFetchController == null)
 	var ExpressionExperimentDataFetchController = {};

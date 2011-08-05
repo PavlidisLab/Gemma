@@ -66,6 +66,8 @@ import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -964,11 +966,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
             finalResult.setBatchEffect( batchEffect( ee ) );
         }
         
-
         AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee, null );
         if(lastArrayDesignUpdate != null){
             finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.getDate().toString() );
         }
+        
+        finalResult.setCanCurrentUserEditExperiment( canCurrentUserEditExperiment( id ) );
+        
         return finalResult;
 
     }
@@ -2083,6 +2087,23 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         return strBuff.toString();
+    }
+    
+
+    /**
+     * AJAX 
+     * returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
+     * @param 
+     * @return
+     */
+    public boolean canCurrentUserEditExperiment(Long eeId){
+        boolean userCanEditGroup = false;
+        try{
+            userCanEditGroup = securityService.isEditable( expressionExperimentService.load( eeId ) );
+        }catch(org.springframework.security.access.AccessDeniedException ade){
+                return false;
+        }
+        return userCanEditGroup;
     }
 
 }
