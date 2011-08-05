@@ -3,21 +3,35 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 
-// TODO stgeorgn
 public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
-    public LiteratureEvidenceValueObject( String name, String description, Boolean isNegativeEvidence,
-            GOEvidenceCode evidenceCode, Collection<String> phenotypes ) {
-        super( name, description, isNegativeEvidence, evidenceCode, phenotypes );
-        // TODO Auto-generated constructor stub
+    private String pubmedID = "";
+
+    private BibliographicReferenceValueObject bibliographicReferenceValueObject = null;
+
+    public LiteratureEvidenceValueObject( String name, String description, String characteristic,
+            Boolean isNegativeEvidence, GOEvidenceCode evidenceCode, Collection<String> characteristics, String pubmedID ) {
+        super( name, description, characteristic, isNegativeEvidence, evidenceCode, characteristics );
+        this.pubmedID = pubmedID;
     }
 
-    @Override
-    public PhenotypeAssociation createEntity() {
-        // TODO Auto-generated method stub
-        return null;
+    /** Entity to Value Object */
+    public LiteratureEvidenceValueObject( LiteratureEvidence literatureEvidence ) {
+        super( literatureEvidence );
+
+        this.bibliographicReferenceValueObject = new BibliographicReferenceValueObject(
+                literatureEvidence.getCitation() );
+
+    }
+
+    public String getPubmedID() {
+        return pubmedID;
+    }
+
+    public BibliographicReferenceValueObject getBibliographicReferenceValueObject() {
+        return bibliographicReferenceValueObject;
     }
 
 }

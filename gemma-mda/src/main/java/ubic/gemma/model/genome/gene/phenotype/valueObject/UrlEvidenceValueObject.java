@@ -3,7 +3,6 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.UrlEvidence;
 
 /** Value object representing an url evidence */
@@ -19,30 +18,16 @@ public class UrlEvidenceValueObject extends EvidenceValueObject {
         this.url = url;
     }
 
-    public UrlEvidenceValueObject( String name, String description, Boolean isNegativeEvidence,
+    public UrlEvidenceValueObject( String name, String description, String characteristic, Boolean isNegativeEvidence,
             GOEvidenceCode evidenceCode, Collection<String> characteristics, String url ) {
-        super( name, description, isNegativeEvidence, evidenceCode, characteristics );
+        super( name, description, characteristic, isNegativeEvidence, evidenceCode, characteristics );
         this.url = url;
     }
 
+    /** Entity to Value Object */
     public UrlEvidenceValueObject( UrlEvidence urlEvidence ) {
-        super( urlEvidence.getName(), urlEvidence.getDescription(), urlEvidence.getEvidenceCode(), urlEvidence
-                .getIsNegativeEvidence(), urlEvidence.getPhenotypes(), urlEvidence.getId() );
+        super( urlEvidence );
         this.url = urlEvidence.getUrl();
-    }
-
-    /** Change the value object to an entity */
-    @Override
-    public PhenotypeAssociation createEntity() {
-
-        // Create the entity with no values
-        UrlEvidence urlEvidence = UrlEvidence.Factory.newInstance();
-        // set fields common to all evidence
-        populatePhenotypeAssociation( urlEvidence );
-        // set specific field unique to this evidence
-        urlEvidence.setUrl( url );
-
-        return urlEvidence;
     }
 
 }

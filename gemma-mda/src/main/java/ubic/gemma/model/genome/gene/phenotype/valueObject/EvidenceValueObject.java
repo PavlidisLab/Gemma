@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.association.phenotype.DataAnalysisEvidence;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
@@ -13,28 +12,26 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.UrlEvidence;
 import ubic.gemma.model.common.description.Characteristic;
-import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
-/** Parent class of all evidences value object */
+/** Parent class of all evidences value objects */
 public abstract class EvidenceValueObject {
 
     private Long databaseId = null;
 
-    private String name;
-    private String description;
+    private String name = "";
+    private String description = "";
+    private String characteristic = "";
     private GOEvidenceCode evidenceCode = null;
     private Boolean isNegativeEvidence = false;
 
     private Collection<String> phenotypes = null;
 
     /**
-     * Convert an collection of entities to a collection of value objects, *note: we implement the code here since we
-     * cannot put this logic in the object thereself since the code is auto generated
+     * Convert an collection of evidence entities to their corresponding value objects
      * 
-     * @param phenotypeAssociations The List of entity we need to convert
-     * @return A list of Evidence Value objects
+     * @param phenotypeAssociations The List of entities we need to convert to value object
+     * @return Collection<EvidenceValueObject> the converted results
      */
-
     public static Collection<EvidenceValueObject> convert2ValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
@@ -51,50 +48,51 @@ public abstract class EvidenceValueObject {
                 if ( phe instanceof UrlEvidence ) {
                     evidence = new UrlEvidenceValueObject( ( UrlEvidence ) phe );
                     returnEvidences.add( evidence );
-                } else if ( phe instanceof DataAnalysisEvidence ) {
-                    // TODO
+                } else if ( phe instanceof ExperimentalEvidence ) {
+                    evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
+                    returnEvidences.add( evidence );
+                } else if ( phe instanceof GenericEvidence ) {
+                    evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
+                    returnEvidences.add( evidence );
+                } else if ( phe instanceof LiteratureEvidence ) {
+                    evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
+                    returnEvidences.add( evidence );
+                } else if ( phe instanceof ExternalDatabaseEvidence ) {
+                    evidence = new ExternalDatabaseEvidenceValueObject( ( ExternalDatabaseEvidence ) phe );
+                    returnEvidences.add( evidence );
                 } else if ( phe instanceof DifferentialExpressionEvidence ) {
                     // TODO
-                } else if ( phe instanceof ExperimentalEvidence ) {
-                    // TODO
-                } else if ( phe instanceof ExternalDatabaseEvidence ) {
-                    // TODO
-                } else if ( phe instanceof GenericEvidence ) {
-                    // TODO
-                } else if ( phe instanceof LiteratureEvidence ) {
-                    // TODO
                 }
-                // else if ( phe instanceof GenericExperiment ) {
-                // TODO
-                // }
 
             }
         }
         return returnEvidences;
     }
 
+    /** set fields common to all evidences. Entity to Value Object */
+    protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
 
-    public EvidenceValueObject( String name, String description, GOEvidenceCode evidenceCode,
-            Boolean isNegativeEvidence, Collection<Characteristic> characteristics, Long databaseId ) {
-        super();
-        this.name = name;
-        this.description = description;
-        this.evidenceCode = evidenceCode;
-        this.isNegativeEvidence = isNegativeEvidence;
-        this.databaseId = databaseId;
-
+        this.databaseId = phenotypeAssociation.getId();
+        this.name = phenotypeAssociation.getName();
+        this.description = phenotypeAssociation.getDescription();
+        this.evidenceCode = phenotypeAssociation.getEvidenceCode();
+        this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
+        if ( phenotypeAssociation.getAssociationType() != null ) {
+            this.characteristic = phenotypeAssociation.getAssociationType().getValue();
+        }
         phenotypes = new HashSet<String>();
 
-        for ( Characteristic c : characteristics ) {
+        for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
             phenotypes.add( c.getValue() );
         }
     }
 
-    public EvidenceValueObject( String name, String description, Boolean isNegativeEvidence,
+    protected EvidenceValueObject( String name, String description, String characteristic, Boolean isNegativeEvidence,
             GOEvidenceCode evidenceCode, Collection<String> phenotypes ) {
         super();
         this.name = name;
         this.description = description;
+        this.characteristic = characteristic;
         this.evidenceCode = evidenceCode;
         this.isNegativeEvidence = isNegativeEvidence;
         this.phenotypes = phenotypes;
@@ -152,37 +150,12 @@ public abstract class EvidenceValueObject {
         return isNegativeEvidence;
     }
 
-    /** Each child must implement this method and determine how to create the entity the represents */
-    public abstract PhenotypeAssociation createEntity();
+    public String getCharacteristic() {
+        return characteristic;
+    }
 
-    /**
-     * Sets the global field for all Evidences, the fields that are the same for any evidence. This method will be used
-     * by all child evidences to create an Entity using createEntity()
-     * 
-     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
-     * @param phenotypes the given phenotypes
-     */
-    protected void populatePhenotypeAssociation( PhenotypeAssociation phe ) {
-        // TODO
-        // phe.setAssociationType( evidenceValueObject.get );
-        phe.setDescription( description );
-        phe.setEvidenceCode( evidenceCode );
-        phe.setIsNegativeEvidence( isNegativeEvidence );
-        phe.setName( name );
-
-        // here lets add the phenotypes
-        Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
-
-        for ( String phenotype : phenotypes ) {
-
-            // TODO how to set up correct phenotype
-            VocabCharacteristicImpl myPhenotype = new VocabCharacteristicImpl();
-            myPhenotype.setValue( phenotype );
-
-            myPhenotypes.add( myPhenotype );
-        }
-
-        phe.setPhenotypes( myPhenotypes );
+    public void setCharacteristic( String characteristic ) {
+        this.characteristic = characteristic;
     }
 
 }

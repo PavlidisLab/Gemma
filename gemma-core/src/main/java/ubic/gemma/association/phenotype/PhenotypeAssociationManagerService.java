@@ -12,7 +12,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 public interface PhenotypeAssociationManagerService {
 
     /**
-     * Links an Evidence and phenotypes to a gene
+     * Links an Evidence to a Gene
      * 
      * @param geneNCBI The Gene id we want to add the evidence
      * @param evidence The evidence
@@ -22,7 +22,7 @@ public interface PhenotypeAssociationManagerService {
     public GeneValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence );
 
     /**
-     * Removes an evidence froma Gene
+     * Removes an evidence from a Gene
      * 
      * @param geneNCBI The Evidence id
      */

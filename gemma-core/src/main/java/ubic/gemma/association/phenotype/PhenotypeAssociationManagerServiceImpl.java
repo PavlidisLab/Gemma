@@ -5,7 +5,6 @@ import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.genome.Gene;
@@ -18,13 +17,16 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService {
 
     @Autowired
-    PhenotypeAssociationService associationService;
+    private PhenotypeAssociationService associationService;
 
     @Autowired
-    GeneService geneService;
+    private GeneService geneService;
+
+    @Autowired
+    private PhenotypeAssoManagerServiceHelper phenotypeAssoManagerServiceHelper;
 
     /**
-     * Links an Evidence and phenotypes to a gene
+     * Links an Evidence to a Gene
      * 
      * @param geneNCBI The Gene id we want to add the evidence
      * @param evidence The evidence
@@ -36,11 +38,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // find the gene we wish to add the evidence and phenotype
         Gene gene = geneService.findByNCBIId( geneNCBI );
 
-        // use polymorphism to create the good entity from the value object
-        PhenotypeAssociation phenotypeAssociation = evidence.createEntity();
+        // convert the valueObject received to the corresponding Entity
+        PhenotypeAssociation pheAsso = phenotypeAssoManagerServiceHelper.valueObject2Entity( evidence );
 
-        // add the new phenotype association to the gene
-        gene.getPhenotypeAssociations().add( phenotypeAssociation );
+        // add the entity to the gene
+        gene.getPhenotypeAssociations().add( pheAsso );
 
         // save result
         geneService.update( gene );
@@ -59,7 +61,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Gene gene = geneService.findByNCBIId( geneNCBI );
 
-        if ( gene.getPhenotypeAssociations() == null || gene.getPhenotypeAssociations().size() == 0 ) {
+        if ( gene == null || gene.getPhenotypeAssociations() == null || gene.getPhenotypeAssociations().size() == 0 ) {
             return null;
         }
 

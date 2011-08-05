@@ -47,7 +47,7 @@ public class SystemArchitectureAspect {
     /**
      * A entity service method.
      */
-    @Pointcut("execution(public * ubic.gemma.model..*.*Service.*(..))")
+    @Pointcut("execution(public * ubic.gemma.model..*.*Service.*(..)) || execution(public * ubic.gemma.association.phenotype.*Service.*(..))")
     public void serviceMethod() {
     }
 

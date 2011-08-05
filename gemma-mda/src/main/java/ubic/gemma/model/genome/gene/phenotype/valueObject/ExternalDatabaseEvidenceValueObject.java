@@ -2,25 +2,30 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 
+import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.association.GOEvidenceCode;
-import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 
-//TODO stgeorgn
 public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
 
-    public ExternalDatabaseEvidenceValueObject( String name, String description, Boolean isNegativeEvidence,
-            GOEvidenceCode evidenceCode, Collection<String> phenotypes ) {
-        super( name, description, isNegativeEvidence, evidenceCode, phenotypes );
-        // TODO Auto-generated constructor stub
+    private DatabaseEntryValueObject databaseEntryValueObject = null;
+
+    public ExternalDatabaseEvidenceValueObject( String name, String description, String characteristic,
+            Boolean isNegativeEvidence, GOEvidenceCode evidenceCode, Collection<String> characteristics,
+            DatabaseEntryValueObject databaseEntryValueObject ) {
+        super( name, description, characteristic, isNegativeEvidence, evidenceCode, characteristics );
+        this.databaseEntryValueObject = databaseEntryValueObject;
     }
 
-    @Override
-    public PhenotypeAssociation createEntity() {
-        // TODO Auto-generated method stub
-        return null;
+    /** Entity to Value Object */
+    public ExternalDatabaseEvidenceValueObject( ExternalDatabaseEvidence externalDatabaseEvidence ) {
+        super( externalDatabaseEvidence );
+        this.databaseEntryValueObject = DatabaseEntryValueObject.fromEntity( externalDatabaseEvidence
+                .getEvidenceSource() );
     }
 
+    public DatabaseEntryValueObject getDatabaseEntryValueObject() {
+        return databaseEntryValueObject;
+    }
 
-
-    
 }

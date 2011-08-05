@@ -42,11 +42,11 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // Gene NCBI used
         geneNCBI = "44444444";
         // Phenotype
-        phenotypeValue = "GOTestPhenotype";
+        phenotypeValue = "testPhenotype";
         phenotypes = new HashSet<String>();
         phenotypes.add( phenotypeValue );
         // Evidence
-        evidence = new UrlEvidenceValueObject( "test_name", "test_description", false,
+        evidence = new UrlEvidenceValueObject( "test_name", "test_description", "test_caracteristic", false,
                 GOEvidenceCode.fromString( "IC" ), phenotypes, "www.test.com" );
 
         // Make sure a Gene exist in the database with the NCBI id
