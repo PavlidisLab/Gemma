@@ -10,7 +10,6 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	autoExpandColumn : 'efs',
 	height : 300,
-	loadMask : true,
 	stateful : false,
 	viewConfig : {
 	 forceFit : true
@@ -154,6 +153,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 		Gemma.ProbeLevelDiffExGrid.superclass.initComponent.call(this);
 
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
+
 		// once the store is loaded validate to see if it has any records and pass delegate reference to store
 		this.store.on("load", this.validate.createDelegate(this));
 
