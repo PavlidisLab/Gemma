@@ -434,6 +434,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
             List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, FactorValue subsetFactorValue ) {
+        
+        if (factors.isEmpty()) {
+            throw new IllegalArgumentException("Must provide at least one factor");
+        }
+        
         if ( samplesUsed.size() <= factors.size() ) {
             throw new IllegalArgumentException( "Must have more samples than factors" );
         }
