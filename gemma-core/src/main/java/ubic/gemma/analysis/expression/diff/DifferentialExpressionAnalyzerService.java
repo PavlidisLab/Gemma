@@ -167,20 +167,9 @@ public class DifferentialExpressionAnalyzerService {
                     && ( subsetFactorValueForExisting == null || subsetFactorValueForExisting.equals( newAnalysis
                             .getSubsetFactorValue() ) ) ) {
 
-                log.info( "Deleting old differential expression analysis for experiment "
-                        + expressionExperiment.getShortName() );
-                differentialExpressionAnalysisService.delete( existingAnalysis );
+                deleteOldAnalysis( expressionExperiment, existingAnalysis );
+
                 numDeleted++;
-
-                /*
-                 * Delete old flat files. This deletes them all, could be fixed but not a big deal.
-                 */
-                expressionDataFileService.deleteDiffExFile( expressionExperiment );
-
-                /*
-                 * Delete the old statistic distributions.
-                 */
-                deleteOldDistributionMatrices( expressionExperiment, existingAnalysis );
             }
         }
 
@@ -188,6 +177,30 @@ public class DifferentialExpressionAnalyzerService {
             log.info( "None of the existing analyses were eligible for deletion" );
         }
         return numDeleted;
+    }
+
+    /**
+     * Delete an old analysis.
+     * 
+     * @param expressionExperiment
+     * @param existingAnalysis
+     */
+    public void deleteOldAnalysis( ExpressionExperiment expressionExperiment,
+            DifferentialExpressionAnalysis existingAnalysis ) {
+        log
+                .info( "Deleting old differential expression analysis for experiment "
+                        + expressionExperiment.getShortName() );
+        differentialExpressionAnalysisService.delete( existingAnalysis );
+
+        /*
+         * Delete old flat files. This deletes them all, could be fixed but not a big deal.
+         */
+        expressionDataFileService.deleteDiffExFile( expressionExperiment );
+
+        /*
+         * Delete the old statistic distributions.
+         */
+        deleteOldDistributionMatrices( expressionExperiment, existingAnalysis );
     }
 
     /**
