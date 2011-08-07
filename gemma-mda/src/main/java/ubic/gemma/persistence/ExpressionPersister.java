@@ -29,7 +29,6 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.Characteristic;
@@ -588,7 +587,8 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
             expressionExperimentService.delete( expExp );
-            throw new CancellationException( "Thread canceled during EE persisting. " + this.getClass() );
+            throw new java.util.concurrent.CancellationException( "Thread canceled during EE persisting. "
+                    + this.getClass() );
         }
 
         expressionExperimentService.update( expExp ); // help fix up ACLs. Yes, this is a good idea. See AclAdviceTest

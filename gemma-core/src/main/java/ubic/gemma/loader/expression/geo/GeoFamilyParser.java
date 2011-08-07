@@ -233,7 +233,7 @@ public class GeoFamilyParser implements Parser<Object> {
             }
         } catch ( ExecutionException e ) {
             throw new RuntimeException( "Parse failed", e.getCause() );
-        } catch ( CancellationException e ) {
+        } catch ( java.util.concurrent.CancellationException e ) {
             throw new RuntimeException( "Parse was cancelled", e.getCause() );
         } catch ( InterruptedException e ) {
             throw new RuntimeException( "Parse was interrupted", e.getCause() );
@@ -526,7 +526,8 @@ public class GeoFamilyParser implements Parser<Object> {
                 parseLine( line );
                 if ( ++parsedLines % 20000 == 0 && Thread.currentThread().isInterrupted() ) {
                     dis.close(); // clean up
-                    throw new CancellationException( "Thread was terminated during parsing. " + this.getClass() );
+                    throw new java.util.concurrent.CancellationException( "Thread was terminated during parsing. "
+                            + this.getClass() );
                 }
             }
 

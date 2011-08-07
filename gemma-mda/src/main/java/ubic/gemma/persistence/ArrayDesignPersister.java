@@ -21,6 +21,7 @@ package ubic.gemma.persistence;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.HibernateException;
@@ -29,7 +30,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateCallback;
 
-import ubic.basecode.util.CancellationException;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -342,8 +342,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                      * need to fix.
                      */
                     compositeSequenceService.remove( c ); // etc
-                    throw new CancellationException( "Thread was terminated during persisting the arraydesign. "
-                            + this.getClass() );
+                    throw new java.util.concurrent.CancellationException(
+                            "Thread was terminated during persisting the arraydesign. " + this.getClass() );
                 }
             }
         }
