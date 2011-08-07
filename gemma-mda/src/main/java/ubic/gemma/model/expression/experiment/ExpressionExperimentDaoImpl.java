@@ -186,7 +186,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             if ( results.size() > 1 ) {
                 throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
                         "More than one instance of '" + ExpressionExperiment.class.getName()
-                                + "' was found when executing query" );
+                                + "' was found when executing query for " + accession );
 
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
