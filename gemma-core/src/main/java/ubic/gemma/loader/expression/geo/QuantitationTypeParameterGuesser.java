@@ -145,6 +145,7 @@ public class QuantitationTypeParameterGuesser {
         scaleDescPatterns.get( ScaleType.LOG10 ).add( ".*log( )?10.*" );
         scaleDescPatterns.get( ScaleType.LOGBASEUNKNOWN ).add( ".*log( )?(?!(10|2)).*" );
         scaleDescPatterns.get( ScaleType.LOG2 ).add( "log (base 2)" );
+        scaleDescPatterns.get( ScaleType.LOG2 ).add( "(gc?)rma" );
 
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "^%.*" );
         scaleNamePatterns.get( ScaleType.PERCENT ).add( "pergtbch[12].*" );
@@ -272,6 +273,7 @@ public class QuantitationTypeParameterGuesser {
         isBackgroundSubtractedNamePatterns.add( ".*((- )|_)b(532|635)" );
         isBackgroundSubtractedNamePatterns.add( ".*- background" );
         isBackgroundSubtractedNamePatterns.add( "rma" );
+        isBackgroundSubtractedNamePatterns.add( "gcrma" );
         isBackgroundSubtractedNamePatterns.add( "dchip" );
         isBackgroundSubtractedDescPatterns
                 .add( ".*channel [12] (mean|median) signal background (subtracted|corrected).*(?!ratio).*" );
@@ -279,6 +281,7 @@ public class QuantitationTypeParameterGuesser {
         // note: unf_value is without the flagged values removed.
         isPreferredNamePatterns.add( "value" );
         isPreferredNamePatterns.add( "rma" );
+        isPreferredNamePatterns.add( "gcrma" );
         isPreferredNamePatterns.add( "dchip" );
         isPreferredNamePatterns.add( "chpsignal" );
         isPreferredNamePatterns.add( "signal" );
@@ -287,7 +290,7 @@ public class QuantitationTypeParameterGuesser {
     }
 
     /**
-     * Determine if a quanttiation type is 'preferred'.
+     * Determine if a quantitation type is 'preferred'.
      * 
      * @param qt
      * @return
