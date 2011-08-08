@@ -21,10 +21,11 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import ubic.gemma.loader.expression.geo.model.GeoRecord;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * TODO Document Me
+ * Scans GEO for experiments that are not GEO.
  * 
  * @author paul
  * @version $Id$
@@ -34,7 +35,6 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
     @Override
     protected void buildOptions() {
         // TODO Auto-generated method stub
-
     }
 
     @Override
@@ -43,6 +43,8 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
 
         Set<String> seen = new HashSet<String>();
         GeoBrowserService gbs = ( GeoBrowserService ) this.getBean( "geoBrowserService" );
+        ExpressionExperimentService ees = ( ExpressionExperimentService ) this.getBean( "expressionExperimentService" );
+
         try {
             int start = 0;
             int chunksize = 100;
@@ -53,6 +55,10 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
                 int numnew = 0;
                 for ( GeoRecord geoRecord : recs ) {
                     if ( seen.contains( geoRecord.getGeoAccession() ) ) {
+                        continue;
+                    }
+
+                    if ( ees.findByShortName( geoRecord.getGeoAccession() ) != null ) {
                         continue;
                     }
 
