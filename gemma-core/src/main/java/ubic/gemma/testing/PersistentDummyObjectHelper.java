@@ -507,6 +507,11 @@ public class PersistentDummyObjectHelper {
         ba.setName( RandomStringUtils.randomNumeric( RANDOM_STRING_LENGTH ) + "_testbioassay" );
         ba.getSamplesUsed().add( bm );
         ba.setArrayDesignUsed( ad );
+        DatabaseEntry de = DatabaseEntry.Factory.newInstance();
+
+        de.setExternalDatabase( this.geo );
+        de.setAccession( ba.getName() );
+        ba.setAccession( de );
 
         LocalFile file = LocalFile.Factory.newInstance();
         try {

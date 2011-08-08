@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -267,22 +268,15 @@ public class GeoDatasetService extends AbstractGeoService {
      * @param series
      */
     private void checkSamplesAreNew( GeoSeries series ) {
-        Collection<BioAssay> existingBioAssays = null;
         Collection<GeoSample> toSkip = new HashSet<GeoSample>();
+
         for ( GeoSample sample : series.getSamples() ) {
             if ( !sample.appearsInMultipleSeries() ) {
                 // nothing to worry about: if this series is not loaded, then we're guaranteed to be new.
                 continue;
             }
 
-            /*
-             * Note: this is a bit slow (30 seconds), now that we have >70k samples, but we only do this once.
-             */
-            if ( existingBioAssays == null ) {
-                log.debug( "Loading all bioassays to check for duplication..." );
-                existingBioAssays = bioAssayService.loadAll();
-            }
-
+            Collection<BioAssay> existingBioAssays = bioAssayService.findByAccession( sample.getGeoAccession() );
             for ( BioAssay ba : existingBioAssays ) {
                 DatabaseEntry acc = ba.getAccession();
                 if ( acc == null ) continue;
@@ -291,22 +285,21 @@ public class GeoDatasetService extends AbstractGeoService {
                 String existingAcc = acc.getAccession();
                 if ( existingAcc.equals( sampleId )
                         && ba.getAccession().getExternalDatabase().getName().equals( GEO_DB_NAME ) ) {
-                    log.info( sampleId + " appears in an expression experiment already in the system, skipping" );
+                    log.debug( sampleId + " appears in an expression experiment already in the system, skipping" );
                     toSkip.add( sample );
                 }
             }
-
         }
 
         if ( !toSkip.isEmpty() ) {
-            log.info( "Total of " + toSkip.size() + " samples that are already in the system." );
+            log.info( "Found " + toSkip.size()
+                    + " samples that are already in the system; they will be removed from the new set (example: "
+                    + toSkip.iterator().next().getGeoAccession() + ")" );
         }
 
-        StringBuilder buf = new StringBuilder();
         for ( GeoSample gs : toSkip ) {
             series.getSamples().remove( gs );
             series.getSampleCorrespondence().removeSample( gs.getGeoAccession() );
-            buf.append( gs + ", " );
         }
 
         for ( GeoDataset gds : series.getDatasets() ) {
@@ -323,7 +316,8 @@ public class GeoDatasetService extends AbstractGeoService {
         if ( toSkip.size() > 0 ) {
             series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
                     + " samples from this series, which appear in other Expression Experiments in Gemma, "
-                    + "were not imported from the GEO source. The following samples were removed: " + buf.toString() );
+                    + "were not imported from the GEO source. The following samples were removed: "
+                    + StringUtils.join( toSkip, "," ) );
         }
 
         if ( series.getSamples().size() == 0 ) {
@@ -395,7 +389,7 @@ public class GeoDatasetService extends AbstractGeoService {
         List<String> gemmaNames = pl.getColumnData( columnWithGemmaNames );
         List<String> geoNames = pl.getColumnData( columnWithGeoNames );
         assert gemmaNames.size() == geoNames.size();
-        log.info( "Matching up " + geoNames.size() + " probe names" );
+        log.debug( "Matching up " + geoNames.size() + " probe names" );
         for ( int i = 0; i < gemmaNames.size(); i++ ) {
             String gemmaName = gemmaNames.get( i );
             String geoName = geoNames.get( i );

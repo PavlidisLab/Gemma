@@ -194,4 +194,9 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         return this.getBioAssayDao().thaw( bioAssays );
     }
 
+    @Override
+    public Collection<BioAssay> findByAccession( String accession ) {
+        return this.getBioAssayDao().findByAccession( accession );
+    }
+
 }

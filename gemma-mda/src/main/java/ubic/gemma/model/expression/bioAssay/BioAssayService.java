@@ -103,4 +103,11 @@ public interface BioAssayService {
     @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( BioAssay bioAssay );
 
+    /**
+     * @param accession eg GSM12345.
+     * @return BioAssays that match based on the plain accession (unconstrained by ExternalDatabase).
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<BioAssay> findByAccession( String accession );
+
 }

@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.bioAssay;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -30,6 +31,7 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
+import org.tuckey.web.filters.urlrewrite.utils.StringUtils;
 
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.util.BusinessKey;
@@ -81,6 +83,21 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#findByAccession(java.lang.String)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    public Collection<BioAssay> findByAccession( String accession ) {
+        if ( StringUtils.isBlank( accession ) ) return new HashSet<BioAssay>();
+
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct b from BioAssayImpl b inner join b.accession a where a.accession = :query", "query",
+                accession );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#findOrCreate(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
@@ -125,11 +142,6 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         } );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#thaw(java.util.Collection)
-     */
     /*
      * (non-Javadoc)
      * 

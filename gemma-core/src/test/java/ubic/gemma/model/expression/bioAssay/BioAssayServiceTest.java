@@ -54,6 +54,11 @@ public class BioAssayServiceTest extends BaseSpringContextTest {
 
     }
 
+    @Test
+    public void testFindByAccession() {
+        assertEquals( 1, bioAssayService.findByAccession( ba.getAccession().getAccession() ).size() );
+    }
+
     /**
      * Tests HQL
      */

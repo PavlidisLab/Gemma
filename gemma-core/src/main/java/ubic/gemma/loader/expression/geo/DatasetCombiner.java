@@ -238,10 +238,10 @@ public class DatasetCombiner {
                         /*
                          * 'console.error' seems to be benign text in the page's js.
                          */
-                        if ( !line.contains( "console.error" ) ) {
+                        if ( !line.contains( "console.error" ) && !line.contains("class=\"error\"")) {
                             // throw new IOException( "Error from NCBI: " + line );
                             // until we know what errors look like.
-                            log.error( "Error from NCBI while fetching GDS? '" + line + "'" );
+                            log.error( "Error from NCBI while fetching GDS? '" + line + "'" + " at " + url );
                         }
 
                     }

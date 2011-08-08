@@ -156,4 +156,10 @@ public interface BioAssayDao extends BaseDao<BioAssay> {
      */
     public Collection<BioAssay> thaw( Collection<BioAssay> bioAssays );
 
+    /**
+     * @param accession
+     * @return
+     */
+    public Collection<BioAssay> findByAccession( String accession );
+
 }
