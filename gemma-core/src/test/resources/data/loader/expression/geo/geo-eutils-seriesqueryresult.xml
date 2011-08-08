@@ -1,0 +1,2584 @@
+<?xml version="1.0"?> <!DOCTYPE eSummaryResult PUBLIC "-//NLM//DTD eSummaryResult, 29 October 2004//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/eSummary_041029.dtd"> 
+<eSummaryResult> 
+	<DocSum> 	
+		<Id>473</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">Muscle function and aging - female (HG-U133B)</Item> 	
+		<Item Name="summary" Type="String">Comparison of gene expression in vastus lateralis skeletal muscle biopsies in healthy young (20-29 year old) and older (65-71 year old) women</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GDS</Item> 	
+		<Item Name="gdsType" Type="String">Expression profiling by array</Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String">count</Item> 	
+		<Item Name="SSInfo" Type="String">age;age</Item> 	
+		<Item Name="subsetInfo" Type="String">2 age</Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10360</Item> 			
+				<Item Name="Title" Type="String">C6-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10356</Item> 			
+				<Item Name="Title" Type="String">C3-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10362</Item> 			
+				<Item Name="Title" Type="String">C7-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10354</Item> 			
+				<Item Name="Title" Type="String">C1-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10355</Item> 			
+				<Item Name="Title" Type="String">C2-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10359</Item> 			
+				<Item Name="Title" Type="String">C4-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10361</Item> 			
+				<Item Name="Title" Type="String">C8-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10366</Item> 			
+				<Item Name="Title" Type="String">D4-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10365</Item> 			
+				<Item Name="Title" Type="String">D3-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10369</Item> 			
+				<Item Name="Title" Type="String">D6-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10370</Item> 			
+				<Item Name="Title" Type="String">D7-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10368</Item> 			
+				<Item Name="Title" Type="String">D5-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10367</Item> 			
+				<Item Name="Title" Type="String">D8-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10363</Item> 			
+				<Item Name="Title" Type="String">D1-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10364</Item> 			
+				<Item Name="Title" Type="String">D2-U133B</Item> 		
+			</Item> 	
+		</Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">15</Item> 	
+		<Item Name="SeriesTitle" Type="String">Normal Muscle - Female , Effect of Age</Item> 	
+		<Item Name="PlatformTitle" Type="String">[HG-U133B] Affymetrix Human Genome U133B Array</Item> 	
+		<Item Name="PlatformTaxa" Type="String">Homo sapiens</Item> 	
+		<Item Name="SamplesTaxa" Type="String">Homo sapiens</Item> 	
+		<Item Name="PubMedIds" Type="List"> 		
+			<Item Name="int" Type="Integer">15036396</Item> 	
+		</Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>472</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">Muscle function and aging - female (HG-U133A)</Item> 	
+		<Item Name="summary" Type="String">Comparison of gene expression in vastus lateralis skeletal muscle biopsies in healthy young (20-29 year old) and older (65-71 year old) women</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GDS</Item> 	
+		<Item Name="gdsType" Type="String">Expression profiling by array</Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String">count</Item> 	
+		<Item Name="SSInfo" Type="String">age;age</Item> 	
+		<Item Name="subsetInfo" Type="String">2 age</Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10378</Item> 			
+				<Item Name="Title" Type="String">C6-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10376</Item> 			
+				<Item Name="Title" Type="String">C3-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10380</Item> 			
+				<Item Name="Title" Type="String">C7-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10374</Item> 			
+				<Item Name="Title" Type="String">C1-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10375</Item> 			
+				<Item Name="Title" Type="String">C2-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10377</Item> 			
+				<Item Name="Title" Type="String">C4-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10379</Item> 			
+				<Item Name="Title" Type="String">C8-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10384</Item> 			
+				<Item Name="Title" Type="String">D4-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10387</Item> 			
+				<Item Name="Title" Type="String">D6-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10383</Item> 			
+				<Item Name="Title" Type="String">D3-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10388</Item> 			
+				<Item Name="Title" Type="String">D7-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10385</Item> 			
+				<Item Name="Title" Type="String">D8-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10386</Item> 			
+				<Item Name="Title" Type="String">D5-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10381</Item> 			
+				<Item Name="Title" Type="String">D1-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10382</Item> 			
+				<Item Name="Title" Type="String">D2-U133A</Item> 		
+			</Item> 	
+		</Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">15</Item> 	
+		<Item Name="SeriesTitle" Type="String">Normal Muscle - Female , Effect of Age</Item> 	
+		<Item Name="PlatformTitle" Type="String">[HG-U133A] Affymetrix Human Genome U133A Array</Item> 	
+		<Item Name="PlatformTaxa" Type="String">Homo sapiens</Item> 	
+		<Item Name="SamplesTaxa" Type="String">Homo sapiens</Item> 	
+		<Item Name="PubMedIds" Type="List"> 		
+			<Item Name="int" Type="Integer">15036396</Item> 	
+		</Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>200010760</Id> 	
+		<Item Name="GDS" Type="String"></Item> 	
+		<Item Name="title" Type="String">Effect of facioscapulohumeral dystrophy (FSHD) on skeletal muscle gene expression</Item> 	
+		<Item Name="summary" Type="String">Muscle biopsies taken from vastus lateralis muscle of 30 normal subjects and 19 FSHD subjects (see PubMed ID 17151338) Affymetrix U133A and U133B arrays were scanned both before (S1) and after (S2) antibody enhancement. Effects of age and sex in normal subjects reported previously under GSE362, GSE674, and GSE9676. Keywords: facioscapulohumeral dystrophy, skeletal muscle</Item> 	
+		<Item Name="GPL" Type="String">96;97</Item> 	
+		<Item Name="GSE" Type="String">10760</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSE</Item> 	
+		<Item Name="gdsType" Type="String">Expression profiling by array</Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2008/03/08</Item> 	
+		<Item Name="suppFile" Type="String">CEL</Item> 	
+		<Item Name="Samples" Type="List"> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271517</Item> 			
+				<Item Name="Title" Type="String">male 21.5 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271520</Item> 			
+				<Item Name="Title" Type="String">male 68.4 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271523</Item> 			
+				<Item Name="Title" Type="String">male 74.5 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271530</Item> 			
+				<Item Name="Title" Type="String">female 20.1 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271533</Item> 			
+				<Item Name="Title" Type="String">female 70.7 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271536</Item> 			
+				<Item Name="Title" Type="String">female 65.1 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271539</Item> 			
+				<Item Name="Title" Type="String">female 67.3 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271546</Item> 			
+				<Item Name="Title" Type="String">male FSHD #6_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271549</Item> 			
+				<Item Name="Title" Type="String">male FSHD #9_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271552</Item> 			
+				<Item Name="Title" Type="String">female FSHD #2_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271555</Item> 			
+				<Item Name="Title" Type="String">female FSHD #5_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271562</Item> 			
+				<Item Name="Title" Type="String">male 24.2 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271565</Item> 			
+				<Item Name="Title" Type="String">male 25.1 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271568</Item> 			
+				<Item Name="Title" Type="String">male 69.6 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271575</Item> 			
+				<Item Name="Title" Type="String">female 23.5 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271578</Item> 			
+				<Item Name="Title" Type="String">female 26.5 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271581</Item> 			
+				<Item Name="Title" Type="String">female 29.8 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271584</Item> 			
+				<Item Name="Title" Type="String">female 66.6 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271591</Item> 			
+				<Item Name="Title" Type="String">male FSHD #2_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271594</Item> 			
+				<Item Name="Title" Type="String">male FSHD #5_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271597</Item> 			
+				<Item Name="Title" Type="String">male FSHD #8_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271600</Item> 			
+				<Item Name="Title" Type="String">female FSHD #1_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271607</Item> 			
+				<Item Name="Title" Type="String">female FSHD #8_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271610</Item> 			
+				<Item Name="Title" Type="String">male 27.1 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271613</Item> 			
+				<Item Name="Title" Type="String">male 23.4 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271620</Item> 			
+				<Item Name="Title" Type="String">male 67.2 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271623</Item> 			
+				<Item Name="Title" Type="String">male 75.1 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271626</Item> 			
+				<Item Name="Title" Type="String">female 21.5 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271629</Item> 			
+				<Item Name="Title" Type="String">female 22.5 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271636</Item> 			
+				<Item Name="Title" Type="String">female 65.9 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271639</Item> 			
+				<Item Name="Title" Type="String">male FSHD #1_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271642</Item> 			
+				<Item Name="Title" Type="String">male FSHD #4_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271645</Item> 			
+				<Item Name="Title" Type="String">male FSHD #7_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271652</Item> 			
+				<Item Name="Title" Type="String">female FSHD #4_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271655</Item> 			
+				<Item Name="Title" Type="String">female FSHD #7_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271658</Item> 			
+				<Item Name="Title" Type="String">male 25.2 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271661</Item> 			
+				<Item Name="Title" Type="String">male 26.2 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271665</Item> 			
+				<Item Name="Title" Type="String">male 69.2 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271668</Item> 			
+				<Item Name="Title" Type="String">male 73.5 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271671</Item> 			
+				<Item Name="Title" Type="String">male 71.2 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271674</Item> 			
+				<Item Name="Title" Type="String">female 24.4 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271681</Item> 			
+				<Item Name="Title" Type="String">female 71.4 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271684</Item> 			
+				<Item Name="Title" Type="String">female 68.4 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271687</Item> 			
+				<Item Name="Title" Type="String">female 67.9 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271690</Item> 			
+				<Item Name="Title" Type="String">male FSHD #3_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271697</Item> 			
+				<Item Name="Title" Type="String">male FSHD #10_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271700</Item> 			
+				<Item Name="Title" Type="String">female FSHD #3_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271703</Item> 			
+				<Item Name="Title" Type="String">female FSHD #6_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271706</Item> 			
+				<Item Name="Title" Type="String">female FSHD #9_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271513</Item> 			
+				<Item Name="Title" Type="String">male 24.2 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271516</Item> 			
+				<Item Name="Title" Type="String">male 25.1 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271519</Item> 			
+				<Item Name="Title" Type="String">male 69.6 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271526</Item> 			
+				<Item Name="Title" Type="String">female 23.5 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271529</Item> 			
+				<Item Name="Title" Type="String">female 26.5 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271532</Item> 			
+				<Item Name="Title" Type="String">female 29.8 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271535</Item> 			
+				<Item Name="Title" Type="String">female 66.6 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271542</Item> 			
+				<Item Name="Title" Type="String">male FSHD #2_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271545</Item> 			
+				<Item Name="Title" Type="String">male FSHD #5_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271548</Item> 			
+				<Item Name="Title" Type="String">male FSHD #8_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271551</Item> 			
+				<Item Name="Title" Type="String">female FSHD #1_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271558</Item> 			
+				<Item Name="Title" Type="String">female FSHD #8_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271561</Item> 			
+				<Item Name="Title" Type="String">male 27.1 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271564</Item> 			
+				<Item Name="Title" Type="String">male 23.4 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271571</Item> 			
+				<Item Name="Title" Type="String">male 67.2 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271574</Item> 			
+				<Item Name="Title" Type="String">male 75.1 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271577</Item> 			
+				<Item Name="Title" Type="String">female 21.5 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271580</Item> 			
+				<Item Name="Title" Type="String">female 22.5 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271587</Item> 			
+				<Item Name="Title" Type="String">female 65.9 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271590</Item> 			
+				<Item Name="Title" Type="String">male FSHD #1_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271593</Item> 			
+				<Item Name="Title" Type="String">male FSHD #4_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271596</Item> 			
+				<Item Name="Title" Type="String">male FSHD #7_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271603</Item> 			
+				<Item Name="Title" Type="String">female FSHD #4_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271606</Item> 			
+				<Item Name="Title" Type="String">female FSHD #7_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271609</Item> 			
+				<Item Name="Title" Type="String">male 25.2 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271612</Item> 			
+				<Item Name="Title" Type="String">male 26.2 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271616</Item> 			
+				<Item Name="Title" Type="String">male 69.2 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271619</Item> 			
+				<Item Name="Title" Type="String">male 73.5 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271622</Item> 			
+				<Item Name="Title" Type="String">male 71.2 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271625</Item> 			
+				<Item Name="Title" Type="String">female 24.4 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271632</Item> 			
+				<Item Name="Title" Type="String">female 71.4 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271635</Item> 			
+				<Item Name="Title" Type="String">female 68.4 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271638</Item> 			
+				<Item Name="Title" Type="String">female 67.9 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271641</Item> 			
+				<Item Name="Title" Type="String">male FSHD #3_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271648</Item> 			
+				<Item Name="Title" Type="String">male FSHD #10_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271651</Item> 			
+				<Item Name="Title" Type="String">female FSHD #3_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271654</Item> 			
+				<Item Name="Title" Type="String">female FSHD #6_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271657</Item> 			
+				<Item Name="Title" Type="String">female FSHD #9_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271664</Item> 			
+				<Item Name="Title" Type="String">male 21.5 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271667</Item> 			
+				<Item Name="Title" Type="String">male 68.4 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271670</Item> 			
+				<Item Name="Title" Type="String">male 74.5 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271677</Item> 			
+				<Item Name="Title" Type="String">female 20.1 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271680</Item> 			
+				<Item Name="Title" Type="String">female 70.7 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271683</Item> 			
+				<Item Name="Title" Type="String">female 65.1 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271686</Item> 			
+				<Item Name="Title" Type="String">female 67.3 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271693</Item> 			
+				<Item Name="Title" Type="String">male FSHD #6_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271696</Item> 			
+				<Item Name="Title" Type="String">male FSHD #9_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271699</Item> 			
+				<Item Name="Title" Type="String">female FSHD #2_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271702</Item> 			
+				<Item Name="Title" Type="String">female FSHD #5_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271511</Item> 			
+				<Item Name="Title" Type="String">male 25.2 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271514</Item> 			
+				<Item Name="Title" Type="String">male 26.2 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271518</Item> 			
+				<Item Name="Title" Type="String">male 69.2 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271521</Item> 			
+				<Item Name="Title" Type="String">male 73.5 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271524</Item> 			
+				<Item Name="Title" Type="String">male 71.2 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271527</Item> 			
+				<Item Name="Title" Type="String">female 24.4 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271534</Item> 			
+				<Item Name="Title" Type="String">female 71.4 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271537</Item> 			
+				<Item Name="Title" Type="String">female 68.4 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271540</Item> 			
+				<Item Name="Title" Type="String">female 67.9 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271543</Item> 			
+				<Item Name="Title" Type="String">male FSHD #3_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271550</Item> 			
+				<Item Name="Title" Type="String">male FSHD #10_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271553</Item> 			
+				<Item Name="Title" Type="String">female FSHD #3_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271556</Item> 			
+				<Item Name="Title" Type="String">female FSHD #6_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271559</Item> 			
+				<Item Name="Title" Type="String">female FSHD #9_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271566</Item> 			
+				<Item Name="Title" Type="String">male 21.5 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271569</Item> 			
+				<Item Name="Title" Type="String">male 68.4 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271572</Item> 			
+				<Item Name="Title" Type="String">male 74.5 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271579</Item> 			
+				<Item Name="Title" Type="String">female 20.1 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271582</Item> 			
+				<Item Name="Title" Type="String">female 70.7 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271585</Item> 			
+				<Item Name="Title" Type="String">female 65.1 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271588</Item> 			
+				<Item Name="Title" Type="String">female 67.3 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271595</Item> 			
+				<Item Name="Title" Type="String">male FSHD #6_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271598</Item> 			
+				<Item Name="Title" Type="String">male FSHD #9_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271601</Item> 			
+				<Item Name="Title" Type="String">female FSHD #2_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271604</Item> 			
+				<Item Name="Title" Type="String">female FSHD #5_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271611</Item> 			
+				<Item Name="Title" Type="String">male 24.2 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271614</Item> 			
+				<Item Name="Title" Type="String">male 25.1 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271617</Item> 			
+				<Item Name="Title" Type="String">male 69.6 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271624</Item> 			
+				<Item Name="Title" Type="String">female 23.5 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271627</Item> 			
+				<Item Name="Title" Type="String">female 26.5 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271630</Item> 			
+				<Item Name="Title" Type="String">female 29.8 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271633</Item> 			
+				<Item Name="Title" Type="String">female 66.6 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271640</Item> 			
+				<Item Name="Title" Type="String">male FSHD #2_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271643</Item> 			
+				<Item Name="Title" Type="String">male FSHD #5_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271646</Item> 			
+				<Item Name="Title" Type="String">male FSHD #8_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271649</Item> 			
+				<Item Name="Title" Type="String">female FSHD #1_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271656</Item> 			
+				<Item Name="Title" Type="String">female FSHD #8_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271659</Item> 			
+				<Item Name="Title" Type="String">male 27.1 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271662</Item> 			
+				<Item Name="Title" Type="String">male 23.4 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271669</Item> 			
+				<Item Name="Title" Type="String">male 67.2 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271672</Item> 			
+				<Item Name="Title" Type="String">male 75.1 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271675</Item> 			
+				<Item Name="Title" Type="String">female 21.5 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271678</Item> 			
+				<Item Name="Title" Type="String">female 22.5 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271685</Item> 			
+				<Item Name="Title" Type="String">female 65.9 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271688</Item> 			
+				<Item Name="Title" Type="String">male FSHD #1_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271691</Item> 			
+				<Item Name="Title" Type="String">male FSHD #4_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271694</Item> 			
+				<Item Name="Title" Type="String">male FSHD #7_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271701</Item> 			
+				<Item Name="Title" Type="String">female FSHD #4_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271704</Item> 			
+				<Item Name="Title" Type="String">female FSHD #7_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271512</Item> 			
+				<Item Name="Title" Type="String">male 27.1 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271515</Item> 			
+				<Item Name="Title" Type="String">male 23.4 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271522</Item> 			
+				<Item Name="Title" Type="String">male 67.2 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271525</Item> 			
+				<Item Name="Title" Type="String">male 75.1 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271528</Item> 			
+				<Item Name="Title" Type="String">female 21.5 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271531</Item> 			
+				<Item Name="Title" Type="String">female 22.5 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271538</Item> 			
+				<Item Name="Title" Type="String">female 65.9 yr_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271541</Item> 			
+				<Item Name="Title" Type="String">male FSHD #1_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271544</Item> 			
+				<Item Name="Title" Type="String">male FSHD #4_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271547</Item> 			
+				<Item Name="Title" Type="String">male FSHD #7_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271554</Item> 			
+				<Item Name="Title" Type="String">female FSHD #4_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271557</Item> 			
+				<Item Name="Title" Type="String">female FSHD #7_U133A_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271560</Item> 			
+				<Item Name="Title" Type="String">male 25.2 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271563</Item> 			
+				<Item Name="Title" Type="String">male 26.2 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271567</Item> 			
+				<Item Name="Title" Type="String">male 69.2 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271570</Item> 			
+				<Item Name="Title" Type="String">male 73.5 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271573</Item> 			
+				<Item Name="Title" Type="String">male 71.2 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271576</Item> 			
+				<Item Name="Title" Type="String">female 24.4 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271583</Item> 			
+				<Item Name="Title" Type="String">female 71.4 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271586</Item> 			
+				<Item Name="Title" Type="String">female 68.4 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271589</Item> 			
+				<Item Name="Title" Type="String">female 67.9 yr_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271592</Item> 			
+				<Item Name="Title" Type="String">male FSHD #3_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271599</Item> 			
+				<Item Name="Title" Type="String">male FSHD #10_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271602</Item> 			
+				<Item Name="Title" Type="String">female FSHD #3_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271605</Item> 			
+				<Item Name="Title" Type="String">female FSHD #6_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271608</Item> 			
+				<Item Name="Title" Type="String">female FSHD #9_U133A_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271615</Item> 			
+				<Item Name="Title" Type="String">male 21.5 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271618</Item> 			
+				<Item Name="Title" Type="String">male 68.4 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271621</Item> 			
+				<Item Name="Title" Type="String">male 74.5 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271628</Item> 			
+				<Item Name="Title" Type="String">female 20.1 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271631</Item> 			
+				<Item Name="Title" Type="String">female 70.7 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271634</Item> 			
+				<Item Name="Title" Type="String">female 65.1 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271637</Item> 			
+				<Item Name="Title" Type="String">female 67.3 yr_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271644</Item> 			
+				<Item Name="Title" Type="String">male FSHD #6_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271647</Item> 			
+				<Item Name="Title" Type="String">male FSHD #9_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271650</Item> 			
+				<Item Name="Title" Type="String">female FSHD #2_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271653</Item> 			
+				<Item Name="Title" Type="String">female FSHD #5_U133B_S2</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271660</Item> 			
+				<Item Name="Title" Type="String">male 24.2 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271663</Item> 			
+				<Item Name="Title" Type="String">male 25.1 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271666</Item> 			
+				<Item Name="Title" Type="String">male 69.6 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271673</Item> 			
+				<Item Name="Title" Type="String">female 23.5 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271676</Item> 			
+				<Item Name="Title" Type="String">female 26.5 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271679</Item> 			
+				<Item Name="Title" Type="String">female 29.8 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271682</Item> 			
+				<Item Name="Title" Type="String">female 66.6 yr_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271689</Item> 			
+				<Item Name="Title" Type="String">male FSHD #2_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271692</Item> 			
+				<Item Name="Title" Type="String">male FSHD #5_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271695</Item> 			
+				<Item Name="Title" Type="String">male FSHD #8_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271698</Item> 			
+				<Item Name="Title" Type="String">female FSHD #1_U133B_S1</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM271705</Item> 			
+				<Item Name="Title" Type="String">female FSHD #8_U133B_S1</Item> 		
+			</Item> 	
+		</Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">196</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"> 		
+			<Item Name="int" Type="Integer">17151338</Item> 	
+		</Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>200009676</Id> 	
+		<Item Name="GDS" Type="String"></Item> 	
+		<Item Name="title" Type="String">Effects of sex and age on skeletal muscle gene expression in normal men and women</Item> 	
+		<Item Name="summary" Type="String">Muscle biopsies taken from vastus lateralis muscle of 15 men and 15 women after 3 days of standardized diet and activity to examine effects of sex and age Subjects were either young adults (7 men and 7 women, 20-29 yr old) or older (8 men and 8 women, 65-75 yr old) Affymetrix U133A and U133B arrays were scanned both before (S1) and after (S2) antibody enhancement. This file has U133A S1 data. Effects of age were computed for men and women separately with an alternative method previously and data submitted as GSE362 (men) and GSE674 (women). Keywords: sex differences, age-related differences</Item> 	
+		<Item Name="GPL" Type="String">97;96</Item> 	
+		<Item Name="GSE" Type="String">9676</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSE</Item> 	
+		<Item Name="gdsType" Type="String">Expression profiling by array</Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2007/11/24</Item> 	
+		<Item Name="suppFile" Type="String">CEL</Item> 	
+		<Item Name="Samples" Type="List"> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244527</Item> 			
+				<Item Name="Title" Type="String">Male 25.2 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244534</Item> 			
+				<Item Name="Title" Type="String">Male 69.2 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244537</Item> 			
+				<Item Name="Title" Type="String">Male 73.5 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244540</Item> 			
+				<Item Name="Title" Type="String">Male 71.2 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244543</Item> 			
+				<Item Name="Title" Type="String">Female 24.4 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244550</Item> 			
+				<Item Name="Title" Type="String">Female 71.4 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244553</Item> 			
+				<Item Name="Title" Type="String">Female 68.4 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244556</Item> 			
+				<Item Name="Title" Type="String">Female 67.9 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244563</Item> 			
+				<Item Name="Title" Type="String">Male 21.5 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244566</Item> 			
+				<Item Name="Title" Type="String">Male 68.4 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244569</Item> 			
+				<Item Name="Title" Type="String">Male 74.5 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244572</Item> 			
+				<Item Name="Title" Type="String">Female 23.5 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244579</Item> 			
+				<Item Name="Title" Type="String">Female 70.7 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244582</Item> 			
+				<Item Name="Title" Type="String">Female 65.1 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244585</Item> 			
+				<Item Name="Title" Type="String">Female 67.3 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244588</Item> 			
+				<Item Name="Title" Type="String">Male 27.1 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244595</Item> 			
+				<Item Name="Title" Type="String">Male 69.6 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244598</Item> 			
+				<Item Name="Title" Type="String">Male 67.2 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244601</Item> 			
+				<Item Name="Title" Type="String">Male 75.1 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244608</Item> 			
+				<Item Name="Title" Type="String">Female 29.8 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244611</Item> 			
+				<Item Name="Title" Type="String">Female 66.6 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244614</Item> 			
+				<Item Name="Title" Type="String">Female 65.9 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244617</Item> 			
+				<Item Name="Title" Type="String">Male 25.2 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244624</Item> 			
+				<Item Name="Title" Type="String">Male 69.2 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244627</Item> 			
+				<Item Name="Title" Type="String">Male 73.5 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244630</Item> 			
+				<Item Name="Title" Type="String">Male 71.2 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244633</Item> 			
+				<Item Name="Title" Type="String">Female 24.4 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244640</Item> 			
+				<Item Name="Title" Type="String">Female 71.4 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244643</Item> 			
+				<Item Name="Title" Type="String">Female 68.4 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244646</Item> 			
+				<Item Name="Title" Type="String">Female 67.9 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244530</Item> 			
+				<Item Name="Title" Type="String">Male 26.2 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244533</Item> 			
+				<Item Name="Title" Type="String">Male 21.5 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244536</Item> 			
+				<Item Name="Title" Type="String">Male 68.4 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244539</Item> 			
+				<Item Name="Title" Type="String">Male 74.5 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244546</Item> 			
+				<Item Name="Title" Type="String">Female 20.1 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244549</Item> 			
+				<Item Name="Title" Type="String">Female 70.7 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244552</Item> 			
+				<Item Name="Title" Type="String">Female 65.1 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244559</Item> 			
+				<Item Name="Title" Type="String">Male 24.2 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244562</Item> 			
+				<Item Name="Title" Type="String">Male 25.1 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244565</Item> 			
+				<Item Name="Title" Type="String">Male 69.6 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244568</Item> 			
+				<Item Name="Title" Type="String">Male 67.2 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244575</Item> 			
+				<Item Name="Title" Type="String">Female 26.5 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244578</Item> 			
+				<Item Name="Title" Type="String">Female 29.8 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244581</Item> 			
+				<Item Name="Title" Type="String">Female 66.6 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244584</Item> 			
+				<Item Name="Title" Type="String">Female 65.9 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244591</Item> 			
+				<Item Name="Title" Type="String">Male 23.4 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244594</Item> 			
+				<Item Name="Title" Type="String">Male 69.2 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244597</Item> 			
+				<Item Name="Title" Type="String">Male 73.5 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244604</Item> 			
+				<Item Name="Title" Type="String">Female 21.5 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244607</Item> 			
+				<Item Name="Title" Type="String">Female 22.5 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244610</Item> 			
+				<Item Name="Title" Type="String">Female 71.4 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244613</Item> 			
+				<Item Name="Title" Type="String">Female 68.4 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244620</Item> 			
+				<Item Name="Title" Type="String">Male 26.2 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244623</Item> 			
+				<Item Name="Title" Type="String">Male 21.5 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244626</Item> 			
+				<Item Name="Title" Type="String">Male 68.4 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244629</Item> 			
+				<Item Name="Title" Type="String">Male 74.5 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244636</Item> 			
+				<Item Name="Title" Type="String">Female 20.1 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244639</Item> 			
+				<Item Name="Title" Type="String">Female 70.7 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244642</Item> 			
+				<Item Name="Title" Type="String">Female 65.1 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244645</Item> 			
+				<Item Name="Title" Type="String">Female 67.3 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244528</Item> 			
+				<Item Name="Title" Type="String">Male 27.1 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244531</Item> 			
+				<Item Name="Title" Type="String">Male 23.4 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244538</Item> 			
+				<Item Name="Title" Type="String">Male 67.2 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244541</Item> 			
+				<Item Name="Title" Type="String">Male 75.1 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244544</Item> 			
+				<Item Name="Title" Type="String">Female 21.5 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244547</Item> 			
+				<Item Name="Title" Type="String">Female 22.5 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244551</Item> 			
+				<Item Name="Title" Type="String">Female 66.6 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244554</Item> 			
+				<Item Name="Title" Type="String">Female 65.9 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244557</Item> 			
+				<Item Name="Title" Type="String">Male 25.2 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244560</Item> 			
+				<Item Name="Title" Type="String">Male 26.2 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244567</Item> 			
+				<Item Name="Title" Type="String">Male 73.5 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244570</Item> 			
+				<Item Name="Title" Type="String">Male 71.2 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244573</Item> 			
+				<Item Name="Title" Type="String">Female 24.4 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244576</Item> 			
+				<Item Name="Title" Type="String">Female 20.1 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244583</Item> 			
+				<Item Name="Title" Type="String">Female 68.4 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244586</Item> 			
+				<Item Name="Title" Type="String">Female 67.9 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244589</Item> 			
+				<Item Name="Title" Type="String">Male 24.2 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244592</Item> 			
+				<Item Name="Title" Type="String">Male 25.1 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244599</Item> 			
+				<Item Name="Title" Type="String">Male 74.5 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244602</Item> 			
+				<Item Name="Title" Type="String">Female 23.5 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244605</Item> 			
+				<Item Name="Title" Type="String">Female 26.5 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244612</Item> 			
+				<Item Name="Title" Type="String">Female 65.1 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244615</Item> 			
+				<Item Name="Title" Type="String">Female 67.3 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244618</Item> 			
+				<Item Name="Title" Type="String">Male 27.1 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244621</Item> 			
+				<Item Name="Title" Type="String">Male 23.4 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244628</Item> 			
+				<Item Name="Title" Type="String">Male 67.2 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244631</Item> 			
+				<Item Name="Title" Type="String">Male 75.1 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244634</Item> 			
+				<Item Name="Title" Type="String">Female 21.5 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244637</Item> 			
+				<Item Name="Title" Type="String">Female 22.5 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244644</Item> 			
+				<Item Name="Title" Type="String">Female 65.9 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244529</Item> 			
+				<Item Name="Title" Type="String">Male 24.2 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244532</Item> 			
+				<Item Name="Title" Type="String">Male 25.1 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244535</Item> 			
+				<Item Name="Title" Type="String">Male 69.6 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244542</Item> 			
+				<Item Name="Title" Type="String">Female 23.5 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244545</Item> 			
+				<Item Name="Title" Type="String">Female 26.5 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244548</Item> 			
+				<Item Name="Title" Type="String">Female 29.8 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244555</Item> 			
+				<Item Name="Title" Type="String">Female 67.3 yr before antibody enrichment scan 1 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244558</Item> 			
+				<Item Name="Title" Type="String">Male 27.1 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244561</Item> 			
+				<Item Name="Title" Type="String">Male 23.4 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244564</Item> 			
+				<Item Name="Title" Type="String">Male 69.2 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244571</Item> 			
+				<Item Name="Title" Type="String">Male 75.1 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244574</Item> 			
+				<Item Name="Title" Type="String">Female 21.5 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244577</Item> 			
+				<Item Name="Title" Type="String">Female 22.5 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244580</Item> 			
+				<Item Name="Title" Type="String">Female 71.4 yr after antibody enrichment scan 2 (U133A)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244587</Item> 			
+				<Item Name="Title" Type="String">Male 25.2 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244590</Item> 			
+				<Item Name="Title" Type="String">Male 26.2 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244593</Item> 			
+				<Item Name="Title" Type="String">Male 21.5 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244596</Item> 			
+				<Item Name="Title" Type="String">Male 68.4 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244600</Item> 			
+				<Item Name="Title" Type="String">Male 71.2 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244603</Item> 			
+				<Item Name="Title" Type="String">Female 24.4 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244606</Item> 			
+				<Item Name="Title" Type="String">Female 20.1 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244609</Item> 			
+				<Item Name="Title" Type="String">Female 70.7 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244616</Item> 			
+				<Item Name="Title" Type="String">Female 67.9 yr before antibody enrichment scan 1 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244619</Item> 			
+				<Item Name="Title" Type="String">Male 24.2 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244622</Item> 			
+				<Item Name="Title" Type="String">Male 25.1 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244625</Item> 			
+				<Item Name="Title" Type="String">Male 69.6 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244632</Item> 			
+				<Item Name="Title" Type="String">Female 23.5 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244635</Item> 			
+				<Item Name="Title" Type="String">Female 26.5 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244638</Item> 			
+				<Item Name="Title" Type="String">Female 29.8 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM244641</Item> 			
+				<Item Name="Title" Type="String">Female 66.6 yr after antibody enrichment scan 2 (U133B)</Item> 		
+			</Item> 	
+		</Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">120</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"> 		
+			<Item Name="int" Type="Integer">18167544</Item> 	
+		</Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>200000674</Id> 	
+		<Item Name="GDS" Type="String">472;473</Item> 	
+		<Item Name="title" Type="String">Normal Muscle - Female , Effect of Age</Item> 	
+		<Item Name="summary" Type="String">Healthy younger (20-29 yr) and older (65-71 yr) women donated vastus lateralis muscle under standard conditions. Keywords = muscle Keywords = aging Keywords: time-course</Item> 	
+		<Item Name="GPL" Type="String">97;96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSE</Item> 	
+		<Item Name="gdsType" Type="String">Expression profiling by array</Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10359</Item> 			
+				<Item Name="Title" Type="String">C4-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10362</Item> 			
+				<Item Name="Title" Type="String">C7-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10365</Item> 			
+				<Item Name="Title" Type="String">D3-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10368</Item> 			
+				<Item Name="Title" Type="String">D5-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10375</Item> 			
+				<Item Name="Title" Type="String">C2-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10378</Item> 			
+				<Item Name="Title" Type="String">C6-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10381</Item> 			
+				<Item Name="Title" Type="String">D1-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10384</Item> 			
+				<Item Name="Title" Type="String">D4-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10388</Item> 			
+				<Item Name="Title" Type="String">D7-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10356</Item> 			
+				<Item Name="Title" Type="String">C3-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10363</Item> 			
+				<Item Name="Title" Type="String">D1-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10366</Item> 			
+				<Item Name="Title" Type="String">D4-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10369</Item> 			
+				<Item Name="Title" Type="String">D6-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10379</Item> 			
+				<Item Name="Title" Type="String">C8-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10382</Item> 			
+				<Item Name="Title" Type="String">D2-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10385</Item> 			
+				<Item Name="Title" Type="String">D8-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10354</Item> 			
+				<Item Name="Title" Type="String">C1-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10360</Item> 			
+				<Item Name="Title" Type="String">C6-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10367</Item> 			
+				<Item Name="Title" Type="String">D8-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10370</Item> 			
+				<Item Name="Title" Type="String">D7-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10376</Item> 			
+				<Item Name="Title" Type="String">C3-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10383</Item> 			
+				<Item Name="Title" Type="String">D3-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10386</Item> 			
+				<Item Name="Title" Type="String">D5-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10355</Item> 			
+				<Item Name="Title" Type="String">C2-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10361</Item> 			
+				<Item Name="Title" Type="String">C8-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10364</Item> 			
+				<Item Name="Title" Type="String">D2-U133B</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10374</Item> 			
+				<Item Name="Title" Type="String">C1-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10377</Item> 			
+				<Item Name="Title" Type="String">C4-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10380</Item> 			
+				<Item Name="Title" Type="String">C7-U133A</Item> 		
+			</Item> 		
+			<Item Name="Sample" Type="Structure"> 			
+				<Item Name="Accession" Type="String">GSM10387</Item> 			
+				<Item Name="Title" Type="String">D6-U133A</Item> 		
+			</Item> 	
+		</Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">30</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"> 		
+			<Item Name="int" Type="Integer">15036396</Item> 	
+		</Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>100000096</Id> 	
+		<Item Name="GDS" Type="String">266;268;287;289;395;420;472;483;484;493;505;513;525;534;536;552;556;559;561;562;564;596;649;686;690;731;737;738;748;756;761;785;810;820;826;834;855;858;860;885;901;906;916;917;940;946;962;987;992;999;1023;1036;1050;1062;1063;1064;1065;1067;1096;1204;1209;1215;1220;1230;1250;1253;1257;1282;1284;1286;1287;1288;1295;1304;1312;1313;1314;1317;1321;1324;1325;1326;1327;1329;1331;1333;1340;1353;1362;1373;1375;1376;1380;1384;1390;1392;1397;1401;1405;1414;1423;1438;1447;1453;1476;1477;1478;1479;1480;1499;1503;1505;1542;1543;1548;1549;1584;1615;1618;1630;1637;1663;1664;1672;1684;1688;1713;1736;1746;1750;1758;1780;1783;1791;1806;1815;1841;1850;1873;1886;1902;1925;1926;1942;1956;1965;1972;1975;1979;2007;2008;2014;2021;2039;2042;2045;2049;2055;2057;2084;2086;2090;2095;2096;2097;2110;2113;2142;2153;2168;2175;2190;2191;2193;2200;2201;2205;2214;2239;2241;2244;2245;2246;2255;2287;2297;2323;2324;2332;2333;2341;2358;2362;2366;2367;2373;2378;2381;2395;2397;2428;2429;2444;2445;2446;2490;2493;2494;2501;2516;2518;2519;2528;2530;2536;2617;2623;2643;2649;2655;2682;2705;2723;2732;2736;2744;2756;2758;2763;2767;2770;2771;2777;2781;2787;2791;2810;2833;2847;2852;2861;2864;2865;2868;2880;2904;2908;2921;2922;2930;2933;2938;2941;2952;2954;2978;2988;3005;3012;3027;3034;3042;3043;3044;3045;3046;3047;3048;3049;3051;3054;3057;3068;3069;3089;3096;3097;3110;3112;3115;3116;3124;3125;3126;3128;3139;3158;3181;3196;3203;3207;3211;3233;3257;3260;3262;3281;3291;3292;3312;3333;3383;3401;3417;3428;3439;3471;3472;3474;3483;3497;3514;3517;3523;3524;3525;3559;3568;3610;3631;3644;3694;3711;3716</Item> 	
+		<Item Name="title" Type="String">[HG-U133A] Affymetrix Human Genome U133A Array</Item> 	
+		<Item Name="summary" Type="String">Affymetrix submissions are typically submitted to GEO using the GEOarchive method described at http://www.ncbi.nlm.nih.gov/geo/info/geo_affy.html The U133 set includes 2 arrays with a total of 44928 entries and was indexed 29-Jan-2002. The set includes over 1,000,000 unique oligonucleotide features covering more than 39,000 transcript variants, which in turn represent greater than 33,000 of the best characterized human genes. Sequences were selected from GenBank, dbEST, and RefSeq. Sequence clusters were created from Build 133 of UniGene (April 20, 2001) and refined by analysis and comparison with a number of other publicly available databases including the Washington University EST trace repository and the University of California, Santa Cruz golden-path human genome database (April 2001 release). In addition, ESTs were analyzed for untrimmed low-quality sequence information, correct orientation, false priming, false clustering, alternative splicing and alternative polyadenylation. Keywords = high density oligonucleotide array Protocol: see manufacturer's web site</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">362;410;474;590;593;609;635;645;648;651;654;805;873;976;982;995;1017;1059;1133;1152;1159;1297;1300;1323;1377;1400;1432;1474;1551;1615;1644;1650;1657;1824;1869;2004;2110;2113;2152;2174;2222;2232;2248;2251;2280;2322;2328;2351;2386;2521;2531;2666;2724;2727;2990;3003;3061;3112;3167;3183;3524;3585;3726;3771;3790;3893;3996;4006;4025;4115;4131;4176;4292;4475;4565;4571;4780;4841;5220;5519;5580;5667;5808;5821;5824;5847;6011;6014;6146;6184;6236;6274;6322;6432;6477;6708;6740;6772;6814;6914;7007;7010;7103;7142;7148;7473;7524;7675;7765;7894;7929;8003;8096;8173;8218;8228;8286;8401;8440;8562;8633;8636;8694;8835;8970;9105;9118;9166;9182;9378;9574;9712;9773;9854;9963;9992;10024;10043;10072;10172;10255;10361;10435;10612;10615;10631;10760;11341;11467;11582;11769;11865;11907;11965;11971;12093;12585;12627;12630;12649;12800;12803;12839;12845;12945;13041;13083;13276;13411;13591;13597;14018;14108;14204;14230;14323;14471;14577;14722;14767;14882;14895;14943;15072;15641;16129;16746;17459;17475;17588;17601;17700;19027;19143;19397;19500;19699;19811;20168;20181;20194;20271;20602;20978;21122;21251;21254;21363;21987;22093;22369;22539;22597;22610;22639;24072;24506;24509;24634;24747;25055;25065;25136;25476;25724;26148;26903;28079;28497;29522;29788;430;475;620;649;655;658;674;951;973;1140;1147;1317;1343;1397;1410;1417;1420;1455;1462;1481;1542;1561;1577;1629;1638;1648;1722;1751;1764;1773;1786;1789;1802;1825;1844;1937;2111;2117;2149;2165;2175;2252;2294;2326;2361;2429;2448;2451;2461;2487;2503;2509;2525;2638;2699;2705;2715;2779;2859;2888;3113;3306;3589;3624;3769;3772;3788;3791;3794;3807;3823;3846;3868;3891;3910;3920;3926;3929;4045;4119;4209;4225;4228;4315;4392;4485;4527;4636;4646;4668;4845;4858;4922;5054;5057;5060;5099;5118;5144;5327;5388;5462;5542;5822;5999;6008;6015;6082;6095;6272;6365;6381;6481;6532;6596;6783;6786;6808;6927;7123;7146;7332;7355;7390;7403;7454;7930;8087;8113;8229;8441;8611;8730;8939;8987;9006;9080;9128;9218;9536;9662;9713;9716;9723;9874;9877;10089;10137;10320;10436;10526;10584;10783;10867;10957;11188;11342;11686;11908;11914;11943;12027;12306;12348;12396;12586;12685;12692;12708;12791;12907;12939;13280;13569;14244;14359;14555;14613;14764;14771;14816;14925;15648;15757;16014;16024;16088;16091;16554;16795;16972;17046;17078;17100;17354;17518;18026;18723;18736;18887;19147;19301;19610;20198;20262;20291;21252;21785;22601;22688;23112;23906;24185;25066;26325;26682;27556;29211;29561;473;643;646;653;656;659;685;781;923;939;974;1000;1045;1295;1318;1427;1456;1466;1716;1729;1774;1822;1845;1848;1922;1935;1993;2018;2034;2044;2060;2099;2144;2189;2208;2230;2240;2256;2449;2510;2513;2555;2603;2703;2712;2719;2725;2732;2770;2815;2841;2883;2918;2992;3005;3037;3040;3149;3185;3188;3204;3230;3268;3284;3297;3307;3320;3365;3410;3419;3506;3593;3737;3834;3911;4097;4271;4412;4425;4521;4550;4560;4563;4573;4592;4698;4717;4817;4852;4917;5090;5122;5180;5222;5370;5389;5392;5418;5450;5543;5553;5720;5839;5845;5967;6012;6205;6253;6263;6269;6324;6401;6565;6613;6883;7015;7021;7208;7429;7497;7529;7577;7670;7895;7956;8040;8515;8602;8650;8692;9116;9335;9476;9499;9569;9714;9936;9939;9971;10135;10212;10691;10935;11038;11089;11115;11121;11266;11812;11915;12021;12259;12288;12445;12484;12792;12815;12837;12860;12972;13017;13110;13168;13425;13496;13534;13586;13759;13785;14286;14543;14553;14630;14900;15215;15347;15456;15928;16102;16131;16494;16712;16873;17371;17602;17705;18155;18232;18965;19556;20163;20186;20292;20295;20314;20510;20700;21124;21648;21943;22470;22528;22991;23216;24128;24427;24514;25468;26712;26869;27155;28784;31014;409;567;647;650;657;660;666;846;907;981;994;997;1010;1036;1081;1132;1158;1264;1296;1299;1309;1364;1428;1460;1473;1518;1595;1682;1743;1801;1849;1955;2006;2067;2135;2138;2225;2238;2241;2299;2395;2405;2443;2450;2485;2504;2549;2639;2665;2668;2700;2742;2835;2912;2980;3166;3189;3218;3243;3308;3356;3378;3407;3446;3494;3529;3542;3780;3860;3912;3982;4069;4127;4133;4342;4570;4635;4667;4725;4731;4824;4840;4869;4885;4975;5007;5107;5117;5142;5168;5200;5258;5287;5364;5390;5406;5457;5788;5820;5846;6029;6280;6344;6569;6691;6710;6932;7009;7035;7054;7138;7144;7382;7803;7819;7893;8002;8166;8388;8397;8481;8510;8760;8879;8921;9397;9429;9676;9715;9750;9782;9827;9946;10097;10139;10161;10325;10438;10778;11450;11466;11482;11681;11691;11819;11855;11909;12237;12417;12517;12587;12645;12648;12668;12995;13471;13850;14020;14618;14795;14814;15103;15245;15460;15646;15653;15717;15852;16122;16334;16424;16716;17073;17195;17645;18005;19987;20151;20164;20437;20611;21947;22368;22529;22593;22886;23400;23988;24193;24598;25527;28107;29354;30517;30803</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GPL</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String">in situ oligonucleotide</Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2002/03/11</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"> 		
+			<Item Name="Relation" Type="Structure"> 			
+				<Item Name="RelationType" Type="String">Alternative to</Item> 			
+				<Item Name="TargetObject" Type="String">GPL4557</Item> 		
+			</Item> 		
+			<Item Name="Relation" Type="Structure"> 			
+				<Item Name="RelationType" Type="String">Alternative to</Item> 			
+				<Item Name="TargetObject" Type="String">GPL7566</Item> 		
+			</Item> 		
+			<Item Name="Relation" Type="Structure"> 			
+				<Item Name="RelationType" Type="String">Alternative to</Item> 			
+				<Item Name="TargetObject" Type="String">GPL9021</Item> 		
+			</Item> 		
+			<Item Name="Relation" Type="Structure"> 			
+				<Item Name="RelationType" Type="String">Alternative to</Item> 			
+				<Item Name="TargetObject" Type="String">GPL9741</Item> 		
+			</Item> 		
+			<Item Name="Relation" Type="Structure"> 			
+				<Item Name="RelationType" Type="String">Alternative to</Item> 			
+				<Item Name="TargetObject" Type="String">GPL10553</Item> 		
+			</Item> 	
+		</Item> 	
+		<Item Name="n_samples" Type="Integer">28956</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>100000097</Id> 	
+		<Item Name="GDS" Type="String">267;288;473;494;507;557;560;786;823;1051;1231;1258;1334;1481;1504;1557;1559;1816;1976;2009;2040;2054;2056;2058;2087;2143;2176;2298;2368;2382;2396;2430;2529;2618;2656;2745;2788;2834;2855;2881;3129;3308;3402;3475;3498;3560;3570</Item> 	
+		<Item Name="title" Type="String">[HG-U133B] Affymetrix Human Genome U133B Array</Item> 	
+		<Item Name="summary" Type="String">Affymetrix submissions are typically submitted to GEO using the GEOarchive method described at http://www.ncbi.nlm.nih.gov/projects/geo/info/geo_affy.html The U133 set includes 2 arrays with a total of 44928 entries and was indexed 29-Jan-2002. The set includes over 1,000,000 unique oligonucleotide features covering more than 39,000 transcript variants, which in turn represent greater than 33,000 of the best characterized human genes. Sequences were selected from GenBank, dbEST, and RefSeq. Sequence clusters were created from Build 133 of UniGene (April 20, 2001) and refined by analysis and comparison with a number of other publicly available databases including the Washington University EST trace repository and the University of California, Santa Cruz golden-path human genome database (April 2001 release). In addition, ESTs were analyzed for untrimmed low-quality sequence information, correct orientation, false priming, false clustering, alternative splicing and alternative polyadenylation. Keywords = high density oligonucleotide array Protocol: see manufacturer's web site</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674;1542;2326;2666;3772;3788;3791;3794;3823;3891;4636;4845;4858;4922;5099;6236;6532;9006;10436;10783;11914;11965;12839;14722;16024;620;781;1427;1456;1764;1848;2240;2510;2770;3284;3307;4412;4521;5553;5720;5999;6253;6565;6883;7015;8602;8650;8939;9569;11908;11915;12021;13017;13586;14771;19556;24427;473;907;1132;1299;1460;1466;1849;2138;2395;2980;3230;3378;3407;3494;3780;3860;4133;4271;4342;4824;4840;4975;6029;6280;6344;6569;7054;7382;7819;8397;9499;9676;9782;10691;10778;11681;11909;12417;16131;22529;25527;362;1152;1615;1657;2299;3218;3446;3771;3790;4131;4176;4571;4667;5667;7675;7765;10435;10438;10760;11907;14577;16129;21363;22886;23400</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GPL</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String">in situ oligonucleotide</Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2002/03/11</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"> 		
+			<Item Name="Relation" Type="Structure"> 			
+				<Item Name="RelationType" Type="String">Alternative to</Item> 			
+				<Item Name="TargetObject" Type="String">GPL9742</Item> 		
+			</Item> 	
+		</Item> 	
+		<Item Name="n_samples" Type="Integer">5164</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010388</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D7-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 67 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010387</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D6-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 66 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010386</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D5-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 68 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010385</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D8-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 68 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010384</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D4-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 65 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010383</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D3-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 66 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010382</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D2-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 71 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010381</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">D1-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 70 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010380</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">C7-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 22 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010379</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">C8-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 29 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010378</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">C6-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 20 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010377</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">C4-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 26 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010376</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">C3-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 21 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010375</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">C2-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 24 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010374</Id> 	
+		<Item Name="GDS" Type="String">472</Item> 	
+		<Item Name="title" Type="String">C1-U133A</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 23 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">96</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010370</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D7-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 67 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010369</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D6-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 66 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010368</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D5-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 68 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010367</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D8-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 68 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010366</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D4-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 65 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010365</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D3-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 66 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010364</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D2-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 71 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010363</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">D1-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 70 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010362</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">C7-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 22 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010361</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">C8-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 29 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010360</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">C6-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 20 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010359</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">C4-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 26 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010356</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">C3-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 21 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010355</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">C2-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 24 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+	<DocSum> 	
+		<Id>300010354</Id> 	
+		<Item Name="GDS" Type="String">473</Item> 	
+		<Item Name="title" Type="String">C1-U133B</Item> 	
+		<Item Name="summary" Type="String">vastus lateralis biopsy 23 yr old healthy female</Item> 	
+		<Item Name="GPL" Type="String">97</Item> 	
+		<Item Name="GSE" Type="String">674</Item> 	
+		<Item Name="taxon" Type="String">Homo sapiens</Item> 	
+		<Item Name="GSM_L" Type="String"></Item> 	
+		<Item Name="GSM_titles_L" Type="String"></Item> 	
+		<Item Name="entryType" Type="String">GSM</Item> 	
+		<Item Name="gdsType" Type="String"></Item> 	
+		<Item Name="ptechType" Type="String"></Item> 	
+		<Item Name="valType" Type="String"></Item> 	
+		<Item Name="SSInfo" Type="String"></Item> 	
+		<Item Name="subsetInfo" Type="String"></Item> 	
+		<Item Name="PDAT" Type="String">2003/09/22</Item> 	
+		<Item Name="suppFile" Type="String"></Item> 	
+		<Item Name="Samples" Type="List"></Item> 	
+		<Item Name="Relations" Type="List"></Item> 	
+		<Item Name="n_samples" Type="Integer">0</Item> 	
+		<Item Name="SeriesTitle" Type="String"></Item> 	
+		<Item Name="PlatformTitle" Type="String"></Item> 	
+		<Item Name="PlatformTaxa" Type="String"></Item> 	
+		<Item Name="SamplesTaxa" Type="String"></Item> 	
+		<Item Name="PubMedIds" Type="List"></Item> 	
+		<Item Name="Projects" Type="List"></Item> 
+	</DocSum>  
+</eSummaryResult> 

@@ -231,7 +231,12 @@ public class DatasetCombiner {
             String details = EutilFetch.fetch( "gds", seriesAccession, 100 );
             XPathFactory xf = XPathFactory.newInstance();
             XPath xpath = xf.newXPath();
-            XPathExpression xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
+
+            /*
+             * Get all Items of type GDS that are from a DocSum with an Item entryType of GDS.
+             */
+            XPathExpression xgds = xpath
+                    .compile( "/eSummaryResult/DocSum[Item/@Name=\"entryType\" and (Item=\"GDS\")]/Item[@Name=\"GDS\"][1]/text()" );
 
             DocumentBuilder builder = factory.newDocumentBuilder();
             StringInputStream sis = new StringInputStream( details );
@@ -240,8 +245,9 @@ public class DatasetCombiner {
             NodeList result = ( NodeList ) xgds.evaluate( document, XPathConstants.NODESET );
             for ( int i = 0; i < result.getLength(); i++ ) {
                 String nodeValue = result.item( i ).getNodeValue();
-                if ( nodeValue.contains( ";" ) ) continue; // FIXME I think my query isn't specific enough.
+                // if ( nodeValue.contains( ";" ) ) continue; //
                 associatedDatasetAccessions.add( "GDS" + nodeValue );
+                log.info( nodeValue );
             }
 
             return associatedDatasetAccessions;
