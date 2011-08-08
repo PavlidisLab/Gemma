@@ -149,7 +149,7 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
         } finally {
             try {
-                if ( ftpClient.isConnected() ) ftpClient.disconnect();
+                if ( ftpClient != null && ftpClient.isConnected() ) ftpClient.disconnect();
             } catch ( IOException e ) {
                 throw new RuntimeException( "Could not disconnect: " + e.getMessage() );
             }
