@@ -53,7 +53,7 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * Simple command line to load expression experiments, either singly or in batches defined on the command line or in a
  * file.
  * <p>
- * CAUTION: redundant with GeoLoaderCli.
+ * CAUTION: redundant with GeoLoaderCli. // this doesn't exist any more.
  * 
  * @author pavlidis
  * @version $Id$
@@ -101,8 +101,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private TwoChannelMissingValues tcmv;
 
     private boolean splitByPlatform = false;
-    private boolean allowSuperSeriesLoad = true;
-    private boolean allowSubSeriesLoad = true;
+    private boolean allowSuperSeriesLoad = false;
+    private boolean allowSubSeriesLoad = false;
     private boolean suppressPostProcessing = false;
 
     @Override
@@ -164,6 +164,10 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         addOption( OptionBuilder.withDescription( "Suppress postprocessing steps" ).create( "nopost" ) );
 
+        /*
+         * add 'allowsub/super' series option;
+         */
+        addOption( OptionBuilder.withDescription( "Allow sub/super series to be loaded" ).create( "allowsuper" ) );
     }
 
     /*
@@ -337,6 +341,9 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             force = true;
         }
 
+        this.allowSubSeriesLoad = hasOption( "allowsuper" );
+        this.allowSuperSeriesLoad = hasOption( "allowsuper" );
+
         if ( hasOption( "aggressive" ) ) {
             this.aggressive = true;
         }
@@ -352,11 +359,12 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         if ( hasOption( "splitByPlatform" ) ) {
             this.splitByPlatform = true;
             this.doMatching = false; // defensive
+        } else {
+            this.splitByPlatform = false;
+            this.doMatching = true;
         }
 
-        if ( hasOption( "nopost" ) ) {
-            this.suppressPostProcessing = true;
-        }
+        this.suppressPostProcessing = hasOption( "nopost" );
 
         this.eeService = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
         this.adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
