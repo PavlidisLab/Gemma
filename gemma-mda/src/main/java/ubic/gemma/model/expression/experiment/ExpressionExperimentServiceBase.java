@@ -124,7 +124,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
      */
-    public ExpressionExperiment findByAccession( final ubic.gemma.model.common.description.DatabaseEntry accession ) {
+    public Collection<ExpressionExperiment> findByAccession( final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         try {
             return this.handleFindByAccession( accession );
         } catch ( Throwable th ) {
@@ -857,7 +857,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * Performs the core logic for {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)}
      */
-    protected abstract ExpressionExperiment handleFindByAccession(
+    protected abstract Collection<ExpressionExperiment> handleFindByAccession(
             ubic.gemma.model.common.description.DatabaseEntry accession ) throws java.lang.Exception;
 
     /**

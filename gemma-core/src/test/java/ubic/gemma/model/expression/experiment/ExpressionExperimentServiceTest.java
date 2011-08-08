@@ -92,8 +92,9 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
         DatabaseEntry accessionEntry = DatabaseEntry.Factory.newInstance( ed );
         accessionEntry.setAccession( accession );
 
-        ExpressionExperiment expressionExperiment = expressionExperimentService.findByAccession( accessionEntry );
-        assertNotNull( expressionExperiment );
+        Collection<ExpressionExperiment> expressionExperiment = expressionExperimentService
+                .findByAccession( accessionEntry );
+        assertTrue( expressionExperiment.size() > 0 );
     }
 
     @Test

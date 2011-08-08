@@ -216,32 +216,20 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#findByAccession(int, String, ubic.gemma.model.common.description.DatabaseEntry)
      */
 
-    public ExpressionExperiment findByAccession( final int transform, final String queryString,
+    public Collection<ExpressionExperiment> findByAccession( final int transform, final String queryString,
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         List<String> argNames = new ArrayList<String>();
         List<Object> args = new ArrayList<Object>();
         args.add( accession );
         argNames.add( "accession" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
+        return new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        ExpressionExperiment result = null;
-
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ExpressionExperiment" + "' was found when executing query --> '"
-                            + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = ( ExpressionExperiment ) results.iterator().next();
-        }
-
-        result = ( ExpressionExperiment ) transformEntity( transform, result );
-        return result;
     }
 
     /**
      * @see ExpressionExperimentDao#findByAccession(int, ubic.gemma.model.common.description.DatabaseEntry)
      */
-    public ExpressionExperiment findByAccession( final int transform,
+    public Collection<ExpressionExperiment> findByAccession( final int transform,
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         return this.findByAccession( transform, "from ExpressionExperiment where accession=:accession", accession );
     }
@@ -249,7 +237,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByAccession(String, ubic.gemma.model.common.description.DatabaseEntry)
      */
-    public ExpressionExperiment findByAccession( final String queryString,
+    public Collection<ExpressionExperiment> findByAccession( final String queryString,
             final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         return this.findByAccession( TRANSFORM_NONE, queryString, accession );
     }
@@ -257,7 +245,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
      */
-    public ExpressionExperiment findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession ) {
+    public Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession ) {
         return this.findByAccession( TRANSFORM_NONE, accession );
     }
 

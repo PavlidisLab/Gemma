@@ -273,7 +273,7 @@ public class ExpressionExperimentServiceImpl extends
      * .common.description.DatabaseEntry)
      */
     @Override
-    protected ExpressionExperiment handleFindByAccession( DatabaseEntry accession ) throws Exception {
+    protected Collection<ExpressionExperiment> handleFindByAccession( DatabaseEntry accession ) throws Exception {
         return this.getExpressionExperimentDao().findByAccession( accession );
     }
 

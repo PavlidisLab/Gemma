@@ -277,8 +277,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
             }
 
             Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching,
-                    this.aggressive, this.splitByPlatform, this.allowSuperSeriesLoad,
-                    this.allowSubSeriesLoad );
+                    this.aggressive, this.splitByPlatform, this.allowSuperSeriesLoad, this.allowSubSeriesLoad );
 
             if ( !suppressPostProcessing ) {
                 postProcess( ees );
@@ -352,7 +351,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         if ( hasOption( "splitByPlatform" ) ) {
             this.splitByPlatform = true;
-            this.doMatching = false; //  defensive
+            this.doMatching = false; // defensive
         }
 
         if ( hasOption( "nopost" ) ) {
@@ -377,11 +376,13 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         ExternalDatabase geo = ExternalDatabase.Factory.newInstance();
         geo.setName( "GEO" );
         acDbe.setExternalDatabase( geo );
-        ExpressionExperiment existing = eeService.findByAccession( acDbe );
+        Collection<ExpressionExperiment> existing = eeService.findByAccession( acDbe );
 
-        if ( existing != null ) {
+        if ( !existing.isEmpty() ) {
             log.info( "Deleting existing version of " + accession );
-            eeService.delete( existing );
+            for ( ExpressionExperiment expressionExperiment : existing ) {
+                eeService.delete( expressionExperiment );
+            }
         }
     }
 
@@ -410,8 +411,8 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
 
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee,
-                new FilterConfig(), dataVectors );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
+                dataVectors );
         ExpressionDataSampleCorrelation.process( datamatrix, ee );
     }
 

@@ -101,8 +101,8 @@ public class GeoDatasetService extends AbstractGeoService {
     @SuppressWarnings("unchecked")
     @Override
     public Collection fetchAndLoad( String geoAccession, boolean loadPlatformOnly, boolean doSampleMatching,
-            boolean aggressiveQuantitationTypeRemoval, boolean splitByPlatform,
-            boolean allowSuperSeriesImport, boolean allowSubSeriesImport ) {
+            boolean aggressiveQuantitationTypeRemoval, boolean splitByPlatform, boolean allowSuperSeriesImport,
+            boolean allowSubSeriesImport ) {
 
         /*
          * We do this to get a fresh instantiation of GeoConverter (prototype scope)
@@ -251,10 +251,9 @@ public class GeoDatasetService extends AbstractGeoService {
             return; // that's okay, it might have been a GPL.
         }
         for ( DatabaseEntry entry : projectedAccessions ) {
-            ExpressionExperiment existing = expressionExperimentService.findByAccession( entry );
-            if ( existing != null ) {
-                String message = "There is already an expression experiment that matches " + entry.getAccession()
-                        + ", " + existing.getName();
+            Collection<ExpressionExperiment> existing = expressionExperimentService.findByAccession( entry );
+            if ( !existing.isEmpty() ) {
+                String message = "There is already an expression experiment that matches " + entry.getAccession();
                 log.info( message );
                 throw new AlreadyExistsInSystemException( message, existing );
             }

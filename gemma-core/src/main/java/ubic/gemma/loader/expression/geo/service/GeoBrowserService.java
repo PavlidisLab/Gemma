@@ -190,9 +190,11 @@ public class GeoBrowserService implements InitializingBean {
                 de.setExternalDatabase( geo );
                 de.setAccession( acc );
 
-                ExpressionExperiment ee = expressionExperimentService.findByAccession( de );
-                if ( ee != null ) {
-                    record.getCorrespondingExperiments().add( ee.getId() );
+                Collection<ExpressionExperiment> ee = expressionExperimentService.findByAccession( de );
+                if ( !ee.isEmpty() ) {
+                    for ( ExpressionExperiment expressionExperiment : ee ) {
+                        record.getCorrespondingExperiments().add( expressionExperiment.getId() );
+                    }
                 }
 
                 record.setPreviousClicks( localInfo.containsKey( acc ) ? localInfo.get( acc ).getPreviousClicks() : 0 );

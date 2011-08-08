@@ -78,9 +78,9 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 
     /**
-     * 
+     * There can be more than one if the experiment was split up.
      */
-    public ExpressionExperiment findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
+    public Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * <p>

@@ -173,27 +173,13 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ExpressionExperiment findByAccession( DatabaseEntry accession ) {
+    public Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession ) {
 
         DetachedCriteria crit = DetachedCriteria.forClass( ExpressionExperiment.class );
 
         BusinessKey.checkKey( accession );
         BusinessKey.attachCriteria( crit, accession, "accession" );
-
-        List results = this.getHibernateTemplate().findByCriteria( crit );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + ExpressionExperiment.class.getName()
-                                + "' was found when executing query for " + accession );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( ExpressionExperiment ) result;
-
+        return this.getHibernateTemplate().findByCriteria( crit );
     }
 
     /*

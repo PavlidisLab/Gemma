@@ -67,10 +67,11 @@ public interface ExpressionExperimentService {
 
     /**
      * @param accession
-     * @return
+     * @return Expeirments which have this accession. There can be more than one, because one GEO accesssion can result
+     *         in multiple experiments in Gemma.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExpressionExperiment findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * @param accession
