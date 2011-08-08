@@ -63,7 +63,7 @@ public class GeoGrabberCli extends AbstractSpringAwareCLI {
                     }
 
                     numnew++;
-                    System.err.println( geoRecord.getGeoAccession() + "\t" + geoRecord.getOrganisms().iterator().next()
+                    System.out.println( geoRecord.getGeoAccession() + "\t" + geoRecord.getOrganisms().iterator().next()
                             + "\t" + geoRecord.getNumSamples() + "\t" + geoRecord.getTitle() + "\t"
                             + StringUtils.join( geoRecord.getCorrespondingExperiments(), "," ) );
                     seen.add( geoRecord.getGeoAccession() );
