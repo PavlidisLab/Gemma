@@ -25,7 +25,6 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,12 +37,26 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hsqldb.lib.StringInputStream;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import ubic.basecode.math.StringDistance;
 import ubic.basecode.util.StringUtil;
+import ubic.gemma.loader.entrez.EutilFetch;
 import ubic.gemma.loader.expression.geo.model.GeoData;
 import ubic.gemma.loader.expression.geo.model.GeoDataset;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
@@ -203,63 +216,44 @@ public class DatasetCombiner {
 
     }
 
+    static DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
     /**
      * @param seriesAccession
      * @return GDSs that correspond to the given series. It will be empty if there is no GDS matching.
      */
     public static Collection<String> findGDSforGSE( String seriesAccession ) {
-        URL url = null;
+
         Collection<String> associatedDatasetAccessions = new HashSet<String>();
-        InputStream is = null;
+
         try {
 
-            Pattern pat = Pattern.compile( "(GDS\\d+)\\srecord" );
-            Pattern errorPat = Pattern.compile( "error", Pattern.CASE_INSENSITIVE );
-            url = new URL( ENTREZ_GEO_QUERY_URL_BASE + seriesAccession + ENTREZ_GEO_QUERY_URL_SUFFIX );
+            String details = EutilFetch.fetch( "gds", seriesAccession, 100 );
+            XPathFactory xf = XPathFactory.newInstance();
+            XPath xpath = xf.newXPath();
+            XPathExpression xgds = xpath.compile( "/eSummaryResult/DocSum/Item[@Name=\"GDS\"][1]/text()" );
 
-            URLConnection conn = url.openConnection();
-            conn.connect();
-            is = conn.getInputStream();
-            BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-            String line = null;
-            while ( ( line = br.readLine() ) != null ) {
-                Matcher mat = pat.matcher( line );
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            StringInputStream sis = new StringInputStream( details );
+            Document document = builder.parse( sis );
 
-                if ( mat.find() ) {
-                    String capturedAccession = mat.group( 1 );
-                    associatedDatasetAccessions.add( capturedAccession );
-                } else {
-                    Matcher errorMat = errorPat.matcher( line );
-                    /*
-                     * In case NCBI is alive, but busted, html is returned but with an error.
-                     */
-                    if ( errorMat.find() ) {
-
-                        /*
-                         * 'console.error' seems to be benign text in the page's js.
-                         */
-                        if ( !line.contains( "console.error" ) && !line.contains("class=\"error\"")) {
-                            // throw new IOException( "Error from NCBI: " + line );
-                            // until we know what errors look like.
-                            log.error( "Error from NCBI while fetching GDS? '" + line + "'" + " at " + url );
-                        }
-
-                    }
-                }
+            NodeList result = ( NodeList ) xgds.evaluate( document, XPathConstants.NODESET );
+            for ( int i = 0; i < result.getLength(); i++ ) {
+                String nodeValue = result.item( i ).getNodeValue();
+                if ( nodeValue.contains( ";" ) ) continue; // FIXME I think my query isn't specific enough.
+                associatedDatasetAccessions.add( "GDS" + nodeValue );
             }
+
             return associatedDatasetAccessions;
-        } catch ( MalformedURLException e ) {
-            throw new RuntimeException( "Invalid URL " + url, e );
-        } catch ( UnknownHostException e ) {
-            throw new RuntimeException( "Could not connect to remote server", e );
+
         } catch ( IOException e ) {
-            throw new RuntimeException( "Could not get data from remote server", e );
-        } finally {
-            if ( is != null ) try {
-                is.close();
-            } catch ( IOException e ) {
-                throw new RuntimeException( "Could not close stream", e );
-            }
+            throw new RuntimeException( "Could not parse XML data from remote server", e );
+        } catch ( XPathExpressionException e ) {
+            throw new RuntimeException( "XML parsing error of remote data", e );
+        } catch ( ParserConfigurationException e ) {
+            throw new RuntimeException( "XML parsing error of remote data", e );
+        } catch ( SAXException e ) {
+            throw new RuntimeException( "XML parsing error of remote data", e );
         }
     }
 

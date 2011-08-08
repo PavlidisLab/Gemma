@@ -51,6 +51,7 @@ public class DatasetCombinerTest {
     public void testFindGDSGrouping() throws Exception {
         try {
             Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE674" );
+            assertEquals( 2, result.size() );
             assertTrue( result.contains( "GDS472" ) && result.contains( "GDS473" ) );
         } catch ( RuntimeException e ) {
             if ( e.getCause() instanceof java.net.UnknownHostException ) {
@@ -58,6 +59,7 @@ public class DatasetCombinerTest {
                 return;
             } else if ( e.getCause() instanceof java.io.IOException && e.getCause().getMessage().contains( "503" ) ) {
                 log.warn( "Test skipped due to 503 from NCBI" );
+                log.error( e, e );
                 return;
             }
             throw e;
