@@ -3,7 +3,6 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 import java.util.HashSet;
 
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
@@ -20,11 +19,11 @@ public abstract class EvidenceValueObject {
 
     private String name = "";
     private String description = "";
-    private String characteristic = "";
-    private GOEvidenceCode evidenceCode = null;
+    private CharacteristicValueObject associationType = null;
+    private String evidenceCode = null;
     private Boolean isNegativeEvidence = false;
 
-    private Collection<String> phenotypes = null;
+    private Collection<CharacteristicValueObject> phenotypes = null;
 
     /**
      * Convert an collection of evidence entities to their corresponding value objects
@@ -60,6 +59,7 @@ public abstract class EvidenceValueObject {
                 } else if ( phe instanceof ExternalDatabaseEvidence ) {
                     evidence = new ExternalDatabaseEvidenceValueObject( ( ExternalDatabaseEvidence ) phe );
                     returnEvidences.add( evidence );
+                    // TODO
                 } else if ( phe instanceof DifferentialExpressionEvidence ) {
                     // TODO
                 }
@@ -75,66 +75,33 @@ public abstract class EvidenceValueObject {
         this.databaseId = phenotypeAssociation.getId();
         this.name = phenotypeAssociation.getName();
         this.description = phenotypeAssociation.getDescription();
-        this.evidenceCode = phenotypeAssociation.getEvidenceCode();
+        this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
         if ( phenotypeAssociation.getAssociationType() != null ) {
-            this.characteristic = phenotypeAssociation.getAssociationType().getValue();
+
+            String category = phenotypeAssociation.getAssociationType().getCategory();
+            String value = phenotypeAssociation.getAssociationType().getValue();
+
+            this.associationType = new CharacteristicValueObject( category, value );
         }
-        phenotypes = new HashSet<String>();
+        phenotypes = new HashSet<CharacteristicValueObject>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
-            phenotypes.add( c.getValue() );
+
+            CharacteristicValueObject characteristicVO = new CharacteristicValueObject( c.getCategory(), c.getValue() );
+
+            phenotypes.add( characteristicVO );
         }
     }
 
-    protected EvidenceValueObject( String name, String description, String characteristic, Boolean isNegativeEvidence,
-            GOEvidenceCode evidenceCode, Collection<String> phenotypes ) {
+    protected EvidenceValueObject( String name, String description, CharacteristicValueObject associationType,
+            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes ) {
         super();
         this.name = name;
         this.description = description;
-        this.characteristic = characteristic;
+        this.associationType = associationType;
         this.evidenceCode = evidenceCode;
         this.isNegativeEvidence = isNegativeEvidence;
-        this.phenotypes = phenotypes;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName( String name ) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    public GOEvidenceCode getEvidenceCode() {
-        return evidenceCode;
-    }
-
-    public void setEvidenceCode( GOEvidenceCode evidenceCode ) {
-        this.evidenceCode = evidenceCode;
-    }
-
-    public Boolean isNegativeEvidence() {
-        return isNegativeEvidence;
-    }
-
-    public void setIsNegativeEvidence( Boolean isNegativeEvidence ) {
-        this.isNegativeEvidence = isNegativeEvidence;
-    }
-
-    public Collection<String> getPhenotypes() {
-        return phenotypes;
-    }
-
-    public void setPhenotypes( Collection<String> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
@@ -142,20 +109,28 @@ public abstract class EvidenceValueObject {
         return databaseId;
     }
 
-    public void setDatabaseId( Long databaseId ) {
-        this.databaseId = databaseId;
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public CharacteristicValueObject getAssociationType() {
+        return associationType;
+    }
+
+    public String getEvidenceCode() {
+        return evidenceCode;
     }
 
     public Boolean getIsNegativeEvidence() {
         return isNegativeEvidence;
     }
 
-    public String getCharacteristic() {
-        return characteristic;
-    }
-
-    public void setCharacteristic( String characteristic ) {
-        this.characteristic = characteristic;
+    public Collection<CharacteristicValueObject> getPhenotypes() {
+        return phenotypes;
     }
 
 }

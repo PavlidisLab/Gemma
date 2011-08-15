@@ -3,17 +3,16 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 
 import ubic.gemma.model.DatabaseEntryValueObject;
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 
 public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
 
     private DatabaseEntryValueObject databaseEntryValueObject = null;
 
-    public ExternalDatabaseEvidenceValueObject( String name, String description, String characteristic,
-            Boolean isNegativeEvidence, GOEvidenceCode evidenceCode, Collection<String> characteristics,
-            DatabaseEntryValueObject databaseEntryValueObject ) {
-        super( name, description, characteristic, isNegativeEvidence, evidenceCode, characteristics );
+    public ExternalDatabaseEvidenceValueObject( String name, String description,
+            CharacteristicValueObject associationType, Boolean isNegativeEvidence, String evidenceCode,
+            Collection<CharacteristicValueObject> phenotypes, DatabaseEntryValueObject databaseEntryValueObject ) {
+        super( name, description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.databaseEntryValueObject = databaseEntryValueObject;
     }
 

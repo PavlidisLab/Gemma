@@ -14,11 +14,11 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -32,9 +32,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private PhenotypeAssociationManagerService phenoAssoService;
 
     private String geneNCBI = "";
-    private Collection<String> phenotypes = null;
     private UrlEvidenceValueObject evidence = null;
-    private String phenotypeValue = "GOTestPhenotype";
+    private String phenotypeValue = "";
+    private String phenotypeCategory = "";
+    private Collection<CharacteristicValueObject> phenotypes = null;
 
     @Before
     public void setup() {
@@ -42,12 +43,16 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // Gene NCBI used
         geneNCBI = "44444444";
         // Phenotype
-        phenotypeValue = "testPhenotype";
-        phenotypes = new HashSet<String>();
-        phenotypes.add( phenotypeValue );
+        phenotypeValue = "testValue";
+        phenotypeCategory = "testCategory";
+
         // Evidence
-        evidence = new UrlEvidenceValueObject( "test_name", "test_description", "test_caracteristic", false,
-                GOEvidenceCode.fromString( "IC" ), phenotypes, "www.test.com" );
+        CharacteristicValueObject phenotype = new CharacteristicValueObject( phenotypeValue, phenotypeCategory );
+        phenotypes = new HashSet<CharacteristicValueObject>();
+        phenotypes.add( phenotype );
+
+        evidence = new UrlEvidenceValueObject( "test_name", "test_description", null, false, "IC", phenotypes,
+                "www.test.com" );
 
         // Make sure a Gene exist in the database with the NCBI id
         makeGene( geneNCBI );
@@ -123,8 +128,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
                     + evidence.getDescription() );
             System.out.println( "With phenotypes: " );
 
-            for ( String value : evidence.getPhenotypes() ) {
-                System.out.println( "Value :" + value );
+            for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
+                System.out.println( "Value :" + phenotype.getValue() );
 
             }
             System.out.println();
@@ -151,8 +156,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
                         + evidence.getDescription() );
                 System.out.println( "With phenotypes: " );
 
-                for ( String value : evidence.getPhenotypes() ) {
-                    System.out.println( "Value :" + value );
+                for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
+                    System.out.println( "Value :" + phenotype.getValue() );
 
                 }
                 System.out.println();

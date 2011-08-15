@@ -385,8 +385,18 @@ public class OntologyService implements InitializingBean {
         return birnLexOntologyService;
     }
 
+    /**
+     * @return the NIFSTDOntologyService
+     */
     public NIFSTDOntologyService getNifstfOntologyService() {
         return nifstdOntologyService;
+    }
+
+    /**
+     * @return the HumanPhenotypeOntologyService
+     */
+    public HumanPhenotypeOntologyService getHumanPhenotypeOntologyService() {
+        return humanPhenotypeOntologyService;
     }
 
     /**
@@ -415,6 +425,20 @@ public class OntologyService implements InitializingBean {
      */
     public MgedOntologyService getMgedOntologyService() {
         return mgedOntologyService;
+    }
+
+    /**
+     * @return the MammalianPhenotypeOntologyService for the specified URI
+     */
+    public MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService() {
+        return mammalianPhenotypeOntologyService;
+    }
+
+    /**
+     * @return the ObiService for the specified URI
+     */
+    public ObiService getObiService() {
+        return obiService;
     }
 
     /**

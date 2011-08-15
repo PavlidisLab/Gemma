@@ -7,7 +7,7 @@ public class CharacteristicValueObject {
 
     private String value = "";
 
-    public CharacteristicValueObject( String category, String value ) {
+    public CharacteristicValueObject( String value, String category ) {
         this.category = category;
         this.value = value;
     }

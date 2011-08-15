@@ -2,7 +2,6 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 
 public class LiteratureEvidenceValueObject extends EvidenceValueObject {
@@ -11,9 +10,10 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
     private BibliographicReferenceValueObject bibliographicReferenceValueObject = null;
 
-    public LiteratureEvidenceValueObject( String name, String description, String characteristic,
-            Boolean isNegativeEvidence, GOEvidenceCode evidenceCode, Collection<String> characteristics, String pubmedID ) {
-        super( name, description, characteristic, isNegativeEvidence, evidenceCode, characteristics );
+    public LiteratureEvidenceValueObject( String name, String description, CharacteristicValueObject associationType,
+            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
+            String pubmedID ) {
+        super( name, description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.pubmedID = pubmedID;
     }
 

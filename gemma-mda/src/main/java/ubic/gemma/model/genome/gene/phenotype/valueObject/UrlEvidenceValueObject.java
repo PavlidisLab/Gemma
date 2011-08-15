@@ -2,7 +2,6 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 
-import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.UrlEvidence;
 
 /** Value object representing an url evidence */
@@ -18,9 +17,10 @@ public class UrlEvidenceValueObject extends EvidenceValueObject {
         this.url = url;
     }
 
-    public UrlEvidenceValueObject( String name, String description, String characteristic, Boolean isNegativeEvidence,
-            GOEvidenceCode evidenceCode, Collection<String> characteristics, String url ) {
-        super( name, description, characteristic, isNegativeEvidence, evidenceCode, characteristics );
+    public UrlEvidenceValueObject( String name, String description, CharacteristicValueObject associationType,
+            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
+            String url ) {
+        super( name, description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.url = url;
     }
 

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
@@ -28,6 +29,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseEviden
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
+import ubic.gemma.persistence.PersisterHelper;
 
 /** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
 @Component
@@ -41,6 +43,9 @@ public class PhenotypeAssoManagerServiceHelper {
 
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;
+
+    @Autowired
+    private PersisterHelper persisterHelper;
 
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
@@ -175,11 +180,11 @@ public class PhenotypeAssoManagerServiceHelper {
         // characteristic
         Collection<Characteristic> characteristics = null;
 
-        if ( evidenceValueObject.getTags() != null ) {
+        if ( evidenceValueObject.getExperimentCharacteristics() != null ) {
 
             characteristics = new HashSet<Characteristic>();
 
-            for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getTags() ) {
+            for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getExperimentCharacteristics() ) {
 
                 Characteristic tag = Characteristic.Factory.newInstance();
 
@@ -209,27 +214,29 @@ public class PhenotypeAssoManagerServiceHelper {
 
         // TODO
         phe.setDescription( evidenceValueObject.getDescription() );
-        phe.setEvidenceCode( evidenceValueObject.getEvidenceCode() );
+
+        phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
         phe.setName( evidenceValueObject.getName() );
 
         // TODO how to set up correct AssociationType
-        VocabCharacteristic associationType = VocabCharacteristic.Factory.newInstance();
-        associationType.setValue( evidenceValueObject.getCharacteristic() );
-        // we need a category ???? how does it work
-        phe.setAssociationType( associationType );
+        if ( evidenceValueObject.getAssociationType() != null ) {
+            VocabCharacteristic associationType = VocabCharacteristic.Factory.newInstance();
+            associationType.setValue( evidenceValueObject.getAssociationType().getValue() );
+            associationType.setCategory( evidenceValueObject.getAssociationType().getCategory() );
 
+            phe.setAssociationType( associationType );
+        }
         // here lets add the phenotypes
         Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
 
-        for ( String phenotype : evidenceValueObject.getPhenotypes() ) {
+        for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
 
             // TODO how to set up correct phenotype
             VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
 
-            // example http://purl.org/obo/owl/DOID#DOID_1969
-            myPhenotype.setValueUri( phenotype );
-            myPhenotype.setValue( phenotype.substring( phenotype.indexOf( "#" ) + 1 ) );
+            myPhenotype.setValue( phenotype.getValue() );
+            myPhenotype.setCategory( phenotype.getCategory() );
 
             myPhenotypes.add( myPhenotype );
         }
@@ -271,7 +278,9 @@ public class PhenotypeAssoManagerServiceHelper {
             bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
             // TODO make sure those pubmed id exists
 
-            bibliographicReferenceService.create( bibRef );
+            // this will create or find the BibliographicReference
+            persisterHelper.persist( bibRef );
+
         }
 
         return bibRef;
