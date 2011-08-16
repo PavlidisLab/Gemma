@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
@@ -27,6 +29,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
     private UrlEvidenceDao urlDao;
+    
+    @Autowired
+    private GeneService geneService;
 
     @Autowired
     private PhenotypeAssociationManagerService phenoAssoService;
@@ -56,6 +61,11 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         // Make sure a Gene exist in the database with the NCBI id
         makeGene( geneNCBI );
+    }
+    
+    @After
+    public void tearDown() {
+        geneService.remove( geneService.findByNCBIId( geneNCBI ) );
     }
 
     @Test
@@ -181,9 +191,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         g.setOfficialSymbol( "RAT1" );
         g.setNcbiId( ncbiId );
         g.setTaxon( rat );
-        List<GeneProduct> ggg = new ArrayList<GeneProduct>();
-        ggg.add( super.getTestPersistentGeneProduct( g ) );
-        g.setProducts( ggg );
+        List<GeneProduct> geneProducts = new ArrayList<GeneProduct>();
+        geneProducts.add( super.getTestPersistentGeneProduct( g ) );
+        g.setProducts( geneProducts );
         g = ( Gene ) persisterHelper.persist( g );
         return g;
     }
