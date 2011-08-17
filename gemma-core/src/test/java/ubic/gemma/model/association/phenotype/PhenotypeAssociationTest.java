@@ -29,7 +29,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
     private UrlEvidenceDao urlDao;
-    
+
     @Autowired
     private GeneService geneService;
 
@@ -56,13 +56,12 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         phenotypes = new HashSet<CharacteristicValueObject>();
         phenotypes.add( phenotype );
 
-        evidence = new UrlEvidenceValueObject( "test_name", "test_description", null, false, "IC", phenotypes,
-                "www.test.com" );
+        evidence = new UrlEvidenceValueObject( "test_description", null, false, "IC", phenotypes, "www.test.com" );
 
         // Make sure a Gene exist in the database with the NCBI id
         makeGene( geneNCBI );
     }
-    
+
     @After
     public void tearDown() {
         geneService.remove( geneService.findByNCBIId( geneNCBI ) );
@@ -134,8 +133,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
         for ( EvidenceValueObject evidence : geneInfoValueObject.getEvidences() ) {
 
-            System.out.println( "Found evidence: " + evidence.getDatabaseId() + "   " + evidence.getName() + "   "
-                    + evidence.getDescription() );
+            System.out.println( "Found evidence: " + evidence.getDatabaseId() + "   " + evidence.getDescription() );
             System.out.println( "With phenotypes: " );
 
             for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
@@ -162,8 +160,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
             for ( EvidenceValueObject evidence : geneInfoValueObject.getEvidences() ) {
 
-                System.out.println( "Found evidence: " + evidence.getDatabaseId() + "   " + evidence.getName() + "   "
-                        + evidence.getDescription() );
+                System.out.println( "Found evidence: " + evidence.getDatabaseId() + "   " + evidence.getDescription() );
                 System.out.println( "With phenotypes: " );
 
                 for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
@@ -191,9 +188,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         g.setOfficialSymbol( "RAT1" );
         g.setNcbiId( ncbiId );
         g.setTaxon( rat );
-        List<GeneProduct> geneProducts = new ArrayList<GeneProduct>();
-        geneProducts.add( super.getTestPersistentGeneProduct( g ) );
-        g.setProducts( geneProducts );
+        List<GeneProduct> ggg = new ArrayList<GeneProduct>();
+        ggg.add( super.getTestPersistentGeneProduct( g ) );
+        g.setProducts( ggg );
         g = ( Gene ) persisterHelper.persist( g );
         return g;
     }

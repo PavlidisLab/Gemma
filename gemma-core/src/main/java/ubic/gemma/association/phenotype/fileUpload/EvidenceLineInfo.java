@@ -1,9 +1,22 @@
 package ubic.gemma.association.phenotype.fileUpload;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+
 /** This represents one line from the tsv file in a simple object */
-public class PhenoAssoLineInfo {
+public class EvidenceLineInfo {
 
     // used the mgedOntologyService to get those values (defined structure)
+    public final static String DEVELOPMENTAL_STAGE = "DevelopmentalStage";
+    public final static String BIOSOURCE = "BioSource";
+    public final static String ORGANISM_PART = "OrganismPart";
+    public final static String EXPERIMENT_DESIGN = "ExperimentDesign";
+    public final static String TREATMENT = "Treatment";
+    public final static String EXPERIMENT = "Experiment";
+    public final static String PHENOTYPE = "Phenotype";
+
     public final static String DEVELOPMENTAL_STAGE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#DevelopmentalStage";
     public final static String BIOSOURCE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioSource";
     public final static String ORGANISM_PART_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#OrganismPart";
@@ -19,7 +32,7 @@ public class PhenoAssoLineInfo {
     private String comment = "";
     private String associationType = null;
 
-    // All characteristics
+    // All characteristics taken from file
     private String[] developmentStage = null;
     private String[] bioSource = null;
     private String[] organismPart = null;
@@ -28,7 +41,11 @@ public class PhenoAssoLineInfo {
     private String[] experimentOBI = null;
     private String[] phenotype = null;
 
-    public PhenoAssoLineInfo( String line ) {
+    // What will populate the Evidences
+    private Collection<CharacteristicValueObject> experimentCharacteristics = new ArrayList<CharacteristicValueObject>();
+    private Collection<CharacteristicValueObject> phenotypes = new ArrayList<CharacteristicValueObject>();
+
+    public EvidenceLineInfo( String line ) {
 
         String[] tokens = line.split( "\t" );
         geneID = tokens[0].trim();
@@ -160,6 +177,30 @@ public class PhenoAssoLineInfo {
 
     public void setExperimentOBI( String[] experimentOBI ) {
         this.experimentOBI = experimentOBI;
+    }
+
+    public Collection<CharacteristicValueObject> getExperimentCharacteristics() {
+        return experimentCharacteristics;
+    }
+
+    public void setExperimentCharacteristics( Collection<CharacteristicValueObject> experimentCharacteristics ) {
+        this.experimentCharacteristics = experimentCharacteristics;
+    }
+
+    public void addExperimentCharacteristic( CharacteristicValueObject experimentCharacteristic ) {
+        experimentCharacteristics.add( experimentCharacteristic );
+    }
+
+    public Collection<CharacteristicValueObject> getPhenotypes() {
+        return phenotypes;
+    }
+
+    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
+        this.phenotypes = phenotypes;
+    }
+
+    public void addPhenotype( CharacteristicValueObject phenotype ) {
+        phenotypes.add( phenotype );
     }
 
 }

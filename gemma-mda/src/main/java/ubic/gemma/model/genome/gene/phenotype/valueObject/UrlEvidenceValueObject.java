@@ -17,10 +17,10 @@ public class UrlEvidenceValueObject extends EvidenceValueObject {
         this.url = url;
     }
 
-    public UrlEvidenceValueObject( String name, String description, CharacteristicValueObject associationType,
+    public UrlEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
             String url ) {
-        super( name, description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.url = url;
     }
 

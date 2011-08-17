@@ -9,10 +9,10 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
 
     private DatabaseEntryValueObject databaseEntryValueObject = null;
 
-    public ExternalDatabaseEvidenceValueObject( String name, String description,
-            CharacteristicValueObject associationType, Boolean isNegativeEvidence, String evidenceCode,
-            Collection<CharacteristicValueObject> phenotypes, DatabaseEntryValueObject databaseEntryValueObject ) {
-        super( name, description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
+    public ExternalDatabaseEvidenceValueObject( String description, CharacteristicValueObject associationType,
+            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
+            DatabaseEntryValueObject databaseEntryValueObject ) {
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.databaseEntryValueObject = databaseEntryValueObject;
     }
 

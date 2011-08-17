@@ -10,10 +10,10 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
     private BibliographicReferenceValueObject bibliographicReferenceValueObject = null;
 
-    public LiteratureEvidenceValueObject( String name, String description, CharacteristicValueObject associationType,
+    public LiteratureEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
             String pubmedID ) {
-        super( name, description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.pubmedID = pubmedID;
     }
 

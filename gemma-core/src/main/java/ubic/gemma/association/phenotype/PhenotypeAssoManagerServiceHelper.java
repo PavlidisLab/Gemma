@@ -186,12 +186,14 @@ public class PhenotypeAssoManagerServiceHelper {
 
             for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getExperimentCharacteristics() ) {
 
-                Characteristic tag = Characteristic.Factory.newInstance();
+                VocabCharacteristic experimentCha = VocabCharacteristic.Factory.newInstance();
 
-                tag.setCategory( chaValueObject.getCategory() );
-                tag.setValue( chaValueObject.getValue() );
+                experimentCha.setValue( chaValueObject.getValue() );
+                experimentCha.setCategory( chaValueObject.getCategory() );
+                experimentCha.setValueUri( chaValueObject.getValueUri() );
+                experimentCha.setCategoryUri( chaValueObject.getCategoryUri() );
 
-                characteristics.add( tag );
+                characteristics.add( experimentCha );
             }
         }
 
@@ -217,13 +219,14 @@ public class PhenotypeAssoManagerServiceHelper {
 
         phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
-        phe.setName( evidenceValueObject.getName() );
 
-        // TODO how to set up correct AssociationType
         if ( evidenceValueObject.getAssociationType() != null ) {
             VocabCharacteristic associationType = VocabCharacteristic.Factory.newInstance();
+
             associationType.setValue( evidenceValueObject.getAssociationType().getValue() );
             associationType.setCategory( evidenceValueObject.getAssociationType().getCategory() );
+            associationType.setValueUri( evidenceValueObject.getAssociationType().getValueUri() );
+            associationType.setCategoryUri( evidenceValueObject.getAssociationType().getCategoryUri() );
 
             phe.setAssociationType( associationType );
         }
@@ -237,6 +240,8 @@ public class PhenotypeAssoManagerServiceHelper {
 
             myPhenotype.setValue( phenotype.getValue() );
             myPhenotype.setCategory( phenotype.getCategory() );
+            myPhenotype.setValueUri( phenotype.getValueUri() );
+            myPhenotype.setCategoryUri( phenotype.getCategoryUri() );
 
             myPhenotypes.add( myPhenotype );
         }

@@ -24,11 +24,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     private BibliographicReferenceValueObject primaryPublicationValueObject = null;
     private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = null;
 
-    public ExperimentalEvidenceValueObject( String name, String description, CharacteristicValueObject associationType,
+    public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
             String primaryPublication, Collection<String> relevantPublication,
             Collection<CharacteristicValueObject> experimentCharacteristics ) {
-        super( name, description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.primaryPublication = primaryPublication;
         this.relevantPublication = relevantPublication;
         this.experimentCharacteristics = experimentCharacteristics;
