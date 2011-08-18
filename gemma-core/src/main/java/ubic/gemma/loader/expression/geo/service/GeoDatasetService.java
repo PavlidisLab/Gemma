@@ -310,8 +310,6 @@ public class GeoDatasetService extends AbstractGeoService {
             }
         }
 
-        log.info( "Series now contains " + series.getSamples().size() + " (removed " + toSkip.size() + ")" );
-
         // update the description, so we keep some kind of record.
         if ( toSkip.size() > 0 ) {
             series.setSummaries( series.getSummaries() + "\nNote: " + toSkip.size()
@@ -324,6 +322,15 @@ public class GeoDatasetService extends AbstractGeoService {
             throw new AlreadyExistsInSystemException( "All the samples in " + series
                     + " are in the system already (in other ExpressionExperiments)" );
         }
+
+        if ( series.getSamples().size() < 2 /* we don't really have a lower limit set anywhere else */) {
+            throw new IllegalStateException(
+                    "After removing samples already in the system, this data set is too small to load: "
+                            + series.getSamples().size() + " left (removed " + toSkip.size() + ")" );
+        }
+
+        log.info( "Series now contains " + series.getSamples().size() + " (removed " + toSkip.size() + ")" );
+
     }
 
     /**
