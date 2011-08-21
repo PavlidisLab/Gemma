@@ -445,6 +445,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         Map<Double, Integer> eitherCounts = new HashMap<Double, Integer>();
 
         for ( DifferentialExpressionAnalysisResult r : results ) {
+
+            Double corrP = r.getCorrectedPvalue();
+            if ( corrP == null ) continue;
+
             Collection<ContrastResult> crs = r.getContrasts();
             boolean up = false;
             boolean down = false;
@@ -456,7 +460,6 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     up = true;
                 }
             }
-            Double corrP = r.getCorrectedPvalue();
 
             for ( double thresh : qValueThresholdsForHitLists ) {
 
