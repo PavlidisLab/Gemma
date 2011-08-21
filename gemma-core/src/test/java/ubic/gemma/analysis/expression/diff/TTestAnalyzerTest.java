@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -80,6 +81,14 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         assertEquals( numResults, NUM_DESIGN_ELEMENTS );
 
         assertEquals( factorValueA2, resultSet.getBaselineGroup() );
+
+        Collection<HitListSize> hitListSizes = resultSet.getHitListSizes();
+        assertEquals( 3 * 5, hitListSizes.size() );
+        for ( HitListSize hitListSize : hitListSizes ) {
+            // TODO explicitly check these counts.
+            // log.info( hitListSize.getDirection() + " " + hitListSize.getThresholdQvalue() + " "
+            // + hitListSize.getNumberOfProbes() );
+        }
 
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {

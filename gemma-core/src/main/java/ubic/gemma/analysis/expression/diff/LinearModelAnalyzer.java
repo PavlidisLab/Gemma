@@ -59,10 +59,12 @@ import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
+import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -105,6 +107,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     private static final boolean USE_R = ConfigUtils.getBoolean( "gemma.linearmodels.useR" );
 
     /**
+     * Preset levels for which we will store the HitListSizes.
+     */
+    private static final double[] qValueThresholdsForHitLists = new double[] { 0.001, 0.005, 0.01, 0.05, 0.1 };
+
+    /**
      * Determine if any factor should be treated as the intercept term.
      * 
      * @param factors
@@ -128,6 +135,60 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             }
         }
         return interceptFactor;
+    }
+
+    /**
+     * @param matrix on which to perform regression.
+     * @param config containing configuration of factors to include. Any interactions or subset configuration is
+     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way.
+     * @param retainScale if true, the data retain the global mean (intercept)
+     * @return residuals from the regression.
+     */
+    public ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
+            DifferentialExpressionAnalysisConfig config, boolean retainScale ) {
+
+        if ( config.getFactorsToInclude().isEmpty() ) {
+            log.warn( "No factors" );
+            return matrix; // FIXME perhaps return a copy instead. OR throw an ex.
+        }
+
+        /*
+         * Note that this method relies on similar code to doAnalysis, for the setup stages.
+         */
+
+        List<ExperimentalFactor> factors = config.getFactorsToInclude();
+
+        List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( matrix, factors );
+
+        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils.getBaselineConditions(
+                samplesUsed, factors );
+
+        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils.buildDesignMatrix( factors,
+                samplesUsed, baselineConditions );
+
+        DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
+
+        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, matrix );
+        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
+
+        DoubleMatrix<String, String> sNamedMatrix = makeDataMatrix( designMatrix, namedMatrix );
+        LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
+
+        DoubleMatrix2D residuals = fit.getResiduals();
+
+        if ( retainScale ) {
+            DoubleMatrix1D intercept = fit.getCoefficients().viewRow( 0 );
+            for ( int i = 0; i < residuals.rows(); i++ ) {
+                residuals.viewRow( i ).assign( Functions.plus( intercept.get( i ) ) );
+            }
+        }
+
+        DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
+                residuals.toArray() );
+        f.setRowNames( dmatrix.getMatrix().getRowNames() );
+        f.setColumnNames( dmatrix.getMatrix().getColNames() );
+        return new ExpressionDataDoubleMatrix( dmatrix, f );
+
     }
 
     /*
@@ -369,57 +430,73 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
-     * @param matrix on which to perform regression.
-     * @param config containing configuration of factors to include. Any interactions or subset configuration is
-     *        ignored. Data are <em>NOT</em> log transformed unless they come in that way.
-     * @param retainScale if true, the data retain the global mean (intercept)
-     * @return residuals from the regression.
+     * Generate HitListSize entities that will be stored to count the number of diff. ex probes at various preset
+     * thresholds, to avoid wasting time generating these counts on the fly later.
+     * 
+     * @param results
+     * @return
      */
-    public ExpressionDataDoubleMatrix regressionResiduals( ExpressionDataDoubleMatrix matrix,
-            DifferentialExpressionAnalysisConfig config, boolean retainScale ) {
+    private Collection<HitListSize> computeHitListSizes( List<DifferentialExpressionAnalysisResult> results ) {
+        Collection<HitListSize> hitListSizes = new HashSet<HitListSize>();
 
-        if ( config.getFactorsToInclude().isEmpty() ) {
-            log.warn( "No factors" );
-            return matrix; // FIXME perhaps return a copy instead. OR throw an ex.
-        }
+        // maps from Doubles are a bit dodgy...
+        Map<Double, Integer> upCounts = new HashMap<Double, Integer>();
+        Map<Double, Integer> downCounts = new HashMap<Double, Integer>();
+        Map<Double, Integer> eitherCounts = new HashMap<Double, Integer>();
 
-        /*
-         * Note that this method relies on similar code to doAnalysis, for the setup stages.
-         */
-
-        List<ExperimentalFactor> factors = config.getFactorsToInclude();
-
-        List<BioMaterial> samplesUsed = ExperimentalDesignUtils.getOrderedSamples( matrix, factors );
-
-        Map<ExperimentalFactor, FactorValue> baselineConditions = ExperimentalDesignUtils.getBaselineConditions(
-                samplesUsed, factors );
-
-        ObjectMatrix<String, String, Object> designMatrix = ExperimentalDesignUtils.buildDesignMatrix( factors,
-                samplesUsed, baselineConditions );
-
-        DesignMatrix properDesignMatrix = new DesignMatrix( designMatrix, true );
-
-        ExpressionDataDoubleMatrix dmatrix = new ExpressionDataDoubleMatrix( samplesUsed, matrix );
-        DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix = dmatrix.getMatrix();
-
-        DoubleMatrix<String, String> sNamedMatrix = makeDataMatrix( designMatrix, namedMatrix );
-        LeastSquaresFit fit = new LeastSquaresFit( properDesignMatrix, sNamedMatrix );
-
-        DoubleMatrix2D residuals = fit.getResiduals();
-
-        if ( retainScale ) {
-            DoubleMatrix1D intercept = fit.getCoefficients().viewRow( 0 );
-            for ( int i = 0; i < residuals.rows(); i++ ) {
-                residuals.viewRow( i ).assign( Functions.plus( intercept.get( i ) ) );
+        for ( DifferentialExpressionAnalysisResult r : results ) {
+            Collection<ContrastResult> crs = r.getContrasts();
+            boolean up = false;
+            boolean down = false;
+            for ( ContrastResult cr : crs ) {
+                Double lf = cr.getLogFoldChange();
+                if ( lf < 0 ) {
+                    down = true;
+                } else if ( lf > 0 ) {
+                    up = true;
+                }
             }
+            Double corrP = r.getCorrectedPvalue();
+
+            for ( double thresh : qValueThresholdsForHitLists ) {
+
+                if ( !upCounts.containsKey( thresh ) ) {
+                    upCounts.put( thresh, 0 );
+                }
+                if ( !downCounts.containsKey( thresh ) ) {
+                    downCounts.put( thresh, 0 );
+                }
+                if ( !eitherCounts.containsKey( thresh ) ) {
+                    eitherCounts.put( thresh, 0 );
+                }
+
+                if ( corrP < thresh ) {
+                    if ( up ) {
+                        upCounts.put( thresh, upCounts.get( thresh ) + 1 );
+                    }
+                    if ( down ) {
+                        downCounts.put( thresh, downCounts.get( thresh ) + 1 );
+                    }
+                    eitherCounts.put( thresh, eitherCounts.get( thresh ) + 1 );
+                }
+            }
+
         }
 
-        DoubleMatrix<CompositeSequence, BioMaterial> f = new DenseDoubleMatrix<CompositeSequence, BioMaterial>(
-                residuals.toArray() );
-        f.setRowNames( dmatrix.getMatrix().getRowNames() );
-        f.setColumnNames( dmatrix.getMatrix().getColNames() );
-        return new ExpressionDataDoubleMatrix( dmatrix, f );
+        for ( double thresh : qValueThresholdsForHitLists ) {
+            Integer up = upCounts.get( thresh );
+            Integer down = downCounts.get( thresh );
+            Integer either = eitherCounts.get( thresh );
 
+            HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP );
+            HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN );
+            HitListSize eitherS = HitListSize.Factory.newInstance( thresh, either, Direction.EITHER );
+
+            hitListSizes.add( upS );
+            hitListSizes.add( downS );
+            hitListSizes.add( eitherS );
+        }
+        return hitListSizes;
     }
 
     /**
@@ -434,11 +511,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
             List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, FactorValue subsetFactorValue ) {
-        
-        if (factors.isEmpty()) {
-            throw new IllegalArgumentException("Must provide at least one factor");
+
+        if ( factors.isEmpty() ) {
+            throw new IllegalArgumentException( "Must provide at least one factor" );
         }
-        
+
         if ( samplesUsed.size() <= factors.size() ) {
             throw new IllegalArgumentException( "Must have more samples than factors" );
         }
@@ -914,6 +991,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
          */
         Collection<ExpressionAnalysisResultSet> resultSets = new HashSet<ExpressionAnalysisResultSet>();
         for ( String fName : resultLists.keySet() ) {
+            List<DifferentialExpressionAnalysisResult> results = resultLists.get( fName );
+
             Collection<ExperimentalFactor> factorsUsed = new HashSet<ExperimentalFactor>();
             factorsUsed.addAll( label2Factors.get( fName ) );
 
@@ -922,8 +1001,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 baselineGroup = baselineConditions.get( factorsUsed.iterator().next() );
             }
 
+            Collection<HitListSize> hitListSizes = computeHitListSizes( results );
+
             ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( factorsUsed,
-                    baselineGroup, expressionAnalysis, resultLists.get( fName ), null /* hit list sizes */);
+                    baselineGroup, expressionAnalysis, results, hitListSizes );
             resultSets.add( resultSet );
 
         }

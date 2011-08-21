@@ -41,6 +41,7 @@ import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
+import ubic.gemma.model.analysis.Direction;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -50,6 +51,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
+import ubic.gemma.model.analysis.expression.diff.HitListSize;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -216,15 +218,41 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         vizColumn.setResultSetId( resultSet.getId() );
         StopWatch timer = new StopWatch();
         timer.start();
-        // TODO: should be part of result set?
-        Integer numberDiffExpressedProbes = differentialExpressionAnalysisService.countProbesMeetingThreshold(
-                resultSet, 0.05 );
-        Integer numberDiffExpressedProbesUp = differentialExpressionAnalysisService.countUpregulated( resultSet, 0.05 );
-        Integer numberDiffExpressedProbesDown = differentialExpressionAnalysisService.countDownregulated( resultSet,
-                0.05 );
+
+        double qValueThresholdForHitCounts = 0.05;
+
+        Collection<HitListSize> hitListSizes = resultSet.getHitListSizes();
+        Integer numberDiffExpressedProbes = 0;
+        Integer numberDiffExpressedProbesUp = 0;
+        Integer numberDiffExpressedProbesDown = 0;
+
+        if ( hitListSizes.isEmpty() ) {
+            // old way, if not populated this is our fallback.
+            numberDiffExpressedProbes = differentialExpressionAnalysisService.countProbesMeetingThreshold( resultSet,
+                    qValueThresholdForHitCounts );
+            numberDiffExpressedProbesUp = differentialExpressionAnalysisService.countUpregulated( resultSet,
+                    qValueThresholdForHitCounts );
+            numberDiffExpressedProbesDown = differentialExpressionAnalysisService.countDownregulated( resultSet,
+                    qValueThresholdForHitCounts );
+        } else {
+            for ( HitListSize hitListSize : hitListSizes ) {
+                // warning, comparing doubles
+                if ( hitListSize.getThresholdQvalue() != qValueThresholdForHitCounts ) continue;
+
+                if ( hitListSize.getDirection().equals( Direction.UP ) ) {
+                    numberDiffExpressedProbesUp = hitListSize.getNumberOfProbes();
+                } else if ( hitListSize.getDirection().equals( Direction.DOWN ) ) {
+                    numberDiffExpressedProbesDown = hitListSize.getNumberOfProbes();
+                } else {
+                    numberDiffExpressedProbes = hitListSize.getNumberOfProbes();
+                }
+
+            }
+        }
+
         timer.stop();
         if ( log.isDebugEnabled() )
-            log.debug( "DiffEx probes: " + numberDiffExpressedProbes + ", call took :" + timer.getTime() + " ms" );
+            log.debug( "DiffEx probes: " + numberDiffExpressedProbes + ", counting took :" + timer.getTime() + " ms" );
 
         vizColumn.setNumberOfProbesDiffExpressed( numberDiffExpressedProbes );
         vizColumn.setNumberOfProbesUpRegulated( numberDiffExpressedProbesUp );
@@ -343,7 +371,7 @@ public class DifferentialExpressionSearchController extends BaseFormController {
                 geneFullNamesInsideSet = new ArrayList<String>();
                 geneIdsInsideSet = new ArrayList<Long>();
 
-                genesInsideSet = new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ));
+                genesInsideSet = new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) );
                 geneGroupNames.add( gsvo.getName() );
 
                 // sort genes alphabetically
@@ -1001,7 +1029,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
      * 
      * } } } } return experiments; }
      */
-
 
     /*
      * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first place.
