@@ -26,9 +26,22 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface SampleCoexpressionAnalysisDao extends BaseDao<SampleCoexpressionAnalysis> {
 
+    /**
+     * @param ee
+     * @return
+     */
     public DoubleMatrix<BioAssay, BioAssay> load( ExpressionExperiment ee );
 
+    /**
+     * @param matrix
+     * @param bad
+     * @param ee
+     */
     public void create( DoubleMatrix<BioAssay, BioAssay> matrix, BioAssayDimension bad, ExpressionExperiment ee );
 
+    /**
+     * @param ee
+     * @return
+     */
     public boolean hasAnalysis( ExpressionExperiment ee );
 }

@@ -1980,7 +1980,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( expressionExperiment );
+        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( expressionExperiment, true );
     }
 
     @Override

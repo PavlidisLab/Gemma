@@ -163,7 +163,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
             Hibernate.initialize( bad );
             for ( BioAssay ba : bad.getBioAssays() ) {
 
-                session.lock( ba, LockMode.NONE );
+                // session.lock( ba, LockMode.NONE );
 
                 Hibernate.initialize( ba );
                 Hibernate.initialize( ba.getSamplesUsed() );

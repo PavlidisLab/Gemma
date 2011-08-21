@@ -31,7 +31,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -81,7 +80,7 @@ public class ExperimentalDesignVisualizationService {
     /**
      * Cache. TODO: use ehcache so we can manage this.
      */
-    private Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
+    private Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> cachedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
 
     @Autowired
     private BioAssayDimensionService bioAssayDimensionService;
@@ -89,7 +88,7 @@ public class ExperimentalDesignVisualizationService {
     /**
      * Cache. TODO: use ehcache so we can manage this.
      */
-    private Map<Long, BioAssayDimension> thawedBads = new HashMap<Long, BioAssayDimension>();
+    private Map<Long, BioAssayDimension> cachedThawedBioAssayDimensions = new HashMap<Long, BioAssayDimension>();
 
     /**
      * For an experiment, spit out
@@ -100,23 +99,23 @@ public class ExperimentalDesignVisualizationService {
     public LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> getExperimentalDesignLayout(
             ExpressionExperiment e ) {
 
-        if ( layouts.containsKey( e ) ) {
-            return layouts.get( e );
+        if ( cachedLayouts.containsKey( e ) ) {
+            return cachedLayouts.get( e );
         }
 
         Collection<BioAssayDimension> bds = expressionExperimentService.getBioAssayDimensions( e );
 
         /*
          * FIXME if there are multiple bioassay dimensions...they had better match up. This should be the case, but
-         * mightF tnot be if curation is incomplete.
+         * might not be if curation is incomplete.
          */
 
         BioAssayDimension bd = bds.iterator().next();
         assert bd != null;
-        bd = this.thawedBads.get( bd.getId() );
+        bd = this.cachedThawedBioAssayDimensions.get( bd.getId() );
         if ( bd == null ) {
             bd = this.bioAssayDimensionService.thaw( bd );
-            this.thawedBads.put( bd.getId(), bd );
+            this.cachedThawedBioAssayDimensions.put( bd.getId(), bd );
         }
 
         // needed?
@@ -125,7 +124,7 @@ public class ExperimentalDesignVisualizationService {
         LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> result = getExperimentalDesignLayout( tee,
                 bd );
 
-        layouts.put( tee, result );
+        cachedLayouts.put( tee, result );
 
         return result;
     }
@@ -174,8 +173,8 @@ public class ExperimentalDesignVisualizationService {
             for ( FactorValue fv : ef.getFactorValues() ) {
                 i = i + 1.0;
                 // fvV.put( fv, i ); // just for now, a placeholder value.
-                if(fv.getId() == null){
-                    log.warn( "FactorValue has null id, this shouldn't happen!"+ fv.toString() );
+                if ( fv.getId() == null ) {
+                    log.warn( "FactorValue has null id, this shouldn't happen!" + fv.toString() );
                 }
                 fvV.put( fv, new Double( fv.getId() ) ); // try using the factorValue id
             }
@@ -280,8 +279,8 @@ public class ExperimentalDesignVisualizationService {
     public Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortVectorDataByDesign(
             Collection<DoubleVectorValueObject> dedvs ) {
 
-        // thawedBads.clear(); // FIXME TEMPORARY FOR DEBUGGING.
-        // layouts.clear(); // FIXME TEMPORARY FOR DEBUGGING.
+        // cachedThawedBioAssayDimensions.clear(); // TEMPORARY FOR DEBUGGING.
+        // cachedLayouts.clear(); // TEMPORARY FOR DEBUGGING.
 
         Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> returnedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
 
@@ -301,7 +300,7 @@ public class ExperimentalDesignVisualizationService {
          * This loop is not a performance issue.
          */
         for ( DoubleVectorValueObject vec : dedvs ) {
-            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( vec
+            LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = cachedLayouts.get( vec
                     .getExpressionExperiment() );
             returnedLayouts.put( vec.getExpressionExperiment(), layout );
 
@@ -323,12 +322,12 @@ public class ExperimentalDesignVisualizationService {
             double[] data = vec.getData();
             double[] dol = ArrayUtils.clone( data );
 
-            if ( !thawedBads.containsKey( bad.getId() ) ) {
+            if ( !cachedThawedBioAssayDimensions.containsKey( bad.getId() ) ) {
                 log.warn( "Missing bioassaydimension: " + bad.getId() ); // WHY?
                 continue;
             }
 
-            Collection<BioAssay> oldOrdering = thawedBads.get( bad.getId() ).getBioAssays();
+            Collection<BioAssay> oldOrdering = cachedThawedBioAssayDimensions.get( bad.getId() ).getBioAssays();
             assert oldOrdering instanceof List<?>;
             int j = 0;
             for ( BioAssay ba : oldOrdering ) {
@@ -375,58 +374,73 @@ public class ExperimentalDesignVisualizationService {
     public Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortLayoutSamplesByFactor(
             Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> layouts ) {
 
-        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = 
-            new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay,LinkedHashMap<ExperimentalFactor,Double>>>();
+        Map<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>> sortedLayouts = new HashMap<ExpressionExperiment, LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>>();
         StopWatch timer = new StopWatch();
         timer.start();
         for ( ExpressionExperiment ee : layouts.keySet() ) {
-            log.debug( "Thawing ee: " + timer.getTime() + "ms" );
+
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> layout = layouts.get( ee );
+            if ( layout == null ) {
+                log.warn( "Null layout for ee: " + ee ); // does this happen?
+                continue;
+            }
+
             ee = expressionExperimentService.thawLite( ee );
+
+            // don't sort by "batch" factor // FIXME we might want to make this an option.
+            Collection<ExperimentalFactor> filteredFactors = new HashSet<ExperimentalFactor>();
+            for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                if ( !ExperimentalDesignUtils.isBatch( ef ) ) filteredFactors.add( ef );
+            }
+            if ( filteredFactors.isEmpty() ) continue; // batch was the only factor.
 
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> sortedLayout = new LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>>();
             List<BioMaterial> bmList = new ArrayList<BioMaterial>();
             Map<BioMaterial, BioAssay> BMtoBA = new HashMap<BioMaterial, BioAssay>();
-            if ( layout != null && layout.keySet() != null ) {
-                Set<BioAssay> bas = new HashSet<BioAssay>( layout.keySet() );
-                for ( BioAssay ba : bas ) {
 
-                    for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        BMtoBA.put( bm, ba ); // is one biomaterial per bioassay true??
-                        bmList.add( bm );
-                    }
+            for ( BioAssay ba : layout.keySet() ) {
+                Collection<BioMaterial> samplesUsed = ba.getSamplesUsed();
+                assert !samplesUsed.isEmpty();
+                for ( BioMaterial bm : samplesUsed ) {
+                    BMtoBA.put( bm, ba ); // is one biomaterial per bioassay true??
+                    bmList.add( bm );
                 }
-                // don't sort by batch
-                Collection<ExperimentalFactor> filteredFactors = new HashSet<ExperimentalFactor>();
-                for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
-                    if ( !ExperimentalDesignUtils.isBatch( ef ) ) filteredFactors.add( ef );
-                }
-                // sort factors within layout by number of values
-                LinkedList<ExperimentalFactor> sortedFactors = ( LinkedList<ExperimentalFactor> ) ExpressionDataMatrixColumnSort
-                        .orderFactorsByExperimentalDesign( bmList, filteredFactors );
-
-                List<BioMaterial> sortedBMList = ExpressionDataMatrixColumnSort.orderBiomaterialsBySortedFactors(
-                        bmList, new LinkedList<ExperimentalFactor>( sortedFactors ) );
-                List<BioAssay> sortedBAList = new ArrayList<BioAssay>();
-                // sort layout entries according to sorted ba list
-                for ( BioMaterial bm : sortedBMList ) {
-                    sortedBAList.add( BMtoBA.get( bm ) );
-                    BioAssay ba = BMtoBA.get( bm );
-
-                    // sort factor-value pairs for each biomaterial
-                    LinkedHashMap<ExperimentalFactor, Double> facs = layout.get( ba );
-                    LinkedHashMap<ExperimentalFactor, Double> sortedFacs = new LinkedHashMap<ExperimentalFactor, Double>();
-                    for ( ExperimentalFactor fac : sortedFactors ) {
-                        sortedFacs.put( fac, facs.get( fac ) );
-                    }
-                    assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + ", got " + sortedFacs.size();
-                    layout.remove( ba );
-                    layout.put( ba, sortedFacs );
-
-                    sortedLayout.put( BMtoBA.get( bm ), layout.get( ba ) );
-                }
-                sortedLayouts.put( ee, sortedLayout );
             }
+
+            // sort factors within layout by number of values
+            LinkedList<ExperimentalFactor> sortedFactors = ( LinkedList<ExperimentalFactor> ) ExpressionDataMatrixColumnSort
+                    .orderFactorsByExperimentalDesign( bmList, filteredFactors );
+
+            assert sortedFactors.size() == filteredFactors.size();
+
+            List<BioMaterial> sortedBMList = ExpressionDataMatrixColumnSort.orderBiomaterialsBySortedFactors( bmList,
+                    sortedFactors );
+
+            assert sortedBMList.size() == bmList.size();
+
+            // sort layout entries according to sorted ba list
+            List<BioAssay> sortedBAList = new ArrayList<BioAssay>();
+            for ( BioMaterial bm : sortedBMList ) {
+                BioAssay ba = BMtoBA.get( bm );
+                assert ba != null;
+
+                sortedBAList.add( ba );
+
+                // sort factor-value pairs for each biomaterial
+                LinkedHashMap<ExperimentalFactor, Double> facs = layout.get( ba );
+
+                LinkedHashMap<ExperimentalFactor, Double> sortedFacs = new LinkedHashMap<ExperimentalFactor, Double>();
+                for ( ExperimentalFactor fac : sortedFactors ) {
+                    sortedFacs.put( fac, facs.get( fac ) );
+                }
+
+                assert facs.size() == sortedFacs.size() : "Expected " + facs.size() + ", got " + sortedFacs.size();
+                layout.remove( ba );
+                layout.put( ba, sortedFacs );
+
+                sortedLayout.put( BMtoBA.get( bm ), layout.get( ba ) );
+            }
+            sortedLayouts.put( ee, sortedLayout );
 
         }
 
@@ -464,7 +478,7 @@ public class ExperimentalDesignVisualizationService {
         for ( DoubleVectorValueObject vec : dedvs ) {
             ExpressionExperiment ee = vec.getExpressionExperiment();
 
-            if ( layouts.containsKey( ee ) ) {
+            if ( cachedLayouts.containsKey( ee ) ) {
                 continue;
             }
             BioAssayDimension bioAssayDimension = vec.getBioAssayDimension();
@@ -485,13 +499,13 @@ public class ExperimentalDesignVisualizationService {
                  * way, like allowing the BAD to have a reference to the original source and a "isSubset" flag.
                  */
             } else {
-                if ( thawedBads.containsKey( bioAssayDimension.getId() ) ) {
+                if ( cachedThawedBioAssayDimensions.containsKey( bioAssayDimension.getId() ) ) {
                     log.debug( "Already got" );
-                    bioAssayDimension = thawedBads.get( bioAssayDimension.getId() );
+                    bioAssayDimension = cachedThawedBioAssayDimensions.get( bioAssayDimension.getId() );
                 } else {
                     log.debug( "Thawing" );
                     bioAssayDimension = bioAssayDimensionService.thaw( bioAssayDimension );
-                    thawedBads.put( bioAssayDimension.getId(), bioAssayDimension );
+                    cachedThawedBioAssayDimensions.put( bioAssayDimension.getId(), bioAssayDimension );
                 }
                 vec.setBioAssayDimension( bioAssayDimension );
             }
@@ -503,7 +517,7 @@ public class ExperimentalDesignVisualizationService {
             // plotExperimentalDesign( ee ); // debugging/testing
             LinkedHashMap<BioAssay, LinkedHashMap<ExperimentalFactor, Double>> experimentalDesignLayout = getExperimentalDesignLayout(
                     ee, bioAssayDimension );
-            layouts.put( ee, experimentalDesignLayout );
+            cachedLayouts.put( ee, experimentalDesignLayout );
 
         }
 

@@ -85,6 +85,18 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisDao#hasAnalysis(ubic.gemma.model.
+     * expression.experiment.ExpressionExperiment)
+     */
+    public boolean hasAnalysis( ExpressionExperiment ee ) {
+        return !this.getHibernateTemplate().findByNamedParam(
+                " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee ).isEmpty();
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionMatrixDao#load(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */
@@ -103,7 +115,25 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
 
         byte[] matrixBytes = matObj.getCoexpressionMatrix();
 
-        List<BioAssay> bioAssays = ( List<BioAssay> ) matObj.getBioAssayDimension().getBioAssays();
+        final List<BioAssay> bioAssays = ( List<BioAssay> ) matObj.getBioAssayDimension().getBioAssays();
+
+//        // thaw
+//        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
+//
+//            @Override
+//            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
+//                for ( BioAssay bioAssay : bioAssays ) {
+//                    Hibernate.initialize( bioAssay );
+//                    Hibernate.initialize( bioAssay.getSamplesUsed() );
+//                    for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
+//                        Hibernate.initialize( bm );
+//                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
+//                    }
+//                }
+//                return null;
+//            }
+//        } );
+
         int numBa = bioAssays.size();
 
         double[][] rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );
@@ -115,11 +145,10 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         return result;
     }
 
-    public boolean hasAnalysis( ExpressionExperiment ee ) {
-        return !this.getHibernateTemplate().findByNamedParam(
-                " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee ).isEmpty();
-    }
-
+    /**
+     * @param ee
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private Collection<SampleCoexpressionAnalysis> findAnalysesByExperiment( ExpressionExperiment ee ) {
         List<?> r = this.getHibernateTemplate().findByNamedParam(
@@ -127,13 +156,15 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         return ( Collection<SampleCoexpressionAnalysis> ) r;
     }
 
+    /**
+     * @param ee
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private Collection<SampleCoexpressionMatrix> findByExperiment( ExpressionExperiment ee ) {
-        List<?> r = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select sa.sampleCoexpressionMatrix from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee",
-                        "ee", ee );
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+                "select sa.sampleCoexpressionMatrix"
+                        + " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee );
         return ( Collection<SampleCoexpressionMatrix> ) r;
     }
 }

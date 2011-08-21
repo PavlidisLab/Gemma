@@ -14,9 +14,7 @@
  */
 package ubic.gemma.analysis.preprocess;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +30,8 @@ import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnaly
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -43,8 +43,29 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 @Service
 public class SampleCoexpressionMatrixService {
 
+    /**
+     * @param matrix
+     * @return
+     */
+    public static DoubleMatrix<BioAssay, BioAssay> getMatrix( ExpressionDataDoubleMatrix matrix ) {
+
+        DoubleMatrix<BioMaterial, CompositeSequence> transposeR = matrix.getMatrix().transpose();
+
+        DoubleMatrix<BioAssay, CompositeSequence> transpose = new DenseDoubleMatrix<BioAssay, CompositeSequence>(
+                transposeR.getRawMatrix() );
+        transpose.setColumnNames( transposeR.getColNames() );
+        for ( int i = 0; i < transpose.rows(); i++ ) {
+            BioAssay s = transposeR.getRowName( i ).getBioAssaysUsedIn().iterator().next();
+            transpose.setRowName( s, i );
+        }
+
+        DoubleMatrix<BioAssay, BioAssay> mat = MatrixStats.correlationMatrix( transpose );
+
+        return mat;
+    }
+
     @Autowired
-    SampleCoexpressionAnalysisDao sampleCoexpressionMatrixDao;
+    private SampleCoexpressionAnalysisDao sampleCoexpressionMatrixDao;
 
     @Autowired
     private ExpressionDataMatrixService expressionDataMatrixService;
@@ -52,20 +73,23 @@ public class SampleCoexpressionMatrixService {
     @Autowired
     private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
-    public boolean hasMatrix( ExpressionExperiment ee ) {
-        return sampleCoexpressionMatrixDao.load( ee ) != null;
+    /**
+     * @param expressionExperiment
+     */
+    public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment expressionExperiment ) {
+        return getSampleCorrelationMatrix( expressionExperiment, false );
     }
 
     /**
      * Retrieve (and if necessary compute) the correlation matrix for the samples.
      * 
      * @param ee
-     * @return
+     * @return Matrix, sorted by experimental design
      */
-    public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment ee ) {
+    public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment ee, boolean forceRecompute ) {
         DoubleMatrix<BioAssay, BioAssay> mat = sampleCoexpressionMatrixDao.load( ee );
 
-        if ( mat == null ) {
+        if ( forceRecompute || mat == null ) {
 
             Collection<ProcessedExpressionDataVector> processedVectors = processedExpressionDataVectorService
                     .getProcessedDataVectors( ee );
@@ -75,17 +99,17 @@ public class SampleCoexpressionMatrixService {
             }
 
             mat = getSampleCorrelationMatrix( ee, processedVectors );
-
         }
 
         mat = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
+        mat = mat.subsetRows( mat.getColNames() ); // enforce same order on rows.
         return mat;
 
     }
 
     /**
      * @param processedVectors
-     * @return
+     * @return correlation matrix. The matrix is NOT sorted by the experimental design.
      */
     public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
@@ -104,37 +128,7 @@ public class SampleCoexpressionMatrixService {
         return mat;
     }
 
-    /**
-     * @param matrix
-     * @return
-     */
-    public static DoubleMatrix<BioAssay, BioAssay> getMatrix( ExpressionDataDoubleMatrix matrix ) {
-        int cols = matrix.columns();
-        double[][] rawcols = new double[cols][];
-
-        /*
-         * Transpose the matrix
-         */
-        List<BioAssay> colElements = new ArrayList<BioAssay>();
-        int m = 0;
-        for ( int i = 0; i < matrix.columns(); i++ ) {
-            Collection<BioAssay> bas = matrix.getBioAssaysForColumn( i );
-            colElements.add( bas.iterator().next() );
-            Double[] colo = matrix.getColumn( i );
-            rawcols[m] = new double[colo.length];
-            for ( int j = 0; j < colo.length; j++ ) {
-                rawcols[m][j] = colo[j];
-            }
-            m++;
-        }
-
-        DoubleMatrix<BioAssay, Object> columns = new DenseDoubleMatrix<BioAssay, Object>( rawcols );
-
-        columns.setRowNames( colElements );
-
-        DoubleMatrix<BioAssay, BioAssay> mat = MatrixStats.correlationMatrix( columns );
-
-        return mat;
+    public boolean hasMatrix( ExpressionExperiment ee ) {
+        return sampleCoexpressionMatrixDao.load( ee ) != null;
     }
-
 }

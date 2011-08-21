@@ -96,7 +96,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.security.SecurityService;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
@@ -118,9 +117,6 @@ public class ExpressionExperimentQCController extends BaseController {
 
     @Autowired
     private SVDService svdService;
-
-    @Autowired
-    private SecurityService securityService;
 
     @Autowired
     ProcessedExpressionDataVectorCreateTask processedExpressionDataVectorCreateTask;
