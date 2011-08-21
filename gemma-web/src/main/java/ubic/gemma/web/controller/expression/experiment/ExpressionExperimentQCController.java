@@ -79,29 +79,30 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.graphics.ColorMatrix;
 import ubic.basecode.graphics.MatrixDisplay;
-import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.basecode.io.writer.MatrixWriter;
 import ubic.basecode.math.DescriptiveWithMissing;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionFileUtils;
+import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTask;
-import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateTaskCommand;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
-import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -204,6 +205,34 @@ public class ExpressionExperimentQCController extends BaseController {
 
     /**
      * @param id of experiment
+     */
+    @RequestMapping("/expressionExperiment/outliers.html")
+    public ModelAndView identifyOutliers( Long id ) throws Exception {
+
+        if ( id == null ) {
+            log.warn( "No id!" );
+            return null;
+        }
+
+        ExpressionExperiment ee = expressionExperimentService.load( id );
+        if ( ee == null ) {
+            log.warn( "Could not load experiment with id " + id );
+            return null;
+        }
+
+        DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService
+                .getSampleCorrelationMatrix( ee );
+
+        // TODO
+
+        return null; // nothing to return;
+    }
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
+    /**
+     * @param id of experiment
      * @param size Multiplier on the cell size. 1 or null for standard small size.
      * @param contrVal
      * @param text if true, output a tabbed file instead of a png
@@ -221,68 +250,46 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        if ( StringUtils.isBlank( contrVal ) ) {
-            contrVal = "hi"; // FIXME use this.
-        }
-
         ExpressionExperiment ee = expressionExperimentService.load( id );
         if ( ee == null ) {
             log.warn( "Could not load experiment with id " + id );
             return null;
         }
 
-        File f = locateCorrMatDataFile( ee );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
 
-        if ( !f.exists() || !f.canRead() ) {
+        List<String> stringNames = new ArrayList<String>();
+        for ( BioAssay ba : omatrix.getRowNames() ) {
+            stringNames.add( ba.getName() + " ID=" + ba.getId() );
+        }
+        DoubleMatrix<String, String> matrix = new DenseDoubleMatrix<String, String>( omatrix.getRawMatrix() );
+        matrix.setRowNames( stringNames );
+        matrix.setColumnNames( stringNames );
 
-            if ( !securityService.isEditable( ee ) ) {
-                writePlaceholderImage( os );
-                return null;
-            }
-
-            /*
-             * We try to generate it. This _could_ be slow. Should do in background.
-             */
-            processedExpressionDataVectorCreateTask.execute( new ProcessedExpressionDataVectorCreateTaskCommand( ee,
-                    true ) );
-            f = locateCorrMatDataFile( ee ); // did we get it?
-            if ( f == null ) {
-                writePlaceholderImage( os );
-                return null;
-            }
+        /*
+         * Blank out the diagonal so it doesn't affect the colour scale.
+         */
+        for ( int i = 0; i < matrix.rows(); i++ ) {
+            matrix.set( i, i, Double.NaN );
         }
 
-        if ( text != null && text ) {
-            writeFile( os, f );
-        } else {
-            DoubleMatrixReader r = new DoubleMatrixReader();
-            DoubleMatrix<String, String> matrix = r.read( f.getAbsolutePath() );
+        ColorMatrix<String, String> cm = new ColorMatrix<String, String>( matrix );
 
-            /*
-             * Blank out the diagonal so it doesn't affect the colour scale.
-             */
-            for ( int i = 0; i < matrix.rows(); i++ ) {
-                matrix.set( i, i, Double.NaN );
-            }
+        cleanNames( matrix );
 
-            ColorMatrix<String, String> cm = new ColorMatrix<String, String>( matrix );
+        int row = matrix.rows();
+        int cellsize = ( int ) Math.min( MAX_HEATMAP_CELLSIZE, Math.max( 1, size * DEFAULT_QC_IMAGE_SIZE_PX / row ) );
 
-            cleanNames( matrix );
+        MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( cm );
 
-            int row = matrix.rows();
-            int cellsize = ( int ) Math
-                    .min( MAX_HEATMAP_CELLSIZE, Math.max( 1, size * DEFAULT_QC_IMAGE_SIZE_PX / row ) );
+        boolean reallyShowLabels = showLabels == null ? false : showLabels && cellsize > 8 /*
+                                                                                            * minimum size for text to
+                                                                                            * show up
+                                                                                            */;
 
-            MatrixDisplay<String, String> writer = new MatrixDisplay<String, String>( cm );
+        writer.setCellSize( new Dimension( cellsize, cellsize ) );
+        writer.writeToPng( cm, os, reallyShowLabels, reallyShowLabels /* show scale if we show labels */);
 
-            boolean reallyShowLabels = showLabels == null ? false : showLabels && cellsize > 8 /*
-                                                                                                * minimum size for text
-                                                                                                * to show up
-                                                                                                */;
-
-            writer.setCellSize( new Dimension( cellsize, cellsize ) );
-            writer.writeToPng( cm, os, reallyShowLabels, reallyShowLabels /* show scale if we show labels */);
-        }
         return null; // nothing to return;
     }
 
@@ -656,14 +663,6 @@ public class ExpressionExperimentQCController extends BaseController {
     // return files;
     // }
 
-    private File locateCorrMatDataFile( ExpressionExperiment ee ) {
-        String shortName = ee.getShortName();
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
-        File f = new File( analysisStoragePath + File.separatorChar + shortName + "_corrmat" + ".txt" );
-        return f;
-    }
-
     /**
      * @param ee
      * @return
@@ -979,18 +978,6 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         os.write( ChartUtilities.encodeAsPNG( image ) );
-        return true;
-    }
-
-    /**
-     * @param response
-     * @param f
-     */
-    private boolean writeFile( OutputStream os, File f ) {
-        if ( !f.canRead() ) {
-            return false;
-        }
-        writeToClient( os, f, "text/plain" );
         return true;
     }
 

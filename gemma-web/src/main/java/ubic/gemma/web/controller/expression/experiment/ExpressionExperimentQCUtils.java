@@ -47,21 +47,7 @@ public class ExpressionExperimentQCUtils {
                 + ExpressionDataSampleCorrelation.cleanStringForPath( shortName ) + suffix );
         return f.exists() && f.canRead();
     }
-
-    /**
-     * @param ee
-     * @return
-     */
-    public static boolean hasCorrMatFile( ExpressionExperiment ee ) {
-
-        if ( ee == null ) return false;
-        String analysisStoragePath = ConfigUtils.getAnalysisStoragePath() + File.separatorChar
-                + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME;
-        File f = new File( analysisStoragePath + File.separatorChar
-                + ExpressionDataSampleCorrelation.getMatrixFileBaseName( ee ) + ".txt" );
-        return f.exists() && f.canRead();
-    }
-
+ 
     /**
      * @param ee
      * @return

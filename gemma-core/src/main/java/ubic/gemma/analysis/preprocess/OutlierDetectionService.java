@@ -28,7 +28,6 @@ import ubic.basecode.math.Rank;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.GenericAncovaAnalyzer;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -77,7 +76,8 @@ public class OutlierDetectionService {
 
     /**
      * @param ee
-     * @param useRegression whether the experimental design should be accounted for
+     * @param useRegression whether the experimental design should be accounted for (Not recommended, based on our
+     *        tests; it tends to cause more outlier calls, not fewer)
      * @param which quantile the correlation has to be in before it's considered potentially outlying (suggestion: 15)
      * @param what fraction of samples have to have a correlation lower than the quantile for a sample, for that sample
      *        to be considered an outlier (suggestion: 0.9)
@@ -117,7 +117,23 @@ public class OutlierDetectionService {
         /*
          * Determine the correlation of samples.
          */
-        DoubleMatrix<BioAssay, BioAssay> cormat = ExpressionDataSampleCorrelation.getMatrix( mat );
+        DoubleMatrix<BioAssay, BioAssay> cormat = SampleCoexpressionMatrixService.getMatrix( mat );
+
+        return identifyOutliers( ee, cormat, quantileThreshold, fractionThreshold );
+
+    }
+
+    /**
+     * @param ee
+     * @param cormat pre-computed correlation matrix.
+     * @param quantileThreshold which quantile the correlation has to be in before it's considered potentially outlying
+     *        (suggestion: 15)
+     * @param fractionThreshold what fraction of samples have to have a correlation lower than the quantile for a
+     *        sample, for that sample to be considered an outlier (suggestion: 0.9)
+     * @return
+     */
+    public Collection<OutlierDetails> identifyOutliers( ExpressionExperiment ee,
+            DoubleMatrix<BioAssay, BioAssay> cormat, int quantileThreshold, double fractionThreshold ) {
 
         /*
          * Raymond's algorithm: "A sample which has a correlation of less than a threshold with more than 80% of the
@@ -186,7 +202,6 @@ public class OutlierDetectionService {
          */
 
         return outliers;
-
     }
 
 }

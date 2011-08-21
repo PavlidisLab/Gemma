@@ -30,9 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
@@ -177,9 +175,7 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
         /*
          * Update the correlation heatmaps.
          */
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( expExp,
-                new FilterConfig(), oldVectors );
-        ExpressionDataSampleCorrelation.process( datamatrix, expExp );
+        sampleSoexpressionMatrixService.getSampleCorrelationMatrix( expExp );
 
         for ( BioAssay ba : assaysToRemove ) {
             audit( ba, "Sample " + ba.getName() + " marked as missing data." );
@@ -193,8 +189,11 @@ public class SampleRemoveService extends ExpressionExperimentVectorManipulatingS
     }
 
     public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService; 
+        this.auditTrailService = auditTrailService;
     }
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleSoexpressionMatrixService;
 
     /**
      * @param arrayDesign

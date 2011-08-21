@@ -23,11 +23,8 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.batcheffects.ExpressionExperimentBatchCorrectionService;
-import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
@@ -51,9 +48,11 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * <li>Getting information on batches
  * <li>PCA
  * <li>Computing sample-wise correlation matrices
+ * <li>Outlier detection
  * <li>Batch correction
  * <li>Populating the experimental design (guesses)?
- * <li>Ordering of vectors with respect to the experimental design?
+ * <li>Ordering of vectors with respect to the experimental design? [probably not, this isn't a problem]
+ * <li>Autotagger
  * </ol>
  * 
  * @author paul
@@ -100,6 +99,9 @@ public class PreprocessorService {
     @Autowired
     ExpressionExperimentBatchCorrectionService batchCorrectionService;
 
+    /**
+     * @param ee
+     */
     private void process( ExpressionExperiment ee ) {
 
         processForMissingValues( ee );
@@ -111,9 +113,6 @@ public class PreprocessorService {
         Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
 
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
-                dataVectors );
-
         batchInfoPopulationService.fillBatchInformation( ee );
         svdService.svd( ee );
 
@@ -121,8 +120,11 @@ public class PreprocessorService {
          * Batch correct here.
          */
 
-        ExpressionDataSampleCorrelation.process( datamatrix, ee );
+        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
     }
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     /**
      * @param ee

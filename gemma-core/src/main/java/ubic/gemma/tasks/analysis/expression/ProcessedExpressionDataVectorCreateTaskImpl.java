@@ -24,10 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
-import ubic.gemma.analysis.preprocess.filter.FilterConfig;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
@@ -47,10 +44,10 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
     private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService;
+    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
 
     @Autowired
-    private ProcessedExpressionDataVectorService processedExpressionDataVectorService;
+    private SampleCoexpressionMatrixService coexpressionMatrixService;
 
     /*
      * (non-Javadoc)
@@ -65,6 +62,8 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
         ExpressionExperiment ee = command.getExpressionExperiment();
         Collection<ProcessedExpressionDataVector> processedVectors = null;
         if ( command.isCorrelationMatrixOnly() ) {
+            // only create them if necessary. This is sort of stupid, it's just so I didn't have to create a whole other
+            // task for the correlation matrix computation.
             processedVectors = processedExpressionDataVectorService.getProcessedDataVectors( ee );
             if ( processedVectors.isEmpty() ) {
                 processedVectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
@@ -73,15 +72,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
             processedVectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         }
 
-        /*
-         * Update the correlation heatmaps.
-         */
-        FilterConfig fconfig = new FilterConfig();
-        fconfig.setIgnoreMinimumRowsThreshold( true );
-        fconfig.setIgnoreMinimumSampleThreshold( true );
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, fconfig,
-                processedVectors );
-        ExpressionDataSampleCorrelation.process( datamatrix, ee );
+        coexpressionMatrixService.getSampleCorrelationMatrix( ee, processedVectors );
 
         TaskResult result = new TaskResult( command, processedVectors.size() );
         return result;

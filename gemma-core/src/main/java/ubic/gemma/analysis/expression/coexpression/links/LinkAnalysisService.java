@@ -53,7 +53,6 @@ import ubic.gemma.analysis.preprocess.filter.InsufficientSamplesException;
 import ubic.gemma.analysis.preprocess.svd.ExpressionDataSVD;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixRowElement;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
@@ -537,14 +536,6 @@ public class LinkAnalysisService {
         }
 
         datamatrix = this.normalize( datamatrix, linkAnalysisConfig );
-
-        /*
-         * Might as well while we have the data handy
-         */
-        if ( linkAnalysisConfig.isMakeSampleCorrMatImages() ) {
-            log.info( "Creating sample correlation matrix ..." );
-            ExpressionDataSampleCorrelation.process( datamatrix, ee );
-        }
 
         /*
          * Link analysis section.

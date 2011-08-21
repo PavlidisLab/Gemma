@@ -26,20 +26,15 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
-import ubic.gemma.analysis.stats.ExpressionDataSampleCorrelation;
-import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
@@ -61,13 +56,7 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
     private ExpressionExperimentService eeService;
 
     @Autowired
-    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-
-    @Autowired
     private TwoChannelMissingValues twoChannelMissingValueService;
-
-    @Autowired
-    private ExpressionDataMatrixService expressionDataMatrixService;
 
     @Autowired
     private SVDService svdService;
@@ -208,12 +197,10 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
      * @param ee
      */
     private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
-
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( ee, new FilterConfig(),
-                dataVectors );
-        ExpressionDataSampleCorrelation.process( datamatrix, ee );
+        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
     }
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
 }

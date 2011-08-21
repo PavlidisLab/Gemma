@@ -33,6 +33,8 @@ import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -97,6 +99,27 @@ public class ExpressionDataMatrixColumnSort {
 
         return result;
 
+    }
+
+    /**
+     * @param mat
+     * @return
+     */
+    public static <R> DoubleMatrix<R, BioAssay> orderByExperimentalDesign( DoubleMatrix<R, BioAssay> mat ) {
+
+        List<BioAssay> bioAssays = mat.getColNames();
+
+        List<BioMaterial> start = new ArrayList<BioMaterial>();
+        Map<BioMaterial, BioAssay> bm2ba = new HashMap<BioMaterial, BioAssay>();
+        for ( BioAssay bioAssay : bioAssays ) {
+            start.add( bioAssay.getSamplesUsed().iterator().next() );
+        }
+        List<BioMaterial> bm = orderByExperimentalDesign( start, null );
+        List<BioAssay> newBioAssayOrder = new ArrayList<BioAssay>();
+        for ( BioMaterial bioMaterial : bm ) {
+            newBioAssayOrder.add( bm2ba.get( bioMaterial ) );
+        }
+        return mat.subsetColumns( newBioAssayOrder );
     }
 
     /**
@@ -179,7 +202,7 @@ public class ExpressionDataMatrixColumnSort {
             Collection<ExperimentalFactor> factors ) {
 
         if ( factors == null || factors.isEmpty() ) {
-            log.warn( "No factors supplied for sorting");
+            log.warn( "No factors supplied for sorting" );
             return new LinkedList<ExperimentalFactor>();
         }
 
@@ -220,8 +243,8 @@ public class ExpressionDataMatrixColumnSort {
         if ( factors == null ) {
             throw new IllegalArgumentException( "Must provide sorted factors, or at least an empty list" );
         }
-        if(factors.isEmpty()){
-         // we're done.
+        if ( factors.isEmpty() ) {
+            // we're done.
             return start;
         }
 
@@ -738,4 +761,5 @@ public class ExpressionDataMatrixColumnSort {
         }
         return false;
     }
+
 }

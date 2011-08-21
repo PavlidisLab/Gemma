@@ -54,7 +54,9 @@ import ubic.gemma.util.ConfigUtils;
  * 
  * @author Paul
  * @version $Id$
+ * @deprecated because the matrices are now just stored in the database without precomputed images.
  */
+@Deprecated
 public class ExpressionDataSampleCorrelation {
 
     public static final double LO_CONTRAST_COR_THRESH = 0.2;
@@ -98,6 +100,7 @@ public class ExpressionDataSampleCorrelation {
      * @param eeDoubleMatrix
      * @param ee
      */
+    @Deprecated
     public static void process( ExpressionDataDoubleMatrix eeDoubleMatrix, ExpressionExperiment ee ) {
         DoubleMatrix<BioAssay, BioAssay> cormat = getMatrix( eeDoubleMatrix );
         String fileBaseName = getMatrixFileBaseName( ee );
@@ -114,6 +117,7 @@ public class ExpressionDataSampleCorrelation {
      *         original matrix.
      */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public static DoubleMatrix<BioAssay, BioAssay> getMatrix( ExpressionDataDoubleMatrix matrix ) {
         int cols = matrix.columns();
         double[][] rawcols = new double[cols][];
@@ -179,6 +183,7 @@ public class ExpressionDataSampleCorrelation {
      * @param location directory where files will be saved
      * @param fileBaseName root name for files (without .png ending)
      */
+    @Deprecated
     protected static void createMatrixImages( DoubleMatrix<BioAssay, BioAssay> matrix, File location,
             String fileBaseName ) throws IOException {
 
@@ -281,6 +286,7 @@ public class ExpressionDataSampleCorrelation {
      * @return
      * @throws IOException
      */
+    @Deprecated
     protected static DoubleMatrix<String, String> getMatrixFromExperimentFile( InputStream is ) throws IOException {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         DoubleMatrix<String, String> matrix = reader.read( is );
@@ -298,6 +304,7 @@ public class ExpressionDataSampleCorrelation {
     /**
      * 
      */
+    @Deprecated
     public static File getStorageDirectory() throws IOException {
         File dir = new File( ConfigUtils.getAnalysisStoragePath() + File.separatorChar
                 + ExpressionDataSampleCorrelation.CORRMAT_DIR_NAME );
