@@ -1,49 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:MagicDrawProfile_0="http:///MagicDrawProfile_0_rxE2sKmfEeCiHOqShdSrcg.profile.uml2" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xsi:schemaLocation="http:///MagicDrawProfile_0_rxE2sKmfEeCiHOqShdSrcg.profile.uml2 UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_rxvmAqmfEeCiHOqShdSrcg" xmi:id="_11_5_be00301_1153310565718_226811_161" name="DSL Customization" appliedProfile="_be00301_1073394351331_445580_2profileApplicationDSL_Customization" metamodelReference="_16_8beta_62a020a_1256807644323_906120_345">
-  <eAnnotations xmi:id="_rxz3yqmfEeCiHOqShdSrcg" source="attributes">
-    <details xmi:id="_rxz3y6mfEeCiHOqShdSrcg" key="version" value="0"/>
+<uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:MagicDrawProfile_0="http:///MagicDrawProfile_0_U7Fl8MuXEeCAed-DQtO3HQ.profile.uml2" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xsi:schemaLocation="http:///MagicDrawProfile_0_U7Fl8MuXEeCAed-DQtO3HQ.profile.uml2 UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_U7w768uXEeCAed-DQtO3HQ" xmi:id="_11_5_be00301_1153310565718_226811_161" name="DSL Customization" appliedProfile="_be00301_1073394351331_445580_2profileApplicationDSL_Customization" metamodelReference="_16_8beta_62a020a_1256807644323_906120_345">
+  <eAnnotations xmi:id="_U7yw98uXEeCAed-DQtO3HQ" source="attributes">
+    <details xmi:id="_U7yw-MuXEeCAed-DQtO3HQ" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_rxz3zKmfEeCiHOqShdSrcg" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_rxz3zamfEeCiHOqShdSrcg" name="DSLCustomization_0" nsURI="http:///DSLCustomization_0_rxXxoKmfEeCiHOqShdSrcg.profile.uml2" nsPrefix="DSLCustomization_0">
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz3zqmfEeCiHOqShdSrcg" name="DSLCustomization__CustomizationOfderivedPropertySpecification"/>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz3z6mfEeCiHOqShdSrcg" name="DSLCustomization__PropertyGroup"/>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz30KmfEeCiHOqShdSrcg" name="DSLCustomization__CustomizationOfElementsLibraryBranch"/>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz30amfEeCiHOqShdSrcg" name="DSLCustomization__DiagramTableCustomization"/>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz30qmfEeCiHOqShdSrcg" name="DSLCustomization__CustomizationOfRelationMap"/>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz306mfEeCiHOqShdSrcg" name="DSLCustomization__CustomizationOfElementsLibrary"/>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz31KmfEeCiHOqShdSrcg" name="DSLCustomization__CustomizationOfInfo"/>
-      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_rxz31amfEeCiHOqShdSrcg" name="DSLCustomization__CustomizationGroupNames">
-        <eLiterals xmi:id="_rxz31qmfEeCiHOqShdSrcg" name="Connection Rules">
-          <eAnnotations xmi:id="_rxz316mfEeCiHOqShdSrcg" source="enumerationLiteral" references="_11_5_be00301_1151668191517_977444_372"/>
+  <eAnnotations xmi:id="_U7yw-cuXEeCAed-DQtO3HQ" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_U7yw-suXEeCAed-DQtO3HQ" name="DSLCustomization_0" nsURI="http:///DSLCustomization_0_U7cLQMuXEeCAed-DQtO3HQ.profile.uml2" nsPrefix="DSLCustomization_0">
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yw-8uXEeCAed-DQtO3HQ" name="DSLCustomization__CustomizationOfderivedPropertySpecification"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yw_MuXEeCAed-DQtO3HQ" name="DSLCustomization__PropertyGroup"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yw_cuXEeCAed-DQtO3HQ" name="DSLCustomization__CustomizationOfElementsLibraryBranch"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yw_suXEeCAed-DQtO3HQ" name="DSLCustomization__DiagramTableCustomization"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yw_8uXEeCAed-DQtO3HQ" name="DSLCustomization__CustomizationOfRelationMap"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yxAMuXEeCAed-DQtO3HQ" name="DSLCustomization__CustomizationOfElementsLibrary"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yxAcuXEeCAed-DQtO3HQ" name="DSLCustomization__CustomizationOfInfo"/>
+      <eClassifiers xmi:type="ecore:EEnum" xmi:id="_U7yxAsuXEeCAed-DQtO3HQ" name="DSLCustomization__CustomizationGroupNames">
+        <eLiterals xmi:id="_U7yxA8uXEeCAed-DQtO3HQ" name="Connection Rules">
+          <eAnnotations xmi:id="_U7yxBMuXEeCAed-DQtO3HQ" source="enumerationLiteral" references="_11_5_be00301_1151668191517_977444_372"/>
         </eLiterals>
-        <eLiterals xmi:id="_rxz32KmfEeCiHOqShdSrcg" name="Model Initialization" value="1">
-          <eAnnotations xmi:id="_rxz32amfEeCiHOqShdSrcg" source="enumerationLiteral" references="_11_5_be00301_1151668205978_536169_376"/>
+        <eLiterals xmi:id="_U7yxBcuXEeCAed-DQtO3HQ" name="Model Initialization" value="1">
+          <eAnnotations xmi:id="_U7yxBsuXEeCAed-DQtO3HQ" source="enumerationLiteral" references="_11_5_be00301_1151668205978_536169_376"/>
         </eLiterals>
-        <eLiterals xmi:id="_rxz32qmfEeCiHOqShdSrcg" name="Properties" value="2">
-          <eAnnotations xmi:id="_rxz326mfEeCiHOqShdSrcg" source="enumerationLiteral" references="_11_5_be00301_1151668187061_119857_370"/>
+        <eLiterals xmi:id="_U7yxB8uXEeCAed-DQtO3HQ" name="Properties" value="2">
+          <eAnnotations xmi:id="_U7yxCMuXEeCAed-DQtO3HQ" source="enumerationLiteral" references="_11_5_be00301_1151668187061_119857_370"/>
         </eLiterals>
-        <eLiterals xmi:id="_rxz33KmfEeCiHOqShdSrcg" name="OwnedElements" value="3">
-          <eAnnotations xmi:id="_rxz33amfEeCiHOqShdSrcg" source="enumerationLiteral" references="_12_0EAPbeta_be00301_1157629460825_333054_764"/>
+        <eLiterals xmi:id="_U7yxCcuXEeCAed-DQtO3HQ" name="OwnedElements" value="3">
+          <eAnnotations xmi:id="_U7yxCsuXEeCAed-DQtO3HQ" source="enumerationLiteral" references="_12_0EAPbeta_be00301_1157629460825_333054_764"/>
         </eLiterals>
-        <eLiterals xmi:id="_rxz33qmfEeCiHOqShdSrcg" name="General" value="4">
-          <eAnnotations xmi:id="_rxz336mfEeCiHOqShdSrcg" source="enumerationLiteral" references="_11_5_be00301_1151668160833_388370_368"/>
+        <eLiterals xmi:id="_U7yxC8uXEeCAed-DQtO3HQ" name="General" value="4">
+          <eAnnotations xmi:id="_U7yxDMuXEeCAed-DQtO3HQ" source="enumerationLiteral" references="_11_5_be00301_1151668160833_388370_368"/>
         </eLiterals>
-        <eLiterals xmi:id="_rxz34KmfEeCiHOqShdSrcg" name="Naming" value="5">
-          <eAnnotations xmi:id="_rxz34amfEeCiHOqShdSrcg" source="enumerationLiteral" references="_11_5_be00301_1151668201842_594414_374"/>
+        <eLiterals xmi:id="_U7yxDcuXEeCAed-DQtO3HQ" name="Naming" value="5">
+          <eAnnotations xmi:id="_U7yxDsuXEeCAed-DQtO3HQ" source="enumerationLiteral" references="_11_5_be00301_1151668201842_594414_374"/>
         </eLiterals>
-        <eLiterals xmi:id="_rxz34qmfEeCiHOqShdSrcg" name="Symbol" value="6">
-          <eAnnotations xmi:id="_rxz346mfEeCiHOqShdSrcg" source="enumerationLiteral" references="_16_5beta1_6790224_1232024334692_769917_268"/>
+        <eLiterals xmi:id="_U7yxD8uXEeCAed-DQtO3HQ" name="Symbol" value="6">
+          <eAnnotations xmi:id="_U7yxEMuXEeCAed-DQtO3HQ" source="enumerationLiteral" references="_16_5beta1_6790224_1232024334692_769917_268"/>
         </eLiterals>
       </eClassifiers>
-      <eClassifiers xmi:type="ecore:EClass" xmi:id="_rxz35KmfEeCiHOqShdSrcg" name="DSLCustomization__CustomizationOfCustomization"/>
+      <eClassifiers xmi:type="ecore:EClass" xmi:id="_U7yxEcuXEeCAed-DQtO3HQ" name="DSLCustomization__CustomizationOfCustomization"/>
     </contents>
   </eAnnotations>
-  <eAnnotations xmi:id="_sPOyUqmfEeCiHOqShdSrcg" source="MagicDraw">
-    <details xmi:id="_sPOyU6mfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1153310565718_226811_161"/>
+  <eAnnotations xmi:id="_VeB68MuXEeCAed-DQtO3HQ" source="MagicDraw">
+    <details xmi:id="_VeB68cuXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1153310565718_226811_161"/>
   </eAnnotations>
   <packageImport xmi:id="_16_8beta_62a020a_1256807644323_906120_345">
-    <eAnnotations xmi:id="_sPOyVKmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPOyVamfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_62a020a_1256807644323_906120_345"/>
+    <eAnnotations xmi:id="_VeB68suXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeB688uXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_62a020a_1256807644323_906120_345"/>
     </eAnnotations>
     <importedPackage xmi:type="uml:Model" href="pathmap://UML2_METAMODELS/UML2.metamodel.uml2#_m8qbA686EdiEh75YJ_3n8g"/>
   </packageImport>
@@ -54,112 +54,112 @@
     <importedPackage xmi:type="uml:Model" href="pathmap://UML2_LIBRARIES/JavaPrimitiveTypes.library.uml2#_RjmyoK86EdieaYgxtVWN8Q"/>
   </packageImport>
   <packageImport xmi:type="uml:ProfileApplication" xmi:id="_be00301_1073394351331_445580_2profileApplicationDSL_Customization">
-    <eAnnotations xmi:id="_rygaFamfEeCiHOqShdSrcg" source="attributes">
-      <details xmi:id="_rygaFqmfEeCiHOqShdSrcg" key="version" value="0"/>
+    <eAnnotations xmi:id="_U8pFI8uXEeCAed-DQtO3HQ" source="attributes">
+      <details xmi:id="_U8pFJMuXEeCAed-DQtO3HQ" key="version" value="0"/>
     </eAnnotations>
     <importedPackage xmi:type="uml:Profile" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_be00301_1073394351331_445580_2"/>
     <importedProfile href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_be00301_1073394351331_445580_2"/>
   </packageImport>
   <ownedMember xmi:type="uml:Class" xmi:id="_16_8beta_8f90291_1267715684316_784985_2238" name="CustomizationOfderivedPropertySpecification">
-    <eAnnotations xmi:id="_rysAQKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_rysAQamfEeCiHOqShdSrcg" representationText="Derived Property Specification" doNotSuggestAsType="true">
+    <eAnnotations xmi:id="_U88AEMuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U88AEcuXEeCAed-DQtO3HQ" representationText="Derived Property Specification" doNotSuggestAsType="true">
         <customizationTarget>MagicDraw Profile::derivedPropertySpecification</customizationTarget>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPOyVqmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPOyV6mfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1267715684316_784985_2238"/>
+    <eAnnotations xmi:id="_VeB69MuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeB69cuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1267715684316_784985_2238"/>
     </eAnnotations>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_12_0EAPbeta_be00301_1157702418763_223586_769">
-    <eAnnotations xmi:id="_sPOyWKmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPOyWamfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_223586_769"/>
+    <eAnnotations xmi:id="_VeB69suXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeB698uXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_223586_769"/>
     </eAnnotations>
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_12_0EAPbeta_be00301_1157702418763_262371_771" name="extension_suggestedStringValues" visibility="private" association="_12_0EAPbeta_be00301_1157702418763_223586_769" aggregation="composite">
-      <eAnnotations xmi:id="_sPOyWqmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPOyW6mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_262371_771"/>
+      <eAnnotations xmi:id="_VeB6-MuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeB6-cuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_262371_771"/>
       </eAnnotations>
       <type xmi:type="uml:Stereotype" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157702393377_93867_763"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_12_0EAPbeta_be00301_1157702418763_752460_773" value="1">
-        <eAnnotations xmi:id="_sPOyXKmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPOyXamfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_752460_773"/>
+        <eAnnotations xmi:id="_VeB6-suXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeB6-8uXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_752460_773"/>
         </eAnnotations>
       </upperValue>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_12_0EAPbeta_be00301_1157702418763_269419_772">
-        <eAnnotations xmi:id="_sPOyXqmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPOyX6mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_269419_772"/>
+        <eAnnotations xmi:id="_VeB6_MuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeB6_cuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702418763_269419_772"/>
         </eAnnotations>
       </lowerValue>
     </ownedEnd>
-    <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157702418763_489660_770"/>
     <memberEnd xmi:type="uml:ExtensionEnd" href="#_12_0EAPbeta_be00301_1157702418763_262371_771"/>
+    <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157702418763_489660_770"/>
   </ownedMember>
   <ownedMember xmi:type="uml:Class" xmi:id="_16_8beta_8f90291_1257409451098_886580_361" name="PropertyGroup">
-    <eAnnotations xmi:id="_ryrZNKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_ryrZNamfEeCiHOqShdSrcg" representationText="Property Group">
+    <eAnnotations xmi:id="_U86x8MuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U86x8cuXEeCAed-DQtO3HQ" representationText="Property Group">
         <customizationTarget>MagicDraw Profile::propertyGroup</customizationTarget>
         <suggestedOwnedTypes>MagicDraw Profile::propertyGroup</suggestedOwnedTypes>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPQAf6mfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPQAgKmfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409451098_886580_361"/>
+    <eAnnotations xmi:id="_VeDJEcuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeDJEsuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409451098_886580_361"/>
     </eAnnotations>
     <ownedAttribute xmi:id="_16_8beta_8f90291_1257409451098_299079_363" name="subgroup" visibility="private">
-      <eAnnotations xmi:id="_ryhoMKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-        <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_ryhoMamfEeCiHOqShdSrcg" useAsNode="true" showGroupInQuickProperties="false">
+      <eAnnotations xmi:id="_U8q6UsuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+        <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_U8q6U8uXEeCAed-DQtO3HQ" useAsNode="true" showGroupInQuickProperties="false">
           <properties>qualifier</properties>
           <columns>name</columns>
           <columns>type</columns>
           <filter>MagicDraw Profile::propertyGroup</filter>
         </contents>
       </eAnnotations>
-      <eAnnotations xmi:id="_sPQAgamfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPQAgqmfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409451098_299079_363"/>
+      <eAnnotations xmi:id="_VeDJE8uXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeDJFMuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409451098_299079_363"/>
       </eAnnotations>
       <qualifier xmi:id="_16_8beta_8f90291_1257409451098_385425_366" name="subgroup" visibility="private">
-        <eAnnotations xmi:id="_ryhBJKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-          <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_ryhBJamfEeCiHOqShdSrcg"/>
+        <eAnnotations xmi:id="_U8q6UMuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+          <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_U8q6UcuXEeCAed-DQtO3HQ"/>
         </eAnnotations>
-        <eAnnotations xmi:id="_sPQAg6mfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPQAhKmfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409451098_385425_366"/>
+        <eAnnotations xmi:id="_VeDJFcuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeDJFsuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409451098_385425_366"/>
         </eAnnotations>
         <qualifier xmi:id="_16_8beta_8f90291_1257409451098_232814_373" name="subsubgroup" visibility="private">
-          <eAnnotations xmi:id="_ryhBIKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-            <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_ryhBIamfEeCiHOqShdSrcg"/>
+          <eAnnotations xmi:id="_U8psMMuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+            <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_U8psMcuXEeCAed-DQtO3HQ"/>
           </eAnnotations>
-          <eAnnotations xmi:id="_sPQAhamfEeCiHOqShdSrcg" source="MagicDraw">
-            <details xmi:id="_sPQAhqmfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409451098_232814_373"/>
+          <eAnnotations xmi:id="_VeDJF8uXEeCAed-DQtO3HQ" source="MagicDraw">
+            <details xmi:id="_VeDJGMuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409451098_232814_373"/>
           </eAnnotations>
         </qualifier>
       </qualifier>
     </ownedAttribute>
   </ownedMember>
   <ownedMember xmi:type="uml:Class" xmi:id="_16_8beta_8e8028e_1264147042683_80820_1151" name="CustomizationOfElementsLibraryBranch">
-    <eAnnotations xmi:id="_ryqyIqmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_ryqyI6mfEeCiHOqShdSrcg" representationText="Elements Library Branch">
+    <eAnnotations xmi:id="_U848xMuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U848xcuXEeCAed-DQtO3HQ" representationText="Elements Library Branch">
         <customizationTarget>MagicDraw Profile::elementsLibraryBranch</customizationTarget>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPTq0KmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPTq0amfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8e8028e_1264147042683_80820_1151"/>
+    <eAnnotations xmi:id="_VeGMZ8uXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeGMaMuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8e8028e_1264147042683_80820_1151"/>
     </eAnnotations>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_12_0EAPbeta_be00301_1157552563192_997222_7">
-    <eAnnotations xmi:id="_sPTq0qmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPTq06mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_997222_7"/>
+    <eAnnotations xmi:id="_VeGMacuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeGMasuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_997222_7"/>
     </eAnnotations>
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_12_0EAPbeta_be00301_1157552563192_568121_9" name="extension_metaproperty" visibility="private" association="_12_0EAPbeta_be00301_1157552563192_997222_7" aggregation="composite">
-      <eAnnotations xmi:id="_sPTq1KmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPTq1amfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_568121_9"/>
+      <eAnnotations xmi:id="_VeGMa8uXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeGMbMuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_568121_9"/>
       </eAnnotations>
       <type xmi:type="uml:Stereotype" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157552487453_470617_1"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_12_0EAPbeta_be00301_1157552563192_534596_11" value="1">
-        <eAnnotations xmi:id="_sPTq1qmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPTq16mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_534596_11"/>
+        <eAnnotations xmi:id="_VeGMbcuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeGMbsuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_534596_11"/>
         </eAnnotations>
       </upperValue>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_12_0EAPbeta_be00301_1157552563192_302807_10">
-        <eAnnotations xmi:id="_sPTq2KmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPTq2amfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_302807_10"/>
+        <eAnnotations xmi:id="_VeGMb8uXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeGMcMuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157552563192_302807_10"/>
         </eAnnotations>
       </lowerValue>
     </ownedEnd>
@@ -167,8 +167,8 @@
     <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157552563192_854244_8"/>
   </ownedMember>
   <ownedMember xmi:type="uml:Class" xmi:id="_16_8beta_62a020a_1264764334075_693144_1053" name="DiagramTableCustomization">
-    <eAnnotations xmi:id="_ryqyJKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_ryqyJamfEeCiHOqShdSrcg" representationText="Generic Table" showPropertiesWhenNotApplied="false">
+    <eAnnotations xmi:id="_U85j0MuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U85j0cuXEeCAed-DQtO3HQ" representationText="Generic Table" showPropertiesWhenNotApplied="false">
         <customizationTarget>MagicDraw Profile::DiagramTable</customizationTarget>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>SP&lt;/title>&lt;/head>&lt;body>&lt;p>name&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>HP&lt;/title>&lt;/head>&lt;body>&lt;p>ELEMENT_ID&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
@@ -217,36 +217,36 @@
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>SN&lt;/title>&lt;/head>&lt;body>&lt;p>CONSTRAINTS&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPTq2qmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPTq26mfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_62a020a_1264764334075_693144_1053"/>
+    <eAnnotations xmi:id="_VeGMccuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeGMcsuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_62a020a_1264764334075_693144_1053"/>
     </eAnnotations>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_11_5EAPbeta_be00301_1148642767573_534647_270">
-    <eAnnotations xmi:id="_sPTq3KmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPTq3amfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_534647_270"/>
+    <eAnnotations xmi:id="_VeGMc8uXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeGMdMuXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_534647_270"/>
     </eAnnotations>
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5EAPbeta_be00301_1148642767573_559919_272" name="extension_" visibility="private" association="_11_5EAPbeta_be00301_1148642767573_534647_270" aggregation="composite">
-      <eAnnotations xmi:id="_sPTq3qmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPTq36mfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_559919_272"/>
+      <eAnnotations xmi:id="_VeGMdcuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeGMdsuXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_559919_272"/>
       </eAnnotations>
       <type xmi:type="uml:Stereotype" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_11_5EAPbeta_be00301_1148642764910_998510_268"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5EAPbeta_be00301_1148642767573_62314_274" value="1">
-        <eAnnotations xmi:id="_sPTq4KmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPTq4amfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_62314_274"/>
+        <eAnnotations xmi:id="_VeGMd8uXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeGMeMuXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_62314_274"/>
         </eAnnotations>
       </upperValue>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5EAPbeta_be00301_1148642767573_3428_273">
-        <eAnnotations xmi:id="_sPTq4qmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPTq46mfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_3428_273"/>
+        <eAnnotations xmi:id="_VeGMecuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeGMesuXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1148642767573_3428_273"/>
         </eAnnotations>
       </lowerValue>
     </ownedEnd>
-    <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_11_5EAPbeta_be00301_1148642767573_196284_271"/>
     <memberEnd xmi:type="uml:ExtensionEnd" href="#_11_5EAPbeta_be00301_1148642767573_559919_272"/>
+    <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_11_5EAPbeta_be00301_1148642767573_196284_271"/>
   </ownedMember>
   <ownedMember xmi:type="uml:Class" xmi:id="_16_8beta_9020291_1262175585022_177479_1164" name="CustomizationOfRelationMap">
-    <eAnnotations xmi:id="_rysAQqmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_rysAQ6mfEeCiHOqShdSrcg" representationText="Relation Map">
+    <eAnnotations xmi:id="_U88AEsuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U88AE8uXEeCAed-DQtO3HQ" representationText="Relation Map">
         <customizationTarget>MagicDraw Profile::RelationMap</customizationTarget>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>SP&lt;/title>&lt;/head>&lt;body>&lt;p>ShowAppliedStereotypes&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>SP&lt;/title>&lt;/head>&lt;body>&lt;p>relationCriterion&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
@@ -289,12 +289,12 @@
         <checkSpelling>TO_DO</checkSpelling>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPTq5KmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPTq5amfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_9020291_1262175585022_177479_1164"/>
+    <eAnnotations xmi:id="_VeGzcMuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeGzccuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_9020291_1262175585022_177479_1164"/>
     </eAnnotations>
     <ownedAttribute xmi:id="_16_8beta_8f90291_1263224599111_925039_1141" name="Relation Map" visibility="private">
-      <eAnnotations xmi:id="_ryhBIqmfEeCiHOqShdSrcg" source="appliedStereotypes">
-        <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_ryhBI6mfEeCiHOqShdSrcg">
+      <eAnnotations xmi:id="_U8qTQMuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+        <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__propertyGroup" xmi:id="_U8qTQcuXEeCAed-DQtO3HQ">
           <properties>contextElement</properties>
           <properties>depth</properties>
           <properties>elementType</properties>
@@ -307,28 +307,28 @@
           <properties>suppressedElements</properties>
         </contents>
       </eAnnotations>
-      <eAnnotations xmi:id="_sPUR4KmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPUR4amfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1263224599111_925039_1141"/>
+      <eAnnotations xmi:id="_VeGzcsuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeGzc8uXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1263224599111_925039_1141"/>
       </eAnnotations>
     </ownedAttribute>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_11_5_be00301_1151908234482_966809_159">
-    <eAnnotations xmi:id="_sPUR4qmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPUR46mfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151908234482_966809_159"/>
+    <eAnnotations xmi:id="_VeGzdMuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeGzdcuXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151908234482_966809_159"/>
     </eAnnotations>
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5_be00301_1151908234482_122252_161" name="extension_" visibility="private" association="_11_5_be00301_1151908234482_966809_159" aggregation="composite">
-      <eAnnotations xmi:id="_sPUR5KmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPUR5amfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151908234482_122252_161"/>
+      <eAnnotations xmi:id="_VeGzdsuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeGzd8uXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151908234482_122252_161"/>
       </eAnnotations>
       <type xmi:type="uml:Stereotype" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_11_5_be00301_1151908232109_493412_157"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5_be00301_1151908234482_377432_163" value="1">
-        <eAnnotations xmi:id="_sPUR5qmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPUR56mfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151908234482_377432_163"/>
+        <eAnnotations xmi:id="_VeGzeMuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeGzecuXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151908234482_377432_163"/>
         </eAnnotations>
       </upperValue>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5_be00301_1151908234482_66258_162">
-        <eAnnotations xmi:id="_sPUR6KmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPUR6amfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151908234482_66258_162"/>
+        <eAnnotations xmi:id="_VeGzesuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeGze8uXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151908234482_66258_162"/>
         </eAnnotations>
       </lowerValue>
     </ownedEnd>
@@ -336,8 +336,8 @@
     <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_11_5_be00301_1151908234482_224109_160"/>
   </ownedMember>
   <ownedMember xmi:type="uml:Class" xmi:id="_16_8beta_8e8028e_1264146958055_271700_1144" name="CustomizationOfElementsLibrary">
-    <eAnnotations xmi:id="_ryrZMqmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_ryrZM6mfEeCiHOqShdSrcg" representationText="Elements Library">
+    <eAnnotations xmi:id="_U86K4suXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U86K48uXEeCAed-DQtO3HQ" representationText="Elements Library">
         <customizationTarget>MagicDraw Profile::elementsLibrary</customizationTarget>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>SP&lt;/title>&lt;/head>&lt;body>&lt;p>name&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>HP&lt;/title>&lt;/head>&lt;body>&lt;p>documentation&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
@@ -399,13 +399,13 @@
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>SP&lt;/title>&lt;/head>&lt;body>&lt;p>TO_DO&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPUR6qmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPUR66mfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8e8028e_1264146958055_271700_1144"/>
+    <eAnnotations xmi:id="_VeGzfMuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeGzfcuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8e8028e_1264146958055_271700_1144"/>
     </eAnnotations>
   </ownedMember>
   <ownedMember xmi:type="uml:Class" xmi:id="_15_5EAPbeta1_8f90291_1207743558796_443201_179" name="CustomizationOfInfo">
-    <eAnnotations xmi:id="_rysARKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_rysARamfEeCiHOqShdSrcg" representationText="Info" doNotSuggestAsType="true">
+    <eAnnotations xmi:id="_U88nIMuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U88nIcuXEeCAed-DQtO3HQ" representationText="Info" doNotSuggestAsType="true">
         <customizationTarget>MagicDraw Profile::Info</customizationTarget>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>SP&lt;/title>&lt;/head>&lt;body>&lt;p>name&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
         <standardExpertConfiguration>&lt;html>&lt;head>&lt;title>HP&lt;/title>&lt;/head>&lt;body>&lt;p>ELEMENT_ID&lt;/p>&lt;/body>&lt;/html></standardExpertConfiguration>
@@ -464,27 +464,27 @@
         <checkSpelling>TO_DO</checkSpelling>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPU48KmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPU48amfEeCiHOqShdSrcg" key="md_id" value="_15_5EAPbeta1_8f90291_1207743558796_443201_179"/>
+    <eAnnotations xmi:id="_VeHagMuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeHagcuXEeCAed-DQtO3HQ" key="md_id" value="_15_5EAPbeta1_8f90291_1207743558796_443201_179"/>
     </eAnnotations>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_11_5EAPbeta_be00301_1149591436012_62817_130">
-    <eAnnotations xmi:id="_sPU4-qmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPU4-6mfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_62817_130"/>
+    <eAnnotations xmi:id="_VeHaisuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeHai8uXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_62817_130"/>
     </eAnnotations>
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_11_5EAPbeta_be00301_1149591436012_515478_132" name="extension_Customization" visibility="private" association="_11_5EAPbeta_be00301_1149591436012_62817_130" aggregation="composite">
-      <eAnnotations xmi:id="_sPU4_KmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPU4_amfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_515478_132"/>
+      <eAnnotations xmi:id="_VeHajMuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIBkMuXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_515478_132"/>
       </eAnnotations>
       <type xmi:type="uml:Stereotype" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_11_5EAPbeta_be00301_1148632817486_155219_3"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_11_5EAPbeta_be00301_1149591436012_396194_134" value="1">
-        <eAnnotations xmi:id="_sPU4_qmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPU4_6mfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_396194_134"/>
+        <eAnnotations xmi:id="_VeIBkcuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeIBksuXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_396194_134"/>
         </eAnnotations>
       </upperValue>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_11_5EAPbeta_be00301_1149591436012_516780_133">
-        <eAnnotations xmi:id="_sPU5AKmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPU5AamfEeCiHOqShdSrcg" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_516780_133"/>
+        <eAnnotations xmi:id="_VeIBk8uXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeIBlMuXEeCAed-DQtO3HQ" key="md_id" value="_11_5EAPbeta_be00301_1149591436012_516780_133"/>
         </eAnnotations>
       </lowerValue>
     </ownedEnd>
@@ -492,94 +492,94 @@
     <memberEnd xmi:type="uml:ExtensionEnd" href="#_11_5EAPbeta_be00301_1149591436012_515478_132"/>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_12_0EAPbeta_be00301_1157702352288_380469_758">
-    <eAnnotations xmi:id="_sPU5AqmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPU5A6mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_380469_758"/>
+    <eAnnotations xmi:id="_VeIBlcuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeIBlsuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_380469_758"/>
     </eAnnotations>
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_12_0EAPbeta_be00301_1157702352288_429407_760" name="extension_suggestedValues" visibility="private" association="_12_0EAPbeta_be00301_1157702352288_380469_758" aggregation="composite">
-      <eAnnotations xmi:id="_sPVgAKmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPVgAamfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_429407_760"/>
+      <eAnnotations xmi:id="_VeIBl8uXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIBmMuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_429407_760"/>
       </eAnnotations>
       <type xmi:type="uml:Stereotype" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157702293303_868726_752"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_12_0EAPbeta_be00301_1157702352288_347145_762" value="1">
-        <eAnnotations xmi:id="_sPVgAqmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPVgA6mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_347145_762"/>
+        <eAnnotations xmi:id="_VeIBmcuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeIBmsuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_347145_762"/>
         </eAnnotations>
       </upperValue>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_12_0EAPbeta_be00301_1157702352288_757534_761">
-        <eAnnotations xmi:id="_sPVgBKmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPVgBamfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_757534_761"/>
+        <eAnnotations xmi:id="_VeIBm8uXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeIBnMuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157702352288_757534_761"/>
         </eAnnotations>
       </lowerValue>
     </ownedEnd>
-    <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157702352288_681323_759"/>
     <memberEnd xmi:type="uml:ExtensionEnd" href="#_12_0EAPbeta_be00301_1157702352288_429407_760"/>
+    <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_12_0EAPbeta_be00301_1157702352288_681323_759"/>
   </ownedMember>
   <ownedMember xmi:type="uml:Extension" xmi:id="_16_8beta_8f90291_1257409433754_94323_356">
-    <eAnnotations xmi:id="_sPVgHqmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPVgH6mfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409433754_94323_356"/>
+    <eAnnotations xmi:id="_VeIooMuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeIoocuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409433754_94323_356"/>
     </eAnnotations>
     <ownedEnd xmi:type="uml:ExtensionEnd" xmi:id="_16_8beta_8f90291_1257409433754_649568_358" name="extension_derivedPropertySpecification" visibility="private" association="_16_8beta_8f90291_1257409433754_94323_356" aggregation="composite">
-      <eAnnotations xmi:id="_sPVgIKmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPVgIamfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409433754_649568_358"/>
+      <eAnnotations xmi:id="_VeIoosuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIoo8uXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409433754_649568_358"/>
       </eAnnotations>
       <type xmi:type="uml:Stereotype" href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_16_8beta_8f90291_1257409433754_907450_344"/>
       <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_16_8beta_8f90291_1257409433754_869721_360" value="1">
-        <eAnnotations xmi:id="_sPVgIqmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPVgI6mfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409433754_869721_360"/>
+        <eAnnotations xmi:id="_VeIopMuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeIopcuXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409433754_869721_360"/>
         </eAnnotations>
       </upperValue>
       <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_16_8beta_8f90291_1257409433754_988203_359">
-        <eAnnotations xmi:id="_sPVgJKmfEeCiHOqShdSrcg" source="MagicDraw">
-          <details xmi:id="_sPVgJamfEeCiHOqShdSrcg" key="md_id" value="_16_8beta_8f90291_1257409433754_988203_359"/>
+        <eAnnotations xmi:id="_VeIopsuXEeCAed-DQtO3HQ" source="MagicDraw">
+          <details xmi:id="_VeIop8uXEeCAed-DQtO3HQ" key="md_id" value="_16_8beta_8f90291_1257409433754_988203_359"/>
         </eAnnotations>
       </lowerValue>
     </ownedEnd>
-    <memberEnd xmi:type="uml:ExtensionEnd" href="#_16_8beta_8f90291_1257409433754_649568_358"/>
     <memberEnd href="UML_Standard_Profile.MagicDraw_Profile.profile.uml2#_16_8beta_8f90291_1257409433754_871790_357"/>
+    <memberEnd xmi:type="uml:ExtensionEnd" href="#_16_8beta_8f90291_1257409433754_649568_358"/>
   </ownedMember>
   <ownedMember xmi:type="uml:Enumeration" xmi:id="_11_5_be00301_1151668147214_220172_349" name="CustomizationGroupNames">
-    <eAnnotations xmi:id="_sPVgJqmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPVgJ6mfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151668147214_220172_349"/>
+    <eAnnotations xmi:id="_VeIoqMuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeIoqcuXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151668147214_220172_349"/>
     </eAnnotations>
     <ownedLiteral xmi:id="_11_5_be00301_1151668191517_977444_372" name="Connection Rules">
-      <eAnnotations xmi:id="_sPVgKKmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPVgKamfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151668191517_977444_372"/>
+      <eAnnotations xmi:id="_VeIoqsuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIoq8uXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151668191517_977444_372"/>
       </eAnnotations>
     </ownedLiteral>
     <ownedLiteral xmi:id="_11_5_be00301_1151668205978_536169_376" name="Model Initialization">
-      <eAnnotations xmi:id="_sPVgKqmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPVgK6mfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151668205978_536169_376"/>
+      <eAnnotations xmi:id="_VeIorMuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIorcuXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151668205978_536169_376"/>
       </eAnnotations>
     </ownedLiteral>
     <ownedLiteral xmi:id="_11_5_be00301_1151668187061_119857_370" name="Properties">
-      <eAnnotations xmi:id="_sPWHEKmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPWHEamfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151668187061_119857_370"/>
+      <eAnnotations xmi:id="_VeIorsuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIor8uXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151668187061_119857_370"/>
       </eAnnotations>
     </ownedLiteral>
     <ownedLiteral xmi:id="_12_0EAPbeta_be00301_1157629460825_333054_764" name="OwnedElements">
-      <eAnnotations xmi:id="_sPWHEqmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPWHE6mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1157629460825_333054_764"/>
+      <eAnnotations xmi:id="_VeIosMuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIoscuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1157629460825_333054_764"/>
       </eAnnotations>
     </ownedLiteral>
     <ownedLiteral xmi:id="_11_5_be00301_1151668160833_388370_368" name="General">
-      <eAnnotations xmi:id="_sPWHFKmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPWHFamfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151668160833_388370_368"/>
+      <eAnnotations xmi:id="_VeIossuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIos8uXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151668160833_388370_368"/>
       </eAnnotations>
     </ownedLiteral>
     <ownedLiteral xmi:id="_11_5_be00301_1151668201842_594414_374" name="Naming">
-      <eAnnotations xmi:id="_sPWHFqmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPWHF6mfEeCiHOqShdSrcg" key="md_id" value="_11_5_be00301_1151668201842_594414_374"/>
+      <eAnnotations xmi:id="_VeIotMuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIotcuXEeCAed-DQtO3HQ" key="md_id" value="_11_5_be00301_1151668201842_594414_374"/>
       </eAnnotations>
     </ownedLiteral>
     <ownedLiteral xmi:id="_16_5beta1_6790224_1232024334692_769917_268" name="Symbol">
-      <eAnnotations xmi:id="_sPWHGKmfEeCiHOqShdSrcg" source="MagicDraw">
-        <details xmi:id="_sPWHGamfEeCiHOqShdSrcg" key="md_id" value="_16_5beta1_6790224_1232024334692_769917_268"/>
+      <eAnnotations xmi:id="_VeIotsuXEeCAed-DQtO3HQ" source="MagicDraw">
+        <details xmi:id="_VeIot8uXEeCAed-DQtO3HQ" key="md_id" value="_16_5beta1_6790224_1232024334692_769917_268"/>
       </eAnnotations>
     </ownedLiteral>
   </ownedMember>
   <ownedMember xmi:type="uml:Class" xmi:id="_12_0EAPbeta_be00301_1159943470859_244302_338" name="CustomizationOfCustomization">
-    <eAnnotations xmi:id="_ryqyIKmfEeCiHOqShdSrcg" source="appliedStereotypes">
-      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_ryqyIamfEeCiHOqShdSrcg" representationText="Customization" doNotSuggestAsType="true">
+    <eAnnotations xmi:id="_U848wsuXEeCAed-DQtO3HQ" source="appliedStereotypes">
+      <contents xmi:type="MagicDrawProfile_0:MagicDrawProfile__Customization" xmi:id="_U848w8uXEeCAed-DQtO3HQ" representationText="Customization" doNotSuggestAsType="true">
         <customizationTarget>MagicDraw Profile::Customization</customizationTarget>
         <customizationTarget>MagicDraw Profile::grouped</customizationTarget>
         <customizationTarget>MagicDraw Profile::metaProperty</customizationTarget>
@@ -589,8 +589,8 @@
         <suggestedOwnedTypes>MagicDraw Profile::propertyGroup</suggestedOwnedTypes>
       </contents>
     </eAnnotations>
-    <eAnnotations xmi:id="_sPWHGqmfEeCiHOqShdSrcg" source="MagicDraw">
-      <details xmi:id="_sPWHG6mfEeCiHOqShdSrcg" key="md_id" value="_12_0EAPbeta_be00301_1159943470859_244302_338"/>
+    <eAnnotations xmi:id="_VeIouMuXEeCAed-DQtO3HQ" source="MagicDraw">
+      <details xmi:id="_VeIoucuXEeCAed-DQtO3HQ" key="md_id" value="_12_0EAPbeta_be00301_1159943470859_244302_338"/>
     </eAnnotations>
   </ownedMember>
 </uml:Profile>

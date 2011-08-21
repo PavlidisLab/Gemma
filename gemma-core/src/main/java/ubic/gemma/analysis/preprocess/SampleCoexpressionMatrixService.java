@@ -63,7 +63,6 @@ public class SampleCoexpressionMatrixService {
      * @return
      */
     public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment ee ) {
-
         DoubleMatrix<BioAssay, BioAssay> mat = sampleCoexpressionMatrixDao.load( ee );
 
         if ( mat == null ) {
@@ -75,7 +74,7 @@ public class SampleCoexpressionMatrixService {
                 throw new IllegalArgumentException( "Must have processed vectors created first" );
             }
 
-            return getSampleCorrelationMatrix( ee, processedVectors );
+            mat = getSampleCorrelationMatrix( ee, processedVectors );
 
         }
 

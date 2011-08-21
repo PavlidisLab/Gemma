@@ -113,10 +113,12 @@ public class ExpressionDataMatrixColumnSort {
         Map<BioMaterial, BioAssay> bm2ba = new HashMap<BioMaterial, BioAssay>();
         for ( BioAssay bioAssay : bioAssays ) {
             start.add( bioAssay.getSamplesUsed().iterator().next() );
+            bm2ba.put( bioAssay.getSamplesUsed().iterator().next(), bioAssay );
         }
         List<BioMaterial> bm = orderByExperimentalDesign( start, null );
         List<BioAssay> newBioAssayOrder = new ArrayList<BioAssay>();
         for ( BioMaterial bioMaterial : bm ) {
+            assert bm2ba.containsKey( bioMaterial );
             newBioAssayOrder.add( bm2ba.get( bioMaterial ) );
         }
         return mat.subsetColumns( newBioAssayOrder );
