@@ -35,7 +35,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
         try {
             ExpressionDataCorrMatCli e = new ExpressionDataCorrMatCli();
             Exception ex = e.doWork( args );
-            log.info( ex, ex );
+            if ( ex != null ) log.info( ex, ex );
         } catch ( Exception e ) {
             log.info( e, e );
         }
@@ -69,7 +69,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
             }
 
         }
-        if ( expressionExperiments.size() > 1 ) summarizeProcessing();
+        summarizeProcessing();
         return null;
     }
 
@@ -77,7 +77,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
      * @param arrayDesign
      */
     private void audit( ExpressionExperiment ee, AuditEventType eventType ) {
-        auditTrailService.addUpdateEvent( ee, eventType, "Generated correlation matrix images" );
+        auditTrailService.addUpdateEvent( ee, eventType, "Generated sample correlation matrix" );
         successObjects.add( ee.toString() );
     }
 
