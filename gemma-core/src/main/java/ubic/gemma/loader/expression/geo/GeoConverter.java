@@ -29,6 +29,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -970,6 +972,8 @@ public class GeoConverter implements Converter<Object, Object> {
             descIter = descriptions.iterator();
         }
 
+        Pattern refSeqAccessionPattern = Pattern.compile( "^[A-Z]{2}_" );
+
         Collection compositeSequences = new ArrayList( 5000 );
         int i = 0; // to get sequences, if we have them, and clone identifiers.
         for ( String id : identifiers ) {
@@ -1025,7 +1029,8 @@ public class GeoConverter implements Converter<Object, Object> {
                     && StringUtils.isNotBlank( externalAccession ) ) {
                 // http://www.ncbi.nlm.nih.gov/RefSeq/key.html#accessions : "RefSeq accession numbers can be
                 // distinguished from GenBank accessions by their prefix distinct format of [2 characters|underbar]"
-                isRefseq = externalAccession.matches( "^[A-Z]{2}_" );
+                Matcher refSeqAccessionMatcher = refSeqAccessionPattern.matcher( externalAccession );
+                isRefseq = refSeqAccessionMatcher.matches();
             }
 
             boolean isImage = false;
