@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
@@ -92,10 +91,9 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     protected boolean aggressive;
 
     // Service Beans
-    protected ExpressionExperimentService eeService;
-    protected ArrayDesignService adService;
-    protected ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
-    protected ExpressionDataMatrixService expressionDataMatrixService;
+    private ExpressionExperimentService eeService;
+    private ArrayDesignService adService;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
     private TwoChannelMissingValues tcmv;
 
     private boolean splitByPlatform = false;
@@ -103,9 +101,62 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     private boolean allowSubSeriesLoad = false;
     private boolean suppressPostProcessing = false;
 
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
+
     @Override
     public String getShortDesc() {
         return "Load data from GEO or ArrayExpress";
+    }
+
+    /**
+     * Do missing value and processed vector creation steps.
+     * 
+     * @param ees
+     */
+    private void postProcess( Collection<ExpressionExperiment> ees ) {
+        log.info( "Postprocessing ..." );
+        for ( ExpressionExperiment ee : ees ) {
+
+            postProcess( ee );
+        }
+    }
+
+    /**
+     * @param ee
+     */
+    private void postProcess( ExpressionExperiment ee ) {
+        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
+        if ( arrayDesignsUsed.size() > 1 ) {
+            log.warn( "Skipping postprocessing because experiment uses "
+                    + "multiple array types. Please check valid entry and run postprocessing separately." );
+        }
+
+        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+        processForMissingValues( ee, arrayDesignUsed );
+
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
+
+        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            ee = eeService.thawLite( ee );
+            tcmv.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
     }
 
     /*
@@ -368,7 +419,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         this.adService = ( ArrayDesignService ) getBean( "arrayDesignService" );
         this.processedExpressionDataVectorCreateService = ( ProcessedExpressionDataVectorCreateService ) getBean( "processedExpressionDataVectorCreateService" );
         this.tcmv = ( TwoChannelMissingValues ) this.getBean( "twoChannelMissingValues" );
-        this.expressionDataMatrixService = ( ExpressionDataMatrixService ) getBean( "expressionDataMatrixService" );
+        this.sampleCoexpressionMatrixService = ( SampleCoexpressionMatrixService ) getBean( "sampleCoexpressionMatrixService" );
     }
 
     /**
@@ -390,54 +441,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
                 eeService.delete( expressionExperiment );
             }
         }
-    }
-
-    /**
-     * Do missing value and processed vector creation steps.
-     * 
-     * @param ees
-     */
-    private void postProcess( Collection<ExpressionExperiment> ees ) {
-        log.info( "Postprocessing ..." );
-        for ( ExpressionExperiment ee : ees ) {
-
-            postProcess( ee );
-        }
-    }
-
-    private void postProcess( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses "
-                    + "multiple array types. Please check valid entry and run postprocessing separately." );
-        }
-
-        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-        processForMissingValues( ee, arrayDesignUsed );
-
-        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
-    }
-
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
-
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
-
-        boolean wasProcessed = false;
-
-        TechnologyType tt = design.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = eeService.thawLite( ee );
-            tcmv.computeMissingValues( ee );
-            wasProcessed = true;
-        }
-
-        return wasProcessed;
     }
 
 }

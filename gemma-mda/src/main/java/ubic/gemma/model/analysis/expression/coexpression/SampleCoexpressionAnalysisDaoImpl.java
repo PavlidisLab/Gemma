@@ -116,24 +116,6 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         byte[] matrixBytes = matObj.getCoexpressionMatrix();
 
         final List<BioAssay> bioAssays = ( List<BioAssay> ) matObj.getBioAssayDimension().getBioAssays();
-
-//        // thaw
-//        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
-//
-//            @Override
-//            public Object doInHibernate( Session session ) throws HibernateException, SQLException {
-//                for ( BioAssay bioAssay : bioAssays ) {
-//                    Hibernate.initialize( bioAssay );
-//                    Hibernate.initialize( bioAssay.getSamplesUsed() );
-//                    for ( BioMaterial bm : bioAssay.getSamplesUsed() ) {
-//                        Hibernate.initialize( bm );
-//                        Hibernate.initialize( bm.getBioAssaysUsedIn() );
-//                    }
-//                }
-//                return null;
-//            }
-//        } );
-
         int numBa = bioAssays.size();
 
         double[][] rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );

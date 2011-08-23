@@ -549,17 +549,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     desvo.setBaselineGroup( new FactorValueValueObject( par.getBaselineGroup() ) );
                 }
 
-                Integer probesThatMetThreshold = differentialExpressionAnalysisService.countProbesMeetingThreshold(
-                        par, threshold );
-                desvo.setNumberOfDiffExpressedProbes( probesThatMetThreshold );
-
-                Integer upregulatedCount = differentialExpressionAnalysisService.countUpregulated( par, threshold );
-                Integer downregulatedCount = differentialExpressionAnalysisService.countDownregulated( par, threshold );
-
-                desvo.setUpregulatedCount( upregulatedCount );
-                desvo.setDownregulatedCount( downregulatedCount );
-
-                log.debug( "Probes that met threshold in result set - " + par.getId() + " : " + probesThatMetThreshold );
+                populateHitListSizes( threshold, par, desvo );
 
                 avo.getResultSets().add( desvo );
 
@@ -568,6 +558,27 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
             summaries.add( avo );
         }
         return summaries;
+    }
+
+    /**
+     * @param threshold
+     * @param par
+     * @param desvo
+     * @deprecated since the counts are available in the ResultSet->HitListSize.
+     */
+    private void populateHitListSizes( double threshold, ExpressionAnalysisResultSet par,
+            DifferentialExpressionSummaryValueObject desvo ) {
+
+        Integer probesThatMetThreshold = differentialExpressionAnalysisService.countProbesMeetingThreshold( par,
+                threshold );
+        desvo.setNumberOfDiffExpressedProbes( probesThatMetThreshold );
+        Integer upregulatedCount = differentialExpressionAnalysisService.countUpregulated( par, threshold );
+        Integer downregulatedCount = differentialExpressionAnalysisService.countDownregulated( par, threshold );
+
+        desvo.setUpregulatedCount( upregulatedCount );
+        desvo.setDownregulatedCount( downregulatedCount );
+
+        log.debug( "Probes that met threshold in result set - " + par.getId() + " : " + probesThatMetThreshold );
     }
 
     /*
