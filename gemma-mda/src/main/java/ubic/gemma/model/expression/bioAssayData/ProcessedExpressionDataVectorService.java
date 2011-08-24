@@ -40,10 +40,10 @@ public interface ProcessedExpressionDataVectorService {
      * should already have been computed.
      * 
      * @param expressionExperiment
+     * @return updated expressionExperiment
      */
     @Secured( { "GROUP_USER" })
-    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
-            ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     /**
      * @param expressionExperiments

@@ -107,8 +107,9 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
 
         ExpressionExperiment ee = ees.iterator().next();
 
-        Collection<ProcessedExpressionDataVector> createProcessedDataVectors = processedDataVectorService
-                .createProcessedDataVectors( ee );
+        ee = processedDataVectorService.createProcessedDataVectors( ee );
+
+        Collection<ProcessedExpressionDataVector> createProcessedDataVectors = ee.getProcessedExpressionDataVectors();
 
         assertEquals( 40, createProcessedDataVectors.size() );
         Collection<DoubleVectorValueObject> v = processedDataVectorService.getProcessedDataArrays( ee );

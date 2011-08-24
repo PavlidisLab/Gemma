@@ -96,13 +96,16 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
                     "GSE5949", false, true, false, false );
             this.ee = results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
-            this.ee = ( ExpressionExperiment ) e.getData();
+            this.ee = ( ( Collection<ExpressionExperiment> ) e.getData() ).iterator().next();
         }
 
         ee = eeService.thawLite( ee );
 
         Collection<ProcessedExpressionDataVector> preferredVectors = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
+
+        ee = eeService.load( ee.getId() );
+        ee = eeService.thawLite( ee );
 
         for ( ProcessedExpressionDataVector d : preferredVectors ) {
             assertTrue( d.getQuantitationType().getIsMaskedPreferred() );

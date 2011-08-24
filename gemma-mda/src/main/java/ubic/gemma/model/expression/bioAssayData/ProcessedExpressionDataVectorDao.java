@@ -44,9 +44,9 @@ public interface ProcessedExpressionDataVectorDao extends DesignElementDataVecto
      * should already have been computed. If the values already exist, they will be re-written.
      * 
      * @param expressionExperiment
+     * @return the updated expressionExperiment.
      */
-    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors(
-            ExpressionExperiment expressionExperiment );
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment expressionExperiment );
 
     public Collection<DoubleVectorValueObject> getProcessedDataArrays(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes );

@@ -72,7 +72,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#createProcessedDataVectors(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
      */
-    public Collection<ProcessedExpressionDataVector> createProcessedDataVectors( final ExpressionExperiment ee ) {
+    public ExpressionExperiment createProcessedDataVectors( ExpressionExperiment ee ) {
         if ( ee == null ) {
             throw new IllegalStateException( "ExpressionExperiment cannot be null" );
         }
@@ -161,7 +161,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         this.processedDataVectorCache.clearCache( expressionExperiment.getId() );
 
-        return expressionExperiment.getProcessedExpressionDataVectors();
+        return expressionExperiment;
 
     }
 

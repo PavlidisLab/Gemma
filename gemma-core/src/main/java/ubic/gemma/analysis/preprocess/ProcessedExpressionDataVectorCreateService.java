@@ -94,10 +94,10 @@ public class ProcessedExpressionDataVectorCreateService {
      */
     public Collection<ProcessedExpressionDataVector> computeProcessedExpressionData( ExpressionExperiment ee ) {
 
-        // eeService.thawLite( ee );
         try {
-            Collection<ProcessedExpressionDataVector> processedVectors = processedDataService
-                    .createProcessedDataVectors( ee );
+            ee = processedDataService.createProcessedDataVectors( ee );
+
+            Collection<ProcessedExpressionDataVector> processedVectors = ee.getProcessedExpressionDataVectors();
 
             assert processedVectors.size() > 0;
 
