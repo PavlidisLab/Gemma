@@ -20,30 +20,35 @@ package ubic.gemma.loader.expression.geo.service;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import java.util.Collection;
 
+import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
+import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
+import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
+import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
+import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.RawExpressionDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.tasks.analysis.expression.ExpressionExperimentLoadTask;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -55,15 +60,24 @@ import ubic.gemma.util.ConfigUtils;
 public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @Autowired
-    protected GeoDatasetService geoService;
+    private GeoDatasetService geoService;
 
     @Autowired
-    ExpressionExperimentService eeService;
+    private ExpressionExperimentService eeService;
 
-    ExpressionExperiment ee;
+    private ExpressionExperiment ee;
 
     @Autowired
     private DesignElementDataVectorService designElementDataVectorService;
+
+    @Autowired
+    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+
+    @Autowired
+    TwoChannelMissingValues twoChannelMissingValues;
+
+    @Autowired
+    ExpressionExperimentLoadTask expressionExperimentLoadTask;
 
     /**
      * Has multiple species (mouse and human, one and two platforms respectively), also test publication entry.
@@ -84,10 +98,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertNotNull( ee.getPrimaryPublication() );
         assertEquals( "6062-7", ee.getPrimaryPublication().getPages() );
         assertEquals( 2, results.size() );
-
-        eeService.delete( ee );
-
-        assertNull( eeService.load( ee.getId() ) );
 
     }
 
@@ -114,9 +124,88 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         Collection qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() );
 
-        eeService.delete( ee );
+    }
 
-        assertNull( eeService.load( ee.getId() ) );
+    @After
+    public void tearDown() {
+        if ( ee != null ) try {
+            eeService.delete( ee );
+        } catch ( Exception e ) {
+            log.info( "Failed to delete EE after test" );
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testFetchAndLoadGSE9048() throws Exception {
+        String path = ConfigUtils.getString( "gemma.home" );
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE9048", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.info( "Test skipped because GSE9048 was already loaded - clean the DB before running the test" );
+            return;
+        }
+
+        ee = eeService.load( ee.getId() );
+        ee = eeService.thawLite( ee );
+        Collection qts = eeService.getQuantitationTypes( ee );
+        assertEquals( 17, qts.size() );
+
+        twoChannelMissingValues.computeMissingValues( ee );
+
+        ee = eeService.load( ee.getId() );
+        ee = eeService.thawLite( ee );
+        qts = eeService.getQuantitationTypes( ee );
+        assertEquals( 18, qts.size() );
+
+        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+        assertEquals( 10, dataVectors.size() );
+
+        ee = eeService.load( ee.getId() );
+        ee = eeService.thawLite( ee );
+        qts = eeService.getQuantitationTypes( ee );
+        assertEquals( 19, qts.size() );
+
+    }
+
+    /**
+     * For bug 2312 - qts getting dropped.
+     */
+    @Test
+    public void testFetchAndLoadGSE18707() throws Exception {
+        String path = ConfigUtils.getString( "gemma.home" );
+        try {
+            geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
+                    + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
+            Collection<?> results = geoService.fetchAndLoad( "GSE18707", false, true, false, false );
+            ee = ( ExpressionExperiment ) results.iterator().next();
+        } catch ( AlreadyExistsInSystemException e ) {
+            log.info( "Test skipped because GSE18707 was already loaded - clean the DB before running the test" );
+            return;
+        }
+
+        // Mouse430A_2.
+        ee = eeService.findByShortName( "GSE18707" );
+
+        Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
+
+        assertEquals( 1, qts.size() );
+        QuantitationType qt = qts.iterator().next();
+        assertEquals( "Processed Affymetrix Rosetta intensity values", qt.getDescription() );
+
+        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
+                .computeProcessedExpressionData( ee );
+        assertEquals( 100, dataVectors.size() );
+
+        ee = eeService.findByShortName( "GSE18707" );
+
+        qts = eeService.getQuantitationTypes( ee );
+
+        assertEquals( 2, qts.size() );
 
     }
 
@@ -136,10 +225,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         ee = eeService.thawLite( ee );
         Collection qts = eeService.getQuantitationTypes( ee );
         assertEquals( 3, qts.size() );
-
-        eeService.delete( ee );
-
-        assertNull( eeService.load( ee.getId() ) );
 
     }
 
@@ -191,24 +276,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         // GSM10380 = C7-U133A
         testMatrixValue( newee, matrix, "1007_s_at", "GSM10380", 1272.0 );
 
-        eeService.delete( newee );
-
-        assertNull( eeService.load( newee.getId() ) );
-
     }
-
-    /*
-     * Please leave this here, we use it to load data sets for chopping.
-     */
-    void fetchASeries( String accession ) throws Exception {
-        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-        geoService.fetchAndLoad( accession, false, false, false, false );
-    }
-
-    // @Test
-    // public void test() throws Exception {
-    // fetchASeries( "GSE18162" );
-    // }
 
     /**
      * @param matrix
@@ -267,5 +335,18 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         assertEquals( expectedValue, actualValue, 0.00001 );
 
     }
+
+    /*
+     * Please leave this here, we use it to load data sets for chopping.
+     */
+    void fetchASeries( String accession ) throws Exception {
+        geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
+        geoService.fetchAndLoad( accession, false, false, false, false );
+    }
+    //
+    // @Test
+    // public void test() throws Exception {
+    // fetchASeries( "GSE9048" );
+    // }
 
 }

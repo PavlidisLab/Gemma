@@ -396,8 +396,15 @@ public class ProcessedExpressionDataVectorCreateService {
 
             ExpressionDataBooleanMatrix missingValues = builder.getMissingValueData();
 
-            if ( missingValues == null || intensities == null ) {
-                log.warn( "Could not locate intensity matrix for " + ee + ", rank computation skipped" );
+            if ( missingValues == null ) {
+                log.warn( "Could not locate missing value matrix for " + ee
+                        + ", rank computation skipped (needed for two-color data)" );
+                return processedVectors;
+            }
+
+            if ( intensities == null ) {
+                log.warn( "Could not locate intensity matrix for " + ee
+                        + ", rank computation skipped (needed for two-color data)" );
                 return processedVectors;
             }
             this.maskMissingValues( intensities, missingValues );

@@ -531,6 +531,27 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 66, e.getRawExpressionDataVectors().size() );
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testParseGSE18707() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE18707.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE18707" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Set result = ( Set ) this.gc.convert( series );
+        ExpressionExperiment e = ( ExpressionExperiment ) result.iterator().next();
+        assertEquals( 100, e.getRawExpressionDataVectors().size() );
+        assertEquals( 1, e.getQuantitationTypes().size() ); // this is normal, before any processing.
+
+        QuantitationType qt = e.getQuantitationTypes().iterator().next();
+        assertEquals( "Processed Affymetrix Rosetta intensity values", qt.getDescription() );
+
+    }
+
     /**
      * GSE4047 is an example of where some of the samples used have channel 1 and channel 2 taxon different. And thus an
      * exception should be thrown
