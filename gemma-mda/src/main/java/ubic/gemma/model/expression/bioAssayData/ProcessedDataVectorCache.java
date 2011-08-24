@@ -118,7 +118,9 @@ public class ProcessedDataVectorCache implements InitializingBean {
      */
     @SuppressWarnings("unchecked")
     public Collection<DoubleVectorValueObject> get( BioAssaySet ee, Gene g ) {
-        return ( Collection<DoubleVectorValueObject> ) cache.get( new CacheKey( ee.getId(), g.getId() ) ).getValue();
+        Element element = cache.get( new CacheKey( ee.getId(), g.getId() ) );
+        if ( element == null ) return null;
+        return ( Collection<DoubleVectorValueObject> ) element.getValue();
     }
 
     /**
