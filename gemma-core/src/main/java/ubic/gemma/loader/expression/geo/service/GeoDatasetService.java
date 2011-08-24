@@ -51,6 +51,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.security.SecurityService;
 
 /**
  * Non-interactive fetching, processing and persisting of GEO data.
@@ -74,6 +75,9 @@ public class GeoDatasetService extends AbstractGeoService {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
+
+    @Autowired
+    private SecurityService securityService;
 
     /*
      * (non-Javadoc)
@@ -194,6 +198,9 @@ public class GeoDatasetService extends AbstractGeoService {
         Collection persistedResult = persisterHelper.persist( result );
         log.debug( "Persisted " + seriesAccession );
         updateReports( persistedResult );
+
+        securityService.makePrivate( persistedResult ); // TODO make this optional?
+
         return persistedResult;
     }
 
