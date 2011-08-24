@@ -123,6 +123,12 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			title: 'Gene Products'
 		});
 		
+		this.add({
+			xtype: 'genephenotypes',
+			geneid: geneId,
+			title: 'Phenotypes'
+		});
+		
 		this.on('render', function(){
 			this.setActiveTab(0);
 		});

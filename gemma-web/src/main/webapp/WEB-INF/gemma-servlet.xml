@@ -381,6 +381,11 @@ gemma.max.fileupload.size.bytes=
 
 
 
+
+<bean id="experimentalEvidenceValueObject" class="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject"/>
+
+
+
 	<!--  ============================================ -->
 	<!--             DWR CONFIGURATION                 -->
 	<!--  ============================================ -->
@@ -499,7 +504,17 @@ gemma.max.fileupload.size.bytes=
 							</list>
 						</property>
 					</bean>
-				</entry>					
+				</entry>
+				<entry key="ExperimentalEvidenceValueObject">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="experimentalEvidenceValueObject" />
+							</bean>
+						</property>
+					</bean>
+				</entry>
+									
 				<!--entry key="ExpressionExperimentSetValueObject">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
@@ -565,6 +580,7 @@ gemma.max.fileupload.size.bytes=
 								<value>findGOTerms</value>
 								<value>getProducts</value>
 								<value>loadGeneDetails</value>
+								<value>loadGeneEvidences</value>
 								<value>loadAllenBrainImages</value>
 							</list>
 						</property>
@@ -1433,6 +1449,32 @@ gemma.max.fileupload.size.bytes=
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.genome.gene.GeneDetailsValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+						<property name="javascriptClassName" value="ExperimentalEvidenceValueObject"/>
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
+				<entry key="ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>

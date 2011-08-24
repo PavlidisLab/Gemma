@@ -1,5 +1,6 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -11,6 +12,7 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.UrlEvidence;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 /** Parent class of all evidences value objects */
 public abstract class EvidenceValueObject {
@@ -68,6 +70,10 @@ public abstract class EvidenceValueObject {
         return returnEvidences;
     }
 
+    public EvidenceValueObject(){
+        
+    }
+    
     /** set fields common to all evidences. Entity to Value Object */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
 
@@ -80,13 +86,21 @@ public abstract class EvidenceValueObject {
             String category = phenotypeAssociation.getAssociationType().getCategory();
             String value = phenotypeAssociation.getAssociationType().getValue();
 
-            this.associationType = new CharacteristicValueObject( category, value );
+            this.associationType = new CharacteristicValueObject( value, category );
         }
-        phenotypes = new HashSet<CharacteristicValueObject>();
+        phenotypes = new ArrayList<CharacteristicValueObject>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
-            CharacteristicValueObject characteristicVO = new CharacteristicValueObject( c.getCategory(), c.getValue() );
+            CharacteristicValueObject characteristicVO = null;
+            
+            if(c instanceof VocabCharacteristicImpl){
+                VocabCharacteristicImpl voCha = (VocabCharacteristicImpl)c;
+                characteristicVO = new CharacteristicValueObject( voCha.getValue(), voCha.getCategory(),voCha.getValueUri(),voCha.getCategoryUri() );
+            }
+            else{
+                characteristicVO = new CharacteristicValueObject( c.getValue(), c.getCategory() );
+            }
 
             phenotypes.add( characteristicVO );
         }

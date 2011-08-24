@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
@@ -27,10 +29,12 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceVa
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
-/** take a tsv file for the CGMS and creates experimental evidences */
+/** take a tsv file for the CGMS and creates experimental evidences objects */
 public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
+    // input file path
     private String inputFile = "";
+    // flag to decided if the data is ready to be imported
     private Boolean createInDatabase = false;
 
     private OntologyService ontologyService = null;
@@ -47,13 +51,14 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
     public static void main( String[] args ) {
 
+        // example of parameters
         args = new String[7];
         args[0] = "-u";
         args[1] = "administrator";
         args[2] = "-p";
         args[3] = "administrator";
         args[4] = "-f";
-        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/ArtemisInputFile.tsv";
+        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/ArtemisInputFile2.tsv";
         args[6] = "-create";
 
         PhenotypeAssociationLoaderCLI p = new PhenotypeAssociationLoaderCLI();
@@ -92,7 +97,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    /** There is 5 Steps in the process of creating the evidences */
+    /** There are 5 Steps in the process of creating the evidences */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "PhenotypeAssociationLoader", args );
@@ -101,7 +106,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         try {
 
             System.out.println( "STEP 1 : Load Ontology" );
-            loadOntologyServices();
+            loadServices();
 
             System.out.println( "STEP 2 : Extract the data from the file" );
             Collection<EvidenceLineInfo> linesFromFile = file2Objects( inputFile );
@@ -109,7 +114,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             System.out.println( "STEP 3 : Convert file to Ontology terms" );
             convertOntologiesTerms( linesFromFile );
 
-            // make a tsv file to check is Ontology correctly mapped
+            // make a intermediate tsv file to check is Ontology correctly mapped (used by students to verify data)
             System.out.println( "STEP 4 : Create intermediate file with uri from ontology" );
             writeFileWithOntology( linesFromFile );
 
@@ -117,7 +122,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             System.out.println( "STEP 5 : Verify is all Gene ID exist in Gemma" );
             verifyGeneIdExist( linesFromFile );
 
-            // called when we are sure about step 3 and 4, option is put on the command line
+            // called as the final step to create the object in the database
             if ( createInDatabase ) {
                 System.out.println( "STEP 6 : Create the evidences in the database" );
                 createEvidencesInDatabase( linesFromFile );
@@ -131,8 +136,8 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         return null;
     }
 
-    /** check that all Ontology are loaded */
-    private synchronized void loadOntologyServices() throws Exception {
+    /** load services and verify that Ontology are loaded */
+    private synchronized void loadServices() throws Exception {
 
         phenotypeAssociationService = ( PhenotypeAssociationManagerService ) this
                 .getBean( "phenotypeAssociationManagerService" );
@@ -145,66 +150,38 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
         humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
         nifstdOntologyService = ontologyService.getNifstfOntologyService();
-
         obiService = ontologyService.getObiService();
         fmaOntologyService = ontologyService.getFmaOntologyService();
 
-        int time = 0;
-
         while ( diseaseOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
-            time++;
-            if ( time > 600 ) {
-                throw new Exception( "Taking more than 10 minutes" );
-            }
             System.out.println( "waiting for Disease Ontology to load" );
         }
 
         while ( mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
-            time++;
-            if ( time > 600 ) {
-                throw new Exception( "Taking more than 10 minutes" );
-            }
             System.out.println( "waiting for MP Ontology to load" );
         }
 
         while ( humanPhenotypeOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
-            time++;
-            if ( time > 600 ) {
-                throw new Exception( "Taking more than 10 minutes" );
-            }
             System.out.println( "waiting for HP Ontology to load" );
         }
 
         while ( obiService.isOntologyLoaded() == false ) {
             wait( 1000 );
-            time++;
-            if ( time > 600 ) {
-                throw new Exception( "Taking more than 10 minutes" );
-            }
             System.out.println( "waiting for OBI Ontology to load" );
         }
 
         while ( nifstdOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
-            time++;
-            if ( time > 600 ) {
-                throw new Exception( "Taking more than 10 minutes" );
-            }
             System.out.println( "waiting for NIF Ontology to load" );
         }
 
         while ( ontologyService.getFmaOntologyService().isOntologyLoaded() == false ) {
             wait( 1000 );
-            time++;
-            if ( time > 600 ) {
-                throw new Exception( "Taking more than 10 minutes" );
-            }
             System.out.println( "waiting for FMA Ontology to load" );
         }
-
     }
 
     /** Take the file and transform it into an object structure for each line */
@@ -225,7 +202,6 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             if ( lineNumber != 1 ) {
 
                 System.out.println( "Creating object for line: " + lineNumber );
-
                 evidenceLineInfos.add( new EvidenceLineInfo( line ) );
             }
         }
@@ -239,7 +215,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
      * find the exact term of a search term in a Collection of Ontology terms
      * 
      * @param ontologyTerms Collection of ontologyTerms
-     * @param search The value we are intereted in finding
+     * @param search The value we are interested in finding
      * @return OntologyTerm the exact match value found
      */
     private OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) {
@@ -256,7 +232,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         return null;
     }
 
-    /** search term first in the diseaseOntology then hp, then mp */
+    /** search phenotype term the diseaseOntology then hp, then mp */
     private String phenotype2Ontology( String search ) throws Exception {
 
         // search disease
@@ -286,7 +262,10 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             return ot.getUri();
         }
 
-        throw new Exception( "phenotype not found in disease, hp and mp Ontology : " + search );
+        // all phenotypes must be find
+        System.err.println( "phenotype not found in disease, hp and mp Ontology : " + search );
+        return null;
+        // throw new Exception( "phenotype not found in disease, hp and mp Ontology : " + search );
     }
 
     /** search term in the obi Ontology */
@@ -335,7 +314,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    /** changing each line of the file by Ontology terms */
+    /** change each line of the file by Ontology terms */
     private void convertOntologiesTerms( Collection<EvidenceLineInfo> evidenceLineInfos ) throws Exception {
 
         int line = 1;
@@ -428,7 +407,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
     private void writeFileWithOntology( Collection<EvidenceLineInfo> linesFromFile ) throws IOException {
 
         BufferedWriter out = new BufferedWriter( new FileWriter(
-                "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/ArtemisOutputFile.tsv" ) );
+                "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/intermediateOutputFile.tsv" ) );
 
         out.write( "Gene ID" + "\t" + "Experimental Source (PMID)" + "\t" + "Review Source (PMID)" + "\t"
                 + "EvidenceCode" + "\t" + "Comments" + "\t" + "Association Type" + "\t" + "Value" + "\t" + "ValueUri"
@@ -465,21 +444,25 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
         for ( EvidenceLineInfo lineInfo : linesFromFile ) {
             if ( geneService.findByNCBIId( lineInfo.getGeneID() ) == null ) {
-
-                System.out.println( "Gene not found in Gemma: " + lineInfo.getGeneID() );
+                System.err.println( "Gene not found in Gemma: " + lineInfo.getGeneID() + " Description: "
+                        + lineInfo.getComment() );
             }
         }
     }
 
-    /** Step 6 populate the evidence and save it to the database calling the service */
-    private void createEvidencesInDatabase( Collection<EvidenceLineInfo> linesFromFile ) throws IOException {
+    /**
+     * Step 6 populate the evidence and save it to the database calling the service
+     * 
+     * @throws Exception
+     */
+    private void createEvidencesInDatabase( Collection<EvidenceLineInfo> linesFromFile ) throws Exception {
 
         int evidenceNumber = 1;
 
         // for each evidence found, we need to populate its evidenceObject and to call the service to save it
         for ( EvidenceLineInfo phenoAss : linesFromFile ) {
 
-            String description = phenoAss.getComment() + phenoAss.getReviewReferencePubmed();
+            String description = phenoAss.getComment();
             CharacteristicValueObject associationType = null;
 
             if ( !phenoAss.getAssociationType().equalsIgnoreCase( "" ) ) {
@@ -487,28 +470,32 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             }
             String evidenceCode = phenoAss.getEvidenceCode();
             String primaryPublicationPubmed = phenoAss.getPrimaryReferencePubmed();
+            String relevantPublicationPubmed = phenoAss.getReviewReferencePubmed();
+            Collection<String> relevantPublicationsPubmed = null;
+
+            if ( !relevantPublicationPubmed.equalsIgnoreCase( "" ) ) {
+                relevantPublicationsPubmed = new HashSet<String>();
+                relevantPublicationsPubmed.add( relevantPublicationPubmed );
+            }
 
             Collection<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
 
             Collection<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
 
             EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType, false,
-                    evidenceCode, phenotypes, primaryPublicationPubmed, null, characteristics );
+                    evidenceCode, phenotypes, primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
 
             String geneId = phenoAss.getGeneID();
 
             try {
                 // here should be gene id using 2 for test since I have a test database
                 phenotypeAssociationService.linkGeneToPhenotype( geneId, evidence );
+                System.out.println( "Evidence " + evidenceNumber + " created" );
 
-                System.out.println( "** WORK **" );
             } catch ( Exception e ) {
-
-                System.out.println( "** DIDNT WORK **" );
-
+                System.out.println( "Evidence " + evidenceNumber + " was NOT Created" );
+                // throw new Exception( "Evidence " + evidenceNumber + " was NOT Created" );
             }
-
-            System.out.println( "Evidence " + evidenceNumber + " created" );
             evidenceNumber++;
         }
 
