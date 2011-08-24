@@ -83,9 +83,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /**
      * Sort a map's values.
      * <p>
-     * TODO: put this somewhere where it might be used by others.
-     * <p>
-     * FIXME could use org.apache.commons.collections.bidimap.TreeBidiMap?
+     * TODO: put this somewhere where it might be used by others. For another implementation see ErmineJ
+     * GeneSetPvalRun.getSortedClasses
      * <p>
      * Based on a concept at www.xinotes.org/notes/note/306
      * 

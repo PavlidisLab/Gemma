@@ -122,7 +122,10 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
             ee = eeService.thawLite( ee );
             boolean needToRun = needToRun( ee, ProcessedVectorComputationEvent.class );
 
-            if ( !needToRun && !force ) return;
+            if ( !needToRun && !force ) {
+                log.info( "No need to run " + ee + "(use 'force' to override)" );
+                return;
+            }
             this.processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
             // Note tha tauditing is done by the service.
             successObjects.add( ee.toString() );

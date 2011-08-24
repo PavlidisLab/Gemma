@@ -19,16 +19,18 @@
 package ubic.gemma.model.expression.bioAssayData;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -43,9 +45,9 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 @Component
-public class ProcessedDataVectorCache {
+public class ProcessedDataVectorCache implements InitializingBean {
 
-    private static final String VECTOR_CACHE_NAME_BASE = "DataVectorCache";
+    private static final String VECTOR_CACHE_NAME = "ProcessedExpressionDataVectorCache";
     private static final int VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
     private static final int VECTOR_CACHE_DEFAULT_TIME_TO_LIVE = 10000;
     private static final int VECTOR_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
@@ -56,7 +58,9 @@ public class ProcessedDataVectorCache {
      * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
      * cache manager needs to recreate a cache for some reason. Something to keep in mind.
      */
-    private static final Map<Long /* EE id */, Cache> caches = new HashMap<Long, Cache>();
+    // private static final Map<Long /* EE id */, Cache> caches = new HashMap<Long, Cache>();
+
+    private Cache cache;
 
     @Autowired
     private CacheManager cacheManager;
@@ -65,39 +69,14 @@ public class ProcessedDataVectorCache {
      * 
      */
     public void clearAllCaches() {
-        for ( Long eeid : caches.keySet() ) {
-            clearCache( eeid );
-        }
+        // for ( Long eeid : caches.keySet() ) {
+        // clearCache( eeid );
+        // }
+        clearCache();
     }
 
-    /**
-     * Remove all elements from the cache for the given expression experiment, if the cache exists.
-     * 
-     * @param e the expression experiment - specific cache to be cleared.
-     */
-    public void clearCache( Long eeid ) {
-        Cache cache = cacheManager.getCache( getCacheName( eeid ) );
-        if ( cache != null ) cache.removeAll();
-    }
-
-    /**
-     * @return
-     */
-    public Collection<Cache> getAllCaches() {
-        return caches.values();
-    }
-
-    /**
-     * Get the coexpression cache for a particular experiment
-     * 
-     * @param e
-     * @return
-     */
-    public Cache getCache( Long eeid ) {
-        if ( !caches.containsKey( eeid ) ) {
-            initializeCache( eeid );
-        }
-        return caches.get( eeid );
+    public void clearCache() {
+        cache.removeAll();
     }
 
     /**
@@ -107,21 +86,8 @@ public class ProcessedDataVectorCache {
         this.cacheManager = cacheManager;
     }
 
-    private String getCacheName( Long eeid ) {
-        return VECTOR_CACHE_NAME_BASE + "_" + eeid;
-    }
-
-    /**
-     * Initialize the vector cache; if it already exists it will not be recreated.
-     * 
-     * @return
-     */
-    private void initializeCache( Long eeid ) {
-
-        if ( caches.containsKey( eeid ) ) {
-            return;
-        }
-
+    @Override
+    public void afterPropertiesSet() throws Exception {
         int maxElements = ConfigUtils.getInt( "gemma.cache.vectors.maxelements", VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = ConfigUtils.getInt( "gemma.cache.vectors.timetolive", VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
         int timeToIdle = ConfigUtils.getInt( "gemma.cache.vectors.timetoidle", VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
@@ -131,7 +97,7 @@ public class ProcessedDataVectorCache {
 
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal", VECTOR_CACHE_DEFAULT_ETERNAL );
 
-        String cacheName = getCacheName( eeid );
+        String cacheName = VECTOR_CACHE_NAME;
 
         boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
 
@@ -141,7 +107,76 @@ public class ProcessedDataVectorCache {
                     null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
         }
 
-        caches.put( eeid, cacheManager.getCache( cacheName ) );
+        this.cache = cacheManager.getCache( VECTOR_CACHE_NAME );
 
     }
+
+    /**
+     * @param ee
+     * @param g
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<DoubleVectorValueObject> get( BioAssaySet ee, Gene g ) {
+        return ( Collection<DoubleVectorValueObject> ) cache.get( new CacheKey( ee.getId(), g.getId() ) ).getValue();
+    }
+
+    /**
+     * @param eeid
+     * @param g
+     * @param collection
+     */
+    public void addToCache( Long eeid, Gene g, Collection<DoubleVectorValueObject> collection ) {
+        cache.put( new Element( new CacheKey( eeid, g.getId() ), collection ) );
+    }
+
+    /**
+     * Remove cached items for experiment with given id.
+     * 
+     * @param eeid
+     */
+    public void clearCache( Long eeid ) {
+        for ( Object o : cache.getKeys() ) {
+            CacheKey k = ( CacheKey ) o;
+            if ( k.eeid.equals( eeid ) ) {
+                cache.remove( k );
+            }
+        }
+    }
+}
+
+class CacheKey {
+
+    Long eeid;
+    Long geneId;
+
+    CacheKey( Long eeid, Long geneId ) {
+        this.eeid = eeid;
+        this.geneId = geneId;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( eeid == null ) ? 0 : eeid.hashCode() );
+        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        CacheKey other = ( CacheKey ) obj;
+        if ( eeid == null ) {
+            if ( other.eeid != null ) return false;
+        } else if ( !eeid.equals( other.eeid ) ) return false;
+        if ( geneId == null ) {
+            if ( other.geneId != null ) return false;
+        } else if ( !geneId.equals( other.geneId ) ) return false;
+        return true;
+    }
+
 }
