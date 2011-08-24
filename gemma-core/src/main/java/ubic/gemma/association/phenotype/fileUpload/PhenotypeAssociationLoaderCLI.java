@@ -373,7 +373,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
                     CharacteristicValueObject characteristic = new CharacteristicValueObject(
                             lineInfo.getTreatment()[i], EvidenceLineInfo.TREATMENT, null,
                             EvidenceLineInfo.TREATMENT_ONTOLOGY );
-                    lineInfo.addPhenotype( characteristic );
+                    lineInfo.addExperimentCharacteristic( characteristic );
                 }
             }
 
@@ -466,7 +466,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             CharacteristicValueObject associationType = null;
 
             if ( !phenoAss.getAssociationType().equalsIgnoreCase( "" ) ) {
-                associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
+               // associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
             }
             String evidenceCode = phenoAss.getEvidenceCode();
             String primaryPublicationPubmed = phenoAss.getPrimaryReferencePubmed();
@@ -482,8 +482,8 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
             Collection<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
 
-            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType, false,
-                    evidenceCode, phenotypes, primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
+            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType, false, evidenceCode,
+                    phenotypes, primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
 
             String geneId = phenoAss.getGeneID();
 
@@ -493,8 +493,8 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
                 System.out.println( "Evidence " + evidenceNumber + " created" );
 
             } catch ( Exception e ) {
-                System.out.println( "Evidence " + evidenceNumber + " was NOT Created" );
-                // throw new Exception( "Evidence " + evidenceNumber + " was NOT Created" );
+                // System.out.println( "Evidence " + evidenceNumber + " was NOT Created: " + e.getMessage() );
+                throw e;
             }
             evidenceNumber++;
         }

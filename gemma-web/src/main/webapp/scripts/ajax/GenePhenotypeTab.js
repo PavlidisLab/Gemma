@@ -32,7 +32,7 @@ Gemma.GenePhenotypes = Ext.extend(Gemma.GemmaGridPanel, {
                     
                         var uri = value[i].valueUri;
                         
-                        if (uri.indexOf('#') !=
+                        if (uri!=null && uri.indexOf('#') !=
                         -1) {
                         
                             var link = "<a href=\"http://www.ebi.ac.uk/ontology-lookup/?termId=" +
@@ -81,7 +81,7 @@ Gemma.GenePhenotypes = Ext.extend(Gemma.GemmaGridPanel, {
         this.getStore().load({
             params: [this.geneid]
         });
-        /*
+ 
         
          this.getStore().on("load", function(store, records, options) {
         
@@ -89,7 +89,7 @@ Gemma.GenePhenotypes = Ext.extend(Gemma.GemmaGridPanel, {
         
          })
         
-         */
+
         
     }
     
