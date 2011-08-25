@@ -48,8 +48,11 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
     private Integer posSupp;
     private GeneValueObject queryGene;
     private Boolean queryRegulatesFound = false;
+    private Double queryGeneNodeDegree;
+    private Double foundGeneNodeDegree;
 
     private String sortKey;
+
     private Collection<Long> supportingExperiments;
 
     private Integer supportKey;
@@ -74,7 +77,6 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         } else if ( !sortKey.equals( other.sortKey ) ) return false;
         return true;
     }
-
     public Boolean getContainsMyData() {
         return containsMyData;
     }
@@ -88,6 +90,10 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
      */
     public GeneValueObject getFoundGene() {
         return foundGene;
+    }
+
+    public Double getFoundGeneNodeDegree() {
+        return foundGeneNodeDegree;
     }
 
     public Boolean getFoundRegulatesQuery() {
@@ -147,6 +153,10 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
         return queryGene;
     }
 
+    public Double getQueryGeneNodeDegree() {
+        return queryGeneNodeDegree;
+    }
+
     public Boolean getQueryRegulatesFound() {
         return queryRegulatesFound;
     }
@@ -186,6 +196,10 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
 
     public void setFoundGene( GeneValueObject foundGene ) {
         this.foundGene = foundGene;
+    }
+
+    public void setFoundGeneNodeDegree( Double foundGeneNodeDegree ) {
+        this.foundGeneNodeDegree = foundGeneNodeDegree;
     }
 
     public void setFoundRegulatesQuery( Boolean foundRegulatesQuery ) {
@@ -243,6 +257,10 @@ public class CoexpressionValueObjectExt implements Comparable<CoexpressionValueO
 
     public void setQueryGene( GeneValueObject queryGene ) {
         this.queryGene = queryGene;
+    }
+
+    public void setQueryGeneNodeDegree( Double queryGeneNodeDegree ) {
+        this.queryGeneNodeDegree = queryGeneNodeDegree;
     }
 
     public void setQueryRegulatesFound( Boolean queryRegulatesFound ) {

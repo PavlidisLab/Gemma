@@ -211,7 +211,11 @@ public class GeneCoexpressionService {
                     queryGenesOnly, maxResults );
         }
 
+        Collection<Long> allUsedGenes = new HashSet<Long>();
+
         for ( Gene queryGene : allCoexpressions.keySet() ) {
+
+            allUsedGenes.add( queryGene.getId() );
 
             CoexpressionCollectionValueObject coexpressions = allCoexpressions.get( queryGene );
 
@@ -234,6 +238,22 @@ public class GeneCoexpressionService {
             summary.setLinksMetNegativeStringency( coexpressions.getKnownGeneCoexpression()
                     .getNegativeStringencyLinkCount() );
             result.getSummary().put( queryGene.getOfficialSymbol(), summary );
+        }
+
+        Collection<Long> allSupportingDatasets = new HashSet<Long>();
+        for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
+            allSupportingDatasets.addAll( c.getSupportingExperiments() );
+            allUsedGenes.add( c.getFoundGene().getId() );
+        }
+
+        Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( geneService
+                .loadMultiple( allUsedGenes ), expressionExperimentService.loadMultiple( allSupportingDatasets ) );
+
+        Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
+
+        for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
+            c.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getQueryGene().getId() ) ) );
+            c.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getFoundGene().getId() ) ) );
         }
 
         return result;
@@ -287,6 +307,9 @@ public class GeneCoexpressionService {
         StopWatch timer = new StopWatch();
         timer.start();
         Collection<Gene> foundGenes = new HashSet<Gene>();
+        Collection<Gene> allUsedGenes = new HashSet<Gene>();
+        allUsedGenes.addAll( queryGenes );
+        Collection<Long> allSupportingDatasets = new HashSet<Long>();
         for ( Gene queryGene : queryGenes ) {
 
             // Note we don't check if the gene taxon matches the experiments ...
@@ -345,6 +368,8 @@ public class GeneCoexpressionService {
                 cvo.setSupportingExperiments( supportingDatasets );
                 int numSupportingDatasets = supportingDatasets.size();
 
+                allSupportingDatasets.addAll( supportingDatasets );
+
                 /*
                  * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
                  * full set of data sets that were used in the original analysis.
@@ -372,6 +397,10 @@ public class GeneCoexpressionService {
                 seen.add( g2g );
             }
         }
+        allUsedGenes.addAll( foundGenes );
+
+        populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
+
         geneService.thawLite( foundGenes );
         if ( timer.getTime() > 1000 ) {
             log.info( "Process " + ecvos.size() + " results in " + timer.getTime() + "ms" );
@@ -725,6 +754,7 @@ public class GeneCoexpressionService {
 
         // populate the value objects.
         StopWatch timer = new StopWatch();
+        Collection<Gene> allUsedGenes = new HashSet<Gene>();
         for ( Gene queryGene : queryGenes ) {
             timer.start();
 
@@ -732,6 +762,8 @@ public class GeneCoexpressionService {
                 throw new IllegalArgumentException(
                         "Mismatch between taxon for expression experiment set selected and gene queries" );
             }
+
+            allUsedGenes.add( queryGene );
 
             /*
              * For summary statistics
@@ -774,6 +806,8 @@ public class GeneCoexpressionService {
                 timer2.start();
 
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
+
+                allUsedGenes.add( foundGene );
 
                 // FIXME Symptom fix for duplicate found genes
                 // Keep track of the found genes that we can correctly identify duplicates.
@@ -892,6 +926,8 @@ public class GeneCoexpressionService {
 
             }
 
+            populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
+
             if ( timer.getTime() > 1000 ) {
                 log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
                         + timer.getTime() + "ms" );
@@ -945,6 +981,34 @@ public class GeneCoexpressionService {
         return result;
     }
 
+    /**
+     * @param ecvos
+     * @param allUsedGenes
+     * @param allSupportingDatasets
+     */
+    private void populateNodeDegree( List<CoexpressionValueObjectExt> ecvos, Collection<Gene> allUsedGenes,
+            Collection<Long> allSupportingDatasets ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+        Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( allUsedGenes,
+                expressionExperimentService.loadMultiple( allSupportingDatasets ) );
+        Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
+        for ( CoexpressionValueObjectExt coexp : ecvos ) {
+            coexp.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getQueryGene().getId() ) ) );
+            coexp.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getFoundGene().getId() ) ) );
+        }
+
+        if ( timer.getTime() > 10 ) log.info( "Node degree population:" + timer.getTime() + "ms" );
+    }
+
+    /**
+     * @param proteinInteractionMap
+     * @param regulatedBy
+     * @param regulates
+     * @param foundGene
+     * @param cvo
+     */
     private void populateInteractions( Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap,
             Map<Long, TfGeneAssociation> regulatedBy, Map<Long, TfGeneAssociation> regulates, Gene foundGene,
             CoexpressionValueObjectExt cvo ) {

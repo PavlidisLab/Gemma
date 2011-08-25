@@ -110,6 +110,26 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     private Gene queryGene;
 
+    private Double queryGeneNodeDegree;
+
+    private Double foundGeneNodeDegree;
+
+    public Double getQueryGeneNodeDegree() {
+        return queryGeneNodeDegree;
+    }
+
+    public void setQueryGeneNodeDegree( Double queryGeneNodeDegree ) {
+        this.queryGeneNodeDegree = queryGeneNodeDegree;
+    }
+
+    public Double getFoundGeneNodeDegree() {
+        return foundGeneNodeDegree;
+    }
+
+    public void setFoundGeneNodeDegree( Double foundGeneNodeDegree ) {
+        this.foundGeneNodeDegree = foundGeneNodeDegree;
+    }
+
     /**
      * Map of eeId -> probe IDs for the _query_.
      */
@@ -193,6 +213,7 @@ public class CoexpressionValueObject implements Comparable<CoexpressionValueObje
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Comparable#compareTo(java.lang.Object)
      */
     public int compareTo( CoexpressionValueObject o ) {

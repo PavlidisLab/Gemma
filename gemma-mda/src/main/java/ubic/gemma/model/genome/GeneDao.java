@@ -388,4 +388,19 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      */
     public Collection<Gene> loadThawed( Collection<Long> ids );
 
+    /**
+     * @param genes
+     * @param ees
+     * @return
+     */
+    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees );
+
+    /**
+     * @param gene
+     * @param ees
+     * @return
+     */
+    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
+
 }

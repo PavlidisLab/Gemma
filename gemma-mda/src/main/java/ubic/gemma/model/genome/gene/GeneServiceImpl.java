@@ -68,6 +68,16 @@ public class GeneServiceImpl extends GeneServiceBase {
         return this.getGeneDao().findNearest( physicalLocation, useStrand );
     }
 
+    @Override
+    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees ) {
+        return this.getGeneDao().getGeneCoexpressionNodeDegree( genes, ees );
+    }
+
+    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
+        return this.getGeneDao().getGeneCoexpressionNodeDegree( gene, ees );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -159,6 +169,17 @@ public class GeneServiceImpl extends GeneServiceBase {
     @Override
     public Collection<Gene> handleThawLite( Collection<Gene> genes ) {
         return this.getGeneDao().thawLite( genes );
+    }
+
+    @Override
+    public Collection<Gene> loadThawed( Collection<Long> ids ) {
+        return this.getGeneDao().loadThawed( ids );
+    }
+
+    @Override
+    public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
+        Collection<Gene> g = this.getGeneDao().loadThawed( ids );
+        return GeneValueObject.convert2ValueObjects( g );
     }
 
     public Gene thawLite( Gene gene ) {
@@ -395,16 +416,4 @@ public class GeneServiceImpl extends GeneServiceBase {
     protected void handleUpdate( Gene gene ) throws java.lang.Exception {
         this.getGeneDao().update( gene );
     }
-
-    @Override
-    public Collection<Gene> loadThawed( Collection<Long> ids ) {
-        return this.getGeneDao().loadThawed( ids );
-    }
-
-    @Override
-    public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids ) {
-        Collection<Gene> g = this.getGeneDao().loadThawed( ids );
-        return GeneValueObject.convert2ValueObjects( g );
-    }
-
 }

@@ -287,4 +287,19 @@ public interface GeneService {
     @Secured( { "GROUP_ADMIN" })
     public void update( Gene gene );
 
+    /**
+     * @param genes
+     * @param ees
+     * @return
+     */
+    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees );
+
+    /**
+     * @param gene
+     * @param ees
+     * @return
+     */
+    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
+
 }

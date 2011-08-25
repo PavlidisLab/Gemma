@@ -45,6 +45,9 @@ import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import cern.colt.list.DoubleArrayList;
+import cern.jet.stat.Descriptive;
+
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
@@ -56,6 +59,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.BusinessKey;
+import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.SequenceBinUtils;
 import ubic.gemma.util.TaxonUtility;
@@ -1236,6 +1240,71 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         return coexpressions;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util.Collection, java.util.Collection)
+     */
+    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees ) {
+
+        Map<CompositeSequence, Collection<Gene>> cs2GeneMap = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+
+        /*
+         * When we aggregate, it's only over data sets that had the gene tested (inner join)
+         */
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+                "select p.probe, p.nodeDegreeRank from ProbeCoexpressionAnalysisImpl pca "
+                        + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe in (:ps)",
+                new String[] { "ps", "ees" }, new Object[] { cs2GeneMap.keySet(), ees } );
+
+        Map<Gene, DoubleArrayList> interm = new HashMap<Gene, DoubleArrayList>();
+        for ( Gene g : genes ) {
+            interm.put( g, new DoubleArrayList() );
+        }
+
+        for ( Object o : r ) {
+            Object[] oa = ( Object[] ) o;
+            CompositeSequence cs = ( CompositeSequence ) oa[0];
+            Double nodeDegreeRank = ( Double ) oa[1];
+
+            Collection<Gene> gs = cs2GeneMap.get( cs );
+
+            // if ( gs.size() > 1 ) continue; // nonspecific - perhaps control this.
+            interm.get( gs.iterator().next() ).add( nodeDegreeRank );
+        }
+
+        // aggregate.
+        Map<Gene, Double> result = new HashMap<Gene, Double>();
+        for ( Gene g : interm.keySet() ) {
+            DoubleArrayList vals = interm.get( g );
+            result.put( g, Descriptive.mean( vals ) );
+        }
+
+        return result;
+    }
+
+    @Override
+    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
+
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+                "select  pca.experimentAnalyzed, p.nodeDegreeRank from ProbeCoexpressionAnalysisImpl pca "
+                        + "join pca.probesUsed p where pca.experimentAnalyzed ee in (:ees) and p.probe in (:ps)",
+                new String[] { "ps", "ees" }, new Object[] { probes, ees } );
+
+        Map<BioAssaySet, Double> result = new HashMap<BioAssaySet, Double>();
+        for ( Object o : r ) {
+            Object[] oa = ( Object[] ) o;
+            BioAssaySet ee = ( BioAssaySet ) oa[1];
+            Double nodeDegreeRank = ( Double ) oa[2];
+            result.put( ee, nodeDegreeRank );
+        }
+
+        return result;
 
     }
 
