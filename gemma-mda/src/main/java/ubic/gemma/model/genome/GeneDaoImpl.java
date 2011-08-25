@@ -950,7 +950,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coExVOForCache.setCoexpressedProbe( coexpressedProbe );
             if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
 
-            this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
+            this.getProbe2ProbeCoexpressionCache().addToCache( coExVOForCache );
         }
 
     }
@@ -996,10 +996,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coExVOForCache.setQueryProbe( queryProbe );
             coExVOForCache.setCoexpressedProbe( coexpressedProbe );
             if ( log.isDebugEnabled() ) log.debug( "Caching: " + coExVOForCache );
-            this.getProbe2ProbeCoexpressionCache().addToCache( eeID, coExVOForCache );
-
-            // why are we doing this?
-            this.getProbe2ProbeCoexpressionCache().retrieve( eeID, coExVOForCache.getQueryGene() );
+            this.getProbe2ProbeCoexpressionCache().addToCache( coExVOForCache );
         }
     }
 
@@ -1347,8 +1344,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Collection<BioAssaySet> eesToSearch = new HashSet<BioAssaySet>();
         Map<Long, Collection<CoexpressionCacheValueObject>> cachedResults = new HashMap<Long, Collection<CoexpressionCacheValueObject>>();
         for ( BioAssaySet ee : ees ) {
-            Collection<CoexpressionCacheValueObject> eeResults = this.getProbe2ProbeCoexpressionCache().retrieve(
-                    ee.getId(), gene );
+            Collection<CoexpressionCacheValueObject> eeResults = this.getProbe2ProbeCoexpressionCache().get( ee, gene );
 
             if ( eeResults != null ) {
                 cachedResults.put( ee.getId(), eeResults );

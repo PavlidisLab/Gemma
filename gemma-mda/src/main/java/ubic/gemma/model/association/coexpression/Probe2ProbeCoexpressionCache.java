@@ -19,14 +19,15 @@
 package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+
+import org.springframework.beans.factory.InitializingBean;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.CoexpressionCacheValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
@@ -42,7 +43,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
-public class Probe2ProbeCoexpressionCache {
+public class Probe2ProbeCoexpressionCache implements InitializingBean {
 
     private static final String PROCESSED_DATA_VECTOR_CACHE_NAME_BASE = "Probe2ProbeCache";
     private static final int PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS = 100000;
@@ -69,40 +70,30 @@ public class Probe2ProbeCoexpressionCache {
         this.enabled = enabled;
     }
 
-    /**
-     * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
-     * cache manager needs to recreate a cache for some reason. Something to keep in mind.
-     */
-    private final Map<Long, Cache> caches = new HashMap<Long, Cache>();
+    private Cache cache;
 
     /**
-     * @param eeID
      * @param coExVOForCache
      */
-    @SuppressWarnings("unchecked")
-    public void addToCache( Long eeID, CoexpressionCacheValueObject coExVOForCache ) {
-
-        Cache c = getCache( eeID );
-
+    public void addToCache( CoexpressionCacheValueObject coExVOForCache ) {
+        Long eeID = coExVOForCache.getExpressionExperiment();
         Gene queryGene = coExVOForCache.getQueryGene();
 
-        Element element = c.get( queryGene );
-        if ( element != null ) {
-            ( ( Collection<CoexpressionCacheValueObject> ) element.getObjectValue() ).add( coExVOForCache );
+        Collection<CoexpressionCacheValueObject> existingCache = get( eeID, queryGene.getId() );
+        if ( existingCache != null ) {
+            existingCache.add( coExVOForCache );
         } else {
             Collection<CoexpressionCacheValueObject> cachedValues = new HashSet<CoexpressionCacheValueObject>();
             cachedValues.add( coExVOForCache );
-            c.put( new Element( queryGene, cachedValues ) );
+            cache.put( new Element( new CacheKey( eeID, queryGene.getId() ), cachedValues ) );
         }
     }
 
     /**
      * 
      */
-    public void clearAllCaches() {
-        for ( Long e : caches.keySet() ) {
-            clearCache( e );
-        }
+    public void clearCache() {
+        cache.removeAll();
     }
 
     /**
@@ -110,46 +101,31 @@ public class Probe2ProbeCoexpressionCache {
      * 
      * @param e the expression experiment - specific cache to be cleared.
      */
-    public void clearCache( Long e ) {
-        CacheManager manager = CacheManager.getInstance();
-        Cache cache = manager.getCache( getCacheName( e ) );
-        if ( cache != null ) cache.removeAll();
-    }
-
-    /**
-     * @return
-     */
-    public Collection<Cache> getAllCaches() {
-        return caches.values();
-    }
-
-    /**
-     * Get the vector cache for a particular experiment
-     * 
-     * @param e
-     * @return
-     */
-    public Cache getCache( Long e ) {
-        if ( !caches.containsKey( e ) ) {
-            initializeCache( e );
+    public void clearCache( Long eeid ) {
+        for ( Object o : cache.getKeys() ) {
+            CacheKey k = ( CacheKey ) o;
+            if ( k.eeid.equals( eeid ) ) {
+                cache.remove( k );
+            }
         }
-        return caches.get( e );
     }
 
     /**
-     * @param eeID
-     * @param queryGene
-     * @return null if there are no cached results.
+     * @param ee
+     * @param g
+     * @return
      */
+    public Collection<CoexpressionCacheValueObject> get( BioAssaySet ee, Gene g ) {
+        Long eeid = ee.getId();
+        Long geneid = g.getId();
+        return get( eeid, geneid );
+    }
+
     @SuppressWarnings("unchecked")
-    public Collection<CoexpressionCacheValueObject> retrieve( Long eeID, Gene queryGene ) {
-        Cache c = getCache( eeID );
-        Element element = c.get( queryGene );
-        if ( element != null ) {
-            return ( Collection<CoexpressionCacheValueObject> ) element.getValue();
-        }
-        return null;
-
+    private Collection<CoexpressionCacheValueObject> get( Long eeid, Long geneid ) {
+        Element element = cache.get( new CacheKey( eeid, geneid ) );
+        if ( element == null ) return null;
+        return ( Collection<CoexpressionCacheValueObject> ) element.getValue();
     }
 
     /**
@@ -159,25 +135,12 @@ public class Probe2ProbeCoexpressionCache {
         this.cacheManager = cacheManager;
     }
 
-    private String getCacheName( Long id ) {
-        return PROCESSED_DATA_VECTOR_CACHE_NAME_BASE + "_" + id;
-    }
-
     /**
      * Initialize the vector cache; if it already exists it will not be recreated.
      * 
      * @return
      */
-    private void initializeCache( Long e ) {
-
-        if ( caches.containsKey( e ) ) {
-            return;
-        }
-
-        /*
-         * TODO: allow easy disabling of cache.
-         */
-
+    public void afterPropertiesSet() throws Exception {
         int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive",
@@ -193,15 +156,49 @@ public class Probe2ProbeCoexpressionCache {
 
         boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
 
-        String cacheName = getCacheName( e );
+        if ( !cacheManager.cacheExists( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE ) ) {
 
-        if ( !cacheManager.cacheExists( cacheName ) ) {
-
-            cacheManager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
-                    null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
+            cacheManager.addCache( new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE, maxElements,
+                    MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
+                    diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
         }
-        caches.put( e, cacheManager.getCache( cacheName ) );
 
+    }
+
+}
+
+class CacheKey {
+
+    Long eeid;
+    Long geneId;
+
+    CacheKey( Long eeid, Long geneId ) {
+        this.eeid = eeid;
+        this.geneId = geneId;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( eeid == null ) ? 0 : eeid.hashCode() );
+        result = prime * result + ( ( geneId == null ) ? 0 : geneId.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        CacheKey other = ( CacheKey ) obj;
+        if ( eeid == null ) {
+            if ( other.eeid != null ) return false;
+        } else if ( !eeid.equals( other.eeid ) ) return false;
+        if ( geneId == null ) {
+            if ( other.geneId != null ) return false;
+        } else if ( !geneId.equals( other.geneId ) ) return false;
+        return true;
     }
 
 }

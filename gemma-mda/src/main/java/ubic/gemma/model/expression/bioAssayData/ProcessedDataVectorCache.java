@@ -65,16 +65,6 @@ public class ProcessedDataVectorCache implements InitializingBean {
     @Autowired
     private CacheManager cacheManager;
 
-    /**
-     * 
-     */
-    public void clearAllCaches() {
-        // for ( Long eeid : caches.keySet() ) {
-        // clearCache( eeid );
-        // }
-        clearCache();
-    }
-
     public void clearCache() {
         cache.removeAll();
     }
