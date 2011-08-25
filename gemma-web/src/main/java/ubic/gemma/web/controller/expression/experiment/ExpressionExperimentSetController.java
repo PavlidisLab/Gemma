@@ -39,6 +39,7 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
@@ -110,7 +111,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         for ( SessionBoundExpressionExperimentSetValueObject eesvo : eeSetVos ) {
 
-            results.add( sessionListManager.addExperimentSet( eesvo, false) );
+            results.add( sessionListManager.addExperimentSet( eesvo, false ) );
         }
 
         return results;
@@ -132,7 +133,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
         for ( ExpressionExperimentSetValueObject eesvo : entities ) {
 
             if ( eesvo instanceof SessionBoundExpressionExperimentSetValueObject ) {
-                sessionResult.add( (SessionBoundExpressionExperimentSetValueObject) eesvo );
+                sessionResult.add( ( SessionBoundExpressionExperimentSetValueObject ) eesvo );
             } else {
                 result.add( eesvo );
             }
@@ -204,7 +205,8 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         Collection<ExpressionExperimentSetValueObject> results = loadAll();
 
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResults = sessionListManager
+                .getAllExperimentSets();
 
         results.addAll( sessionResults );
 
@@ -219,7 +221,8 @@ public class ExpressionExperimentSetController extends BaseFormController {
      */
     public Collection<SessionBoundExpressionExperimentSetValueObject> loadAllSessionGroups() {
 
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResults = sessionListManager.getAllExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResults = sessionListManager
+                .getAllExperimentSets();
 
         return sessionResults;
     }
@@ -233,36 +236,34 @@ public class ExpressionExperimentSetController extends BaseFormController {
     public Collection<ExpressionExperimentSetValueObject> loadAllUserOwnedAndSessionGroups() {
 
         Collection<ExpressionExperimentSetValueObject> valueObjects = new ArrayList<ExpressionExperimentSetValueObject>();
-        
+
         Collection<ExpressionExperimentSet> results = expressionExperimentSetService.loadMySets(); // expressionExperimentSetService
-                                                                                                   // is null?
-        valueObjects.addAll( DatabaseBackedExpressionExperimentSetValueObject.makeValueObjects( results ));
+        // is null?
+        valueObjects.addAll( DatabaseBackedExpressionExperimentSetValueObject.makeValueObjects( results ) );
         valueObjects.addAll( sessionListManager.getAllExperimentSets() );
 
         return valueObjects;
     }
-    
 
     /**
-     * AJAX 
-     * returns a JSON string encoding whether the current user owns the group and whether the group is db-backed
+     * AJAX returns a JSON string encoding whether the current user owns the group and whether the group is db-backed
+     * 
      * @param ref reference for a gene set
      * @return
      */
-    public String canCurrentUserEditGroup(ExpressionExperimentSetValueObject eesvo){
+    public String canCurrentUserEditGroup( ExpressionExperimentSetValueObject eesvo ) {
         boolean userCanEditGroup = false;
         boolean groupIsDBBacked = false;
-        if(eesvo instanceof DatabaseBackedExpressionExperimentSetValueObject){
+        if ( eesvo instanceof DatabaseBackedExpressionExperimentSetValueObject ) {
             groupIsDBBacked = true;
-            try{
+            try {
                 userCanEditGroup = securityService.isEditable( expressionExperimentService.load( eesvo.getId() ) );
-            }catch(org.springframework.security.access.AccessDeniedException ade){
-                return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+false+"}";
+            } catch ( org.springframework.security.access.AccessDeniedException ade ) {
+                return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";
             }
         }
-        return "{groupIsDBBacked:"+groupIsDBBacked+",userCanEditGroup:"+userCanEditGroup+"}";
+        return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + userCanEditGroup + "}";
     }
-    
 
     /**
      * @param entities
@@ -303,9 +304,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
             if ( experimentSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject ) {
-                sessionCollection.add( (SessionBoundExpressionExperimentSetValueObject) experimentSetValueObject );
-            } else if (experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
-                databaseCollection.add( (DatabaseBackedExpressionExperimentSetValueObject) experimentSetValueObject );
+                sessionCollection.add( ( SessionBoundExpressionExperimentSetValueObject ) experimentSetValueObject );
+            } else if ( experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject ) {
+                databaseCollection.add( ( DatabaseBackedExpressionExperimentSetValueObject ) experimentSetValueObject );
             }
         }
 
@@ -359,65 +360,65 @@ public class ExpressionExperimentSetController extends BaseFormController {
     }
 
     /**
-     * AJAX Updates the given group (permission permitting) with the given list of memberIds 
-     * Will not allow the same experiment to be added to the set twice.
-     * Cannot update name or description, just members
+     * AJAX Updates the given group (permission permitting) with the given list of memberIds Will not allow the same
+     * experiment to be added to the set twice. Cannot update name or description, just members
+     * 
      * @param groupId id of the gene set being updated
      * @param eeIds
      */
-    public String updateMembers( Long groupId, Collection<Long> eeIds) {
-        
-            String msg = null;
-            
-            ExpressionExperimentSet eeSet = expressionExperimentSetService.load( groupId );
-            if ( eeSet == null ) {
-                throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded" );
+    public String updateMembers( Long groupId, Collection<Long> eeIds ) {
+
+        String msg = null;
+
+        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( groupId );
+        if ( eeSet == null ) {
+            throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded" );
+        }
+        Collection<ExpressionExperiment> updatedExperimentlist = new HashSet<ExpressionExperiment>();
+
+        if ( !eeIds.isEmpty() ) {
+            Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
+
+            if ( experiments.isEmpty() ) {
+                throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
+                        + " provided)" );
             }
-            Collection<ExpressionExperiment> updatedExperimentlist = new HashSet<ExpressionExperiment>();
-
-            if ( !eeIds.isEmpty() ) {
-                Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
-
-                if ( experiments.isEmpty() ) {
-                    throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
-                            + " provided)" );
-                }
-                if ( experiments.size() < eeIds.size() ) {
-                    throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found " + experiments.size()
-                            + " out of " + eeIds.size() + " provided)" );
-                }
-
-                assert experiments.size() == eeIds.size();
-                boolean exists = false;
-                for ( ExpressionExperiment experiment : experiments ) {
-                    
-                    for ( BioAssaySet bas : eeSet.getExperiments() ) {
-                        if ( bas.getId().equals( experiment.getId() ) ){
-                            exists = true;
-                            break;
-                        }
-                    }
-
-                    if ( !exists ) {
-                        eeSet.getExperiments().add( experiment );
-                        updatedExperimentlist.add( experiment );
-                    } else {
-                        updatedExperimentlist.add( experiment );
-                    }
-                    
-                    exists = false;
-                }
+            if ( experiments.size() < eeIds.size() ) {
+                throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found "
+                        + experiments.size() + " out of " + eeIds.size() + " provided)" );
             }
 
-            eeSet.getExperiments().clear();
-            eeSet.getExperiments().addAll( updatedExperimentlist );
+            assert experiments.size() == eeIds.size();
+            boolean exists = false;
+            for ( ExpressionExperiment experiment : experiments ) {
 
-            expressionExperimentSetService.update( eeSet );
-            
+                for ( BioAssaySet bas : eeSet.getExperiments() ) {
+                    if ( bas.getId().equals( experiment.getId() ) ) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if ( !exists ) {
+                    eeSet.getExperiments().add( experiment );
+                    updatedExperimentlist.add( experiment );
+                } else {
+                    updatedExperimentlist.add( experiment );
+                }
+
+                exists = false;
+            }
+        }
+
+        eeSet.getExperiments().clear();
+        eeSet.getExperiments().addAll( updatedExperimentlist );
+
+        expressionExperimentSetService.update( eeSet );
+
         return msg;
 
     }
-    
+
     /**
      * AJAX Updates the session group.
      * 
@@ -445,9 +446,9 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         for ( ExpressionExperimentSetValueObject experimentSetValueObject : vos ) {
             if ( experimentSetValueObject instanceof SessionBoundExpressionExperimentSetValueObject ) {
-                sessionCollection.add( (SessionBoundExpressionExperimentSetValueObject) experimentSetValueObject );
-            } else if (experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
-                databaseCollection.add( (DatabaseBackedExpressionExperimentSetValueObject) experimentSetValueObject );
+                sessionCollection.add( ( SessionBoundExpressionExperimentSetValueObject ) experimentSetValueObject );
+            } else if ( experimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject ) {
+                databaseCollection.add( ( DatabaseBackedExpressionExperimentSetValueObject ) experimentSetValueObject );
             }
         }
 
@@ -548,9 +549,11 @@ public class ExpressionExperimentSetController extends BaseFormController {
             vo.setModifiable( true );
         }
 
-        for ( BioAssaySet ee : set.getExperiments() ) {
-            vo.getExpressionExperimentIds().add( ee.getId() );
-        }
+        /*
+         * getExperimentsInSet to get the security-filtered ees.
+         */
+        vo.getExpressionExperimentIds().addAll(
+                EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( set.getId() ) ) );
 
         vo.setNumExperiments( size );
         return vo;
