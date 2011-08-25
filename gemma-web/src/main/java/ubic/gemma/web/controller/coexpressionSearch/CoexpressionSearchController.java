@@ -175,23 +175,19 @@ public class CoexpressionSearchController extends BaseFormController {
                 }
             }
         }
-        Long eeSetId = searchOptions.getEeSetId();
+
         Collection<Long> eeIds = new HashSet<Long>();
-
+        Long eeSetId = null;
         if ( searchOptions.getEeIds() != null ) {
-            eeIds = searchOptions.getEeIds();
-        }
-
-        /*
-         * User provided a eeset by name.
-         */
-        if ( ( eeSetId == null && searchOptions.getEeSetName() != null )
-                || ( eeSetId != null && eeSetId < 0 && StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) ) {
+            // security filter.
+            eeIds = EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
+        } else if ( searchOptions.getEeSetId() != null ) {
+            eeSetId = searchOptions.getEeSetId();
+        } else if ( StringUtils.isNotBlank( searchOptions.getEeSetName() ) ) {
             Collection<ExpressionExperimentSet> eeSets = expressionExperimentSetService.findByName( searchOptions
                     .getEeSetName() );
             if ( eeSets.size() == 1 ) {
                 eeSetId = eeSets.iterator().next().getId();
-
             } else {
                 result.setErrorState( "Unknown or ambiguous set name: " + searchOptions.getEeSetName() );
                 return result;
@@ -202,14 +198,7 @@ public class CoexpressionSearchController extends BaseFormController {
          * Got an ee set.
          */
         if ( eeSetId != null ) {
-            ExpressionExperimentSet eeSet = expressionExperimentSetService.load( eeSetId );
-            if ( eeSet == null ) {
-                result.setErrorState( "No such set with id=" + eeSetId );
-                return result;
-            }
-            for ( BioAssaySet b : eeSet.getExperiments() ) {
-                eeIds.add( b.getId() );
-            }
+            eeIds = EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
         }
 
         // Add the users datasets to the selected datasets
@@ -225,17 +214,22 @@ public class CoexpressionSearchController extends BaseFormController {
                 log.info( "No user data to add" );
         }
 
-        Collection<ExpressionExperiment> ees = expressionExperimentService.loadMultiple( eeIds );
-        eeIds = EntityUtils.getIds( ees );
-
         if ( eeIds.isEmpty() ) {
             result.setErrorState( "No experiments were available" );
+            return result;
         }
 
         log.info( "Coexpression search: " + searchOptions );
 
         result = geneCoexpressionService.coexpressionSearch( eeIds, genes, searchOptions.getStringency(), MAX_RESULTS,
                 searchOptions.getQueryGenesOnly(), searchOptions.isForceProbeLevelSearch() );
+
+        // debug 2317
+        // Collection<CoexpressionValueObjectExt> quickResults = geneCoexpressionService.coexpressionSearchQuick(
+        // eeSetId,
+        // genes, searchOptions.getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly(), true );
+        // log.info( eeIds.size() + " ees " + result.getKnownGeneResults().size() + " quick: " + quickResults.size() );
+        // end debug.
 
         if ( searchOptions.isUseMyDatasets() ) {
             addMyDataFlag( result, myEE );

@@ -23,6 +23,8 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * @version $Id$
  * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService
@@ -149,6 +151,11 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     public void thaw( ExpressionExperimentSet expressionExperimentSet ) {
         this.getExpressionExperimentSetDao().thaw( expressionExperimentSet );
+    }
+
+    @Override
+    public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
+        return this.getExpressionExperimentSetDao().getExperimentsInSet( id );
     }
 
 }

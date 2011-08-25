@@ -21,6 +21,7 @@ package ubic.gemma.model.analysis.expression;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -46,6 +47,13 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      */
     public java.util.Collection<ExpressionAnalysis> getAnalyses(
             ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+
+    /**
+     * @param id
+     * @return
+     * @see ExpressionExperimentSetService.getExperimentsInSet
+     */
+    public Collection<ExpressionExperiment> getExperimentsInSet( Long id );
 
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them.

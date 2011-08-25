@@ -64,6 +64,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.AnchorTagUtil;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Provides access to Gene2Gene and Probe2Probe links. The use of this service provides 'high-level' access to
@@ -129,7 +130,7 @@ public class GeneCoexpressionService {
     /**
      * Main entry point. Note that if possible, the query will be done using results from an ExpressionExperimentSet.
      * 
-     * @param inputEeIds Expression experiments to consider
+     * @param inputEeIds Expression experiments ids to consider
      * @param genes Genes to find coexpression for
      * @param stringency Minimum support level
      * @param queryGenesOnly Whether to return only coexpression among the query genes (assuming there are more than
@@ -146,35 +147,33 @@ public class GeneCoexpressionService {
             r.setErrorState( "No genes selected" );
             return r;
         }
-        Collection<Long> eeIds = inputEeIds;
-
-        if ( inputEeIds == null ) eeIds = new HashSet<Long>();
-        Collection<BioAssaySet> ees = getPossibleExpressionExperiments( genes );
-
-        if ( ees.isEmpty() ) {
-            CoexpressionMetaValueObject r = new CoexpressionMetaValueObject();
-            r.setErrorState( "Gene(s) are not tested in any experiments" );
-            return r;
-        }
-
-        if ( !eeIds.isEmpty() ) {
-            // remove the expression experiments we're not interested in...
-            Collection<BioAssaySet> eesToRemove = new HashSet<BioAssaySet>();
-            for ( BioAssaySet ee : ees ) {
-                if ( !eeIds.contains( ee.getId() ) ) eesToRemove.add( ee );
-            }
-            ees.removeAll( eesToRemove );
-        }
 
         /*
          * repopulate eeIds with the actual eeIds we'll be searching through and load ExpressionExperimentValueObjects
          * to get summary information about the datasets...
          */
-        eeIds.clear();
-        for ( BioAssaySet ee : ees ) {
-            eeIds.add( ee.getId() );
+        Collection<? extends BioAssaySet> ees = expressionExperimentService.loadMultiple( inputEeIds );
+        Collection<Long> eeIds = EntityUtils.getIds( ees );
+
+        /*
+         * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
+         */
+        if ( !forceProbeLevelSearch ) {
+            Taxon taxon = genes.iterator().next().getTaxon();
+            ExpressionExperimentSet eeSet = geneCoexpressionAnalysisService.findCurrent( taxon )
+                    .getExpressionExperimentSetAnalyzed();
+
+            if ( eeSet != null
+                    && EntityUtils.getIds( expressionExperimentSetService.getExperimentsInSet( eeSet.getId() ) )
+                            .containsAll( eeIds ) ) {
+                return getFilteredCannedAnalysisResults( eeSet, eeIds, genes, stringency, maxResults, queryGenesOnly );
+            }
         }
 
+        /*
+         * If we get this far, there was no matching analysis so we do it using the probe2probe table. This is
+         * relatively slow so should be avoided.
+         */
         List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
 
         CoexpressionMetaValueObject result = initValueObject( genes, eevos, false );
@@ -185,40 +184,12 @@ public class GeneCoexpressionService {
             return result;
         }
 
-        /*
-         * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
-         */
-        if ( !forceProbeLevelSearch ) {
-            Taxon taxon = genes.iterator().next().getTaxon();
-            ExpressionExperimentSet eeSet = geneCoexpressionAnalysisService.findCurrent( taxon )
-                    .getExpressionExperimentSetAnalyzed();
-
-            /*
-             * debugging
-             */
-            // List<Long> eeSetIds = getIds( eeSet );
-            // for ( Long id : eeIds ) {
-            // if ( !eeSetIds.contains( id ) ) {
-            // log.info( "EEset does not have: " + id );
-            // }
-            // }
-            if ( eeSet != null && getIds( eeSet ).containsAll( eeIds ) ) {
-                log.debug( "Using canned analysis to conduct customized analysis" );
-                return getFilteredCannedAnalysisResults( eeIds, genes, stringency, maxResults, queryGenesOnly );
-            }
-        }
-
-        /*
-         * If we get this far, there was no matching analysis so we do it using the probe2probe table. This is
-         * relatively slow so should be avoided.
-         */
-
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             // FIXME don't reuse this field.
             eevo.setExternalUri( AnchorTagUtil.getExpressionExperimentUrl( eevo.getId() ) );
         }
 
-        boolean knownGenesOnly = true; // !SecurityService.isUserAdmin();
+        boolean knownGenesOnly = true; // used to be: !SecurityService.isUserAdmin();
         result.setKnownGenesOnly( knownGenesOnly );
 
         Collection<Long> geneIds = new HashSet<Long>( genes.size() );
@@ -245,22 +216,14 @@ public class GeneCoexpressionService {
             CoexpressionCollectionValueObject coexpressions = allCoexpressions.get( queryGene );
 
             result.setErrorState( coexpressions.getErrorState() );
+
             // fill in the protein interaction details if present
             Map<Long, Gene2GeneProteinAssociation> proteinInteractionsForQueryGene = this
                     .getGene2GeneProteinAssociationForQueryGene( queryGene );
 
-            // only fill this in for
             addExtCoexpressionValueObjects( queryGene, eevos, coexpressions.getKnownGeneCoexpression(), stringency,
                     queryGenesOnly, geneIds, result.getKnownGeneResults(), result.getKnownGeneDatasets(),
                     proteinInteractionsForQueryGene );
-
-            // FIXME only do this part if the user is logged in?
-            addExtCoexpressionValueObjects( queryGene, eevos, coexpressions.getPredictedGeneCoexpression(), stringency,
-                    queryGenesOnly, geneIds, result.getPredictedGeneResults(), result.getPredictedGeneDatasets(),
-                    proteinInteractionsForQueryGene );
-            addExtCoexpressionValueObjects( queryGene, eevos, coexpressions.getProbeAlignedRegionCoexpression(),
-                    stringency, queryGenesOnly, geneIds, result.getProbeAlignedRegionResults(), result
-                            .getProbeAlignedRegionDatasets(), proteinInteractionsForQueryGene );
 
             CoexpressionSummaryValueObject summary = new CoexpressionSummaryValueObject();
             summary.setDatasetsAvailable( eevos.size() );
@@ -290,27 +253,33 @@ public class GeneCoexpressionService {
     public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Long eeSetId, Collection<Gene> queryGenes,
             int stringency, int maxResults, boolean queryGenesOnly, boolean specificProbesOnly ) {
 
-        ExpressionExperimentSet baseSet = expressionExperimentSetService.load( eeSetId );
-
-        if ( baseSet == null ) {
-            throw new IllegalArgumentException( "No such expressionexperiment set with id=" + eeSetId );
-        }
-
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
          */
         Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
                 queryGenesOnly );
 
-        Collection<Long> eeIdsToUse = getIds( baseSet );
+        Collection<Long> eeIdsToUse = EntityUtils
+                .getIds( expressionExperimentSetService.getExperimentsInSet( eeSetId ) );
+
+        if ( eeIdsToUse.isEmpty() ) {
+            log.warn( "No experiments were selected" );
+            return new HashSet<CoexpressionValueObjectExt>();
+        }
+
+        removeTroubledEes( eeIdsToUse ); // PP added; may not be necessary? Slow.
+
+        log.info( "quick ees: " + eeIdsToUse.size() ); // these are security-filtered
 
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
-        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( eeIdsToUse );
+        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( eeSetId );
+        expressionExperimentSetService.thaw( eeSet );
+        Collection<Long> allEEIdsInSet = EntityUtils.getIds( eeSet.getExperiments() );
+        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( allEEIdsInSet );
 
         List<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
-
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
         queryGenes = geneService.thawLite( gg2gs.keySet() );
@@ -320,10 +289,7 @@ public class GeneCoexpressionService {
         Collection<Gene> foundGenes = new HashSet<Gene>();
         for ( Gene queryGene : queryGenes ) {
 
-            if ( !queryGene.getTaxon().equals( baseSet.getTaxon() ) ) {
-                throw new IllegalArgumentException(
-                        "Mismatch between taxon for expression experiment set selected and gene queries" );
-            }
+            // Note we don't check if the gene taxon matches the experiments ...
 
             Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
             Map<Long, Gene2GeneProteinAssociation> proteinInteractionMap = this
@@ -338,7 +304,6 @@ public class GeneCoexpressionService {
                 Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
                 CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
 
-                // geneService.thawLite( foundGene );
                 foundGenes.add( foundGene );
 
                 cvo.setQueryGene( new GeneValueObject( queryGene ) );
@@ -374,6 +339,8 @@ public class GeneCoexpressionService {
                             positionToIDMap );
                     supportingDatasets.retainAll( specificDatasets );
                 }
+
+                supportingDatasets.retainAll( eeIdsToUse );
 
                 cvo.setSupportingExperiments( supportingDatasets );
                 int numSupportingDatasets = supportingDatasets.size();
@@ -712,32 +679,19 @@ public class GeneCoexpressionService {
      * Get coexpression results using a pure gene2gene query (without visiting the probe2probe tables. This is generally
      * faster, probably even if we're only interested in data from a subset of the exeriments.
      * 
-     * @param eeIds Experiments to limit the results to (must not be null)
+     * @param baseSet
+     * @param eeIds Experiments to limit the results to (must not be null, and should already be security-filtered)
      * @param queryGenes
      * @param stringency
      * @param maxResults
      * @param queryGenesOnly return links among the query genes only.
      * @return
      */
-    private CoexpressionMetaValueObject getFilteredCannedAnalysisResults( Collection<Long> eeIds,
-            Collection<Gene> queryGenes, int stringency, int maxResults, boolean queryGenesOnly ) {
+    private CoexpressionMetaValueObject getFilteredCannedAnalysisResults( ExpressionExperimentSet baseSet,
+            Collection<Long> eeIds, Collection<Gene> queryGenes, int stringency, int maxResults, boolean queryGenesOnly ) {
 
         if ( queryGenes.isEmpty() ) {
             throw new IllegalArgumentException( "No genes in query" );
-        }
-
-        /*
-         * assuming they are all the same.
-         */
-        Taxon taxon = queryGenes.iterator().next().getTaxon();
-
-        /*
-         * The live analysis for this taxon
-         */
-        GeneCoexpressionAnalysis currentAnalysis = geneCoexpressionAnalysisService.findCurrent( taxon );
-
-        if ( currentAnalysis == null ) {
-            throw new IllegalArgumentException( "Sorry, there is no coexpression analysis available for that taxon" );
         }
 
         List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
@@ -746,12 +700,12 @@ public class GeneCoexpressionService {
             throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
         }
 
-        ExpressionExperimentSet baseSet = currentAnalysis.getExpressionExperimentSetAnalyzed();
-
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
-        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( getIds( baseSet ) );
+        expressionExperimentSetService.thaw( baseSet );
+        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( EntityUtils
+                .getIds( baseSet.getExperiments() ) );
 
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
@@ -863,11 +817,6 @@ public class GeneCoexpressionService {
                 Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
                         positionToIDMap );
 
-                if ( timer2.getTime() > 100 ) log.info( "Coexp. Gene processing phase II:" + timer2.getTime() + "ms" );
-                timer2.stop();
-                timer2.reset();
-                timer2.start();
-
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
 
@@ -876,10 +825,6 @@ public class GeneCoexpressionService {
                 Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
                         positionToIDMap );
 
-                if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase III:" + timer2.getTime() + "ms" );
-                timer2.stop();
-                timer2.reset();
-                timer2.start();
                 /*
                  * Specific probe EEids contains 1 even if the data set wasn't supporting.
                  */
@@ -944,12 +889,6 @@ public class GeneCoexpressionService {
 
                 allSupportingDatasets.addAll( supportingDatasets );
                 allDatasetsWithSpecificProbes.addAll( specificDatasets );
-
-                if ( timer2.getTime() > 100 )
-                    log.info( "Coexp. Gene processing phase IV (end):" + timer2.getTime() + "ms" );
-                timer2.stop();
-                timer2.reset();
-                timer2.start();
 
             }
 
@@ -1067,20 +1006,6 @@ public class GeneCoexpressionService {
             log.info( "GO stats for " + queryGene.getName() + " + " + overlapIds.size() + " coexpressed genes :"
                     + timer.getTime() + "ms" );
         }
-    }
-
-    /**
-     * @param expressionExperimentSet
-     * @return ids of the experiments in the set
-     */
-    private List<Long> getIds( ExpressionExperimentSet expressionExperimentSet ) {
-        expressionExperimentSetService.thaw( expressionExperimentSet );
-        List<Long> ids = new ArrayList<Long>( expressionExperimentSet.getExperiments().size() );
-        for ( BioAssaySet dataset : expressionExperimentSet.getExperiments() ) {
-            // log.info( dataset.getId() );
-            ids.add( dataset.getId() );
-        }
-        return ids;
     }
 
     /**

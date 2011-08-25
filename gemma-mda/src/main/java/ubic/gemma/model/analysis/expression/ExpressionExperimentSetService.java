@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+
 /**
  * @author paul
  * @version $Id$
@@ -61,6 +63,16 @@ public interface ExpressionExperimentSetService {
 
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperimentSet> load( Collection<Long> ids );
+
+    /**
+     * Get the security-filtered list of experiments in a set. It is possible for the return to be empty even if the set
+     * is not (due to security filters). Use this insead of expressionExperimentSet.getExperiments.
+     * 
+     * @param id
+     * @return
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> getExperimentsInSet( Long id );
 
     /**
      * 

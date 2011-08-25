@@ -96,7 +96,8 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
     public Map<Gene, CoexpressionCollectionValueObject> linkAnalysis( Collection<Gene> genes,
-            Collection<BioAssaySet> ees, int stringency, boolean knownGenesOnly, boolean interGenesOnly, int limit ) {
+            Collection<? extends BioAssaySet> ees, int stringency, boolean knownGenesOnly, boolean interGenesOnly,
+            int limit ) {
 
         /*
          * Start with raw results
@@ -150,8 +151,8 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
-    public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<BioAssaySet> ees, int inputStringency,
-            boolean knownGenesOnly, int limit ) {
+    public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<? extends BioAssaySet> ees,
+            int inputStringency, boolean knownGenesOnly, int limit ) {
 
         int stringency = inputStringency <= 0 ? 1 : inputStringency;
 
@@ -337,8 +338,8 @@ public class ProbeLinkCoexpressionAnalyzer {
      *        going to be looked at (as in the case of a bulk Gene2Gene analysis).
      */
     @SuppressWarnings("unchecked")
-    private void computeEesTestedIn( Collection<BioAssaySet> ees, CoexpressionCollectionValueObject coexpressions,
-            Collection eesQueryTestedIn, int stringency, int limit ) {
+    private void computeEesTestedIn( Collection<? extends BioAssaySet> ees,
+            CoexpressionCollectionValueObject coexpressions, Collection eesQueryTestedIn, int stringency, int limit ) {
 
         List<CoexpressionValueObject> coexpressionData = coexpressions.getKnownGeneCoexpressionData( stringency );
 
@@ -365,7 +366,7 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @return Map of EE IDs to an index, where the index values are from 0 ... N-1 where N is the number of
      *         experiments.
      */
-    public static Map<Long, Integer> getOrderingMap( Collection<BioAssaySet> experiments ) {
+    public static Map<Long, Integer> getOrderingMap( Collection<? extends BioAssaySet> experiments ) {
         List<Long> eeIds = new ArrayList<Long>();
         for ( BioAssaySet ee : experiments ) {
             eeIds.add( ee.getId() );
@@ -389,7 +390,8 @@ public class ProbeLinkCoexpressionAnalyzer {
      *        tested in.
      * @param coexpressionData to check, the query gene must be the same for each of them.
      */
-    private void computeEesTestedInBatch( Collection<BioAssaySet> ees, List<CoexpressionValueObject> coexpressionData ) {
+    private void computeEesTestedInBatch( Collection<? extends BioAssaySet> ees,
+            List<CoexpressionValueObject> coexpressionData ) {
 
         if ( coexpressionData.isEmpty() ) return;
 
@@ -479,7 +481,8 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param eeIndexMap Map of EE IDs to index in the 'eesTestingIn' where that EE is.
      * @return boolean array of same length as ees, where true means the given gene was tested in that dataset.
      */
-    private Boolean[] getEETestedForGeneVector( Long geneId, Collection<BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
+    private Boolean[] getEETestedForGeneVector( Long geneId, Collection<? extends BioAssaySet> ees,
+            Map<Long, Integer> eeIndexMap ) {
         /*
          * This condition is, pretty much only true once in practice. That's because the first time through populates
          * genesTestedIn for all the genes tested in any of the data sets, which is essentially all genes.
@@ -512,7 +515,8 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param eeIdOrder
      * @return
      */
-    private byte[] computeTestedDatasetVector( Long geneId, Collection<BioAssaySet> ees, Map<Long, Integer> eeIdOrder ) {
+    private byte[] computeTestedDatasetVector( Long geneId, Collection<? extends BioAssaySet> ees,
+            Map<Long, Integer> eeIdOrder ) {
         /*
          * This condition is, pretty much only true once in practice. That's because the first time through populates
          * genesTestedIn for all the genes tested in any of the data sets.
@@ -555,7 +559,7 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param ees
      * @param eeIndexMap
      */
-    private void cacheEesGeneTestedIn( Collection<BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
+    private void cacheEesGeneTestedIn( Collection<? extends BioAssaySet> ees, Map<Long, Integer> eeIndexMap ) {
 
         assert ees != null;
         assert eeIndexMap != null;

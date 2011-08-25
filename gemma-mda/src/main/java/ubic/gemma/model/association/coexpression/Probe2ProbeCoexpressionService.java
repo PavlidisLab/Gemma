@@ -86,7 +86,7 @@ public interface Probe2ProbeCoexpressionService {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
-            Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
+            Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /***
      * Return a map of genes in genesB to all ExpressionExperiments in which the given set of pairs of genes was tested
