@@ -2,7 +2,6 @@ Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 /**
  *
- * Panel containing the most interesting info about an experiment.
  * Used as one tab of the EE page
  *
  * pass in the ee details obj as experimentDetails
@@ -15,7 +14,11 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
     experimentDetails: null,
     border: false,
     tbar: new Ext.Toolbar,
-    
+	defaultType:'box',
+    defaults:{
+		border:false
+	},
+	padding:10,
     initComponent: function(){
         Gemma.ExpressionExperimentTools.superclass.initComponent.call(this);
         var manager = new Gemma.EEManager({
@@ -34,26 +37,40 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
         
         this.getTopToolbar().addButton(refreshButton);
         this.add({
-            border: false,
-            padding: 10,
-            html: '<h4>Analyses:<br></h4>' +
-            'Missing values: ' +
-            this.missingValueAnalysisRenderer(this.experimentDetails) +
-            '<br>Proccessed Vector Computation:  ' +
-            this.processedVectorCreateRenderer(this.experimentDetails) +
-            '<br>Differential Expression Analysis:  ' +
-            this.differentialAnalysisRenderer(this.experimentDetails) +
-            '<br>Link Analysis:  ' +
-            this.linkAnalysisRenderer(this.experimentDetails)
+            html: '<h4>Analyses:<br></h4>'
         });
+		
+		
+		var missingValueInfo = this.missingValueAnalysisPanelRenderer(this.experimentDetails, manager);
+		this.add(missingValueInfo);
+		var processedVectorInfo = this.processedVectorCreatePanelRenderer(this.experimentDetails, manager);
+		this.add(processedVectorInfo);
+		var differentialAnalysisInfo = this.differentialAnalysisPanelRenderer(this.experimentDetails, manager);
+		this.add(differentialAnalysisInfo);
+		var linkAnalysisInfo = this.linkAnalysisPanelRenderer(this.experimentDetails, manager);
+		this.add(linkAnalysisInfo);
         
     },
     
-    linkAnalysisRenderer: function(ee){
+    linkAnalysisPanelRenderer: function(ee, manager){
+		var panel = new Ext.Panel({
+			layout: 'hbox',
+			defaults: {
+				border: false,
+				padding:2
+			},
+			items: [{
+				html: 'Link Analysis: '
+			}]
+		});
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doLinks(' +
-        id +
-        ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="link analysis" title="link analysis"/></span>';
+		var runBtn = new Ext.Button({
+			icon:'/Gemma/images/icons/control_play_blue.png',
+			tooltip:'missing value computation',
+			handler: manager.doLinks.createDelegate(this,[id]),
+			scope:this,
+			cls:'transparent-btn'
+		});
         if (ee.dateLinkAnalysis) {
             var type = ee.linkAnalysisEventType;
             var color = "#000";
@@ -69,23 +86,41 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
                     qtip = 'ext:qtip="Analysis was too small"';
                     suggestRun = false;
                 }
-            
-            return '<span style="color:' + color + ';" ' + qtip + '>' +
-            Ext.util.Format.date(ee.dateLinkAnalysis, 'y/M/d') +
-            '&nbsp;' +
-            (suggestRun ? runurl : '');
+            panel.add({
+				html: '<span style="color:' + color + ';" ' + qtip + '>' +
+				Ext.util.Format.date(ee.dateLinkAnalysis, 'y/M/d')
+			});
+			if(suggestRun){
+				panel.add(runBtn);
+			}
+			return panel;
         }
         else {
-            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+			panel.add({html:'<span style="color:#3A3;">Needed</span>&nbsp;'});
+			panel.add(runBtn);
+            return panel;
         }
         
     },
-    missingValueAnalysisRenderer: function(ee){
+    missingValueAnalysisPanelRenderer: function(ee, manager){
+		var panel = new Ext.Panel({
+			layout: 'hbox',
+			defaults: {
+				border: false,
+				padding:2
+			},
+			items: [{
+				html: 'Missing values: '
+			}]
+		});
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doMissingValues(' +
-        id +
-        ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="missing value computation" title="missing value computation"/></span>';
-        
+		var runBtn = new Ext.Button({
+			icon:'/Gemma/images/icons/control_play_blue.png',
+			tooltip:'missing value computation',
+			handler: manager.doMissingValues.createDelegate(this,[id]),
+			scope:this,
+			cls:'transparent-btn'
+		});
         /*
          * Offer missing value analysis if it's possible (this might need
          * tweaking).
@@ -102,27 +137,55 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
                     qtip = 'ext:qtip="Failed"';
                 }
                 
-                return '<span style="color:' + color + ';" ' + qtip + '>' +
-                Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') +
-                '&nbsp;' +
-                (suggestRun ? runurl : '');
+                //return '<span style="color:' + color + ';" ' + qtip + '>' +
+                //Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') +
+                //'&nbsp;' +
+                //(suggestRun ? runurl : '');
+				panel.add({ html: '<span style="color:' + color + ';" ' + qtip + '>' +
+					Ext.util.Format.date(ee.dateMissingValueAnalysis, 'y/M/d') +
+					'&nbsp;'});
+					if(suggestRun){
+						panel.add(runBtn);
+					}
+				return panel;
             }
             else {
-                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+				panel.add({
+					html: '<span style="color:#3A3;">Needed</span>&nbsp;'
+				});
+				panel.add(runBtn);
+                return panel;
             }
             
         }
         else {
-            return '<span ext:qtip="Only relevant for two-channel microarray studies with intensity data available." style="color:#CCF;">NA</span>';
+			
+				panel.add({
+					html: '<span ext:qtip="Only relevant for two-channel microarray studies with intensity data available." style="color:#CCF;">NA</span>'
+				});
+                return panel;
         }
     },
     
-    processedVectorCreateRenderer: function(ee){
+    processedVectorCreatePanelRenderer: function(ee, manager){
+        var panel = new Ext.Panel({
+			layout: 'hbox',
+			defaults: {
+				border: false,
+				padding:2
+			},
+			items: [{
+				html: 'Proccessed Vector Computation: '
+			}]
+		});
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doProcessedVectors(' +
-        id +
-        ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="processed vector computation" title="processed vector computation"/></span>';
-        
+		var runBtn = new Ext.Button({
+			icon:'/Gemma/images/icons/control_play_blue.png',
+			tooltip:'processed vector computation',
+			handler: manager.doProcessedVectors.createDelegate(this,[id]),
+			scope:this,
+			cls:'transparent-btn'
+		});
         if (ee.dateProcessedDataVectorComputation) {
             var type = ee.processedDataVectorComputationEventType;
             var color = "#000";
@@ -136,23 +199,40 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
                 color = 'red';
                 qtip = 'ext:qtip="Failed"';
             }
-            
-            return '<span style="color:' + color + ';" ' + qtip + '>' +
+            panel.add({html:'<span style="color:' + color + ';" ' + qtip + '>' +
             Ext.util.Format.date(ee.dateProcessedDataVectorComputation, 'y/M/d') +
-            '&nbsp;' +
-            (suggestRun ? runurl : '');
+            '&nbsp;'});
+			if(suggestRun){
+				panel.add(runBtn);
+			}
+            return panel;
         }
         else {
-            return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+			panel.add({html:'<span style="color:#3A3;">Needed</span>&nbsp;'});
+			panel.add(runBtn);
+            return panel;
         }
     },
     
-    differentialAnalysisRenderer: function(ee){
+    differentialAnalysisPanelRenderer: function(ee, manager){
+        var panel = new Ext.Panel({
+			layout: 'hbox',
+			defaults: {
+				border: false,
+				padding:2
+			},
+			items: [{
+				html: 'Differential Expression Analysis: '
+			}]
+		});
         var id = ee.id;
-        var runurl = '<span style="cursor:pointer" onClick="return Ext.getCmp(\'eemanager\').doDifferential(' +
-        id +
-        ')"><img src="/Gemma/images/icons/control_play_blue.png" alt="differential expression analysis" title="differential expression analysis"/></span>';
-        
+		var runBtn = new Ext.Button({
+			icon:'/Gemma/images/icons/control_play_blue.png',
+			tooltip:'differential expression analysis',
+			handler: manager.doDifferential.createDelegate(this,[id]),
+			scope:this,
+			cls:'transparent-btn'
+		});
         if (ee.numPopulatedFactors > 0) {
             if (ee.dateDifferentialAnalysis) {
                 var type = ee.differentialAnalysisEventType;
@@ -167,22 +247,31 @@ Gemma.ExpressionExperimentTools = Ext.extend(Ext.Panel, {
                     color = 'red';
                     qtip = 'ext:qtip="Failed"';
                 }
-                
-                return '<span style="color:' + color + ';" ' + qtip + '>' +
+                panel.add({html:'<span style="color:' + color + ';" ' + qtip + '>' +
                 Ext.util.Format.date(ee.dateDifferentialAnalysis, 'y/M/d') +
-                '&nbsp;' +
-                (suggestRun ? runurl : '');
+                '&nbsp;'});
+				if(suggestRun){
+					panel.add(runBtn);
+				}
+                return panel;
             }
             else {
-                return '<span style="color:#3A3;">Needed</span>&nbsp;' + runurl;
+				
+                panel.add({html:'<span style="color:#3A3;">Needed</span>&nbsp;'});
+				panel.add(runBtn);
+                return panel;
             }
         }
         else {
-            return '<span style="color:#CCF;">NA</span>';
+			
+            panel.add({html:'<span style="color:#CCF;">NA</span>'});
+            return panel;
         }
     },
     renderProcessedExpressionVectorCount: function(e){
         return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
     }
 });
+
+
 
