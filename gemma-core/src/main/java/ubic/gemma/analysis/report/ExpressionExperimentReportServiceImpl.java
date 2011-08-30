@@ -630,6 +630,18 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     /**
+     * Read information about troubled events for the set of given EEs. These are read from the audit trail.
+     * 
+     * @param ees
+     * @param type
+     * @return
+     */
+    @Override
+    public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees ) {
+        return getEvents(ees,  TroubleStatusFlagEvent.class );
+    }
+    
+    /**
      * Read information about an particular type of event for the set of given EEs. These are read from the audit trail.
      * 
      * @param ees

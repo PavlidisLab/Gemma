@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 
 /**
@@ -69,7 +71,8 @@ public interface ExpressionExperimentReportService {
      * @return
      */
     public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos );
-
+    
+    public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees );
     /**
      * @param vos
      */
