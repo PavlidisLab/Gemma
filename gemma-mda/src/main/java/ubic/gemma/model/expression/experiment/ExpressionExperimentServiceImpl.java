@@ -22,11 +22,13 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -74,6 +76,66 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByQuantitationType( type );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Integer,
+     * java.lang.Integer)
+     */
+    @Override
+    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+        return this.getExpressionExperimentDao().browse( start, limit );
+    }
+
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
+        return this.getExpressionExperimentDao().browseSpecificIds( start, limit , ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Intege,
+     * java.lang.Integer, java.lang.String, boolean)
+     */
+    
+    @Override
+    public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+        return this.getExpressionExperimentDao().browse( start, limit, orderField, descending );
+    }
+
+    @Override
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending, Collection<Long> ids ) {
+        return this.getExpressionExperimentDao().browseSpecificIds( start, limit, orderField, descending, ids );
+    }
+    
+    @Override
+    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
+        return this.getExpressionExperimentDao().loadAllOrdered( orderField, descending );
+    }
+    
+    @Override
+    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
+        return this.getExpressionExperimentDao().loadAllTaxonOrdered( orderField, descending, taxon );
+    }
+    
+    
+    
+    @Override
+    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
+        return this.getExpressionExperimentDao().loadMultipleOrdered( orderField, descending, ids );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#count()
+     */
+    @Override
+    public Integer count() {
+        return this.getExpressionExperimentDao().count();
+    }
+
+    
     /*
      * (non-Javadoc)
      * 

@@ -371,6 +371,10 @@ Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 			},
 
 			beforeExpand : function(record, body, rowIndex) {
+				Ext.DomHelper.overwrite(body, {
+							tag : 'p',
+							html : ' Loading...'
+						});
 				ExpressionExperimentController.getDescription(record.id, {
 							callback : this.fillExpander.createDelegate(this, [body, rowIndex], true)
 						});
@@ -378,3 +382,5 @@ Gemma.EEGridRowExpander = Ext.extend(Ext.grid.RowExpander, {
 			}
 
 		});
+
+

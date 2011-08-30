@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -32,11 +33,12 @@ import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.persistence.BrowsingDao;
 
 /**
  * @see ExpressionExperiment
  */
-public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperiment> {
+public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperiment>, BrowsingDao<ExpressionExperiment> {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
@@ -358,5 +360,16 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ExpressionExperiment> loadLackingTags();
 
     public Collection<ExpressionExperiment> findByAccession( String accession );
+
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending,
+            Collection<Long> ids );
+
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
+
+    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
+
+    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
+
+    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
 
 }

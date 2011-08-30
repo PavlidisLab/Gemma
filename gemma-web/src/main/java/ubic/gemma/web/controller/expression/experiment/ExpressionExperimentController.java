@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -108,13 +109,13 @@ import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
-import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.web.remote.EntityDelegator;
-import ubic.gemma.web.taglib.displaytag.ExpressionExperimentValueObjectComparator;
+import ubic.gemma.web.remote.JsonReaderResponse;
+import ubic.gemma.web.remote.ListBatchCommand;
 import ubic.gemma.web.taglib.expression.experiment.ExperimentQCTag;
 import ubic.gemma.web.util.EntityNotFoundException;
 import ubic.gemma.web.view.TextView;
@@ -256,9 +257,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     @Autowired
     private ArrayDesignService arrayDesignService;
-
-    @Autowired
-    private AuditableUtil auditableUtil;
 
     @Autowired
     private AuditEventService auditEventService;
@@ -682,7 +680,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
                             .toString() );
         }
         return displayResults;
-
     }
 
     /**
@@ -1100,6 +1097,259 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
+     * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
+     * level. 1. a db call returns all experiments, which are filtered by the service method 2. if the user is an admin,
+     * we filter out the troubled experiments 3. an appropriate page-sized chunk is then taken from this (filtered) list
+     * 4. another round of db calls create and fill value objects for this chunk 5. value objects are returned
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<ExpressionExperimentValueObject> browse( ListBatchCommand batch ) {
+
+        int limit = batch.getLimit();
+        int origStart = batch.getStart();
+        List<ExpressionExperiment> records = loadAllOrdered( batch );
+
+/*        if(batch.getStart().equals( 0 )){
+            batch.setLimit( batch.getLimit()*2 );
+            records = getBatch( batch );
+            List<ExpressionExperiment> allRecords = loadAllOrdered( batch );
+        }else{
+            records = loadAllOrdered( batch );
+        }*/        
+        
+        int start = origStart;
+        int stop = Math.min( origStart + limit, records.size() );
+
+        // if user is not admin, remove troubled experiments
+        if ( !SecurityService.isUserAdmin() ) {
+            records = removeTroubledExperiments( records );
+        }
+
+        /*
+         * can't just do countAll because this will count experiments the user may not have access to Integer count =
+         * expressionExperimentService.countAll();
+         */
+        int count = records.size();
+
+        List<ExpressionExperiment> recordsSubset = records.subList( start, stop );
+
+        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+                getExpressionExperimentValueObjects( recordsSubset ) );
+
+        // if admin, want to show if experiment is troubled
+        if ( SecurityService.isUserAdmin() ) {
+            expressionExperimentReportService.fillEventInformation( valueObjects );
+        }
+
+        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
+                valueObjects, count );
+
+        return returnVal;
+    }
+
+    /**
+     * Return a version of the passed in list where all troubled experiments have been removed
+     * 
+     * @param records
+     * @return filtered list of records
+     */
+    private List<ExpressionExperiment> removeTroubledExperiments( List<ExpressionExperiment> records ) {
+        List<ExpressionExperiment> untroubled = new ArrayList<ExpressionExperiment>( records );
+        Map<Long, AuditEvent> troubleEvents = expressionExperimentReportService
+                .getTroubledEvents( ( Collection<ExpressionExperiment> ) records );
+        Long id = null;
+        Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
+        for ( ExpressionExperiment record : records ) {
+            id = record.getId();
+            if ( troubleEvents.containsKey( id ) ) {
+                toRemove.add( record );
+            }
+        }
+        untroubled.removeAll( toRemove );
+        return untroubled;
+    }
+
+    /**
+     * AJAX call for remote paging store
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<ExpressionExperimentValueObject> browseSpecificIds( ListBatchCommand batch,
+            Collection<Long> ids ) {
+        int origLimit = batch.getLimit();
+        int origStart = batch.getStart();
+        
+        Set<Long> noDupIds = new HashSet<Long>( ids );
+        List<ExpressionExperiment> records = loadAllOrdered( batch, noDupIds );
+
+        // if user is not admin, remove troubled experiments
+        if ( !SecurityService.isUserAdmin() ) {
+            records = removeTroubledExperiments( records );
+        }
+
+        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+                getExpressionExperimentValueObjects( records.subList( origStart, Math.min( origStart + origLimit,
+                        records.size() ) ) ) );
+
+        // if admin, want to show if experiment is troubled
+        if ( SecurityService.isUserAdmin() ) {
+            expressionExperimentReportService.fillEventInformation( valueObjects );
+        }
+
+        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
+                valueObjects, valueObjects.size() );
+        return returnVal;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<ExpressionExperimentValueObject> browseByTaxon( ListBatchCommand batch, Long taxonId ) {
+
+        int origLimit = batch.getLimit();
+        int origStart = batch.getStart();
+        if ( taxonId == null ) {
+            return browse( batch );
+        }
+        Taxon taxon = taxonService.load( taxonId );
+        if ( taxon == null ) {
+            return browse( batch );
+        }
+        List<ExpressionExperiment> records = loadAllOrdered( batch, taxon );
+
+        // if user is not admin, remove troubled experiments
+        if ( !SecurityService.isUserAdmin() ) {
+            records = removeTroubledExperiments( records );
+        }
+
+        /*
+         * can't just do countAll because this will count experiments the user may not have access to Integer count =
+         * expressionExperimentService.countAll();
+         */
+        int count = records.size();
+
+        List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
+                getExpressionExperimentValueObjects( records.subList( origStart, Math.min( origStart + origLimit,
+                        records.size() ) ) ) );
+
+        // if admin, want to show if experiment is troubled
+        if ( SecurityService.isUserAdmin() ) {
+            expressionExperimentReportService.fillEventInformation( valueObjects );
+        }
+
+        JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
+                valueObjects, count );
+
+        return returnVal;
+    }
+
+    /**
+     * AJAX call for remote paging store
+     * 
+     * @param batch
+     * @return public JsonReaderResponse<ExpressionExperimentValueObject> browseTaxon( ListBatchCommand batch, Long
+     *         taxonId ) { List<ExpressionExperiment> records = loadAllOrdered( batch );
+     *         List<ExpressionExperimentValueObject> valueObjects = new
+     *         ArrayList<ExpressionExperimentValueObject>(getExpressionExperimentValueObjects( records ));
+     *         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new
+     *         JsonReaderResponse<ExpressionExperimentValueObject>( valueObjects, ids.size() ); return returnVal; }
+     */
+    private List<ExpressionExperiment> getBatch( ListBatchCommand batch ) {
+        return getBatch( batch, null );
+    }
+
+    private List<ExpressionExperiment> getBatch( ListBatchCommand batch, Collection<Long> ids ) {
+        List<ExpressionExperiment> records;
+        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
+
+            String o = batch.getSort();
+
+            String orderBy = "name"; // default ordering
+            if ( o.equals( "shortName" ) ) {
+                orderBy = "shortName";
+            } else if ( o.equals( "name" ) ) {
+                orderBy = "name";
+            } else if ( o.equals( "bioAssayCount" ) ) {
+                orderBy = "bioAssayCount";
+            } else if ( o.equals( "taxon" ) ) {
+                orderBy = "taxon";
+            } else {
+                throw new IllegalArgumentException( "Unknown sort field: " + o );
+            }
+
+            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
+            if ( ids != null ) {
+                records = expressionExperimentService.browseSpecificIds( batch.getStart(), batch.getLimit(), orderBy,
+                        descending, ids );
+            } else {
+                records = expressionExperimentService.browse( batch.getStart(), batch.getLimit(), orderBy, descending );
+            }
+        } else {
+            if ( ids != null ) {
+                records = expressionExperimentService.browseSpecificIds( batch.getStart(), batch.getLimit(), ids );
+            } else {
+                records = expressionExperimentService.browse( batch.getStart(), batch.getLimit() );
+            }
+        }
+        return records;
+    }
+
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch ) {
+        return loadAllOrdered( batch, null, null );
+    }
+
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids ) {
+        return loadAllOrdered( batch, ids, null );
+    }
+
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Taxon taxon ) {
+        return loadAllOrdered( batch, null, taxon );
+    }
+
+    private List<ExpressionExperiment> loadAllOrdered( ListBatchCommand batch, Collection<Long> ids, Taxon taxon ) {
+        List<ExpressionExperiment> records;
+        if ( StringUtils.isNotBlank( batch.getSort() ) ) {
+
+            String o = batch.getSort();
+
+            String orderBy = "name"; // default ordering
+            if ( o.equals( "shortName" ) ) {
+                orderBy = "shortName";
+            } else if ( o.equals( "name" ) ) {
+                orderBy = "name";
+            } else if ( o.equals( "bioAssayCount" ) ) {
+                orderBy = "bioAssayCount";
+            } else if ( o.equals( "taxon" ) ) {
+                orderBy = "taxon";
+            } else {
+                throw new IllegalArgumentException( "Unknown sort field: " + o );
+            }
+
+            boolean descending = batch.getDir() != null && batch.getDir().equalsIgnoreCase( "DESC" );
+            if ( ids != null ) {
+                records = expressionExperimentService.loadMultipleOrdered( orderBy, descending, ids );
+            } else if ( taxon != null ) {
+                records = expressionExperimentService.loadAllTaxonOrdered( orderBy, descending, taxon );
+            } else {
+                records = expressionExperimentService.loadAllOrdered( orderBy, descending );
+            }
+        } else {
+            if ( ids != null ) {
+                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( ids ) );
+            } else {
+                records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadAll() );
+            }
+        }
+        return records;
+    }
+
+    /**
      * Show all experiments (optionally conditioned on either a taxon, or a list of ids)
      * 
      * @param request
@@ -1109,83 +1359,88 @@ public class ExpressionExperimentController extends AbstractTaskService {
     @RequestMapping("/showAllExpressionExperiments.html")
     public ModelAndView showAllExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
-        String sId = request.getParameter( "id" );
-        String taxonId = request.getParameter( "taxonId" );
-
-        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
-        Collection<ExpressionExperimentValueObject> eeValObjectCol;
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
+        
+//        String sId = request.getParameter( "id" );
+//        String taxonId = request.getParameter( "taxonId" );
+//
+//        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
+//        Collection<ExpressionExperimentValueObject> eeValObjectCol;
+//
+//        Collection<ExpressionExperimentValueObject> usersData;
+        // if ( taxonId != null ) {
+        // // if a taxon ID is specified, load all expression experiments for
+        // // this taxon
+        // try {
+        // Long tId = Long.parseLong( taxonId );
+        //
+        // /*
+        // * TODO: handle case of multiple taxa or 'other'.
+        // */
+        //
+        // Taxon taxon = taxonService.load( tId );
+        //
+        // if ( taxon == null ) {
+        // return mav.addObject( "message", "Invalid taxon id" );
+        // }
+        //
+        // eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, false );
+        // mav.addObject( "showAll", false );
+        // mav.addObject( "taxon", taxon );
+        // } catch ( NumberFormatException e ) {
+        // return mav.addObject( "message", "Invalid taxon id, must be an integer" );
+        // }
+        // } else if ( sId == null ) {
+        // mav.addObject( "showAll", true );
+        // eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, false );
+        // } else {
+        // Collection<Long> eeIdList = new ArrayList<Long>();
+        // String[] idList = StringUtils.split( sId, ',' );
+        // try {
+        // for ( int i = 0; i < idList.length; i++ ) {
+        // if ( StringUtils.isNotBlank( idList[i] ) ) {
+        // eeIdList.add( Long.parseLong( idList[i] ) );
+        // }
+        // }
+        // } catch ( NumberFormatException e ) {
+        // return mav.addObject( "message", "Invalid ids, must be a list of integers separated by commas." );
+        // }
+        // mav.addObject( "showAll", false );
+        // eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, eeIdList, false );
+        // }
+        //
+        // expressionExperiments.addAll( eeValObjectCol );
+        //
+        // // sort expression experiments by name first
+        // Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
+        // new ExpressionExperimentValueObjectComparator() );
+        //        
+        // //System.out.println( "old way, before: "+ expressionExperiments.size() );
+        //
+        // if ( SecurityService.isUserAdmin() ) {
+        // expressionExperimentReportService.fillEventInformation( expressionExperiments );
+        // }
+        //
+        // if ( !SecurityService.isUserAdmin() ) {
+        // auditableUtil.removeTroubledEes( expressionExperiments );
+        // }
+        //
+        // //System.out.println( "old way, after: "+ expressionExperiments.size() );
+        // /*
+        // * Figure out which of the data sets belong to the current user (if anonymous, this won't do anything; is
+        // * administrator, they 'owned' is always true.)
+        // */
+        // usersData = this.getFilteredExpressionExperimentValueObjects( null,
+        // EntityUtils.getIds( expressionExperiments ), true );
+        //
+        // Long numExpressionExperiments = Long.valueOf( expressionExperiments.size() );
+        //
+        // mav.addObject( "expressionExperiments", expressionExperiments );
+        //
+        // mav.addObject( "eeids", EntityUtils.getIdStrings( usersData ).toArray( new String[] {} ) );
 
-        Collection<ExpressionExperimentValueObject> usersData;
-        if ( taxonId != null ) {
-            // if a taxon ID is specified, load all expression experiments for
-            // this taxon
-            try {
-                Long tId = Long.parseLong( taxonId );
+        // mav.addObject( "numExpressionExperiments", numExpressionExperiments );
 
-                /*
-                 * TODO: handle case of multiple taxa or 'other'.
-                 */
-
-                Taxon taxon = taxonService.load( tId );
-
-                if ( taxon == null ) {
-                    return mav.addObject( "message", "Invalid taxon id" );
-                }
-
-                eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, false );
-                mav.addObject( "showAll", false );
-                mav.addObject( "taxon", taxon );
-            } catch ( NumberFormatException e ) {
-                return mav.addObject( "message", "Invalid taxon id, must be an integer" );
-            }
-        } else if ( sId == null ) {
-            mav.addObject( "showAll", true );
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, false );
-        } else {
-            Collection<Long> eeIdList = new ArrayList<Long>();
-            String[] idList = StringUtils.split( sId, ',' );
-            try {
-                for ( int i = 0; i < idList.length; i++ ) {
-                    if ( StringUtils.isNotBlank( idList[i] ) ) {
-                        eeIdList.add( Long.parseLong( idList[i] ) );
-                    }
-                }
-            } catch ( NumberFormatException e ) {
-                return mav.addObject( "message", "Invalid ids, must be a list of integers separated by commas." );
-            }
-            mav.addObject( "showAll", false );
-            eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, eeIdList, false );
-        }
-
-        expressionExperiments.addAll( eeValObjectCol );
-
-        // sort expression experiments by name first
-        Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
-                new ExpressionExperimentValueObjectComparator() );
-
-        if ( SecurityService.isUserAdmin() ) {
-            expressionExperimentReportService.fillEventInformation( expressionExperiments );
-        }
-
-        if ( !SecurityService.isUserAdmin() ) {
-            auditableUtil.removeTroubledEes( expressionExperiments );
-        }
-
-        /*
-         * Figure out which of the data sets belong to the current user (if anonymous, this won't do anything; is
-         * administrator, they 'owned' is always true.)
-         */
-        usersData = this.getFilteredExpressionExperimentValueObjects( null,
-                EntityUtils.getIds( expressionExperiments ), true );
-
-        Long numExpressionExperiments = Long.valueOf( expressionExperiments.size() );
-
-        mav.addObject( "expressionExperiments", expressionExperiments );
-
-        mav.addObject( "eeids", EntityUtils.getIdStrings( usersData ).toArray( new String[] {} ) );
-
-        mav.addObject( "numExpressionExperiments", numExpressionExperiments );
         return mav;
 
     }
@@ -1793,20 +2048,41 @@ public class ExpressionExperimentController extends AbstractTaskService {
     }
 
     /**
+     * Maintains order if a list is passed in
+     * 
      * @param securedEEs
-     * @return
+     * @return List<ExpressionExperimentValueObject> in the same order as the EEs passed in
      */
-    private Collection<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
-            Collection<ExpressionExperiment> securedEEs ) {
+    private List<ExpressionExperimentValueObject> getExpressionExperimentValueObjects(
+            Collection<ExpressionExperiment> securedEEsCol ) {
 
-        if ( securedEEs.size() == 0 ) {
-            return new HashSet<ExpressionExperimentValueObject>();
+        List<ExpressionExperiment> securedEEs = new ArrayList<ExpressionExperiment>( securedEEsCol );
+
+        if ( securedEEsCol.size() == 0 ) {
+            return new ArrayList<ExpressionExperimentValueObject>();
         }
         StopWatch timer = new StopWatch();
         timer.start();
-        Collection<Long> ids = EntityUtils.getIds( securedEEs );
 
-        Collection<ExpressionExperimentValueObject> valueObjs = expressionExperimentService.loadValueObjects( ids );
+        List<ExpressionExperimentValueObject> valueObjs = new ArrayList<ExpressionExperimentValueObject>();
+
+        /*
+         * just using expressionExperimentService.loadValueObjects( allIds ) doesn't maintain order using experiment
+         * 
+         * using objects already loaded from db to create value objects doesn't fill in the taxon or assay count fields
+         * (so "valueObjs = ExpressionExperimentValueObject.convert2ValueObjectsOrdered( securedEEs );" won't work)
+         * 
+         * expressionExperimentService.loadValueObjects( tmp ) makes a call to db to get all fields needed for a fully
+         * populated experiment value object
+         */
+
+        Collection<Long> tmp = new ArrayList<Long>();
+        for ( ExpressionExperiment ee : securedEEs ) {
+            tmp.add( ee.getId() );
+            // TODO add expressionExperimentService.loadValueObject(Long id)
+            valueObjs.addAll( expressionExperimentService.loadValueObjects( tmp ) );
+            tmp.clear();
+        }
 
         if ( SecurityService.isUserAdmin() ) {
             for ( ExpressionExperimentValueObject vo : valueObjs ) {
@@ -1827,6 +2103,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             log.info( "Value objects for " + securedEEs.size() + " in " + timer.getTime() + "ms" );
         }
 
+        assert securedEEsCol.size() >= valueObjs.size();
         return valueObjs;
     }
 
@@ -1924,7 +2201,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         log.debug( "Loading value objects ..." );
-        return getExpressionExperimentValueObjects( securedEEs );
+        Collection<ExpressionExperimentValueObject> eevos = getExpressionExperimentValueObjects( securedEEs );
+        return eevos;
     }
 
     /**

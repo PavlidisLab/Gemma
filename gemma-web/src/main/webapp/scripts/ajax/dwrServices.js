@@ -425,6 +425,19 @@ ExpressionExperimentController.canCurrentUserEditExperiment = function(p0, callb
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'canCurrentUserEditExperiment',
 			p0, callback);
 }
+ExpressionExperimentController.browse = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browse', p0,
+			callback);
+}
+ExpressionExperimentController.browseSpecificIds = function(p0, p1, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseSpecificIds', p0, p1,
+			callback);
+}
+ExpressionExperimentController.browseByTaxon = function(p0, p1, callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseByTaxon', p0, p1,
+			callback);
+}
+
 // ====================================================================================
 if (ExpressionExperimentDataFetchController == null)
 	var ExpressionExperimentDataFetchController = {};

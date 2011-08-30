@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -45,6 +46,19 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     public static Collection<ExpressionExperimentValueObject> convert2ValueObjects(
             Collection<ExpressionExperiment> collection ) {
         Collection<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
+        for ( ExpressionExperiment ee : collection ) {
+            result.add( new ExpressionExperimentValueObject( ee ) );
+        }
+        return result;
+    }
+
+    /**
+     * @param collection
+     * @return
+     */
+    public static List<ExpressionExperimentValueObject> convert2ValueObjectsOrdered(
+            List<ExpressionExperiment> collection ) {
+        List<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
         for ( ExpressionExperiment ee : collection ) {
             result.add( new ExpressionExperimentValueObject( ee ) );
         }

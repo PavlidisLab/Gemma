@@ -241,6 +241,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		//this.reset();
 		this.selectedExpressionExperimentGroup = expressionExperimentGroup.data;
 		this.lastQuery = null;
+		this.fireEvent("recordSelected", this.getExpressionExperimentGroup());
 
 	},
 	setTaxonId: function(id){

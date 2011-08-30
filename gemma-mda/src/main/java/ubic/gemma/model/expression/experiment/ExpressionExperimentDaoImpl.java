@@ -130,6 +130,114 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     /*
      * (non-Javadoc)
+     * @see ubic.gemma.persistence.BrowsingDao#browse(java.lang.Integer, java.lang.Integer)
+     */
+    @Override
+    public List<ExpressionExperiment> browse( Integer start, Integer limit ) {
+        Query query = this.getSession().createQuery( "from ExpressionExperimentImpl" );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
+    }
+    
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
+        Query query = this.getSession().createQuery( "from ExpressionExperimentImpl where id in (:ids) " );
+        query.setParameterList( "ids", ids );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
+        String qs = "Select distinct ee from ExpressionExperimentImpl ee ";
+        if(orderField.equals( "taxon" ) ){
+            qs +=  "inner join ee.bioAssays as ba "
+            + "inner join ba.samplesUsed as sample "
+            + "order by sample.sourceTaxon " + ( descending ? "desc" : "" );
+        }else if(orderField.equals( "bioAssayCount" ) ){
+            qs +=  "inner join ee.bioAssays as ba "
+                 + "group by ee.id "
+                 + "order by count(ba) " + ( descending ? "desc" : "" );
+        }else{ //(orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+             qs += " order by ee."+orderField+" "+ ( descending ? "desc" : "" ) ;
+        }
+        Query query = this.getSession().createQuery(qs);
+        return query.list();
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
+        String qs = "Select distinct ee from ExpressionExperimentImpl ee ";
+        if(orderField.equals( "taxon" ) ){
+            qs +=  "inner join ee.bioAssays as ba "
+            + "inner join ba.samplesUsed as sample "
+            + "where ee.id in (:ids) "
+            + "order by sample.sourceTaxon " + ( descending ? "desc" : "" );
+        }else if(orderField.equals( "bioAssayCount" ) ){
+            qs += "inner join ee.bioAssays as ba "
+                + "where ee.id in (:ids) "
+                + "group by ee.id "
+                + "order by count(ba) " + ( descending ? "desc" : "" );
+        }else{ //(orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            qs += " where ee.id in (:ids) ";
+            qs += " order by ee."+orderField+" "+ ( descending ? "desc" : "" ) ;
+        }
+        Query query = this.getSession().createQuery(qs);
+        query.setParameterList( "ids", ids );
+        return query.list();
+    }
+    
+    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
+        String qs = "select distinct ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
+        
+        if(orderField.equals( "taxon" ) ){
+            qs += " order by sample.sourceTaxon " + ( descending ? "desc" : "" );
+        }else if(orderField.equals( "bioAssayCount" ) ){
+            qs += "group by ee.id order by count(distinct ba) " + ( descending ? "desc" : "" );
+        }else{ //(orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+           qs += " order by ee."+orderField+" "+ ( descending ? "desc" : "" ) ;
+        }
+        Query query = this.getSession().createQuery(qs);
+        query.setParameter( "taxon", taxon );
+        return query.list();
+    }
+    
+    private String getOrderClause( String orderField, String tableName ){
+        if(orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            return " order by "+tableName+"."+orderField+" ";
+        }else if(orderField.equals( "taxon" ) ){
+            
+        }
+        return "";
+    }
+    
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BrowsingDao#browse(java.lang.Integer, java.lang.Integer, java.lang.String, boolean)
+     */
+    @Override
+    public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
+        Query query = this.getSession().createQuery(
+                "from ExpressionExperimentImpl order by " + orderField + " " + ( descending ? "desc" : "" ) );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
+    }
+
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending, Collection<Long> ids ) {
+        
+        Query query = this.getSession().createQuery(
+                "from ExpressionExperimentImpl where id in (:ids) order by " + orderField + " " + ( descending ? "desc" : "" ));
+        query.setParameterList( "ids", ids );
+        query.setMaxResults( limit );
+        query.setFirstResult( start );
+        return query.list();
+    }
+    /*
+     * (non-Javadoc)
      * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#find(ubic.gemma.model.expression.experiment
@@ -1679,5 +1787,16 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 "select e from ExpressionExperimentImpl e inner join e.accession a where a.accession = :accession",
                 "accession", accession );
     }
+    
+    /*
+     * (non-Javadoc)
+     * @see ubic.gemma.persistence.BrowsingDao#count()
+     */
+    @Override
+    public Integer count() {
+        return ( ( Long ) getHibernateTemplate().find( "select count(*) from ExpressionExperimentImpl" ).iterator()
+                .next() ).intValue();
+    }
+
 
 }

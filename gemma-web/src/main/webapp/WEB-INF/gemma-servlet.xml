@@ -91,6 +91,8 @@
 	<bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/admin/taskTest.html" />
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/metaheatmap.html" />
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/contactUs.html" />
+    <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/analysesResultsSearch.html" />
+    <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperiments.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -504,7 +506,7 @@ gemma.max.fileupload.size.bytes=
 							</list>
 						</property>
 					</bean>
-				</entry>
+				</entry>					
 				<entry key="ExperimentalEvidenceValueObject">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
@@ -1004,6 +1006,9 @@ gemma.max.fileupload.size.bytes=
 								<value>getDescription</value>
 								<value>unmatchAllBioAssays</value>
 								<value>canCurrentUserEditExperiment</value>
+								<value>browse</value>
+								<value>browseSpecificIds</value>
+								<value>browseByTaxon</value>
 							</list>
 						</property>
 					</bean>

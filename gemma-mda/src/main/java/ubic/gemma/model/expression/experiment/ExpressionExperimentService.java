@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
@@ -448,5 +449,31 @@ public interface ExpressionExperimentService {
 
     @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadLackingTags();
+
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> browse( Integer start, Integer limit );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
+    
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending, Collection<Long> ids );
+
+    public Integer count();
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
+
 
 }

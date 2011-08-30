@@ -46,3 +46,64 @@
 .x-toolbar .x-toolbar-standardbutton.x-btn-menu-active .x-btn-bc, 
 .x-toolbar .x-toolbar-standardbutton.x-btn-pressed .x-btn-bc { background-position: 0 -21px; }
 
+.x-btn,.bigText button{
+	font-size: 14px
+}
+.x-btn,.mediumText button{
+	font-size: 12px
+}
+.x-btn,.smallText button{
+	font-size: 10px
+}
+
+
+
+.transparent-btn .x-btn-tl, .transparent-btn .x-btn-tr, .transparent-btn .x-btn-tc, .transparent-btn .x-btn-ml, .transparent-btn .x-btn-mr, .transparent-btn .x-btn-mc, .transparent-btn .x-btn-bl, .transparent-btn .x-btn-br, .transparent-btn .x-btn-bc {
+    background-image:url(/Gemma/images/s.gif);
+	cursor:pointer;
+}
+.transparent-btn-link table:hover{
+	cursor:pointer;
+}
+.transparent-btn-link button {
+	color: #004f64;
+	text-decoration: none;
+}
+.transparent-btn-link button:hover {
+	color: #f47f20;
+	text-decoration: none;
+}
+
+
+
+#fi-button-msg {
+	border: 2px solid #ccc;
+	padding: 5px 10px;
+	background: #eee;
+	float: left;
+}
+
+.purple-btn .x-btn-tl, .purple-btn .x-btn-tr, .purple-btn .x-btn-tc, .purple-btn .x-btn-ml, .purple-btn .x-btn-mr, .purple-btn .x-btn-mc, .purple-btn .x-btn-bl, .purple-btn .x-btn-br, .purple-btn .x-btn-bc {
+    background-image:url('/Gemma/images/default/button/btn-light.gif');
+}
+ 
+
+table.x-btn-pressed.highlightToggle{
+	padding: 0px;
+	margin 7px;
+}
+.highlightToggle .x-btn-tl, .highlightToggle  .x-btn-tr, .highlightToggle .x-btn-tc, .highlightToggle .x-btn-ml, .highlightToggle .x-btn-mr, .highlightToggle .x-btn-mc, .highlightToggle .x-btn-bl, .highlightToggle .x-btn-br, .highlightToggle .x-btn-bc{
+	background-image:url('/Gemma/images/default/button/btn-match-panel.gif');
+}
+.x-btn-pressed.highlightToggle button span{
+	color:black;	
+}
+.highlightToggle button span{
+	color:grey
+}
+
+
+
+.details .x-btn-text {
+	background-image: url(../../images/icons/details.gif);
+}
