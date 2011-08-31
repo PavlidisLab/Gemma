@@ -936,10 +936,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var j;
 		var vos = this.getSelectedExperimentAndExperimentSetValueObjects();
 		for (i = 0; i < vos.length; i++) {
-			if (selectedVOs[i] instanceof ExpressionExperimentValueObject) {
-				eeIds.push(vo.id);
-			} else if (selectedVOs[i] instanceof ExpressionExperimentSetValueObject) {
-				eeIds = eeIds.concat(vo.expressionExperimentIds);
+			if (vos[i] instanceof ExpressionExperimentValueObject) {
+				eeIds.push(vos[i].id);
+			} else if (vos[i] instanceof ExpressionExperimentSetValueObject) {
+				eeIds = eeIds.concat(vos[i].expressionExperimentIds);
 			}
 		}
 		return eeIds;
@@ -951,10 +951,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var j;
 		var vos = this.getSelectedGeneAndGeneSetValueObjects();
 		for (i = 0; i < vos.length; i++) {
-			if (selectedVOs[i] instanceof GeneValueObject) {
-				geneIds.push(vo.id);
-			} else if (selectedVOs[i] instanceof GeneSetValueObject) {
-				geneIds = geneIds.concat(vo.geneIds);
+			if (vos[i] instanceof GeneValueObject) {
+				geneIds.push(vos[i].id);
+			} else if (vos[i] instanceof GeneSetValueObject) {
+				geneIds = geneIds.concat(vos[i].geneIds);
 			}
 		}
 		return geneIds;
