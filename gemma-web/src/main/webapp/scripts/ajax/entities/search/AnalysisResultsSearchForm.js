@@ -913,7 +913,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if(selectedVOs[i] instanceof ExpressionExperimentValueObject){
 				var ee = selectedVOs[i];
 				// maybe this should be a call to the backend?
-				var singleExperimentSet = new SessionBoundExperimentSetValueObject();
+				var singleExperimentSet = new SessionBoundExpressionExperimentSetValueObject();
 				singleExperimentSet.id = null;
 				singleExperimentSet.expressionExperimentIds = [ee.id];
 				singleExperimentSet.name = ee.shortName;
