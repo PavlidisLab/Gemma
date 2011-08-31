@@ -246,14 +246,24 @@ public class GeneCoexpressionService {
             allUsedGenes.add( c.getFoundGene().getId() );
         }
 
-        Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( geneService
-                .loadMultiple( allUsedGenes ), expressionExperimentService.loadMultiple( allSupportingDatasets ) );
+        
+        if (!allSupportingDatasets.isEmpty()){
+        
+            Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( geneService
+                    .loadMultiple( allUsedGenes ), expressionExperimentService.loadMultiple( allSupportingDatasets ) );
 
-        Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
+            Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
 
-        for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
-            c.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getQueryGene().getId() ) ) );
-            c.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getFoundGene().getId() ) ) );
+            for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
+                c.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getQueryGene().getId() ) ) );
+                c.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getFoundGene().getId() ) ) );
+            }
+        }
+        else{
+            for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
+                c.setQueryGeneNodeDegree( 0d );
+                c.setFoundGeneNodeDegree( 0d );
+            }            
         }
 
         return result;
