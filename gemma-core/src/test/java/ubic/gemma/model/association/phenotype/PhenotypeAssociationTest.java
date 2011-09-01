@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,7 +67,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void setup() {
 
         // Gene NCBI used
-        geneNCBI = "44444444";
+        geneNCBI = RandomStringUtils.randomNumeric( 6 );
         // Phenotype
         phenotypeValue = "testValue";
         phenotypeCategory = "testCategory";
@@ -210,7 +211,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         g.setTaxon( rat );
         List<GeneProduct> ggg = new ArrayList<GeneProduct>();
         ggg.add( super.getTestPersistentGeneProduct( g ) );
-        g.setProducts( ggg );
+        g.getProducts().addAll( ggg );
         g = ( Gene ) persisterHelper.persist( g );
         return g;
     }
