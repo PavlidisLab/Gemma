@@ -18,7 +18,9 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.Cache;
@@ -33,10 +35,10 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 @Component
-public class Gene2GeneCoexpressionCache {
+public class Gene2GeneCoexpressionCache implements InitializingBean {
 
     @Autowired
-    private CacheManager cacheManager;
+    private EhCacheManagerFactoryBean cacheManagerFactory;
 
     private static final String GENE_COEXPRESSION_CACHE_NAME = "Gene2GeneCoexpressionCache";
 
@@ -45,7 +47,7 @@ public class Gene2GeneCoexpressionCache {
     private static final int GENE_COEXPRESSION_CACHE_DEFAULT_TIME_TO_IDLE = 10000;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
-    private static Cache cache;
+    private Cache cache;
 
     /**
      * Remove all elements from the cache.
@@ -64,8 +66,10 @@ public class Gene2GeneCoexpressionCache {
      * 
      * @return
      */
-    public Cache initializeCache() {
-
+    @Override
+    public void afterPropertiesSet() {
+        CacheManager cacheManager = cacheManagerFactory.getObject();
+        assert cacheManager != null;
         int maxElements = ConfigUtils.getInt( "gemma.cache.gene2gene.maxelements",
                 GENE_COEXPRESSION_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = ConfigUtils.getInt( "gemma.cache.gene2gene.timetolive",
@@ -77,25 +81,31 @@ public class Gene2GeneCoexpressionCache {
                 GENE_COEXPRESSION_CACHE_DEFAULT_OVERFLOW_TO_DISK );
 
         boolean eternal = ConfigUtils.getBoolean( "gemma.cache.gene2gene.eternal",
-                GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL );
+                GENE_COEXPRESSION_CACHE_DEFAULT_ETERNAL )
+                && timeToLive == 0;
+        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
 
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
-        if ( cacheManager.cacheExists( GENE_COEXPRESSION_CACHE_NAME ) ) {
-            return cacheManager.getCache( GENE_COEXPRESSION_CACHE_NAME );
+        /*
+         * See TerracottaConfiguration.
+         */
+        int diskExpiryThreadIntervalSeconds = 600;
+        int maxElementsOnDisk = 10000;
+        boolean terracottaCoherentReads = false;
+        boolean clearOnFlush = false;
+
+        if ( terracottaEnabled ) {
+            this.cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
+                    overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,
+                    diskExpiryThreadIntervalSeconds, null, null, maxElementsOnDisk, 10, clearOnFlush,
+                    terracottaEnabled, "SERIALIZATION", terracottaCoherentReads );
+        } else {
+            this.cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
+                    overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,
+                    diskExpiryThreadIntervalSeconds, null );
         }
 
-        cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
-                null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null );
-
         cacheManager.addCache( cache );
-        return cacheManager.getCache( GENE_COEXPRESSION_CACHE_NAME );
-    }
-
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
     }
 }

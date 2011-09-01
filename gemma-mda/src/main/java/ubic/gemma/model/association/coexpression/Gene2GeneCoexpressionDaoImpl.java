@@ -27,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import net.sf.ehcache.CacheException;
 import net.sf.ehcache.Element;
 
 import org.apache.commons.logging.Log;
@@ -326,21 +325,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         return result;
 
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.springframework.dao.support.DaoSupport#initDao()
-     */
-    @Override
-    protected void initDao() throws Exception {
-        super.initDao();
-        try {
-            this.getGene2GeneCoexpressionCache().initializeCache();
-        } catch ( CacheException e ) {
-            throw new RuntimeException( e );
-        }
     }
 
     /**

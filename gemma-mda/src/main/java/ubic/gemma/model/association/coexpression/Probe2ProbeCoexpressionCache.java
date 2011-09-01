@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
+import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
@@ -43,6 +46,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
+@Component
 public class Probe2ProbeCoexpressionCache implements InitializingBean {
 
     private static final String PROCESSED_DATA_VECTOR_CACHE_NAME_BASE = "Probe2ProbeCache";
@@ -52,7 +56,8 @@ public class Probe2ProbeCoexpressionCache implements InitializingBean {
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
-    private CacheManager cacheManager;
+    @Autowired
+    private EhCacheManagerFactoryBean cacheManagerFactory;
 
     private Boolean enabled = true;
 
@@ -123,16 +128,10 @@ public class Probe2ProbeCoexpressionCache implements InitializingBean {
 
     @SuppressWarnings("unchecked")
     private Collection<CoexpressionCacheValueObject> get( Long eeid, Long geneid ) {
+        assert cache != null;
         Element element = cache.get( new CacheKey( eeid, geneid ) );
         if ( element == null ) return null;
         return ( Collection<CoexpressionCacheValueObject> ) element.getValue();
-    }
-
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
     }
 
     /**
@@ -141,6 +140,7 @@ public class Probe2ProbeCoexpressionCache implements InitializingBean {
      * @return
      */
     public void afterPropertiesSet() throws Exception {
+        CacheManager cacheManager = cacheManagerFactory.getObject();
         int maxElements = ConfigUtils.getInt( "gemma.cache.probe2probe.maxelements",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = ConfigUtils.getInt( "gemma.cache.probe2probe.timetolive",
@@ -148,23 +148,39 @@ public class Probe2ProbeCoexpressionCache implements InitializingBean {
         int timeToIdle = ConfigUtils.getInt( "gemma.cache.probe2probe.timetoidle",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
 
+        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
+                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL )
+                && timeToLive == 0;
+        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", true );
         boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.probe2probe.usedisk",
                 PROCESSED_DATA_VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.probe2probe.eternal",
-                PROCESSED_DATA_VECTOR_CACHE_DEFAULT_ETERNAL );
-
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
 
         if ( !cacheManager.cacheExists( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE ) ) {
+            /*
+             * See TerracottaConfiguration.
+             */
+            int diskExpiryThreadIntervalSeconds = 600;
+            int maxElementsOnDisk = 10000;
+            boolean terracottaCoherentReads = false;
+            boolean clearOnFlush = false;
 
-            cacheManager.addCache( new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE, maxElements,
-                    MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
-                    diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
+            if ( terracottaEnabled ) {
+                this.cache = new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE, maxElements,
+                        MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
+                        diskPersistent, diskExpiryThreadIntervalSeconds, null, null, maxElementsOnDisk, 10,
+                        clearOnFlush, terracottaEnabled, "SERIALIZATION", terracottaCoherentReads );
+                // FIXME make it nonstop.
+
+            } else {
+                this.cache = new Cache( PROCESSED_DATA_VECTOR_CACHE_NAME_BASE, maxElements,
+                        MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null, eternal, timeToLive, timeToIdle,
+                        diskPersistent, diskExpiryThreadIntervalSeconds, null );
+            }
+            cacheManager.addCache( cache );
         }
 
     }
-
 }
 
 class CacheKey {

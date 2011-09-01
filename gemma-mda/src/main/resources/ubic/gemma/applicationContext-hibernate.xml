@@ -8,12 +8,13 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
-        http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+        http://www.springframework.org/schema/context  http://www.springframework.org/schema/context/spring-context-3.0.xsd
+            http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
 
 	<!-- DONT include gemma.web here, it is brought in by gemma-servlet.xml -->
 	<context:component-scan
-		base-package="ubic.gemma.analysis,ubic.gemma.association, ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology,ubic.gemma.annotation,ubic.gemma.job,ubic.gemma.tasks"
+		base-package="ubic.gemma.analysis,ubic.gemma.preprocess,ubic.gemma.association, ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology,ubic.gemma.annotation,ubic.gemma.job,ubic.gemma.tasks"
 		name-generator="ubic.gemma.util.BeanNameGenerator" />
 
 	<!--
@@ -36,6 +37,7 @@
 		<!-- the transactional semantics... -->
 		<tx:attributes>
 			<tx:method name="get*" read-only="true" />
+			<tx:method name="browse*" read-only="true" />
 			<tx:method name="find*" read-only="true" />
 			<tx:method name="load*" read-only="true" />
 			<tx:method name="thaw*" read-only="true" />
@@ -195,7 +197,7 @@
 				</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml   </value>
+				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml</value>
 
 				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
 
@@ -204,54 +206,38 @@
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
-				<prop key="hibernate.max_fetch_depth">3</prop>
-				<prop key="hibernate.jdbc.fetch_size">500</prop>
-				<prop key="hibernate.default_batch_fetch_size">500</prop>
-				<prop key="hibernate.jdbc.batch_size">500</prop>
-				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
-				<prop key="hibernate.use_streams_for_binary">true</prop>
-				<prop key="hibernate.cache.use_query_cache">false</prop>
-				<prop key="hibernate.cache.use_second_level_cache">false</prop>
 				<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
-				<prop key="hibernate.generate_statistics">true</prop>
-				<prop key="hibernate.cache.use_structured_entries">true</prop>
-				<!--
-					<prop key="hibernate.format_sql">true</prop> <prop key="hibernate.use_sql_comments">true</prop> <prop
-					key="hibernate.show_sql">true</prop>
-				-->
+				<!-- <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop>-->
+				<prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
+				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
+				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_fetch_size}</prop>
+				<prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
+				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
+				<!-- <prop key="hibernate.use_streams_for_binary">true</prop>--> <!--  I believe this is ignored unless passed in java -D... -->
+				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
+				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
+				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
+				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}</prop>
+				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
+				<!-- <prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop> -->
+				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
+				<prop key="hibernate.use_sql_comments">${gemma.hibernate.use_sql_comments}</prop>
+				<prop key="hibernate.show_sql">${gemma.hibernate.show_sql}</prop>
 			</props>
 		</property>
-		<property name="cacheProvider">
-			<ref bean="cacheProvider" />
+
+		<!-- We have a annotation-configured ubic.gemma.persistence.ExternalCacheRegionFactory -->
+		<!--	<property name="cacheProvider">
+			<ref bean="externalCacheProvider" />
+		</property>-->
+		<property name="cacheRegionFactory">
+			<ref bean="externalCacheRegionFactory" />
 		</property>
+		<!-- 	<property name="cacheRegionFactory" ref="cacheRegionFactory" />-->
 	</bean>
 
-	<bean id="cacheProvider" class="ubic.gemma.persistence.ExternalCacheProvider">
-		<property name="cacheManager">
-			<ref bean="cacheManager" />
-		</property>
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="configLocation" value="${gemma.ehcache.configfile.name}" />
 	</bean>
-
-	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" />
-
-	<!-- cache beans -->
-	<bean id="gene2GeneCoexpressionCache" class="ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionCache">
-		<property name="cacheManager">
-			<ref bean="cacheManager" />
-		</property>
-	</bean>
-
-	<bean id="probe2ProbeCoexpressionCache" class="ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache">
-		<property name="cacheManager">
-			<ref bean="cacheManager" />
-		</property>
-	</bean>
-
-	<bean id="processedDataVectorCache" class="ubic.gemma.model.expression.bioAssayData.ProcessedDataVectorCache">
-		<property name="cacheManager">
-			<ref bean="cacheManager" />
-		</property>
-	</bean>
-
 
 </beans>

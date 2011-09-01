@@ -37,7 +37,8 @@
 		<s:intercept-url pattern="/**" access="IS_AUTHENTICATED_ANONYMOUSLY" />
 
 		<s:logout logout-success-url="/login.jsp" />
-		<s:form-login login-page="/login.jsp" default-target-url="/" authentication-success-handler-ref="ajaxAuthenticationSuccessHandler" authentication-failure-handler-ref="ajaxAuthenticationFailureHandler" />
+		<s:form-login login-page="/login.jsp" default-target-url="/" authentication-success-handler-ref="ajaxAuthenticationSuccessHandler"
+			authentication-failure-handler-ref="ajaxAuthenticationFailureHandler" />
 		<s:remember-me key="gemma_rm" />
 
 		<!--
@@ -50,13 +51,13 @@
 		</s:session-management>
 
 	</s:http>
-	
-	<bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationSuccessHandler" >
-		<property name="alwaysUseDefaultTargetUrl" value="false"></property>			
+
+	<bean id="ajaxAuthenticationSuccessHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationSuccessHandler">
+		<property name="alwaysUseDefaultTargetUrl" value="false"></property>
 	</bean>
-	
-	<bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationFailureHandler" >
-		<property name="defaultFailureUrl" value="/login.jsp"></property>			
+
+	<bean id="ajaxAuthenticationFailureHandler" class="ubic.gemma.security.authentication.AjaxAuthenticationFailureHandler">
+		<property name="defaultFailureUrl" value="/login.jsp"></property>
 	</bean>
 
 	<!-- For use with access tags  -->
@@ -85,13 +86,10 @@
 		<s:authentication-provider ref="runAsAuthenticationProvider" />
 	</s:authentication-manager>
 
-
 	<bean id="runAsManager" class="org.springframework.security.access.intercept.RunAsManagerImpl">
 		<property name="rolePrefix" value="GROUP_" />
 		<property name="key" value="${gemma.runas.password}" />
 	</bean>
-
-
 
 	<bean id="runAsAuthenticationProvider" class="org.springframework.security.access.intercept.RunAsImplAuthenticationProvider">
 		<property name="key" value="${gemma.runas.password}" />
@@ -105,10 +103,15 @@
 			<bean class="org.springframework.cache.ehcache.EhCacheFactoryBean">
 				<property name="cacheManager" ref="cacheManager" />
 				<property name="cacheName" value="aclCache" />
+				<!--
+					diskStore has to be on in ehcache.xml if you want this true
+				-->
+				<property name="overflowToDisk" value="false" />
+				<property name="timeToLive" value="500" />
+				<!-- FIXME add other configuration here. -->
 			</bean>
 		</constructor-arg>
 	</bean>
-
 
 	<!--- global method security configuration -->
 
@@ -126,9 +129,7 @@
 		<s:after-invocation-provider ref="afterAclMapRead" />
 		<s:after-invocation-provider ref="afterAclMapValuesRead" />
 		<s:after-invocation-provider ref="postInvocationAdviceProvider" /><!-- for @Post... -->
-
 	</s:global-method-security>
-
 
 	<!-- needed for the use of @Pre... and @Post...-->
 	<bean id="securityExpressionHandler" class="org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler">
@@ -144,7 +145,6 @@
 	</bean>
 
 	<!-- ===================== VOTING ==================== -->
-
 
 	<!-- Decide whether the user has access to a particular resource, method, or data-->
 	<bean id="accessDecisionManager" class="org.springframework.security.access.vote.UnanimousBased">
@@ -241,7 +241,8 @@
 				GROUP_ADMIN > GROUP_USER
 				GROUP_RUN_AS_ADMIN > GROUP_ADMIN
 				GROUP_USER > GROUP_ANONYMOUS
-				GROUP_RUN_AS_USER > GROUP_USER
+				GROUP_RUN_AS_USER >
+				GROUP_USER
 				GROUP_ADMIN > GROUP_AGENT
 				GROUP_ANONYMOUS > IS_AUTHENTICATED_ANONYMOUSLY
 				]]

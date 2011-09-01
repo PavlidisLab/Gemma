@@ -21,6 +21,7 @@ package ubic.gemma.persistence;
 import java.util.Properties;
 
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +29,8 @@ import org.hibernate.cache.Cache;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.CacheProvider;
 import org.hibernate.cache.Timestamper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 /**
  * Based on code by Les Hazlewood. http://www.leshazlewood.com/?p=37
@@ -35,13 +38,17 @@ import org.hibernate.cache.Timestamper;
  * @author paul
  * @version $Id$
  */
+@Deprecated
+@Component
 public class ExternalCacheProvider implements CacheProvider {
     protected transient final Log log = LogFactory.getLog( getClass() );
+
+    @Autowired
     private CacheManager cacheManager = null;
 
     public Cache buildCache( String name, Properties properties ) throws CacheException {
         try {
-            net.sf.ehcache.Ehcache cache = cacheManager.getEhcache( name );
+            Ehcache cache = cacheManager.getEhcache( name );
             if ( cache == null ) {
                 if ( log.isWarnEnabled() ) {
                     log.warn( "Unable to find EHCache configuration for cache named [" + name + "]. Using defaults." );

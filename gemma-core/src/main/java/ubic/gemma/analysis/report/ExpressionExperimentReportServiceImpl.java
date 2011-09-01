@@ -143,13 +143,24 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         /*
          * Initialize the cache; if it already exists it will not be recreated.
          */
+        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false ) && !terracottaEnabled;
         int maxElements = 5000;
         boolean eternal = true;
         boolean overFlowToDisk = false;
-        boolean diskPersistent = true;
+        int diskExpiryThreadIntervalSeconds = 600;
+        int maxElementsOnDisk = 10000;
+        boolean terracottaCoherentReads = false;
+        boolean clearOnFlush = false;
 
-        this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
-                null, eternal, 0, 0, diskPersistent, 600 /* diskExpiryThreadInterval */, null );
+        if ( terracottaEnabled ) {
+            this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
+                    overFlowToDisk, null, eternal, 0, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null, null,
+                    maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION", terracottaCoherentReads );
+        } else {
+            this.statsCache = new Cache( EESTATS_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
+                    overFlowToDisk, null, eternal, 0, 0, diskPersistent, diskExpiryThreadIntervalSeconds, null );
+        }
 
         cacheManager.addCache( statsCache );
         this.statsCache = cacheManager.getCache( EESTATS_CACHE_NAME );
@@ -638,9 +649,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      */
     @Override
     public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees ) {
-        return getEvents(ees,  TroubleStatusFlagEvent.class );
+        return getEvents( ees, TroubleStatusFlagEvent.class );
     }
-    
+
     /**
      * Read information about an particular type of event for the set of given EEs. These are read from the audit trail.
      * 

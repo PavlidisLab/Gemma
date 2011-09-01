@@ -136,7 +136,9 @@
 	<listener>
 		<listener-class>org.springframework.security.web.session.HttpSessionEventPublisher</listener-class>
 	</listener>
-
+	<listener><!-- this may not be necessary, see http://ehcache.org/documentation/user-guide/shutdown -->
+  		<listener-class>net.sf.ehcache.constructs.web.ShutdownListener</listener-class>
+	</listener>
 
 	<!-- Dispatch Servlet Configuration -->
 	<servlet>

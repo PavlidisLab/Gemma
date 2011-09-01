@@ -279,10 +279,23 @@ public class SearchService implements InitializingBean {
             if ( cacheManager.cacheExists( "OntologyChildrenCache" ) ) {
                 return;
             }
-            childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
-                    MemoryStoreEvictionPolicy.LFU, false, null, true, ONTOLOGY_CACHE_TIME_TO_DIE,
-                    ONTOLOGY_CACHE_TIME_TO_IDLE, false, 500, null );
+            boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+            int diskExpiryThreadIntervalSeconds = 600;
+            int maxElementsOnDisk = 10000;
+            boolean terracottaCoherentReads = false;
+            boolean clearOnFlush = false;
 
+            if ( terracottaEnabled ) {
+                childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
+                        MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
+                        ONTOLOGY_CACHE_TIME_TO_IDLE, false, diskExpiryThreadIntervalSeconds, null, null,
+                        maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
+                        terracottaCoherentReads );
+            } else {
+                childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
+                        MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
+                        ONTOLOGY_CACHE_TIME_TO_IDLE, false, diskExpiryThreadIntervalSeconds, null );
+            }
             cacheManager.addCache( childTermCache );
             childTermCache = cacheManager.getCache( "OntologyChildrenCache" );
 
@@ -562,22 +575,23 @@ public class SearchService implements InitializingBean {
         Element cachedChildren = this.childTermCache.get( uri );
         // log.debug("Getting children of " + term);
         if ( cachedChildren == null ) {
-            try{
+            try {
                 children = term.getChildren( false );
                 childTermCache.put( new Element( uri, children ) );
-            }catch(com.hp.hpl.jena.ontology.ConversionException ce){
-                log.warn( "getting children for term: "+term+" caused com.hp.hpl.jena.ontology.ConversionException. "+ce.getMessage() );
+            } catch ( com.hp.hpl.jena.ontology.ConversionException ce ) {
+                log.warn( "getting children for term: " + term
+                        + " caused com.hp.hpl.jena.ontology.ConversionException. " + ce.getMessage() );
             }
         } else {
             children = ( Collection<OntologyTerm> ) cachedChildren.getValue();
         }
 
-        if(children != null){ // will happen if there's a com.hp.hpl.jena.ontology.ConversionException
-           for ( OntologyTerm child : children ) {
-               characteristicUris.add( child.getUri() );
-           } 
+        if ( children != null ) { // will happen if there's a com.hp.hpl.jena.ontology.ConversionException
+            for ( OntologyTerm child : children ) {
+                characteristicUris.add( child.getUri() );
+            }
         }
-        
+
     }
 
     /**

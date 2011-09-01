@@ -27,6 +27,7 @@ import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -54,47 +55,49 @@ public class ProcessedDataVectorCache implements InitializingBean {
     private static final boolean VECTOR_CACHE_DEFAULT_ETERNAL = true;
     private static final boolean VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK = true;
 
-    /**
-     * We retain references to the caches separately from the CacheManager. This _could_ create leaks of caches if the
-     * cache manager needs to recreate a cache for some reason. Something to keep in mind.
-     */
-    // private static final Map<Long /* EE id */, Cache> caches = new HashMap<Long, Cache>();
-
     private Cache cache;
 
     @Autowired
-    private CacheManager cacheManager;
+    private EhCacheManagerFactoryBean cacheManagerFactory;
 
     public void clearCache() {
         cache.removeAll();
     }
 
-    /**
-     * @param cacheManager the cacheManager to set
-     */
-    public void setCacheManager( CacheManager cacheManager ) {
-        this.cacheManager = cacheManager;
-    }
-
     @Override
     public void afterPropertiesSet() throws Exception {
+        CacheManager cacheManager = this.cacheManagerFactory.getObject();
         int maxElements = ConfigUtils.getInt( "gemma.cache.vectors.maxelements", VECTOR_CACHE_DEFAULT_MAX_ELEMENTS );
         int timeToLive = ConfigUtils.getInt( "gemma.cache.vectors.timetolive", VECTOR_CACHE_DEFAULT_TIME_TO_LIVE );
         int timeToIdle = ConfigUtils.getInt( "gemma.cache.vectors.timetoidle", VECTOR_CACHE_DEFAULT_TIME_TO_IDLE );
-
         boolean overFlowToDisk = ConfigUtils.getBoolean( "gemma.cache.vectors.usedisk",
                 VECTOR_CACHE_DEFAULT_OVERFLOW_TO_DISK );
-
-        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal", VECTOR_CACHE_DEFAULT_ETERNAL );
+        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", true );
+        boolean eternal = ConfigUtils.getBoolean( "gemma.cache.vectors.eternal", VECTOR_CACHE_DEFAULT_ETERNAL )
+                && timeToLive == 0;
+        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", true ) && !terracottaEnabled;
 
         String cacheName = VECTOR_CACHE_NAME;
 
-        boolean diskPersistent = ConfigUtils.getBoolean( "gemma.cache.diskpersistent", false );
-
         if ( !cacheManager.cacheExists( cacheName ) ) {
+            /*
+             * See TerracottaConfiguration.
+             */
+            int diskExpiryThreadIntervalSeconds = 600;
+            int maxElementsOnDisk = 10000;
+            boolean terracottaCoherentReads = false;
+            boolean clearOnFlush = false;
 
-            cacheManager.addCache( new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk,
-                    null, eternal, timeToLive, timeToIdle, diskPersistent, 600 /* diskExpiryThreadInterval */, null ) );
+            if ( terracottaEnabled ) {
+                this.cache = new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null,
+                        eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null, null,
+                        maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
+                        terracottaCoherentReads );
+            } else {
+                this.cache = new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null,
+                        eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null );
+            }
+            cacheManager.addCache( cache );
         }
 
         this.cache = cacheManager.getCache( VECTOR_CACHE_NAME );
