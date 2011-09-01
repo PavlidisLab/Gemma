@@ -197,7 +197,7 @@ public class PhenotypeAssoManagerServiceHelper {
             }
         }
 
-        genericExperiment.setCharacteristics( characteristics );
+        genericExperiment.getCharacteristics().addAll( characteristics );
 
         phenotypeAssociationService.createGenericExperiment( genericExperiment );
 
@@ -246,7 +246,7 @@ public class PhenotypeAssoManagerServiceHelper {
             myPhenotypes.add( myPhenotype );
         }
 
-        phe.setPhenotypes( myPhenotypes );
+        phe.getPhenotypes().addAll( myPhenotypes );
     }
 
     /** calls findOrCreateBibliographicReference for a Collection */
