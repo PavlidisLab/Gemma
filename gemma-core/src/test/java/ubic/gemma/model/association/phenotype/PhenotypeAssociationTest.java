@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2011 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.model.association.phenotype;
 
 import static org.junit.Assert.assertNotNull;
@@ -25,6 +39,10 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.testing.BaseSpringContextTest;
 
+/**
+ * @author nicolas
+ * @version $Id$
+ */
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
@@ -41,6 +59,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private String phenotypeValue = "";
     private String phenotypeCategory = "";
     private Collection<CharacteristicValueObject> phenotypes = null;
+
+    private Gene gene;
 
     @Before
     public void setup() {
@@ -59,12 +79,12 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         evidence = new UrlEvidenceValueObject( "test_description", null, false, "IC", phenotypes, "www.test.com" );
 
         // Make sure a Gene exist in the database with the NCBI id
-        makeGene( geneNCBI );
+        this.gene = makeGene( geneNCBI );
     }
 
     @After
     public void tearDown() {
-        geneService.remove( geneService.findByNCBIId( geneNCBI ) );
+        if ( gene != null ) geneService.remove( gene );
     }
 
     @Test
@@ -119,7 +139,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         assertNull( urlDao.load( entityReturn.getId() ) );
     }
 
-    // not a junit test, used to check values
+    // not a junit test, used to check values // not used
     public void testFindPhenotypeAssociations() {
 
         // call to the service
