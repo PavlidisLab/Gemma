@@ -18,10 +18,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
@@ -32,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -209,9 +206,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         g.setOfficialSymbol( "RAT1" );
         g.setNcbiId( ncbiId );
         g.setTaxon( rat );
-        List<GeneProduct> ggg = new ArrayList<GeneProduct>();
-        ggg.add( super.getTestPersistentGeneProduct( g ) );
-        g.getProducts().addAll( ggg );
+        g.getProducts().add( super.getTestPersistentGeneProduct( g ) );
         g = ( Gene ) persisterHelper.persist( g );
         return g;
     }
