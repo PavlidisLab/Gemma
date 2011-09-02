@@ -1,6 +1,6 @@
 <ehcache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="ehcache.xsd"
 	updateCheck="true" monitoring="autodetect">
-	
+
 	<!--  File for use in non-clustered environments (no terracotta) -->
 
 	<!--  $Id$ -->
@@ -9,7 +9,7 @@
 		replaced by its value in the running VM. The following properties are translated: user.home - User's home directory
 		user.dir - User's current working directory java.io.tmpdir - Default temp file path
 	-->
-	<diskStore path="${ehcache.disk.store.dir}" />
+	<diskStore path="ehcache.disk.store.dir" />
 
 	<!--
 		Default Cache configuration. These will applied to caches programmatically created through the CacheManager. The
@@ -299,7 +299,7 @@
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventTypeImpl" maxElementsInMemory="100000"
-		eternal="false" timeToIdleSeconds="6000" timeToLiveSeconds="6000" overflowToDisk="true" />
+		eternal="false" timeToIdleSeconds="6000" timeToLiveSeconds="6000" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.eventType.MissingValueAnalysisEventImpl"
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
@@ -470,7 +470,7 @@
 		maxElementsInMemory="10000" eternal="false" timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.ExpressionExperimentImpl.processedExpressionDataVectors"
-		maxElementsInMemory="100000" eternal="true" overflowToDisk="true" />
+		maxElementsInMemory="100000" eternal="true" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.expression.experiment.FactorValueImpl" maxElementsInMemory="10000" eternal="false"
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />

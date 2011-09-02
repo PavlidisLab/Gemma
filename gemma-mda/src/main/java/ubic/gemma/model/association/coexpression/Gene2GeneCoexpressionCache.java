@@ -25,6 +25,9 @@ import org.springframework.stereotype.Component;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 import ubic.gemma.util.ConfigUtils;
 
@@ -96,10 +99,25 @@ public class Gene2GeneCoexpressionCache implements InitializingBean {
         boolean clearOnFlush = false;
 
         if ( terracottaEnabled ) {
-            this.cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
-                    overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,
-                    diskExpiryThreadIntervalSeconds, null, null, maxElementsOnDisk, 10, clearOnFlush,
-                    terracottaEnabled, "SERIALIZATION", terracottaCoherentReads );
+            CacheConfiguration config = new CacheConfiguration( GENE_COEXPRESSION_CACHE_NAME, maxElements );
+            config.setStatistics( false );
+            config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
+            config.setOverflowToDisk( overFlowToDisk );
+            config.setEternal( eternal );
+            config.setTimeToIdleSeconds( timeToIdle );
+            config.setMaxElementsOnDisk( maxElementsOnDisk );
+            config.addTerracotta( new TerracottaConfiguration() );
+            config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
+            config.clearOnFlush( clearOnFlush );
+            config.setTimeToLiveSeconds( timeToLive );
+            config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+            config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
+            config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+            this.cache = new Cache( config );
+            // this.cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
+            // overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,
+            // diskExpiryThreadIntervalSeconds, null, null, maxElementsOnDisk, 10, clearOnFlush,
+            // terracottaEnabled, "SERIALIZATION", terracottaCoherentReads );
         } else {
             this.cache = new Cache( GENE_COEXPRESSION_CACHE_NAME, maxElements, MemoryStoreEvictionPolicy.LRU,
                     overFlowToDisk, null, eternal, timeToLive, timeToIdle, diskPersistent,

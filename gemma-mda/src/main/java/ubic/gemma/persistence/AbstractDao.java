@@ -31,6 +31,7 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
     // generic class
     private Class<T> elementClass;
 
+    @SuppressWarnings("unchecked")
     protected AbstractDao( Class elementClass ) {
         this.elementClass = elementClass;
     }

@@ -23,6 +23,9 @@ import java.util.Collection;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.springframework.beans.factory.InitializingBean;
@@ -89,10 +92,26 @@ public class ProcessedDataVectorCache implements InitializingBean {
             boolean clearOnFlush = false;
 
             if ( terracottaEnabled ) {
-                this.cache = new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null,
-                        eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null, null,
-                        maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
-                        terracottaCoherentReads );
+                CacheConfiguration config = new CacheConfiguration( cacheName, maxElements );
+                config.setStatistics( false );
+                config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
+                config.setOverflowToDisk( overFlowToDisk );
+                config.setEternal( eternal );
+                config.setTimeToIdleSeconds( timeToIdle );
+                config.setMaxElementsOnDisk( maxElementsOnDisk );
+                config.addTerracotta( new TerracottaConfiguration() );
+                config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
+                config.clearOnFlush( clearOnFlush );
+                config.setTimeToLiveSeconds( timeToLive );
+                config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+                config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
+                config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+                this.cache = new Cache( config );
+                //                
+                // this.cache = new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null,
+                // eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null, null,
+                // maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
+                // terracottaCoherentReads );
             } else {
                 this.cache = new Cache( cacheName, maxElements, MemoryStoreEvictionPolicy.LRU, overFlowToDisk, null,
                         eternal, timeToLive, timeToIdle, diskPersistent, diskExpiryThreadIntervalSeconds, null );

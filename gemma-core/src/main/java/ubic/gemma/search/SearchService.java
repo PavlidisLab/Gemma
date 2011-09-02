@@ -39,6 +39,9 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheException;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.TerracottaConfiguration;
 import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
 
 import org.apache.commons.lang.StringEscapeUtils;
@@ -286,11 +289,28 @@ public class SearchService implements InitializingBean {
             boolean clearOnFlush = false;
 
             if ( terracottaEnabled ) {
-                childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
-                        MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
-                        ONTOLOGY_CACHE_TIME_TO_IDLE, false, diskExpiryThreadIntervalSeconds, null, null,
-                        maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
-                        terracottaCoherentReads );
+
+                CacheConfiguration config = new CacheConfiguration( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE );
+                config.setStatistics( false );
+                config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
+                config.setOverflowToDisk( false );
+                config.setEternal( true );
+                config.setTimeToIdleSeconds( ONTOLOGY_CACHE_TIME_TO_IDLE );
+                config.setMaxElementsOnDisk( maxElementsOnDisk );
+                config.addTerracotta( new TerracottaConfiguration() );
+                config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
+                config.clearOnFlush( clearOnFlush );
+                config.setTimeToLiveSeconds( ONTOLOGY_CACHE_TIME_TO_DIE );
+                config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+                config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
+                config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+                childTermCache = new Cache( config );
+
+                // childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
+                // MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
+                // ONTOLOGY_CACHE_TIME_TO_IDLE, false, diskExpiryThreadIntervalSeconds, null, null,
+                // maxElementsOnDisk, 10, clearOnFlush, terracottaEnabled, "SERIALIZATION",
+                // terracottaCoherentReads );
             } else {
                 childTermCache = new Cache( "OntologyChildrenCache", ONTOLOGY_INFO_CACHE_SIZE,
                         MemoryStoreEvictionPolicy.LFU, false, null, false, ONTOLOGY_CACHE_TIME_TO_DIE,
