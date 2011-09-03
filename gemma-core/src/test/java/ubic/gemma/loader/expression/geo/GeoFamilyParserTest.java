@@ -19,6 +19,9 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
@@ -27,6 +30,8 @@ import org.junit.Test;
 
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSample;
+import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.expression.geo.model.GeoValues;
 
 /**
  * @author pavlidis
@@ -125,6 +130,29 @@ public class GeoFamilyParserTest extends TestCase {
                 .iterator().next();
         assertTrue( sample.isGenePix() );
         assertEquals( 54, sample.getColumnNames().size() ); // includes ones we aren't using.
+    }
+
+    /**
+     * Lacks data for some samples (on purpose)
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testParseGSE29014() throws Exception {
+        is = new GZIPInputStream( this.getClass().getResourceAsStream( "/data/loader/expression/geo/GSE29014.soft.gz" ) );
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE29014" );
+
+        assertEquals( 78, series.getSamples().size() );
+        //
+        // GeoPlatform platform = series.getSamples().iterator().next().getPlatforms().iterator().next();
+        // /*
+        // * However, 3 of those samples have no data.
+        // */
+        GeoValues values = series.getValues();
+        // System.err.println( values );
+
     }
 
     /**

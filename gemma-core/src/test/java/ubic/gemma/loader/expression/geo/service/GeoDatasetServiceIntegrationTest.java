@@ -343,10 +343,11 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
         geoService.fetchAndLoad( accession, false, false, false, false );
     }
+
     //
-    // @Test
-    // public void test() throws Exception {
-    // fetchASeries( "GSE9048" );
-    // }
+//    @Test
+//    public void test() throws Exception {
+//        fetchASeries( "GSE29014" );
+//    }
 
 }

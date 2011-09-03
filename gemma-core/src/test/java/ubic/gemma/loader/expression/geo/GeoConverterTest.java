@@ -389,6 +389,29 @@ public class GeoConverterTest extends BaseSpringContextTest {
     }
 
     /**
+     * Lacks data for some samples (on purpose)
+     * 
+     * @throws Exception
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void testConvertGSE29014() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/GSE29014.soft.gz" ) );
+        GeoFamilyParser parser = new GeoFamilyParser();
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE29014" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner();
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        Object result = this.gc.convert( series );
+        assertNotNull( result );
+        Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) result;
+        assertEquals( 1, ees.size() );
+    }
+
+    /**
      * NPE in converter, not reproduced here.
      * 
      * @throws Exception

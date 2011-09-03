@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -341,7 +342,7 @@ public class GeoFamilyParser implements Parser<Object> {
             }
         }
         if ( countMissing > 0 ) {
-            log.debug( "Added data missing for " + countMissing + " probes for sample=" + currentSample + "  on "
+            log.warn( "Added data missing for " + countMissing + " probes for sample=" + currentSample + "  on "
                     + samplePlatform + "; last probe with missing data was " + lastMissingValue );
         }
 
@@ -530,6 +531,8 @@ public class GeoFamilyParser implements Parser<Object> {
                 }
             }
 
+            tidyUp();
+
         } catch ( Exception e ) {
             log.error( "Parsing failed (Cancelled?) :" + e.getMessage() );
             /*
@@ -548,6 +551,48 @@ public class GeoFamilyParser implements Parser<Object> {
         log.debug( this.dataSetDataLines + " data set data lines" );
         log.debug( this.sampleDataLines + " sample data lines" );
         return null;
+    }
+
+    /**
+     * Check for problems and fix them.
+     */
+    private void tidyUp() {
+
+        checkForAndFixMissingColumnNames();
+    }
+
+    /**
+     * Due to bug 2326, when a sample has no data at all.
+     * 
+     * @param sampleMap
+     */
+    private void checkForAndFixMissingColumnNames() {
+        Map<String, GeoSample> sampleMap = this.results.getSampleMap();
+        List<String> representativeColumnNames = null;
+        GeoSample representativeSample = null;
+        for ( GeoSample sam : sampleMap.values() ) {
+            if ( !sam.getColumnNames().isEmpty() ) {
+                representativeColumnNames = sam.getColumnNames();
+                representativeSample = sam;
+                break;
+            }
+        }
+
+        if ( representativeColumnNames == null ) {
+            return;
+        }
+
+        for ( GeoSample sam : sampleMap.values() ) {
+            if ( sam.getColumnNames().isEmpty() ) {
+                int i = 0;
+                for ( String colName : representativeColumnNames ) {
+                    sam.addColumnName( colName );
+                    sam.getColumnDescriptions().add( representativeSample.getColumnDescriptions().get( i ) );
+                    i++;
+                }
+
+            }
+        }
     }
 
     /**
@@ -570,7 +615,7 @@ public class GeoFamilyParser implements Parser<Object> {
      * (in a platform section of a GSE file):
      * 
      * <pre>
-     *                                    #SEQ_LEN = Sequence length
+     * #SEQ_LEN = Sequence length
      * </pre>
      * 
      * @param line
@@ -676,6 +721,13 @@ public class GeoFamilyParser implements Parser<Object> {
         }
         GeoPlatform platformForSample = platforms.iterator().next();
         log.debug( "Initializing quantitation types for " + currentSample() + ", Platform=" + platformForSample );
+
+        if ( currentSample().getColumnNames().isEmpty() ) {
+            /*
+             * We need to fill in dummy values.
+             */
+            geoSeries.getValues().addSample( currentSample() );
+        }
 
         for ( String columnName : currentSample().getColumnNames() ) {
             boolean isWanted = values.isWantedQuantitationType( columnName, this.aggressiveQuantitationTypeRemoval );
@@ -800,7 +852,7 @@ public class GeoFamilyParser implements Parser<Object> {
 
             // update the current index, note that it is platform-specific.
             currentIndex.put( platformForSample, currentIndex.get( platformForSample ) + 1 );
-        }
+        } // end iteration over column names.
 
     }
 
@@ -1481,7 +1533,14 @@ public class GeoFamilyParser implements Parser<Object> {
         } else if ( startsWithIgnoreCase( line, "!Sample_last_update_date" ) ) {
             sampleLastUpdateDate( currentSampleAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Sample_data_row_count" ) ) {
-            // nooop.
+            if ( value.equals( "0" ) ) {
+                /*
+                 * Empty sample, we won't get any data and this messes things up later.
+                 */
+                log.warn( "No data for sample " + currentSampleAccession );
+                initializeQuantitationTypes();
+                checkDataCompleteness(); // because we don't get the dable_end.
+            }
         } else if ( startsWithIgnoreCase( line, "!Sample_type" ) ) {
             sampleTypeSet( currentSampleAccession, value );
         } else if ( startsWithIgnoreCase( line, "!Sample_comment" ) ) {

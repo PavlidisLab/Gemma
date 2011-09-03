@@ -196,24 +196,7 @@ public class GeoValues implements Serializable {
                     + quantitationTypeIndex + " de=" + designElement );
         }
 
-        if ( sample.getPlatforms().size() > 1 ) {
-            throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
-        }
-
-        GeoPlatform platform = sample.getPlatforms().iterator().next();
-        if ( !sampleDimensions.containsKey( platform ) ) {
-            sampleDimensions.put( platform, new HashMap<Object, LinkedHashSet<GeoSample>>() );
-        }
-
-        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
-        if ( !samplePlatformMap.containsKey( quantitationTypeIndex ) ) {
-            samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<GeoSample>() );
-        }
-
-        LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
-        if ( !sampleQtMap.contains( sample ) ) {
-            sampleQtMap.add( sample );
-        }
+        GeoPlatform platform = addSample( sample, quantitationTypeIndex );
 
         if ( !data.containsKey( platform ) ) {
             data.put( platform, new HashMap<Object, Map<String, List<Object>>>() );
@@ -235,6 +218,60 @@ public class GeoValues implements Serializable {
             log.trace( "Adding value for platform=" + platform + " sample=" + sample + " qt=" + quantitationTypeIndex
                     + " de=" + designElement + " value=" + value );
         }
+    }
+
+    /**
+     * Only call this to add a sample for which there are no data.
+     * 
+     * @param sample
+     * @return
+     */
+    public void addSample( GeoSample sample ) {
+        GeoPlatform platform = sample.getPlatforms().iterator().next();
+
+        /*
+         * Problem: if this is the first sample, we don't know how many quantitation types to expect.
+         */
+        if ( !sampleDimensions.containsKey( platform ) ) {
+            throw new UnsupportedOperationException(
+                    "Can't deal with empty samples when that sample is the first one on its platform." );
+        }
+
+        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+        for ( Object quantitationTypeIndex : samplePlatformMap.keySet() ) {
+            LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
+            sampleQtMap.add( sample );
+        }
+
+    }
+
+    /**
+     * Only needs to be called 'externally' if you know there is no data for the sample.
+     * 
+     * @param sample
+     * @param quantitationTypeIndex
+     * @return
+     */
+    private GeoPlatform addSample( GeoSample sample, Integer quantitationTypeIndex ) {
+        if ( sample.getPlatforms().size() > 1 ) {
+            throw new IllegalArgumentException( sample + ": Can't handle samples that use multiple platforms" );
+        }
+
+        GeoPlatform platform = sample.getPlatforms().iterator().next();
+        if ( !sampleDimensions.containsKey( platform ) ) {
+            sampleDimensions.put( platform, new HashMap<Object, LinkedHashSet<GeoSample>>() );
+        }
+
+        Map<Object, LinkedHashSet<GeoSample>> samplePlatformMap = sampleDimensions.get( platform );
+        if ( !samplePlatformMap.containsKey( quantitationTypeIndex ) ) {
+            samplePlatformMap.put( quantitationTypeIndex, new LinkedHashSet<GeoSample>() );
+        }
+
+        LinkedHashSet<GeoSample> sampleQtMap = samplePlatformMap.get( quantitationTypeIndex );
+        if ( !sampleQtMap.contains( sample ) ) {
+            sampleQtMap.add( sample );
+        }
+        return platform;
     }
 
     private Map<GeoPlatform, Map<String, Integer>> quantitationTypeNameMap = new HashMap<GeoPlatform, Map<String, Integer>>();
@@ -390,7 +427,6 @@ public class GeoValues implements Serializable {
                  * There can be values missing if some data are missing for some samples. For example, on GSE1004,
                  * sample GSM15832 was run on HG-U95V1 while the rest are on HG-U95V2, so a few probes are missing data.
                  */
-
                 if ( rawvals.size() < ( i + 1 ) ) {
                     throw new IllegalStateException( "Data out of bounds index=" + i + " (" + designElement + " on "
                             + platform + " quant.type # " + quantitationType + ") - vector has only " + rawvals.size()
@@ -437,17 +473,20 @@ public class GeoValues implements Serializable {
                 }
                 buf.append( "\n" );
 
-                assert data.get( platform ).get( qType ) != null;
-                Object[] els = data.get( platform ).get( qType ).keySet().toArray();
+                Map<String, List<Object>> map = data.get( platform ).get( qType );
+                assert map != null;
+                Object[] els = map.keySet().toArray();
                 Arrays.sort( els );
                 for ( Object dEl : els ) {
                     buf.append( dEl );
-                    for ( Object val : data.get( platform ).get( qType ).get( dEl ) ) {
-                        if ( StringUtils.isBlank( val.toString() ) ) {
+
+                    for ( Object val : map.get( dEl ) ) {
+                        if ( val == null || StringUtils.isBlank( val.toString() ) ) {
                             val = ".";
                         }
                         buf.append( "\t" + val );
                     }
+
                     buf.append( "\n" );
                 }
             }

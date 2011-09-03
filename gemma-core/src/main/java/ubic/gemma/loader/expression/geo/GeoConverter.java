@@ -2697,16 +2697,31 @@ public class GeoConverter implements Converter<Object, Object> {
     }
 
     /**
-     * Sanity check hopefully the first one is representative.
+     * Sanity check.
      * 
      * @param datasetSamples
      */
     private void sanityCheckQuantitationTypes( List<GeoSample> datasetSamples ) {
-        List<String> reference = datasetSamples.iterator().next().getColumnNames();
+        List<String> reference = new ArrayList<String>();
+
+        // Choose a reference that is populated ...
+        for ( GeoSample sample : datasetSamples ) {
+            reference = sample.getColumnNames();
+            if ( !reference.isEmpty() ) break;
+        }
+
+        if ( reference.isEmpty() ) {
+            throw new IllegalStateException( "None of the samples have any quantitation type names" );
+        }
+
         boolean someDidntMatch = false;
+        String lastError = "";
         for ( GeoSample sample : datasetSamples ) {
             List<String> columnNames = sample.getColumnNames();
-            if ( !reference.equals( columnNames ) && log.isWarnEnabled() ) {
+
+            assert !columnNames.isEmpty();
+
+            if ( !reference.equals( columnNames ) ) {
 
                 StringBuilder buf = new StringBuilder();
                 buf.append( "\nSample " + sample.getGeoAccession() + ":" );
@@ -2719,11 +2734,12 @@ public class GeoConverter implements Converter<Object, Object> {
                 }
                 someDidntMatch = true;
 
-                log.debug( "*** Sample quantitation type names do not match: " + buf.toString() );
+                lastError = "*** Sample quantitation type names do not match: " + buf.toString();
+                log.debug( lastError );
             }
         }
         if ( someDidntMatch ) {
-            log.warn( "Samples do not have consistent quantification type names" );
+            log.warn( "Samples do not have consistent quantification type names. Last error was: " + lastError );
         }
     }
 
