@@ -373,7 +373,7 @@ Gemma.VisualizationZoomPanel = Ext.extend(Ext.Panel, {
 	 * The following are only used if we don't have a parent container, or on
 	 * initialization.
 	 */
-	heatmapMode : false,
+	heatmapMode : true,
 	forceFitPlots : false,
 	smoothLineGraphs : false,
 	showLegend : false,
@@ -622,8 +622,13 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 	stateful : true,
 	stateId : "visualization-window",
 	stateEvents : ['destroy'],
-
-	heatmapMode : false, // must start this way.
+	
+	/* 
+	 * old comment said heatmapMode must start as false, but we'd like it to default to heatmap, 
+	 * so I'm trying true
+	 * see bug 2316
+	 */
+	heatmapMode : true, 
 	forceFitPlots : false,
 	smoothLineGraphs : false,
 	havePvalues : false,
@@ -818,7 +823,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 	 */
 	switchView : function(btn) {
 		// var smoothBtn = Ext.getCmp(this.smoothBtnId);
-		var toggleLegendBtn = Ext.getCmp(this.toggleLegendBtnId);
+		var toggleLegendBtn = this.getBottomToolbar().toggleLegendBtn;
 		if (this.heatmapMode) {
 			this.setHeatmapMode(false);
 			btn.setText("Switch to heatmap");
@@ -1053,10 +1058,12 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 		// ? "Unsmooth" : "Smooth");
 		}
 			if (this.heatmapMode) {
+				this.getBottomToolbar().toggleLegendBtn.hide();
 			// Ext.getCmp(this.smoothBtnId).hide();
 			//Ext.getCmp(this.toggleLegendBtnId).hide();
 			}
 			else {
+				this.getBottomToolbar().toggleLegendBtn.show();
 			// Ext.getCmp(this.smoothBtnId).show();
 			//Ext.getCmp(this.toggleLegendBtnId).show();
 			}
