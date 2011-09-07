@@ -1589,7 +1589,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "ED.name as externalDatabaseName, " // 2
                 + "ED.webUri as externalDatabaseUri, " // 3
                 + "ee.source as source, " // 4
-                + "ee.accession.accession as accession, " // 5
+                + "acc.accession as accession, " // 5
                 + "taxon.commonName as taxonCommonName," // 6
                 + "taxon.id as taxonId," // 7
                 + "count(distinct BA) as bioAssayCount, " // 8
@@ -1614,13 +1614,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 Collections.sort( idl ); // so it's consistent and therefore cacheable.
                 qtMap = getQuantitationTypeMap( idl );
                 queryObject.setParameterList( "ids", idl );
+            System.out.println(queryObject.getQueryString() +"\nparam:"+idl);
             } else {
                 qtMap = getQuantitationTypeMap( null );
             }
 
             queryObject.setCacheable( true );
-
             List list = queryObject.list();
+            System.out.println("size of query results: "+list.size());
             for ( Object object : list ) {
 
                 Object[] res = ( Object[] ) object;
