@@ -12,6 +12,7 @@
 
 <%@ include file="/common/messages.jsp"%>
 
+<input type="hidden" id="reloadOnLogin" value="true"/>
 
 <c:choose>
 	<c:when test="${not empty param.exception}">
@@ -20,9 +21,14 @@
 		</p>
 
 		<p>
-			Possible next steps: Try what you were doing again; Go to the
-			<a href='/Gemma/'>home page</a>;
-			<a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.
+			Possible next steps: 
+			<ul>
+			<li>Try what you were doing again</li>
+			<li>Log in</li>
+			<li>Go to the <a href='/Gemma/'>home page</a></li>
+			<li><a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>
+			
 		</p>
 
 		<security:authorize access="hasRole('GROUP_ADMIN')">
@@ -36,10 +42,13 @@
 		</p>
 
 		<p>
-			Possible next steps: Try what you were doing again; Go to the
-			<a href='/Gemma/'>home page</a>;
-			<a href="mailto:gemma@chibi.ubc.ca?subject=${requestScope['javax.servlet.error.exception'].message}">Email us</a>
-			about the problem.
+			Possible next steps: 
+			<ul>
+			<li>- Try what you were doing again</li>
+			<li>- Log in</li>
+			<li>- Go to the <a href='/Gemma/'>home page</a></li>
+			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>
 		</p>
 
 
@@ -54,9 +63,13 @@
 		</p>
 
 		<p>
-			Possible next steps: Try what you were doing again; Go to the
-			<a href='/Gemma/'>home page</a>;
-			<a href="mailto:gemma@chibi.ubc.ca?subject=${requestScope['exception'].message}">Email us</a> about the problem.
+			Possible next steps: 
+			<ul>
+			<li>- Try what you were doing again</li>
+			<li>- Log in</li>
+			<li>- Go to the <a href='/Gemma/'>home page</a></li>
+			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>	
 		</p>
 
 
@@ -70,9 +83,13 @@
 		</p>
 
 		<p>
-			Possible next steps: Try what you were doing again; Go to the
-			<a href='/Gemma/'>home page</a>;
-			<a href="mailto:gemma@chibi.ubc.ca?subject=Unknown%20error">Email us</a> about the problem.
+			Possible next steps: 
+			<ul>
+			<li>- Try what you were doing again</li>
+			<li>- Log in</li>
+			<li>- Go to the <a href='/Gemma/'>home page</a></li>
+			<li>- <a href="mailto:gemma@chibi.ubc.ca?subject=${param.exception.message}">Email us</a> about the problem.</li>
+			</ul>
 		</p>
 	</c:otherwise>
 

@@ -102,13 +102,7 @@
 		<property name="exceptionMappings">
 			<props>
 				<prop key="org.springframework.dao.DataAccessException">dataAccessFailure</prop>
-				<!--
-					<prop key="ubic.gemma.loader.expression.geo.InvalidAccessionException">invalidGeoAccession</prop>
-				-->
-				<!--
-					<prop key="ubic.gemma.loader.util.AlreadyExistsInSystemException">alreadyExistsInSystem</prop>
-				-->
-				<prop key="org.springframework.security.access.AccessDeniedException">accessDeniedError</prop>
+				<prop key="org.springframework.security.access.AccessDeniedException">accessDeniedFailure</prop>
 				<prop key="java.lang.Exception">error</prop>
 			</props>
 		</property>

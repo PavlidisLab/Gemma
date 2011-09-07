@@ -85,7 +85,7 @@ Gemma.GenePhenotypes = Ext.extend(Gemma.GemmaGridPanel, {
         
          this.getStore().on("load", function(store, records, options) {
         
-         console.log(records[0]);
+         //console.log(records[0]);
         
          })
         

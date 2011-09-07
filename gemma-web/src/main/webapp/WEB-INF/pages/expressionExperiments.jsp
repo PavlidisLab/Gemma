@@ -20,13 +20,13 @@ $Id$
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
 	Ext.onReady(function(){
 		Ext.QuickTips.init();
-		new Gemma.ExperimentPagingGrid({renderTo:'eepage'});
-		//new Gemma.GemmaViewPort({
-		// 	centerPanelConfig: new Gemma.ExperimentPagingGrid() 
-		//});
+		//new Gemma.ExperimentPagingGrid({renderTo:'eepage'});
+		new Gemma.GemmaViewPort({
+		 	centerPanelConfig: new Gemma.ExperimentPagingGrid() 
+		});
 	});
 
 
 </script>
-
+<input type="hidden" id="dontReloadOnLogout" value="true">
 <div id="eepage"></div>

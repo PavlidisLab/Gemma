@@ -6,24 +6,23 @@
 Ext.namespace('Gemma');
 Ext.onReady(function() {
 	Ext.QuickTips.init();
-	
-	new Gemma.GenePage( {
-			renderTo : 'newGenePageWidget',
-			geneId: Ext.get("gene").getValue()
-		});
+
+	new Gemma.GemmaViewPort({
+		 	centerPanelConfig: new Gemma.GenePage({
+		 		geneId:  Ext.get("geneId").getValue()
+		 	})
+		 });
 });
 </script>
 
-	<title><c:if test="${not empty gene.officialSymbol}">
-			${gene.officialSymbol}
+	<title><c:if test="${not empty geneOfficialSymbol}">
+			${geneOfficialSymbol}
 		</c:if> <fmt:message key="gene.details" />
 	</title>
 </head>
 
 <body>
 
-	<input type="hidden" name="gene" id="gene" value="${gene.id}" />
-	<input type="hidden" name="geneName" id="geneName" value="${gene.name}" />
-	<input type="hidden" name="taxon" id="taxon" value="${gene.taxon.id}" />
+	<input type="hidden" name="geneId" id="geneId" value="${geneId}" />
 	
 	<div id="newGenePageWidget"></div>

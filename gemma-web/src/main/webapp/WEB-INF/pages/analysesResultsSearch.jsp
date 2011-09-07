@@ -1,6 +1,8 @@
-<%@ include file="/common/taglibs.jsp"%>
-<head>
-	<title>${expressionExperiment.shortName} Details</title>
+
+<html>
+  <head>
+    <title>Search Analyses Results</title>
+	<meta http-equiv="keywords" content="coexpression,differential expression">
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js'
 		useRandomParam="false" />
 	<jwr:script src='/scripts/app/eeDataFetch.js' useRandomParam="false" />
@@ -14,22 +16,12 @@
 
 	Ext.onReady( function() {
 		Ext.QuickTips.init();
-
 		
 		new Gemma.GemmaViewPort({
-		 	centerPanelConfig: new Gemma.ExpressionExperimentPage( {
-				eeId: Ext.get("eeId").getValue()
-			})
+		 	centerPanelConfig: new Gemma.AnalysisResultsSearch()
 		});
 	});
 	
 </script>
 
-<input id="eeId" type="hidden" value="${eeId}" />
-<input id="taxonName" type="hidden" value="${taxonName}  " />
-
-<div spellcheck="false" id="eedetails">
-	<div id="messages"></div>
-</div>
-
-<div id="eepage"></div>
+</html>

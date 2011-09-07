@@ -60,6 +60,7 @@
 </h1>
 <title>Platforms</title>
 
+<input type="hidden" id="reloadOnLogin" value="true"/>
 
 <form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
 	<h4>

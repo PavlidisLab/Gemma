@@ -19,6 +19,9 @@
 	</security:authorize>
 
 	<security:authorize access="!hasAnyRole('GROUP_USER','GROUP_ADMIN')">
+		<script type="text/javascript">
+			Gemma.AjaxLogin.showLoginWindowFn(true);
+		</script>
 		<p>
 			Sorry, to upload data you must
 			<a href="/Gemma/login.jsp">login</a> or

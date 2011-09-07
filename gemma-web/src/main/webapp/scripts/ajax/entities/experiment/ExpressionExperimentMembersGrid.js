@@ -162,7 +162,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			} else if (btn === 'yes') { // yes is save as
 			
 				// input window for creation of new groups
-				var detailsWin = new Gemma.GeneSetDetailsDialog({
+				var detailsWin = new Gemma.CreateSetDetailsWindow({
 					title: 'Provide or edit experiment group details'
 				});
 				detailsWin.on("hide", function(args){
@@ -488,23 +488,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
             method: 'GET',                  
             success: function ( response, options ) {			
 					
-                    var dataMsg = Ext.util.JSON.decode(response.responseText);                    
-                    var link = Ext.getDom('footer-login-link');
-                    var loggedInAs = Ext.getDom('footer-login-status');
-                    var hasuser = Ext.getDom('hasUser');
+                    var dataMsg = Ext.util.JSON.decode(response.responseText); 
                     
                     if (dataMsg.success){
-						link.href="/Gemma/j_spring_security_logout";
-						link.innerHTML="Logout"; 
-						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
-						hasuser.value= true;
 						this.loggedInSaveHandler();
 					}
                     else{
-                    	link.href="/Gemma/login.jsp";
-						link.innerHTML="Login";
-						loggedInAs.innerHTML=" ";
-						hasuser.value= "";
 						this.promptLoginForSave();                      	
                     }
             },
@@ -517,58 +506,22 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	
 	promptLoginForSave: function(){
-		if (this.ajaxLogin == null) {
+	
+		//Check to see if another login widget is open (rare case but possible)
+		var otherOpenLogin = Ext.getCmp('_ajaxLogin');
 		
-			//Check to see if another login widget is open (rare case but possible)
-			var otherOpenLogin = Ext.getCmp('_ajaxLogin');
-			
-			//if another login widget is open, fire its event to close it and destroy it before launching this one
-			if (otherOpenLogin != null) {
-				otherOpenLogin.fireEvent("login_cancelled");
-			}
-			
-			
-			this.ajaxLogin = new Gemma.AjaxLogin({
-				name: 'ajaxLogin',
-				closable: false,
-				//closeAction : 'hide',													
-				title: 'Please login to use this function'
-			
-			
-			});
-			
-			
-			this.ajaxLogin.on("login_success", function(){
-				this.getEl().unmask();
-				this.ajaxLogin.destroy();
-				this.ajaxLogin = null;
-				this.saveBtnHandler();
-				
-				
-			}, this);
-			
-			this.ajaxLogin.on("register_requested", function(){
-			
-				this.getEl().unmask();
-				this.ajaxLogin.destroy();
-				this.ajaxLogin = null;
-				this.launchRegisterWidget();
-				
-				
-			}, this);
-			
-			this.ajaxLogin.on("login_cancelled", function(){
-			
-				this.ajaxLogin.destroy();
-				this.ajaxLogin = null;
-				this.getEl().unmask();
-				
-			}, this);
-			
-			}
-			this.getEl().mask();
-			this.ajaxLogin.show();
+		//if another login widget is open, fire its event to close it and destroy it before launching this one
+		if (otherOpenLogin != null) {
+			otherOpenLogin.fireEvent("login_cancelled");
+		}
 		
+		Gemma.AjaxLogin.showLoginWindowFn();
+		
+		
+		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
+			Ext.getBody().unmask();
+			this.saveBtnHandler();
+		}, this);
 		
 	},
 	loggedInSaveHandler : function () {
@@ -620,7 +573,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 	saveAsHandler: function(){
 		// input window for creation of new groups
-		var detailsWin = new Gemma.GeneSetDetailsDialog({
+		var detailsWin = new Gemma.CreateSetDetailsWindow({
 			title: 'Provide or edit experiment group details'
 		});
 		detailsWin.on("hide", function(args){

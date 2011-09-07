@@ -9,7 +9,7 @@ version: $Id$
 	<head>
 		<title>Login</title>
 
-		<script>
+		<script type="text/javascript">
 		
 	Ext.namespace('Gemma');
 	Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
@@ -46,10 +46,9 @@ version: $Id$
 			],
 			defaults :
 		    {
-				<%-- 
-					enter defaults here
-					width :230 
-				--%>
+				//enter defaults here
+				//width :230 
+				
 			},
 			defaultType :'textfield',
 			items :
@@ -111,6 +110,7 @@ version: $Id$
 			})
 		});
 		login.render(document.getElementById('_login'));
+		
 	});
 
 </script>

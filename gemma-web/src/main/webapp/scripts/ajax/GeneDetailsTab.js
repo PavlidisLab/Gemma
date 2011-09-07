@@ -84,7 +84,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 		Gemma.GeneDetails.superclass.initComponent.call(this);
 		
 		this.on('render', function(){
-			if (!this.loadMask) {
+			if (!this.loadMask && this.getEl()) {
 				this.loadMask = new Ext.LoadMask(this.getEl(), {
 					msg: "Loading ...",
 					msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
@@ -130,18 +130,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							fieldLabel: 'Notes',
 							html: geneDetails.description
 						}]
-					}, {
-						html: '<h4>Gene Ontology Terms</h4>'
-					}, {
-						layout: 'fit', // need extra panel level to make grid resize with window
-						flex:1,
-						items: {
-							xtype: 'genegogrid',
-							border: true,
-							geneid: this.geneId
-						//,height: 200
-						}
-				}]);
+					}]);
 				this.doLayout();
 			}.createDelegate(this));
 		});

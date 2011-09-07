@@ -1138,7 +1138,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<ExpressionExperimentValueObject> valueObjects = new ArrayList<ExpressionExperimentValueObject>(
                 getExpressionExperimentValueObjects( recordsSubset ) );
 
-        // if admin, want to show if experiment is troubled
+        // if admin, want to show why experiment is troubled
         if ( SecurityService.isUserAdmin() ) {
             expressionExperimentReportService.fillEventInformation( valueObjects );
         }

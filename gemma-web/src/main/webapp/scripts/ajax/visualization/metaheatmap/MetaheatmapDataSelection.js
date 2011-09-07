@@ -196,6 +196,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 
 					// if no experiments were returned, don't show visualizer
 					if (experimentCount === 0) {
+						//Ext.Msg.alert('<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.');
 						Ext.DomHelper.overwrite('meta-heatmap-div', {
 							html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
 						});
@@ -221,6 +222,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 								});
 						_metaVizApp.doLayout();
 						_metaVizApp.refreshVisualization();
+						//this.add(_metaVizApp);
+						//this.doLayout();
 					}
 
 				}.createDelegate(this));
@@ -383,7 +386,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 	},
 	onRender : function() {
 		Gemma.MetaHeatmapDataSelection.superclass.onRender.apply(this, arguments);
-		_sortPanel = this.ownerCt.sortPanel;
+		//_sortPanel = this.ownerCt.sortPanel;
 	}
 });
 

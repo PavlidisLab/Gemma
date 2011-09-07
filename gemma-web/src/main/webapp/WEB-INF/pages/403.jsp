@@ -7,6 +7,7 @@
 </title>
 <content tag="heading">
 <fmt:message key="403.title" />
+<input type="hidden" id="reloadOnLogin" value="true"/>
 </content>
 
 <p>

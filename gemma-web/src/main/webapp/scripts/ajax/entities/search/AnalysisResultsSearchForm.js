@@ -710,22 +710,34 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	/** Shared methods * */
 
 	handleError : function(msg, e) {
-		Ext.DomHelper.overwrite("analysis-results-search-form-messages", {
-					tag : 'img',
-					src : '/Gemma/images/icons/warning.png'
+		if (Ext.get("analysis-results-search-form-messages")) {
+			Ext.DomHelper.overwrite("analysis-results-search-form-messages", {
+				tag: 'img',
+				src: '/Gemma/images/icons/warning.png'
+			});
+			
+			if (!(msg.length === 0)) {
+				Ext.DomHelper.append("analysis-results-search-form-messages", {
+					tag: 'span',
+					html: "&nbsp;&nbsp;" + msg
 				});
-
-		if (!(msg.length === 0)) {
-			Ext.DomHelper.append("analysis-results-search-form-messages", {
-						tag : 'span',
-						html : "&nbsp;&nbsp;" + msg
-					});
-		} else {
-			Ext.DomHelper.append("analysis-results-search-form-messages", {
-						tag : 'span',
-						html : "&nbsp;&nbsp;Error retrieving results."
-					});
+			}
+			else {
+				Ext.DomHelper.append("analysis-results-search-form-messages", {
+					tag: 'span',
+					html: "&nbsp;&nbsp;Error retrieving results."
+				});
+			}
 		}
+		else {
+			if (!(msg.length === 0)) {
+				this.fireEvent("handleError", msg);
+			}
+			else {
+				this.fireEvent("handleError", "Error retrieving results.");
+			}
+		}
+		
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, e);
 		if (e && !(msg.length === 0)) {
@@ -734,7 +746,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	clearError : function() {
-		Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
+		//Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
 	},
 
 	getDataForDiffVisualization : function(geneSetValueObjects, experimentSetValueObjects) {
@@ -913,7 +925,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if(selectedVOs[i] instanceof ExpressionExperimentValueObject){
 				var ee = selectedVOs[i];
 				// maybe this should be a call to the backend?
-				var singleExperimentSet = new SessionBoundExpressionExperimentSetValueObject();
+				var singleExperimentSet = new SessionBoundExperimentSetValueObject();
 				singleExperimentSet.id = null;
 				singleExperimentSet.expressionExperimentIds = [ee.id];
 				singleExperimentSet.name = ee.shortName;
@@ -934,12 +946,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var eeIds = [];
 		var i;
 		var j;
-		var vos = this.getSelectedExperimentAndExperimentSetValueObjects();
-		for (i = 0; i < vos.length; i++) {
-			if (vos[i] instanceof ExpressionExperimentValueObject) {
-				eeIds.push(vos[i].id);
-			} else if (vos[i] instanceof ExpressionExperimentSetValueObject) {
-				eeIds = eeIds.concat(vos[i].expressionExperimentIds);
+		var selectedVOs = this.getSelectedExperimentAndExperimentSetValueObjects();
+		for (i = 0; i < selectedVOs.length; i++) {
+			var vo = selectedVOs[i];
+			if ( vo instanceof ExpressionExperimentValueObject) {
+				eeIds.push(vo.id);
+			} else if (vo instanceof ExpressionExperimentSetValueObject) {
+				eeIds = eeIds.concat(vo.expressionExperimentIds);
 			}
 		}
 		return eeIds;
@@ -949,12 +962,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var geneIds = [];
 		var i;
 		var j;
-		var vos = this.getSelectedGeneAndGeneSetValueObjects();
-		for (i = 0; i < vos.length; i++) {
-			if (vos[i] instanceof GeneValueObject) {
-				geneIds.push(vos[i].id);
-			} else if (vos[i] instanceof GeneSetValueObject) {
-				geneIds = geneIds.concat(vos[i].geneIds);
+		var selectedVOs = this.getSelectedGeneAndGeneSetValueObjects();
+		for (i = 0; i < selectedVOs.length; i++) {
+			var vo = selectedVOs[i];
+			if (vo instanceof GeneValueObject) {
+				geneIds.push(vo.id);
+			} else if (vo instanceof GeneSetValueObject) {
+				geneIds = geneIds.concat(vo.geneIds);
 			}
 		}
 		return geneIds;

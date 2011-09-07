@@ -9,8 +9,7 @@
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
 
-		<title><fmt:message key="menu.home" /> | <fmt:message
-				key="webapp.name" />
+		<title><decorator:title /> | <fmt:message key="webapp.name" />
 		</title>
 
 		<jwr:style src="/bundles/gemma-all.css" />
@@ -20,12 +19,12 @@
 		<%-- for dwr creation of javascript objects to mirror java value objects--%>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DatabaseBackedExpressionExperimentSetValueObject.js'></script>
 		<script type='text/javascript' src='/Gemma/scripts/app/valueObjectsInheritanceStructure.js'></script>
+		<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
 
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
 
 		<decorator:head />
-
 	</head>
 	<body
 		<decorator:getProperty property="body.id" writeEntireProperty="true"/>
@@ -33,8 +32,8 @@
 
 		<div id="page">
 
-			<div id="homeheaderclear" class="clearfix">
-				<jsp:include page="/common/header.jsp" />
+			<div id="homeheaderclearnopadding" class="clearfix">
+				<jsp:include page="/common/header.inner.jsp" />
 			</div>
 
 			<div id="content" class="clearfix">
@@ -45,7 +44,7 @@
 
 				<%@ include file="/WEB-INF/pages/frontPageContent.jsp"%>
 
-				<div id="nav" class="home">
+				<!-- div id="nav" class="home">
 					<div class="wrapper"
 						style="float: right; position: relative; right: 35px; top: 0px">
 						<h2 class="accessibility">
@@ -54,18 +53,17 @@
 						<jsp:include page="/WEB-INF/pages/menu.jsp" />
 					</div>
 					<hr />
-				</div>
+				</div-->
 
 
 				<%-- end nav --%>
 
-
-
 			</div>
 			<%-- end content --%>
 
+		<jsp:include page="/common/userStatusVariables.jsp" />
 			<div id="footer" class="clearfix">
-				<jsp:include page="/common/footer.jsp" />
+				<jsp:include page="/common/footerLight.jsp" />
 			</div>
 		</div>
 

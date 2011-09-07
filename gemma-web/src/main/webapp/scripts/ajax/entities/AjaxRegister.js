@@ -2,9 +2,9 @@
  * Widget for Ajax styleregister
  *  
  */
-Ext.namespace('Gemma');
+Ext.namespace('Gemma','Gemma.AjaxLogin');
 
-Gemma.AjaxRegister = Ext.extend(Ext.Window, {
+Gemma.AjaxLogin.AjaxRegister = Ext.extend(Ext.Window, {
 	
 	id : '_ajaxRegister',
 	
@@ -117,7 +117,7 @@ Gemma.AjaxRegister = Ext.extend(Ext.Window, {
 	
 	this.addEvents('register_cancelled', 'register_success');
 	
-	Gemma.AjaxRegister.superclass.initComponent.call(this,arguments);
+	Gemma.AjaxLogin.AjaxRegister.superclass.initComponent.call(this,arguments);
 	},
 	
 	submitHandler : function(){

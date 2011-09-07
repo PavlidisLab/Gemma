@@ -7,7 +7,7 @@
 Ext.namespace("Gemma.Search");
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
-Gemma.Search.app = function() {
+Gemma.Search.app = function( ) {
 	return {
 		init : function() {
 
@@ -20,6 +20,8 @@ Gemma.Search.app = function() {
 						form : this.form
 					});
 
+			viewPort.add(this.form);
+			viewPort.add(this.resultGrid);
 			this.form.on("search", this.search.createDelegate(this));
 
 			/*
@@ -110,12 +112,175 @@ Gemma.Search.app = function() {
 	};
 }();
 
+Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
+	layout:'vbox',
+	layoutConfig:{
+		align:'stretch'
+	},
+	padding:10,
+	title:'General Search',
+	initComponent : function() {
+		Gemma.Search.GeneralSearch.superclass.initComponent.call(this);
+			this.form = new Gemma.SearchForm({
+				flex:0
+			});
+
+			this.resultGrid = new Gemma.SearchGrid({
+						form : this.form,
+						flex:1,
+						region:'center'
+					});
+					
+			this.messagePanel = new Ext.Panel({
+				xtype:'panel',
+				tpl:'<tpl if="msg != \'\'"><img src="/Gemma/images/icons/warning.png"/>{msg}</tpl>',
+				border:false,
+				flex:1
+			});
+			this.bookmarkPanel = new Ext.Panel({
+				xtype:'panel',
+				tpl:'<a href="/Gemma/searcher.html?query={escapedQuery}{scopes}">Bookmarkable link</a>',
+				border:false,
+				flex:0,
+				height:25,
+				colspan:2
+			});
+
+			northPan = new Ext.Panel({
+				style:'width:100%',
+				flex:0,
+				border:false,
+				layout: 'column',
+				region:'north',
+				//height:250,
+				items: [this.form, this.messagePanel]
+			});
+			
+			this.add(northPan);
+			this.add(this.bookmarkPanel);
+			this.add(this.resultGrid);
+			this.form.on("search", this.search.createDelegate(this));
+			
+
+			/*
+			 * Search from url if we have to.
+			 */
+			this.on("afterlayout",function(){
+				if (this.form.restoreState()) {
+					this.search();
+				}
+			}, this);
+			
+			
+			this.resultGrid.on("loadError", function(message){
+				this.messagePanel.update({msg:message});
+			});
+			
+			// adjust height of north panel to fit search form properly
+			this.form.on('formResized', function(height, width){
+				northPan.setHeight(height);
+				this.doLayout();
+			}, this);
+			
+			
+			// respond to the user logging in or out
+			Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
+				// show/hide the advanced options section
+				this.form.adjustForIsAdmin(isAdmin);
+				northPan.setHeight(this.form.getHeight());
+				this.doLayout();
+				
+			},this);
+			Gemma.Application.currentUser.on("logOut", function(){
+				this.form.adjustForIsAdmin(false);
+				northPan.setHeight(this.form.getHeight());
+				this.doLayout();
+			},this);
+		},
+
+		/**
+		 * 
+		 */
+		search : search = function(t, event) {
+			if (!this.form.getForm().findField('query').isValid()) {
+				return;
+			}
+			var query = Ext.getCmp('search-text-field').getValue();
+			var searchProbes = Ext.getCmp('search-prbs-chkbx').getValue();
+			var searchGenes = Ext.getCmp('search-genes-chkbx').getValue();
+			var searchExperiments = Ext.getCmp('search-exps-chkbx').getValue();
+			var searchArrays = Ext.getCmp('search-ars-chkbx').getValue();
+			var searchSequences = Ext.getCmp('search-seqs-chkbx').getValue();
+			var searchGeneSets = Ext.getCmp('search-genesets-chkbx').getValue();
+			var searchEESets = Ext.getCmp('search-eesets-chkbx').getValue();
+
+			var searchDatabase = true;
+			var searchIndices = true;
+			var searchCharacteristics = true;
+			if (Ext.get('hasAdmin').getValue()) {
+				searchDatabase = Ext.getCmp('search-database-chkbx').getValue();
+				searchIndices = Ext.getCmp('search-indices-chkbx').getValue();
+				searchCharacteristics = Ext.getCmp('search-characteristics-chkbx').getValue();
+			}
+
+			var scopes = "&scope=";
+			if (searchProbes) {
+				scopes = scopes + "P";
+			}
+			if (searchGenes) {
+				scopes = scopes + "G";
+			}
+			if (searchExperiments) {
+				scopes = scopes + "E";
+			}
+			if (searchArrays) {
+				scopes = scopes + "A";
+			}
+			if (searchSequences) {
+				scopes = scopes + "S";
+			}
+			if (searchGeneSets) {
+				scopes = scopes + "M";
+			}
+			if (searchEESets) {
+				scopes = scopes + "N";
+			}
+
+			this.resultGrid.getStore().load({
+						params : [{
+									query : query,
+									searchProbes : searchProbes,
+									searchBioSequences : searchSequences,
+									searchArrays : searchArrays,
+									searchExperiments : searchExperiments,
+									searchGenes : searchGenes,
+									searchGeneSets : searchGeneSets,
+									searchExperimentSets : searchEESets,
+									useDatabase : searchDatabase,
+									useIndices : searchIndices,
+									useCharacteristics : searchCharacteristics
+								}]
+					});
+
+			if (typeof pageTracker !== 'undefined') {
+				pageTracker._trackPageview("/Gemma/searcher.search?query=" + escape(query) + scopes);
+			}			
+			this.messagePanel.update({msg:""});
+			this.form.findById('submit-button').setDisabled(true);
+			this.bookmarkPanel.update({
+				escapedQuery:escape(query),
+				scopes:scopes
+			});
+		}
+});
+
 Gemma.Search.MAX_AUTO_EXPAND_SIZE = 15;
 
 Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 			frame : true,
 			autoHeight : true,
-			width : 300,
+			
+			//width : 500,
 
 			/**
 			 * Restore state ... fixme.
@@ -186,10 +351,12 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 
 			initComponent : function() {
 
+				var showAdvancedOptions = Ext.get("hasAdmin").getValue();
 				Ext.apply(this, {
 							items : [{
 										xtype : 'panel',
 										layout : 'column',
+										width:400,
 										items : [new Ext.form.TextField({
 															id : 'search-text-field',
 															fieldLabel : 'Search term(s)',
@@ -228,12 +395,17 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 														})]
 									}, {
 										xtype : 'fieldset',
+										layout: 'table',
+										ref: 'searchForSelects',
+										layoutConfig:{
+											columns:4
+										},
 										collapsible : true,
-										collapsed : true,
+										collapsed : false,
 										autoHeight : true,
 										defaultType : 'checkbox',
 										title : 'Items to search for',
-										width : 180,
+										width : 500,
 										items : [{
 													id : 'search-genes-chkbx',
 													name : "searchGenes",
@@ -295,9 +467,9 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													},
 													hideLabel : true
 												}, {
-													id : 'search-prbs-chkbx',
-													name : "searchProbes",
-													boxLabel : "Probes",
+													id : 'search-genesets-chkbx',
+													name : "searchGeneSets",
+													boxLabel : "Gene sets",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {
@@ -309,10 +481,10 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 														this.setValue(state.value);
 													},
 													hideLabel : true
-												}, {
-													id : 'search-genesets-chkbx',
-													name : "searchGeneSets",
-													boxLabel : "Gene sets",
+												},{
+													id : 'search-prbs-chkbx',
+													name : "searchProbes",
+													boxLabel : "Probes",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {
@@ -340,56 +512,72 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													},
 													hideLabel : true
 												}]
+									},{
+										hidden: !showAdvancedOptions,
+										width: 400,
+										xtype: 'fieldset',
+										ref: 'advancedSelects',
+										layout: 'table',
+										layoutConfig: {
+											columns: 3
+										},
+										defaultType: 'checkbox',
+										collapsible: true,
+										collapsed: false,
+										autoHeight: true,
+										title: 'Advanced options',
+										items: [{
+											id: 'search-database-chkbx',
+											name: "searchDatabase",
+											boxLabel: "Search database",
+											hideLabel: true,
+											checked: true
+										}, {
+											id: 'search-indices-chkbx',
+											name: "searchIndices",
+											boxLabel: "Seach indices",
+											hideLabel: true,
+											checked: true
+										}, {
+											id: 'search-characteristics-chkbx',
+											name: "searchCharacteristics",
+											boxLabel: "Search characteristics",
+											hideLabel: true,
+											checked: true
+										}]
 									}]
-						});
-
-				var showAdvancedOptions = Ext.get("hasAdmin").getValue();
-
-				if (showAdvancedOptions) {
-					var advancedOptions = {
-						width : 180,
-						xtype : 'fieldset',
-						defaultType : 'checkbox',
-						collapsible : true,
-						collapsed : true,
-						autoHeight : true,
-						title : 'Advanced options',
-						items : [{
-									id : 'search-database-chkbx',
-									name : "searchDatabase",
-									boxLabel : "Search database",
-									hideLabel : true,
-									checked : true
-								}, {
-									id : 'search-indices-chkbx',
-									name : "searchIndices",
-									boxLabel : "Seach indices",
-									hideLabel : true,
-									checked : true
-								}, {
-									id : 'search-characteristics-chkbx',
-									name : "searchCharacteristics",
-									boxLabel : "Search characteristics",
-									hideLabel : true,
-									checked : true
-								}]
-					};
-
-					this.items.push(advancedOptions);
-				}
+						});			
 
 				Gemma.SearchForm.superclass.initComponent.call(this);
 				this.addEvents("search");
 
 				this.restoreState();
+				
+				this.addEvents('formResized');
+				this.searchForSelects.on('collapse', function(){
+					this.fireEvent('formResized', this.getHeight(), this.getWidth());
+				}, this);
+				this.searchForSelects.on('expand', function(){
+					this.fireEvent('formResized', this.getHeight(), this.getWidth());
+				}, this);
+				this.advancedSelects.on('collapse', function(){
+					this.fireEvent('formResized', this.getHeight(), this.getWidth());
+				}, this);
+				this.advancedSelects.on('expand', function(){
+					this.fireEvent('formResized', this.getHeight(), this.getWidth());
+				}, this);
+				
+				
+			}, // end of initComponent
+			adjustForIsAdmin : function(isAdmin){
+				this.advancedSelects.setVisible(isAdmin);
 			}
-
 		});
 
 Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 
-	width : 800,
-	height : 500,
+	//width : 800,
+	//height : 500,
 	loadMask : true,
 	stripeRows : true,
 	collapsible : false,
@@ -558,7 +746,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	handleLoadSuccess : function(scope, b, arg) {
-		Ext.DomHelper.overwrite("messages", scope.getCount() + " found");
+		this.setTitle("Search results  --  "+scope.getCount() + " found");
 		this.form.findById('submit-button').setDisabled(false);
 
 		// If possible to expand all and not scroll then expand
@@ -586,6 +774,7 @@ Gemma.SearchGrid = Ext.extend(Ext.grid.GridPanel, {
 	},
 
 	handleLoadError : function(scope, b, message, exception) {
+		this.fireEvent("loadError",message);
 		Ext.DomHelper.overwrite('messages', {
 					tag : 'img',
 					src : '/Gemma/images/icons/warning.png'

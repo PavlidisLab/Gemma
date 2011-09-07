@@ -154,7 +154,7 @@ Ext.extend(Gemma.SessionGeneGroupStore, Ext.data.Store, {
 					// });
 				},
 				exception : function(proxy, type, action, options, res, arg) {
-					console.log(res);
+					//console.log(res);
 					if (type === 'remote') {
 						Ext.Msg.show({
 									title : 'Error',

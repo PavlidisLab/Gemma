@@ -1,7 +1,7 @@
 <%@ include file="/common/taglibs.jsp"%>
 
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-<jwr:script src='/scripts/app/AnalysisResultsSearch.js' />
+<jwr:script src='/scripts/app/AnalysisResultsSearchNonWidget.js' />
 
 
 
@@ -27,15 +27,15 @@ function hideTopBar(divID) {
 	// adjust other elements on the page
 	// leaving this hacky because we'll probably get rid of it soon
 	// resize header
-	document.getElementById('homeheaderclear').style.height = '160px';
+	document.getElementById('homeheaderclearnopadding').style.height = '120px';
 	// move menu bar
 	document.getElementById('nav').style.top = '-85px';
 
 }
 </script>
 
-<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
 
+<input type="hidden" id="dontReloadOnLogout" value="true">
 <div id="topBarUpdates"
 	style="background-color: #FFFFCC; border: 1px solid #FFCC66; float: left; margin-left: 150px; margin-top: -70px; padding: 5px; width: 84%; text-align: center;">
 	Welcome to the new Gemma!
@@ -131,37 +131,6 @@ function hideTopBar(divID) {
 						<a href="http://twitter.com/GemmaSoftware" class="twitter-follow-button">Follow @GemmaSoftware</a>
 						<script src="http://platform.twitter.com/widgets.js" type="text/javascript"></script>
 					</p></div>
-
-					<security:authorize access="hasRole('GROUP_ADMIN')">
-						<div id="adminFunctions"
-							style="margin-bottom: 10px;">
-							<strong> More administrative functions </strong>
-							<ul class="compactList" style="padding-left: 15px;">
-								<li>
-									<a href='<c:url value="/admin/systemStats.html"/>'> System
-										monitoring </a>
-								</li>
-								<li>
-									<a href='<c:url value="/admin/indexer.html"/>'> <fmt:message
-											key="menu.compassIndexer" /> </a>
-								</li>
-								<li>
-									<a href='<c:url value="/admin/maintenanceMode.html" />'>Manage
-										maintenance mode</a>
-								</li>
-								<li>
-									<a href='<c:url value="/whatsnew/generateCache.html" />'>Update
-										"What's New"</a>
-								</li>
-								<li>
-									<a href='<c:url value="/admin/widgetTest.html"/>'>Widget
-										test</a>
-								</li>
-
-							</ul>
-						</div>
-					</security:authorize>
-
 
 				</td>
 				<td>

@@ -187,13 +187,17 @@ Ext.onReady(function(){
                     abstractBibli.setValue(record.get('abstractText'));
                     authors.setValue(record.get('authorList'));
                     publication.setValue(record.get('publication'));
-                    date.setValue(record.get('publicationDate').format('F j, Y'));
+					if(record.get('publicationDate').format){
+                    	date.setValue(record.get('publicationDate').format('F j, Y'));	
+					}else{
+						date.setValue(record.get('publicationDate'));	
+					}
                     title.setValue(record.get('title'));
                     citation.setValue(record.get('citation'));
                     
                     var allExperiments = '';
-                    
-                    for (var i = 0; i <
+                    var i;
+                    for ( i = 0; i <
                     record.get('experiments').length; i++) {
                         allExperiments += record.get('experiments')[i].shortName +
                         " : ";
@@ -204,7 +208,7 @@ Ext.onReady(function(){
                     
                     var allMeshTerms = "";
                     
-                    for (var i = 0; i <
+                    for ( i = 0; i <
                     record.get('meshTerms').length; i++) {
                     
                         allMeshTerms += record.get('meshTerms')[i] +
@@ -215,7 +219,7 @@ Ext.onReady(function(){
                     
                     var allChemicalsTerms = "";
                     
-                    for (var i = 0; i <
+                    for ( i = 0; i <
                     record.get('chemicalsTerms').length; i++) {
                         allChemicalsTerms += record.get('chemicalsTerms')[i] +
                         "\n";
@@ -386,7 +390,7 @@ function doUpdate(id){
         html: "&nbsp;Please wait..."
     });
     
-};
+}
 
 function updateDone(data){
     Ext.DomHelper.overwrite("messages", {
@@ -397,7 +401,7 @@ function updateDone(data){
         tag: 'span',
         html: "&nbsp;Updated"
     });
-};
+}
 
 function handleFailure(data, e){
     Ext.DomHelper.overwrite("messages", {
@@ -408,4 +412,4 @@ function handleFailure(data, e){
         tag: 'span',
         html: "&nbsp;There was an error: " + data
     });
-};
+}

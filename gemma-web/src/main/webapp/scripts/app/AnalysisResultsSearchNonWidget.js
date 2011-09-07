@@ -7,7 +7,7 @@ Gemma.SEARCH_FORM_WIDTH = 900;
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
 Ext.onReady(function() {
-	
+		
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
 	var admin = (Ext.get('hasAdmin')!==null)? Ext.get('hasAdmin').getValue(): null;
@@ -329,6 +329,7 @@ Ext.onReady(function() {
 			
 			// show metaheatmap viewer (but not control panel)
 			// control panel is responsible for creating the visualisation view space
+			Ext.apply(data, {applyTo : 'meta-heatmap-div'});
 			this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data);
 			
 			this.diffVisualizer.on('visualizationLoaded', function(){

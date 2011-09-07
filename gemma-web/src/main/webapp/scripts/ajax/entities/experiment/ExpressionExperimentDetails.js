@@ -331,7 +331,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 		
 		var panelId = this.getId();
         var e = this.experimentDetails;
-        var currentDescription = e.description
+        var currentDescription = e.description;
         var currentName = e.name;
         var currentShortName = e.shortName;
 		var currentPubMedId = e.pubmedId;
@@ -800,10 +800,30 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         
         this.add(basics);
         
+				
+		// adjust when user logs in or out
+		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
+			var appScope = this;
+			ExpressionExperimentController.canCurrentUserEditExperiment(this.experimentDetails.id, {
+				callback: function(editable){
+					console.log(this);
+					appScope.adjustForIsEditable(editable);
+				},
+				scope: appScope
+			});
+			
+		},this);
+		Gemma.Application.currentUser.on("logOut", function(){
+			this.adjustForIsEditable(false);
+			// TODO reset widget if experiment is private!
+		},this);
+		
         this.doLayout();
         this.fireEvent("ready");
         
-    }
-    
+    }, // end of initComponent
+    adjustForIsEditable: function(editable){
+		this.fieldPanel.getTopToolbar().setVisible(editable);
+	}
 });
 

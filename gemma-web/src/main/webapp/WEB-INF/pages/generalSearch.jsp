@@ -10,16 +10,18 @@
 
 	<script type="text/javascript">
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
-	Ext.QuickTips.init();
-	Ext.onReady(Gemma.Search.app.init, Gemma.Search.app);
+//	Ext.QuickTips.init();
+//	Ext.onReady(Gemma.Search.app.init, Gemma.Search.app);
+	Ext.onReady(function(){
+		Ext.QuickTips.init();
+		
+		new Gemma.GemmaViewPort({
+		 	centerPanelConfig: new Gemma.Search.GeneralSearch()
+		});
+	});
 	</script>
 </head>
-
-
-<h1>
-	General search tool for Gemma
-</h1>
-
+<input type="hidden" id="dontReloadOnLogout" value="true">
 <div id="messages"></div>
 <div style="height: 1em; margin-bottom: " id="validation-messages"></div>
 <div style="margin-bottom: 10px" id="general-search-form"></div>

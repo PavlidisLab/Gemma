@@ -1614,14 +1614,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 Collections.sort( idl ); // so it's consistent and therefore cacheable.
                 qtMap = getQuantitationTypeMap( idl );
                 queryObject.setParameterList( "ids", idl );
-            System.out.println(queryObject.getQueryString() +"\nparam:"+idl);
+            //System.out.println(queryObject.getQueryString() +"\nparam:"+idl);
             } else {
                 qtMap = getQuantitationTypeMap( null );
             }
 
             queryObject.setCacheable( true );
             List list = queryObject.list();
-            System.out.println("size of query results: "+list.size());
+            //System.out.println("size of query results: "+list.size());
             for ( Object object : list ) {
 
                 Object[] res = ( Object[] ) object;

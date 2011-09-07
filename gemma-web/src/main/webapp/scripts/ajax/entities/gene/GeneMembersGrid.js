@@ -169,7 +169,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
 			scope: this,
 			disabled: true
-		})
+		});
 		this.exportButton = new Ext.Button({
 			text: "Export",
 			qtip: 'Get a plain text version of this list',
@@ -320,7 +320,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		// separated list of gene ids
 		this.on('render', function(){
 			if (this.genes || this.geneIds) {
-			var gis = ((this.genes)?this.genes:this.geneIds)
+			var gis = ((this.genes)?this.genes:this.geneIds);
 			var genes = gis instanceof Array ? gis : gis.split(",");
 			this.loadGenes(gis);
 		}
@@ -419,8 +419,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		// make download link
 		var downloadLink = String.format("/Gemma/gene/downloadGeneList.html?g={0}", this.getGeneIds());
 		window.open(downloadLink);
-	},
-
+	}
 
 });
 Ext.reg('geneMembersGrid', Gemma.GeneMembersGrid);
@@ -454,7 +453,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
 			scope: this,
 			disabled: true
-		})
+		});
 		this.exportButton = new Ext.Button({
 			text: "Export",
 			qtip: 'Get a plain text version of this list',
@@ -713,13 +712,13 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	},
 	
 	launchRegisterWidget : function(){
-		if (this.ajaxRegister == null){
+		if (this.ajaxRegister === null){
 			
 			//Check to see if another register widget is open (rare case but possible)
 				var otherOpenRegister = Ext.getCmp('_ajaxRegister');				
 				
 				//if another register widget is open, fire its event to close it and destroy it before launching this one
-				if (otherOpenRegister!=null){
+				if (otherOpenRegister!==null){
 					otherOpenRegister.fireEvent("register_cancelled");
 				}	
 			
@@ -764,23 +763,12 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
          	url : '/Gemma/ajaxLoginCheck.html',
             method: 'GET',                  
             success: function ( response, options ) {		
-                    var dataMsg = Ext.util.JSON.decode(response.responseText);                    
-                    var link = Ext.getDom('footer-login-link');
-                    var loggedInAs = Ext.getDom('footer-login-status');
-                    var hasuser = Ext.getDom('hasUser');
+                    var dataMsg = Ext.util.JSON.decode(response.responseText); 
                     
                     if (dataMsg.success){
-						link.href="/Gemma/j_spring_security_logout";
-						link.innerHTML="Logout"; 
-						loggedInAs.innerHTML="Logged in as: "+dataMsg.user;
-						hasuser.value= true;
 						this.loggedInSaveHandler();
 					}
                     else{
-                    	link.href="/Gemma/login.jsp";
-						link.innerHTML="Login";
-						loggedInAs.innerHTML=" ";
-						hasuser.value= "";
 						this.promptLoginForSave();  
                     }
                       
@@ -794,57 +782,21 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	   
 	},
 	promptLoginForSave : function () {
-			
-		if (this.ajaxLogin == null){
-			
-			//Check to see if another login widget is open (rare case but possible)
-				var otherOpenLogin = Ext.getCmp('_ajaxLogin');				
+		/*//Check to see if another login widget is open (rare case but possible)
+		var otherOpenLogin = Ext.getCmp('_ajaxLogin');				
 				
-				//if another login widget is open, fire its event to close it and destroy it before launching this one
-				if (otherOpenLogin!=null){
-					otherOpenLogin.fireEvent("login_cancelled");
-				}		
-			
-			
-			this.ajaxLogin = new Gemma.AjaxLogin({					
-					name : 'ajaxLogin',									
-					closable : false,
-					//closeAction : 'hide',													
-					title : 'Please login to use this function'
-				});			
-			
-			
-			this.ajaxLogin.on("login_success",function(){
-				this.getEl().unmask();		
-				this.ajaxLogin.destroy();
-				this.ajaxLogin=null;
-				this.saveCheckMethod();
-				
-				
-			},this);
-			
-			this.ajaxLogin.on("register_requested",function(){
-				
-				this.getEl().unmask();		
-				this.ajaxLogin.destroy();
-				this.ajaxLogin=null;
-				this.launchRegisterWidget();
-				
-				
-			},this);
-			
-			this.ajaxLogin.on("login_cancelled",function(){
-				
-				this.ajaxLogin.destroy();
-				this.ajaxLogin=null;
-				this.getEl().unmask();				
-				
-			},this);
-			
-			}
+		//if another login widget is open, fire its event to close it and destroy it before launching this one
+		if (otherOpenLogin!==null){
+			otherOpenLogin.fireEvent("login_cancelled");
+		}*/		
 		
-			this.getEl().mask();
-			this.ajaxLogin.show();
+		Gemma.AjaxLogin.showLoginWindowFn();
+		
+		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){	
+				Ext.getBody().unmask();
+				this.loggedInSaveHandler();
+			},this);
+
 	},
 	loggedInSaveHandler : function () {
 		
@@ -896,23 +848,23 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	
 	saveAsHandler: function(){
 		// input window for creation of new groups
-				var detailsWin = new Gemma.GeneSetDetailsDialog();
-				detailsWin.on("commit", function(args){
-					this.newGroupName = args.name;
-					this.newGroupDescription = args.description;
-					this.createInDatabase();
-				}, this);
-				detailsWin.on("hide", function(args){
-					this.close();
-				});
-				
-				detailsWin.name = this.groupName;
-				detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
-				(new Date()).toString();
-				
-				//this.detailsWin.name = '';
-				//this.detailsWin.description = '';
-				detailsWin.show();
+		var detailsWin = new Gemma.CreateSetDetailsWindow();
+		detailsWin.on("commit", function(args){
+			this.newGroupName = args.name;
+			this.newGroupDescription = args.description;
+			this.createInDatabase();
+		}, this);
+		detailsWin.on("hide", function(args){
+			this.close();
+		});
+		
+		detailsWin.name = this.groupName;
+		detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
+		(new Date()).toString();
+		
+		//this.detailsWin.name = '';
+		//this.detailsWin.description = '';
+		detailsWin.show();
 	},
 	saveHandler: function(){
 		this.updateDatabase();

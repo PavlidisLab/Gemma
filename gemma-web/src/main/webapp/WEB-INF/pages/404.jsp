@@ -5,6 +5,7 @@
 	</title>
 	<content tag="heading">
 	<fmt:message key="404.title" />
+	<input type="hidden" id="reloadOnLogin" value="true"/>
 	</content>
 	<p>
 		<fmt:message key="404.message">
@@ -13,4 +14,5 @@
 			</fmt:param>
 		</fmt:message>
 	</p>
+	
 </page:applyDecorator>

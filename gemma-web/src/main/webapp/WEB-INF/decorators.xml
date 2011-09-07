@@ -12,9 +12,6 @@
     <decorator name="default" page="default.jsp">   
         <pattern>/*</pattern>
     </decorator>
-    <!--decorator name="homePage" page="home.jsp">
-        <pattern>/mainMenu*</pattern>
-    </decorator-->
     <decorator name="homePage" page="home.jsp">
         <pattern>/home*</pattern>
     </decorator>

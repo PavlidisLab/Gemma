@@ -15,6 +15,7 @@ Gemma.MAX_DIFF_RESULTS = 75;
 Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 
 	height: 600,
+	autoScroll:true,
 	defaults: {
 		autoScroll: true,
 		width: 850
@@ -33,43 +34,23 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		}
 	},
 	initComponent: function(){
-	
+		
 		var geneId = this.geneId;
 		
 		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
 			this.editable = true;
 		}
-		var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
-		
-		var windowPadding = 3;
-		var minWidth = 800;
-		var minHeight = 600;
-		
-		var pageHeight = window.innerHeight !== null ? window.innerHeight : document.documentElement &&
-		document.documentElement.clientHeight ? document.documentElement.clientHeight : document.body !== null ? document.body.clientHeight : null;
-		
-		var pageWidth = window.innerWidth !== null ? window.innerWidth : document.documentElement &&
-		document.documentElement.clientWidth ? document.documentElement.clientWidth : document.body !== null ? document.body.clientWidth : null;
-		
-		var adjPageWidth = ((pageWidth - windowPadding) > minWidth) ? (pageWidth - windowPadding - 70) : minWidth;
-		var adjPageHeight = ((pageHeight - windowPadding) > minHeight) ? (pageHeight - windowPadding - 60) : minHeight;
-		this.setSize(adjPageWidth, adjPageHeight);
-		// resize all elements with browser window resize
-		Ext.EventManager.onWindowResize(function(width, height){
-			var adjWidth = ((width - windowPadding) > minWidth) ? (width - windowPadding - 70) : minWidth;
-			var adjHeight = ((height - windowPadding) > minHeight) ? (height - windowPadding - 60) : minHeight;
-			this.setSize(adjWidth, adjHeight);
-			this.doLayout();
-		}, this);
+		var isAdmin = (Ext.get("hasAdmin"))?(Ext.get("hasAdmin").getValue() === 'true')?true:false:false;
 		
 		Gemma.GenePage.superclass.initComponent.call(this);
-		/*DETAILS TAB*/
+		
+		//DETAILS TAB
 		this.add(new Gemma.GeneDetails({
 			title: 'Details',
 			geneId: geneId
 		}));
 		
-		/*ALLEN BRAIN ATLAS IMAGES*/
+		//ALLEN BRAIN ATLAS IMAGES
 		this.add({
 			xtype:'geneallenbrainatlasimages',
 			geneId: geneId,
@@ -85,7 +66,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			var visColumnIndex = diffExGrid.getColumnModel().getIndexById('visualize');
 			diffExGrid.getColumnModel().setHidden(visColumnIndex, false);
 			// this should go in grid itself, but it wasn't working properly (or at all)
-			if (!this.loadMask) {
+			if (!this.loadMask && this.getEl()) {
 				this.loadMask = new Ext.LoadMask(this.getEl(), {
 					msg : "Loading ...",
 					msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
@@ -124,11 +105,18 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		});
 		
 		this.add({
+			title:'Gene Ontology Terms',
+			xtype: 'genegogrid',
+			border: true,
+			geneid: this.geneId,
+			minHeight: 150
+		});
+		
+		this.add({
 			xtype: 'genephenotypes',
 			geneid: geneId,
 			title: 'Phenotypes'
 		});
-		
 		this.on('render', function(){
 			this.setActiveTab(0);
 		});

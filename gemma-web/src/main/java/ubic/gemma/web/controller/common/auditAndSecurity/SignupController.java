@@ -36,6 +36,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import ubic.gemma.security.SecurityService;
 import ubic.gemma.security.authentication.UserDetailsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.ConfigUtils;
@@ -261,7 +262,7 @@ public class SignupController extends BaseController {
 
         if ( userManager.loggedIn() ) {
             userName = userManager.getCurrentUser().getUserName();
-            jsonText = "{success:true,user:\'" + userName + "\'}";
+            jsonText = "{success:true,user:\'" + userName + "\',isAdmin:"+SecurityService.isUserAdmin()+"}";
         } else {
             jsonText = "{success:false}";
         }
