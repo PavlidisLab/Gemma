@@ -513,7 +513,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
                     "Error performing 'ExpressionExperimentService.getPerTaxonCount()' --> " + th, th );
         }
     }
-
+    
     /**
      * @see ExpressionExperimentService#getPopulatedFactorCounts(Collection)
      */
@@ -523,6 +523,19 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.getPopulatedFactorCounts(Collection ids)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentService#getPopulatedFactorCountsExcludeBatch(Collection)
+     */
+    public Map getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+        try {
+            return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
+        } catch ( Throwable th ) {
+            throw new ExpressionExperimentServiceException(
+                    "Error performing 'ExpressionExperimentService.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> " + th,
                     th );
         }
     }
@@ -1021,11 +1034,16 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
      * Performs the core logic for {@link #getPerTaxonCount()}
      */
     protected abstract Map<Taxon, Long> handleGetPerTaxonCount() throws java.lang.Exception;
-
+    
     /**
      * Performs the core logic for {@link #getPopulatedFactorCounts(Collection)}
      */
     protected abstract Map handleGetPopulatedFactorCounts( Collection<Long> ids ) throws java.lang.Exception;
+
+    /**
+     * Performs the core logic for {@link #getPopulatedFactorCountsExcludeBatch(Collection)}
+     */
+    protected abstract Map handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getPreferredQuantitationType(ExpressionExperiment)}

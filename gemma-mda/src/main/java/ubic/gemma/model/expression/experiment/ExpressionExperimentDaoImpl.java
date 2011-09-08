@@ -47,6 +47,7 @@ import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -1358,6 +1359,41 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperimentImpl e inner join e.bioAssays ba"
                 + " inner join ba.samplesUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef where e.id in (:ids) group by e.id";
         List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+
+        for ( Object r : res ) {
+            Object[] ro = ( Object[] ) r;
+            Long id = ( Long ) ro[0];
+            Integer count = ( ( Long ) ro[1] ).intValue();
+            results.put( id, count );
+        }
+        return results;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPopulatedFactorCounts(java.util.
+     * Collection)
+     */
+    @SuppressWarnings("unchecked")
+    @Override
+    protected Map<Long, Integer> handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws Exception {
+        Map<Long, Integer> results = new HashMap<Long, Integer>();
+        if ( ids.size() == 0 ) {
+            return results;
+        }
+
+        for ( Long id : ids ) {
+            results.put( id, 0 );
+        }
+
+        String queryString = "select e.id,count(distinct ef.id) from ExpressionExperimentImpl e inner join e.bioAssays ba" +
+                " inner join ba.samplesUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef " +
+                " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and ef.name != (:name) group by e.id";
+        
+        String[] names = {"ids","category","name"};
+        Object[] values = {ids, ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME, ExperimentalDesignUtils.BATCH_FACTOR_NAME};
+        List res = this.getHibernateTemplate().findByNamedParam( queryString, names, values);
 
         for ( Object r : res ) {
             Object[] ro = ( Object[] ) r;

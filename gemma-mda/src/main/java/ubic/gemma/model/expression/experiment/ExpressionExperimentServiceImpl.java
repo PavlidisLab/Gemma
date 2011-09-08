@@ -612,10 +612,15 @@ public class ExpressionExperimentServiceImpl extends
     protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
         return this.getExpressionExperimentDao().getPerTaxonCount();
     }
-
+    
     @Override
     protected Map handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception {
         return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
+    }
+
+    @Override
+    protected Map handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws Exception {
+        return this.getExpressionExperimentDao().getPopulatedFactorCountsExcludeBatch( ids );
     }
 
     /*

@@ -239,12 +239,18 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * </p>
      */
     public Map<Taxon, Long> getPerTaxonCount();
-
+    
     /**
      * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials.
      */
     public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
+
+    /**
+     * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
+     * with biomaterials and not counting batch factors
+     */
+    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
     /**
      * @param ee

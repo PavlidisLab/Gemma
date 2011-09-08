@@ -707,7 +707,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             throw new RuntimeException( "Error performing 'ExpressionExperimentDao.getPerTaxonCount()' --> " + th, th );
         }
     }
-
+    
     /**
      * @see ExpressionExperimentDao#getPopulatedFactorCounts(Collection)
      */
@@ -717,6 +717,18 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.getPopulatedFactorCounts(Collection ids)' --> " + th, th );
+        }
+    }
+
+    /**
+     * @see ExpressionExperimentDao#getPopulatedFactorCountsExcludeBatch(Collection)
+     */
+    public Map getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+        try {
+            return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
+        } catch ( Throwable th ) {
+            throw new RuntimeException(
+                    "Error performing 'ExpressionExperimentDao.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> " + th, th );
         }
     }
 
@@ -1180,11 +1192,16 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * Performs the core logic for {@link #getPerTaxonCount()}
      */
     protected abstract Map<Taxon, Long> handleGetPerTaxonCount() throws Exception;
-
+    
     /**
      * Performs the core logic for {@link #getPopulatedFactorCounts(Collection)}
      */
     protected abstract Map handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception;
+
+    /**
+     * Performs the core logic for {@link #getPopulatedFactorCountsExcludeBatch(Collection)}
+     */
+    protected abstract Map handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getProcessedExpressionVectorCount(ExpressionExperiment)}

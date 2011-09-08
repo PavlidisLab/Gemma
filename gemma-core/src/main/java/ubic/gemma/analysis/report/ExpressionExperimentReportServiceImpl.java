@@ -189,6 +189,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     /**
      * Populate information about how many annotations there are, and how many factor values there are.
      * 
+     * Batch is not counted towards the number of factors
+     * 
      * @param vos
      */
     public void fillAnnotationInformation( Collection<ExpressionExperimentValueObject> vos ) {
@@ -204,7 +206,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Long, Integer> annotationCounts = expressionExperimentService.getAnnotationCounts( ids );
 
-        Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCounts( ids );
+        Map<Long, Integer> factorCounts = expressionExperimentService.getPopulatedFactorCountsExcludeBatch( ids );
 
         for ( ExpressionExperimentValueObject eeVo : vos ) {
             Long id = eeVo.getId();

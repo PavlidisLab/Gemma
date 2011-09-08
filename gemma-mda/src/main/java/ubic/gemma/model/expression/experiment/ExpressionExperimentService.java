@@ -283,12 +283,18 @@ public interface ExpressionExperimentService {
      * Function to get a count of expression experiments, grouped by Taxon
      */
     public Map<Taxon, Long> getPerTaxonCount();
-
+    
     /**
      * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials.
      */
     public Map<Long, Integer> getPopulatedFactorCounts( Collection<Long> ids );
+
+    /**
+     * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
+     * with biomaterials and only factors that aren't batch
+     */
+    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( Collection<Long> ids );
 
     /**
      * Iterates over the quantiation types for a given expression experiment and returns the preferred quantitation

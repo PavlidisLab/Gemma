@@ -441,7 +441,7 @@ Ext.onReady(function() {
 				sortable : true,
 				dataIndex : 'numPopulatedFactors',
 				renderer : experimentalDesignEditRenderer,
-				tooltip : 'The number of experimental factors (variables) defined for the study',
+				tooltip : 'The number of experimental factors (variables) defined for the study, excluding any batch factors',
 				width : 45
 			}, {
 				header : '#tags',
