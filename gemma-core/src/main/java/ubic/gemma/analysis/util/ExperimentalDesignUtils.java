@@ -29,6 +29,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.measurement.Measurement;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
 import ubic.gemma.model.expression.experiment.ExperimentalFactorValueObject;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
@@ -38,14 +39,14 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 public class ExperimentalDesignUtils {
-    public static final String BATCH_FACTOR_NAME_PREFIX = "Batch_";
+    public static final String BATCH_FACTOR_NAME_PREFIX = ExperimentalFactorService.BATCH_FACTOR_NAME_PREFIX;
 
-    public static final String BATCH_FACTOR_CATEGORY_URI = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ComplexAction";
+    public static final String BATCH_FACTOR_CATEGORY_URI = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_URI;
 
-    public static final String BATCH_FACTOR_CATEGORY_NAME = "ComplexAction";
+    public static final String BATCH_FACTOR_CATEGORY_NAME = ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME;
 
-    public static final String BATCH_FACTOR_NAME = "batch";
-    public static final String FACTOR_VALUE_RNAME_PREFIX = "fv_";
+    public static final String BATCH_FACTOR_NAME = ExperimentalFactorService.BATCH_FACTOR_NAME;
+    public static final String FACTOR_VALUE_RNAME_PREFIX = ExperimentalFactorService.FACTOR_VALUE_RNAME_PREFIX;
 
     /**
      * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix

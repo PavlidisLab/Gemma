@@ -1392,7 +1392,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 " inner join ef.category cat where e.id in (:ids) and cat.category != (:category) and ef.name != (:name) group by e.id";
         
         String[] names = {"ids","category","name"};
-        Object[] values = {ids, ExperimentalDesignUtils.BATCH_FACTOR_CATEGORY_NAME, ExperimentalDesignUtils.BATCH_FACTOR_NAME};
+        Object[] values = {ids, ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME, ExperimentalFactorService.BATCH_FACTOR_NAME};
         List res = this.getHibernateTemplate().findByNamedParam( queryString, names, values);
 
         for ( Object r : res ) {
