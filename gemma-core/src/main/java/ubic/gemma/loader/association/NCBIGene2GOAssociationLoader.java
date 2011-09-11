@@ -45,8 +45,8 @@ import ubic.gemma.persistence.PersisterHelper;
 public class NCBIGene2GOAssociationLoader {
 
     protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationLoader.class );
-    private static final int QUEUE_SIZE = 30000;
-    private static final int BATCH_SIZE = 2000;
+    private static final int QUEUE_SIZE = 60000;
+    private static final int BATCH_SIZE = 12000;
 
     private PersisterHelper persisterHelper;
 
