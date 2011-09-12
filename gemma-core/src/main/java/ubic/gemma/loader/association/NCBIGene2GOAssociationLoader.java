@@ -66,6 +66,7 @@ public class NCBIGene2GOAssociationLoader {
         try {
             inputStream = FileTools.getInputStreamFromPlainOrCompressedFile( ncbiFile.asFile().getAbsolutePath() );
         } catch ( IOException e ) {
+            log.error( e, e );
             throw new RuntimeException( e );
         }
 
@@ -99,7 +100,8 @@ public class NCBIGene2GOAssociationLoader {
                     parser.parse( inputStream, queue );
                     setCount( parser.getCount() );
                 } catch ( IOException e ) {
-                    e.printStackTrace();
+                    log.error( e, e );
+                    throw new RuntimeException( e );
                 }
                 log.info( "Done parsing" );
                 producerDone.set( true );
