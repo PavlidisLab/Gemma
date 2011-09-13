@@ -9,6 +9,7 @@ import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.GenericExperimentDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
  * Service responsible of low level operations, used by PhenotypeAssociationManagerServiceImpl
@@ -29,8 +30,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** find Genes for a specific phenotype */
     public Collection<Gene> findCandidateGenes( String value ) {
-
         return phenotypeAssociationDao.findByPhenotype( value );
+    }
+
+    /** find all phenotypes in Gemma */
+    public Collection<CharacteristicValueObject> findAllPhenotypes() {
+        return phenotypeAssociationDao.findAllPhenotypes();
     }
 
     /** create a GenericExperiment */

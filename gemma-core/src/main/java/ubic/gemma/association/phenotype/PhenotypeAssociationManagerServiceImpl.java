@@ -10,6 +10,7 @@ import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationServic
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
@@ -79,6 +80,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<Gene> genes = associationService.findCandidateGenes( value );
 
         return GeneValueObject.convert2ValueObjects( genes );
+    }
+
+    /**
+     * Get all phenotypes linked to genes and shows how many are linked to each genes
+     * 
+     * @return A collection of the phenotypes with the number of genes containing them
+     */
+    public Collection<CharacteristicValueObject> findAllPhenotypes() {
+        return associationService.findAllPhenotypes();
     }
 
     /**

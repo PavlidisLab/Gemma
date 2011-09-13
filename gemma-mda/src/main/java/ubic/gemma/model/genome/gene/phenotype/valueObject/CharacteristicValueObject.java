@@ -9,6 +9,8 @@ public class CharacteristicValueObject {
     private String value = "";
     private String valueUri = "";
 
+    private long occurence = 0;
+
     public CharacteristicValueObject( String value, String category ) {
         this.category = category;
         this.value = value;
@@ -53,4 +55,13 @@ public class CharacteristicValueObject {
     public void setValue( String value ) {
         this.value = value;
     }
+
+    public long getOccurence() {
+        return occurence;
+    }
+
+    public void setOccurence( long occurence ) {
+        this.occurence = occurence;
+    }
+
 }
