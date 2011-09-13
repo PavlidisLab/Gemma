@@ -11,8 +11,8 @@ public interface PhenotypeAssociationService {
     /** Using an phenotypeAssociation id removes the evidence */
     public void removePhenotypeAssociation( Long id );
 
-    /** find Genes for a specific phenotype */
-    public Collection<Gene> findCandidateGenes( String value );
+    /** find Genes for specific phenotypes */
+    public Collection<Gene> findCandidateGenes( String... phenotypesValues );
 
     /** create a GenericExperiment */
     public GenericExperiment createGenericExperiment( GenericExperiment genericExperiment );

@@ -28,9 +28,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         phenotypeAssociationDao.remove( id );
     }
 
-    /** find Genes for a specific phenotype */
-    public Collection<Gene> findCandidateGenes( String value ) {
-        return phenotypeAssociationDao.findByPhenotype( value );
+    /** find Genes for specific phenotypes */
+    public Collection<Gene> findCandidateGenes( String... phenotypesValues ) {
+        return phenotypeAssociationDao.findByPhenotype( phenotypesValues );
     }
 
     /** find all phenotypes in Gemma */

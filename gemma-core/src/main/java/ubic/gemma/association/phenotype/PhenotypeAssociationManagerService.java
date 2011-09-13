@@ -42,7 +42,7 @@ public interface PhenotypeAssociationManagerService {
      * @param value The value of the phenotype
      * @return A collection of the genes found
      */
-    public Collection<GeneValueObject> findCandidateGenes( String value );
+    public Collection<GeneValueObject> findCandidateGenes( String... phenotypesValues );
 
     /**
      * Get all phenotypes linked to genes and shows how many are linked to each genes

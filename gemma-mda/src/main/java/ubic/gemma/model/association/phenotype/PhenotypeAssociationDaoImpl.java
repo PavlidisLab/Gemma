@@ -23,14 +23,19 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
-    /** find Genes for a specific phenotype */
+    /** find Genes for specific phenotypes */
     @SuppressWarnings("unchecked")
-    public Collection<Gene> findByPhenotype( String value ) {
+    public Collection<Gene> findByPhenotype( String... phenotypesValues ) {
+
+        if ( phenotypesValues.length == 0 ) {
+            return null;
+        }
+
         return this
                 .getHibernateTemplate()
                 .findByNamedParam(
-                        "select distinct g from GeneImpl as g inner join fetch g.phenotypeAssociations pheAsso inner join fetch pheAsso.phenotypes phe where phe.value = :value",
-                        "value", value );
+                        "select distinct g from GeneImpl as g inner join fetch g.phenotypeAssociations pheAsso inner join fetch pheAsso.phenotypes phe where phe.value in (:phenotypesValues)",
+                        "phenotypesValues", phenotypesValues );
     }
 
     public Collection<CharacteristicValueObject> findAllPhenotypes() {

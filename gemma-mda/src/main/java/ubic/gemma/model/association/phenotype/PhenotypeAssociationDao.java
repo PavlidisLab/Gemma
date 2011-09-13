@@ -8,8 +8,8 @@ import ubic.gemma.persistence.BaseDao;
 
 public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
-    /** find Genes for a specific phenotype */
-    public Collection<Gene> findByPhenotype( String value );
+    /** find Genes for specific phenotypes */
+    public Collection<Gene> findByPhenotype( String... phenotypesValues );
 
     /** find all phenotypes */
     public Collection<CharacteristicValueObject> findAllPhenotypes();
