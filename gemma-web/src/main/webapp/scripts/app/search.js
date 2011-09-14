@@ -413,6 +413,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													stateful : true,
 													stateEvents : ['check'],
 													hideLabel : true,
+													checked: true,
 													getState : function() {
 														return {
 															value : this.getValue()
@@ -440,6 +441,7 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													id : 'search-exps-chkbx',
 													name : "searchExperiments",
 													stateful : true,
+													checked: true,
 													stateEvents : ['check'],
 													getState : function() {
 														return {
