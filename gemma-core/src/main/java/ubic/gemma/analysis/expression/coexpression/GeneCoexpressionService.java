@@ -1001,12 +1001,21 @@ public class GeneCoexpressionService {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( allUsedGenes,
-                expressionExperimentService.loadMultiple( allSupportingDatasets ) );
-        Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
-        for ( CoexpressionValueObjectExt coexp : ecvos ) {
-            coexp.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getQueryGene().getId() ) ) );
-            coexp.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getFoundGene().getId() ) ) );
+        
+        if (!allSupportingDatasets.isEmpty()){
+            Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( allUsedGenes,
+                    expressionExperimentService.loadMultiple( allSupportingDatasets ) );
+            Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
+            for ( CoexpressionValueObjectExt coexp : ecvos ) {
+                coexp.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getQueryGene().getId() ) ) );
+                coexp.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getFoundGene().getId() ) ) );
+            }
+        }
+        else{
+            for ( CoexpressionValueObjectExt coexp : ecvos ) {
+                coexp.setQueryGeneNodeDegree( 0d );
+                coexp.setFoundGeneNodeDegree( 0d );
+            }            
         }
 
         if ( timer.getTime() > 10 ) log.info( "Node degree population:" + timer.getTime() + "ms" );
