@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.GenericExperimentDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
@@ -29,7 +28,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /** find Genes for specific phenotypes */
-    public Collection<Gene> findCandidateGenes( String... phenotypesValues ) {
+    public Collection<Long> findCandidateGenes( String... phenotypesValues ) {
         return phenotypeAssociationDao.findByPhenotype( phenotypesValues );
     }
 

@@ -37,9 +37,9 @@ public interface PhenotypeAssociationManagerService {
     public GeneValueObject findPhenotypeAssociations( String geneNCBI );
 
     /**
-     * Given a phenotype returns the Genes that have this phenotype
+     * Given an array of phenotypes returns Genes that have all those phenotypes for an evidence
      * 
-     * @param value The value of the phenotype
+     * @param 1 to many phenotypes
      * @return A collection of the genes found
      */
     public Collection<GeneValueObject> findCandidateGenes( String... phenotypesValues );

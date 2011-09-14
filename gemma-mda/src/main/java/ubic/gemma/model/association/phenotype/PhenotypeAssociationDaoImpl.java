@@ -10,7 +10,6 @@ import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.AbstractDao;
 
@@ -24,18 +23,41 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** find Genes for specific phenotypes */
-    @SuppressWarnings("unchecked")
-    public Collection<Gene> findByPhenotype( String... phenotypesValues ) {
+    public Collection<Long> findByPhenotype( String... phenotypesValues ) {
 
-        if ( phenotypesValues.length == 0 ) {
+        Collection<Long> genesNCBI = new HashSet<Long>();
+
+        int numberOfterms = phenotypesValues.length;
+
+        if ( numberOfterms == 0 ) {
             return null;
         }
 
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct g from GeneImpl as g inner join fetch g.phenotypeAssociations pheAsso inner join fetch pheAsso.phenotypes phe where phe.value in (:phenotypesValues)",
-                        "phenotypesValues", phenotypesValues );
+        String queryStringPart1 = "SELECT t1.ID FROM CHROMOSOME_FEATURE t1 INNER JOIN (SELECT t3.* FROM PHENOTYPE_ASSOCIATION t3 INNER JOIN (SELECT PHENOTYPE_ASSOCIATION_FK,COUNT(*) FROM CHARACTERISTIC WHERE";
+
+        String queryStringPart2 = "";
+
+        for ( int i = 0; i < numberOfterms; i++ ) {
+            queryStringPart2 = queryStringPart2 + " value = '" + phenotypesValues[i] + "' ";
+
+            // if not the last one
+            if ( i != numberOfterms - 1 ) {
+                queryStringPart2 = queryStringPart2 + "or";
+            }
+        }
+
+        String queryStringPart3 = "group by PHENOTYPE_ASSOCIATION_FK HAVING COUNT(*) = " + numberOfterms
+                + " ) t4 ON t3.id = t4.PHENOTYPE_ASSOCIATION_FK) t2 ON t1.id = t2.GENE_FK";
+
+        String queryString = queryStringPart1 + queryStringPart2 + queryStringPart3;
+
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+            genesNCBI.add( ( ( BigInteger ) results.get( 0 ) ).longValue() );
+        }
+
+        return genesNCBI;
     }
 
     public Collection<CharacteristicValueObject> findAllPhenotypes() {

@@ -3,7 +3,6 @@ package ubic.gemma.model.association.phenotype.service;
 import java.util.Collection;
 
 import ubic.gemma.model.association.phenotype.GenericExperiment;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 public interface PhenotypeAssociationService {
@@ -12,7 +11,7 @@ public interface PhenotypeAssociationService {
     public void removePhenotypeAssociation( Long id );
 
     /** find Genes for specific phenotypes */
-    public Collection<Gene> findCandidateGenes( String... phenotypesValues );
+    public Collection<Long> findCandidateGenes( String... phenotypesValues );
 
     /** create a GenericExperiment */
     public GenericExperiment createGenericExperiment( GenericExperiment genericExperiment );

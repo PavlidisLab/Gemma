@@ -70,16 +70,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Given a phenotype returns the Genes that have 1 to many phenotypes, bag of terms
+     * Given an array of phenotypes returns Genes that have all those phenotypes for an evidence
      * 
-     * @param value The value of the phenotype
+     * @param 1 to many phenotypes
      * @return A collection of the genes found
      */
     public Collection<GeneValueObject> findCandidateGenes( String... phenotypesValues ) {
 
-        Collection<Gene> genes = associationService.findCandidateGenes( phenotypesValues );
+        Collection<Long> genesID = associationService.findCandidateGenes( phenotypesValues );
 
-        return GeneValueObject.convert2ValueObjects( genes );
+        return geneService.loadValueObjects( genesID );
     }
 
     /**
