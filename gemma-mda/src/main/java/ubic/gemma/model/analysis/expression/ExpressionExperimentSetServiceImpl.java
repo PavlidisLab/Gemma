@@ -18,12 +18,14 @@
  */
 package ubic.gemma.model.analysis.expression;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @version $Id$
@@ -43,9 +45,13 @@ public class ExpressionExperimentSetServiceImpl extends
     public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().load( ids );
     }
-
+    
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
-        return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
+        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
+    }
+
+    public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
+        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
 
     /*
@@ -55,13 +61,14 @@ public class ExpressionExperimentSetServiceImpl extends
      */
     @Override
     public Collection<ExpressionExperimentSet> loadMySets() {
-        return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
+        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
-
+    
     @Override
     public Collection<ExpressionExperimentSet> loadMySharedSets() {
-        return this.getExpressionExperimentSetDao().loadAllMultiExperimentSets();
+        return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
+
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
@@ -130,10 +137,7 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception {
-        if ( expressionExperimentSet.getExperiments().size() == 0 ) {
-            throw new IllegalArgumentException( "Attempt to update ExpressionExperimentSet so it has no members" );
-        }
-
+        
         if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
             throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );
         }
@@ -158,4 +162,19 @@ public class ExpressionExperimentSetServiceImpl extends
         return this.getExpressionExperimentSetDao().getExperimentsInSet( id );
     }
 
+    @Override
+    public boolean isValidForFrontEnd(ExpressionExperimentSet eeSet) {
+        return (eeSet.getTaxon() != null);
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSet> validateForFrontEnd(Collection<ExpressionExperimentSet> eeSets) {
+        Collection<ExpressionExperimentSet> valid = new ArrayList<ExpressionExperimentSet>();
+        for(ExpressionExperimentSet eeSet : eeSets){
+            if(isValidForFrontEnd( eeSet )){
+                valid.add( eeSet );
+            }
+        }
+        return valid;
+    }
 }

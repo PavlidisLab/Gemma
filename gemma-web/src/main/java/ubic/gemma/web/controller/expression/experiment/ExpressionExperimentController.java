@@ -438,7 +438,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
             // FOR TESTING UNTIL SCALING ISSUES ARE WORKED OUT
             // propmt with all public groups, just limit by size for now
-            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered
+            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon(); // filtered
             // by
             // security.
             sets.removeAll( userExperimentSets );
@@ -466,7 +466,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
              * changes, may want to use searching instead of filtering // search would be for all lists where
              * 'modifiable = false' (?)
              * 
-             * Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets();
+             * Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
              * // filtered by security. List<SearchResultDisplayObject> autoGenSets = new
              * ArrayList<SearchResultDisplayObject>(); for ( ExpressionExperimentSet set : sets) {
              * if(set.getName().indexOf( "All" ) == 0 ){ expressionExperimentSetService.thaw( set ); if ( !taxonLimited
@@ -529,10 +529,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
         // prepare taxon property for being read
+        Collection<SearchResult> toRmvSR = new ArrayList<SearchResult>();
         for ( SearchResult sr : eesSR ) {
-            ExpressionExperimentSet ees = ( ExpressionExperimentSet ) sr.getResultObject();
-            expressionExperimentSetService.thaw( ees );
+            if(expressionExperimentSetService.isValidForFrontEnd( (ExpressionExperimentSet)sr.getResultObject() )){
+                ExpressionExperimentSet ees = ( ExpressionExperimentSet ) sr.getResultObject();
+                expressionExperimentSetService.thaw( ees );
+            }else{
+                toRmvSR.add( sr );
+            }
         }
+        eesSR.removeAll( toRmvSR );
+        
         Collection<SearchResultDisplayObject> experiments = SearchResultDisplayObject
                 .convertSearchResults2SearchResultDisplayObjects( results.get( ExpressionExperiment.class ) );
         Collection<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
@@ -545,20 +552,20 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( experiments.size() == 1 && experimentSets.size() > 0 ) {
             Long eid = ( ( ExpressionExperimentValueObject ) experiments.iterator().next().getResultValueObject() )
                     .getId();
-            Collection<SearchResultDisplayObject> toRmv = new ArrayList<SearchResultDisplayObject>();
+            Collection<SearchResultDisplayObject> toRmvSRDO = new ArrayList<SearchResultDisplayObject>();
             for ( SearchResultDisplayObject srdo : experimentSets ) {
                 if ( srdo.getMemberIds().size() == 1 && ( srdo.getMemberIds().toArray() )[0].equals( eid ) ) {
-                    toRmv.add( srdo );
+                    toRmvSRDO.add( srdo );
                 }
             }
-            experimentSets.removeAll( toRmv );
+            experimentSets.removeAll( toRmvSRDO );
         }
 
         Taxon taxon = null;
         // for each experiment search result display object, set the taxon -- pretty hacky,
         // but only way to get experiment's taxon is using service
         // can I do this in the SRDO constructor?
-        Collection<SearchResultDisplayObject> toRmv = new ArrayList<SearchResultDisplayObject>();
+        Collection<SearchResultDisplayObject> toRmvSRDO = new ArrayList<SearchResultDisplayObject>();
         for ( SearchResultDisplayObject srdo : experiments ) {
 
             if ( taxonLimited ) {
@@ -571,13 +578,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 log.warn( "Experiment had null taxon, was excluded from results: experiment id="
                         + ( ( ExpressionExperimentValueObject ) srdo.getResultValueObject() ).getId() + " shortname="
                         + srdo.getName() );
-                toRmv.add( srdo );
+                toRmvSRDO.add( srdo );
             } else {
                 srdo.setTaxonId( taxon.getId() );
                 srdo.setTaxonName( taxon.getCommonName() );
             }
         }
-        experiments.removeAll( toRmv );
+        experiments.removeAll( toRmvSRDO );
 
         // if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)

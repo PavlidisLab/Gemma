@@ -163,10 +163,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
 
     protected ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity ) {
         if ( !isTransient( entity ) ) return entity;
-        if ( entity.getExperiments().size() == 0 ) {
-            throw new IllegalArgumentException( "Attempt to create an empty ExpressionExperimentSet." );
-        }
-
+        
         Collection<BioAssaySet> setMembers = new HashSet<BioAssaySet>();
 
         for ( BioAssaySet baSet : entity.getExperiments() ) {

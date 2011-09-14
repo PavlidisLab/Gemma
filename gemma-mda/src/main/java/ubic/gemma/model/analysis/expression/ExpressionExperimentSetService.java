@@ -79,12 +79,18 @@ public interface ExpressionExperimentSetService {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperimentSet> loadAll();
-
+    
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them.
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
+
+    /**
+     * @return ExpressionExperimentSets that have more than 1 experiment in them.
+     */
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
     /**
      * @return sets belonging to current user -- only if they have more than one experiment!
@@ -118,5 +124,30 @@ public interface ExpressionExperimentSetService {
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
+    
+
+    /**
+     * Checks if the EE set can be exposed to the front end
+     * 
+     * For example:
+     * some experiment sets were implicitly created when analyses were run (bug 2323)
+     * these sets were created before the taxon field was added, so in many (all?) cases they do not have a taxon value
+     * these sets should not be exposed to the front end since they are mostly useless will just add clutter
+     * also, not having a taxon causes serious problems in our taxon-centric handling of sets
+     * in the case of these EE sets, this method would return false
+     * 
+     * @param expressionExperimentSet
+     * @return false if the set should not be shown on the front end (for example, if the set has a null taxon),
+     * true otherwise
+     */
+    public boolean isValidForFrontEnd( ExpressionExperimentSet expressionExperimentSet );
+
+    /**
+     * Returns only the experiment sets that are valid for the front end
+     * uses ubic.gemma.model.analysis.expression.ExpressionExperimentSetService.isValidForFrontEnd(ExpressionExperimentSet)
+     * @param eeSets
+     * @return
+     */
+    public Collection<ExpressionExperimentSet> validateForFrontEnd( Collection<ExpressionExperimentSet> eeSets );
 
 }

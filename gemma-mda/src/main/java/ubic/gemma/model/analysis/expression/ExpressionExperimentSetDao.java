@@ -54,11 +54,16 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @see ExpressionExperimentSetService.getExperimentsInSet
      */
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id );
-
+    
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them.
      */
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets();
+
+    /**
+     * @return ExpressionExperimentSets that have more than 1 experiment in them.
+     */
+    public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon();
 
     /**
      * @param expressionExperimentSet

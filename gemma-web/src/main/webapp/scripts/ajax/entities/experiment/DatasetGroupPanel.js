@@ -151,10 +151,8 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			 */
 			onRender : function(ct, position) {
 				Gemma.DatasetGroupEditToolbar.superclass.onRender.apply(this, arguments);
-
 				// owner isn't set until rendering...
 				this.ownerCt.on('rowselect', function(selector, rowindex, record) {
-
 							if (!record.phantom) {
 								this.cloneBut.enable();
 							}
@@ -351,7 +349,6 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 	viewConfig : {
 		forceFit : true
 	},
-
 	colModel : new Ext.grid.ColumnModel({
 
 		columns : [{
@@ -461,11 +458,16 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					store : this.store
 				});
 
-		this.relayEvents(this.getSelectionModel(), 'rowselect');
-		this.relayEvents(this.getStore(), 'datachanged');
+		// these don't seem to work!
+		//this.relayEvents(this.getSelectionModel(), 'rowselect'); 
+		//this.relayEvents(this.getStore(), 'datachanged');
 
+		this.getStore().on('datachanged', function( store ){
+			this.fireEvent('datachanged', store);
+		});
 		this.getSelectionModel().on("rowselect", function(selmol, index, rec) {
 					this.getStore().setSelected(rec);
+					this.fireEvent('rowselect', selmol, index, rec);
 				}, this);
 	},
 

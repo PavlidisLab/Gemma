@@ -176,10 +176,13 @@ public class ExpressionExperimentSetController extends BaseFormController {
     /**
      * AJAX
      * 
-     * @return all available sets that have at least 2 experiments (so not really all)
+     * returns all available sets that have a taxon value (so not really all)
+     * sets can have *any* number of experiments
+     * 
+     * @return all available sets that have a taxon value
      */
     public Collection<ExpressionExperimentSetValueObject> loadAll() {
-        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllMultiExperimentSets(); // filtered
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon(); // filtered
         // by
         // security.
         List<ExpressionExperimentSetValueObject> results = new ArrayList<ExpressionExperimentSetValueObject>();
@@ -198,8 +201,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
     /**
      * AJAX
      * 
-     * @return all available sets that have at least 2 experiments (so not really all) from db and also session backed
-     *         sets
+     * @return all available sets from db and also session backed sets
      */
     public Collection<ExpressionExperimentSetValueObject> loadAllUserAndSessionGroups() {
 
@@ -216,8 +218,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
     /**
      * AJAX
      * 
-     * @return all available sets that have at least 2 experiments (so not really all) from db and also session backed
-     *         sets
+     * @return all available session backed sets
      */
     public Collection<SessionBoundExpressionExperimentSetValueObject> loadAllSessionGroups() {
 
@@ -230,7 +231,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
     /**
      * AJAX
      * 
-     * @return all available sets that have at least 2 experiments (so not really all) from db and also session backed
+     * @return all available sets that have a taxon value from db and also session backed
      *         sets
      */
     public Collection<ExpressionExperimentSetValueObject> loadAllUserOwnedAndSessionGroups() {
@@ -508,10 +509,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
             throw new IllegalArgumentException( "No such taxon with id=" + obj.getTaxonId() );
         }
 
-        if ( newSet.getExperiments().size() < 2 ) {
-            throw new IllegalArgumentException( "Attempt to create an ExpressionExperimentSet with only "
-                    + newSet.getExperiments().size() + ", must have at least 2" );
-        }
         ExpressionExperimentSet newEESet = ( ExpressionExperimentSet ) persisterHelper.persist( newSet );
         return this.makeEESetValueObject( newEESet );
     }
@@ -541,8 +538,10 @@ public class ExpressionExperimentSetController extends BaseFormController {
         }
 
         vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
-
+        
         vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
+        
+        // if the set is used in an analysis, it should not be modifiable
         if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
             vo.setModifiable( false );
         } else {
@@ -640,10 +639,6 @@ public class ExpressionExperimentSetController extends BaseFormController {
         }
 
         if ( needUpdate ) {
-            if ( toUpdate.getExperiments().size() < 2 ) {
-                throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has only "
-                        + toUpdate.getExperiments().size() + ", must have at least 2" );
-            }
             expressionExperimentSetService.update( toUpdate );
             log.info( "Updated " + obj.getName() );
         } else {

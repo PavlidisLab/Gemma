@@ -85,6 +85,17 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
     /*
      * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllExperimentSetsWithTaxon()
+     */
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
+        return this.getHibernateTemplate().find(
+                "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#thaw(ubic.gemma.model.analysis.expression.
      * ExpressionExperimentSet)
      */

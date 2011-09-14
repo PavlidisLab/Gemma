@@ -392,8 +392,8 @@ public class GeneralSearchController extends BaseFormController {
         } else if ( GeneSet.class.isAssignableFrom( entityClass ) ) {
             vos = DatabaseBackedGeneSetValueObject.convert2ValueObjects( geneSetService.load( EntityUtils.getIds( results ) ), false );
         } else if ( ExpressionExperimentSet.class.isAssignableFrom( entityClass ) ) {
-            vos = DatabaseBackedExpressionExperimentSetValueObject.makeValueObjects( experimentSetService.load( EntityUtils
-                    .getIds( results ) ) );
+            Collection<ExpressionExperimentSet> eeSets  = experimentSetService.validateForFrontEnd( experimentSetService.load( EntityUtils.getIds( results ) ));
+            vos = DatabaseBackedExpressionExperimentSetValueObject.makeValueObjects( eeSets );
         } else {
             throw new UnsupportedOperationException( "Don't know how to make value objects for class=" + entityClass );
         }

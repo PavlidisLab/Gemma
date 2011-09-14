@@ -140,7 +140,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         sortable: true,
         width: 0.5, //viewConfig.forceFit resizes based on relative widths,
         renderer: function(value, metaData, record, rowIndex, colIndex, store){
-            return (value && record) ? '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + record.id + '">' + value + '</a>' : '';
+            return (value && record) ? '<a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=' + record.id + '" title="'+value+'">' + value + '</a>' : '';
         }
     }, {
         header: "Status",
