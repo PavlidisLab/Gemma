@@ -215,7 +215,7 @@ public class ArrayDesignWrapper extends TableDecorator {
         if ( object == null ) {
             return "Array Design unavailable";
         }
-        return "<input type=\"button\" value=\"Refresh\" " + "\" onClick=\"updateReport(" + object.getId() + ")\" >";
+        return "<input type=\"button\" value=\"Refresh\" " + "\" onClick=\"updateArrayDesignReport(" + object.getId() + ")\" >";
     }
 
     public String getShortName() {

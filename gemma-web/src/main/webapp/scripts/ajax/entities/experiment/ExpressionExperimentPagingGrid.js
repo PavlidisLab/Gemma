@@ -9,7 +9,6 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
     },
     paramNames: {
         start: 'start', // default The parameter name which specifies the start row
-        adjustedStart: 'adjustedStart', // start row based on records returned (needed for dealing with security filtering)
         limit: 'limit', // default The parameter name which specifies number of rows to return
         sort: 'sort', // default The parameter name which specifies the column to sort on
         dir: 'dir' // default The parameter name which specifies the sort direction

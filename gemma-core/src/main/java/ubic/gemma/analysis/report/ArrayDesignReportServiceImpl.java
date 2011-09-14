@@ -43,6 +43,7 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
@@ -162,8 +163,8 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                     adVo.setLastRepeatMask( event.getDate() );
                 }
             }
-            adVo.setTroubleEvent( troubleEvents.get( id ) );
-            adVo.setValidationEvent( validationEvents.get( id ) );
+            adVo.setTroubleEvent( (troubleEvents.get( id ) == null)?null:new AuditEventValueObject( troubleEvents.get( id ) ) );
+            adVo.setValidationEvent( (validationEvents.get( id ) == null)?null: new AuditEventValueObject( validationEvents.get( id ) ) );
         }
 
         watch.stop();

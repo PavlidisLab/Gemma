@@ -408,7 +408,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 				autoEl: {
 					tag: 'a',
 					href: 'http://www.ubc.ca/',
-					cn: '<img src="/Gemma/images/logo/logo_ubc.jpg"/>',
+					cn: '<img src="/Gemma/images/logo/ubcgrey_logo_40.png"/>',
 					style: 'padding-left:15px; padding-right:10px'
 				}
 			} ]);

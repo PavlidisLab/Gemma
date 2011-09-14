@@ -160,7 +160,7 @@
 	<tr>
 		<td colspan="2">
 			<security:authorize access="hasRole('GROUP_ADMIN')">
-				<input type="button" value="Refresh report" onClick="updateReport(${arrayDesign.id })" />
+				<input type="button" value="Refresh report" onClick="updateArrayDesignReport(${arrayDesign.id })" />
 			</security:authorize>
 		</td>
 	</tr>

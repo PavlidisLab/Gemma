@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
+
 /**
  * Value object for quickly displaying varied information about Array Designs.
  * 
@@ -104,9 +106,9 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     private ubic.gemma.model.expression.arrayDesign.TechnologyType technologyType;
 
-    private ubic.gemma.model.common.auditAndSecurity.AuditEvent troubleEvent;
+    private ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject troubleEvent;
 
-    private ubic.gemma.model.common.auditAndSecurity.AuditEvent validationEvent;
+    private ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject validationEvent;
 
     public ArrayDesignValueObject() {
     }
@@ -138,8 +140,8 @@ public class ArrayDesignValueObject implements java.io.Serializable {
             String numProbesToKnownGenes, String numGenes, String dateCached, java.util.Date lastSequenceUpdate,
             java.util.Date lastSequenceAnalysis, java.util.Date lastGeneMapping, Boolean isSubsumed,
             Boolean isSubsumer, Boolean isMerged, Boolean isMergee, java.util.Date lastRepeatMask,
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent troubleEvent,
-            ubic.gemma.model.common.auditAndSecurity.AuditEvent validationEvent, java.util.Date dateCreated,
+            AuditEventValueObject troubleEvent,
+            AuditEventValueObject validationEvent, java.util.Date dateCreated,
             String description, ubic.gemma.model.expression.arrayDesign.TechnologyType technologyType ) {
         this.name = name;
         this.shortName = shortName;
@@ -465,7 +467,7 @@ public class ArrayDesignValueObject implements java.io.Serializable {
      * The last uncleared TroubleEvent associated with this ArrayDesign.
      * </p>
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getTroubleEvent() {
+    public AuditEventValueObject getTroubleEvent() {
         return this.troubleEvent;
     }
 
@@ -474,7 +476,7 @@ public class ArrayDesignValueObject implements java.io.Serializable {
      * The last uncleared TroubleEvent associated with this ArrayDesign.
      * </p>
      */
-    public ubic.gemma.model.common.auditAndSecurity.AuditEvent getValidationEvent() {
+    public AuditEventValueObject getValidationEvent() {
         return this.validationEvent;
     }
 
@@ -607,11 +609,11 @@ public class ArrayDesignValueObject implements java.io.Serializable {
         this.technologyType = technologyType;
     }
 
-    public void setTroubleEvent( ubic.gemma.model.common.auditAndSecurity.AuditEvent troubleEvent ) {
+    public void setTroubleEvent( AuditEventValueObject troubleEvent ) {
         this.troubleEvent = troubleEvent;
     }
 
-    public void setValidationEvent( ubic.gemma.model.common.auditAndSecurity.AuditEvent validationEvent ) {
+    public void setValidationEvent( AuditEventValueObject validationEvent ) {
         this.validationEvent = validationEvent;
     }
 

@@ -658,7 +658,11 @@ gemma.max.fileupload.size.bytes=
 								<value>getReportHtml</value>
 								<value>addAlternateName</value>
 								<value>getArrayDesigns</value>
+								<value>loadArrayDesignsForShowAll</value>
 								<value>remove</value>
+								<value>getSummaryForArrayDesign</value>
+								<value>loadArrayDesignsSummary</value>
+								<value>updateReportById</value>
 							</list>
 						</property>
 					</bean>
@@ -2129,16 +2133,12 @@ gemma.max.fileupload.size.bytes=
 				<entry key="ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
-						<property name="includes">
+						<property name="excludes">
 							<list>
-								<value>id</value>
-								<value>name</value>
-								<value>shortName</value>
-								<value>description</value>
-								<value>taxon</value>
-								<value>troubled</value>
+								<value>technologyType</value>
 							</list>
 						</property>
+						<property name="javascriptClassName" value="ArrayDesignValueObject"/>
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.web.controller.common.auditAndSecurity.FileUpload">

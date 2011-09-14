@@ -84,7 +84,7 @@ function handleReportUpdateSuccess(taskId) {
 
 }
 
-function updateReport(id) {
+function updateArrayDesignReport(id) {
 
 	var callParams = [];
 	callParams.push({

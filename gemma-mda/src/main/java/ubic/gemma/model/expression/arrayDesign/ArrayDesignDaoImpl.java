@@ -48,6 +48,7 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -791,30 +792,30 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         return eventMap;
     }
-
+    
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() throws Exception {
-
+        
         // get the expression experiment counts
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
         final String queryString = "select ad.id as id, ad.name as name, ad.shortName as shortName, "
-                + "ad.technologyType, ad.description, event.date as createdDate,  mergedInto  from ArrayDesignImpl ad "
-                + "left join ad.auditTrail as trail inner join trail.events as event left join ad.mergedInto as mergedInto "
-                + "where event.action='C' group by ad ";
-
+            + "ad.technologyType, ad.description, event.date as createdDate,  mergedInto  from ArrayDesignImpl ad "
+            + "left join ad.auditTrail as trail inner join trail.events as event left join ad.mergedInto as mergedInto "
+            + "where event.action='C' group by ad ";
+        
         try {
             Map<Long, String> arrayToTaxon = getArrayToPrimaryTaxonMap();
-
+            
             Query queryObject = super.getSession().createQuery( queryString );
-
+            
             Collection<ArrayDesignValueObject> result = processADValueObjectQueryResults( eeCounts, queryObject,
                     arrayToTaxon );
-
+            
             return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-
+        
     }
 
     /*

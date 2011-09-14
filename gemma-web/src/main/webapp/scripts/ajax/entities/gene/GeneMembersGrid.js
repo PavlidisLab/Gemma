@@ -502,7 +502,6 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 					}
 				});
 
-		// dummy action event handler - just outputs some arguments to console
 		this.action.on({
 					action : function(grid, record, action, row, col) {
 						if (action === 'icon-cross') {
