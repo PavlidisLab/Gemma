@@ -62,6 +62,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 							},
 							tbar : ['->', {
 										text : "Delete selected",
+										icon: "/Gemma/images/icons/cross.png",
 										handler : this.removeSelectedFromdatasetGroupMembersGrid,
 										scope : this
 									}],
