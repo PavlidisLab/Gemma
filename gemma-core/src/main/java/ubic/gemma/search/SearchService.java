@@ -192,7 +192,7 @@ public class SearchService implements InitializingBean {
     /**
      * How many term children can stay in memory
      */
-    private static final int ONTOLOGY_INFO_CACHE_SIZE = 500;
+    private static final int ONTOLOGY_INFO_CACHE_SIZE = 15000;
 
     Analyzer analyzer = new StandardAnalyzer();
 
