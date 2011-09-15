@@ -213,7 +213,6 @@ public class CoexpressionSearchController extends BaseFormController {
             } else
                 log.info( "No user data to add" );
         }
-
         if ( eeIds.isEmpty() ) {
             result.setErrorState( "No experiments were available" );
             return result;
@@ -224,10 +223,10 @@ public class CoexpressionSearchController extends BaseFormController {
         result = geneCoexpressionService.coexpressionSearch( eeIds, genes, searchOptions.getStringency(), MAX_RESULTS,
                 searchOptions.getQueryGenesOnly(), searchOptions.isForceProbeLevelSearch() );
 
-        // debug 2317
-        // Collection<CoexpressionValueObjectExt> quickResults = geneCoexpressionService.coexpressionSearchQuick(
-        // eeSetId,
-        // genes, searchOptions.getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly(), true );
+        // debug 2317, 2336
+        // Collection<CoexpressionValueObjectExt> quickResults = geneCoexpressionService.coexpressionSearchQuick2(
+        // eeIds,
+        // genes, searchOptions.getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
         // log.info( eeIds.size() + " ees " + result.getKnownGeneResults().size() + " quick: " + quickResults.size() );
         // end debug.
 

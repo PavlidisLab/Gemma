@@ -128,6 +128,39 @@ public class GeneCoexpressionService {
     private TfGeneAssociationService tfGeneAssociationService;
 
     /**
+     * @param inputEeIds
+     * @param genes
+     * @param stringency
+     * @param maxResults
+     * @param queryGenesOnly
+     * @return
+     */
+    public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick2( Collection<Long> inputEeIds,
+            Collection<Gene> genes, int stringency, int maxResults, boolean queryGenesOnly ) {
+
+        if ( genes.isEmpty() ) {
+            return new HashSet<CoexpressionValueObjectExt>();
+        }
+
+        /*
+         * repopulate eeIds with the actual eeIds we'll be searching through and load ExpressionExperimentValueObjects
+         * to get summary information about the datasets...
+         */
+        Collection<? extends BioAssaySet> ees = expressionExperimentService.loadMultiple( inputEeIds );
+        Collection<Long> eeIds = EntityUtils.getIds( ees );
+
+        /*
+         * If possible: instead of using the probeLinkCoexpressionAnalyzer, Use a canned analysis with a filter.
+         */
+        Taxon taxon = genes.iterator().next().getTaxon();
+        ExpressionExperimentSet eeSet = geneCoexpressionAnalysisService.findCurrent( taxon )
+                .getExpressionExperimentSetAnalyzed();
+
+        return getFilteredCannedAnalysisResults2( eeSet, eeIds, genes, stringency, maxResults, queryGenesOnly );
+
+    }
+
+    /**
      * Main entry point. Note that if possible, the query will be done using results from an ExpressionExperimentSet.
      * 
      * @param inputEeIds Expression experiments ids to consider
@@ -246,9 +279,8 @@ public class GeneCoexpressionService {
             allUsedGenes.add( c.getFoundGene().getId() );
         }
 
-        
-        if (!allSupportingDatasets.isEmpty()){
-        
+        if ( !allSupportingDatasets.isEmpty() ) {
+
             Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( geneService
                     .loadMultiple( allUsedGenes ), expressionExperimentService.loadMultiple( allSupportingDatasets ) );
 
@@ -258,12 +290,11 @@ public class GeneCoexpressionService {
                 c.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getQueryGene().getId() ) ) );
                 c.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getFoundGene().getId() ) ) );
             }
-        }
-        else{
+        } else {
             for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
                 c.setQueryGeneNodeDegree( 0d );
                 c.setFoundGeneNodeDegree( 0d );
-            }            
+            }
         }
 
         return result;
@@ -715,6 +746,237 @@ public class GeneCoexpressionService {
     }
 
     /**
+     * @param baseSet
+     * @param eeIds
+     * @param queryGenes
+     * @param stringency
+     * @param maxResults
+     * @param queryGenesOnly
+     * @return
+     */
+    private Collection<CoexpressionValueObjectExt> getFilteredCannedAnalysisResults2( ExpressionExperimentSet baseSet,
+            Collection<Long> eeIds, Collection<Gene> queryGenes, int stringency, int maxResults, boolean queryGenesOnly ) {
+
+        if ( queryGenes.isEmpty() ) {
+            throw new IllegalArgumentException( "No genes in query" );
+        }
+
+        List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
+
+        if ( eevos.isEmpty() ) {
+            throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
+        }
+
+        /*
+         * We get this prior to filtering so it matches the vectors stored with the analysis.
+         */
+        expressionExperimentSetService.thaw( baseSet );
+        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( EntityUtils
+                .getIds( baseSet.getExperiments() ) );
+
+        /*
+         * This set of links must be filtered to include those in the data sets being analyzed.
+         */
+        Map<Gene, Collection<Gene2GeneCoexpression>> gg2gs = getRawCoexpression( queryGenes, stringency, maxResults,
+                queryGenesOnly );
+
+        List<Long> filteredEeIds = getSortedFilteredIdList( eeIds );
+
+        List<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
+
+        Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
+
+        queryGenes = geneService.thawLite( gg2gs.keySet() );
+
+        // populate the value objects.
+        StopWatch timer = new StopWatch();
+        Collection<Gene> allUsedGenes = new HashSet<Gene>();
+        for ( Gene queryGene : queryGenes ) {
+            timer.start();
+
+            if ( !queryGene.getTaxon().equals( baseSet.getTaxon() ) ) {
+                throw new IllegalArgumentException(
+                        "Mismatch between taxon for expression experiment set selected and gene queries" );
+            }
+
+            allUsedGenes.add( queryGene );
+
+            /*
+             * For summary statistics
+             */
+            CountingMap<Long> supportCount = new CountingMap<Long>();
+            Collection<Long> allSupportingDatasets = new HashSet<Long>();
+            Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
+            Collection<Long> allTestedDataSets = new HashSet<Long>();
+
+            int linksMetPositiveStringency = 0;
+            int linksMetNegativeStringency = 0;
+
+            Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
+
+            assert g2gs != null;
+
+            List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
+            relevantEEIdList.retainAll( filteredEeIds );
+
+            GeneValueObject queryGeneValueObject = new GeneValueObject( queryGene );
+
+            Map<Gene, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
+
+            if ( timer.getTime() > 100 ) {
+                log.info( "Postprocess " + queryGene.getOfficialSymbol() + " Phase I: " + timer.getTime() + "ms" );
+            }
+            timer.stop();
+            timer.reset();
+            timer.start();
+
+            for ( Gene2GeneCoexpression g2g : g2gs ) {
+                StopWatch timer2 = new StopWatch();
+                timer2.start();
+
+                Gene foundGene = g2g.getFirstGene().equals( queryGene ) ? g2g.getSecondGene() : g2g.getFirstGene();
+
+                allUsedGenes.add( foundGene );
+
+                // FIXME Symptom fix for duplicate found genes
+                // Keep track of the found genes that we can correctly identify duplicates.
+                // All keep the g2g object for debugging purposes.
+                if ( foundGenes.containsKey( foundGene ) ) {
+                    foundGenes.get( foundGene ).add( g2g );
+                    log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene
+                            + " From analysis: " + g2g.getSourceAnalysis().getId() );
+                    continue; // Found a duplicate gene, don't add to results just our debugging list
+
+                }
+
+                foundGenes.put( foundGene, new ArrayList<Gene2GeneCoexpression>() );
+                foundGenes.get( foundGene ).add( g2g );
+
+                CoexpressionValueObjectExt cvo = new CoexpressionValueObjectExt();
+
+                /*
+                 * This Thaw is a big time sink and _should not_ be necessary.
+                 */
+                // foundGene = geneService.thawLite( foundGene ); // db hit
+
+                cvo.setQueryGene( queryGeneValueObject );
+                cvo.setFoundGene( new GeneValueObject( foundGene ) );
+
+                if ( timer2.getTime() > 10 ) log.info( "Coexp. Gene processing phase I:" + timer2.getTime() + "ms" );
+                timer2.stop();
+                timer2.reset();
+                timer2.start();
+
+                Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
+                        positionToIDMap );
+                testingDatasets.retainAll( filteredEeIds );
+
+                /*
+                 * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there were
+                 * 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the analyzer.
+                 */
+                Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
+                        positionToIDMap );
+
+                // necessary in case any were filtered out.
+                supportingDatasets.retainAll( filteredEeIds );
+
+                cvo.setSupportingExperiments( supportingDatasets );
+
+                Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
+                        positionToIDMap );
+
+                /*
+                 * Specific probe EEids contains 1 even if the data set wasn't supporting.
+                 */
+                specificDatasets.retainAll( supportingDatasets );
+
+                int numTestingDatasets = testingDatasets.size();
+                int numSupportingDatasets = supportingDatasets.size();
+
+                /*
+                 * SANITY CHECKS
+                 */
+                assert specificDatasets.size() <= numSupportingDatasets;
+                assert numTestingDatasets >= numSupportingDatasets;
+                assert numTestingDatasets <= eevos.size();
+
+                cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
+                        relevantEEIdList ) );
+
+                /*
+                 * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
+                 * full set of data sets that were used in the original analysis.
+                 */
+                if ( numSupportingDatasets < stringency ) {
+                    continue;
+                }
+
+                allTestedDataSets.addAll( testingDatasets );
+
+                int supportFromSpecificProbes = specificDatasets.size();
+                if ( g2g.getEffect() < 0 ) {
+                    cvo.setPosSupp( 0 );
+                    cvo.setNegSupp( numSupportingDatasets );
+                    if ( numSupportingDatasets != supportFromSpecificProbes )
+                        cvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
+
+                    ++linksMetNegativeStringency;
+                } else {
+                    cvo.setPosSupp( numSupportingDatasets );
+                    if ( numSupportingDatasets != supportFromSpecificProbes )
+                        cvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
+                    cvo.setNegSupp( 0 );
+                    ++linksMetPositiveStringency;
+                }
+                cvo.setSupportKey( Math.max( cvo.getPosSupp(), cvo.getNegSupp() ) );
+                cvo.setNumTestedIn( numTestingDatasets );
+
+                for ( Long id : supportingDatasets ) {
+                    supportCount.increment( id );
+                }
+
+                cvo.setSortKey();
+
+                /*
+                 * This check prevents links from being shown twice when we do "among query genes". We don't skip
+                 * entirely so we get the counts for the summary table populated correctly.
+                 */
+                if ( !seen.contains( g2g ) ) {
+                    ecvos.add( cvo );
+                }
+
+                seen.add( g2g );
+
+                allSupportingDatasets.addAll( supportingDatasets );
+                allDatasetsWithSpecificProbes.addAll( specificDatasets );
+
+            }
+
+            populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
+
+            if ( timer.getTime() > 100 ) {
+                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
+                        + timer.getTime() + "ms" );
+            }
+            timer.stop();
+            timer.reset();
+            timer.start();
+
+            Collections.sort( ecvos );
+
+            timer.stop();
+            if ( timer.getTime() > 100 ) {
+                log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol()
+                        + " PhaseIII: " + timer.getTime() + "ms" );
+            }
+            timer.reset();
+        } // Over results.
+        return ecvos;
+
+    }
+
+    /**
      * Get coexpression results using a pure gene2gene query (without visiting the probe2probe tables. This is generally
      * faster, probably even if we're only interested in data from a subset of the exeriments.
      * 
@@ -1001,8 +1263,7 @@ public class GeneCoexpressionService {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        
-        if (!allSupportingDatasets.isEmpty()){
+        if ( !allSupportingDatasets.isEmpty() ) {
             Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( allUsedGenes,
                     expressionExperimentService.loadMultiple( allSupportingDatasets ) );
             Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
@@ -1010,12 +1271,11 @@ public class GeneCoexpressionService {
                 coexp.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getQueryGene().getId() ) ) );
                 coexp.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getFoundGene().getId() ) ) );
             }
-        }
-        else{
+        } else {
             for ( CoexpressionValueObjectExt coexp : ecvos ) {
                 coexp.setQueryGeneNodeDegree( 0d );
                 coexp.setFoundGeneNodeDegree( 0d );
-            }            
+            }
         }
 
         if ( timer.getTime() > 10 ) log.info( "Node degree population:" + timer.getTime() + "ms" );
