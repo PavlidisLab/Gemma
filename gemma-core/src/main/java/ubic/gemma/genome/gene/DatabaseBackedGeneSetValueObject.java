@@ -107,7 +107,6 @@ public class DatabaseBackedGeneSetValueObject extends GeneSetValueObject {
     public DatabaseBackedGeneSetValueObject( GeneSet gs ) {
         super(gs);
     }
-    @Override
     public boolean isSessionBound() {
         return false;
     }

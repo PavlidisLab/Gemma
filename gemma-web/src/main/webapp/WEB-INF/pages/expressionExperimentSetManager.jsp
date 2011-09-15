@@ -6,20 +6,6 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/ajax/entities/DatasetGroupEditor.js' />
 
-<security:authorize ifAnyGranted="GROUP_ADMIN,GROUP_USER">
-	<script type="text/javascript">
-	Ext.namespace('Gemma');
-	Ext.onReady(function() {
-		Ext.QuickTips.init();
-
-		var eeSetChooserPanel = new Gemma.DatasetGroupComboPanel( {
-			renderTo : 'EESetManager'
-		});
-		eeSetChooserPanel.show();
-
-	});
-</script>
-</security:authorize>
 
 </head>
 <body>
@@ -33,12 +19,27 @@
 <security:authorize access="hasAnyRole('GROUP_USER','GROUP_ADMIN')">
 	<div id='messages' style='width: 600px; height: 1.6em; margin: 0.2em; padding-bottom: 0.4em;'></div>
 
-	<p>Use this tool to create and edit groups of datasets. You can modify a built-in set by making a copy ("clone")
-	and editing the copy.</p>
+	<!-- p>Use this tool to create and edit groups of datasets. You can modify a built-in set by making a copy ("clone")
+	and editing the copy.</p-->
+
+	<script type="text/javascript">
+		Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
+		
+		Ext.onReady(function() {
+	
+			Ext.QuickTips.init();
+			
+			new Gemma.GemmaViewPort({
+			 	centerPanelConfig: new Gemma.DatasetGroupEditor({
+							modal : true
+						})
+			});
+	
+		});
+			
+	</script>
 
 
 </security:authorize>
 
-
-<div id='EESetManager'></div>
 </body>

@@ -462,9 +462,9 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 		//this.relayEvents(this.getSelectionModel(), 'rowselect'); 
 		//this.relayEvents(this.getStore(), 'datachanged');
 
-		this.getStore().on('datachanged', function( store ){
-			this.fireEvent('datachanged', store);
-		});
+		/*this.getStore().on('datachanged', function( store ){
+			this.fireEvent('datachanged', store); // causes recursive loop
+		});*/
 		this.getSelectionModel().on("rowselect", function(selmol, index, rec) {
 					this.getStore().setSelected(rec);
 					this.fireEvent('rowselect', selmol, index, rec);

@@ -45,12 +45,10 @@ Gemma.GeneGroupManager = Ext.extend(Ext.Panel, {
 			initComponent : function() {
 				this.geneChooserPanel = new Gemma.GeneGroupMemberPanelClassic({
 							split : true,
-							id : 'gene-chooser-panel',
 							flex:1
 						});
 
 				this.geneGroupPanel = new Gemma.GeneGroupPanel({
-							id : 'gene-group-panel',
 							tbar : new Gemma.GeneGroupEditToolbar(),
 							flex:1,
 							viewConfig: {forceFit: true}

@@ -37,12 +37,19 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 							msg : 'Loading ...',
 							store : this.store
 						});
-
+						
+						
+				/* these methods don't seem to work anymore
 				this.relayEvents(this.getSelectionModel(), 'rowselect');
-				this.relayEvents(this.getStore(), 'datachanged');
-
+				this.relayEvents(this.getStore(), 'datachanged');*/
+				
 				this.getSelectionModel().on("rowselect", function(selmol, index, rec) {
 							this.getStore().setSelected(rec);
+							this.fireEvent("rowselect", selmol, index, rec);
+						}, this);
+						
+				this.getSelectionModel().on("datachanged", function(store) {
+							this.fireEvent("datachanged", store);
 						}, this);
 			},
 

@@ -364,13 +364,14 @@ gemma.max.fileupload.size.bytes=
 			<value>expressionExperiment</value>
 		</property>
 	</bean>
-	
-<!--bean id="geneSetValueObject" class="ubic.gemma.genome.gene.GeneSetValueObject"/-->
+
+
+<bean id="geneSetValueObject" class="ubic.gemma.genome.gene.GeneSetValueObject"/>
 <bean id="freeTextGeneResultsValueObject" class="ubic.gemma.genome.gene.FreeTextGeneResultsValueObject"/>
 <bean id="goGroupValueObject" class="ubic.gemma.genome.gene.GOGroupValueObject"/>
 <bean id="databaseBackedGeneSetValueObject" class="ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject"/>
 <bean id="sessionBoundGeneSetValueObject" class="ubic.gemma.genome.gene.SessionBoundGeneSetValueObject"/>
-<!--bean id="expressionExperimentSetValueObject" class="ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject"/-->
+<bean id="expressionExperimentSetValueObject" class="ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject"/>
 <bean id="freeTextExpressionExperimentResultsValueObject" class="ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject"/>
 <bean id="databaseBackedExpressionExperimentSetValueObject" class="ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject"/>
 <bean id="sessionBoundExpressionExperimentSetValueObject" class="ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject"/>

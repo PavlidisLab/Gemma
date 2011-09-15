@@ -94,7 +94,6 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
     /* (non-Javadoc)
      * @see ubic.gemma.web.genome.gene.GeneSetValueObject#isSessionBound()
      */
-    @Override
     public boolean isSessionBound() {
         return true;
     }

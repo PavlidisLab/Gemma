@@ -33,7 +33,7 @@ import ubic.gemma.model.genome.gene.GeneSetMember;
  * @author kelsey
  * @version $Id$
  */
-public abstract class GeneSetValueObject implements Serializable {
+public class GeneSetValueObject implements Serializable {
 
     private static final long serialVersionUID = 6212231006289412683L;
 
@@ -117,8 +117,6 @@ public abstract class GeneSetValueObject implements Serializable {
     public Long getId() {
         return id;
     }
-
-    public abstract boolean isSessionBound();
         
 
     /**

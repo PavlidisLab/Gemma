@@ -11,39 +11,26 @@
  * 
  * 
  * @class Gemma.DatasetGroupEditor
- * @extends Ext.Window
+ * @extends Ext.Panel
  */
 
-/* 
- * get width and height of viewport to use for sizing the parent and children panels 
- */
-var windowHeightData = Ext.getBody().getViewSize().height * 0.9;
-var windowWidthData = Ext.getBody().getViewSize().width * 0.9;
-var westWidthData = windowWidthData* 0.33;
-var eastWidthData = windowWidthData* 0.33;
-var centreWidthData = windowWidthData-westWidthData-eastWidthData;
-
-
-Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
+Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 
 			id : 'dataset-chooser',
 			name : 'datasetchooser',
 			layout : 'border',
-			height : windowHeightData,
-			width : windowWidthData,
-			height : 500,
-			closeAction : 'hide',
-			constrainHeader : false,
-			title : "Dataset Group Editor ",
+			title : "Dataset Group Editor <a href=\"javascript:void()\" style=\"float:right\" title=\"Use this tool to create and edit groups of datasets. "+
+				"You can modify a built-in set by making a copy (clone) and editing the copy\" "+
+				"onClick=\"window.open(Gemma.HOST + 'faculty/pavlidis/wiki/display/gemma/Dataset+chooser', 'DataSetChooserHelp');\">"+
+				"<img src=\"/Gemma/images/icons/question_blue.png\"></a>",
 			isLoggedIn : false,
-			maximizable : false,
 
 			/**
 			 * 
 			 */
 			initComponent : function() {
 
-				Ext.apply(this, {
+				/*Ext.apply(this, {
 							buttons : [{
 										id : 'done-selecting-button',
 										text : "Done",
@@ -55,11 +42,12 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 										handler : this.onHelp,
 										scope : this
 									}]
-						});
+						});*/
 
 				Gemma.DatasetGroupEditor.superclass.initComponent.call(this);
 
-				this.isLoggedIn = Ext.get('loggedIn').getValue();
+				var userLoggedIn = (Ext.getDom('hasUser') && Ext.getDom('hasUser').getValue() === 'true')?true:false;
+				this.isLoggedIn = Ext.get('loggedIn').getValue() || userLoggedIn;
 
 				/**
 				 * Plain grid for displaying datasets in the current set. Editable.
@@ -78,9 +66,8 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 										scope : this
 									}],
 							split : true,
-							height : 200,
-							width : eastWidthData,
-							minWidth : 200
+							width:400,
+							height:200
 						});
 
 				/*
@@ -90,7 +77,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							region : 'south',
 							split : true,
 							bodyStyle : 'padding:8px',
-							height : 200
+							height:200
 						});
 
 				/**
@@ -102,13 +89,11 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							title : "Dataset locator",
 							region : 'center',
 							split : true,
+							width:400,
 							showAnalysisInfo : true,
-							height : 200,
 							loadMask : {
 								msg : 'Searching ...'
 							},
-							width: centreWidthData,
-							minWidth : 200,
 							tbar : new Gemma.DataSetSearchAndGrabToolbar({
 										taxonSearch : true,
 										targetGrid : this.datasetGroupMembersGrid
@@ -121,18 +106,26 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 				 * Top grid for showing the datasetGroups
 				 */
 				this.datasetGroupGrid = new Gemma.DatasetGroupGridPanel({
-							store : this.datasetGroupStore,
 							region : 'west',
 							layout : 'fit',
 							split : true,
 							collapsible : true,
 							collapseMode : 'mini',
-							height : 200,
-							width : westWidthData,
+							width:400,
+							height:200,
 							title : "Available expression experiment sets",
 							displayGrid : this.datasetGroupMembersGrid,
 							tbar : new Gemma.DatasetGroupEditToolbar()
 						});
+				if(this.datasetGroupStore){
+					Ext.apply(this.datasetGroupGrid, {store: this.datasetGroupStore });	
+				}
+				this.datasetGroupGrid.on('beforeload', function(){
+					console.log('beforeload');
+				});
+				this.datasetGroupGrid.on('load', function(){
+					console.log('doneload');
+				});
 
 				this.add(this.datasetGroupGrid);
 				this.add(this.datasetGroupMembersGrid);
@@ -178,7 +171,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 					buffer : 100
 						// keep from firing too many times at once
 					});
-
+/*
 				this.on('show', function(panel) {
 							var r = this.datasetGroupGrid.getStore().getSelected();
 							if (r) {
@@ -190,7 +183,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Window, {
 							delay : 100,
 							single : true
 						});
-
+*/
 				this.addEvents({
 							"select" : true,
 							"commit" : true,
