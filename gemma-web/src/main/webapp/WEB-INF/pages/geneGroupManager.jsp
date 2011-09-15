@@ -6,6 +6,28 @@
 	<jwr:script src='/scripts/app/GeneGroupManager.js' useRandomParam='false' />
 </head>
 <body>
+
+<script type="text/javascript">
+	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
+	
+	Ext.onReady(function() {
+
+			Ext.QuickTips.init();
+
+			/*new Gemma.GeneGroupManager({
+						renderTo : 'genesetCreation-div',
+						html:'You can create a group of genes to be used in searches and analyses. This interface allows you to create gene groups, modify them, and control who else can see them.'
+					});
+				*/	
+		new Gemma.GemmaViewPort({
+		 	centerPanelConfig: new Gemma.GeneGroupManager()
+		});
+
+		});
+
+
+
+</script>
 	<h2>
 		Manage Gene Groups
 	</h2>
@@ -25,12 +47,11 @@
 		modify them, and control who else can see them.
 	</p>
 	
-</security:authorize>
-
-
 	<div id='genesetCreation-div'>
 	</div>
+</security:authorize>
 
 	<div id='errorMessage' style='width: 500px; margin-bottom: 1em;'></div>
 
 </body>
+

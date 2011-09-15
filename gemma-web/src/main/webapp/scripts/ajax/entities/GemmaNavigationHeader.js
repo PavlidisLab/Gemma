@@ -18,8 +18,8 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 	},
 	initComponent: function(){
 		
-	var isAdmin = (Ext.getDom('hasAdmin'))?Ext.getDom('hasAdmin').getValue():false;
-	var userLoggedIn = (Ext.getDom('hasUser'))?Ext.getDom('hasUser').getValue():false;
+	var isAdmin = (Ext.getDom('hasAdmin') && Ext.getDom('hasAdmin').getValue() === 'true')?true:false;
+	var userLoggedIn = (Ext.getDom('hasUser') && Ext.getDom('hasUser').getValue() === 'true')?true:false;
 	
 	var searchBtn = new Ext.Button({
 			text: 'Search',
@@ -307,7 +307,6 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 				}
 			}
 		});
-		
 		this.loginBtn = new Ext.Button({
 			xtype: 'button',
 			text: 'Log In',
@@ -321,6 +320,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 		});
 		
 		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
+			alert('logged in'+userName);
 			this.loginBtn.hide();
 			myGemmaBtn.show();
 			if(this.navToolbar.myGemmaSpacer) { this.navToolbar.myGemmaSpacer.show(); }

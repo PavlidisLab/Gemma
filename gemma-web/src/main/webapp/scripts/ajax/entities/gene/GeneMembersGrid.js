@@ -993,3 +993,98 @@ Gemma.GeneAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 			}
 });
 
+
+Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
+
+	initComponent : function() {
+		Gemma.GeneGroupMemberPanelClassic.superclass.initComponent.call(this);
+	},
+	showGeneGroup: function(groupRecord){
+		this.getEl().mask("Loading genes ...");
+		GeneSetController.getGenesInGroup(groupRecord.get('id'), {
+			callback: this.afterLoadGenes.createDelegate(this, [groupRecord], true),
+			errorHandler: function(e){
+				this.getEl().unmask();
+				Ext.Msg.alert('There was an error', e);
+			}
+		});
+	},
+	
+	reset: function(){
+		this.getTopToolbar().taxonCombo.reset();
+		this.getTopToolbar().geneCombo.reset();
+		this.getTopToolbar().taxonCombo.setDisabled(false);
+		this.fireEvent("taxonchanged", null);
+		this.loadGenes([]);
+		this.currentGroupSize = 0;
+	},
+	/**
+	 * functions the same as reset(), except the taxon combo box doesn't lose its value
+	 * and an event announcing that the taxon has been changed isn't fired
+	 */
+	resetKeepTaxon: function(){
+		this.getTopToolbar().geneCombo.reset();
+		this.getTopToolbar().taxonCombo.setDisabled(false);
+		this.loadGenes([]);
+		this.currentGroupSize = 0;
+	},
+	
+	lockInTaxon: function(taxon){
+		this.getTopToolbar().taxonCombo.setTaxon(taxon);
+		this.getTopToolbar().geneCombo.setTaxon(taxon);
+		this.getTopToolbar().taxonCombo.setDisabled(true);
+	},
+	
+	afterLoadGenes: function(geneValueObjs, groupRecord){
+	
+		if (groupRecord.get('currentUserHasWritePermission')) {
+			Ext.util.Observable.releaseCapture(this.getStore());
+			this.getTopToolbar().setDisabled(false);
+		}
+		else {
+			this.getTopToolbar().setDisabled(true);
+			Ext.util.Observable.capture(this.getStore(), function(eventName, args){
+				/*
+				 * Trap events that would modify an unmodifiable set. Basically 'remove' is the problem.
+				 */
+				if (eventName === 'add' || eventName === 'remove') {
+					Ext.Msg.alert("Access denied", "You don't have permission to edit this set.");
+					return false;
+				}
+				return true;
+			}, this);
+		}
+		
+		// If no genes in gene set, enable taxon
+		// selection
+		this.currentGroupId = groupRecord.get('id');
+		
+		if (!geneValueObjs || geneValueObjs.size() === 0) {
+			this.reset();
+		}
+		else {
+		
+			this.currentGroupSize = geneValueObjs.size();
+			
+			var geneIds = [];
+			var taxonId = geneValueObjs[0].taxonId;
+			for (var i = 0; i < geneValueObjs.length; i++) {
+				if (taxonId !== geneValueObjs[0].taxonId) {
+					Ext.Msg.alert('Sorry', 'Gene groups do not support mixed taxa. Please remove this gene group');
+					break;
+				}
+				geneIds.push(geneValueObjs[i].id);
+			}
+			
+			var groupTaxon = {
+				id: taxonId,
+				commonName: geneValueObjs[0].taxonName
+			};
+			this.lockInTaxon(groupTaxon);
+			this.loadGenes(geneIds);
+		}
+		
+		this.getEl().unmask();
+	}
+	
+});
