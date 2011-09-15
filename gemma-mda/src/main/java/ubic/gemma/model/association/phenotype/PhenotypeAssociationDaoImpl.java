@@ -23,6 +23,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** find Genes for specific phenotypes */
+    // TODO should be and HSQL query
     public Collection<Long> findByPhenotype( String... phenotypesValues ) {
 
         Collection<Long> genesNCBI = new HashSet<Long>();
@@ -33,21 +34,30 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             return null;
         }
 
-        String queryStringPart1 = "SELECT t1.ID FROM CHROMOSOME_FEATURE t1 INNER JOIN (SELECT t3.* FROM PHENOTYPE_ASSOCIATION t3 INNER JOIN (SELECT PHENOTYPE_ASSOCIATION_FK,COUNT(*) FROM CHARACTERISTIC WHERE";
+        String queryStringPart1 = "SELECT chr.id FROM CHROMOSOME_FEATURE chr";
 
         String queryStringPart2 = "";
 
         for ( int i = 0; i < numberOfterms; i++ ) {
-            queryStringPart2 = queryStringPart2 + " value = '" + phenotypesValues[i] + "' ";
+            queryStringPart2 = queryStringPart2
+                    + " INNER JOIN ( SELECT t"
+                    + i
+                    + ".ID FROM CHROMOSOME_FEATURE t"
+                    + i
+                    + " WHERE id IN (SELECT gene_fk FROM CHARACTERISTIC INNER JOIN PHENOTYPE_ASSOCIATION ON PHENOTYPE_ASSOCIATION.ID = CHARACTERISTIC.PHENOTYPE_ASSOCIATION_FK WHERE VALUE = '"
+                    + phenotypesValues[i] + "'))t" + i + " ";
+        }
+
+        String queryStringPart3 = "ON ";
+
+        for ( int i = 0; i < numberOfterms; i++ ) {
+            queryStringPart3 = queryStringPart3 + "chr.id = t" + i + ".id ";
 
             // if not the last one
             if ( i != numberOfterms - 1 ) {
-                queryStringPart2 = queryStringPart2 + "or";
+                queryStringPart3 = queryStringPart3 + "AND ";
             }
         }
-
-        String queryStringPart3 = "group by PHENOTYPE_ASSOCIATION_FK HAVING COUNT(*) = " + numberOfterms
-                + " ) t4 ON t3.id = t4.PHENOTYPE_ASSOCIATION_FK) t2 ON t1.id = t2.GENE_FK";
 
         String queryString = queryStringPart1 + queryStringPart2 + queryStringPart3;
 
@@ -85,4 +95,5 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return phenotypes;
     }
+
 }
