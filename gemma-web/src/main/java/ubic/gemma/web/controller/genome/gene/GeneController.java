@@ -210,10 +210,6 @@ public class GeneController extends BaseController {
         ids.add( gene.getId() );
         Collection<GeneValueObject> initialResults = geneService.loadValueObjects( ids );
 
-        if ( initialResults.size() == 0 ) {
-            return null;
-        }
-
         GeneValueObject geneValueObject = initialResults.iterator().next();
 
         return geneValueObject.getEvidences();

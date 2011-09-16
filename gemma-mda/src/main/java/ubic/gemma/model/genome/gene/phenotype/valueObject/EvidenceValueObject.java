@@ -35,11 +35,9 @@ public abstract class EvidenceValueObject {
     public static Collection<EvidenceValueObject> convert2ValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
-        Collection<EvidenceValueObject> returnEvidences = null;
+        Collection<EvidenceValueObject> returnEvidences = new HashSet<EvidenceValueObject>();
 
         if ( phenotypeAssociations != null && phenotypeAssociations.size() > 0 ) {
-
-            returnEvidences = new HashSet<EvidenceValueObject>();
 
             for ( PhenotypeAssociation phe : phenotypeAssociations ) {
 
