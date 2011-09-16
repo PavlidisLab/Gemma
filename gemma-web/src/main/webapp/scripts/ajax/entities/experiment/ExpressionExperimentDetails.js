@@ -806,7 +806,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 			var appScope = this;
 			ExpressionExperimentController.canCurrentUserEditExperiment(this.experimentDetails.id, {
 				callback: function(editable){
-					console.log(this);
+					//console.log(this);
 					appScope.adjustForIsEditable(editable);
 				},
 				scope: appScope

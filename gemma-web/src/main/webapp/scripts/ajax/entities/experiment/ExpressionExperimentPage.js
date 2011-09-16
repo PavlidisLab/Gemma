@@ -157,7 +157,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     var appScope = this;
                     ExpressionExperimentController.canCurrentUserEditExperiment(experimentDetails.id, {
                         callback: function(editable){
-                            console.log(this);
+                            //console.log(this);
                             appScope.adjustForIsAdmin(isAdmin, editable);
                         },
                         scope: appScope

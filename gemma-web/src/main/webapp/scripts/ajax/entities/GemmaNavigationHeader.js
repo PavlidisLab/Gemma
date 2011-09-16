@@ -320,7 +320,6 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 		});
 		
 		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
-			alert('logged in'+userName);
 			this.loginBtn.hide();
 			myGemmaBtn.show();
 			if(this.navToolbar.myGemmaSpacer) { this.navToolbar.myGemmaSpacer.show(); }
