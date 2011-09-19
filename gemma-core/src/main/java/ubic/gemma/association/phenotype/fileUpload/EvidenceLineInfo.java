@@ -55,21 +55,25 @@ public class EvidenceLineInfo {
         comment = tokens[4].trim();
         associationType = tokens[5].trim();
 
-        developmentStage = trimArray( tokens[6].split( ";" ) );
-        bioSource = trimArray( tokens[7].split( ";" ) );
-        organismPart = trimArray( tokens[8].split( ";" ) );
-        experimentDesign = trimArray( tokens[9].split( ";" ) );
-        treatment = trimArray( tokens[10].split( ";" ) );
-        experimentOBI = trimArray( tokens[11].split( ";" ) );
-        phenotype = trimArray( tokens[12].split( ";" ) );
+        developmentStage = trimArray( tokens[6].split( ";" ),false );
+        bioSource = trimArray( tokens[7].split( ";" ),false  );
+        organismPart = trimArray( tokens[8].split( ";" ),false  );
+        experimentDesign = trimArray( tokens[9].split( ";" ),false  );
+        treatment = trimArray( tokens[10].split( ";" ),false  );
+        experimentOBI = trimArray( tokens[11].split( ";" ),false  );
+        phenotype = trimArray( tokens[12].split( ";" ),true  );
     }
 
-    private String[] trimArray( String[] array ) {
+    private String[] trimArray( String[] array, boolean lowerCase ) {
 
         String[] trimmedArray = new String[array.length];
 
         for ( int i = 0; i < trimmedArray.length; i++ ) {
             trimmedArray[i] = array[i].trim();
+            
+            if(lowerCase){
+                trimmedArray[i] = trimmedArray[i].toLowerCase();
+            }
         }
 
         return trimmedArray;

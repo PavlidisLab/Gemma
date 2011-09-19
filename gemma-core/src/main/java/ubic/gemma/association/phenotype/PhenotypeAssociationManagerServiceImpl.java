@@ -82,18 +82,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return null;
         }
 
+        Collection<GeneValueObject> genesVO = new HashSet<GeneValueObject>();
+
         // find all the Genes with the first phenotype
         Collection<Gene> genes = associationService.findCandidateGenes( phenotypesValues[0] );
         Collection<GeneValueObject> genesWithFirstPhenotype = GeneValueObject.convert2ValueObjects( genes );
 
         if ( phenotypesValues.length == 1 ) {
-            return genesWithFirstPhenotype;
+            genesVO = genesWithFirstPhenotype;
         }
         // there is more than 1 phenotype, lets filter the content
         else {
-
-            Collection<GeneValueObject> genesVO = new HashSet<GeneValueObject>();
-
             for ( GeneValueObject gene : genesWithFirstPhenotype ) {
 
                 // contains all phenotypes for one gene
@@ -110,7 +109,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 // verify if all phenotypes we are looking for are present in the gene
                 for ( int i = 1; i < phenotypesValues.length; i++ ) {
 
-                    if ( !allPhenotypes.contains( phenotypesValues[i] ) ) {
+                    if ( !allPhenotypes.contains( phenotypesValues[i].toLowerCase() ) ) {
                         containAllPhenotypes = false;
                     }
                 }
@@ -120,8 +119,35 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     genesVO.add( gene );
                 }
             }
-            return genesVO;
         }
+
+        // we need to take out the evidences that doesn't have any of the phenotypes chosen
+        for ( GeneValueObject gene : genesVO ) {
+
+            boolean evidenceHasPhenotype = false;
+
+            Collection<EvidenceValueObject> filterEvidences = new HashSet<EvidenceValueObject>();
+
+            for ( EvidenceValueObject evidence : gene.getEvidences() ) {
+
+                for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
+
+                    for ( int i = 0; i < phenotypesValues.length; i++ ) {
+
+                        if ( phenotype.getValue().equalsIgnoreCase( phenotypesValues[i] ) ) {
+                            evidenceHasPhenotype = true;
+                        }
+                    }
+                }
+
+                if ( evidenceHasPhenotype ) {
+                    filterEvidences.add( evidence );
+                }
+            }
+            gene.setEvidences( filterEvidences );
+        }
+
+        return genesVO;
     }
 
     /**

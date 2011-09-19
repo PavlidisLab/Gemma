@@ -23,6 +23,7 @@ public abstract class EvidenceValueObject {
     private CharacteristicValueObject associationType = null;
     private String evidenceCode = null;
     private Boolean isNegativeEvidence = false;
+    private String className = "";
 
     private Collection<CharacteristicValueObject> phenotypes = null;
 
@@ -68,13 +69,14 @@ public abstract class EvidenceValueObject {
         return returnEvidences;
     }
 
-    public EvidenceValueObject(){
-        
+    public EvidenceValueObject() {
+
     }
-    
+
     /** set fields common to all evidences. Entity to Value Object */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
 
+        this.className = phenotypeAssociation.getClass().getName();
         this.databaseId = phenotypeAssociation.getId();
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
@@ -91,14 +93,10 @@ public abstract class EvidenceValueObject {
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
             CharacteristicValueObject characteristicVO = null;
-            
-            if(c instanceof VocabCharacteristicImpl){
-                VocabCharacteristicImpl voCha = (VocabCharacteristicImpl)c;
-                characteristicVO = new CharacteristicValueObject( voCha.getValue(), voCha.getCategory(),voCha.getValueUri(),voCha.getCategoryUri() );
-            }
-            else{
-                characteristicVO = new CharacteristicValueObject( c.getValue(), c.getCategory() );
-            }
+
+            VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
+            characteristicVO = new CharacteristicValueObject( voCha.getValue().toLowerCase(), voCha.getCategory(),
+                    voCha.getValueUri(), voCha.getCategoryUri() );
 
             phenotypes.add( characteristicVO );
         }
@@ -136,6 +134,10 @@ public abstract class EvidenceValueObject {
 
     public Collection<CharacteristicValueObject> getPhenotypes() {
         return phenotypes;
+    }
+
+    public String getClassName() {
+        return className;
     }
 
 }
