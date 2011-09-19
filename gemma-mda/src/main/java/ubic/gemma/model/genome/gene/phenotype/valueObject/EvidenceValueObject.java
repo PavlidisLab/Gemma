@@ -76,7 +76,7 @@ public abstract class EvidenceValueObject {
     /** set fields common to all evidences. Entity to Value Object */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
 
-        this.className = phenotypeAssociation.getClass().getName();
+        this.className = this.getClass().getSimpleName();
         this.databaseId = phenotypeAssociation.getId();
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
