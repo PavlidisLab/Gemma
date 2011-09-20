@@ -124,11 +124,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // we need to take out the evidences that doesn't have any of the phenotypes chosen
         for ( GeneValueObject gene : genesVO ) {
 
-            boolean evidenceHasPhenotype = false;
-
             Collection<EvidenceValueObject> filterEvidences = new HashSet<EvidenceValueObject>();
 
             for ( EvidenceValueObject evidence : gene.getEvidences() ) {
+
+                boolean evidenceHasPhenotype = false;
 
                 for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
 
