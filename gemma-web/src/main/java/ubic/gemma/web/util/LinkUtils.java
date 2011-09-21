@@ -93,7 +93,4 @@ public class LinkUtils {
         return ncbiLink + product.getNcbiId();
     }
 
-    public static String getPubMedUrlPrefix() {
-   		return "http://www.ncbi.nlm.nih.gov/pubmed/";
-    }
 }
