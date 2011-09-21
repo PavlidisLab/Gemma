@@ -22,8 +22,6 @@ import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneProductValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultValueObject;
 import ubic.gemma.util.ConfigUtils;
 
