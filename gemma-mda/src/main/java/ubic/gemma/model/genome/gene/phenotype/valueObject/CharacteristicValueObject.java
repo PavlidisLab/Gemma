@@ -20,7 +20,7 @@ public class CharacteristicValueObject {
         super();
         this.category = category;
         this.categoryUri = categoryUri;
-        this.value = value;
+        this.value = value.toLowerCase();
         this.valueUri = valueUri;
     }
 
@@ -53,7 +53,7 @@ public class CharacteristicValueObject {
     }
 
     public void setValue( String value ) {
-        this.value = value;
+        this.value = value.toLowerCase();
     }
 
     public long getOccurence() {
