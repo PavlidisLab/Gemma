@@ -932,3 +932,13 @@ LinkOutController._path = '/Gemma/dwr';
 LinkOutController.getAllenBrainAtlasLink = function(p0, callback) {
 	dwr.engine._execute(LinkOutController._path, 'LinkOutController', 'getAllenBrainAtlasLink', p0, callback);
 }
+//=====================================================================================
+if (PhenotypeSearchController == null)
+	var PhenotypeSearchController = {};
+PhenotypeSearchController._path = '/Gemma/dwr';
+PhenotypeSearchController.findCandidateGenes = function(p0, callback) {
+	dwr.engine._execute(PhenotypeSearchController._path, 'PhenotypeSearchController', 'findCandidateGenes', p0, callback);
+}
+PhenotypeSearchController.findAllPhenotypes = function(callback) {
+	dwr.engine._execute(PhenotypeSearchController._path, 'PhenotypeSearchController', 'findAllPhenotypes', callback);
+}

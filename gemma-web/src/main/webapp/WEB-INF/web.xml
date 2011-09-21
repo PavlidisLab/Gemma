@@ -204,6 +204,23 @@
 		<load-on-startup>5</load-on-startup>
 	</servlet>
 
+	<!-- REST web service -->
+	<servlet>
+		<servlet-name>rest-ws-servlet</servlet-name>
+		<servlet-class>
+			com.sun.jersey.spi.spring.container.servlet.SpringServlet
+		</servlet-class>
+		<init-param>
+			<param-name>com.sun.jersey.config.property.packages</param-name>
+			<param-value>ubic.gemma.web.services.rest</param-value>
+		</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
 	<!--  servlet mappings -->
 	<servlet-mapping>
 		<servlet-name>gemma</servlet-name>
@@ -268,7 +285,6 @@
 		<url-pattern>/spark</url-pattern>
 	</servlet-mapping>
 
-
 	<!-- JAWR js and css compression -->
 	<servlet-mapping>
 		<servlet-name>JavascriptCompressServlet</servlet-name>
@@ -278,6 +294,12 @@
 	<servlet-mapping>
 		<servlet-name>CSSCompressServlet</servlet-name>
 		<url-pattern>*.css</url-pattern>
+	</servlet-mapping>
+
+	<!-- REST web service -->
+ 	<servlet-mapping>
+		<servlet-name>rest-ws-servlet</servlet-name>
+		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
 
 
