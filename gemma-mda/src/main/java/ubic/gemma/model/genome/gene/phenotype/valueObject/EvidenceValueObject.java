@@ -25,7 +25,7 @@ public abstract class EvidenceValueObject {
     private Boolean isNegativeEvidence = false;
     private String className = "";
     /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes*/
-    private Boolean relevance = false;
+    private Double relevance = 0D;
 
     private Collection<CharacteristicValueObject> phenotypes = null;
 
@@ -142,11 +142,11 @@ public abstract class EvidenceValueObject {
         return className;
     }
 
-    public Boolean getRelevance() {
+    public Double getRelevance() {
         return relevance;
     }
 
-    public void setRelevance( Boolean relevance ) {
+    public void setRelevance( Double relevance ) {
         this.relevance = relevance;
     }
 

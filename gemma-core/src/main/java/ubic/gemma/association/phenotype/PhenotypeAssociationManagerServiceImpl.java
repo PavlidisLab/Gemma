@@ -139,7 +139,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
 
                 if ( evidenceHasPhenotype ) {
-                    evidence.setRelevance( true );
+                    evidence.setRelevance( 1.0 );
                 }
             }
         }
