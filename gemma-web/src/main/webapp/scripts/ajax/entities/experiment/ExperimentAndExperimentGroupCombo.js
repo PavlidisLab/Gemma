@@ -22,14 +22,16 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	displayField : 'name',
 	width : 160,
 	listWidth : 450, // ridiculously large so IE displays it properly
-	lazyInit: false, //true to not initialize the list for this combo until the field is focused (defaults to true)
-	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
-	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
+	lazyInit : false, //true to not initialize the list for this combo until the field is focused (defaults to true)
+	triggerAction : 'all', //run the query specified by the allQuery config option when the trigger is clicked
+	allQuery : '', //  loading of auto gen and user's sets handled in Controller when query = ''
+	enableKeyEvents : true,
 	
 	loadingText : 'Searching...',
-
+	
 	emptyText : "Search experiments by keyword",
-	listEmptyText : 'Enter text to search for experiments',
+	listEmptyTextBlankQuery : 'Enter text to search for experiments',
+	listEmptyText : 'No results found',
 	minChars : 3,
 	selectOnFocus : false,
 	autoSelect: false,
@@ -179,24 +181,48 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		
 		
 		/***** start of query queue fix *****/
-		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
-		// this needs the lastQuery property to be initialised as null
-		this.getStore().on('beforeload', function(store, options){
-			this.records = this.store.getRange();
-		}, this);
 		
+		// enableKeyEvents config required
+		this.on('keypress', function(textfield, eventObj){
+			// this is set to true when query returns
+			this.displayingComboValueToQueryMatch = false;
+		});
 		this.getStore().on('load', function(store, records, options){
 			var query = (options.params) ? options.params[0] : null;
-			if ((query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery)) {
+			// if the query for which the store is returning is not the same as the last query made with the combo
+			// clear these results and add the previous query's results
+			
+			if(this.getValue() !== query){
+				
+				// replace returned records with those of last matching query
 				store.removeAll();
-				store.add(this.records);
-				if (this.records === null || this.records.length === 0) {
-					this.doQuery(this.lastQuery);
+				if( this.prevQuery === this.getValue() ){
+					store.add(this.prevRecords);
+				}
+				
+				// removing records works to prevent wrong/old results from popping up, but this also 
+				// removes the loading text which should be shown if there's a newer query that's still working
+				
+				// if a valid query has already returned, don't replace results with loading text
+				// if the valid query hasn't returned yet, show loading text
+				if(!this.displayingComboValueToQueryMatch){
+					// --- from Combo.js to show loading text ---
+					this.innerList.update(this.loadingText ?''+this.loadingText+'' : '');
+			        this.restrictHeight();
+			        this.selectedIndex = -1;
+					// --- end of code from Combo.js ---
+				}
+			}else{
+				this.displayingComboValueToQueryMatch = true;
+				this.prevRecords = this.store.getRange();
+				this.prevQuery = (options.params) ? options.params[0] : null;
+				
+				// special case for empty prompted record set
+				if(this.store.getCount() === 0 && (this.prevQuery === '' || this.prevQuery === null) ){
+					this.innerList.update(this.listEmptyTextBlankQuery ?''+this.listEmptyTextBlankQuery+'' : '');
 				}
 			}
-			else if(this.store && typeof this.store ==! 'undefined'){
-				this.records = this.store.getRange();
-			}
+			
 		}, this);
 		/***** end of query queue fix *****/
 		

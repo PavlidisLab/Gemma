@@ -26,10 +26,12 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	triggerAction: 'all', //run the query specified by the allQuery config option when the trigger is clicked
 	allQuery: '', // loading of auto gen and user's sets handled in Controller when query = ''
 
+	enableKeyEvents : true,
 	loadingText : 'Searching...',
 
 	emptyText : "Search genes by keyword",
-	listEmptyText : 'Enter text to search for genes',
+	listEmptyText : 'No results found',
+	listEmptyTextBlankQuery : 'Enter text to search for genes',
 	minChars : 2,
 	selectOnFocus : false,
 	autoSelect: false,
@@ -198,25 +200,48 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 		this.on('select', this.setGeneGroup, this);
 		
 		/***** start of query queue fix *****/
-		// this makes sure that when older searches return AFTER newer searches, the newer results aren't bumped
-		// this needs the lastQuery property to be initialised as null
-		// note that is some other code in this file requried as well, it is marked
-		this.getStore().on('beforeload', function(store, options){
-			this.records = this.store.getRange();
-		}, this);
-		
+		// enableKeyEvents config required
+		this.on('keypress', function(textfield, eventObj){
+			// this is set to true when query returns
+			this.displayingComboValueToQueryMatch = false;
+		});
 		this.getStore().on('load', function(store, records, options){
 			var query = (options.params) ? options.params[0] : null;
-			if ((query === null && this.lastQuery !== null) || (query !== '' && query !== this.lastQuery)) {
+			// if the query for which the store is returning is not the same as the last query made with the combo
+			// clear these results and add the previous query's results
+			
+			if(this.getValue() !== query){
+				
+				// replace returned records with those of last matching query
 				store.removeAll();
-				store.add(this.records);
-				if (this.records === null || this.records.length === 0) {
-					this.doQuery(this.lastQuery);
+				if( this.prevQuery === this.getValue() ){
+					store.add(this.prevRecords);
+				}
+				
+				// removing records works to prevent wrong/old results from popping up, but this also 
+				// removes the loading text which should be shown if there's a newer query that's still working
+				
+				// if a valid query has already returned, don't replace results with loading text
+				// if the valid query hasn't returned yet, show loading text
+				if(!this.displayingComboValueToQueryMatch){
+					// --- from Combo.js to show loading text ---
+					this.innerList.update(this.loadingText ?''+this.loadingText+'' : '');
+			        this.restrictHeight();
+			        this.selectedIndex = -1;
+					// --- end of code from Combo.js ---
+				}
+				
+			}else{
+				this.displayingComboValueToQueryMatch = true;
+				this.prevRecords = this.store.getRange();
+				this.prevQuery = (options.params) ? options.params[0] : null;
+								
+				// special case for empty prompted record set, display more specific feedback
+				if(this.store.getCount() === 0 && (this.prevQuery === '' || this.prevQuery === null) ){
+					this.innerList.update(this.listEmptyTextBlankQuery ?''+this.listEmptyTextBlankQuery+'' : '');
 				}
 			}
-			else {
-				this.records = this.store.getRange();
-			}
+			
 		}, this);
 		/***** end of query queue fix *****/
 		
