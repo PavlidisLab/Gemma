@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.expression.experiment;
+package ubic.gemma.model.expression.experiment;
 
 import java.io.Serializable;
 import java.util.Collection;

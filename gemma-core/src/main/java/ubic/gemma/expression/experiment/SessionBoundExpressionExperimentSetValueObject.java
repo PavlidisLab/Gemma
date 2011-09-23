@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.session.GemmaSessionBackedValueObject;
 
 /**

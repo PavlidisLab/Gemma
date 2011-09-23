@@ -48,7 +48,7 @@ import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
-import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;

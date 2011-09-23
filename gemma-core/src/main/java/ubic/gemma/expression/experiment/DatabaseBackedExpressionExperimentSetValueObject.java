@@ -49,6 +49,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
  * TODO Document Me

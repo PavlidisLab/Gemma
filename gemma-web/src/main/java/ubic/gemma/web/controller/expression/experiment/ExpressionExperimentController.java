@@ -56,7 +56,7 @@ import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
-import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
@@ -957,7 +957,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
 
-        finalResult.setQChtml( getQCTagHTML( ee ) );
+        //finalResult.setQChtml( getQCTagHTML( ee ) );
 
         boolean hasBatchInformation = false;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {

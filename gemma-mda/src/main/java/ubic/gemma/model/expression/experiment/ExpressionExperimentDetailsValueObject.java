@@ -20,7 +20,6 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
-import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 /**
