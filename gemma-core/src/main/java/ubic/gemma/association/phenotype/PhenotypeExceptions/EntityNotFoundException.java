@@ -1,7 +1,7 @@
 /*
  * The Gemma project
  * 
- * Copyright (c) 2009 University of British Columbia
+ * Copyright (c) 2006 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,29 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.association.phenotype;
+package ubic.gemma.association.phenotype.PhenotypeExceptions;
 
-import java.util.Collection;
+/**
+ * Used to signifity that an entity was not found in the system.
+ * <hr>
+ * <p>
+ * Copyright (c) 2004-2006 University of British Columbia
+ * 
+ * @author pavlidis
+ * @version $Id$
+ */
+public class EntityNotFoundException extends RuntimeException {
 
-import ubic.gemma.persistence.BaseDao;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4361183252269974829L;
 
-public interface GenericExperimentDao extends BaseDao<GenericExperiment> {
-
-    /** Find all Investigations for a specific pubmed */
-    public Collection<GenericExperiment> findByPubmedID( String pubmed );
+    /**
+     * @param string
+     */
+    public EntityNotFoundException( String string ) {
+        super( string );
+    }
 
 }

@@ -64,4 +64,36 @@ public class CharacteristicValueObject {
         this.occurence = occurence;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( category == null ) ? 0 : category.hashCode() );
+        result = prime * result + ( ( categoryUri == null ) ? 0 : categoryUri.hashCode() );
+        result = prime * result + ( ( value == null ) ? 0 : value.hashCode() );
+        result = prime * result + ( ( valueUri == null ) ? 0 : valueUri.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
+        if ( category == null ) {
+            if ( other.category != null ) return false;
+        } else if ( !category.equals( other.category ) ) return false;
+        if ( categoryUri == null ) {
+            if ( other.categoryUri != null ) return false;
+        } else if ( !categoryUri.equals( other.categoryUri ) ) return false;
+        if ( value == null ) {
+            if ( other.value != null ) return false;
+        } else if ( !value.equals( other.value ) ) return false;
+        if ( valueUri == null ) {
+            if ( other.valueUri != null ) return false;
+        } else if ( !valueUri.equals( other.valueUri ) ) return false;
+        return true;
+    }
+
 }

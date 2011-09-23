@@ -40,6 +40,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // find the gene we wish to add the evidence and phenotype
         Gene gene = geneService.findByNCBIId( geneNCBI );
 
+        // convert all evidence for this gene to valueObject
+        Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
+                .getPhenotypeAssociations() );
+
+        // verify that the evidence is not a duplicate
+        for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
+            if ( evidenceFound.equals( evidence ) ) {
+                // the evidence already exists, no need to create it again
+                return new GeneValueObject( gene );
+            }
+        }
+
         // convert the valueObject received to the corresponding Entity
         PhenotypeAssociation pheAsso = phenotypeAssoManagerServiceHelper.valueObject2Entity( evidence );
 
@@ -139,6 +151,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
 
                 if ( evidenceHasPhenotype ) {
+                    // score between 0 and 1
                     evidence.setRelevance( 1.0 );
                 }
             }

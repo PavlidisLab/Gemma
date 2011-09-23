@@ -20,4 +20,7 @@ public interface PhenotypeAssociationService {
     /** find all phenotypes in Gemma */
     public Collection<CharacteristicValueObject> findAllPhenotypes();
 
+    /** find GenericExperiments by PubMed ID */
+    public Collection<GenericExperiment> findByPubmedID( String pubmed );
+
 }

@@ -43,4 +43,9 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return genericExperimentDao.create( genericExperiment );
     }
 
+    /** find GenericExperiments by PubMed ID */
+    public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
+        return genericExperimentDao.findByPubmedID( pubmed );
+    }
+
 }

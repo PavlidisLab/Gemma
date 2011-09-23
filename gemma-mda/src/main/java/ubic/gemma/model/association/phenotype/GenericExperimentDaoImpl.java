@@ -18,11 +18,15 @@
  */
 package ubic.gemma.model.association.phenotype;
 
+import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.persistence.AbstractDao;
+
+import java.util.Collection;
 
 @Repository
 public class GenericExperimentDaoImpl extends AbstractDao<GenericExperiment> implements GenericExperimentDao {
@@ -31,6 +35,17 @@ public class GenericExperimentDaoImpl extends AbstractDao<GenericExperiment> imp
     public GenericExperimentDaoImpl( SessionFactory sessionFactory ) {
         super( GenericExperimentImpl.class );
         super.setSessionFactory( sessionFactory );
+    }
+
+    /** Find all Investigations for a specific pubmed */
+    @SuppressWarnings("unchecked")
+    public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
+
+        Criteria genericExperiment = super.getSession().createCriteria( GenericExperiment.class );
+        genericExperiment.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).createCriteria( "primaryPublication" )
+                .createCriteria( "pubAccession" ).add( Restrictions.like( "accession", pubmed ) );
+
+        return genericExperiment.list();
     }
 
 }

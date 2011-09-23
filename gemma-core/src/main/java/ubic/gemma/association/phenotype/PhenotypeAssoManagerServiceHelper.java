@@ -6,6 +6,7 @@ import java.util.HashSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
@@ -30,6 +31,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueOb
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.persistence.PersisterHelper;
+
 
 /** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
 @Component
@@ -165,41 +167,80 @@ public class PhenotypeAssoManagerServiceHelper {
         // populate common field to all evidences
         populatePhenotypeAssociation( experimentalEvidence, evidenceValueObject );
 
-        // populate specific fields for this evidence
+        // we only need to create the experiment if its not already in the database
+        Collection<GenericExperiment> genericExperimentWithPubmed = phenotypeAssociationService
+                .findByPubmedID( evidenceValueObject.getPrimaryPublication() );
 
-        // create the GenericExperiment
-        GenericExperiment genericExperiment = GenericExperiment.Factory.newInstance();
+        GenericExperiment genericExperiment = null;
 
-        // find all pubmed id from the value object
-        String primaryPubmedId = evidenceValueObject.getPrimaryPublication();
-        Collection<String> relevantPubmedId = evidenceValueObject.getRelevantPublication();
-        // creates or find those Bibliographic Reference and add them to the GenericExperiment
-        genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
-        genericExperiment.setOtherRelevantPublications( findOrCreateBibliographicReference( relevantPubmedId ) );
+        // for the list received we need to check each one to see if they are the same
+        for ( GenericExperiment genericExp : genericExperimentWithPubmed ) {
 
-        // characteristic
-        Collection<Characteristic> characteristics = null;
+            boolean sameFound = true;
 
-        if ( evidenceValueObject.getExperimentCharacteristics() != null ) {
+            for ( BibliographicReference bilbi : genericExp.getOtherRelevantPublications() ) {
 
-            characteristics = new HashSet<Characteristic>();
+                // same relevant pubmed
+                if ( !evidenceValueObject.getRelevantPublication().contains( bilbi.getPubAccession().getAccession() ) ) {
+                    sameFound = false;
+                }
+            }
 
-            for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getExperimentCharacteristics() ) {
+            // list of all values for a characteristic
+            Collection<String> values = new HashSet<String>();
 
-                VocabCharacteristic experimentCha = VocabCharacteristic.Factory.newInstance();
+            for ( CharacteristicValueObject characteristic : evidenceValueObject.getExperimentCharacteristics() ) {
+                values.add( characteristic.getValue() );
+            }
 
-                experimentCha.setValue( chaValueObject.getValue() );
-                experimentCha.setCategory( chaValueObject.getCategory() );
-                experimentCha.setValueUri( chaValueObject.getValueUri() );
-                experimentCha.setCategoryUri( chaValueObject.getCategoryUri() );
+            for ( Characteristic cha : genericExp.getCharacteristics() ) {
+                if ( !values.contains( cha.getValue() ) ) {
+                    sameFound = false;
+                }
+            }
 
-                characteristics.add( experimentCha );
+            if ( sameFound ) {
+                genericExperiment = genericExp;
             }
         }
 
-        genericExperiment.getCharacteristics().addAll( characteristics );
+        // we didn't find the experiment in the database
+        if ( genericExperiment == null ) {
 
-        phenotypeAssociationService.createGenericExperiment( genericExperiment );
+            // create the GenericExperiment
+            genericExperiment = GenericExperiment.Factory.newInstance();
+
+            // find all pubmed id from the value object
+            String primaryPubmedId = evidenceValueObject.getPrimaryPublication();
+            Collection<String> relevantPubmedId = evidenceValueObject.getRelevantPublication();
+            // creates or find those Bibliographic Reference and add them to the GenericExperiment
+            genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
+            genericExperiment.setOtherRelevantPublications( findOrCreateBibliographicReference( relevantPubmedId ) );
+
+            // characteristic
+            Collection<Characteristic> characteristics = null;
+
+            if ( evidenceValueObject.getExperimentCharacteristics() != null ) {
+
+                characteristics = new HashSet<Characteristic>();
+
+                for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getExperimentCharacteristics() ) {
+
+                    VocabCharacteristic experimentCha = VocabCharacteristic.Factory.newInstance();
+
+                    experimentCha.setValue( chaValueObject.getValue() );
+                    experimentCha.setCategory( chaValueObject.getCategory() );
+                    experimentCha.setValueUri( chaValueObject.getValueUri() );
+                    experimentCha.setCategoryUri( chaValueObject.getCategoryUri() );
+
+                    characteristics.add( experimentCha );
+                }
+            }
+
+            genericExperiment.getCharacteristics().addAll( characteristics );
+            phenotypeAssociationService.createGenericExperiment( genericExperiment );
+
+        }
 
         experimentalEvidence.setExperiment( genericExperiment );
         return experimentalEvidence;
@@ -281,7 +322,11 @@ public class PhenotypeAssoManagerServiceHelper {
 
             // creates a new BibliographicReference
             bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-            // TODO make sure those pubmed id exists
+            
+            // the pudmedId doesn't exists
+            if(bibRef==null){
+                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
+            }
 
             // this will create or find the BibliographicReference
             persisterHelper.persist( bibRef );

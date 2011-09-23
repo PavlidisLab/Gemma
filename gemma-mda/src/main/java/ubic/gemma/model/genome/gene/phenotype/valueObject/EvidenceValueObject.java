@@ -150,4 +150,49 @@ public abstract class EvidenceValueObject {
         this.relevance = relevance;
     }
 
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( associationType == null ) ? 0 : associationType.hashCode() );
+        result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
+        result = prime * result + ( ( evidenceCode == null ) ? 0 : evidenceCode.hashCode() );
+        result = prime * result + ( ( isNegativeEvidence == null ) ? 0 : isNegativeEvidence.hashCode() );
+        result = prime * result + ( ( phenotypes == null ) ? 0 : phenotypes.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        EvidenceValueObject other = ( EvidenceValueObject ) obj;
+        if ( associationType == null ) {
+            if ( other.associationType != null ) return false;
+        } else if ( !associationType.equals( other.associationType ) ) return false;
+        if ( description == null ) {
+            if ( other.description != null ) return false;
+        } else if ( !description.equals( other.description ) ) return false;
+        if ( evidenceCode == null ) {
+            if ( other.evidenceCode != null ) return false;
+        } else if ( !evidenceCode.equals( other.evidenceCode ) ) return false;
+        if ( isNegativeEvidence == null ) {
+            if ( other.isNegativeEvidence != null ) return false;
+        } else if ( !isNegativeEvidence.equals( other.isNegativeEvidence ) ) return false;
+      
+        HashSet<CharacteristicValueObject> set1 = new HashSet<CharacteristicValueObject>();
+        HashSet<CharacteristicValueObject> set2 = new HashSet<CharacteristicValueObject>();
+        set1.addAll( phenotypes );
+        set2.addAll(other.phenotypes);
+        
+        if ( phenotypes == null ) {
+            if ( other.phenotypes != null ) return false;
+        } else if ( !set1.equals( set2 ) ) return false;
+        return true;
+    }
+
+
+    
+
 }
