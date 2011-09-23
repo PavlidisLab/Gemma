@@ -161,13 +161,13 @@
 						</h2>
 						<ul style="clear: both;">
 							<li>
-								1000s of public microarray data sets
+								1000s of public microarray data sets <a title="" target="_blank" href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">[more]</a>
 							</li>
 							<li>
-								1000s of published papers
+								1000s of published papers <a title="" target="_blank" href="/Gemma/bibRef/showAllEeBibRefs.html">[more]</a>
 							</li>
 							<li>
-								Ongoing updates and additions
+								Ongoing updates and additions <a title="" target="_blank" href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">[more]</a>
 							</li>
 						</ul>
 					</td>

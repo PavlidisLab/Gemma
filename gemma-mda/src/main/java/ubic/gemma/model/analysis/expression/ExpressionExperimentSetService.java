@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
@@ -149,5 +150,8 @@ public interface ExpressionExperimentSetService {
      * @return
      */
     public Collection<ExpressionExperimentSet> validateForFrontEnd( Collection<ExpressionExperimentSet> eeSets );
+
+    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet );
 
 }

@@ -120,7 +120,16 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var j = 0; j < ees.size(); j++) {
 						this.previewPart.experimentPreviewContent.update(ees[j]);
 					}
-					this.updateTitle(this.selectedExperimentOrGroup.name,ids.size());
+					
+					var title = this.selectedExperimentOrGroup.name;
+										
+					// if a gene set page exists for this set, make title a link 
+					if( this.selectedExperimentOrGroup.resultValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject){
+						title = '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+
+									this.selectedExperimentOrGroup.resultValueObject.id+'">'+title+'</a>'
+					}
+					
+					this.updateTitle(title,ids.size());
 					this.showExperimentPreview();
 					if (ids.size() <= this.searchForm.PREVIEW_SIZE) {
 						this.previewPart.moreIndicator.update('');

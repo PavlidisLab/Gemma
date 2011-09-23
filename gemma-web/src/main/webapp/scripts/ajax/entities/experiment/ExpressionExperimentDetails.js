@@ -316,7 +316,19 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     renderProcessedExpressionVectorCount: function(e){
         return e.processedExpressionVectorCount ? e.processedExpressionVectorCount : ' [count not available] ';
     },
-    
+    renderEESets:function(eeSets){
+		var eeSetLinks = [];
+		var i, geneSet;
+		for (i = 0; i < eeSets.length; i++) {
+			if (eeSets[i] && eeSets[i].name && eeSets[i].id) {
+				eeSetLinks.push('<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+eeSets[i].id+'">'+eeSets[i].name+'</a>');
+			}
+		}
+		if(eeSetLinks.length === 0){
+			eeSetLinks.push('Not currently a member of any gene group');
+		}
+		return eeSetLinks;
+	},
 
     initComponent: function(){
     
@@ -747,7 +759,10 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 }, {
                     fieldLabel: 'Tags&nbsp;' + taggerurl,
                     items: [tagView]
-                }, {
+                },{
+					fieldLabel: 'Experiment Groups',
+					html: this.renderEESets(e.expressionExperimentSets).join(',')
+				}, {
                     fieldLabel: 'Samples',
                     html: this.renderSamples(e),
                     width: 60

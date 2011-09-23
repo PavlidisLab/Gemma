@@ -55,6 +55,7 @@ import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
@@ -975,6 +976,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( lastArrayDesignUpdate != null ) {
             finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.getDate().toString() );
         }
+        
+        // experiment sets this ee belongs to
+        Collection<ExpressionExperimentSet> eesets = expressionExperimentSetService.find( ee );
+        Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
+        eesvos.addAll( DatabaseBackedExpressionExperimentSetValueObject.convert2ValueObjects( eesets, false ) );
+        finalResult.setExpressionExperimentSets( eesvos );
 
         finalResult.setCanCurrentUserEditExperiment( canCurrentUserEditExperiment( id ) );
 

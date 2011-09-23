@@ -35,50 +35,17 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 	},
 	
 	renderGeneSets:function(geneSets){
-		var geneSetBtns = [];
+		var geneSetLinks = [];
 		var i, geneSet;
 		for (i = 0; i < geneSets.length; i++) {
-			if (geneSets[i] && geneSets[i].name) {
-				geneSetBtns.push({
-					xtype: 'button',
-					text: geneSets[i].name,
-					ctCls: 'right-align-btn transparent-btn transparent-btn-link',
-					geneSet: geneSets[i],
-					listeners: {
-						click: function(){
-							var grid = new Gemma.GeneMembersSaveGrid({
-								geneGroupId: this.geneSet.id,
-								selectedGeneGroup: this.geneSet,
-								groupName: this.geneSet.name,
-								taxonId: this.geneSet.taxonId,
-								taxonName: this.geneSet.taxonName,
-								geneIds: this.geneSet.geneIds,
-								hideHeaders: true,
-								frame: false,
-								allowSaveToSession: false
-							});
-							
-							var win = new Ext.Window({
-								closable: true,
-								layout: 'fit',
-								width: 450,
-								height: 500,
-								items: grid,
-								title: this.geneSet.name
-							});
-							grid.on('doneModification', function(){
-								win.close();
-							}, this);
-							win.show();
-						}
-					}
-				});
+			if (geneSets[i] && geneSets[i].name && geneSets[i].id) {
+				geneSetLinks.push('<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+geneSets[i].id+'">'+geneSets[i].name+'</a>');
 			}
 		}
-		if(geneSetBtns.length === 0){
-			geneSetBtns.push({html: 'Not currently a member of any gene group', border:false});
+		if(geneSetLinks.length === 0){
+			geneSetLinks.push('Not currently a member of any gene group');
 		}
-		return geneSetBtns;
+		return geneSetLinks;
 	},
 	initComponent: function(){
 		Gemma.GeneDetails.superclass.initComponent.call(this);
@@ -121,8 +88,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: this.renderHomologues(geneDetails.homologues, geneDetails.name)
 						}, {
 							fieldLabel: 'Gene Groups',
-							layout:'hbox',
-							items: this.renderGeneSets(geneDetails.geneSets)
+							html: this.renderGeneSets(geneDetails.geneSets).join(',')
 						}, {
 							fieldLabel: 'Probes' + '<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
 							'\'Number of probes for this gene on expression platforms in Gemma\'); return false">' +

@@ -19,6 +19,8 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+
+import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 
 /**
@@ -61,6 +63,8 @@ public class ExpressionExperimentDetailsValueObject extends
     private String lastArrayDesignUpdateDate;
     
     private boolean canCurrentUserEditExperiment;
+    
+    private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
 
     public Boolean getHasMultipleTechnologyTypes() {
         return hasMultipleTechnologyTypes;
@@ -217,6 +221,20 @@ public class ExpressionExperimentDetailsValueObject extends
      */
     public boolean isCanCurrentUserEditExperiment() {
         return canCurrentUserEditExperiment;
+    }
+
+    /**
+     * @param expressionExperimentSets the expressionExperimentSets to set
+     */
+    public void setExpressionExperimentSets( Collection<ExpressionExperimentSetValueObject> expressionExperimentSets ) {
+        this.expressionExperimentSets = expressionExperimentSets;
+    }
+
+    /**
+     * @return the expressionExperimentSets
+     */
+    public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
+        return expressionExperimentSets;
     }
 
 }

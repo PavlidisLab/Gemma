@@ -37,9 +37,14 @@
 
 package ubic.gemma.expression.experiment;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -93,6 +98,35 @@ public class DatabaseBackedExpressionExperimentSetValueObject extends Expression
 
     public static DatabaseBackedExpressionExperimentSetValueObject factoryMethod() {
         return new DatabaseBackedExpressionExperimentSetValueObject();
+    }
+    
+    public static Collection<? extends ExpressionExperimentSetValueObject> convert2ValueObjects(
+            Collection<ExpressionExperimentSet> eesets, boolean includeOnesWithoutExperiments ) {
+        List<DatabaseBackedExpressionExperimentSetValueObject> results = new ArrayList<DatabaseBackedExpressionExperimentSetValueObject>();
+
+        for ( ExpressionExperimentSet es : eesets ) {
+            if ( !includeOnesWithoutExperiments && es.getExperiments().isEmpty() ) {
+                continue;
+            }
+
+            if ( es.getId() == null ) {
+                /*
+                 * GO terms, for example. We need a unique ID that also is different from IDs of things in the database.
+                 * This isn't an entirely satisfactory implementation, it should be made bulletproof.
+                 */
+                es.setId( Long.parseLong( RandomStringUtils.randomNumeric( 16 ) ) + 100000L );
+            }
+
+            results.add( new DatabaseBackedExpressionExperimentSetValueObject( es ) );
+        }
+
+        Collections.sort( results, new Comparator<DatabaseBackedExpressionExperimentSetValueObject>() {
+            @Override
+            public int compare( DatabaseBackedExpressionExperimentSetValueObject o1, DatabaseBackedExpressionExperimentSetValueObject o2 ) {
+                return -o1.getNumExperiments().compareTo( o2.getNumExperiments() );
+            }
+        } );
+        return results;
     }
     
 }

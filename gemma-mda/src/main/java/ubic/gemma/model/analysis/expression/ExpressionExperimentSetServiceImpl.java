@@ -24,8 +24,8 @@ import java.util.Collection;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.util.EntityUtils;
 
 /**
  * @version $Id$
@@ -160,6 +160,11 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         return this.getExpressionExperimentSetDao().getExperimentsInSet( id );
+    }
+    
+    @Override
+    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet) {
+        return this.getExpressionExperimentSetDao().find( bioAssaySet );
     }
 
     @Override

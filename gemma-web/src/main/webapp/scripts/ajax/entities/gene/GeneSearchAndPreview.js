@@ -158,6 +158,13 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.previewPart.genePreviewContent.update(genes[i]);
 					}
 					var title = this.selectedGeneOrGroup.name;
+					
+					// if an experiment set page exists for this set, make title a link 
+					if( this.selectedGeneOrGroup.resultValueObject instanceof DatabaseBackedGeneSetValueObject){
+						title = '<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+
+								this.selectedGeneOrGroup.resultValueObject.id+'">'+title+'</a>'
+					}
+
 					var goPattern = /^GO_\d+$/;
 					if(goPattern.test(this.selectedGeneOrGroup.name)){
 						title = this.selectedGeneOrGroup.name +": "+this.selectedGeneOrGroup.description
