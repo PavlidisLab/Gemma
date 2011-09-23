@@ -245,7 +245,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					// hidden: 'true',
 					hideHeaders : true,
 					frame : false,
-					queryText : this.experimentCombo.getValue()
+					queryText : this.experimentCombo.getValue(),
+					width : 450,
+					height : 500
 				});
 
 		this.experimentSelectionEditor.on('experimentListModified', function(newValueObjects) {

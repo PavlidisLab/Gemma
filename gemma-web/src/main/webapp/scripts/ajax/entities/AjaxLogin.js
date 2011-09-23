@@ -54,7 +54,8 @@ Gemma.AjaxLogin.logoutFn = function(){
 				 * this is the default behaviour unless otherwise specified in the page's jsp
 				 */
 				var dontReloadOnLogout = Ext.getDom('dontReloadOnLogout');
-				if(!dontReloadOnLogout || !dontReloadOnLogout.value){
+				var a = dontReloadOnLogout.getValue();
+				if(!dontReloadOnLogout || dontReloadOnLogout.getValue() === "false" ){
 					Ext.getBody().mask("Logging you out");
 					window.location.reload();
 				}
@@ -171,13 +172,13 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend(Ext.Window, {
 		}
 	},
 	launchRegisterWidget: function(){
-		if (this.ajaxRegister === null) {
+		if (this.ajaxRegister === null || !this.ajaxRegister) {
 		
 			//Check to see if another register widget is open (rare case but possible)
 			var otherOpenRegister = Ext.getCmp('_ajaxRegister');
 			
 			//if another register widget is open, fire its event to close it and destroy it before launching this one
-			if (otherOpenRegister !== null) {
+			if (otherOpenRegister && otherOpenRegister !== null) {
 				otherOpenRegister.fireEvent("register_cancelled");
 			}
 			this.ajaxRegister = new Gemma.AjaxLogin.AjaxRegister({

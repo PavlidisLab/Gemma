@@ -15,11 +15,16 @@
 	Ext.onReady( function() {
 		Ext.QuickTips.init();
 
-		
+		// need wrapper panel because tabPanels can't have title headers (it's used for tabs)
 		new Gemma.GemmaViewPort({
-		 	centerPanelConfig: new Gemma.ExpressionExperimentPage( {
-				eeId: Ext.get("eeId").getValue()
-			})
+		 	centerPanelConfig: new Ext.Panel({
+		 		items:[
+		 			new Gemma.ExpressionExperimentPage( {
+						eeId: Ext.get("eeId").getValue()
+				})],
+			 	layout:'fit', 
+			 	title: Ext.get("eeShortName").getValue()
+			 })
 		});
 	});
 	
@@ -27,6 +32,7 @@
 
 <input id="eeId" type="hidden" value="${eeId}" />
 <input id="taxonName" type="hidden" value="${taxonName}  " />
+<input id="eeShortName" type="hidden" value="${expressionExperiment.shortName}  " />
 
 <div spellcheck="false" id="eedetails">
 	<div id="messages"></div>

@@ -24,9 +24,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -43,7 +50,7 @@ import ubic.gemma.util.EntityUtils;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
-import ubic.gemma.web.controller.BaseFormController;
+import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.persistence.SessionListManager;
 
 /**
@@ -52,12 +59,18 @@ import ubic.gemma.web.persistence.SessionListManager;
  * @author paul
  * @version $Id$
  */
-public class ExpressionExperimentSetController extends BaseFormController {
+@Controller
+@RequestMapping("/expressionExperimentSet")
+public class ExpressionExperimentSetController extends BaseController {
+    @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
+    @Autowired
     private PersisterHelper persisterHelper;
+    @Autowired
     private SecurityService securityService;
-
+    @Autowired
     private TaxonService taxonService;
 
     @Autowired
@@ -173,6 +186,27 @@ public class ExpressionExperimentSetController extends BaseFormController {
         return result;
     }
 
+
+    /**
+     * AJAX
+     * 
+     * @return the ExpressionExperimentSetValueObject for the id param
+     * @throws IllegalArgumentException if the id param is null
+     * @throws AccessDeniedException if the id param is not null but the loading function returns a null value
+     */
+    public ExpressionExperimentSetValueObject load( Long id ) {
+        if(id == null){
+            throw new IllegalArgumentException( "Cannot load an experiment set with a null id." );
+        }
+        ExpressionExperimentSet set = expressionExperimentSetService.load( id );// filtered
+        // by
+        // security.
+        if(set == null){
+            throw new AccessDeniedException("No experiment set exists with id="+id+" or you do not have permission to access it.");
+        }
+        return makeEESetValueObject( set );
+    }
+    
     /**
      * AJAX
      * 
@@ -197,6 +231,7 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
         return results;
     }
+    
 
     /**
      * AJAX
@@ -258,7 +293,14 @@ public class ExpressionExperimentSetController extends BaseFormController {
         if ( eesvo instanceof DatabaseBackedExpressionExperimentSetValueObject ) {
             groupIsDBBacked = true;
             try {
-                userCanEditGroup = securityService.isEditable( expressionExperimentService.load( eesvo.getId() ) );
+                ExpressionExperimentSet set = expressionExperimentSetService.load( eesvo.getId() );
+                userCanEditGroup = securityService.isEditable( set );
+                
+                // if the set is used in an analysis, it should not be modifiable
+                if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {
+                   userCanEditGroup = false;
+                } 
+                
             } catch ( org.springframework.security.access.AccessDeniedException ade ) {
                 return "{groupIsDBBacked:" + groupIsDBBacked + ",userCanEditGroup:" + false + "}";
             }
@@ -420,6 +462,30 @@ public class ExpressionExperimentSetController extends BaseFormController {
 
     }
 
+
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice.
+     * 
+     * @param groupId
+     * @param geneIds
+     */
+    public DatabaseBackedExpressionExperimentSetValueObject updateNameDesc( DatabaseBackedExpressionExperimentSetValueObject eeSetVO ) {
+
+        Long groupId = eeSetVO.getId();
+        ExpressionExperimentSet eeSet = expressionExperimentSetService.load( groupId );
+        if ( eeSet == null ) {
+            throw new IllegalArgumentException( "No experiment set with id=" + groupId + " could be loaded" );
+        }
+
+        eeSet.setDescription( eeSetVO.getDescription() );
+        if ( eeSetVO.getName() != null && eeSetVO.getName().length() > 0 ) eeSet.setName( eeSetVO.getName() );
+        expressionExperimentSetService.update( eeSet );
+        
+        return new DatabaseBackedExpressionExperimentSetValueObject( eeSet );
+
+    }
+    
     /**
      * AJAX Updates the session group.
      * 
@@ -623,7 +689,11 @@ public class ExpressionExperimentSetController extends BaseFormController {
             throw new IllegalArgumentException( "No such set with id = " + obj.getId() );
         }
 
-        boolean needUpdate = updateExperimentsInSet( obj, toUpdate );
+        boolean needUpdate = false;
+        if(obj.getExpressionExperimentIds() != null){
+            needUpdate = updateExperimentsInSet( obj, toUpdate );
+        }
+        
 
         /*
          * Allow updating of the name & description.
@@ -710,10 +780,68 @@ public class ExpressionExperimentSetController extends BaseFormController {
      * @param request
      * @return Object
      * @throws Exception
-     */
+     
     @Override
     protected Object formBackingObject( HttpServletRequest request ) throws Exception {
         return request;
+    }*/
+    
+    /**
+     * @param request
+     * @param response
+     * @param errors
+     * @return ModelAndView
+     */
+    @RequestMapping(value = "/showExpressionExperimentSet.html", method = RequestMethod.GET)
+    public ModelAndView showExpressionExperimentSet( HttpServletRequest request, HttpServletResponse response ) {
+
+        ModelAndView mav = new ModelAndView( "expressionExperimentSet.detail" );
+        StopWatch timer = new StopWatch();
+        timer.start();
+
+
+        // if this is slow, we can get rid of it
+        // checking the id here rather than in the js widget gives better error feedback
+        // though it doesn mean we load the set twice
+        ExpressionExperimentSet expExp = getExpressionExperimentSetFromRequest( request );
+
+        ExpressionExperimentSetValueObject eesvo = new ExpressionExperimentSetValueObject( expExp );
+
+        mav.addObject( "eeSetId", eesvo.getId() );
+        mav.addObject( "eeSetName", eesvo.getName() );
+
+        if ( timer.getTime() > 200 ) {
+            log.info( "Show experiment set was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
+        }
+         
+        return mav;
+    }
+
+    /**
+     * @param request
+     * @return
+     * @throws IllegalArgumentException if a matching EE can't be loaded
+     */
+    private ExpressionExperimentSet getExpressionExperimentSetFromRequest( HttpServletRequest request ) {
+
+        ExpressionExperimentSet expressionExperimentSet = null;
+        Long id = null;
+
+        if ( request.getParameter( "id" ) != null ) {
+            try {
+                id = Long.parseLong( request.getParameter( "id" ) );
+            } catch ( NumberFormatException e ) {
+                throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
+            }
+            expressionExperimentSet = expressionExperimentSetService.load( id );
+
+            if ( expressionExperimentSet == null ) {
+                throw new IllegalArgumentException( "Unable to access experiment set with id=" + id );
+            }
+        }else{
+            throw new IllegalArgumentException( "You must provide an id" );
+        }
+        return expressionExperimentSet;
     }
 
 }

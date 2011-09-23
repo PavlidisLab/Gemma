@@ -360,7 +360,10 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					width : 0.17,
 					editor : new Ext.form.TextField({
 								allowBlank : false
-							})
+							}),
+					renderer: function(value, metadata, record, rowIndex, colIndex, store){
+							return '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+record.data.id+'">'+value+'</a>'
+					}
 				}, {
 					header : "Description",
 					dataIndex : "description",

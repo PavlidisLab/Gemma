@@ -1,0 +1,219 @@
+/*
+
+Title:		jShowOff: a jQuery Content Rotator Plugin
+Author:		Erik Kallevig
+Version:	0.1.2
+Website:	http://ekallevig.com/jshowoff
+License: 	Dual licensed under the MIT and GPL licenses.
+
+*/
+
+
+/*-- jShowOff module styles --*/
+
+
+#features, #slidingFeatures, #labelFeatures, #basicFeatures, #thumbFeatures {
+	background: url(/Gemma/images/slideShow/bg_body.jpg) repeat;
+	position: relative;
+	overflow: hidden;
+	width: 900px;
+	height: 250px;
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+	-moz-border-radius-topleft: 6px;
+	-moz-border-radius-topright: 6px;
+	}
+.jshowoff {
+	width: 900px;
+	margin: 10px 0;
+	}
+.jshowoff div {	
+	width: 900px;
+	height: 250px;
+	}
+.jshowoff div div{	
+	width: auto;
+	height: auto;
+	}
+.jshowoff div, .jshowoff img, .jshowoff {
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+	}
+#basicFeatures, .jshowoff.basicFeatures, .jshowoff.basicFeatures img, .jshowoff.basicFeatures div {
+	-webkit-border-radius: 0;
+	-moz-border-radius: 0;
+	}
+.jshowoff div p, .jshowoff div h2 {
+	_background-color: #efefef;
+	}
+.jshowoff h2, .jshowoff p {
+	font-size: 18px;
+	padding: 15px 20px 0px;
+	margin: 0;
+	}
+.jshowoff p {
+	font-size: 13px;
+	line-height: 15px;
+	}
+.eddie {
+	float: right;
+	padding: 15px 20px 15px 20px;
+	}
+.jshowoff p.jshowoff-slidelinks {
+	position: absolute;
+	bottom: 5px;
+	right: 5px;
+	margin: 0;
+	padding: 0;
+	}
+.jshowoff-slidelinks a, .jshowoff-controls a {
+	display: block;
+	background-color: #fff;
+	color: #fff;
+	padding: 5px 7px 5px;
+	margin: 5px 0 0 5px;
+	float: left;
+	text-decoration: none;
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	outline: none;
+	font-size: 11px;
+	line-height: 14px;
+	}
+.jshowoff-slidelinks a:hover, .jshowoff-controls a:hover {
+	color: #fff;
+	}
+.jshowoff-slidelinks a.jshowoff-active, .jshowoff-slidelinks a.jshowoff-active:hover {
+	background-color: #fff;
+	color: #000;
+	}
+p.jshowoff-controls {
+	background: #aaa;
+	overflow: auto;
+	height: 1%;
+	padding: 0 0 5px 5px;
+	margin: 0;
+	-moz-border-radius-bottomleft: 6px;
+	-moz-border-radius-bottomright: 6px;
+	-webkit-border-bottom-left-radius: 6px;
+	-webkit-border-bottom-right-radius: 6px;
+	}
+.jshowoff-controls a {
+	margin: 5px 5px 0 0;
+	font-size: 12px;
+	line-height: 15px;
+	padding: 4px 8px 5px;
+	}
+
+.jshowoff-pausetext {
+	color: #fff;
+	}
+
+
+/*-- Re-styled Thumbnail Demo --*/
+
+#thumbfeatures {
+	/*needed so links in slides aren't blocked by fwd-back nav element*/
+	width:800px;
+	z-index:100;
+}
+.thumbFeatures p.jshowoff-slidelinks {
+	background: #d2e7ec;
+	bottom: 0;
+	padding: 5px 0 5px 5px;
+	right: 113px;
+	height: 32px;
+	z-index:150;
+	}
+.thumbFeatures .jshowoff-slidelinks a {
+	display: block;
+	width: 46px;
+	height: 30px;
+	background-color: none;
+	background-repeat: no-repeat;
+	margin: 0 5px 0 0;
+	padding: 0;
+	border: 1px solid #ffffff;
+	text-indent: -10000em;
+	-moz-border-radius: 0;
+	-webkit-border-radius: 0;
+	}
+.thumbFeatures .jshowoff-slidelinks a.jshowoff-active {
+	border: 1px solid #4f4f4f;
+	}
+.thumbFeatures .jshowoff-slidelink-0 {
+	background-image: url(/Gemma/images/slideShow/gemmaThumbIcon.gif);
+	}
+.thumbFeatures .jshowoff-slidelink-1 {
+	background-image: url(/Gemma/images/slideShow/dbIcon.gif);
+	}
+.thumbFeatures .jshowoff-slidelink-2 {
+	background-image: url(/Gemma/images/slideShow/DiffExpIcon.jpg);
+	}
+.thumbFeatures .jshowoff-slidelink-3 {
+	background-image: url(/Gemma/images/slideShow/coexThumbIcon.png);
+	}
+.thumbFeatures .jshowoff-slidelink-4 {
+	background-image: url(http://farm5.static.flickr.com/4041/4438283519_4f08cb4a57_o_d.jpg);
+	}
+.thumbFeatures p.jshowoff-controls {
+	background: none;
+	height: 38px;
+	overflow: visible;
+	padding: 0;
+	position: absolute;
+	top: 100px;
+	width: 100%;
+	}
+.thumbFeatures .jshowoff-controls a {
+	display: block;
+	width: 22px;
+	height: 38px;
+	background: none;
+	background-repeat: no-repeat;
+	margin: 0;
+	padding: 0;
+	text-indent: -10000em;
+	position: absolute;
+	}
+
+.thumbFeatures .jshowoff-controls a.jshowoff-prev {
+	left: 15px;
+	background-image: url(http://farm5.static.flickr.com/4035/4438728886_fd55756fc5_o_d.gif);
+	}
+.thumbFeatures .jshowoff-controls a.jshowoff-next {
+	right: 15px;
+	background-image: url(http://farm3.static.flickr.com/2743/4438728872_07e935da40_o_d.gif);
+	}
+.thumbFeatures .jshowoff-controls a.jshowoff-play {
+	display: none;
+	}
+.jshowoff.thumbFeatures {
+	height: 250px;
+	}
+.jshowoff.thumbFeatures div, .jshowoff.thumbFeatures img, .jshowoff.thumbFeatures {
+	-webkit-border-radius: 6px;
+	}
+.jshowoff.thumbFeatures ul {
+	list-style: circle outside;
+	line-height: 100%;
+	font-size: 11pt;
+	margin-left: 30px;
+}
+.jshowoff.thumbFeatures li {
+	margin-bottom: 15px;
+	letter-spacing: 1px;
+}
+.jshowoff.thumbFeatures h1, .jshowoff.thumbFeatures h2 {
+	margin-bottom: 25px;
+	letter-spacing: 1px;
+}
+td.slideTextTD {
+	vertical-align: top;
+	width: 500px;
+}
+
+/*-- slides --*/
+#dataSummary #dataSummaryTable td{
+	font-size: 12px;
+}

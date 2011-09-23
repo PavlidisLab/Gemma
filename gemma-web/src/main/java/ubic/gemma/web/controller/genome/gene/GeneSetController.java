@@ -24,13 +24,18 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
 
 import edu.emory.mathcs.backport.java.util.Collections;
-
 import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
@@ -54,6 +59,7 @@ import ubic.gemma.security.SecurityService;
  * @version $Id
  */
 @Controller
+@RequestMapping("/geneSet")
 public class GeneSetController {
 
     private static final Double DEFAULT_SCORE = 0.0;
@@ -473,6 +479,28 @@ public class GeneSetController {
      * @param groupId
      * @param geneIds
      */
+    public DatabaseBackedGeneSetValueObject updateNameDesc( DatabaseBackedGeneSetValueObject geneSetVO ) {
+
+        Long groupId = geneSetVO.getId();
+        GeneSet gset = geneSetService.load( groupId );
+        if ( gset == null ) {
+            throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+        }
+
+        gset.setDescription( geneSetVO.getDescription() );
+        if ( geneSetVO.getName() != null && geneSetVO.getName().length() > 0 ) gset.setName( geneSetVO.getName() );
+        geneSetService.update( gset );
+        
+        return new DatabaseBackedGeneSetValueObject( gset );
+
+    }
+    /**
+     * AJAX Updates the given gene group (permission permitting) with the given list of geneIds Will not allow the same
+     * gene to be added to the gene set twice.
+     * 
+     * @param groupId
+     * @param geneIds
+     */
     public Collection<DatabaseBackedGeneSetValueObject> update( Collection<DatabaseBackedGeneSetValueObject> geneSetVos ) {
 
         Collection<GeneSet> updated = new HashSet<GeneSet>();
@@ -646,5 +674,81 @@ public class GeneSetController {
 
         return result;
     }
+    
+    
+    
+    /**
+     * AJAX If the current user has access to given gene group will return the gene ids in the gene group
+     * 
+     * @param groupId
+     * @return
+     */
+    @RequestMapping(value = "/showGeneSet.html", method = RequestMethod.GET)
+    public ModelAndView showGeneSet( HttpServletRequest request, HttpServletResponse response ) {
+
+        ModelAndView mav = new ModelAndView( "geneSet.detail" );
+        
+        // if this is slow, we can get rid of it
+        // checking the id here rather than in the js widget gives better error feedback
+        // though it doesn mean we load the set twice
+        GeneSet geneSet= getGeneSetFromRequest( request );
+        mav.addObject( "geneSetId", geneSet.getId() );
+        mav.addObject( "geneSetName", geneSet.getName() );
+
+        return mav;
+    }
+    
+
+    /**
+     * @param request
+     * @return
+     * @throws IllegalArgumentException if a matching EE can't be loaded
+     */
+    private GeneSet getGeneSetFromRequest( HttpServletRequest request ) {
+
+        GeneSet geneSet = null;
+        Long id = null;
+
+        if ( request.getParameter( "id" ) != null ) {
+            try {
+                id = Long.parseLong( request.getParameter( "id" ) );
+            } catch ( NumberFormatException e ) {
+                throw new IllegalArgumentException( "You must provide a valid numerical identifier" );
+            }
+            geneSet = geneSetService.load( id );
+
+            if ( geneSet == null ) {
+                throw new IllegalArgumentException( "Unable to access gene set with id=" + id );
+            }
+        }else{
+            throw new IllegalArgumentException( "You must provide an id" );
+        }
+        return geneSet;
+    }
+    
+    
+    /**
+     * AJAX 
+     * 
+     * @param groupId
+     * @return
+     */
+    public DatabaseBackedGeneSetValueObject load( Long id ) {
+        
+        if(id == null){
+            throw new IllegalArgumentException( "Cannot load a gene set with a null id." );
+        }
+        GeneSet set = geneSetService.load( id );// filtered
+        // by
+        // security.
+        if(set == null){
+            throw new AccessDeniedException("No gene set exists with id="+id+" or you do not have permission to access it.");
+        }
+        DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( set );
+        gsvo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
+        return gsvo;
+
+    }
+
 
 }

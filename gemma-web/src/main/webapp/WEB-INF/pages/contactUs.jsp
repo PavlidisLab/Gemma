@@ -32,7 +32,6 @@
 					</a> and is an easy way to give us in-context feedback!
 				</p>
 
-
 			</div>
 		</div>
 	</body>

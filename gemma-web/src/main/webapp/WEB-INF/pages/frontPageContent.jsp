@@ -3,9 +3,6 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/AnalysisResultsSearchNonWidget.js' />
 
-
-
-
 <script type="text/javascript">
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Ext.onReady(function() {
@@ -36,7 +33,7 @@ function hideTopBar(divID) {
 
 
 <input type="hidden" id="dontReloadOnLogout" value="true">
-<div id="topBarUpdates"
+<!-- div id="topBarUpdates"
 	style="background-color: #FFFFCC; border: 1px solid #FFCC66; float: left; margin-left: 150px; margin-top: -70px; padding: 5px; width: 84%; text-align: center;">
 	Welcome to the new Gemma!
 	<a style="float: right" href="JavaScript:void(0)"
@@ -50,7 +47,9 @@ function hideTopBar(divID) {
 	including a differential expression visualizer, experiment batch
 		effect analysis and a new search interface. Looking for <a
 		href="<c:url value="/gemmaClassic.html"/>">Gemma Classic</a>? </span>
-</div>
+</div-->
+
+
 <div align="center">
 	<div style="width: 900px">
 		<div align="center">
@@ -64,7 +63,6 @@ function hideTopBar(divID) {
 
 	<div id="meta-heatmap-div" align="left"></div>
 
-
 	<div style="width: 900px">
 		<br>
 
@@ -73,7 +71,7 @@ function hideTopBar(divID) {
 				<td
 					style="font-size: 0.9em; vertical-align: top; padding-right: 10px">
 
-
+<!--
 					<div id="left-bar-messages">
 						<h2>
 							Welcome!
@@ -131,14 +129,14 @@ function hideTopBar(divID) {
 						<a href="http://twitter.com/GemmaSoftware" class="twitter-follow-button">Follow @GemmaSoftware</a>
 						<script src="http://platform.twitter.com/widgets.js" type="text/javascript"></script>
 					</p></div>
-
+-->
 				</td>
 				<td>
 
 
 
 					<!-- Box for summary of data in Gemma and summary of updates and new additions -->
-					<div class="rightcolumn" style="font-size: smaller">
+					<div class="rightcolumn" style="font-size: smaller; display:none">
 
 						<div class="roundedcornr_box_777249" style="margin-bottom: 15px;">
 							<div class="roundedcornr_top_777249">

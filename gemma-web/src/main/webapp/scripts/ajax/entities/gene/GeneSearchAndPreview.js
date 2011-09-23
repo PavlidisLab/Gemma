@@ -446,12 +446,14 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		 * *****************************************************************
 		 */
 		this.geneSelectionEditor = new Gemma.GeneMembersSaveGrid({
-					// id: 'geneSelectionEditor',
-					name : 'geneSelectionEditor',
-					// hidden: 'true',
-					hideHeaders : true,
-					frame : false
-				});
+			// id: 'geneSelectionEditor',
+			name: 'geneSelectionEditor',
+			// hidden: 'true',
+			hideHeaders: true,
+			width: 450,
+			height: 500,
+			frame: false
+		});
 
 		this.geneSelectionEditor.on('geneListModified', function(newSets) {
 			var i;

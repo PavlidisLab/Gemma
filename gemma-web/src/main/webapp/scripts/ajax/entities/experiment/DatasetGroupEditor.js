@@ -122,10 +122,10 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 					Ext.apply(this.datasetGroupGrid, {store: this.datasetGroupStore });	
 				}
 				this.datasetGroupGrid.on('beforeload', function(){
-					console.log('beforeload');
+					///console.log('beforeload');
 				});
 				this.datasetGroupGrid.on('load', function(){
-					console.log('doneload');
+					//console.log('doneload');
 				});
 
 				this.add(this.datasetGroupGrid);

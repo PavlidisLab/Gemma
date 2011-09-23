@@ -58,6 +58,8 @@ public class GeneSetValueObject implements Serializable {
     /**
      * Constructor to build value object from GeneSet
      * 
+     * does not set value for currentUserHasWritePermission because valueObject class cannot access SecurityService
+     * 
      * @param gs
      */
     public GeneSetValueObject( GeneSet gs ) {
@@ -72,7 +74,7 @@ public class GeneSetValueObject implements Serializable {
         this.setDescription( gs.getDescription() );
         this.geneIds.addAll( gids );
         this.setSize( geneIds.size() );        
-
+        
         if ( geneIds.size() > 0 ) {
             // FIXME: The assumption is that all genes in a gene set belong to the same taxon. I think this is enforced at UI level only.
             // This assumption is used in other parts of the code as well.

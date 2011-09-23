@@ -109,7 +109,10 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: geneDetails.taxonCommonName
 						}, {
 							fieldLabel: 'Aliases',
-							html: geneDetails.aliases.join(', ') + ' <a  target="_blank" title="NCBI Gene link"' +
+							html: geneDetails.aliases.join(', ')
+						}, {
+							fieldLabel: 'NCBI ID',
+							html: geneDetails.ncbiId + ' <a  target="_blank" title="NCBI Gene link"' +
 							'href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids=' +
 							geneDetails.ncbiId +
 							'"><img alt="NCBI Gene Link" src="/Gemma/images/logo/ncbi.gif"/></a>'

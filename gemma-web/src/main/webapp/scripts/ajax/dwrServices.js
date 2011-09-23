@@ -491,12 +491,20 @@ ExpressionExperimentSetController.update = function(p0, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'update', p0,
 			callback);
 }
+ExpressionExperimentSetController.updateNameDesc = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateNameDesc', p0,
+			callback);
+}
 ExpressionExperimentSetController.updateMembers = function(p0, p1, callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'updateMembers', p0, p1,
 			callback);
 }
 ExpressionExperimentSetController.loadAll = function(callback) {
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'loadAll',
+			callback);
+}
+ExpressionExperimentSetController.load = function(p0, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'load', p0,
 			callback);
 }
 ExpressionExperimentSetController.removeUserAndSessionGroups = function(p0, callback) {
@@ -720,11 +728,17 @@ GeneSetController._path = '/Gemma/dwr';
 GeneSetController.getGenesInGroup = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGenesInGroup', p0, callback);
 }
+GeneSetController.load = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'load', p0, callback);
+}
 GeneSetController.getGeneSetsByGOId = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'getGeneSetsByGO', p0, p1, callback);
 }
 GeneSetController.update = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'update', p0, callback);
+}
+GeneSetController.updateNameDesc = function(p0, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateNameDesc', p0, callback);
 }
 GeneSetController.updateMembers = function(p0, p1, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'updateMembers', p0, p1, callback);

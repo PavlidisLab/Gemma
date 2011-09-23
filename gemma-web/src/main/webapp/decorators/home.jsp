@@ -20,11 +20,14 @@
 		<script type='text/javascript' src='/Gemma/dwr/interface/DatabaseBackedExpressionExperimentSetValueObject.js'></script>
 		<script type='text/javascript' src='/Gemma/scripts/app/valueObjectsInheritanceStructure.js'></script>
 		<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
-
+<script type="text/javascript"
+	src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js">
+</script>
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
 
 		<decorator:head />
+		
 	</head>
 	<body
 		<decorator:getProperty property="body.id" writeEntireProperty="true"/>
@@ -35,6 +38,8 @@
 			<div id="homeheaderclearnopadding" class="clearfix">
 				<jsp:include page="/common/header.inner.jsp" />
 			</div>
+
+			<%@ include file="/WEB-INF/pages/frontPageSlideShowShowOff.jsp"%>
 
 			<div id="content" class="clearfix">
 

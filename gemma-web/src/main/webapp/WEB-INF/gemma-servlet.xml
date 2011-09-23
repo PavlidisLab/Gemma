@@ -63,7 +63,6 @@
 				<prop key="/admin/systemStats.html">systemStatsController</prop>
 				<prop key="/diff/diffExpressionAnalysis.html">differentialExpressionAnalysisController</prop>
 				<prop key="/diff/diffExpressionSearch.html">differentialExpressionSearchController</prop>
-				<prop key="/expressionExperimentSetManager.html">expressionExperimentSetController</prop>
 				<prop key="/home.html">homePageController</prop>
 				<prop key="/gemmaClassic.html">gemmaClassicHomePageController</prop>
 			</props>
@@ -93,6 +92,7 @@
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/contactUs.html" />
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/analysesResultsSearch.html" />
     <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperiments.html" />
+    <bean class="org.springframework.web.servlet.mvc.UrlFilenameViewController" name="/expressionExperimentSetManager.html" />
 
 	<!-- ==================================================== -->
 	<!-- Exception handler. -->
@@ -174,35 +174,6 @@ gemma.max.fileupload.size.bytes=
 	
 	<bean id="experimentSetListContainer" class="ubic.gemma.web.persistence.ExperimentSetListContainer" scope="session">
 		<aop:scoped-proxy/>
-	</bean>
-	
-
-	<bean id="expressionExperimentSetController" class="ubic.gemma.web.controller.expression.experiment.ExpressionExperimentSetController">
-
-		<property name="formView">
-			<value>expressionExperimentSetManager</value>
-		</property>
-		<property name="successView">
-			<value>expressionExperimentSetManager</value>
-		</property>
-		<property name="expressionExperimentSetService">
-			<ref bean="expressionExperimentSetService" />
-		</property>
-		<property name="expressionExperimentService">
-			<ref bean="expressionExperimentService" />
-		</property>
-		<property name="persisterHelper">
-			<ref bean="persisterHelper" />
-		</property>
-		<property name="taxonService">
-			<ref bean="taxonService" />
-		</property>
-		<property name="securityService">
-			<ref bean="securityService" />
-		</property>
-		<property name="expressionExperimentReportService">
-			<ref bean="expressionExperimentReportService" />
-		</property>
 	</bean>
 
 	<bean id="fileUploadController" class="ubic.gemma.web.controller.common.auditAndSecurity.FileUploadController" />
@@ -1100,7 +1071,9 @@ gemma.max.fileupload.size.bytes=
 								<value>getExperimentsInSetBySessionId</value>
 								<value>getExperimentIdsInSet</value>
 								<value>loadAll</value>
+								<value>load</value>
 								<value>update</value>
+								<value>updateNameDesc</value>
 								<value>create</value>
 								<value>remove</value>
 								<value>loadAllUserAndSessionGroups</value>
@@ -1294,6 +1267,7 @@ gemma.max.fileupload.size.bytes=
 						<property name="includes">
 							<list>
 								<value>create</value>
+								<value>load</value>
 								<value>addSessionGroups</value>
 								<value>addNonModificationBasedSessionBoundGroups</value>
 								<value>addUserAndSessionGroups</value>
@@ -1306,6 +1280,7 @@ gemma.max.fileupload.size.bytes=
 								<value>getGenesInGroup</value>
 								<value>getGeneSetByGOId</value>
 								<value>update</value>
+								<value>updateNameDesc</value>
 								<value>updateMembers</value>
 								<value>updateSessionGroups</value>
 								<value>updateUserAndSessionGroups</value>

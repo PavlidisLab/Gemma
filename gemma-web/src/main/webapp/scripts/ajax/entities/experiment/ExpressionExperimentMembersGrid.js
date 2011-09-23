@@ -19,8 +19,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	editable : true,
 	stateful : false,
 	layout : 'fit',
-	width : 450,
-	height : 500,
 	viewConfig : {
 		forceFit : true
 	},
@@ -28,6 +26,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	addExperiments: true,
 	taxonId: null,
 	allowSaveToSession:true, // controls presence of 'done' button
+	allowAdditions:true, // controls presence of top toolbar
+	allowRemovals:true, // controls presence of 'remove experiment' buttons on every row
+	sortableColumnsView:false, // controls whether the data appears in two columns or formatted into one
+	hideCancel:false,
+	showSeparateSaveAs: false, // show a 'save as' button in addition to a save button
+	enableSaveOnlyAfterModification: false, // if save button is show, leave it disabled until an experiment is added or removed
 
 	/**
 	 * Add to table.
@@ -114,42 +118,94 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	initComponent : function() {
 
+		if(this.allowAdditions){
+			Ext.apply(this, {
+				tbar: new Gemma.ExperimentAndGroupAdderToolbar({
+					ref: 'eeAdderTBar',
+					eeGrid : this
+				})
+			});
+		}
+		var columns = [];
+		if(this.sortableColumnsView){
+			Ext.apply(this, {
+				hideHeaders:false
+			});
+			columns.push({
+				header: "Short Name",
+				dataIndex: "shortName",
+				renderer: function(value, metadata, record, row, col, ds){
+					return String.format("<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>" ,
+						record.data.id, record.data.shortName);
+				},
+				sortable: true,
+				width:40
+			});
+			columns.push({
+				id:'name', // needed for autoExpand config
+				header: "Name",
+				dataIndex: "name",
+				sortable: true,
+				width:150
+			});
+		}else{
+			columns.push({
+				id: 'shortName',
+				header: "Dataset",
+				dataIndex: "shortName",
+				renderer: function(value, metadata, record, row, col, ds){
+					return String.format("<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>" +
+					"<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ", record.data.id, record.data.shortName, record.data.name);
+				},
+				sortable: true
+			});
+		}
+		
+		if (this.allowRemovals) {
+			// Create RowActions Plugin
+			this.action = new Ext.ux.grid.RowActions({
+				header: 'Remove',
+				keepSelection: true,
+				tooltip: 'Remove experiment',
+				actions: [{
+					iconCls: 'icon-cross',
+					tooltip: 'Remove experiment'
+				}],
+				callbacks: {
+					'icon-cross': function(grid, record, action, row, col){
+					}
+				}
+			});
+			
+			this.action.on({
+				action: function(grid, record, action, row, col){
+					if (action === 'icon-cross') {
+						this.changeMade = true;
+						grid.getStore().remove(record);
+					}
+				},
+				// You can cancel the action by returning false from this
+				// event handler.
+				beforeaction: function(grid, record, action, row, col){
+					if (grid.getStore().getCount() == 1 && action === 'icon-cross') {
+						return false;
+					}
+					return true;
+				}
+			});
+			columns.push(this.action);
+			Ext.apply(this, {
+				plugins:[this.action]
+			});
+		}
 		Ext.apply(this, {
-			tbar: new Gemma.ExperimentAndGroupAdderToolbar({
-				eeGrid : this
+			colModel: new Ext.grid.ColumnModel({
+				defaults: {
+					sortable: true
+				},
+				columns: columns
 			})
 		});
-
-		// Create RowActions Plugin
-		this.action = new Ext.ux.grid.RowActions({
-					header : 'Actions',
-					keepSelection : true,
-					actions : [{
-								iconCls : 'icon-cross',
-								tooltip : 'Remove experiment'
-							}],
-					callbacks : {
-						'icon-cross' : function(grid, record, action, row, col) {
-						}
-					}
-				});
-
-		this.action.on({
-					action : function(grid, record, action, row, col) {
-						if (action === 'icon-cross') {
-							this.changeMade = true;
-							grid.getStore().remove(record);
-						}
-					},
-					// You can cancel the action by returning false from this
-					// event handler.
-					beforeaction : function(grid, record, action, row, col) {
-						if (grid.getStore().getCount() == 1 && action === 'icon-cross') {
-							return false;
-						}
-						return true;
-					}
-				});
 
 
 		// function to deal with user choice of what to do after editing an
@@ -185,12 +241,20 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			}
 		}.createDelegate(this);
 
+		this.saveAsButton = new Ext.Button({
+			text: "Save As",
+			handler: this.saveAsBtnHandler,
+			qtip: 'Save your selection as a new set.',
+			scope: this,
+			disabled: !this.showSeparateSaveAs,
+			hidden: !this.showSeparateSaveAs
+		});
 		this.saveButton = new Ext.Button({
 			text: "Save",
 			handler: this.saveBtnHandler,
 			qtip: 'Save your selection before returning to search.',
 			scope: this,
-			disabled: false
+			disabled: this.enableSaveOnlyAfterModification // defaults to false
 		});
 		this.doneButton = new Ext.Button({
 			text: "Done",
@@ -206,6 +270,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			scope: this,
 			disabled: false
 		});
+		this.cancelButton = new Ext.Button({
+			text: "Cancel",
+			handler: this.cancel,
+			scope: this,
+			hidden: this.hideCancel
+		});
 	
 		Ext.apply(this, {
 		
@@ -220,11 +290,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.doneButton.hide();
 				}				
 			},
-			buttons: [this.saveButton, this.doneButton, this.exportButton, {
-				text: "Cancel",
-				handler: this.cancel,
-				scope: this
-			}]
+			buttons: [this.saveButton, this.saveAsButton, this.doneButton, this.exportButton, this.cancelButton]
 		});
 		this.setButtonVisibilities();
 
@@ -250,26 +316,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							field : 'shortName',
 							direction : 'ASC'
 						}
-					}),
-			colModel : new Ext.grid.ColumnModel({
-				defaults : {
-					sortable : true
-				},
-				columns : [{
-					id : 'shortName',
-					header : "Dataset",
-					dataIndex : "shortName",
-					renderer : function(value, metadata, record, row, col, ds) {
-						return String
-								.format(
-									"<a target='_blank' href='/Gemma/expressionExperiment/showExpressionExperiment.html?id={0}'>{1}</a>"+
-									"<br><span style='font-color:grey;white-space:normal !important;'>{2}</span> ",
-									record.data.id, record.data.shortName, record.data.name);
-					},
-					sortable : true
-				}, this.action]
-			}),
-			plugins : [this.action]
+					})
 		});
 
 		
@@ -284,17 +331,17 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				 this.doneButton.disable();
 			});
 
-		this.getStore().on("remove", function() {
-					this.changesMade = true;
-					this.saveButton.enable();
-					this.doneButton.enable();
-				}, this);
+		this.getStore().on("remove", function(){
+			this.changesMade = true;
+			this.saveButton.enable();
+			this.doneButton.enable();
+		}, this);
 
-		this.getStore().on("add", function() {
-					this.changesMade = true;
-					this.saveButton.enable();
-					this.doneButton.enable();
-				}, this);
+		this.getStore().on("add", function(){
+			this.changesMade = true;
+			this.saveButton.enable();
+			this.doneButton.enable();
+		}, this);
 
 		this.getStore().on("load", function(store, records, options) {
 					this.doLayout.createDelegate(this);
@@ -302,8 +349,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		if (this.eeids) {
 			this.getStore().load({
-						params : [this.eeids]
-					});
+				params: [this.eeids]
+			});
 		}
 		
 				
@@ -339,7 +386,13 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					var dataMsg = Ext.util.JSON.decode(response);
 					if (!dataMsg.userCanEditGroup || !dataMsg.groupIsDBBacked) {
 						this.saveButton.setText("Save As");
+						
+						// don't show two save as buttons
+						if(this.showSeparateSaveAs){
+							this.saveButton.hide().disable();
+						}
 					}
+					
 				}.createDelegate(this));
 			}
 		});
@@ -494,18 +547,47 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						this.loggedInSaveHandler();
 					}
                     else{
-						this.promptLoginForSave();                      	
+						this.promptLoginForSave('save');                      	
                     }
             },
             failure: function ( response, options ) {   
-				this.promptLoginForSave();  
+				this.promptLoginForSave('save');  
+            },
+            scope: this,
+            disableCaching: true
+       });
+	},
+		
+	/**
+	 * When user clicks 'save as', check if they are logged in or not, then in the callback, call saveAsHandler
+	 */
+	saveAsBtnHandler : function() {
+				
+		Ext.Ajax.request({
+         	url : '/Gemma/ajaxLoginCheck.html',
+            method: 'GET',                  
+            success: function ( response, options ) {			
+					
+                    var dataMsg = Ext.util.JSON.decode(response.responseText); 
+                    
+                    if (dataMsg.success){
+						// get name and description set up
+						this.createDetails();
+						this.saveAsHandler();
+					}
+                    else{
+						this.promptLoginForSave('saveAs');                      	
+                    }
+            },
+            failure: function ( response, options ) {   
+				this.promptLoginForSave('saveAs');  
             },
             scope: this,
             disableCaching: true
        });
 	},
 	
-	promptLoginForSave: function(){
+	promptLoginForSave: function(save){
 	
 		//Check to see if another login widget is open (rare case but possible)
 		var otherOpenLogin = Ext.getCmp('_ajaxLogin');
@@ -517,10 +599,14 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 		Gemma.AjaxLogin.showLoginWindowFn();
 		
-		
 		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
 			Ext.getBody().unmask();
-			this.saveBtnHandler();
+			if(save === 'save'){
+				this.saveBtnHandler();
+			}else{
+				this.saveAsHandler();
+			}
+			
 		}, this);
 		
 	},
@@ -647,6 +733,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				}
 				else {
 					this.fireEvent('experimentListModified', newValueObjects);
+					this.fireEvent('experimentListCreated', newValueObjects[0].id);
 					this.fireEvent('doneModification');
 				}
 			}.createDelegate(this));
@@ -663,6 +750,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.selectedExperimentSetValueObject.expressionExperimentIds = eeIds;
 
 					this.fireEvent('experimentListModified', [this.selectedExperimentSetValueObject]);
+					this.fireEvent('experimentListSavedOver');
 					this.fireEvent('doneModification');
 				}.createDelegate(this));
 	}

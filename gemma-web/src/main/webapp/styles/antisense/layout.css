@@ -44,7 +44,7 @@ div#homeheader {
 	margin: 0 0 2em 0;
 	padding: 10px 0px 2px 20px;
 	text-align: left;
-	height: 180px; /* needed by IE 7 */
+	height: 120px; /* needed by IE 7 */
 	background: white url(images/heatfade.png) no-repeat;
 	background-position: right;
 }
@@ -52,13 +52,13 @@ div#homeheader {
 div#homeheaderclear {
 	padding: 10px 0px 2px 20px;
 	text-align: left;
-	height: 180px; /* needed by IE 7 */
+	height: 120px; /* needed by IE 7 */
 	background-position: right;
 }
 
 div#homeheaderclearnopadding {
 	text-align: left;
-	height: 180px; /* needed by IE 7 */
+	height: 120px; /* needed by IE 7 */
 	background-position: right;
 }
 

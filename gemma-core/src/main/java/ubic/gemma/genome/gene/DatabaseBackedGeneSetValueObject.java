@@ -60,6 +60,8 @@ public class DatabaseBackedGeneSetValueObject extends GeneSetValueObject {
     private static final long serialVersionUID = -1360523793656012770L;
 
     /**
+     * sorts results by size
+     * 
      * @param genesets
      * @param includeOnesWithoutGenes if true, even gene sets that lack genes will be included.
      * @return

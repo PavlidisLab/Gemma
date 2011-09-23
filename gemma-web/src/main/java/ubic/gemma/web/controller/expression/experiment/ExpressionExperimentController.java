@@ -1557,27 +1557,23 @@ public class ExpressionExperimentController extends AbstractTaskService {
         StopWatch timer = new StopWatch();
         timer.start();
 
+        ModelAndView mav = new ModelAndView( "expressionExperiment.detail" );
         ExpressionExperiment expExp = getExpressionExperimentFromRequest( request );
 
-        /*
-         * This is only _really_ needed to get hasBatchInformation; we can get quantitation types by a service method.
-         * So if this is slow, we can supply a query for the batch information.
-         */
-        expExp = expressionExperimentService.thawLite( expExp );
-
-        ModelAndView mav = new ModelAndView( "expressionExperiment.detail" );
+        // This is only _really_ needed to get hasBatchInformation; we can get quantitation types by a service method.
+        // So if this is slow, we can supply a query for the batch information.
+        
+        // expExp = expressionExperimentService.thawLite( expExp );
 
         mav.addObject( "expressionExperiment", expExp );
-
+/*
         mav.addObject( "characteristics", expExp.getCharacteristics() );
 
         Collection<QuantitationType> quantitationTypes = expExp.getQuantitationTypes();
         mav.addObject( "quantitationTypes", quantitationTypes );
         mav.addObject( "qtCount", quantitationTypes.size() );
 
-        /*
-         * Check for multiple "preferred" qts.
-         */
+        //Check for multiple "preferred" qts.
         int countPreferred = 0;
         for ( QuantitationType qt : quantitationTypes ) {
             if ( qt.getIsPreferred() ) {
@@ -1588,10 +1584,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( expExp, null );
         mav.addObject( "lastArrayDesignUpdate", lastArrayDesignUpdate );
-
+*/
         mav.addObject( "eeId", expExp.getId() );
         mav.addObject( "eeClass", ExpressionExperiment.class.getName() );
-
+/*
         boolean hasBatchInformation = false;
         for ( ExperimentalFactor ef : expExp.getExperimentalDesign().getExperimentalFactors() ) {
             if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
@@ -1610,7 +1606,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         boolean isPrivate = securityService.isPrivate( expExp );
         mav.addObject( "isPrivate", isPrivate );
-
+*/
         if ( timer.getTime() > 200 ) {
             log.info( "Show Experiment was slow: id=" + expExp.getId() + " " + timer.getTime() + "ms" );
         }
