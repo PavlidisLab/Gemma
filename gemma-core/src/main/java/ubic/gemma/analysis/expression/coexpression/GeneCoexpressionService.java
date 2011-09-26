@@ -791,6 +791,9 @@ public class GeneCoexpressionService {
         // populate the value objects.
         StopWatch timer = new StopWatch();
         Collection<Gene> allUsedGenes = new HashSet<Gene>();
+        
+        Collection<Long> allSupportingDatasets = new HashSet<Long>();
+        
         for ( Gene queryGene : queryGenes ) {
             timer.start();
 
@@ -805,7 +808,7 @@ public class GeneCoexpressionService {
              * For summary statistics
              */
             CountingMap<Long> supportCount = new CountingMap<Long>();
-            Collection<Long> allSupportingDatasets = new HashSet<Long>();
+           
             Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
             Collection<Long> allTestedDataSets = new HashSet<Long>();
 
@@ -953,7 +956,7 @@ public class GeneCoexpressionService {
 
             }
 
-            populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
+            
 
             if ( timer.getTime() > 100 ) {
                 log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
@@ -971,7 +974,9 @@ public class GeneCoexpressionService {
                         + " PhaseIII: " + timer.getTime() + "ms" );
             }
             timer.reset();
-        } // Over results.
+        } // Over querygenes
+        
+        populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
         return ecvos;
 
     }
