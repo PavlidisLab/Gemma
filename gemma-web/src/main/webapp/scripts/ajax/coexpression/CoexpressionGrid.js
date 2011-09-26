@@ -276,8 +276,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		// this.getView().refresh(true); // refresh column
 		// headers
 		if (!this.lite) {
-			this.datasets = datasets; // the datasets that are 'relevant'.
-			this.resizeDatasetColumn();
+			this.datasets = datasets; // the datasets that are 'relevant'.			
+			if (!this.tabPanelViewFlag){
+				this.resizeDatasetColumn();
+			}
 		}
 
 		if (this.loadMask) {
@@ -864,7 +866,7 @@ Gemma.CoexpressionGrid.linkOutPopUp = function(linkOutValueObject) {
 	var abaWindowId = "coexpressionAbaWindow";
 
 	var popUpLinkOutWin = Ext.getCmp(abaWindowId);
-	if (popUpLinkOutWin !== null) {
+	if (popUpLinkOutWin !== undefined && popUpLinkWin !== null) {
 		popUpLinkOutWin.close();
 		popUpLinkOutWin = null;
 	}

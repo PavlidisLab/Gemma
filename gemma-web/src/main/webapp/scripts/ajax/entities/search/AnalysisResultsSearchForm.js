@@ -51,7 +51,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	PREVIEW_SIZE : 5,
 
 	// defaults for coexpression
-	DEFAULT_STRINGENCY : 2,
+	DEFAULT_STRINGENCY : 10,
 	DEFAULT_forceProbeLevelSearch : false,
 	DEFAULT_useMyDatasets : false,
 	DEFAULT_queryGenesOnly : false,
@@ -428,7 +428,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			this.loadMask.show();
 			var errorHandler = this.handleError.createDelegate(this, [], true);
 			this.lastCSC = csc;
-			ExtCoexpressionSearchController.doSearch(csc, {
+			ExtCoexpressionSearchController.doSearchQuick2(csc, {
 						callback : this.returnFromCoexSearch.createDelegate(this),
 						errorHandler : errorHandler
 					});

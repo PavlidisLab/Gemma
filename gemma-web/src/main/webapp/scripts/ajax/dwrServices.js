@@ -578,6 +578,14 @@ ExtCoexpressionSearchController.findExpressionExperiments = function(p0, p1, cal
 	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController',
 			'findExpressionExperiments', p0, p1, callback);
 }
+ExtCoexpressionSearchController.doSearchQuick2 = function(p0, callback) {
+	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick2', p0,
+			callback);
+}
+ExtCoexpressionSearchController.doSearchQuick = function(p0, callback) {
+	dwr.engine._execute(ExtCoexpressionSearchController._path, 'ExtCoexpressionSearchController', 'doSearchQuick', p0,
+			callback);
+}
 // ====================================================================================
 if (FileUploadController == null)
 	var FileUploadController = {};

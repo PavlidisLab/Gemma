@@ -3,6 +3,15 @@
 <jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 <jwr:script src='/scripts/app/AnalysisResultsSearchNonWidget.js' />
 
+<!-- JSON support for IE (needed to use JS API) -->
+<script type="text/javascript" src="/Gemma/scripts/cytoscape/js/min/json2.min.js"></script>
+        
+<!-- Flash embedding utility (needed to embed Cytoscape Web) -->
+<script type="text/javascript" src="/Gemma/scripts/cytoscape/js/min/AC_OETags.min.js"></script>
+        
+<!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
+<script type="text/javascript" src="/Gemma/scripts/cytoscape/js/min/cytoscapeweb.min.js"></script>
+
 <script type="text/javascript">
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 Ext.onReady(function() {

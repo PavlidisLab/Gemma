@@ -1053,6 +1053,8 @@ gemma.max.fileupload.size.bytes=
 						<property name="includes">
 							<list>
 								<value>doSearch</value>
+								<value>doSearchQuick2</value>
+								<value>doSearchQuick</value>
 								<value>findExpressionExperiments</value>
 							</list>
 						</property>

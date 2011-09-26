@@ -129,6 +129,58 @@ public class CoexpressionSearchController extends BaseFormController {
         return result;
 
     }
+    
+    /**
+     * @param searchOptions
+     * @return
+     */
+    public CoexpressionMetaValueObject doSearchQuick2( CoexpressionSearchCommand searchOptions ) {
+
+        CoexpressionMetaValueObject result = new CoexpressionMetaValueObject();
+
+        Collection<Gene> genes = geneService.loadThawed( searchOptions.getGeneIds() );
+        
+        if ( genes == null || genes.isEmpty()) {
+            result.setErrorState( "Invalid gene id(s) - no genes found" );
+            return result;
+
+        }
+
+        log.info( "Coexpression search: " + searchOptions );
+
+        Collection<Long> eeIds = new HashSet<Long>();
+       
+        if ( searchOptions.getEeIds() != null ) {
+            // security filter.
+            eeIds = EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
+        }        
+        
+        result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
+
+        Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick2( eeIds,
+                genes, 2, 20, searchOptions.getQueryGenesOnly() );
+        result.setKnownGeneResults( geneResults );
+
+        if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
+            result.setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
+            log.info( "No search results for query: " + searchOptions );
+        }
+
+        return result;
+
+    }
+    
+    /**
+     * @param searchOptions
+     * @return
+     */
+    public CoexpressionMetaValueObject doSearchQuick( CoexpressionSearchCommand searchOptions ) {
+
+       
+            return doQuickSearch( searchOptions );
+       
+
+    }
 
     /**
      * Main AJAX entry point
