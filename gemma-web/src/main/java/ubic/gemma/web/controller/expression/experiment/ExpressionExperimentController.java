@@ -957,7 +957,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
 
-        //finalResult.setQChtml( getQCTagHTML( ee ) );
+        finalResult.setQChtml( getQCTagHTML( ee ) );
 
         boolean hasBatchInformation = false;
         for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
