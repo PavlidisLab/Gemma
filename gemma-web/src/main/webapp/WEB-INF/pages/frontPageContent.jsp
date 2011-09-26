@@ -124,12 +124,12 @@ function hideTopBar(divID) {
 							</div>
 						</div>
 					</security:authorize>
-					
+-->					
 					<div><p>
 						<a href="http://twitter.com/GemmaSoftware" class="twitter-follow-button">Follow @GemmaSoftware</a>
 						<script src="http://platform.twitter.com/widgets.js" type="text/javascript"></script>
 					</p></div>
--->
+
 				</td>
 				<td>
 
