@@ -321,7 +321,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 		var i, geneSet;
 		for (i = 0; i < eeSets.length; i++) {
 			if (eeSets[i] && eeSets[i].name && eeSets[i].id) {
-				eeSetLinks.push('<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+eeSets[i].id+'">'+eeSets[i].name+'</a>');
+				eeSetLinks.push(' <a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+eeSets[i].id+'">'+eeSets[i].name+'</a>');
 			}
 		}
 		if(eeSetLinks.length === 0){
@@ -555,7 +555,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             allowBlank: true,
             resizable: true,
             readOnly: true,
-            disabled: true,
+            disabled: false,
 			growMin:1,
 			growMax:150,
 			growAppend:'',
@@ -573,7 +573,6 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 },
                 'toggleEditMode': function(editOn){
                     this.setReadOnly(!editOn);
-                    this.setDisabled(!editOn);
                     if (editOn) {
                         this.removeClass('x-bare-field');
                     }
@@ -591,7 +590,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             allowBlank: false,
             disabledClass: 'disabled-plain',
             readOnly: true,
-            disabled: true,
+            //disabled: true,
             style: 'font-weight: bold; font-size:1.4em; height:1.5em; color:black',
             bubbleEvents: ['changeMade'],
             listeners: {
@@ -602,7 +601,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                 },
                 'toggleEditMode': function(editOn){
                     this.setReadOnly(!editOn);
-                    this.setDisabled(!editOn);
+                   // this.setDisabled(!editOn);
                     if (editOn) {
                         this.removeClass('x-bare-field');
                     }
@@ -620,20 +619,25 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             //growMin: 22,
             growAppend: '',
             readOnly: true,//!this.editable,
-            disabled: true,
-            disabledClass: 'disabled-plain',
+            cls: 'disabled-plain',
             emptyText: 'No description provided',
             enableKeyEvents: true,
             bubbleEvents: ['changeMade'],
+			editOn: false,
             listeners: {
                 'keyup': function(field, e){
                     if (field.isDirty()) {
                         field.fireEvent('changeMade', field.isValid());
                     }
                 },
+                'focus': function(field){
+					if (!field.editOn) {
+                        this.removeClass('x-form-focus');
+                    }
+                },
                 'toggleEditMode': function(editOn){
                     this.setReadOnly(!editOn);
-                    this.setDisabled(!editOn);
+					this.editOn = editOn;
                     if (editOn) {
                         this.removeClass('x-bare-field');
                     }
