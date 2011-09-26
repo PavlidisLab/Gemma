@@ -980,6 +980,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // experiment sets this ee belongs to
         Collection<ExpressionExperimentSet> eesets = expressionExperimentSetService.find( ee );
         Collection<ExpressionExperimentSetValueObject> eesvos = new ArrayList<ExpressionExperimentSetValueObject>();
+        // only include those sets with taxon values
+        eesets = expressionExperimentSetService.validateForFrontEnd( eesets );
         eesvos.addAll( DatabaseBackedExpressionExperimentSetValueObject.convert2ValueObjects( eesets, false ) );
         finalResult.setExpressionExperimentSets( eesvos );
 
