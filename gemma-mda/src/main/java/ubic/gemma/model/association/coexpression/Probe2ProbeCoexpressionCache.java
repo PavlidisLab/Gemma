@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -202,8 +203,12 @@ public class Probe2ProbeCoexpressionCache implements InitializingBean {
     }
 }
 
-class CacheKey {
+class CacheKey implements Serializable{
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 6453661257282349151L;
     Long eeid;
     Long geneId;
 
