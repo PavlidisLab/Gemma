@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.association.coexpression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,7 +59,11 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
     /**
      * For storing information about gene results that are cached.
      */
-    private static class GeneCached {
+    private static class GeneCached implements Serializable {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 915877171652447101L;
         long analysisId;
         long geneId;
 
