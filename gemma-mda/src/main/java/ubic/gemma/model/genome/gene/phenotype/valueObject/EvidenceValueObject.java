@@ -24,7 +24,7 @@ public abstract class EvidenceValueObject {
     private String evidenceCode = null;
     private Boolean isNegativeEvidence = false;
     private String className = "";
-    /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes*/
+    /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
     private Double relevance = 0D;
 
     private Collection<CharacteristicValueObject> phenotypes = null;
@@ -180,19 +180,18 @@ public abstract class EvidenceValueObject {
         if ( isNegativeEvidence == null ) {
             if ( other.isNegativeEvidence != null ) return false;
         } else if ( !isNegativeEvidence.equals( other.isNegativeEvidence ) ) return false;
-      
-        HashSet<CharacteristicValueObject> set1 = new HashSet<CharacteristicValueObject>();
-        HashSet<CharacteristicValueObject> set2 = new HashSet<CharacteristicValueObject>();
-        set1.addAll( phenotypes );
-        set2.addAll(other.phenotypes);
-        
+
         if ( phenotypes == null ) {
             if ( other.phenotypes != null ) return false;
-        } else if ( !set1.equals( set2 ) ) return false;
+        } else {
+            HashSet<CharacteristicValueObject> set1 = new HashSet<CharacteristicValueObject>();
+            HashSet<CharacteristicValueObject> set2 = new HashSet<CharacteristicValueObject>();
+            set1.addAll( phenotypes );
+            set2.addAll( other.phenotypes );
+
+            if ( !set1.equals( set2 ) ) return false;
+        }
         return true;
     }
-
-
-    
 
 }

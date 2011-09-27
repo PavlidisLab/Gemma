@@ -39,14 +39,13 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 public class BibliographicReferenceValueObject {
 
     public static List<BibliographicReferenceValueObject> convert2ValueObjects( Collection<BibliographicReference> refs ) {
-        if ( refs == null || refs.size() == 0 ) {
-            return null;
-        }
 
         List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
 
-        for ( BibliographicReference ref : refs ) {
-            results.add( new BibliographicReferenceValueObject( ref ) );
+        if ( refs != null && refs.size() != 0 ) {
+            for ( BibliographicReference ref : refs ) {
+                results.add( new BibliographicReferenceValueObject( ref ) );
+            }
         }
 
         return results;

@@ -20,7 +20,7 @@ public class CharacteristicValueObject {
         super();
         this.category = category;
         this.categoryUri = categoryUri;
-        this.value = value.toLowerCase();
+        this.value = value;
         this.valueUri = valueUri;
     }
 
