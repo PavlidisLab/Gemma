@@ -1,17 +1,14 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
-    
-    
+
     // *********************************************
     // field used to create the Bibliographic object
     // *********************************************
@@ -27,8 +24,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // *********************************************
     private BibliographicReferenceValueObject primaryPublicationValueObject = null;
     private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = new HashSet<BibliographicReferenceValueObject>();
-    private BibliographicReferenceCitationValueObject primaryPublicationCitationValueObject= null;
-
+    private BibliographicReferenceCitationValueObject primaryPublicationCitationValueObject = null;
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
@@ -40,27 +36,25 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         this.experimentCharacteristics = experimentCharacteristics;
     }
 
-    
-    public ExperimentalEvidenceValueObject(){
+    public ExperimentalEvidenceValueObject() {
     }
-    
+
     /** Entity to Value Object */
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
 
-        
-        this.primaryPublicationCitationValueObject = new BibliographicReferenceCitationValueObject( experimentalEvidence
-                .getExperiment().getPrimaryPublication() );
-        
+        this.primaryPublicationCitationValueObject = new BibliographicReferenceCitationValueObject(
+                experimentalEvidence.getExperiment().getPrimaryPublication() );
+
         this.primaryPublicationValueObject = new BibliographicReferenceValueObject( experimentalEvidence
                 .getExperiment().getPrimaryPublication() );
-        
+
         this.primaryPublication = primaryPublicationValueObject.getPubAccession();
-        
+
         this.relevantPublicationsValueObjects = BibliographicReferenceValueObject
                 .convert2ValueObjects( experimentalEvidence.getExperiment().getOtherRelevantPublications() );
-        
-        for(BibliographicReferenceValueObject bibli :relevantPublicationsValueObjects){
+
+        for ( BibliographicReferenceValueObject bibli : relevantPublicationsValueObjects ) {
             relevantPublication.add( bibli.getPubAccession() );
         }
 
@@ -68,7 +62,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
                 .getCharacteristics();
 
         if ( collectionCharacteristics != null ) {
-            this.experimentCharacteristics = new ArrayList<CharacteristicValueObject>();
             for ( Characteristic c : collectionCharacteristics ) {
                 if ( c instanceof VocabCharacteristicImpl ) {
                     VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
@@ -144,7 +137,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
             HashSet<String> set4 = new HashSet<String>();
             set3.addAll( relevantPublication );
             set4.addAll( other.relevantPublication );
-            if ( !set3.equals( set4 ) ) return false;  
+            if ( !set3.equals( set4 ) ) return false;
         }
         return true;
     }
