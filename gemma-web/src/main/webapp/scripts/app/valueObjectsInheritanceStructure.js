@@ -22,4 +22,4 @@ FreeTextGeneResultsValueObject.prototype = new SessionBoundGeneSetValueObject();
 FreeTextGeneResultsValueObject.prototype.constructor = FreeTextGeneResultsValueObject;
 
 GOGroupValueObject.prototype = new SessionBoundGeneSetValueObject();
-GOGroupValueObject.prototype.constructor = FreeTextGeneResultsValueObject;
+GOGroupValueObject.prototype.constructor = GOGroupValueObject;
