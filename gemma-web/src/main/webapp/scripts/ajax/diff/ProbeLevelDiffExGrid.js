@@ -32,6 +32,8 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 								name : "expressionExperiment",
 								sortType : this.convertEE
 							}, {
+								name : "gene"
+							}, {
 								name : "probe"
 							}, {
 								name : "experimentalFactors",
@@ -257,7 +259,6 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			} else {
 				geneId = dwr.util.getValue("gene"); // would be nice if there was a way to get the gene object....
 			}
-
 			if (this.visDifWindow != null)
 				this.visDifWindow.close();
 
