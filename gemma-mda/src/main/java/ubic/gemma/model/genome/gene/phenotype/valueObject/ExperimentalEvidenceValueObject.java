@@ -10,7 +10,8 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
-
+    
+    
     // *********************************************
     // field used to create the Bibliographic object
     // *********************************************
@@ -19,14 +20,15 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // other relevant pubmed id
     private Collection<String> relevantPublication = new HashSet<String>();
     // TODO find correct name of variable
-    private Collection<CharacteristicValueObject> experimentCharacteristics = null;
+    private Collection<CharacteristicValueObject> experimentCharacteristics = new HashSet<CharacteristicValueObject>();
 
     // *********************************************
     // fields that are returned view of the object
     // *********************************************
     private BibliographicReferenceValueObject primaryPublicationValueObject = null;
+    private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = new HashSet<BibliographicReferenceValueObject>();
     private BibliographicReferenceCitationValueObject primaryPublicationCitationValueObject= null;
-    private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = null;
+
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
@@ -99,6 +101,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return experimentCharacteristics;
     }
 
+    public BibliographicReferenceCitationValueObject getPrimaryPublicationCitationValueObject() {
+        return primaryPublicationCitationValueObject;
+    }
 
     @Override
     public int hashCode() {
@@ -110,34 +115,37 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return result;
     }
 
-
     @Override
     public boolean equals( Object obj ) {
         if ( this == obj ) return true;
         if ( !super.equals( obj ) ) return false;
         if ( getClass() != obj.getClass() ) return false;
         ExperimentalEvidenceValueObject other = ( ExperimentalEvidenceValueObject ) obj;
-        
-        HashSet<CharacteristicValueObject> set1 = new HashSet<CharacteristicValueObject>();
-        HashSet<CharacteristicValueObject> set2 = new HashSet<CharacteristicValueObject>();
-        set1.addAll( experimentCharacteristics );
-        set2.addAll(other.experimentCharacteristics);
-        
+
         if ( experimentCharacteristics == null ) {
             if ( other.experimentCharacteristics != null ) return false;
-        } else if ( !set1.equals( set2 ) ) return false;
+        } else {
+
+            HashSet<CharacteristicValueObject> set1 = new HashSet<CharacteristicValueObject>();
+            HashSet<CharacteristicValueObject> set2 = new HashSet<CharacteristicValueObject>();
+            set1.addAll( experimentCharacteristics );
+            set2.addAll( other.experimentCharacteristics );
+
+            if ( !set1.equals( set2 ) ) return false;
+        }
         if ( primaryPublication == null ) {
             if ( other.primaryPublication != null ) return false;
         } else if ( !primaryPublication.equals( other.primaryPublication ) ) return false;
-        
-        HashSet<String> set3 = new HashSet<String>();
-        HashSet<String> set4 = new HashSet<String>();
-        set3.addAll( relevantPublication );
-        set4.addAll(other.relevantPublication);
-        
+
         if ( relevantPublication == null ) {
             if ( other.relevantPublication != null ) return false;
-        } else if ( !set3.equals( set4 ) ) return false;
+        } else {
+            HashSet<String> set3 = new HashSet<String>();
+            HashSet<String> set4 = new HashSet<String>();
+            set3.addAll( relevantPublication );
+            set4.addAll( other.relevantPublication );
+            if ( !set3.equals( set4 ) ) return false;  
+        }
         return true;
     }
 
