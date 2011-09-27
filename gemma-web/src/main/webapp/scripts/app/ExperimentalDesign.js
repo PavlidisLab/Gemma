@@ -160,10 +160,12 @@ Ext.onReady(function() {
 						}
 					});
 
-			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs) {
+			experimentalFactorGrid.on("experimentalfactorchange", function(efgrid, efs, factor) {
 						factorValueGrid.getEl().unmask();
-						factorValueGrid.setTitle("Factor values");
-						factorValueGrid.setExperimentalFactor(null); // ??
+						if(factor.get("name") && factor.get("id")){
+							factorValueGrid.setTitle("Factor values for : " + factor.get("name"));
+							factorValueGrid.setExperimentalFactor(factor.get("id"));
+						}
 						refreshNeeded = true;
 					});
 
