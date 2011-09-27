@@ -103,6 +103,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceCitationValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
@@ -246,7 +247,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject();
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             result.setId( expressionExperiment.getId() );
-            result.setPrimaryCitation( formatCitation( expressionExperiment.getPrimaryPublication() ) );
+            result.setPrimaryCitation( new BibliographicReferenceCitationValueObject( expressionExperiment.getPrimaryPublication() ) );
             return new TaskResult( command, result );
         }
 
@@ -947,7 +948,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setDescription( ee.getDescription() );
 
         if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult.setPrimaryCitation( formatCitation( ee.getPrimaryPublication() ) );
+            finalResult.setPrimaryCitation( new BibliographicReferenceCitationValueObject( ee.getPrimaryPublication() ) );
             String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
 
             try {
@@ -1916,48 +1917,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
     }
 
-    /**
-     * @param citation
-     * @return
-     */
-    private String formatCitation( BibliographicReference citation ) {
-        StringBuilder buf = new StringBuilder();
-
-        if ( citation.getAuthorList() != null ) {
-            String[] authors = StringUtils.split( citation.getAuthorList(), ";" );
-            // if there are multiple authors, only display the first author
-            if ( authors.length == 1 ) {
-                buf.append( authors[0] + " " );
-            } else if ( authors.length > 0 ) {
-                buf.append( authors[0] + " et al. " );
-            }
-        } else {
-            buf.append( "[Unknown authors]" );
-        }
-        // display the publication year
-        if ( citation.getPublicationDate() != null ) {
-            Calendar pubDate = new GregorianCalendar();
-            pubDate.setTime( citation.getPublicationDate() );
-            buf.append( "(" + pubDate.get( Calendar.YEAR ) + ") " );
-        } else {
-            buf.append( "[Unknown date]" );
-        }
-
-        String volume = citation.getVolume();
-        if ( StringUtils.isBlank( volume ) ) {
-            volume = "[no vol.]";
-        }
-
-        String pages = citation.getPages();
-
-        if ( StringUtils.isBlank( pages ) ) {
-            pages = "[no pages]";
-        }
-
-        buf.append( citation.getTitle() + "; " + citation.getPublication() + ", " + volume + ": " + pages );
-
-        return buf.toString();
-    }
 
     /**
      * @param taxonId

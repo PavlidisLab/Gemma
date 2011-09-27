@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
@@ -24,6 +25,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // fields that are returned view of the object
     // *********************************************
     private BibliographicReferenceValueObject primaryPublicationValueObject = null;
+    private BibliographicReferenceCitationValueObject primaryPublicationCitationValueObject= null;
     private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = null;
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
@@ -43,6 +45,10 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     /** Entity to Value Object */
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
+
+        
+        this.primaryPublicationCitationValueObject = new BibliographicReferenceCitationValueObject( experimentalEvidence
+                .getExperiment().getPrimaryPublication() );
         
         this.primaryPublicationValueObject = new BibliographicReferenceValueObject( experimentalEvidence
                 .getExperiment().getPrimaryPublication() );

@@ -374,7 +374,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 					'</tpl>'),
 			data:{
 				pubAvailable: (currentPubMedId)? 'true':'false',
-				primaryCitation:currentPrimaryCitation,
+				primaryCitation: (currentPrimaryCitation)? currentPrimaryCitation.citation : '',
 				pubMedId:currentPubMedId
 			},
 			/*html: (currentPubMedId)?currentPrimaryCitation +
@@ -533,7 +533,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 				pubMedIdField.setValue(data.pubmedId);
 				pubMedDisplay.update({
 					pubAvailable: (data.pubmedId) ? 'true' : 'false',
-					primaryCitation: data.primaryCitation,
+					primaryCitation: (data.primaryCitation)? data.primaryCitation.citation : '',
 					pubMedId: data.pubmedId
 				});
                 
