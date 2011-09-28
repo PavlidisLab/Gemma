@@ -16,17 +16,53 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 	layoutConfig:{
 		align: 'middle'
 	},
+	doSearchQuery: function(){
+		location.href = '/Gemma/searcher.html?query=' + this.inMenuSearchField.getValue() + '&scope=SEGAP'	
+	},
 	initComponent: function(){
 		
+	this.inMenuSearchField = new Ext.form.TextField({
+		flex: 1,
+		enableKeyEvents: true,
+		listeners: {
+			specialkey: function(formField, e){
+				// e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
+				// e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
+				if (e.getKey() === e.ENTER) {
+					this.doSearchQuery(this.lastQuery);
+				}
+				else 
+					if (e.getKey() === e.ESC) {
+						formField.setValue('');
+					}
+			},
+			scope: this
+		}
+	});
 	var isAdmin = (Ext.getDom('hasAdmin') && Ext.getDom('hasAdmin').getValue() === 'true')?true:false;
 	var userLoggedIn = (Ext.getDom('hasUser') && Ext.getDom('hasUser').getValue() === 'true')?true:false;
 	
 	var searchBtn = new Ext.Button({
+			ref:'searchBtn',
 			text: 'Search',
 			menu: new Ext.menu.Menu({
 			style:'background:white',
-				items: [	// these items will render as dropdown menu items when the arrow is clicked:
+				items: [	
+				// these items will render as dropdown menu items when the arrow is clicked:
 				{
+					xtype: 'panel',
+					layout:'hbox',
+					border:false,
+					items: [this.inMenuSearchField, {
+						xtype: 'button',
+						text: 'Go',
+						handler: function(){
+							this.doSearchQuery();
+						},
+						scope: this,
+						flex:0
+					}]
+				},{
 					text: 'Search our Database',
 					href: "/Gemma/searcher.html",
 					tooltip: "Search our database for genes, experiments, array designs, etc."
