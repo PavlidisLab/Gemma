@@ -83,7 +83,6 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
                 name : name
             };
 
-			console.log(entity);
 			// returns ee details object
             ExpressionExperimentSetController.updateNameDesc(entity, function(data){
 			

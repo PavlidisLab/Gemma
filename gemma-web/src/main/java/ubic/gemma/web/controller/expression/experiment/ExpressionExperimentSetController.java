@@ -602,10 +602,12 @@ public class ExpressionExperimentSetController extends BaseController {
             // downstream object. This is
             // basically a thaw.
         }
-
-        vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
         
         vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
+
+        vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
+        vo.setPublik( securityService.isPublic( set ) );
+        vo.setShared( securityService.isShared( set ) );
         
         // if the set is used in an analysis, it should not be modifiable
         if ( expressionExperimentSetService.getAnalyses( set ).size() > 0 ) {

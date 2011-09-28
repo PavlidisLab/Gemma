@@ -651,16 +651,27 @@ public class GeneSetController {
      * @param secs
      * @return
      */
+    private DatabaseBackedGeneSetValueObject makeValueObect( GeneSet gs ) {
+        DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
+
+        gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
+        gsvo.setPublik( securityService.isPublic( gs ) );
+        gsvo.setShared( securityService.isShared( gs ) );
+
+        return gsvo;
+    }
+    
+    /**
+     * @param secs
+     * @return
+     */
     private Collection<DatabaseBackedGeneSetValueObject> makeValueObects( Collection<GeneSet> secs ) {
         // Create valueobject (need to add security info or would move this out into the valueobject...
         List<DatabaseBackedGeneSetValueObject> result = new ArrayList<DatabaseBackedGeneSetValueObject>();
         for ( GeneSet gs : secs ) {
 
-            DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
+            DatabaseBackedGeneSetValueObject gsvo = makeValueObect( gs );
 
-            gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
-            gsvo.setPublik( securityService.isPublic( gs ) );
-            gsvo.setShared( securityService.isShared( gs ) );
 
             result.add( gsvo );
         }
@@ -744,9 +755,7 @@ public class GeneSetController {
         if(set == null){
             throw new AccessDeniedException("No gene set exists with id="+id+" or you do not have permission to access it.");
         }
-        DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( set );
-        gsvo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
-        return gsvo;
+        return makeValueObect( set );
 
     }
 

@@ -221,14 +221,14 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 						text : 'Cancel',
 						handler : function(b, e) {
 							sp.destroy();
+							// remove the load mask from the icon.
+							Gemma.SecurityManager.updateSecurityLink(elid, clazz, id, isPublic, isShared, canEdit);
 						}
 					}]
 				});
 
 		sp.show();
 
-		// remove the load mask from the table.
-		Gemma.SecurityManager.updateSecurityLink(elid, clazz, id, isPublic, isShared, canEdit);
 
 	};
 
@@ -252,8 +252,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 
 Gemma.SecurityManager.updateSecurityLink = function(elid, clazz, id, isPublic, isShared, canEdit) {
 
-	var newLink = Gemma.SecurityManager.getSecurityLink(clazz, id, isPublic, isShared, canEdit);
-
+	var newLink = Gemma.SecurityManager.getSecurityLink(clazz, id, isPublic, isShared, canEdit, elid, true);
 	Ext.DomHelper.overwrite(elid, newLink);
 };
 
@@ -274,7 +273,7 @@ Gemma.SecurityManager.updateSecurityLink = function(elid, clazz, id, isPublic, i
  *            canEdit if the current user should be able to edit permissions.
  * @return {} html for the link
  */
-Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, canEdit) {
+Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, canEdit, elid, forUpdate) {
 
 	var icon = '';
 
@@ -291,12 +290,17 @@ Gemma.SecurityManager.getSecurityLink = function(clazz, id, isPublic, isShared, 
 
 	var sharedIcon = isShared ? '<img src="/Gemma/images/icons/group.png" ext:qtip="Shared"  alt="shared"/>' : '';
 
-	var elid = Ext.id();
+	if(!elid){
+		var elid = Ext.id();
+	}
 
 	var dialog = canEdit ? 'style="cursor:pointer" onClick="return Gemma.SecurityManager.managePermissions(\'' + elid +
 			'\', \'' + clazz + '\',\'' + id + '\');"' : '';
-	var result = '<span  ' + dialog + ' id="' + elid + '" >' + icon + '&nbsp;' + sharedIcon + '</span>';
-	return result;
+	if (forUpdate) {
+		return icon + '&nbsp;' + sharedIcon;
+	} else {
+		return '<span  ' + dialog + ' id="' + elid + '" >' + icon + '&nbsp;' + sharedIcon + '</span>';
+	}
 };
 
 /**
