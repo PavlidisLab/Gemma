@@ -31,8 +31,8 @@ import ubic.gemma.model.common.description.BibliographicReference;
 /**
  * represents a BibliographicReference as a citation string (which is really super light value object)
  * 
- * 
- * @author pavlidis
+ * @see  ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceValueObject BibliographicReferenceValueObject for a more comprehensive alternative 
+ * representation of BibliographicReference 
  * @version
  */
 public class BibliographicReferenceCitationValueObject {

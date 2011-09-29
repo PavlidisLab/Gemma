@@ -33,6 +33,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * represents a BibliographicReferenceValueObject when this value object is needed in core, the same value object exists
  * in web
  * 
+ * @see  ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceCitationValueObject BibliographicReferenceCitationValueObject for a very light-weight alternative
+ * representation of BibliographicReference 
  * @author pavlidis
  * @version
  */
