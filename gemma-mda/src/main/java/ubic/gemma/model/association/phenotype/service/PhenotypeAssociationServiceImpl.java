@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.GenericExperimentDao;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -46,6 +47,16 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /** find GenericExperiments by PubMed ID */
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
         return genericExperimentDao.findByPubmedID( pubmed );
+    }
+    
+    /** load an evidence given an ID */
+    public PhenotypeAssociation loadEvidence( Long id ) {
+        return phenotypeAssociationDao.load( id );
+    }
+    
+    /** update an evidence */
+    public void updateEvidence( PhenotypeAssociation evidence ) {
+        phenotypeAssociationDao.update( evidence );
     }
 
 }

@@ -32,7 +32,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValu
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.persistence.PersisterHelper;
 
-
 /** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
 @Component
 public class PhenotypeAssoManagerServiceHelper {
@@ -239,12 +238,10 @@ public class PhenotypeAssoManagerServiceHelper {
 
             genericExperiment.getCharacteristics().addAll( characteristics );
             phenotypeAssociationService.createGenericExperiment( genericExperiment );
-
         }
 
         experimentalEvidence.setExperiment( genericExperiment );
         return experimentalEvidence;
-
     }
 
     /**
@@ -253,7 +250,7 @@ public class PhenotypeAssoManagerServiceHelper {
      * @param phe The phenotype association (parent class of an evidence) we are interested in populating
      * @param evidenceValueObject the value object representing a phenotype
      */
-    private void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+    public void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
 
         // TODO
         phe.setDescription( evidenceValueObject.getDescription() );
@@ -322,9 +319,9 @@ public class PhenotypeAssoManagerServiceHelper {
 
             // creates a new BibliographicReference
             bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
-            
+
             // the pudmedId doesn't exists
-            if(bibRef==null){
+            if ( bibRef == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
 

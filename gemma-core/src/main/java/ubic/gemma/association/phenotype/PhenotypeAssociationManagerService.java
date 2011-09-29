@@ -50,4 +50,12 @@ public interface PhenotypeAssociationManagerService {
      * @return A collection of the phenotypes with the gene occurence
      */
     public Collection<CharacteristicValueObject> findAllPhenotypes();
+
+    /**
+     * Modify an existing evidence
+     * 
+     * @param evidenceValueObject the evidence with modified fields
+     */
+    public void modifyEvidence( EvidenceValueObject evidenceValueObject );
+
 }

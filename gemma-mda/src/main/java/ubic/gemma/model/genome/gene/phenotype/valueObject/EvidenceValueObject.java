@@ -150,6 +150,26 @@ public abstract class EvidenceValueObject {
         this.relevance = relevance;
     }
 
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setAssociationType( CharacteristicValueObject associationType ) {
+        this.associationType = associationType;
+    }
+
+    public void setEvidenceCode( String evidenceCode ) {
+        this.evidenceCode = evidenceCode;
+    }
+
+    public void setIsNegativeEvidence( Boolean isNegativeEvidence ) {
+        this.isNegativeEvidence = isNegativeEvidence;
+    }
+
+    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
+        this.phenotypes = phenotypes;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

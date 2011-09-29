@@ -172,18 +172,46 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // for each of them, find the occurence
         for ( CharacteristicValueObject phenotype : phenotypes ) {
             phenotype.setOccurence( associationService.findCandidateGenes( phenotype.getValue() ).size() );
+            // TODO for now lets use lowerCase until we have a tree
+            phenotype.setValue( phenotype.getValue().toLowerCase() );
         }
 
         return phenotypes;
     }
 
     /**
-     * Removes an evidence from a Gene
+     * Removes an evidence
      * 
      * @param geneNCBI The Evidence id
      */
     public void removePhenotypeAssociation( Long id ) {
         associationService.removePhenotypeAssociation( id );
+    }
+
+    /**
+     * Modify an existing evidence
+     * 
+     * @param evidenceValueObject the evidence with modified fields
+     */
+    public void modifyEvidence( EvidenceValueObject evidenceValueObject ) {
+
+        Long id = evidenceValueObject.getDatabaseId();
+
+        if ( evidenceValueObject.getDatabaseId() != null ) {
+
+            // load the phenotypeAssociation
+            PhenotypeAssociation phenotypeAssociation = associationService.loadEvidence( id );
+
+            if ( phenotypeAssociation != null ) {
+
+                // change field in the phenotypeAssociation using the valueObject
+                phenotypeAssoManagerServiceHelper.populatePhenotypeAssociation( phenotypeAssociation,
+                        evidenceValueObject );
+
+                // update changes to database
+                associationService.updateEvidence( phenotypeAssociation );
+            }
+        }
     }
 
 }
