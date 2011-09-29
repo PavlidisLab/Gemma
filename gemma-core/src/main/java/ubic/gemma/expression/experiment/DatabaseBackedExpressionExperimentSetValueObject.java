@@ -110,14 +110,6 @@ public class DatabaseBackedExpressionExperimentSetValueObject extends Expression
                 continue;
             }
 
-            if ( es.getId() == null ) {
-                /*
-                 * GO terms, for example. We need a unique ID that also is different from IDs of things in the database.
-                 * This isn't an entirely satisfactory implementation, it should be made bulletproof.
-                 */
-                es.setId( Long.parseLong( RandomStringUtils.randomNumeric( 16 ) ) + 100000L );
-            }
-
             results.add( new DatabaseBackedExpressionExperimentSetValueObject( es ) );
         }
 
