@@ -28,11 +28,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @SuppressWarnings("unchecked")
     public Collection<Gene> findByPhenotype( String phenotypeValue ) {
 
-        Criteria genes = super.getSession().createCriteria( Gene.class );
-        genes.setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).createCriteria( "phenotypeAssociations" )
+        Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class )
+                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).createCriteria( "phenotypeAssociations" )
                 .createCriteria( "phenotypes" ).add( Restrictions.like( "value", phenotypeValue ) );
 
-        return genes.list();
+        return geneQueryCriteria.list();
 
     }
 

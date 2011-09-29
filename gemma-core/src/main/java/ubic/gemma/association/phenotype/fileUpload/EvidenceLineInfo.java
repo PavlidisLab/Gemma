@@ -1,7 +1,7 @@
 package ubic.gemma.association.phenotype.fileUpload;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -25,12 +25,14 @@ public class EvidenceLineInfo {
     public final static String EXPERIMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Experiment";
     public final static String PHENOTYPE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Phenotype";
 
+    private String geneName = "";
     private String geneID = "";
     private String primaryReferencePubmed = null;
     private String reviewReferencePubmed = null;
     private String evidenceCode = "";
     private String comment = "";
     private String associationType = null;
+    private Boolean isEdivenceNegative = false;
 
     // All characteristics taken from file
     private String[] developmentStage = null;
@@ -42,38 +44,39 @@ public class EvidenceLineInfo {
     private String[] phenotype = null;
 
     // What will populate the Evidences
-    private Collection<CharacteristicValueObject> experimentCharacteristics = new ArrayList<CharacteristicValueObject>();
-    private Collection<CharacteristicValueObject> phenotypes = new ArrayList<CharacteristicValueObject>();
+    private Set<CharacteristicValueObject> experimentCharacteristics = new HashSet<CharacteristicValueObject>();
+    private Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
     public EvidenceLineInfo( String line ) {
 
         String[] tokens = line.split( "\t" );
-        geneID = tokens[0].trim();
-        primaryReferencePubmed = tokens[1].trim();
-        reviewReferencePubmed = tokens[2].trim();
-        evidenceCode = tokens[3].trim();
-        comment = tokens[4].trim();
-        associationType = tokens[5].trim();
+        this.geneName = tokens[0].trim();
+        this.geneID = tokens[1].trim();
+        this.primaryReferencePubmed = tokens[2].trim();
+        this.reviewReferencePubmed = tokens[3].trim();
+        this.evidenceCode = tokens[4].trim();
+        this.comment = tokens[5].trim();
+        this.associationType = tokens[6].trim();
 
-        developmentStage = trimArray( tokens[6].split( ";" ),false );
-        bioSource = trimArray( tokens[7].split( ";" ),false  );
-        organismPart = trimArray( tokens[8].split( ";" ),false  );
-        experimentDesign = trimArray( tokens[9].split( ";" ),false  );
-        treatment = trimArray( tokens[10].split( ";" ),false  );
-        experimentOBI = trimArray( tokens[11].split( ";" ),false  );
-        phenotype = trimArray( tokens[12].split( ";" ),true  );
+        if ( tokens[7].trim().equals( "1" ) ) {
+            this.isEdivenceNegative = true;
+        }
+
+        this.developmentStage = trimArray( tokens[8].split( ";" ) );
+        this.bioSource = trimArray( tokens[9].split( ";" ) );
+        this.organismPart = trimArray( tokens[10].split( ";" ) );
+        this.experimentDesign = trimArray( tokens[11].split( ";" ) );
+        this.treatment = trimArray( tokens[12].split( ";" ) );
+        this.experimentOBI = trimArray( tokens[13].split( ";" ) );
+        this.phenotype = trimArray( tokens[14].split( ";" ) );
     }
 
-    private String[] trimArray( String[] array, boolean lowerCase ) {
+    private String[] trimArray( String[] array ) {
 
         String[] trimmedArray = new String[array.length];
 
         for ( int i = 0; i < trimmedArray.length; i++ ) {
             trimmedArray[i] = array[i].trim();
-            
-            if(lowerCase){
-                trimmedArray[i] = trimmedArray[i].toLowerCase();
-            }
         }
 
         return trimmedArray;
@@ -183,11 +186,11 @@ public class EvidenceLineInfo {
         this.experimentOBI = experimentOBI;
     }
 
-    public Collection<CharacteristicValueObject> getExperimentCharacteristics() {
+    public Set<CharacteristicValueObject> getExperimentCharacteristics() {
         return experimentCharacteristics;
     }
 
-    public void setExperimentCharacteristics( Collection<CharacteristicValueObject> experimentCharacteristics ) {
+    public void setExperimentCharacteristics( Set<CharacteristicValueObject> experimentCharacteristics ) {
         this.experimentCharacteristics = experimentCharacteristics;
     }
 
@@ -195,16 +198,32 @@ public class EvidenceLineInfo {
         experimentCharacteristics.add( experimentCharacteristic );
     }
 
-    public Collection<CharacteristicValueObject> getPhenotypes() {
+    public Set<CharacteristicValueObject> getPhenotypes() {
         return phenotypes;
     }
 
-    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
+    public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
     public void addPhenotype( CharacteristicValueObject phenotype ) {
         phenotypes.add( phenotype );
+    }
+
+    public String getGeneName() {
+        return geneName;
+    }
+
+    public void setGeneName( String geneName ) {
+        this.geneName = geneName;
+    }
+
+    public Boolean getIsEdivenceNegative() {
+        return isEdivenceNegative;
+    }
+
+    public void setIsEdivenceNegative( Boolean isEdivenceNegative ) {
+        this.isEdivenceNegative = isEdivenceNegative;
     }
 
 }

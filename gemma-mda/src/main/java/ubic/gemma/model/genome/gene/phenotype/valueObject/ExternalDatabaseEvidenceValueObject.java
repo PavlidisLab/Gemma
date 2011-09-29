@@ -1,6 +1,6 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.Collection;
+import java.util.Set;
 
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
@@ -10,7 +10,7 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
     private DatabaseEntryValueObject databaseEntryValueObject = null;
 
     public ExternalDatabaseEvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
+            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
             DatabaseEntryValueObject databaseEntryValueObject ) {
         super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.databaseEntryValueObject = databaseEntryValueObject;

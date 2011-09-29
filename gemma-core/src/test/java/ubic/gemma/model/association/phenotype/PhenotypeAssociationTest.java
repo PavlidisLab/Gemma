@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
@@ -56,7 +57,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private UrlEvidenceValueObject evidence = null;
     private String phenotypeValue = "";
     private String phenotypeCategory = "";
-    private Collection<CharacteristicValueObject> phenotypes = null;
+    private Set<CharacteristicValueObject> phenotypes = null;
 
     private Gene gene;
 

@@ -38,7 +38,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public GeneValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence ) {
 
         // find the gene we wish to add the evidence and phenotype
-        Gene gene = geneService.findByNCBIId( geneNCBI );
+        Gene gene = this.geneService.findByNCBIId( geneNCBI );
 
         // convert all evidence for this gene to valueObject
         Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
@@ -53,13 +53,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // convert the valueObject received to the corresponding Entity
-        PhenotypeAssociation pheAsso = phenotypeAssoManagerServiceHelper.valueObject2Entity( evidence );
+        PhenotypeAssociation pheAsso = this.phenotypeAssoManagerServiceHelper.valueObject2Entity( evidence );
 
         // add the entity to the gene
         gene.getPhenotypeAssociations().add( pheAsso );
 
         // save result
-        geneService.update( gene );
+        this.geneService.update( gene );
 
         // return the saved gene result
         return new GeneValueObject( gene );
@@ -97,7 +97,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<GeneValueObject> genesVO = new HashSet<GeneValueObject>();
 
         // find all the Genes with the first phenotype
-        Collection<Gene> genes = associationService.findCandidateGenes( phenotypesValues[0] );
+        Collection<Gene> genes = this.associationService.findCandidateGenes( phenotypesValues[0] );
         Collection<GeneValueObject> genesWithFirstPhenotype = GeneValueObject.convert2ValueObjects( genes );
 
         if ( phenotypesValues.length == 1 ) {
@@ -133,7 +133,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        // we need to take out the evidences that doesn't have any of the phenotypes chosen
+        // for each evidence on the gene, lets put a flag if that evidence got the chosen phenotype
         for ( GeneValueObject gene : genesVO ) {
 
             for ( EvidenceValueObject evidence : gene.getEvidences() ) {
@@ -167,11 +167,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     public Collection<CharacteristicValueObject> findAllPhenotypes() {
         // find of all the phenotypes present in Gemma
-        Collection<CharacteristicValueObject> phenotypes = associationService.findAllPhenotypes();
+        Collection<CharacteristicValueObject> phenotypes = this.associationService.findAllPhenotypes();
 
         // for each of them, find the occurence
         for ( CharacteristicValueObject phenotype : phenotypes ) {
-            phenotype.setOccurence( associationService.findCandidateGenes( phenotype.getValue() ).size() );
+            phenotype.setOccurence( this.associationService.findCandidateGenes( phenotype.getValue() ).size() );
             // TODO for now lets use lowerCase until we have a tree
             phenotype.setValue( phenotype.getValue().toLowerCase() );
         }
@@ -185,7 +185,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneNCBI The Evidence id
      */
     public void removePhenotypeAssociation( Long id ) {
-        associationService.removePhenotypeAssociation( id );
+        this.associationService.removePhenotypeAssociation( id );
     }
 
     /**
@@ -200,16 +200,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( evidenceValueObject.getDatabaseId() != null ) {
 
             // load the phenotypeAssociation
-            PhenotypeAssociation phenotypeAssociation = associationService.loadEvidence( id );
+            PhenotypeAssociation phenotypeAssociation = this.associationService.loadEvidence( id );
 
             if ( phenotypeAssociation != null ) {
 
                 // change field in the phenotypeAssociation using the valueObject
-                phenotypeAssoManagerServiceHelper.populatePhenotypeAssociation( phenotypeAssociation,
+                this.phenotypeAssoManagerServiceHelper.populatePhenotypeAssociation( phenotypeAssociation,
                         evidenceValueObject );
 
                 // update changes to database
-                associationService.updateEvidence( phenotypeAssociation );
+                this.associationService.updateEvidence( phenotypeAssociation );
             }
         }
     }

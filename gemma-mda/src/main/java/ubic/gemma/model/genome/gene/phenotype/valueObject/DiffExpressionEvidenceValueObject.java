@@ -1,6 +1,6 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.Collection;
+import java.util.Set;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
@@ -12,7 +12,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
     private DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult = null;
 
     public DiffExpressionEvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
+            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
             DifferentialExpressionAnalysisResult differentialExpressionAnalysisResult ) {
         super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.differentialExpressionAnalysisResult = differentialExpressionAnalysisResult;

@@ -1,8 +1,8 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
@@ -27,7 +27,7 @@ public abstract class EvidenceValueObject {
     /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
     private Double relevance = 0D;
 
-    private Collection<CharacteristicValueObject> phenotypes = null;
+    private Set<CharacteristicValueObject> phenotypes = null;
 
     /**
      * Convert an collection of evidence entities to their corresponding value objects
@@ -65,7 +65,6 @@ public abstract class EvidenceValueObject {
                 } else if ( phe instanceof DifferentialExpressionEvidence ) {
                     // TODO
                 }
-
             }
         }
         return returnEvidences;
@@ -90,7 +89,7 @@ public abstract class EvidenceValueObject {
 
             this.associationType = new CharacteristicValueObject( value, category );
         }
-        phenotypes = new ArrayList<CharacteristicValueObject>();
+        this.phenotypes = new HashSet<CharacteristicValueObject>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
@@ -100,12 +99,12 @@ public abstract class EvidenceValueObject {
             characteristicVO = new CharacteristicValueObject( voCha.getValue().toLowerCase(), voCha.getCategory(),
                     voCha.getValueUri(), voCha.getCategoryUri() );
 
-            phenotypes.add( characteristicVO );
+            this.phenotypes.add( characteristicVO );
         }
     }
 
     protected EvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes ) {
+            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes ) {
         super();
         this.description = description;
         this.associationType = associationType;
@@ -166,7 +165,7 @@ public abstract class EvidenceValueObject {
         this.isNegativeEvidence = isNegativeEvidence;
     }
 
-    public void setPhenotypes( Collection<CharacteristicValueObject> phenotypes ) {
+    public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
@@ -200,17 +199,9 @@ public abstract class EvidenceValueObject {
         if ( isNegativeEvidence == null ) {
             if ( other.isNegativeEvidence != null ) return false;
         } else if ( !isNegativeEvidence.equals( other.isNegativeEvidence ) ) return false;
-
         if ( phenotypes == null ) {
             if ( other.phenotypes != null ) return false;
-        } else {
-            HashSet<CharacteristicValueObject> set1 = new HashSet<CharacteristicValueObject>();
-            HashSet<CharacteristicValueObject> set2 = new HashSet<CharacteristicValueObject>();
-            set1.addAll( phenotypes );
-            set2.addAll( other.phenotypes );
-
-            if ( !set1.equals( set2 ) ) return false;
-        }
+        } else if ( !phenotypes.equals( other.phenotypes ) ) return false;
         return true;
     }
 

@@ -2,14 +2,13 @@ package ubic.gemma.association.phenotype.fileUpload;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -22,6 +21,7 @@ import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
@@ -58,7 +58,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         args[2] = "-p";
         args[3] = "administrator";
         args[4] = "-f";
-        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/ArtemisInputFile2.tsv";
+        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/file.tsv";
         args[6] = "-create";
 
         PhenotypeAssociationLoaderCLI p = new PhenotypeAssociationLoaderCLI();
@@ -97,7 +97,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    /** There are 5 Steps in the process of creating the evidences */
+    /** There are 6 Steps in the process of creating the evidences */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "PhenotypeAssociationLoader", args );
@@ -123,7 +123,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             verifyGeneIdExist( linesFromFile );
 
             // called as the final step to create the object in the database
-            if ( createInDatabase ) {
+            if ( this.createInDatabase ) {
                 System.out.println( "STEP 6 : Create the evidences in the database" );
                 createEvidencesInDatabase( linesFromFile );
                 System.out.println( "Evidences inserted in the database" );
@@ -139,46 +139,46 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
     /** load services and verify that Ontology are loaded */
     private synchronized void loadServices() throws Exception {
 
-        phenotypeAssociationService = ( PhenotypeAssociationManagerService ) this
+        this.phenotypeAssociationService = ( PhenotypeAssociationManagerService ) this
                 .getBean( "phenotypeAssociationManagerService" );
 
-        geneService = ( GeneService ) this.getBean( "geneService" );
+        this.geneService = ( GeneService ) this.getBean( "geneService" );
 
-        ontologyService = ( OntologyService ) this.getBean( "ontologyService" );
+        this.ontologyService = ( OntologyService ) this.getBean( "ontologyService" );
 
-        diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
-        humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
-        nifstdOntologyService = ontologyService.getNifstfOntologyService();
-        obiService = ontologyService.getObiService();
-        fmaOntologyService = ontologyService.getFmaOntologyService();
+        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
+        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
+        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        this.nifstdOntologyService = ontologyService.getNifstfOntologyService();
+        this.obiService = ontologyService.getObiService();
+        this.fmaOntologyService = ontologyService.getFmaOntologyService();
 
-        while ( diseaseOntologyService.isOntologyLoaded() == false ) {
+        while ( this.diseaseOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
             System.out.println( "waiting for Disease Ontology to load" );
         }
 
-        while ( mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
+        while ( this.mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
             System.out.println( "waiting for MP Ontology to load" );
         }
 
-        while ( humanPhenotypeOntologyService.isOntologyLoaded() == false ) {
+        while ( this.humanPhenotypeOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
             System.out.println( "waiting for HP Ontology to load" );
         }
 
-        while ( obiService.isOntologyLoaded() == false ) {
+        while ( this.obiService.isOntologyLoaded() == false ) {
             wait( 1000 );
             System.out.println( "waiting for OBI Ontology to load" );
         }
 
-        while ( nifstdOntologyService.isOntologyLoaded() == false ) {
+        while ( this.nifstdOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
             System.out.println( "waiting for NIF Ontology to load" );
         }
 
-        while ( ontologyService.getFmaOntologyService().isOntologyLoaded() == false ) {
+        while ( this.ontologyService.getFmaOntologyService().isOntologyLoaded() == false ) {
             wait( 1000 );
             System.out.println( "waiting for FMA Ontology to load" );
         }
@@ -189,8 +189,7 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
 
         Collection<EvidenceLineInfo> evidenceLineInfos = new ArrayList<EvidenceLineInfo>();
 
-        BufferedReader br = new BufferedReader( new InputStreamReader( new DataInputStream( new FileInputStream(
-                inputFile ) ) ) );
+        BufferedReader br = new BufferedReader( new FileReader( inputFile ) );
 
         String line;
         int lineNumber = 0;
@@ -220,63 +219,147 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
      */
     private OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) {
 
+        // list of OntelogyTerms found
+        Collection<OntologyTerm> ontologyKept = new HashSet<OntologyTerm>();
+        OntologyTerm termFound = null;
+
         for ( OntologyTerm ot : ontologyTerms ) {
             if ( ot.getLabel() != null ) {
                 if ( ot.getLabel().equalsIgnoreCase( search ) ) {
-                    return ot;
+                    ontologyKept.add( ot );
+                    termFound = ot;
                 }
-            } else if ( ot.toString().equalsIgnoreCase( search ) ) {
-                return ot;
             }
         }
-        return null;
+
+        // if we have more than 1 result, hardcode the one to choose
+        if ( ontologyKept.size() > 1 ) {
+
+            if ( search.equalsIgnoreCase( "juvenile" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/PATO#PATO_0001190" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "adult" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_681" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "newborn" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_699" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "prenatal" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_7014" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            } else if ( search.equalsIgnoreCase( "infant" ) ) {
+
+                for ( OntologyTerm ontologyTerm : ontologyKept ) {
+
+                    if ( ontologyTerm.getUri().equalsIgnoreCase(
+                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_695" ) ) {
+                        return ontologyTerm;
+                    }
+                }
+            }
+        }
+
+        if ( ontologyKept.size() > 1 ) {
+
+            System.err.println( "More than 1 term found for : " + search + "   " + ontologyKept.size() );
+        }
+
+        return termFound;
     }
 
     /** search phenotype term the diseaseOntology then hp, then mp */
-    private String phenotype2Ontology( String search ) throws Exception {
+    private String phenotype2Ontology( EvidenceLineInfo lineInfo, int index ) throws Exception {
+
+        String search = lineInfo.getPhenotype()[index];
 
         // search disease
-        Collection<OntologyTerm> ontologyTerms = diseaseOntologyService.findTerm( search );
+        Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( search );
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
         if ( ot != null ) {
+            lineInfo.getPhenotype()[index] = ot.getLabel();
             return ot.getUri();
         }
 
         // search hp
-        ontologyTerms = humanPhenotypeOntologyService.findTerm( search );
+        ontologyTerms = this.humanPhenotypeOntologyService.findTerm( search );
 
         ot = findExactTerm( ontologyTerms, search );
 
         if ( ot != null ) {
+            lineInfo.getPhenotype()[index] = ot.getLabel();
             return ot.getUri();
         }
 
         // search mamalian
-        ontologyTerms = mammalianPhenotypeOntologyService.findTerm( search );
+        ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( search );
 
         ot = findExactTerm( ontologyTerms, search );
 
         if ( ot != null ) {
+            lineInfo.getPhenotype()[index] = ot.getLabel();
             return ot.getUri();
         }
 
         // all phenotypes must be find
         System.err.println( "phenotype not found in disease, hp and mp Ontology : " + search );
         return null;
-        // throw new Exception( "phenotype not found in disease, hp and mp Ontology : " + search );
     }
 
     /** search term in the obi Ontology */
-    private String obi2Ontology( String search ) {
+    private String obi2OntologyExperimentDesign( EvidenceLineInfo lineInfo, int index ) {
+
+        String search = lineInfo.getExperimentDesign()[index];
 
         // search disease
-        Collection<OntologyTerm> ontologyTerms = obiService.findTerm( search );
+        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( search );
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
         if ( ot != null ) {
+            lineInfo.getExperimentDesign()[index] = ot.getLabel();
+            return ot.getUri();
+        } else {
+            System.out.println( "term not found in obi Ontology : " + search );
+            return null;
+        }
+    }
+
+    /** search term in the obi Ontology */
+    private String obi2OntologyExperimentOBI( EvidenceLineInfo lineInfo, int index ) {
+
+        String search = lineInfo.getExperimentOBI()[index];
+
+        // search disease
+        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( search );
+
+        OntologyTerm ot = findExactTerm( ontologyTerms, search );
+
+        if ( ot != null ) {
+            lineInfo.getExperimentOBI()[index] = ot.getLabel();
             return ot.getUri();
         } else {
             System.out.println( "term not found in obi Ontology : " + search );
@@ -285,13 +368,16 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
     }
 
     /** search term in the nifstd Ontology */
-    private String nifstd2Ontology( String search ) {
+    private String nifstd2Ontology( EvidenceLineInfo lineInfo, int index ) {
 
-        Collection<OntologyTerm> ontologyTerms = nifstdOntologyService.findTerm( search );
+        String search = lineInfo.getDevelopmentStage()[index];
+
+        Collection<OntologyTerm> ontologyTerms = this.nifstdOntologyService.findTerm( search );
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
         if ( ot != null ) {
+            lineInfo.getDevelopmentStage()[index] = ot.getLabel();
             return ot.getUri();
         } else {
             System.out.println( "term not found in nif Ontology : " + search );
@@ -300,13 +386,16 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
     }
 
     /** search term in the fma Ontology */
-    private String fma2Ontology( String search ) {
+    private String fma2Ontology( EvidenceLineInfo lineInfo, int index ) {
 
-        Collection<OntologyTerm> ontologyTerms = fmaOntologyService.findTerm( search );
+        String search = lineInfo.getOrganismPart()[index];
+
+        Collection<OntologyTerm> ontologyTerms = this.fmaOntologyService.findTerm( search );
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
         if ( ot != null ) {
+            lineInfo.getOrganismPart()[index] = ot.getLabel();
             return ot.getUri();
         } else {
             System.out.println( "term not found in nif Ontology : " + search );
@@ -328,9 +417,11 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             // The DevelopmentStage column get converted
             for ( int i = 0; i < lineInfo.getDevelopmentStage().length; i++ ) {
                 if ( !lineInfo.getDevelopmentStage()[i].equalsIgnoreCase( "" ) ) {
+
+                    String valueURI = nifstd2Ontology( lineInfo, i );
+
                     CharacteristicValueObject characteristic = new CharacteristicValueObject(
-                            lineInfo.getDevelopmentStage()[i], EvidenceLineInfo.DEVELOPMENTAL_STAGE,
-                            nifstd2Ontology( lineInfo.getDevelopmentStage()[i] ),
+                            lineInfo.getDevelopmentStage()[i], EvidenceLineInfo.DEVELOPMENTAL_STAGE, valueURI,
                             EvidenceLineInfo.DEVELOPMENTAL_STAGE_ONTOLOGY );
                     lineInfo.addExperimentCharacteristic( characteristic );
                 }
@@ -349,9 +440,12 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             // The OrganismPart column get converted
             for ( int i = 0; i < lineInfo.getOrganismPart().length; i++ ) {
                 if ( !lineInfo.getOrganismPart()[i].equalsIgnoreCase( "" ) ) {
+
+                    String valueURI = fma2Ontology( lineInfo, i );
+
                     CharacteristicValueObject characteristic = new CharacteristicValueObject(
-                            lineInfo.getOrganismPart()[i], EvidenceLineInfo.ORGANISM_PART,
-                            fma2Ontology( lineInfo.getOrganismPart()[i] ), EvidenceLineInfo.ORGANISM_PART_ONTOLOGY );
+                            lineInfo.getOrganismPart()[i], EvidenceLineInfo.ORGANISM_PART, valueURI,
+                            EvidenceLineInfo.ORGANISM_PART_ONTOLOGY );
                     lineInfo.addExperimentCharacteristic( characteristic );
                 }
             }
@@ -359,9 +453,11 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             // The ExperimentDesign column
             for ( int i = 0; i < lineInfo.getExperimentDesign().length; i++ ) {
                 if ( !lineInfo.getExperimentDesign()[i].equalsIgnoreCase( "" ) ) {
+
+                    String valueURI = obi2OntologyExperimentDesign( lineInfo, i );
+
                     CharacteristicValueObject characteristic = new CharacteristicValueObject(
-                            lineInfo.getExperimentDesign()[i], EvidenceLineInfo.EXPERIMENT_DESIGN,
-                            obi2Ontology( lineInfo.getExperimentDesign()[i] ),
+                            lineInfo.getExperimentDesign()[i], EvidenceLineInfo.EXPERIMENT_DESIGN, valueURI,
                             EvidenceLineInfo.EXPERIMENT_DESIGN_ONTOLOGY );
                     lineInfo.addExperimentCharacteristic( characteristic );
                 }
@@ -380,9 +476,12 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             // The ExperimentOBI column get converted
             for ( int i = 0; i < lineInfo.getExperimentOBI().length; i++ ) {
                 if ( !lineInfo.getExperimentOBI()[i].equalsIgnoreCase( "" ) ) {
+
+                    String valueURI = obi2OntologyExperimentOBI( lineInfo, i );
+
                     CharacteristicValueObject characteristic = new CharacteristicValueObject(
-                            lineInfo.getExperimentOBI()[i], EvidenceLineInfo.EXPERIMENT,
-                            obi2Ontology( lineInfo.getExperimentOBI()[i] ), EvidenceLineInfo.EXPERIMENT_ONTOLOGY );
+                            lineInfo.getExperimentOBI()[i], EvidenceLineInfo.EXPERIMENT, valueURI,
+                            EvidenceLineInfo.EXPERIMENT_ONTOLOGY );
                     lineInfo.addExperimentCharacteristic( characteristic );
                 }
             }
@@ -390,13 +489,14 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             // The phenotype column
             for ( int i = 0; i < lineInfo.getPhenotype().length; i++ ) {
                 if ( !lineInfo.getPhenotype()[i].equalsIgnoreCase( "" ) ) {
+
+                    String valueURI = phenotype2Ontology( lineInfo, i );
+
                     CharacteristicValueObject phenotype = new CharacteristicValueObject( lineInfo.getPhenotype()[i],
-                            EvidenceLineInfo.PHENOTYPE, phenotype2Ontology( lineInfo.getPhenotype()[i] ),
-                            EvidenceLineInfo.PHENOTYPE_ONTOLOGY );
+                            EvidenceLineInfo.PHENOTYPE, valueURI, EvidenceLineInfo.PHENOTYPE_ONTOLOGY );
                     lineInfo.addPhenotype( phenotype );
                 }
             }
-
         }
     }
 
@@ -442,10 +542,23 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
      */
     private void verifyGeneIdExist( Collection<EvidenceLineInfo> linesFromFile ) throws Exception {
 
+        int i = 0;
+
         for ( EvidenceLineInfo lineInfo : linesFromFile ) {
-            if ( geneService.findByNCBIId( lineInfo.getGeneID() ) == null ) {
+
+            i++;
+
+            Gene gene = this.geneService.findByNCBIId( lineInfo.getGeneID() );
+
+            if ( gene == null ) {
                 System.err.println( "Gene not found in Gemma: " + lineInfo.getGeneID() + " Description: "
                         + lineInfo.getComment() );
+            } else if ( !gene.getName().equalsIgnoreCase( lineInfo.getGeneName() ) ) {
+                System.err.println( "************Different Gene name found************" );
+                System.err.println( "LINE: " + i );
+                System.err.println( "Gene name in File: " + lineInfo.getGeneName() );
+                System.err.println( "Gene name in Gemma: " + gene.getName() );
+                System.err.println( "*************************************************" );
             }
         }
     }
@@ -466,30 +579,31 @@ public class PhenotypeAssociationLoaderCLI extends AbstractSpringAwareCLI {
             CharacteristicValueObject associationType = null;
 
             if ( !phenoAss.getAssociationType().equalsIgnoreCase( "" ) ) {
-               // associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
+                // associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
             }
             String evidenceCode = phenoAss.getEvidenceCode();
             String primaryPublicationPubmed = phenoAss.getPrimaryReferencePubmed();
             String relevantPublicationPubmed = phenoAss.getReviewReferencePubmed();
-            Collection<String> relevantPublicationsPubmed = null;
+            Set<String> relevantPublicationsPubmed = new HashSet<String>();
 
             if ( !relevantPublicationPubmed.equalsIgnoreCase( "" ) ) {
-                relevantPublicationsPubmed = new HashSet<String>();
+
                 relevantPublicationsPubmed.add( relevantPublicationPubmed );
             }
 
-            Collection<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
+            Set<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
 
-            Collection<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
+            Set<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
 
-            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType, false, evidenceCode,
-                    phenotypes, primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
+            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType,
+                    phenoAss.getIsEdivenceNegative(), evidenceCode, phenotypes, primaryPublicationPubmed,
+                    relevantPublicationsPubmed, characteristics );
 
             String geneId = phenoAss.getGeneID();
 
             try {
-                // here should be gene id using 2 for test since I have a test database
-                phenotypeAssociationService.linkGeneToPhenotype( geneId, evidence );
+
+                this.phenotypeAssociationService.linkGeneToPhenotype( geneId, evidence );
                 System.out.println( "Evidence " + evidenceNumber + " created" );
 
             } catch ( Exception e ) {

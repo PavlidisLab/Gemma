@@ -44,7 +44,7 @@ public class BibliographicReferenceValueObject {
 
         List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
 
-        if ( refs != null && refs.size() != 0 ) {
+        if ( refs != null ) {
             for ( BibliographicReference ref : refs ) {
                 results.add( new BibliographicReferenceValueObject( ref ) );
             }

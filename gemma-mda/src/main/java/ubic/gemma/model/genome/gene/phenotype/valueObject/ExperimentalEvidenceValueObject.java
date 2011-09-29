@@ -2,6 +2,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.common.description.Characteristic;
@@ -15,9 +16,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // The primary pubmed id
     private String primaryPublication = "";
     // other relevant pubmed id
-    private Collection<String> relevantPublication = new HashSet<String>();
+    private Set<String> relevantPublication = new HashSet<String>();
     // TODO find correct name of variable
-    private Collection<CharacteristicValueObject> experimentCharacteristics = new HashSet<CharacteristicValueObject>();
+    private Set<CharacteristicValueObject> experimentCharacteristics = new HashSet<CharacteristicValueObject>();
 
     // *********************************************
     // fields that are returned view of the object
@@ -27,9 +28,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     private BibliographicReferenceCitationValueObject primaryPublicationCitationValueObject = null;
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Collection<CharacteristicValueObject> phenotypes,
-            String primaryPublication, Collection<String> relevantPublication,
-            Collection<CharacteristicValueObject> experimentCharacteristics ) {
+            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
+            String primaryPublication, Set<String> relevantPublication,
+            Set<CharacteristicValueObject> experimentCharacteristics ) {
         super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
         this.primaryPublication = primaryPublication;
         this.relevantPublication = relevantPublication;
@@ -54,8 +55,8 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         this.relevantPublicationsValueObjects = BibliographicReferenceValueObject
                 .convert2ValueObjects( experimentalEvidence.getExperiment().getOtherRelevantPublications() );
 
-        for ( BibliographicReferenceValueObject bibli : relevantPublicationsValueObjects ) {
-            relevantPublication.add( bibli.getPubAccession() );
+        for ( BibliographicReferenceValueObject bibli : this.relevantPublicationsValueObjects ) {
+            this.relevantPublication.add( bibli.getPubAccession() );
         }
 
         Collection<Characteristic> collectionCharacteristics = experimentalEvidence.getExperiment()
@@ -65,10 +66,10 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
             for ( Characteristic c : collectionCharacteristics ) {
                 if ( c instanceof VocabCharacteristicImpl ) {
                     VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
-                    experimentCharacteristics.add( new CharacteristicValueObject( voCha.getValue(),
-                            voCha.getCategory(), voCha.getValueUri(), voCha.getCategoryUri() ) );
+                    this.experimentCharacteristics.add( new CharacteristicValueObject( voCha.getValue(), voCha
+                            .getCategory(), voCha.getValueUri(), voCha.getCategoryUri() ) );
                 } else {
-                    experimentCharacteristics.add( new CharacteristicValueObject( c.getValue(), c.getCategory() ) );
+                    this.experimentCharacteristics.add( new CharacteristicValueObject( c.getValue(), c.getCategory() ) );
                 }
             }
         }
@@ -86,11 +87,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return primaryPublication;
     }
 
-    public Collection<String> getRelevantPublication() {
+    public Set<String> getRelevantPublication() {
         return relevantPublication;
     }
 
-    public Collection<CharacteristicValueObject> getExperimentCharacteristics() {
+    public Set<CharacteristicValueObject> getExperimentCharacteristics() {
         return experimentCharacteristics;
     }
 
@@ -114,32 +115,15 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         if ( !super.equals( obj ) ) return false;
         if ( getClass() != obj.getClass() ) return false;
         ExperimentalEvidenceValueObject other = ( ExperimentalEvidenceValueObject ) obj;
-
         if ( experimentCharacteristics == null ) {
             if ( other.experimentCharacteristics != null ) return false;
-        } else {
-
-            HashSet<CharacteristicValueObject> set1 = new HashSet<CharacteristicValueObject>();
-            HashSet<CharacteristicValueObject> set2 = new HashSet<CharacteristicValueObject>();
-            set1.addAll( experimentCharacteristics );
-            set2.addAll( other.experimentCharacteristics );
-
-            if ( !set1.equals( set2 ) ) return false;
-        }
+        } else if ( !experimentCharacteristics.equals( other.experimentCharacteristics ) ) return false;
         if ( primaryPublication == null ) {
             if ( other.primaryPublication != null ) return false;
         } else if ( !primaryPublication.equals( other.primaryPublication ) ) return false;
-
         if ( relevantPublication == null ) {
             if ( other.relevantPublication != null ) return false;
-        } else {
-            HashSet<String> set3 = new HashSet<String>();
-            HashSet<String> set4 = new HashSet<String>();
-            set3.addAll( relevantPublication );
-            set4.addAll( other.relevantPublication );
-            if ( !set3.equals( set4 ) ) return false;
-        }
+        } else if ( !relevantPublication.equals( other.relevantPublication ) ) return false;
         return true;
     }
-
 }
