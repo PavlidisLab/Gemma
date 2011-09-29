@@ -3,6 +3,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.common.description.Characteristic;
@@ -18,13 +19,13 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // other relevant pubmed id
     private Set<String> relevantPublication = new HashSet<String>();
     // TODO find correct name of variable
-    private Set<CharacteristicValueObject> experimentCharacteristics = new HashSet<CharacteristicValueObject>();
+    private Set<CharacteristicValueObject> experimentCharacteristics = new TreeSet<CharacteristicValueObject>();
 
     // *********************************************
     // fields that are returned view of the object
     // *********************************************
     private BibliographicReferenceValueObject primaryPublicationValueObject = null;
-    private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = new HashSet<BibliographicReferenceValueObject>();
+    private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = new TreeSet<BibliographicReferenceValueObject>();
     private BibliographicReferenceCitationValueObject primaryPublicationCitationValueObject = null;
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,

@@ -1,7 +1,7 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 /** CharacteristicValueObject containing a category to a value */
-public class CharacteristicValueObject {
+public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
     private String category = "";
     private String categoryUri = "";
@@ -94,6 +94,16 @@ public class CharacteristicValueObject {
             if ( other.valueUri != null ) return false;
         } else if ( !valueUri.equals( other.valueUri ) ) return false;
         return true;
+    }
+
+    @Override
+    public int compareTo( CharacteristicValueObject o ) {
+
+        if ( this.category.equalsIgnoreCase( o.category ) ) {
+            return this.value.compareToIgnoreCase( o.value );
+        } else {
+            return this.category.compareTo( o.category );
+        }
     }
 
 }

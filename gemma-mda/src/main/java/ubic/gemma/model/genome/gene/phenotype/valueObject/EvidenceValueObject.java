@@ -3,6 +3,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
@@ -89,7 +90,7 @@ public abstract class EvidenceValueObject {
 
             this.associationType = new CharacteristicValueObject( value, category );
         }
-        this.phenotypes = new HashSet<CharacteristicValueObject>();
+        this.phenotypes = new TreeSet<CharacteristicValueObject>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
