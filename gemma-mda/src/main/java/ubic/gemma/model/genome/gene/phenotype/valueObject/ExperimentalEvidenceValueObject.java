@@ -14,10 +14,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // *********************************************
     // field used to create the Bibliographic object
     // *********************************************
-    // The primary pubmed id
-    private String primaryPublication = "";
-    // other relevant pubmed id
-    private Set<String> relevantPublication = new HashSet<String>();
     // TODO find correct name of variable
     private Set<CharacteristicValueObject> experimentCharacteristics = new TreeSet<CharacteristicValueObject>();
 
@@ -25,7 +21,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // fields that are returned view of the object
     // *********************************************
 
-    private Collection<CitationValueObject> relevantPublicationsValueObjects = new HashSet<CitationValueObject>();
+    private Collection<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
     private CitationValueObject primaryPublicationCitationValueObject = null;
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
@@ -33,8 +29,15 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
             String primaryPublication, Set<String> relevantPublication,
             Set<CharacteristicValueObject> experimentCharacteristics ) {
         super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
-        this.primaryPublication = primaryPublication;
-        this.relevantPublication = relevantPublication;
+        this.primaryPublicationCitationValueObject = new CitationValueObject();
+        this.primaryPublicationCitationValueObject.setPubmedAccession( primaryPublication );
+
+        for ( String relevantPubMedID : relevantPublication ) {
+            CitationValueObject relevantPublicationValueObject = new CitationValueObject();
+            relevantPublicationValueObject.setPubmedAccession( relevantPubMedID );
+            this.relevantPublicationsCitationValueObjects.add( relevantPublicationValueObject );
+        }
+
         this.experimentCharacteristics = experimentCharacteristics;
     }
 
@@ -45,14 +48,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
 
-        this.primaryPublicationCitationValueObject = BibliographicReferenceValueObject.constructCitation( experimentalEvidence.getExperiment().getPrimaryPublication() );
+        this.primaryPublicationCitationValueObject = BibliographicReferenceValueObject
+                .constructCitation( experimentalEvidence.getExperiment().getPrimaryPublication() );
 
-        this.relevantPublicationsValueObjects = BibliographicReferenceValueObject
+        this.relevantPublicationsCitationValueObjects = BibliographicReferenceValueObject
                 .constructCitations( experimentalEvidence.getExperiment().getOtherRelevantPublications() );
-
-        for ( CitationValueObject bibli : relevantPublicationsValueObjects ) {
-            relevantPublication.add( bibli.getPubmedAccession() );
-        }
 
         Collection<Characteristic> collectionCharacteristics = experimentalEvidence.getExperiment()
                 .getCharacteristics();
@@ -70,20 +70,12 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         }
     }
 
-    public Collection<CitationValueObject> getRelevantPublicationsValueObjects() {
-        return relevantPublicationsValueObjects;
-    }
-
-    public String getPrimaryPublication() {
-        return primaryPublication;
-    }
-
-    public Set<String> getRelevantPublication() {
-        return relevantPublication;
-    }
-
     public Set<CharacteristicValueObject> getExperimentCharacteristics() {
         return experimentCharacteristics;
+    }
+
+    public Collection<CitationValueObject> getRelevantPublicationsValueObjects() {
+        return relevantPublicationsCitationValueObjects;
     }
 
     public CitationValueObject getPrimaryPublicationCitationValueObject() {
@@ -95,8 +87,14 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + ( ( experimentCharacteristics == null ) ? 0 : experimentCharacteristics.hashCode() );
-        result = prime * result + ( ( primaryPublication == null ) ? 0 : primaryPublication.hashCode() );
-        result = prime * result + ( ( relevantPublication == null ) ? 0 : relevantPublication.hashCode() );
+        result = prime
+                * result
+                + ( ( primaryPublicationCitationValueObject == null ) ? 0 : primaryPublicationCitationValueObject
+                        .hashCode() );
+        result = prime
+                * result
+                + ( ( relevantPublicationsCitationValueObjects == null ) ? 0 : relevantPublicationsCitationValueObjects
+                        .hashCode() );
         return result;
     }
 
@@ -109,12 +107,15 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         if ( experimentCharacteristics == null ) {
             if ( other.experimentCharacteristics != null ) return false;
         } else if ( !experimentCharacteristics.equals( other.experimentCharacteristics ) ) return false;
-        if ( primaryPublication == null ) {
-            if ( other.primaryPublication != null ) return false;
-        } else if ( !primaryPublication.equals( other.primaryPublication ) ) return false;
-        if ( relevantPublication == null ) {
-            if ( other.relevantPublication != null ) return false;
-        } else if ( !relevantPublication.equals( other.relevantPublication ) ) return false;
+        if ( primaryPublicationCitationValueObject == null ) {
+            if ( other.primaryPublicationCitationValueObject != null ) return false;
+        } else if ( !primaryPublicationCitationValueObject.equals( other.primaryPublicationCitationValueObject ) )
+            return false;
+        if ( relevantPublicationsCitationValueObjects == null ) {
+            if ( other.relevantPublicationsCitationValueObjects != null ) return false;
+        } else if ( !relevantPublicationsCitationValueObjects.equals( other.relevantPublicationsCitationValueObjects ) )
+            return false;
         return true;
     }
+
 }

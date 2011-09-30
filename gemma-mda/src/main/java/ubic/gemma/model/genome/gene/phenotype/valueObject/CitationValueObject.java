@@ -31,7 +31,8 @@ import ubic.gemma.model.common.description.BibliographicReference;
 /**
  * represents a BibliographicReference as a citation string (which is really super light value object). This object has
  * four fields and is meant to be very simple, before adding anything consider using BibliographicReferenceValueObject.
- * This can't be an inner class of BibliographicReferenceValueObject because it needs dummy constructor for dwr to work with it.
+ * This can't be an inner class of BibliographicReferenceValueObject because it needs dummy constructor for dwr to work
+ * with it.
  * 
  * @see ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceValueObject
  *      BibliographicReferenceValueObject for a more comprehensive alternative representation of BibliographicReference
@@ -166,6 +167,26 @@ public class CitationValueObject {
      */
     public void setPubmedURL( String pubmedURL ) {
         this.pubmedURL = pubmedURL;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( pubmedAccession == null ) ? 0 : pubmedAccession.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        CitationValueObject other = ( CitationValueObject ) obj;
+        if ( pubmedAccession == null ) {
+            if ( other.pubmedAccession != null ) return false;
+        } else if ( !pubmedAccession.equals( other.pubmedAccession ) ) return false;
+        return true;
     }
 
 }

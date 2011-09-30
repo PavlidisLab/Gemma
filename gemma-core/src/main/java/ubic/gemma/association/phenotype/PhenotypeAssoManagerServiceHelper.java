@@ -23,6 +23,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CitationValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
@@ -148,7 +149,7 @@ public class PhenotypeAssoManagerServiceHelper {
         populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
 
         // populate specific fields for this evidence
-        String pubmedId = evidenceValueObject.getPubmedID();
+        String pubmedId = evidenceValueObject.getCitationValueObject().getPubmedAccession();
         literatureEvidence.setCitation( findOrCreateBibliographicReference( pubmedId ) );
         return literatureEvidence;
 
@@ -168,7 +169,7 @@ public class PhenotypeAssoManagerServiceHelper {
 
         // we only need to create the experiment if its not already in the database
         Collection<GenericExperiment> genericExperimentWithPubmed = phenotypeAssociationService
-                .findByPubmedID( evidenceValueObject.getPrimaryPublication() );
+                .findByPubmedID( evidenceValueObject.getPrimaryPublicationCitationValueObject().getPubmedAccession() );
 
         GenericExperiment genericExperiment = null;
 
@@ -177,10 +178,17 @@ public class PhenotypeAssoManagerServiceHelper {
 
             boolean sameFound = true;
 
+            HashSet<String> relevantPublication = new HashSet<String>();
+
+            for ( CitationValueObject relevantPubli : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
+
+                relevantPublication.add( relevantPubli.getPubmedAccession() );
+            }
+
             for ( BibliographicReference bilbi : genericExp.getOtherRelevantPublications() ) {
 
                 // same relevant pubmed
-                if ( !evidenceValueObject.getRelevantPublication().contains( bilbi.getPubAccession().getAccession() ) ) {
+                if ( !relevantPublication.contains( bilbi.getPubAccession().getAccession() ) ) {
                     sameFound = false;
                 }
             }
@@ -210,8 +218,16 @@ public class PhenotypeAssoManagerServiceHelper {
             genericExperiment = GenericExperiment.Factory.newInstance();
 
             // find all pubmed id from the value object
-            String primaryPubmedId = evidenceValueObject.getPrimaryPublication();
-            Collection<String> relevantPubmedId = evidenceValueObject.getRelevantPublication();
+            String primaryPubmedId = evidenceValueObject.getPrimaryPublicationCitationValueObject()
+                    .getPubmedAccession();
+
+            Collection<String> relevantPubmedId = new HashSet<String>();
+
+            for ( CitationValueObject citationValueObject : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
+
+                relevantPubmedId.add( citationValueObject.getPubmedAccession() );
+            }
+
             // creates or find those Bibliographic Reference and add them to the GenericExperiment
             genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
             genericExperiment.setOtherRelevantPublications( findOrCreateBibliographicReference( relevantPubmedId ) );

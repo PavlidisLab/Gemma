@@ -6,30 +6,46 @@ import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 
 public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 
-    private String pubmedID = "";
-
-    private BibliographicReferenceValueObject bibliographicReferenceValueObject = null;
+    private CitationValueObject citationValueObject = null;
 
     public LiteratureEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes, String pubmedID ) {
         super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
-        this.pubmedID = pubmedID;
+
+        citationValueObject = new CitationValueObject();
+        citationValueObject.setPubmedAccession( pubmedID );
     }
 
     /** Entity to Value Object */
     public LiteratureEvidenceValueObject( LiteratureEvidence literatureEvidence ) {
         super( literatureEvidence );
 
-        this.bibliographicReferenceValueObject = new BibliographicReferenceValueObject(
-                literatureEvidence.getCitation() );
+        this.citationValueObject = BibliographicReferenceValueObject.constructCitation( literatureEvidence
+                .getCitation() );
     }
 
-    public String getPubmedID() {
-        return pubmedID;
+    public CitationValueObject getCitationValueObject() {
+        return citationValueObject;
     }
 
-    public BibliographicReferenceValueObject getBibliographicReferenceValueObject() {
-        return bibliographicReferenceValueObject;
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ( ( citationValueObject == null ) ? 0 : citationValueObject.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( !super.equals( obj ) ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        LiteratureEvidenceValueObject other = ( LiteratureEvidenceValueObject ) obj;
+        if ( citationValueObject == null ) {
+            if ( other.citationValueObject != null ) return false;
+        } else if ( !citationValueObject.equals( other.citationValueObject ) ) return false;
+        return true;
     }
 
 }
