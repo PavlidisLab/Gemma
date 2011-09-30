@@ -46,7 +46,7 @@ public class CitationValueObject {
 
     public static List<CitationValueObject> convert2CitationValueObjects( Collection<BibliographicReference> refs ) {
         if ( refs == null || refs.size() == 0 ) {
-            return null;
+            return new ArrayList<CitationValueObject>();
         }
 
         List<CitationValueObject> results = new ArrayList<CitationValueObject>();
