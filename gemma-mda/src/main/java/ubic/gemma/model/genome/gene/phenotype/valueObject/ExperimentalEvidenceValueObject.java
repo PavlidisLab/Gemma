@@ -11,16 +11,7 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
-    // *********************************************
-    // field used to create the Bibliographic object
-    // *********************************************
-    // TODO find correct name of variable
     private Set<CharacteristicValueObject> experimentCharacteristics = new TreeSet<CharacteristicValueObject>();
-
-    // *********************************************
-    // fields that are returned view of the object
-    // *********************************************
-
     private Set<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
     private CitationValueObject primaryPublicationCitationValueObject = null;
 
