@@ -660,6 +660,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 			this.zoom(records[0], this.id);
 			this.fireEvent('loadSucceeded');
 		}
+		
 	},
 
 	setHeatmapMode : function(b) {
@@ -683,7 +684,6 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 		var sampleNames = record.get("sampleNames");
 		var conditionLabels = record.get("factorValuesToNames");
 		var conditionLabelKey = record.get("factorNames");
-
 		this.factorValueLegendPanel.update(conditionLabelKey);
 		this.zoomPanel.update(eevo, profiles, sampleNames, conditionLabels, conditionLabelKey);
 	},
@@ -698,11 +698,11 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 		if (this.forceFitPlots) {
 			this.forceFitPlots = false;
 			this.zoomPanel.forceFitPlots = false;
-			btn.setText("Zoom out");
+			//btn.setText("Fit Width");
 		} else {
 			this.forceFitPlots = true;
 			this.zoomPanel.forceFitPlots = true;
-			btn.setText("Zoom in");
+			//btn.setText("Expand");
 		}
 
 		// force a refresh of the zoom.
@@ -990,7 +990,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 		Ext.apply(this, {
 					items : items,
 					bbar : new Ext.Toolbar({
-								items : [{
+								items : [ browserWarning, '->', {
 											xtype : 'button',
 											ref:'downloadDataBtn',
 											icon : '/Gemma/images/download.gif',
@@ -1000,14 +1000,14 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 																// load.
 											tooltip : "Download displayed data in a tab-delimited format",
 											handler : this.downloadData.createDelegate(this)
-										}, browserWarning, '->', {
+										},'-',{
 											xtype : 'button', 
 											text : this.showSampleNames ? "Hide sample names" : "Show sample names",
 											ref:'toggleSampleNamesBtn',
 											handler : this.toggleSampleNames.createDelegate(this),
 											tooltip : "Toggle display of the sample names",
 											disabled : true
-										},{
+										},'-',{
 											xtype : 'button', 
 											text : this.showLegend ? "Hide legend" : "Show legend",
 											ref:'toggleLegendBtn',
@@ -1015,15 +1015,16 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 											tooltip : "Toggle display of the plot legend",
 											disabled : true,
 											hidden : this.heatmapMode
-										},{
+										},'-',{
 											xtype : 'button',
-											text : this.forceFitPlots ? "Zoom in" : "Zoom out",
+											//text : this.forceFitPlots ? "Fit width" : "Expand",
+											text : "Zoom +/-",
 											ref:'forceFitBtn',
 											handler : this.toggleForceFit.createDelegate(this),
 											tooltip : "Toggle forcing of the plot to fit in the width of the window",
 											disabled : true,
 											hidden : false
-										}, {
+										},'-',{
 											xtype : 'button',
 											text : this.heatmapMode ? "Switch to line plot" : "Switch to heatmap",
 											ref:'toggleViewBtn',
@@ -1051,7 +1052,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 			// So initial state is sure to be okay, after restore from
 			// cookie
 			this.getBottomToolbar().toggleViewBtn.setText(this.heatmapMode ? "Switch to line plot" : "Switch to heatmap");
-			this.getBottomToolbar().forceFitBtn.setText(this.forceFitPlots ? "Zoom in" : "Zoom out");
+			//this.getBottomToolbar().forceFitBtn.setText(this.forceFitPlots ? "Fit width" : "Expand");
 			this.getBottomToolbar().toggleLegendBtn.setText(this.showLegend ? "Hide legend" : "Show legend");
 			this.getBottomToolbar().toggleSampleNamesBtn.setText(this.showSampleNames ? "Hide sample names" : "Show sample names");
 		// Ext.getCmp(this.smoothBtnId).setText(this.smoothLineGraphs
@@ -1107,6 +1108,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 		// }.createDelegate(this), this);
 	
 		//this.loadFromParam();
+
 	},
 	loadFromParam:function(config){
 				
