@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-
 
 /**
  * @author kelsey
@@ -43,15 +41,10 @@ public class GeneValueObject implements java.io.Serializable {
         if ( genes == null ) return converted;
 
         for ( Gene g : genes ) {
-            if ( g != null ) {
-
-                Collection<EvidenceValueObject> evidencesFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
-                        .getPhenotypeAssociations() );
-
-                converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiId(), g
-                        .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
-                        .getTaxon().getScientificName(), g.getTaxon().getCommonName(), evidencesFromPhenotype ) );
-            }
+            if ( g == null ) continue;
+            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiId(), g
+                    .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
+                    .getTaxon().getScientificName(), g.getTaxon().getCommonName() ) );
         }
 
         return converted;
@@ -98,9 +91,6 @@ public class GeneValueObject implements java.io.Serializable {
 
     private java.lang.String taxonScientificName;
 
-    /** Added field for the Candidate Gene Management System */
-    private Collection<EvidenceValueObject> evidences;
-
     public GeneValueObject() {
     }
 
@@ -115,7 +105,6 @@ public class GeneValueObject implements java.io.Serializable {
         this.description = gene.getDescription();
         this.taxonId = gene.getTaxon().getId();
         this.aliases = getAliasStrings( gene );
-        this.evidences = EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
 
     /**
@@ -141,8 +130,7 @@ public class GeneValueObject implements java.io.Serializable {
     public GeneValueObject( GeneValueObject otherBean ) {
         this( otherBean.getId(), otherBean.getName(), otherBean.getAliases(), otherBean.getNcbiId(), otherBean
                 .getOfficialSymbol(), otherBean.getOfficialName(), otherBean.getDescription(), otherBean.getScore(),
-                otherBean.getTaxonId(), otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName(), otherBean
-                        .getEvidences() );
+                otherBean.getTaxonId(), otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName() );
     }
 
     public GeneValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
@@ -161,24 +149,6 @@ public class GeneValueObject implements java.io.Serializable {
         this.aliases = aliases;
     }
 
-    public GeneValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
-            java.lang.String ncbiId, java.lang.String officialSymbol, java.lang.String officialName,
-            java.lang.String description, Double score, Long taxonId, String taxonScientificName,
-            String taxonCommonName, Collection<EvidenceValueObject> evidences ) {
-        this.id = id;
-        this.name = name;
-        this.ncbiId = ncbiId;
-        this.officialSymbol = officialSymbol;
-        this.officialName = officialName;
-        this.description = description;
-        this.score = score;
-        this.taxonId = taxonId;
-        this.taxonScientificName = taxonScientificName;
-        this.taxonCommonName = taxonCommonName;
-        this.aliases = aliases;
-        this.evidences = evidences;
-    }
-
     /**
      * Copies all properties from the argument value object into this value object.
      */
@@ -192,7 +162,6 @@ public class GeneValueObject implements java.io.Serializable {
             this.setDescription( otherBean.getDescription() );
             this.setScore( otherBean.getScore() );
             this.setAliases( otherBean.getAliases() );
-            this.setEvidences( otherBean.getEvidences() );
         }
     }
 
@@ -321,14 +290,6 @@ public class GeneValueObject implements java.io.Serializable {
 
     public void setTaxonScientificName( java.lang.String taxonScientificName ) {
         this.taxonScientificName = taxonScientificName;
-    }
-
-    public Collection<EvidenceValueObject> getEvidences() {
-        return evidences;
-    }
-
-    public void setEvidences( Collection<EvidenceValueObject> evidences ) {
-        this.evidences = evidences;
     }
 
 }

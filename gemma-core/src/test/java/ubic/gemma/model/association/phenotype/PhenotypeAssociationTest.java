@@ -32,9 +32,9 @@ import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -92,22 +92,23 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 1 - call the service to add the phenotype association and save the results to the database
         // ********************************************************************************************
-        GeneValueObject geneValue = phenoAssoService.linkGeneToPhenotype( geneNCBI, evidence );
+        GeneEvidencesValueObject geneValue = phenoAssoService.linkGeneToPhenotype( geneNCBI, evidence );
         assertTrue( geneValue.getEvidences() != null && geneValue.getEvidences().size() >= 1 );
         // ********************************************************************************************
         // 2 - call the service to find all gene for a given phenotype
         // ********************************************************************************************
-        Collection<GeneValueObject> geneInfoValueObjects = phenoAssoService.findCandidateGenes( phenotypeValue );
+        Collection<GeneEvidencesValueObject> geneInfoValueObjects = phenoAssoService
+                .findCandidateGenes( phenotypeValue );
         assertTrue( geneInfoValueObjects != null && geneInfoValueObjects.size() >= 1 );
         // ********************************************************************************************
         // 3 - call the service to find all evidences and phenotypes for a gene
         // ********************************************************************************************
-        GeneValueObject geneInfoValueObject = phenoAssoService.findPhenotypeAssociations( geneNCBI );
-        assertNotNull( geneInfoValueObject.getEvidences() );
+        Collection<EvidenceValueObject> evidences = phenoAssoService.findPhenotypeAssociations( geneNCBI );
+        assertNotNull( evidences );
         // ********************************************************************************************
         // 4 - Delete the Association
         // ********************************************************************************************
-        for ( EvidenceValueObject evidenceValueObject : geneInfoValueObject.getEvidences() ) {
+        for ( EvidenceValueObject evidenceValueObject : evidences ) {
             phenoAssoService.removePhenotypeAssociation( evidenceValueObject.getDatabaseId() );
         }
         assertTrue( phenoAssoService.findCandidateGenes( phenotypeValue ).size() == 0 );
@@ -142,15 +143,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void testFindPhenotypeAssociations() {
 
         // call to the service
-        GeneValueObject geneInfoValueObject = phenoAssoService.findPhenotypeAssociations( "2" );
+        Collection<EvidenceValueObject> evidences = phenoAssoService.findPhenotypeAssociations( "2" );
 
-        System.out.println( "" );
-        System.out.println( "Gene name: " + geneInfoValueObject.getName() );
-        System.out.println( "" );
-        System.out.println();
-        System.out.println();
-
-        for ( EvidenceValueObject evidence : geneInfoValueObject.getEvidences() ) {
+        for ( EvidenceValueObject evidence : evidences ) {
 
             System.out.println( "Found evidence: " + evidence.getDatabaseId() + "   " + evidence.getDescription() );
             System.out.println( "With phenotypes: " );
@@ -167,9 +162,9 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     // not a junit test, used to check values
     public void testFindCandidateGenes() {
 
-        Collection<GeneValueObject> geneInfoValueObjects = phenoAssoService.findCandidateGenes( "CANCER" );
+        Collection<GeneEvidencesValueObject> geneInfoValueObjects = phenoAssoService.findCandidateGenes( "CANCER" );
 
-        for ( GeneValueObject geneInfoValueObject : geneInfoValueObjects ) {
+        for ( GeneEvidencesValueObject geneInfoValueObject : geneInfoValueObjects ) {
 
             System.out.println( "" );
             System.out.println( "Gene name: " + geneInfoValueObject.getName() );
