@@ -10,9 +10,9 @@ import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Component
@@ -35,7 +35,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param phenotypes List of characteristics (phenotypes)
      * @return The Gene updated with the new evidence and characteristics
      */
-    public GeneValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence ) {
+    public GeneEvidencesValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence ) {
 
         // find the gene we wish to add the evidence and phenotype
         Gene gene = this.geneService.findByNCBIId( geneNCBI );
@@ -48,7 +48,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
             if ( evidenceFound.equals( evidence ) ) {
                 // the evidence already exists, no need to create it again
-                return new GeneValueObject( gene );
+                return new GeneEvidencesValueObject( gene );
             }
         }
 
@@ -62,24 +62,45 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         this.geneService.update( gene );
 
         // return the saved gene result
-        return new GeneValueObject( gene );
+        return new GeneEvidencesValueObject( gene );
     };
 
     /**
-     * Return a gene for a specific gene BNDI
+     * Return all evidences for a specific gene NCBI
      * 
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public GeneValueObject findPhenotypeAssociations( String geneNCBI ) {
+    public Collection<EvidenceValueObject> findPhenotypeAssociations( String geneNCBI ) {
+
+        // TODO no need to load the gene
 
         Gene gene = geneService.findByNCBIId( geneNCBI );
 
         if ( gene == null || gene.getPhenotypeAssociations() == null || gene.getPhenotypeAssociations().size() == 0 ) {
             return null;
         }
+        return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
 
-        return new GeneValueObject( gene );
+    }
+
+    /**
+     * Return all evidences for a specific gene database id
+     * 
+     * @param geneNCBI The Evidence id
+     * @return The Gene we are interested in
+     */
+    public Collection<EvidenceValueObject> findPhenotypeAssociations( Long geneDatabaseID ) {
+
+        // TODO no need to load the gene
+
+        Gene gene = geneService.load( geneDatabaseID );
+
+        if ( gene == null || gene.getPhenotypeAssociations() == null || gene.getPhenotypeAssociations().size() == 0 ) {
+            return null;
+        }
+        return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
+
     }
 
     /**
@@ -88,24 +109,25 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param 1 to many phenotypes
      * @return A collection of the genes found
      */
-    public Collection<GeneValueObject> findCandidateGenes( String... phenotypesValues ) {
+    public Collection<GeneEvidencesValueObject> findCandidateGenes( String... phenotypesValues ) {
 
         if ( phenotypesValues.length == 0 ) {
             return null;
         }
 
-        Collection<GeneValueObject> genesVO = new HashSet<GeneValueObject>();
+        Collection<GeneEvidencesValueObject> genesVO = new HashSet<GeneEvidencesValueObject>();
 
         // find all the Genes with the first phenotype
         Collection<Gene> genes = this.associationService.findCandidateGenes( phenotypesValues[0] );
-        Collection<GeneValueObject> genesWithFirstPhenotype = GeneValueObject.convert2ValueObjects( genes );
+        Collection<GeneEvidencesValueObject> genesWithFirstPhenotype = GeneEvidencesValueObject
+                .convert2GeneEvidencesValueObjects( genes );
 
         if ( phenotypesValues.length == 1 ) {
             genesVO = genesWithFirstPhenotype;
         }
         // there is more than 1 phenotype, lets filter the content
         else {
-            for ( GeneValueObject gene : genesWithFirstPhenotype ) {
+            for ( GeneEvidencesValueObject gene : genesWithFirstPhenotype ) {
 
                 // contains all phenotypes for one gene
                 HashSet<String> allPhenotypes = new HashSet<String>();
@@ -134,7 +156,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // for each evidence on the gene, lets put a flag if that evidence got the chosen phenotype
-        for ( GeneValueObject gene : genesVO ) {
+        for ( GeneEvidencesValueObject gene : genesVO ) {
 
             for ( EvidenceValueObject evidence : gene.getEvidences() ) {
 

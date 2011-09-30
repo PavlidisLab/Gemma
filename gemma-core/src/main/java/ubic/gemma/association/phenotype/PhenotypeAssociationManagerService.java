@@ -4,9 +4,9 @@ import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
 
 @Service
 public interface PhenotypeAssociationManagerService {
@@ -19,7 +19,7 @@ public interface PhenotypeAssociationManagerService {
      * @param phenotypes List of characteristics (phenotypes)
      * @return The Gene updated with the new evidence and characteristics
      */
-    public GeneValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence );
+    public GeneEvidencesValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence );
 
     /**
      * Removes an evidence from a Gene
@@ -34,7 +34,15 @@ public interface PhenotypeAssociationManagerService {
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public GeneValueObject findPhenotypeAssociations( String geneNCBI );
+    public Collection<EvidenceValueObject> findPhenotypeAssociations( String geneNCBI );
+
+    /**
+     * Return all evidences for a specific gene database id
+     * 
+     * @param geneNCBI The Evidence id
+     * @return The Gene we are interested in
+     */
+    public Collection<EvidenceValueObject> findPhenotypeAssociations( Long geneDatabaseID );
 
     /**
      * Given an array of phenotypes returns the genes that have all those phenotypes
@@ -42,7 +50,7 @@ public interface PhenotypeAssociationManagerService {
      * @param 1 to many phenotypes
      * @return A collection of the genes found
      */
-    public Collection<GeneValueObject> findCandidateGenes( String... phenotypesValues );
+    public Collection<GeneEvidencesValueObject> findCandidateGenes( String... phenotypesValues );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype
