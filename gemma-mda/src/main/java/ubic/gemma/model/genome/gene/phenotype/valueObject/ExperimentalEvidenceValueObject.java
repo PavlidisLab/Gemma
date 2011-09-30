@@ -21,7 +21,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // fields that are returned view of the object
     // *********************************************
 
-    private Collection<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
+    private Set<CitationValueObject> relevantPublicationsCitationValueObjects = new HashSet<CitationValueObject>();
     private CitationValueObject primaryPublicationCitationValueObject = null;
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
@@ -51,8 +51,8 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         this.primaryPublicationCitationValueObject = BibliographicReferenceValueObject
                 .constructCitation( experimentalEvidence.getExperiment().getPrimaryPublication() );
 
-        this.relevantPublicationsCitationValueObjects = BibliographicReferenceValueObject
-                .constructCitations( experimentalEvidence.getExperiment().getOtherRelevantPublications() );
+        this.relevantPublicationsCitationValueObjects.addAll( BibliographicReferenceValueObject
+                .constructCitations( experimentalEvidence.getExperiment().getOtherRelevantPublications() ) );
 
         Collection<Characteristic> collectionCharacteristics = experimentalEvidence.getExperiment()
                 .getCharacteristics();
