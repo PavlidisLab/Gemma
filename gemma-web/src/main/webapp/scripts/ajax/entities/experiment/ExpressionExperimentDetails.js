@@ -346,7 +346,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         var currentDescription = e.description;
         var currentName = e.name;
         var currentShortName = e.shortName;
-		var currentPubMedId = e.pubmedId;
+		var currentPubMedId = (e.primaryCitation)? e.primaryCitation.pubmedAccession : '';
 		var currentPrimaryCitation = e.primaryCitation;
         var manager = new Gemma.EEManager({
             editable: this.editable,
@@ -363,26 +363,19 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 			style:'padding-top:5px',
 			tpl: new Ext.XTemplate(
 					'<tpl if="pubAvailable==\'true\'">' +
-						'{primaryCitation}' +
+						'{primaryCitationStr}' +
 						'&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"' +
-						' href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=' +
-						'{pubMedId}' +
-						'&query_hl=2&itool=pubmed_docsum"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp' +
+						' href="{pubmedURL}"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp' +
 					'</tpl>'+
 					'<tpl if="pubAvailable==\'false\'">' +
 						'Not Available'+
 					'</tpl>'),
 			data:{
-				pubAvailable: (currentPubMedId)? 'true':'false',
-				primaryCitation: (currentPrimaryCitation)? currentPrimaryCitation.citation : '',
-				pubMedId:currentPubMedId
+				pubAvailable: (currentPrimaryCitation)? 'true':'false',
+				primaryCitationStr: (currentPrimaryCitation)? currentPrimaryCitation.citation : '',
+				pubmedURL : (currentPrimaryCitation)? currentPrimaryCitation.pubmedURL : ''
 			},
-			/*html: (currentPubMedId)?currentPrimaryCitation +
-			'&nbsp; <a target="_blank" ext:qtip="Go to PubMed (in new window)"' +
-			' href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids=' +
-			currentPubMedId +
-			'&query_hl=2&itool=pubmed_docsum"><img src="/Gemma/images/pubmed.gif" ealt="PubMed" /></a>&nbsp;&nbsp': 'Not Available' ,
-			*/listeners: {
+			listeners: {
 				'toggleEditMode': function(editOn){
 					this.setVisible(!editOn);
 				}
@@ -534,13 +527,13 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 				pubMedDisplay.update({
 					pubAvailable: (data.pubmedId) ? 'true' : 'false',
 					primaryCitation: (data.primaryCitation)? data.primaryCitation.citation : '',
-					pubMedId: data.pubmedId
+					pubmedURL: (data.primaryCitation)? data.primaryCitation.pubmedURL : '',
 				});
                 
                 currentShortName = data.shortName;
                 currentName = data.name;
                 currentDescription = data.description;
-				currentPubMedId = data.pubmedId;
+				currentPubMedId = (data.primaryCitation)? data.primaryCitation.pubmedAccession:'';
 				currentPrimaryCitation = data.primaryCitation;
 				
 			this.dirtyForm = false;

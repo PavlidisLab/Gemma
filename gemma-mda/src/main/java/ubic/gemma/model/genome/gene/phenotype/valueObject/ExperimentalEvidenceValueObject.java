@@ -24,9 +24,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     // *********************************************
     // fields that are returned view of the object
     // *********************************************
-    private BibliographicReferenceValueObject primaryPublicationValueObject = null;
-    private Collection<BibliographicReferenceValueObject> relevantPublicationsValueObjects = new TreeSet<BibliographicReferenceValueObject>();
-    private BibliographicReferenceCitationValueObject primaryPublicationCitationValueObject = null;
+
+    private Collection<CitationValueObject> relevantPublicationsValueObjects = new HashSet<CitationValueObject>();
+    private CitationValueObject primaryPublicationCitationValueObject = null;
 
     public ExperimentalEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
@@ -45,19 +45,13 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
 
-        this.primaryPublicationCitationValueObject = new BibliographicReferenceCitationValueObject(
-                experimentalEvidence.getExperiment().getPrimaryPublication() );
-
-        this.primaryPublicationValueObject = new BibliographicReferenceValueObject( experimentalEvidence
-                .getExperiment().getPrimaryPublication() );
-
-        this.primaryPublication = primaryPublicationValueObject.getPubAccession();
+        this.primaryPublicationCitationValueObject = BibliographicReferenceValueObject.constructCitation( experimentalEvidence.getExperiment().getPrimaryPublication() );
 
         this.relevantPublicationsValueObjects = BibliographicReferenceValueObject
-                .convert2ValueObjects( experimentalEvidence.getExperiment().getOtherRelevantPublications() );
+                .constructCitations( experimentalEvidence.getExperiment().getOtherRelevantPublications() );
 
-        for ( BibliographicReferenceValueObject bibli : this.relevantPublicationsValueObjects ) {
-            this.relevantPublication.add( bibli.getPubAccession() );
+        for ( CitationValueObject bibli : relevantPublicationsValueObjects ) {
+            relevantPublication.add( bibli.getPubmedAccession() );
         }
 
         Collection<Characteristic> collectionCharacteristics = experimentalEvidence.getExperiment()
@@ -76,11 +70,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         }
     }
 
-    public BibliographicReferenceValueObject getPrimaryPublicationValueObject() {
-        return primaryPublicationValueObject;
-    }
-
-    public Collection<BibliographicReferenceValueObject> getRelevantPublicationsValueObjects() {
+    public Collection<CitationValueObject> getRelevantPublicationsValueObjects() {
         return relevantPublicationsValueObjects;
     }
 
@@ -96,7 +86,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         return experimentCharacteristics;
     }
 
-    public BibliographicReferenceCitationValueObject getPrimaryPublicationCitationValueObject() {
+    public CitationValueObject getPrimaryPublicationCitationValueObject() {
         return primaryPublicationCitationValueObject;
     }
 

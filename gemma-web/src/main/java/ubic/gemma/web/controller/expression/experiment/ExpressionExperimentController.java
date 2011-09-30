@@ -103,7 +103,8 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceCitationValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CitationValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
@@ -247,7 +248,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             ExpressionExperimentDetailsValueObject result = new ExpressionExperimentDetailsValueObject();
             result.setPubmedId( Integer.parseInt( pubmedId ) );
             result.setId( expressionExperiment.getId() );
-            result.setPrimaryCitation( new BibliographicReferenceCitationValueObject( expressionExperiment.getPrimaryPublication() ) );
+            result.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( expressionExperiment.getPrimaryPublication() ) );
             return new TaskResult( command, result );
         }
 
@@ -948,7 +949,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setDescription( ee.getDescription() );
 
         if ( ee.getPrimaryPublication() != null && ee.getPrimaryPublication().getPubAccession() != null ) {
-            finalResult.setPrimaryCitation( new BibliographicReferenceCitationValueObject( ee.getPrimaryPublication() ) );
+            finalResult.setPrimaryCitation( CitationValueObject.convert2CitationValueObject( ee.getPrimaryPublication() ) );
             String accession = ee.getPrimaryPublication().getPubAccession().getAccession();
 
             try {

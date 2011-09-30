@@ -40,6 +40,9 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  */
 public class BibliographicReferenceValueObject {
 
+    // for constructing pubmedURLs
+    final static String PUBMED_URL_ROOT = "http://www.ncbi.nlm.nih.gov/pubmed/";
+    
     public static List<BibliographicReferenceValueObject> convert2ValueObjects( Collection<BibliographicReference> refs ) {
 
         List<BibliographicReferenceValueObject> results = new ArrayList<BibliographicReferenceValueObject>();
@@ -57,7 +60,7 @@ public class BibliographicReferenceValueObject {
 
     private String authorList;
 
-    private String citation;
+    private CitationValueObject citation;
 
     private Collection<ExpressionExperimentValueObject> experiments = new HashSet<ExpressionExperimentValueObject>();
 
@@ -99,7 +102,7 @@ public class BibliographicReferenceValueObject {
         this.title = ref.getTitle();
         this.publication = ref.getPublication();
         this.volume = ref.getVolume();
-        this.citation = ref.getCitation();
+        this.citation = constructCitation( ref );
 
         this.meshTerms = extractTermsfromHeadings( ref.getMeshTerms() );
         this.chemicalsTerms = extractChemfromHeadings( ref.getChemicals() );
@@ -131,14 +134,13 @@ public class BibliographicReferenceValueObject {
         return chemTermList;
     }
 
-    public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String citation,
-            String issue, String pages, String pubAccession, String publication, Date publicationDate,
-            String publisher, String title, String volume, Collection<ExpressionExperimentValueObject> experiments ) {
+    public BibliographicReferenceValueObject( Long id, String abstractText, String authorList, String issue,
+            String pages, String pubAccession, String publication, Date publicationDate, String publisher,
+            String title, String volume, Collection<ExpressionExperimentValueObject> experiments ) {
         super();
         this.id = id;
         this.abstractText = abstractText;
         this.authorList = authorList;
-        this.citation = citation;
         this.issue = issue;
         this.pages = pages;
         this.pubAccession = pubAccession;
@@ -181,7 +183,7 @@ public class BibliographicReferenceValueObject {
     /**
      * @return the citation
      */
-    public String getCitation() {
+    public CitationValueObject getCitation() {
         return citation;
     }
 
@@ -272,7 +274,7 @@ public class BibliographicReferenceValueObject {
     /**
      * @param citation the citation to set
      */
-    public void setCitation( String citation ) {
+    public void setCitation( CitationValueObject citation ) {
         this.citation = citation;
     }
 
@@ -346,4 +348,11 @@ public class BibliographicReferenceValueObject {
         this.volume = volume;
     }
 
+    public static CitationValueObject constructCitation( BibliographicReference bib ){
+        return CitationValueObject.convert2CitationValueObject( bib );
+    }
+
+    public static Collection<CitationValueObject> constructCitations( Collection<BibliographicReference> bibs ){
+        return CitationValueObject.convert2CitationValueObjects( bibs );
+    }
 }

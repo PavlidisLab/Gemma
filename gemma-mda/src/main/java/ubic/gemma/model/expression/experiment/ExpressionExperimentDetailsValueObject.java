@@ -21,7 +21,7 @@ package ubic.gemma.model.expression.experiment;
 import java.util.Collection;
 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceCitationValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CitationValueObject;
 
 /**
  * @version $Id$
@@ -40,7 +40,7 @@ public class ExpressionExperimentDetailsValueObject extends
 
     private java.lang.String secondaryExternalUri;
 
-    private BibliographicReferenceCitationValueObject primaryCitation;
+    private CitationValueObject primaryCitation;
 
     private Collection<ArrayDesignValueObject> arrayDesigns;
 
@@ -101,7 +101,7 @@ public class ExpressionExperimentDetailsValueObject extends
         return this.description;
     }
 
-    public BibliographicReferenceCitationValueObject getPrimaryCitation() {
+    public CitationValueObject getPrimaryCitation() {
         return primaryCitation;
     }
 
@@ -137,7 +137,7 @@ public class ExpressionExperimentDetailsValueObject extends
         this.description = description;
     }
 
-    public void setPrimaryCitation( BibliographicReferenceCitationValueObject primaryCitation ) {
+    public void setPrimaryCitation( CitationValueObject primaryCitation ) {
         this.primaryCitation = primaryCitation;
     }
 
