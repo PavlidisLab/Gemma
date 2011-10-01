@@ -24,4 +24,5 @@
 	
 </script>
 
+<div id="browser-warnings"></div>
 </html>

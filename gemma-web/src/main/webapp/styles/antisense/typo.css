@@ -201,7 +201,7 @@ textarea {
 
 /* END TEXT */ /* LISTS */
 ul.glassList {
-	list-style: url(../../images/aquadot.jpg) disc outside;
+	list-style: url(../../images/aquadot.jpg) disc inside;
 	vertical-align: top;
 	line-height: 1.5em;
 }
@@ -666,4 +666,6 @@ left: 60px; /*position where enlarged image should offset horizontally */
 	line-height:1.1em;
 	font-size: 1.0em;
 }
-
+.indent20, .indent20 p, .indent20 ul{
+	padding-left:20px
+}

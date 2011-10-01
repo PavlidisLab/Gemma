@@ -14,6 +14,7 @@ License: 	Dual licensed under the MIT and GPL licenses.
 
 #features, #slidingFeatures, #labelFeatures, #basicFeatures, #thumbFeatures {
 	background: url(/Gemma/images/slideShow/bg_body.jpg) repeat;
+	background-color: #E0F0FF;
 	position: relative;
 	overflow: hidden;
 	width: 900px;
@@ -25,7 +26,7 @@ License: 	Dual licensed under the MIT and GPL licenses.
 	}
 .jshowoff {
 	width: 900px;
-	margin: 10px 0;
+	/*margin: 10px 0;*/
 	}
 .jshowoff div {	
 	width: 900px;
@@ -116,6 +117,7 @@ p.jshowoff-controls {
 	/*needed so links in slides aren't blocked by fwd-back nav element*/
 	width:800px;
 	z-index:100;
+
 }
 .thumbFeatures p.jshowoff-slidelinks {
 	background: #d2e7ec;
@@ -151,10 +153,7 @@ p.jshowoff-controls {
 	background-image: url(/Gemma/images/slideShow/DiffExpIcon.jpg);
 	}
 .thumbFeatures .jshowoff-slidelink-3 {
-	background-image: url(/Gemma/images/slideShow/coexThumbIcon.png);
-	}
-.thumbFeatures .jshowoff-slidelink-4 {
-	background-image: url(http://farm5.static.flickr.com/4041/4438283519_4f08cb4a57_o_d.jpg);
+	background-image: url(/Gemma/images/slideShow/lockIcon.png);
 	}
 .thumbFeatures p.jshowoff-controls {
 	background: none;
@@ -194,14 +193,20 @@ p.jshowoff-controls {
 .jshowoff.thumbFeatures div, .jshowoff.thumbFeatures img, .jshowoff.thumbFeatures {
 	-webkit-border-radius: 6px;
 	}
-.jshowoff.thumbFeatures ul {
-	list-style: circle outside;
+.jshowoff.thumbFeaturesOLD ul {
+	list-style: disc outside;
 	line-height: 100%;
 	font-size: 11pt;
 	margin-left: 30px;
 }
+.jshowoff.thumbFeatures ul {
+	list-style: none outside;
+	line-height: 100%;
+	font-size: 11pt;
+	text-align: center;
+}
 .jshowoff.thumbFeatures li {
-	margin-bottom: 15px;
+	margin-bottom: 25px;
 	letter-spacing: 1px;
 }
 .jshowoff.thumbFeatures h1, .jshowoff.thumbFeatures h2 {

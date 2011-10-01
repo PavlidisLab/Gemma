@@ -99,12 +99,16 @@ Ext.onReady(function() {
 		
 		// once the user performs a search, hide the main page elements 
 		// hide and remove main page elements with an animation (if they haven't already been removed)
-		var toHide = Ext.get('frontPageContent');
+
 		//if(left) left.animate({height:{to:0},opacity:{to:0}},2,function(){left.remove()});
 		//if(right) right.animate({height:{to:0},opacity:{to:0}},2,function(){right.remove()});
 		
-		if (toHide) {
-			toHide.remove();
+		if (Ext.get('frontPageContent')) {
+			Ext.get('frontPageContent').remove();
+		}
+				
+		if (Ext.get('frontPageSlideShow')) {
+			Ext.get('frontPageSlideShow').remove();
 		}
 		
 		// remove previous diff visualization result

@@ -269,7 +269,9 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				for (var i = 0; i < records.length; ++i) {
 					efs.push(records[i].data);
 				}
-				this.fireEvent('experimentalfactorchange', this, efs);
+				var selModel = this.getSelectionModel();
+				var selected = (selModel.hasSelection())? selModel.getSelected() : selModel.selectFirstRow().getSelected();
+				this.fireEvent('experimentalfactorchange', this, efs, selected);
 			},
 
 			idsDeleted : function(ids) {

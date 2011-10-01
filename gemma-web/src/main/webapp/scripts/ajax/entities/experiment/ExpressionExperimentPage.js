@@ -189,7 +189,8 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 auditable: {
                     id: this.experimentDetails.id,
                     classDelegatingFor: "ubic.gemma.model.expression.experiment.ExpressionExperimentImpl"
-                }
+                },
+				loadOnlyOnRender:true
             });
             this.add(this.historyTab);
         }
@@ -207,10 +208,9 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             });
             this.add(this.toolTab);
         }
-        else 
-            if (this.toolTab) {
+        else  if (this.toolTab) {
                 this.toolTab.setVisible((isAdmin || isEditable));
-            }
+        }
     }
 });
 

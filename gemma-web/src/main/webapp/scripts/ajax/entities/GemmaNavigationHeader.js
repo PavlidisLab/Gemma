@@ -68,7 +68,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					tooltip: "Search our database for genes, experiments, array designs, etc."
 				}, {
 					text: 'Search Analysis Results',
-					href: "/Gemma/home.html",
+					href: "/Gemma/analysesResultsSearch.html",
 					tooltip: "Search for differential and coexpression patterns"
 				}, {
 					text: 'Browse Datasets',

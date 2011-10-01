@@ -1086,9 +1086,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					colspan:4,
 					hidden: !this.diffExToggle.pressed,
 					html: 'Example Queries:<br> <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
-					'href="/Gemma/metaheatmap.html?gg=48&eg=6112&t=1">Search for differential expression in ten experiments studying autism spectrum disorder based on genes from AutDB\'s candidate gene list</a> (human)<br>' +
+					'href="/Gemma/analysesResultsSearch.html?gg=48&eg=6112&t=1">Search for differential expression in ten experiments studying autism spectrum disorder based on genes from AutDB\'s candidate gene list</a> (human)<br>' +
 					' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." ' +
-					'href="/Gemma/metaheatmap.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)'
+					'href="/Gemma/analysesResultsSearch.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)'
 				});
 				
 				this.diffExToggle.on('toggle', function(){

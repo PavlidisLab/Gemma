@@ -12,6 +12,7 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 			width : 720,
 			loadMask : true,
 			stateful : false,
+			loadOnlyOnRender: false,
 
 			record : Ext.data.Record.create([{
 						name : "id",
@@ -130,9 +131,17 @@ Gemma.AuditTrailGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.getColumnModel().defaultSortable = false;
 				this.getStore().setDefaultSort('date');
 
-				this.getStore().load({
+				if(!this.loadOnlyOnRender){
+					this.getStore().load({
 							params : [this.auditable]
 						});
+				}else{
+					this.on('render', function(){
+						this.getStore().load({
+							params : [this.auditable]
+						});
+					})
+				}
 
 				this.on('rowdblclick', function(grid, row, event) {
 							var record = this.getStore().getAt(row).data;
