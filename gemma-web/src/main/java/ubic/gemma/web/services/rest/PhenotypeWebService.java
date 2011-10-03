@@ -35,7 +35,7 @@ import ubic.gemma.web.remote.JsonReaderResponse;
  * RESTful web services for phenotypes 
  * 
  * @author frances
- * @version $Id: 
+ * @version $Id$
 */
 
 @Component
