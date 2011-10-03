@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
@@ -21,6 +22,10 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
+import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.common.description.DatabaseEntryDao;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CitationValueObject;
@@ -49,6 +54,12 @@ public class PhenotypeAssoManagerServiceHelper {
     @Autowired
     private PersisterHelper persisterHelper;
 
+    @Autowired
+    private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    private DatabaseEntryDao databaseEntryDao;
+
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
     /**
@@ -71,7 +82,6 @@ public class PhenotypeAssoManagerServiceHelper {
             // TODO
             // return conversion2DifferentialExpressionEvidence (( DiffExpressionEvidenceValueObject ) evidence );
         } else if ( evidence instanceof ExternalDatabaseEvidenceValueObject ) {
-            // TODO
             return conversion2ExternalDatabaseEvidence( ( ExternalDatabaseEvidenceValueObject ) evidence );
         }
 
@@ -79,7 +89,6 @@ public class PhenotypeAssoManagerServiceHelper {
 
     }
 
-    // TODO
     /**
      * @param evidenceValueObject the evidence we want to convert
      * @return PhenotypeAssociation the entity created from the ValueObject
@@ -94,11 +103,23 @@ public class PhenotypeAssoManagerServiceHelper {
         populatePhenotypeAssociation( externalDatabaseEvidence, evidenceValueObject );
 
         // populate specific fields for this evidence
-        externalDatabaseEvidence.setEvidenceSource( null );
+        DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getDatabaseEntryValueObject();
 
-        // TODO unsure
-        // DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( accession, accessionVersion, Uri,
-        // externalDatabase );
+        // find the correct database
+        ExternalDatabase externalDatabase = externalDatabaseService.find( databaseEntryValueObject
+                .getExternalDatabase().getName() );
+
+        if ( externalDatabase == null ) {
+            throw new EntityNotFoundException( "Could not locate External Database: "
+                    + databaseEntryValueObject.getExternalDatabase().getName() );
+        }
+
+        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( externalDatabase );
+        databaseEntry.setAccession( databaseEntryValueObject.getAccession() );
+
+        databaseEntryDao.create( databaseEntry );
+
+        externalDatabaseEvidence.setEvidenceSource( databaseEntry );
 
         return externalDatabaseEvidence;
     }

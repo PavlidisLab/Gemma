@@ -30,4 +30,29 @@ public class DatabaseEntryValueObject {
         vo.setExternalDatabase( ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() ) );
         return vo;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( accession == null ) ? 0 : accession.hashCode() );
+        result = prime * result + ( ( externalDatabase == null ) ? 0 : externalDatabase.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        DatabaseEntryValueObject other = ( DatabaseEntryValueObject ) obj;
+        if ( accession == null ) {
+            if ( other.accession != null ) return false;
+        } else if ( !accession.equals( other.accession ) ) return false;
+        if ( externalDatabase == null ) {
+            if ( other.externalDatabase != null ) return false;
+        } else if ( !externalDatabase.equals( other.externalDatabase ) ) return false;
+        return true;
+    }
+
 }

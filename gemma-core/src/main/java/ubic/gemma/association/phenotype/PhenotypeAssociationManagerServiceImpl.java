@@ -93,10 +93,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<EvidenceValueObject> findPhenotypeAssociations( Long geneDatabaseID ) {
 
         // TODO no need to load the gene
-
         Gene gene = geneService.load( geneDatabaseID );
 
-        if ( gene == null || gene.getPhenotypeAssociations() == null || gene.getPhenotypeAssociations().size() == 0 ) {
+        if ( gene == null ) {
             return null;
         }
         return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );

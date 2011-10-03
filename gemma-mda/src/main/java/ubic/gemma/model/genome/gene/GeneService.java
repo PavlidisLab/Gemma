@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -48,14 +49,14 @@ public interface GeneService {
      * @param genes
      * @return
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public Collection<Gene> create( Collection<Gene> genes );
 
     /**
      * @param gene
      * @return
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public Gene create( Gene gene );
 
     /**
@@ -137,7 +138,7 @@ public interface GeneService {
      * @param gene
      * @return
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public Gene findOrCreate( Gene gene );
 
     /**
@@ -150,7 +151,7 @@ public interface GeneService {
      *        single gene is entered
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly );
 
@@ -164,7 +165,7 @@ public interface GeneService {
      * @param knownGenesOnly
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public CoexpressionCollectionValueObject getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
             Integer stringency, boolean knownGenesOnly );
 
@@ -177,7 +178,7 @@ public interface GeneService {
     /**
      * Returns a list of compositeSequences associated with the given gene and array design
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<CompositeSequence> getCompositeSequences( Gene gene, ArrayDesign arrayDesign );
 
     /**
@@ -256,13 +257,13 @@ public interface GeneService {
     /**
      * @param genes
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void remove( Collection<Gene> genes );
 
     /**
      * @param gene
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void remove( Gene gene );
 
     /**
@@ -284,7 +285,7 @@ public interface GeneService {
     /**
      * @param gene
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void update( Gene gene );
 
     /**
@@ -301,5 +302,8 @@ public interface GeneService {
      * @return
      */
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
+
+    /** given a Gene id returns a GeneDetailsValueObject */
+    public GeneDetailsValueObject loadGeneDetails( Long geneId );
 
 }

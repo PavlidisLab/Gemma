@@ -27,4 +27,8 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
         return databaseEntryValueObject;
     }
 
+    public void setDatabaseEntryValueObject( DatabaseEntryValueObject databaseEntryValueObject ) {
+        this.databaseEntryValueObject = databaseEntryValueObject;
+    }
+
 }
