@@ -30,12 +30,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * Links an Evidence to a Gene
      * 
-     * @param geneNCBI The Gene id we want to add the evidence
+     * @param geneNCBI The Gene NCBI we want to add the evidence
      * @param evidence The evidence
-     * @param phenotypes List of characteristics (phenotypes)
-     * @return The Gene updated with the new evidence and characteristics
+     * @return The Gene updated with the new evidence and phenotypes
      */
-    public GeneEvidencesValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence ) {
+    public GeneEvidencesValueObject linkGeneToEvidence( String geneNCBI, EvidenceValueObject evidence ) {
 
         // find the gene we wish to add the evidence and phenotype
         Gene gene = this.geneService.findByNCBIId( geneNCBI );
@@ -52,7 +51,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        // convert the valueObject received to the corresponding Entity
+        // convert the valueObject received to the corresponding entity
         PhenotypeAssociation pheAsso = this.phenotypeAssoManagerServiceHelper.valueObject2Entity( evidence );
 
         // add the entity to the gene
@@ -63,7 +62,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // return the saved gene result
         return new GeneEvidencesValueObject( gene );
-    };
+    }
 
     /**
      * Return all evidences for a specific gene NCBI
@@ -71,35 +70,30 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findPhenotypeAssociations( String geneNCBI ) {
-
-        // TODO no need to load the gene
+    public Collection<EvidenceValueObject> findEvidences( String geneNCBI ) {
 
         Gene gene = geneService.findByNCBIId( geneNCBI );
-
-        if ( gene == null || gene.getPhenotypeAssociations() == null || gene.getPhenotypeAssociations().size() == 0 ) {
-            return null;
-        }
-        return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
-
-    }
-
-    /**
-     * Return all evidences for a specific gene database id
-     * 
-     * @param geneNCBI The Evidence id
-     * @return The Gene we are interested in
-     */
-    public Collection<EvidenceValueObject> findPhenotypeAssociations( Long geneDatabaseID ) {
-
-        // TODO no need to load the gene
-        Gene gene = geneService.load( geneDatabaseID );
 
         if ( gene == null ) {
             return null;
         }
         return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
+    }
 
+    /**
+     * Return all evidences for a specific gene id
+     * 
+     * @param geneId The Evidence id
+     * @return The Gene we are interested in
+     */
+    public Collection<EvidenceValueObject> findEvidences( Long geneId ) {
+
+        Gene gene = geneService.load( geneId );
+
+        if ( gene == null ) {
+            return null;
+        }
+        return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
 
     /**
@@ -203,9 +197,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /**
      * Removes an evidence
      * 
-     * @param geneNCBI The Evidence id
+     * @param id The Evidence database id
      */
-    public void removePhenotypeAssociation( Long id ) {
+    public void removeEvidence( Long id ) {
         this.associationService.removePhenotypeAssociation( id );
     }
 

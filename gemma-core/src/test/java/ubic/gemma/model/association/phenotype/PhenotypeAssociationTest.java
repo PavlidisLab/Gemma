@@ -92,7 +92,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 1 - call the service to add the phenotype association and save the results to the database
         // ********************************************************************************************
-        GeneEvidencesValueObject geneValue = phenoAssoService.linkGeneToPhenotype( geneNCBI, evidence );
+        GeneEvidencesValueObject geneValue = phenoAssoService.linkGeneToEvidence( geneNCBI, evidence );
         assertTrue( geneValue.getEvidences() != null && geneValue.getEvidences().size() >= 1 );
         // ********************************************************************************************
         // 2 - call the service to find all gene for a given phenotype
@@ -103,13 +103,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 3 - call the service to find all evidences and phenotypes for a gene
         // ********************************************************************************************
-        Collection<EvidenceValueObject> evidences = phenoAssoService.findPhenotypeAssociations( geneNCBI );
+        Collection<EvidenceValueObject> evidences = phenoAssoService.findEvidences( geneNCBI );
         assertNotNull( evidences );
         // ********************************************************************************************
         // 4 - Delete the Association
         // ********************************************************************************************
         for ( EvidenceValueObject evidenceValueObject : evidences ) {
-            phenoAssoService.removePhenotypeAssociation( evidenceValueObject.getDatabaseId() );
+            phenoAssoService.removeEvidence( evidenceValueObject.getDatabaseId() );
         }
         assertTrue( phenoAssoService.findCandidateGenes( phenotypeValue ).size() == 0 );
     }
@@ -143,7 +143,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void testFindPhenotypeAssociations() {
 
         // call to the service
-        Collection<EvidenceValueObject> evidences = phenoAssoService.findPhenotypeAssociations( "2" );
+        Collection<EvidenceValueObject> evidences = phenoAssoService.findEvidences( "2" );
 
         for ( EvidenceValueObject evidence : evidences ) {
 

@@ -41,24 +41,24 @@ import ubic.gemma.model.common.description.BibliographicReference;
 public class CitationValueObject {
 
     /**
-     * construct a citation value object from a BibliographicReference
-     * returns null if the BibliographicReference param was null
+     * construct a citation value object from a BibliographicReference returns null if the BibliographicReference param
+     * was null
      * 
      * @param ref
      * @return
      */
     public static CitationValueObject convert2CitationValueObject( BibliographicReference ref ) {
-        
-        if(ref == null){
+
+        if ( ref == null ) {
             return null;
         }
-        
+
         return new CitationValueObject( ref );
     }
 
     /**
-     * construct a collection of citation value objects from a collection of BibliographicReference objects
-     * returns an empty list if all the BibliographicReference list param was null or empty
+     * construct a collection of citation value objects from a collection of BibliographicReference objects returns an
+     * empty list if all the BibliographicReference list param was null or empty
      * 
      * @param ref
      * @return
@@ -67,8 +67,11 @@ public class CitationValueObject {
 
         List<CitationValueObject> results = new ArrayList<CitationValueObject>();
 
-        for ( BibliographicReference ref : refs ) {
-            results.add( new CitationValueObject( ref ) );
+        if ( refs != null ) {
+
+            for ( BibliographicReference ref : refs ) {
+                results.add( new CitationValueObject( ref ) );
+            }
         }
 
         return results;
@@ -88,7 +91,7 @@ public class CitationValueObject {
     }
 
     private CitationValueObject( BibliographicReference ref ) {
-        
+
         StringBuilder buf = new StringBuilder();
 
         if ( ref.getAuthorList() != null ) {

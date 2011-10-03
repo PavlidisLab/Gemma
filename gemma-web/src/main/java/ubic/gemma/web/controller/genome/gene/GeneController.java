@@ -209,7 +209,7 @@ public class GeneController extends BaseController {
 
     /** used to show gene info in the phenotype tab */
     public Collection<EvidenceValueObject> loadGeneEvidences( Long geneId ) {
-        return phenotypeAssociationManagerService.findPhenotypeAssociations( geneId );
+        return phenotypeAssociationManagerService.findEvidences( geneId );
     }
 
     public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {

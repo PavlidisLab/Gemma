@@ -14,35 +14,27 @@ public interface PhenotypeAssociationManagerService {
     /**
      * Links an Evidence to a Gene
      * 
-     * @param geneNCBI The Gene id we want to add the evidence
+     * @param geneNCBI The Gene NCBI we want to add the evidence
      * @param evidence The evidence
-     * @param phenotypes List of characteristics (phenotypes)
-     * @return The Gene updated with the new evidence and characteristics
+     * @return The Gene updated with the new evidence and phenotypes
      */
-    public GeneEvidencesValueObject linkGeneToPhenotype( String geneNCBI, EvidenceValueObject evidence );
+    public GeneEvidencesValueObject linkGeneToEvidence( String geneNCBI, EvidenceValueObject evidence );
 
     /**
-     * Removes an evidence from a Gene
-     * 
-     * @param geneNCBI The Evidence id
-     */
-    public void removePhenotypeAssociation( Long id );
-
-    /**
-     * Return a gene for a specific gene BNDI
+     * Return all evidences for a specific gene NCBI
      * 
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findPhenotypeAssociations( String geneNCBI );
+    public Collection<EvidenceValueObject> findEvidences( String geneNCBI );
 
     /**
-     * Return all evidences for a specific gene database id
+     * Return all evidences for a specific gene id
      * 
-     * @param geneNCBI The Evidence id
+     * @param geneId The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findPhenotypeAssociations( Long geneDatabaseID );
+    public Collection<EvidenceValueObject> findEvidences( Long geneId );
 
     /**
      * Given an array of phenotypes returns the genes that have all those phenotypes
@@ -58,6 +50,13 @@ public interface PhenotypeAssociationManagerService {
      * @return A collection of the phenotypes with the gene occurence
      */
     public Collection<CharacteristicValueObject> findAllPhenotypes();
+
+    /**
+     * Removes an evidence
+     * 
+     * @param id The Evidence database id
+     */
+    public void removeEvidence( Long id );
 
     /**
      * Modify an existing evidence
