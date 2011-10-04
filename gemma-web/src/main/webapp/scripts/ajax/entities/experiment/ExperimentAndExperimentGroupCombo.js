@@ -123,9 +123,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				'{[ this.renderItem(values) ]}' +
 			'</tpl>',{
 				renderItem: function(values){
-					if (values.resultValueObject instanceof ExpressionExperimentValueObject) {
-						return eeTpl.apply(values);
-					}else if (values.resultValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
+					if (values.resultValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject) {
 						if (values.userOwned) {
 							return userOwnedDbSetTpl.apply(values)
 						} else {
@@ -139,6 +137,8 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 						}else {
 							return sessionSetTpl.apply(values);
 						}
+					}else if (values.resultValueObject instanceof ExpressionExperimentValueObject) {
+						return eeTpl.apply(values);
 					}
 					return defaultTpl.apply(values);
 				}
@@ -169,6 +169,9 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					defaultValue: []
 				}, {
 					name: "resultValueObject"
+				}, {
+					name: "userOwned",
+					type:"boolean"
 				}])),
 				proxy: new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
 				autoLoad: false

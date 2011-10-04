@@ -129,9 +129,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 			'{[ this.renderItem(values) ]}' +
 			'</tpl>', {
 				renderItem: function(values){
-					if (values.resultValueObject instanceof GeneValueObject) {
-						return geneTpl.apply(values);
-					}else if (values.resultValueObject instanceof DatabaseBackedGeneSetValueObject) {
+					if (values.resultValueObject instanceof DatabaseBackedGeneSetValueObject) {
 						if (values.userOwned) {
 							return userOwnedDbGeneSetTpl.apply(values)
 						} else {
@@ -147,7 +145,9 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 						}else {
 							return sessionGeneSetTpl.apply(values);
 						}
-					}
+					}else if (values.resultValueObject instanceof GeneValueObject) {
+						return geneTpl.apply(values);
+					} 
 					return defaultTpl.apply(values);
 				}
 			}),
@@ -188,6 +188,9 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 					}
 				}, {
 					name: "resultValueObject"
+				}, {
+					name: "userOwned",
+					type:"boolean"
 				}])),
 				
 				proxy: new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups),
