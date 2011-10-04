@@ -283,48 +283,14 @@ public class GenePickerController {
             taxonName = taxon.getCommonName();
         }
 
-        boolean privateOnly = true;
-
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
         if ( StringUtils.isBlank( query ) ) {
-
-            // get authenticated user's sets
-            Collection<GeneSet> userGeneSets = new ArrayList<GeneSet>();
-            Collection<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
-            if ( SecurityService.isUserLoggedIn() ) {
-                // get DB groups
-                if ( privateOnly ) {
-                    try {
-                        userGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService
-                                .loadMyGeneSets();
-                        userGeneSets.retainAll( securityService.choosePrivate( userGeneSets ) );
-                    } catch ( AccessDeniedException e ) {
-                        // okay, they just aren't allowed to see those.
-                    }
-                } else {
-                    userGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService
-                            .loadMyGeneSets();
-                }
-                result.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( userGeneSets, false ) );
-            }
-            // get any session-bound groups
-
-            Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxon != null ) ? sessionListManager.getModifiedGeneSets( taxonId )
-                                                                                : sessionListManager.getModifiedGeneSets( );
-
-            result.addAll( sessionResult );
-
-            SearchResultDisplayObject newSRDO = null;
-            for ( GeneSetValueObject registeredUserSet : result ) {
-                newSRDO = new SearchResultDisplayObject( registeredUserSet );
-                newSRDO.setUserOwned( true );
-                displayResults.add( newSRDO );
-            }
-            Collections.sort( displayResults );
-
+            
+            return this.searchGenesAndGeneGroupsBlankQuery(taxonId);
+            
         } else {
 
             /*
@@ -344,6 +310,7 @@ public class GenePickerController {
             Collection<SearchResultDisplayObject> genes = null;
             Collection<SearchResultDisplayObject> geneSets = null;
             
+            Map<Long,Boolean> isSetOwnedByUser = new HashMap<Long,Boolean>();
             
             if(taxon!=null){ // filter search results by taxon
                 
@@ -362,6 +329,9 @@ public class GenePickerController {
                 for ( SearchResult sr : geneSetSearchResults ) {
                     GeneSet gs = ( GeneSet ) sr.getResultObject();
                     GeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
+                    
+                    isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ));
+                    
                     if ( gsvo.getTaxonId() == taxonId ) {
                         taxonCheckedSets.add( sr );
                     }
@@ -383,6 +353,10 @@ public class GenePickerController {
                 geneSets = new ArrayList<SearchResultDisplayObject>();
                 SearchResultDisplayObject srdo = null;
                for(SearchResult sr : geneSetSearchResults){
+                   
+                   GeneSet gs = ( GeneSet ) sr.getResultObject();
+                   isSetOwnedByUser.put( gs.getId(), securityService.isOwnedByCurrentUser( gs ));
+                   
                    taxon = getTaxonForGeneSet((GeneSet)sr.getResultObject());
                    srdo = new SearchResultDisplayObject( (GeneSet)sr.getResultObject() );
                    srdo.setTaxonId( taxon.getId() );
@@ -394,24 +368,11 @@ public class GenePickerController {
 
             // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in
             // search results)
-            // TODO make a db call so you can just test each gene set by ID to see if the owner is the current user
-            // (avoids loading all user's sets' genes)
-            // probably not high priority fix b/c users won't tend to have many sets
-            ArrayList<Long> userSetsIds = new ArrayList<Long>();
-            // get ids of user's sets
             if ( SecurityService.isUserLoggedIn() ) {
-                Collection<GeneSet> myGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon )
-                        : geneSetService.loadMyGeneSets();
-                for ( GeneSet myGeneSet : myGeneSets ) {
-                    userSetsIds.add( myGeneSet.getId() );
-                }
-                // tag search result display objects appropriately
                 for ( SearchResultDisplayObject srdo : geneSets ) {
-                    Long id = (srdo.getResultValueObject() instanceof GeneSetValueObject)? 
+                    Long id = (srdo.getResultValueObject() instanceof DatabaseBackedGeneSetValueObject)? 
                             ((GeneSetValueObject) srdo.getResultValueObject()).getId(): new Long(-1);
-                    if ( userSetsIds.contains( id ) ) {
-                        srdo.setUserOwned( true );
-                    }
+                    srdo.setUserOwned( isSetOwnedByUser.get( id ) );
                 }
             }
 
@@ -536,6 +497,79 @@ public class GenePickerController {
         return displayResults;
 
     }
+    
+
+    /**
+     * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent
+     * session-bound sets
+     * 
+     * called by ubic.gemma.web.controller.genome.gene.GenePickerController.searchGenesAndGeneGroups(String, Long)
+     * 
+     * @param taxonId
+     * @return Collection<SearchResultDisplayObject> 
+     */
+    private Collection<SearchResultDisplayObject> searchGenesAndGeneGroupsBlankQuery( Long taxonId ) {
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+            if ( taxon == null ) {
+                log.warn( "No such taxon with id=" + taxonId );
+            }
+        }
+
+        boolean privateOnly = true;
+
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+
+        // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
+        // session-bound sets
+
+            // get authenticated user's sets
+            Collection<GeneSet> userGeneSets = new ArrayList<GeneSet>();
+            Collection<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
+            if ( SecurityService.isUserLoggedIn() ) {
+                // get DB groups
+                if ( privateOnly ) {
+                    try {
+                        userGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService
+                                .loadMyGeneSets();
+                        userGeneSets.retainAll( securityService.choosePrivate( userGeneSets ) );
+                    } catch ( AccessDeniedException e ) {
+                        // okay, they just aren't allowed to see those.
+                    }
+                } else {
+                    userGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService
+                            .loadMyGeneSets();
+                }
+                result.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( userGeneSets, false ) );
+            }
+            // get any session-bound groups
+
+            Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxon != null ) ? sessionListManager.getModifiedGeneSets( taxonId )
+                                                                                : sessionListManager.getModifiedGeneSets( );
+
+            result.addAll( sessionResult );
+
+            SearchResultDisplayObject newSRDO = null;
+            for ( GeneSetValueObject registeredUserSet : result ) {
+                newSRDO = new SearchResultDisplayObject( registeredUserSet );
+                newSRDO.setUserOwned( true );
+                displayResults.add( newSRDO );
+            }
+            Collections.sort( displayResults );
+
+
+        if ( displayResults.isEmpty() ) {
+            log.info( "No results for blank query search, taxon="
+                    + ( ( taxon == null ) ? null : taxon.getCommonName() ) );
+            return new HashSet<SearchResultDisplayObject>();
+        }
+        log.info( "Results for blank query search, size=" + displayResults.size() );
+
+        return displayResults;
+
+    }
+    
     /**
      * assumes that all members in the geneset have the same taxon (or top-level parent taxon)
      * @param geneSet
