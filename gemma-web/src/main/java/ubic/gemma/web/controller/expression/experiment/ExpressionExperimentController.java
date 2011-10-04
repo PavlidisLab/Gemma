@@ -20,11 +20,10 @@ package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -60,6 +59,8 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
+import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
+import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
@@ -103,12 +104,12 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CitationValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchResultDisplayObject;
+import ubic.gemma.search.SearchResultTaxonComparator;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
@@ -402,119 +403,15 @@ public class ExpressionExperimentController extends AbstractTaskService {
      * @return Collection of SearchResultDisplayObjects
      */
     public Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroups( String query, Long taxonId ) {
-
         boolean taxonLimited = ( taxonId != null ) ? true : false;
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
-        List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
-        List<SearchResultDisplayObject> publicResults = new LinkedList<SearchResultDisplayObject>();
-        // List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
 
         // if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent
         // session-bound sets (not autogen sets until handling of large searches is fixed)
         if ( StringUtils.isBlank( query ) ) {
-
-            // get authenticated user's sets
-            Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
-            if ( SecurityService.isUserLoggedIn() ) {
-                userExperimentSets = expressionExperimentSetService.loadMySets();
-                SearchResultDisplayObject newSRDO = null;
-                for ( ExpressionExperimentSet registeredUserSet : userExperimentSets ) {
-
-                    expressionExperimentSetService.thaw( registeredUserSet );
-                    taxonService.thaw( registeredUserSet.getTaxon() );
-                    if ( !taxonLimited || registeredUserSet.getTaxon().getId().equals( taxonId ) ) {
-                        newSRDO = new SearchResultDisplayObject( registeredUserSet );
-
-                        // if set was automatically generated, don't label as user-created (technically was created by
-                        // admin user)
-                        if ( newSRDO.getName().indexOf( "All" ) != 0 ) {
-                            newSRDO.setUserOwned( true );
-                            usersResults.add( newSRDO );
-                        } else {
-                            newSRDO.setUserOwned( false );
-                            // autoGenResults.add( newSRDO );
-                        }
-                    }
-                }
-            }
-
-            // FOR TESTING UNTIL SCALING ISSUES ARE WORKED OUT
-            // propmt with all public groups, just limit by size for now
-            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon(); // filtered
-            // by
-            // security.
-            sets.removeAll( userExperimentSets );
-            for ( ExpressionExperimentSet set : sets ) {
-                if ( set.getExperiments().size() < MAX_COMBO_PROMT_GROUP_SIZE ) {
-                    expressionExperimentSetService.thaw( set );
-                    if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
-                        if ( set.getName().indexOf( "All" ) == 0 ) {
-                            /*
-                             * remove auto-generated sets until scaling issues are resolved (should have all or none)
-                             */
-                            // autoGenResults.add( new SearchResultDisplayObject( set ) );
-                        } else {
-                            publicResults.add( new SearchResultDisplayObject( set ) );
-                        }
-                    }
-                }
-            }
-            // end of section to be used until scaling issues are resolved
-
-            /*
-             * USE THIS CODE WHEN SCALING ISSUES ARE RESOLVED
-             * 
-             * // get auto generated sets // NOTE: assumption made here that total number of groups is small // If this
-             * changes, may want to use searching instead of filtering // search would be for all lists where
-             * 'modifiable = false' (?)
-             * 
-             * Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
-             * // filtered by security. List<SearchResultDisplayObject> autoGenSets = new
-             * ArrayList<SearchResultDisplayObject>(); for ( ExpressionExperimentSet set : sets) {
-             * if(set.getName().indexOf( "All" ) == 0 ){ expressionExperimentSetService.thaw( set ); if ( !taxonLimited
-             * || set.getTaxon().getId().equals( taxonId ) ) { autoGenSets.add( new SearchResultDisplayObject( set ) );
-             * } } }
-             */
-            // get any session-bound groups
-            Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = sessionListManager
-                    .getModifiedExperimentSets();
-
-            List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
-
-            if ( sessionResult != null && sessionResult.size() > 0 ) {
-                Collection<ExpressionExperimentSetValueObject> toRmv = new ArrayList<ExpressionExperimentSetValueObject>();
-                // for every object passed in, create a SearchResultDisplayObject
-                for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
-                    if ( eevo.getTaxonId() == null ) {
-                        toRmv.add( eevo );
-                    } else {
-                        if ( !taxonLimited || eevo.getTaxonId().equals( taxonId ) ) {
-                            SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
-                            srdo.setUserOwned( true );
-                            sessionSets.add( srdo );
-                        }
-                    }
-                }
-                sessionResult.removeAll( toRmv );
-            }
-
-            // keep sets in proper order (user's groups first, then public ones)
-            Collections.sort( sessionSets );
-            displayResults.addAll( sessionSets );
-
-            Collections.sort( usersResults );
-            displayResults.addAll( usersResults );
-            /*
-             * autoGenResults.addAll( autoGenSets ); Collections.sort( autoGenResults );
-             */// displayResults.addAll( autoGenResults );
-
-            Collections.sort( publicResults );
-            displayResults.addAll( publicResults );
-
-            return displayResults;
-
-        } // end of query = ''
+            return this.searchExperimentsAndExperimentGroupBlankQuery( taxonId );
+        }
 
         // if query is not blank...
         /*
@@ -531,12 +428,16 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
 
         List<SearchResult> eesSR = results.get( ExpressionExperimentSet.class );
+        Map<Long,Boolean> isSetOwnedByUser = new HashMap<Long,Boolean>();
+        
         // prepare taxon property for being read
+        // store userOwned info
         Collection<SearchResult> toRmvSR = new ArrayList<SearchResult>();
         for ( SearchResult sr : eesSR ) {
             if(expressionExperimentSetService.isValidForFrontEnd( (ExpressionExperimentSet)sr.getResultObject() )){
                 ExpressionExperimentSet ees = ( ExpressionExperimentSet ) sr.getResultObject();
                 expressionExperimentSetService.thaw( ees );
+                isSetOwnedByUser.put( ees.getId(), securityService.isOwnedByCurrentUser( ees ) );
             }else{
                 toRmvSR.add( sr );
             }
@@ -548,10 +449,14 @@ public class ExpressionExperimentController extends AbstractTaskService {
         Collection<SearchResultDisplayObject> experimentSets = SearchResultDisplayObject
                 .convertSearchResults2SearchResultDisplayObjects( eesSR );
 
+        /* 
+         * THIS SHOULD BE TAKEN CARE OF BY CALL TO 'expressionExperimentSetService.isValidForFrontEnd'
+         * BUT THIS NEEDS TO BE VERIFIED
+         * 
         // when searching for an experiment by short name, one or more experiment set(s) is(are) also returned
         // ex: searching 'GSE2178' gets the experiment and a group called GSE2178 with 1 member
         // to fix this, if 1 ee is returned and the group only has 1 member and it's member has the
-        // same Id as the 1 ee returned, then don't return the ee set
+        // same name as the 1 ee returned, then don't return the ee set
         if ( experiments.size() == 1 && experimentSets.size() > 0 ) {
             Long eid = ( ( ExpressionExperimentValueObject ) experiments.iterator().next().getResultValueObject() )
                     .getId();
@@ -562,7 +467,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 }
             }
             experimentSets.removeAll( toRmvSRDO );
-        }
+        }*/
 
         Taxon taxon = null;
         // for each experiment search result display object, set the taxon -- pretty hacky,
@@ -591,25 +496,12 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)
-        // TODO make a db call so you can just test each experiment by ID to see if the owner is the current user
-        // (avoids loading all user's experiments)
-        // probably not high priority fix b/c users won't tend to have many sets
-        ArrayList<Long> userSetsIds = new ArrayList<Long>();
-        // get ids of user's sets
-        if ( SecurityService.isUserLoggedIn() && experimentSets.size() > 0 ) {
-            Collection<ExpressionExperimentSet> myEEsets = expressionExperimentSetService.loadMySets();
-            for ( ExpressionExperimentSet myEESet : myEEsets ) {
-                userSetsIds.add( myEESet.getId() );
-            }
+        if ( SecurityService.isUserLoggedIn() ) {
             // tag search result display objects appropriately
             for ( SearchResultDisplayObject srdo : experimentSets ) {
-                // if set was automatically generated, don't label as user-created (technically was created by admin
-                // user)
-                if ( userSetsIds.contains( ( ( ExpressionExperimentSetValueObject ) srdo.getResultValueObject() )
-                        .getId() )
-                        && srdo.getDescription().indexOf( "Automatically generated" ) < 0 ) {
-                    srdo.setUserOwned( true );
-                }
+                Long id = (srdo.getResultValueObject() instanceof DatabaseBackedExpressionExperimentSetValueObject)? 
+                        ((ExpressionExperimentSetValueObject) srdo.getResultValueObject()).getId(): new Long(-1);
+                srdo.setUserOwned( isSetOwnedByUser.get( id ));
             }
         }
 
@@ -692,6 +584,109 @@ public class ExpressionExperimentController extends AbstractTaskService {
         return displayResults;
     }
 
+    /**
+     * if query is blank, return list of public sets, user-owned sets (if logged in) and user's recent
+     * session-bound sets
+     * 
+     * called by ubic.gemma.web.controller.expression.experiment.ExpressionExperimentController.searchExperimentsAndExperimentGroup(String, Long)
+     * 
+     * @param taxonId
+     * @return
+     */
+    private Collection<SearchResultDisplayObject> searchExperimentsAndExperimentGroupBlankQuery(Long taxonId){
+        boolean taxonLimited = ( taxonId != null ) ? true : false;
+
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> publicResults = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
+
+            // get authenticated user's sets
+            Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
+            // if user is admin, their sets will be loaded 
+            if ( SecurityService.isUserLoggedIn() ) {
+                userExperimentSets = expressionExperimentSetService.loadMySets();
+                SearchResultDisplayObject newSRDO = null;
+                for ( ExpressionExperimentSet registeredUserSet : userExperimentSets ) {
+
+                    expressionExperimentSetService.thaw( registeredUserSet );
+                    taxonService.thaw( registeredUserSet.getTaxon() );
+                    if ( !taxonLimited || registeredUserSet.getTaxon().getId().equals( taxonId ) ) {
+                        newSRDO = new SearchResultDisplayObject( registeredUserSet );
+
+                        // if set was automatically generated, don't label as user-created (technically was created by
+                        // admin user)
+                        if ( newSRDO.getName().indexOf( "All" ) != 0 ) {
+                            newSRDO.setUserOwned( true );
+                            usersResults.add( newSRDO );
+                        } else {
+                            newSRDO.setUserOwned( false );
+                            autoGenResults.add( newSRDO );
+                        }
+                    }
+                }
+            }
+
+            // get all public sets (if user is admin, these were already loaded with expressionExperimentSetService.loadMySets() )
+            // filtered by security.
+            if(!SecurityService.isUserAdmin()){
+                Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
+                sets.removeAll( userExperimentSets );
+                for ( ExpressionExperimentSet set : sets ) {
+                    //if ( set.getName().indexOf( "All" ) == 0 ) {
+                        expressionExperimentSetService.thaw( set );
+                        if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
+                            
+                            autoGenResults.add( new SearchResultDisplayObject( set ) );
+                        }
+                    //}
+                }
+            }
+            
+             
+            // get any session-bound groups
+            Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = sessionListManager
+                    .getModifiedExperimentSets();
+
+            List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
+
+            if ( sessionResult != null && sessionResult.size() > 0 ) {
+                Collection<ExpressionExperimentSetValueObject> toRmv = new ArrayList<ExpressionExperimentSetValueObject>();
+                // for every object passed in, create a SearchResultDisplayObject
+                for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
+                    if ( eevo.getTaxonId() == null ) {
+                        toRmv.add( eevo );
+                    } else {
+                        if ( !taxonLimited || eevo.getTaxonId().equals( taxonId ) ) {
+                            SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
+                            srdo.setUserOwned( true );
+                            sessionSets.add( srdo );
+                        }
+                    }
+                }
+                sessionResult.removeAll( toRmv );
+            }
+            // keep sets in proper order (user's groups first, then public ones)
+            Collections.sort( sessionSets);
+            displayResults.addAll( sessionSets );
+
+            Collections.sort( usersResults );
+            displayResults.addAll( usersResults );
+            
+            // combine autogen and public results and then sort by taxon
+            /*publicResults.addAll( autoGenResults )
+            Collections.sort( publicResults, new SearchResultTaxonComparator()  );
+            displayResults.addAll( publicResults );
+            */
+            
+            Collections.sort( autoGenResults );
+            displayResults.addAll( autoGenResults );
+
+            Collections.sort( publicResults );
+            displayResults.addAll( publicResults );
+
+            return displayResults;
+    }
     /**
      * AJAX (used by ExperimentCombo.js)
      * 
