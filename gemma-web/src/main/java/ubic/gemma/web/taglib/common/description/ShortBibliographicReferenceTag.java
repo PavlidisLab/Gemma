@@ -30,6 +30,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.CitationValueObject;
 
 /**
  * @jsp.tag name="citation" body-content="empty"
@@ -113,9 +114,9 @@ public class ShortBibliographicReferenceTag extends TagSupport {
             // add pubmed link
             if ( citation.getPubAccession() != null ) {
                 String pubMedId = citation.getPubAccession().getAccession();
+                CitationValueObject citationVO = CitationValueObject.convert2CitationValueObject( citation );
                 if ( StringUtils.isNotBlank( pubMedId ) ) {
-                    String link = "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&dopt=AbstractPlus&list_uids="
-                            + pubMedId + "&query_hl=2&itool=pubmed_docsum";
+                    String link = citationVO.getPubmedURL();
 
                     buf.append( "<a target='_blank' href='" + link
                             + "' ><img src='/Gemma/images/pubmed.gif' /> </a>&nbsp;" );

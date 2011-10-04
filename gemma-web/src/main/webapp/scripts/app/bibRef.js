@@ -282,12 +282,10 @@ Ext.onReady(function(){
                 
             }, {
                 header: "PubMed",
-                dataIndex: 'pubAccession',
+                dataIndex: 'citation',
                 width: 70,
                 renderer: function(value){
-                    return '<a target="_blank" href="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=pubmed&cmd=Retrieve&list_uids=' +
-                    value +
-                    '&query_hl=3&dopt=Abstract"><img ext:qtip="View at NCBI PubMed"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
+                    return '<a target="_blank" href="'+value.pubmedURL+'"><img ext:qtip="View at NCBI PubMed"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
                 },
                 sortable: false
             }]

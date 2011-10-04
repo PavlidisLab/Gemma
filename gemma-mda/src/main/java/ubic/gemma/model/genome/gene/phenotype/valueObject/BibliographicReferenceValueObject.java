@@ -39,9 +39,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
  * @version
  */
 public class BibliographicReferenceValueObject {
-
-    // for constructing pubmedURLs
-    final static String PUBMED_URL_ROOT = "http://www.ncbi.nlm.nih.gov/pubmed/";
     
     public static List<BibliographicReferenceValueObject> convert2ValueObjects( Collection<BibliographicReference> refs ) {
 

@@ -40,6 +40,9 @@ import ubic.gemma.model.common.description.BibliographicReference;
  */
 public class CitationValueObject {
 
+    // for constructing pubmedURLs
+    final static String PUBMED_URL_ROOT = "http://www.ncbi.nlm.nih.gov/pubmed/";
+    
     /**
      * construct a citation value object from a BibliographicReference returns null if the BibliographicReference param
      * was null
@@ -129,7 +132,7 @@ public class CitationValueObject {
 
         this.setCitation( buf.toString() );
         this.setPubmedAccession( ref.getPubAccession().getAccession() );
-        this.setPubmedURL( BibliographicReferenceValueObject.PUBMED_URL_ROOT + ref.getId() );
+        this.setPubmedURL( PUBMED_URL_ROOT + ref.getId() );
         this.setId( ref.getId() );
 
     }
