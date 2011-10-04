@@ -917,7 +917,7 @@ public class DEDVController {
                     .getDifferentialExpression( gene, threshold, factorMap );
 
             for ( DifferentialExpressionValueObject diffVo : differentialExpression ) {
-                assert diffVo.getP() <= threshold;
+                assert diffVo.getCorrP() <= threshold;
                 Long eeId = diffVo.getExpressionExperiment().getId();
 
                 if ( !validatedProbes.containsKey( eeId ) ) {
