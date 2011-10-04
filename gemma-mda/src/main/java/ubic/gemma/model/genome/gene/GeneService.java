@@ -22,7 +22,6 @@ import java.util.Collection;
 import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -302,8 +301,5 @@ public interface GeneService {
      * @return
      */
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
-
-    /** given a Gene id returns a GeneDetailsValueObject */
-    public GeneDetailsValueObject loadGeneDetails( Long geneId );
 
 }

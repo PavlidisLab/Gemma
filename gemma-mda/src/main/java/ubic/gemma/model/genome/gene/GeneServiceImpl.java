@@ -19,20 +19,13 @@
 
 package ubic.gemma.model.genome.gene;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
-import ubic.gemma.genome.gene.GeneDetailsValueObject;
-import ubic.gemma.genome.gene.GeneSetValueObject;
-import ubic.gemma.loader.genome.gene.ncbi.homology.HomologeneService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -45,7 +38,6 @@ import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.search.GeneSetSearch;
 
 /**
  * @author pavlidis
@@ -55,12 +47,6 @@ import ubic.gemma.search.GeneSetSearch;
  */
 @Service
 public class GeneServiceImpl extends GeneServiceBase {
-
-    @Autowired
-    private HomologeneService homologeneService = null;
-
-    @Autowired
-    private GeneSetSearch geneSetSearch;
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
@@ -427,46 +413,6 @@ public class GeneServiceImpl extends GeneServiceBase {
     @Override
     protected void handleUpdate( Gene gene ) throws java.lang.Exception {
         this.getGeneDao().update( gene );
-    }
-
-    /** given a Gene id returns a GeneDetailsValueObject */
-    public GeneDetailsValueObject loadGeneDetails( Long geneId ) {
-
-        Gene gene = load( geneId );
-        // need to thaw for aliases (at least)
-        gene = thaw( gene );
-
-        Collection<Long> ids = new HashSet<Long>();
-        ids.add( gene.getId() );
-        Collection<GeneValueObject> initialResults = loadValueObjects( ids );
-
-        if ( initialResults.size() == 0 ) {
-            return null;
-        }
-
-        GeneValueObject initialResult = initialResults.iterator().next();
-        GeneDetailsValueObject details = new GeneDetailsValueObject( initialResult );
-
-        Collection<GeneAlias> aliasObjs = gene.getAliases();
-        Collection<String> aliasStrs = new ArrayList<String>();
-        for ( GeneAlias ga : aliasObjs ) {
-            aliasStrs.add( ga.getAlias() );
-        }
-        details.setAliases( aliasStrs );
-
-        Long compositeSequenceCount = getCompositeSequenceCountById( geneId );
-        details.setCompositeSequenceCount( compositeSequenceCount );
-
-        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
-        Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
-        gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
-        details.setGeneSets( gsvos );
-
-        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
-        Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
-        details.setHomologues( homologues );
-
-        return details;
     }
 
 }
