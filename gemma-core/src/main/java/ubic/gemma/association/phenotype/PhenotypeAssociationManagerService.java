@@ -26,7 +26,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidences( String geneNCBI );
+    public Collection<EvidenceValueObject> findEvidencesByGeneNCBI( String geneNCBI );
 
     /**
      * Return all evidences for a specific gene id
@@ -34,7 +34,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneId The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidences( Long geneId );
+    public Collection<EvidenceValueObject> findEvidencesByGeneId( Long geneId );
 
     /**
      * Given an array of phenotypes returns the genes that have all those phenotypes

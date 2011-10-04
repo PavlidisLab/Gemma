@@ -8,6 +8,7 @@ import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
 
     private DatabaseEntryValueObject databaseEntryValueObject = null;
+    private String externalUrl = "";
 
     public ExternalDatabaseEvidenceValueObject( String description, CharacteristicValueObject associationType,
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
@@ -21,6 +22,8 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
         super( externalDatabaseEvidence );
         this.databaseEntryValueObject = DatabaseEntryValueObject.fromEntity( externalDatabaseEvidence
                 .getEvidenceSource() );
+        this.externalUrl = externalDatabaseEvidence.getEvidenceSource().getExternalDatabase().getWebUri()
+                + externalDatabaseEvidence.getEvidenceSource().getAccession();
     }
 
     public DatabaseEntryValueObject getDatabaseEntryValueObject() {
@@ -29,6 +32,14 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
 
     public void setDatabaseEntryValueObject( DatabaseEntryValueObject databaseEntryValueObject ) {
         this.databaseEntryValueObject = databaseEntryValueObject;
+    }
+
+    public String getExternalUrl() {
+        return externalUrl;
+    }
+
+    public void setExternalUrl( String externalUrl ) {
+        this.externalUrl = externalUrl;
     }
 
 }

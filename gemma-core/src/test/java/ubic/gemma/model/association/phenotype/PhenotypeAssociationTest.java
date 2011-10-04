@@ -103,7 +103,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 3 - call the service to find all evidences and phenotypes for a gene
         // ********************************************************************************************
-        Collection<EvidenceValueObject> evidences = phenoAssoService.findEvidences( geneNCBI );
+        Collection<EvidenceValueObject> evidences = phenoAssoService.findEvidencesByGeneNCBI( geneNCBI );
         assertNotNull( evidences );
         // ********************************************************************************************
         // 4 - Delete the Association
@@ -143,7 +143,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void testFindPhenotypeAssociations() {
 
         // call to the service
-        Collection<EvidenceValueObject> evidences = phenoAssoService.findEvidences( "2" );
+        Collection<EvidenceValueObject> evidences = phenoAssoService.findEvidencesByGeneNCBI( "2" );
 
         for ( EvidenceValueObject evidence : evidences ) {
 

@@ -70,7 +70,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidences( String geneNCBI ) {
+    public Collection<EvidenceValueObject> findEvidencesByGeneNCBI( String geneNCBI ) {
 
         Gene gene = geneService.findByNCBIId( geneNCBI );
 
@@ -86,7 +86,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneId The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidences( Long geneId ) {
+    public Collection<EvidenceValueObject> findEvidencesByGeneId( Long geneId ) {
 
         Gene gene = geneService.load( geneId );
 
