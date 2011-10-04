@@ -372,7 +372,8 @@ public class GeneDifferentialExpressionService {
                 Boolean fisherContribution = r.equals( res ) ? true : false;
                 devo.setFisherContribution( fisherContribution );
 
-                devo.setP( r.getCorrectedPvalue() );
+                devo.setP( r.getPvalue() );
+                devo.setCorrP( r.getCorrectedPvalue() );
                 devo.setSortKey();
                 devos.add( devo );
             }
@@ -451,7 +452,7 @@ public class GeneDifferentialExpressionService {
              */
             r.getContrasts();
 
-            if (r.getPvalue() == null) continue;
+            if ( r.getPvalue() == null ) continue;
             /* penalize pvals */
             double pval = r.getPvalue() * numProbesForGene;
             if ( pval > MAX_PVAL ) pval = MAX_PVAL;

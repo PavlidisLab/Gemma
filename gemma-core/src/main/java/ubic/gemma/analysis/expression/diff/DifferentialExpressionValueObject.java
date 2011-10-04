@@ -41,32 +41,37 @@ public class DifferentialExpressionValueObject {
     private Long probeId;
     private Collection<ExperimentalFactorValueObject> experimentalFactors;
     private Double p;
+    private Double corrP;
     private String sortKey;
+
     private Boolean metThreshold = false;
+
     private Boolean fisherContribution = false;
-
-    public Boolean getMetThreshold() {
-        return metThreshold;
+    public Double getCorrP() {
+        return corrP;
     }
-
-    public void setMetThreshold( Boolean metThreshold ) {
-        this.metThreshold = metThreshold;
-    }
-
-    public String getSortKey() {
-        return sortKey;
-    }
-
-    public void setSortKey() {
-        this.sortKey = String.format( "%06f%s", p, gene.getOfficialSymbol() );
-    }
-
     public Collection<ExperimentalFactorValueObject> getExperimentalFactors() {
         return experimentalFactors;
     }
 
     public ExpressionExperimentValueObject getExpressionExperiment() {
         return expressionExperiment;
+    }
+
+    public Boolean getFisherContribution() {
+        return fisherContribution;
+    }
+
+    public GeneValueObject getGene() {
+        return gene;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Boolean getMetThreshold() {
+        return metThreshold;
     }
 
     public Double getP() {
@@ -81,12 +86,36 @@ public class DifferentialExpressionValueObject {
         return probeId;
     }
 
+    public String getSortKey() {
+        return sortKey;
+    }
+
+    public void setCorrP( Double corrP ) {
+        this.corrP = corrP;
+    }
+
     public void setExperimentalFactors( Collection<ExperimentalFactorValueObject> experimentalFactors ) {
         this.experimentalFactors = experimentalFactors;
     }
 
     public void setExpressionExperiment( ExpressionExperimentValueObject expressionExperiment ) {
         this.expressionExperiment = expressionExperiment;
+    }
+
+    public void setFisherContribution( Boolean fisherContribution ) {
+        this.fisherContribution = fisherContribution;
+    }
+
+    public void setGene( GeneValueObject gene ) {
+        this.gene = gene;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
+    public void setMetThreshold( Boolean metThreshold ) {
+        this.metThreshold = metThreshold;
     }
 
     public void setP( Double p ) {
@@ -101,12 +130,8 @@ public class DifferentialExpressionValueObject {
         this.probeId = probeId;
     }
 
-    public GeneValueObject getGene() {
-        return gene;
-    }
-
-    public void setGene( GeneValueObject gene ) {
-        this.gene = gene;
+    public void setSortKey() {
+        this.sortKey = String.format( "%06f%s", p, gene.getOfficialSymbol() );
     }
 
     /*
@@ -149,22 +174,6 @@ public class DifferentialExpressionValueObject {
         buf.append( p );
 
         return buf.toString();
-    }
-
-    public Boolean getFisherContribution() {
-        return fisherContribution;
-    }
-
-    public void setFisherContribution( Boolean fisherContribution ) {
-        this.fisherContribution = fisherContribution;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId( Long id ) {
-        this.id = id;
     }
 
 }
