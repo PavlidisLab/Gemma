@@ -16,7 +16,7 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.genome.gene.phenotype.valueObject;
+package ubic.gemma.model.common.description;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -132,7 +132,7 @@ public class CitationValueObject {
 
         this.setCitation( buf.toString() );
         this.setPubmedAccession( ref.getPubAccession().getAccession() );
-        this.setPubmedURL( PUBMED_URL_ROOT + ref.getId() );
+        this.setPubmedURL( PUBMED_URL_ROOT + ref.getPubAccession().getAccession() );
         this.setId( ref.getId() );
 
     }

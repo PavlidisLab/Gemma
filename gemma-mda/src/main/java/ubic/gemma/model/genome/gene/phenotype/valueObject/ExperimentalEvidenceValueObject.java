@@ -6,7 +6,9 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
 public class ExperimentalEvidenceValueObject extends EvidenceValueObject {

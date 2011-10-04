@@ -3,6 +3,8 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 import java.util.Set;
 
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.common.description.CitationValueObject;
 
 public class LiteratureEvidenceValueObject extends EvidenceValueObject {
 

@@ -20,8 +20,8 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.description.CitationValueObject;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CitationValueObject;
 
 /**
  * @version $Id$

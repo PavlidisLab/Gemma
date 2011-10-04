@@ -285,7 +285,10 @@ Ext.onReady(function(){
                 dataIndex: 'citation',
                 width: 70,
                 renderer: function(value){
-                    return '<a target="_blank" href="'+value.pubmedURL+'"><img ext:qtip="View at NCBI PubMed"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
+					if(value && value.pubmedURL){
+						return '<a target="_blank" href="'+value.pubmedURL+'"><img ext:qtip="View at NCBI PubMed"  src="/Gemma/images/pubmed.gif" width="47" height="15" /></a>';
+					}
+                    return '';
                 },
                 sortable: false
             }]

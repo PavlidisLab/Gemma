@@ -26,8 +26,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.displaytag.decorator.TableDecorator;
 
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
-import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenceValueObject;
 
 /**
  * Decorator for displaying bibligraphic refereneces in a list view.
