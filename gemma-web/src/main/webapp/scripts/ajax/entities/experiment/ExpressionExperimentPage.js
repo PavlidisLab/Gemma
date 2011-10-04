@@ -140,9 +140,17 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     'src="/Gemma/images/icons/arrow_refresh_small.png" title="refresh" ' +
                     'alt="refresh" />Refresh</a><br>';
                 }
+				this.refreshDiagnosticsBtn = new Ext.Button({
+						icon: '/Gemma/images/icons/arrow_refresh_small.png',
+						text: 'Refresh',
+						handler: function(){
+							window.location = "refreshCorrMatrix.html?id=" + experimentDetails.id;
+						},
+						hidden: (this.editable || isAdmin)
+					});
                 this.add({
                     title: 'Diagnostics',
-                    html: refreshDiagnosticsLink + experimentDetails.QChtml
+					items: [this.refreshDiagnosticsBtn,{html:experimentDetails.QChtml,border:false}]
                 });
                 
                 /*QUANTITATION TYPES TAB*/
@@ -177,7 +185,10 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
         });
     },
     adjustForIsAdmin: function(isAdmin, isEditable){
-        /*HISTORY TAB*/
+        // hide/show 'refresh' link to diagnostics tab
+		this.refreshDiagnosticsBtn.setVisible(isAdmin || isEditable);
+		
+		/*HISTORY TAB*/
         if ((isAdmin || isEditable) && !this.historyTab) {
             this.historyTab = new Gemma.AuditTrailGrid({
                 title: 'History',
