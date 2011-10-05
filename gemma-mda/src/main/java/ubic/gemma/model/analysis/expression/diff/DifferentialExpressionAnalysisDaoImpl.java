@@ -411,6 +411,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
     @SuppressWarnings("unchecked")
     private void fetchExperimentsTestingGeneNativeQuery( Collection<CompositeSequence> probes,
             Collection<BioAssaySet> result, final String nativeQuery, Taxon taxon ) {
+
+        if ( probes.isEmpty() ) return;
+
         SQLQuery nativeQ = this.getSession().createSQLQuery( nativeQuery );
         nativeQ.setParameterList( "probes", EntityUtils.getIds( probes ) );
         nativeQ.setParameter( "taxon", taxon );
