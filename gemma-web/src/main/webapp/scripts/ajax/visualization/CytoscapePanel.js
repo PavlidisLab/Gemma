@@ -57,7 +57,10 @@ Ext.Panel, {
         }, {
             name: 'supportsign',
             type: 'string'
-        }, ]
+        },{
+            name: 'nodeDegreeBin',
+            type: 'number'
+        }]
 
     },
 
@@ -67,47 +70,43 @@ Ext.Panel, {
         // where you have the Flash installer SWF
         flashInstallerPath: "/Gemma/scripts/cytoscape/swf/playerProductInstall"
     },
+    
+    nodeDegreeVisualStyleFlag:true,
 
-    visual_style: {
+    visual_style_regular: {
         global: {
-            backgroundColor: "#ABCFD6"
+            backgroundColor: "#FFF7FB"
         },
         nodes: {
             tooltipText: "Official Name:${officialName}<br/>Node Degree:${nodeDegree}<br/>NCBI Id:${ncbiId}<br/>",
             shape: "ELLIPSE",
             borderWidth: 3,
-            borderColor: "#ffffff",
+            borderColor: "#FFF7FB",
             size: {
                 defaultValue: 30
 
             },
+            
+            labelFontColor: "#252525",
+            
             labelHorizontalAnchor: "center",
             borderColor: {
                 discreteMapper: {
                     attrName: "queryflag",
                     entries: [{
                         attrValue: true,
-                        value: "#FF8C69"
+                        value: "#C994C7"
                     }, {
                         attrValue: false,
-                        value: "#E0FFFF"
+                        value: "#FFF7FB"
                     }]
                 }
 
             },
-            color: {
-
-                continuousMapper: {
-                    attrName: "nodeDegreeBin",
-                    minValue: "#FFF7BC",
-                    maxValue: "#EC7014" //,
-                    //minAttrValue: 1,
-                    //maxAttrValue: 10
-                }
-            }
+            color: "#6BAED6"
         },
         edges: {
-            tooltipText: "Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
+            tooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
             width: {
                 defaultValue: 1,
                 continuousMapper: {
@@ -118,15 +117,17 @@ Ext.Panel, {
 
             },
 
-            color: {
-                discreteMapper: {
+            color: {    	
+
+                
+            	discreteMapper: {
                     attrName: "supportsign",
                     entries: [{
                         attrValue: "both",
                         value: "#FDDBC7"
                     }, {
                         attrValue: "positive",
-                        value: "#B2182B"
+                        value: "#FC9272"
                     }, {
                         attrValue: "negative",
                         value: "#4D4D4D"
@@ -135,9 +136,89 @@ Ext.Panel, {
             }
         }
     },
+    visual_style_node_degree: {
+        global: {
+            backgroundColor: "#FFF7FB"
+        },
+        nodes: {
+            tooltipText: "Official Name:${officialName}<br/>Node Degree:${nodeDegree}<br/>NCBI Id:${ncbiId}<br/>",
+            shape: "ELLIPSE",
+            borderWidth: 3,
+            borderColor: "#FFF7FB",
+            size: {
+                defaultValue: 30
+
+            },
+            
+            labelFontColor: {
+            	continuousMapper: {
+                    attrName: "nodeDegreeBin",
+                    minValue: "#252525",
+                    maxValue: "#BDBDBD"
+                    	,
+                   minAttrValue: 3//,
+                   // maxAttrValue: 8
+                }
+            	
+            },
+            
+            labelHorizontalAnchor: "center",
+            borderColor: {
+                discreteMapper: {
+                    attrName: "queryflag",
+                    entries: [{
+                        attrValue: true,
+                        value: "#C994C7"
+                    }, {
+                        attrValue: false,
+                        value: "#FFF7FB"
+                    }]
+                }
+
+            },
+            color: {
+
+                continuousMapper: {
+                    attrName: "nodeDegreeBin",
+                    minValue: "#43A2CA",
+                    maxValue: "#E0F3DB"
+                    	,
+                   minAttrValue: 3//,
+                   // maxAttrValue: 8
+                }
+            }
+        },
+        edges: {
+            tooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
+            width: {
+                defaultValue: 1,
+                continuousMapper: {
+                    attrName: "support",
+                    minValue: 1,
+                    maxValue: 6 /*, minAttrValue: 0.1, maxAttrValue: 1.0*/
+                }
+
+            },
+
+            color: {            	
+
+                continuousMapper: {
+                    attrName: "nodeDegreeBin",
+                    minValue: "#A50F15",
+                    maxValue: "#FEE0D2"
+                    	,
+                   minAttrValue: 3//,
+                   // maxAttrValue: 8
+                }
+                
+            }
+        }
+    },
 
     initComponent: function () {
 
+        var vis = new org.cytoscapeweb.Visualization("cytoscapeweb", this.options);
+        
         Ext.apply(
         this, {
 
@@ -151,14 +232,16 @@ Ext.Panel, {
             items: [{
 
                 xtype: 'box',
-                height: 575,
-                width: 875,
+                height: 572,
+                width: 898,
+                
 
                 id: 'cytoscapeweb',
                 listeners: {
                     afterrender: {
                         scope: this,
                         fn: function () {
+            	        				
 
                             if (!this.loadMask) {
                                 this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -193,17 +276,22 @@ Ext.Panel, {
 
                             }
 
-                            Ext.apply(
-                            this.coexCommand, {
-                                geneIds: this.currentNodeGeneIds,
-                                queryGenesOnly: true
-                            });
+                            if (!this.coexCommand.queryGenesOnly){
+                            
+                            	Ext.apply(
+                            	this.coexCommand, {
+                                	geneIds: this.currentNodeGeneIds,
+                                	queryGenesOnly: true
+                            	});
 
-                            ExtCoexpressionSearchController.doSearchQuick2(
-                            this.coexCommand, {
-                                callback: this.completeCoexSearchCallback.createDelegate(this)
+                            	ExtCoexpressionSearchController.doSearchQuick2(
+                            	this.coexCommand, {
+                                	callback: this.completeCoexSearchCallback.createDelegate(this)
 
-                            });
+                            	});
+                            } else {
+                            	this.completeCoexSearchCallback();
+                            }
 
                         }
                     }
@@ -215,12 +303,7 @@ Ext.Panel, {
             ]
         });
 
-        var div_id = "cytoscapeweb";
-
-        var vis = new org.cytoscapeweb.Visualization(div_id, this.options);
-
-
-
+        
         vis.panelRef = this;
 
         vis.ready(function () {
@@ -230,12 +313,23 @@ Ext.Panel, {
             vis.edgeTooltipsEnabled(true);
 
             // Add the Context menu item for radial layout
-            vis.addContextMenuItem("Radial layout", "none", function () {
-                vis.layout("Radial");
-            }).addContextMenuItem("Circle layout", "none", function () {
-                vis.layout("Circle");
-            }).addContextMenuItem("ForceDirected layout", "none", function () {
+            vis.addContextMenuItem("Change layout", "none", function () {
                 vis.layout("ForceDirected");
+            });
+            
+            
+            vis.addContextMenuItem("Node degree emphasis on/off", "none", function () {
+                
+            	if (vis.panelRef.nodeDegreeVisualStyleFlag){
+            		vis.panelRef.nodeDegreeVisualStyleFlag=false;            	
+            		vis.visualStyle(vis.panelRef.visual_style_regular);
+            	}
+            	else {
+            		vis.panelRef.nodeDegreeVisualStyleFlag=true;
+            		vis.visualStyle(vis.panelRef.visual_style_node_degree);
+            	}
+            	
+            	
             });
 
             vis.addContextMenuItem("Extend this node", "nodes", function (evt) {
@@ -457,8 +551,7 @@ Ext.Panel, {
                 if (this.currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) !== -1) {
                     isQueryGene = true;
                 }
-
-                //test to see if node is already there
+                
                 data.nodes.push({
                     id: knowngenes[i].queryGene.officialSymbol,
                     label: knowngenes[i].queryGene.officialSymbol,
@@ -497,7 +590,8 @@ Ext.Panel, {
                 positivesupport: knowngenes[i].posSupp,
                 negativesupport: knowngenes[i].negSupp,
                 support: support,
-                supportsign: supportsign
+                supportsign: supportsign,
+                nodeDegreeBin: Math.max(Math.round(knowngenes[i].queryGeneNodeDegree * 10), Math.round(knowngenes[i].foundGeneNodeDegree * 10))
             });
 
         }
@@ -526,6 +620,7 @@ Ext.Panel, {
                     queryflag: isQueryGene,
                     officialName: qgenes[i].officialName,
                     ncbiId: qgenes[i].ncbiId,
+                    nodeDegreeBin: 0,
                     nodeDegree: 0
                 });
 
@@ -548,11 +643,11 @@ Ext.Panel, {
             data: this.dataJSON
 
         }
-
+        
         // init and draw
         this.visualization.draw({
             network: dataMsg,
-            visualStyle: this.visual_style,
+            visualStyle: this.nodeDegreeVisualStyleFlag ? this.visual_style_node_degree : this.visual_style_regular ,
             layout: "ForceDirected"
         });
 

@@ -173,7 +173,7 @@ Ext.onReady(function() {
 					title : "cytoscape",
 					queryGenes : result.queryGenes,
 					knownGeneResults : result.knownGeneResults,
-					coexCommand: searchPanel.getCoexpressionSearchCommand(),								
+					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),								
 					width:850
 				});
 		/*

@@ -51,7 +51,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	PREVIEW_SIZE : 5,
 
 	// defaults for coexpression
-	DEFAULT_STRINGENCY : 10,
+	DEFAULT_STRINGENCY : 2,
 	DEFAULT_forceProbeLevelSearch : false,
 	DEFAULT_useMyDatasets : false,
 	DEFAULT_queryGenesOnly : false,
@@ -391,6 +391,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		return newCsc;
 	},
 	
+	getLastCoexpressionSearchCommand : function() {
+		return this.lastCSC;
+	},
+	
 	/**
 	 * public method to re-run the previous search with different options
 	 * used if the user changes an option (ex stringency)
@@ -421,12 +425,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (!csc) {
 			csc = this.getCoexpressionSearchCommand();
 		}
+		
 		this.clearError();
 
 		var msg = this.validateCoexSearch(csc);
 		if (msg.length === 0) {
 			this.loadMask.show();
 			var errorHandler = this.handleError.createDelegate(this, [], true);
+			this.restrictCoexSearch(csc);
 			this.lastCSC = csc;
 			ExtCoexpressionSearchController.doSearchQuick2(csc, {
 						callback : this.returnFromCoexSearch.createDelegate(this),
@@ -438,6 +444,26 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (typeof pageTracker !== 'undefined') {
 			pageTracker._trackPageview("/Gemma/coexpressionSearch.doCoexpressionSearch");
 		}
+	},
+	
+	restrictCoexSearch : function(csc) {
+		
+		if (csc.geneIds.length>10){
+			//make it 'my genes only'
+			csc.queryGenesOnly = true;
+		}
+		
+		if (!csc.queryGenesOnly && csc.eeIds.length>50){
+		
+			if (csc.eeIds.length>80){
+				csc.stringency = 4;	
+			}else if (csc.eeIds.length>50){
+				csc.stringency = 3;
+			}
+		
+		}
+		
+		
 	},
 
 	validateCoexSearch : function(csc) {
@@ -746,7 +772,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	clearError : function() {
-		//Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
+		if (Ext.get("analysis-results-search-form-messages")) {
+			Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
+		}
 	},
 
 	getDataForDiffVisualization : function(geneSetValueObjects, experimentSetValueObjects) {
@@ -798,11 +826,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.fireEvent('aftersearch', this, result);
 		this.fireEvent('showCoexResults', this, result);
 		var csc = this.lastCSC;
+		/*
+		 * take this out for now because of new coexSearchQuick2 call
 		if((csc.stringency && csc.stringency !==  this.DEFAULT_STRINGENCY) ||
 			(csc.forceProbeLevelSearch && csc.forceProbeLevelSearch !== this.DEFAULT_forceProbeLevelSearch) ||
 			(csc.queryGenesOnly && csc.queryGenesOnly !== this.DEFAULT_queryGenesOnly)){
 			this.fireEvent('showOptions', csc.stringency, csc.forceProbeLevelSearch, csc.queryGenesOnly);
 		}
+		*/
 	},
 	returnFromDiffExSearch : function(result) {
 		this.doneDiffEx = true;

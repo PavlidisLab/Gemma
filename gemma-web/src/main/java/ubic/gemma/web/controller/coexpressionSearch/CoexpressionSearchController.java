@@ -158,7 +158,7 @@ public class CoexpressionSearchController extends BaseFormController {
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick2( eeIds,
-                genes, 2, 20, searchOptions.getQueryGenesOnly() );
+                genes, searchOptions.getStringency(), 20, searchOptions.getQueryGenesOnly() );
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
