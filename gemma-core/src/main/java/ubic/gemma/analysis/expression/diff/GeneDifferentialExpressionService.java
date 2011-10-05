@@ -536,7 +536,8 @@ public class GeneDifferentialExpressionService {
                     continue;
                 }
 
-                devo.setP( r.getCorrectedPvalue() );
+                devo.setP( r.getPvalue() );
+                devo.setCorrP( r.getCorrectedPvalue() );
                 devo.setMetThreshold( r.getCorrectedPvalue() < threshold );
                 devos.add( devo );
 
