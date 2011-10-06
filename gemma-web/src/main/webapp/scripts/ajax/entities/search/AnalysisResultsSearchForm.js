@@ -199,7 +199,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				trimmedValObj.name = "Trimmed " + valObj.name;
 				trimmedValObj.description = "Trimmed " + valObj.name+" for search";
 				trimmedValObj.modified = true;
-				trimmedValueObjects.push(trimmedRec);
+				trimmedValueObjects.push(trimmedValObj);
 				return trimmedValueObjects;
 			}
 		}
@@ -228,7 +228,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				trimmedValObj.name = "Trimmed " + valObj.name;
 				trimmedValObj.description = "Trimmed " + valObj.name+" for search";
 				trimmedValObj.modified = true;
-				trimmedValueObjects.push(trimmedRec);
+				trimmedValueObjects.push(trimmedValObj);
 				return trimmedValueObjects;
 			}
 		}
