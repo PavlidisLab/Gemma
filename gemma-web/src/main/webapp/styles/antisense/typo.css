@@ -69,11 +69,29 @@ a.newpage {
 }
 
 a.external {
-	background: transparent url(../../images/icons/externallink.png)
+	background: transparent url(../../images/icons/link_external_icon.gif)
 		no-repeat scroll right center;
-	padding-right: 15px;
+	padding-left: 15px;
+	padding-right: 10px;
 }
-
+a.external:hover {
+	background: transparent url(../../images/icons/link_external_icon_hover.gif)
+		no-repeat scroll right center;
+	padding-left: 15px;
+	margin-right: 10px;
+}
+a.internal {
+	background: transparent url(../../images/icons/link_internal_icon.gif)
+		no-repeat scroll right center;
+	padding-left: 15px;
+	margin-right: 10px;
+}
+a.internal:hover {
+	background: transparent url(../../images/icons/link_internal_icon_hover.gif)
+		no-repeat scroll right center;
+	padding-left: 15px;
+	margin-right: 10px;
+}
 span.link {
 	cursor: pointer;
 	text-decoration: underline;

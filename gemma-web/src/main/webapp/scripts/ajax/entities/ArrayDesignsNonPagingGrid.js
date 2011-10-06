@@ -275,8 +275,18 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			'<p>Unique genes: <b>{numGenes}</b> <span style="color:grey">(Number of unique genes represented on the array)</span></p>' +
 			'<p> (as of {dateCached})</p>',
 		});
+		
+		var cellTips = new Ext.ux.plugins.grid.CellToolTips([
+			{
+				field: 'name',
+				tpl:   '{name}'
+			},{
+				field: 'shortName',
+				tpl:   '{shortName}'
+			}
+		]);
 		Ext.apply(this, {
-			plugins: [this.action, rowExpander],
+			plugins: [this.action, rowExpander, cellTips],
 			colModel: new Ext.grid.ColumnModel({
 				defaults: {
 					sortable: true
@@ -294,11 +304,9 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					dataIndex: 'name',
 					width: 0.3, //viewConfig.forceFit resizes based on relative widths,
 					renderer: function(value, metaData, record, rowIndex, colIndex, store){
-						return (value && record) ? '<a title="' + value + '" href="/Gemma/arrays/showArrayDesign.html?id=' +
-						record.id +
-						'">' +
-						value +
-						'</a>' : '';
+						return (value && record) ? 
+						'<a class="internal" title="Go to page for ' + value + '" href="/Gemma/arrays/showArrayDesign.html?id=' +
+						record.id +'"></a>' + value  : '';
 					}
 				}, {
 					header: "Status",
@@ -342,10 +350,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 				}, {
 					header: "Short Name",
 					dataIndex: 'shortName',
-					width: 0.07,
-					renderer: function(value, metaData, record, rowIndex, colIndex, store){
-						return '<span title="' + value + '">' + value + '</span>';
-					}
+					width: 0.07
 				}, {
 					header: "Taxon",
 					dataIndex: 'taxon',
