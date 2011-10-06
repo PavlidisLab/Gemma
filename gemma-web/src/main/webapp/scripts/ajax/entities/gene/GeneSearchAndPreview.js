@@ -468,7 +468,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				if (typeof newSets[i].geneIds !== 'undefined') {
 					this.loadGenes(newSets[i].geneIds);
 					// update record
-					this.selectedGeneOrGroup = newSets[i];
+					this.selectedGeneOrGroup.resultValueObject = newSets[i];
 				}
 				if (newSets[i].name) {
 					this.updateTitle(newSets[i].name, newSets[i].size);
