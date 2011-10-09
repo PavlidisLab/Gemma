@@ -48,6 +48,7 @@ import org.springframework.stereotype.Repository;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 
+import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;
@@ -1278,7 +1279,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Map<Gene, Double> result = new HashMap<Gene, Double>();
         for ( Gene g : interm.keySet() ) {
             DoubleArrayList vals = interm.get( g );
-            result.put( g, Descriptive.mean( vals ) );
+            /*
+             * Note: under the null, each node degree is drawn from a uniform(0,1); sampling properties for the mean of
+             * this are the same as for pvalues, so we treat them thusly. (My first pass implementation just used the
+             * mean). Note we don't do 1 - fp here -- high node degrees are still represented as values near 1 after
+             * this transformation. See bug 2379
+             */
+            result.put( g, MetaAnalysis.fisherCombinePvalues( vals ) );
         }
 
         return result;
