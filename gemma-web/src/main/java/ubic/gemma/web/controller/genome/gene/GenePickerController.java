@@ -279,8 +279,9 @@ public class GenePickerController {
             taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
                 log.warn( "No such taxon with id=" + taxonId );
+            }else{
+                taxonName = taxon.getCommonName();
             }
-            taxonName = taxon.getCommonName();
         }
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
@@ -291,7 +292,7 @@ public class GenePickerController {
             
             return this.searchGenesAndGeneGroupsBlankQuery(taxonId);
             
-        } else {
+        } 
 
             /*
              * GET GENES AND GENESETS
@@ -470,12 +471,12 @@ public class GenePickerController {
                     taxonId2 = entry.getKey();
                     taxon = taxonService.load( taxonId2 );
       
-                    FreeTextGeneResultsValueObject byTaxFTVO = new FreeTextGeneResultsValueObject(
+                    // don't make groups for 1 gene
+                    if ( taxon != null && entry.getValue().size() > 1 ) {
+                        FreeTextGeneResultsValueObject byTaxFTVO = new FreeTextGeneResultsValueObject(
                             "All " + taxon.getCommonName() + " results for '" + query + "'",
                             "All " + taxon.getCommonName() + " genes found for your query",
                             taxon.getId(), taxon.getCommonName(), entry.getValue(), query);
-                    // don't make groups for 1 gene
-                    if ( taxon != null && entry.getValue().size() > 1 ) {
                         displayResults.add( new SearchResultDisplayObject( byTaxFTVO ) );
                     }
                 }
@@ -485,7 +486,7 @@ public class GenePickerController {
             displayResults.addAll( goSRDOs );
             displayResults.addAll( genes );
 
-        }
+        
 
         if ( displayResults.isEmpty() ) {
             log.info( "No results for search: " + query + " taxon="
@@ -572,21 +573,18 @@ public class GenePickerController {
     
     /**
      * assumes that all members in the geneset have the same taxon (or top-level parent taxon)
+     * 
      * @param geneSet
-     * @return
+     * @return 
      */
     private Taxon getTaxonForGeneSet( GeneSet geneSet ) {
-        Taxon taxon = null;
         Taxon tmpTax = null;
         tmpTax = geneSet.getMembers().iterator().next().getGene().getTaxon();
         // check top-level parent
-        while ( tmpTax.getParentTaxon() != null ) {
+        while ( tmpTax != null && tmpTax.getParentTaxon() != null ) {
             tmpTax = tmpTax.getParentTaxon();
         }
-        if ( taxon == null || !taxon.equals( tmpTax ) ) {
-            taxon = tmpTax;
-        }
-        return taxon;
+        return tmpTax;
     }
 
     /**

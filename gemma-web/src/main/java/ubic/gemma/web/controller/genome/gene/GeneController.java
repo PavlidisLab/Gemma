@@ -482,14 +482,19 @@ public class GeneController extends BaseController {
             return mav;
         }
         Collection<Gene> genes = new ArrayList<Gene>();
-        for ( Long id : geneIds ) {
-            genes.add( geneService.load( id ) );
+        if(geneIds != null){
+           for ( Long id : geneIds ) {
+               genes.add( geneService.load( id ) );
+           } 
         }
-        for ( Long id : geneSetIds ) {
-            for ( GeneSetMember gsm : geneSetService.load( id ).getMembers() ) {
-                genes.add( gsm.getGene() );
-            }
+        if(geneSetIds != null){
+           for ( Long id : geneSetIds ) {
+                for ( GeneSetMember gsm : geneSetService.load( id ).getMembers() ) {
+                    genes.add( gsm.getGene() );
+                }
+            } 
         }
+        
 
         mav.addObject( "text", format4File( genes, geneSetName ) );
         watch.stop();
