@@ -422,8 +422,10 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         for ( Object o : list ) {
             ids.add( ( ( BigInteger ) o ).longValue() );
         }
-        result.addAll( this.getHibernateTemplate().findByNamedParam(
+        if (!ids.isEmpty()) {
+            result.addAll( this.getHibernateTemplate().findByNamedParam(
                 "from ExpressionExperimentImpl e where e.id in (:ids)", "ids", ids ) );
+        }
     }
 
     /*
