@@ -17,6 +17,13 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	autoExpandColumn : 'name',
 
+	/** 
+	 * @cfg
+	 * Controls whether the experiment short name should be a link (to the experiment's page).
+	 * Defaults to true but should be false when the user is required to select rows. 
+	 * (In this case, clicking the name has two functions: (1) select row and (2) go to page)
+	 */
+	experimentNameAsLink: true,
 	editable : true,
 	stateful : false,
 
@@ -241,7 +248,7 @@ Gemma.ExpressionExperimentGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				'<tpl for="."><a target="_blank" title="{name}" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
 				'{[values.sourceExperiment ? values.sourceExperiment : values.id]}"',
 				' ext:qtip="{name}">{shortName}</a></tpl>');
-		return eeTemplate.apply(record.data);
+		return this.experimentNameAsLink ? eeTemplate.apply(record.data) : value;
 	},
 
 	/**

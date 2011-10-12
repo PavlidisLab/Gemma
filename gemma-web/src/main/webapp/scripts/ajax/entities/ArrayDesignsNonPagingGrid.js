@@ -196,14 +196,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		var pageStore = new Gemma.ArrayDesignsStore({		//lastOptions: {params: {start: 0, limit: myPageSize}}
 		});
-		pageStore.on('load', function(store, records, options){
-			/*console.log(records[0]);
-			console.log(records[1]);
-			console.log(records[2]);
-			console.log(records[3]);
-			console.log(records[4]);
-			console.log(records[5]);*/
-		}, this);
+
 		Ext.apply(this, {
 			store: pageStore
 		});
@@ -305,7 +298,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					width: 0.3, //viewConfig.forceFit resizes based on relative widths,
 					renderer: function(value, metaData, record, rowIndex, colIndex, store){
 						return (value && record) ? 
-						'<a class="internal" title="Go to page for ' + value + '" href="/Gemma/arrays/showArrayDesign.html?id=' +
+						'<a target="_blank" href="/Gemma/arrays/showArrayDesign.html?id=' +
 						record.id +'"></a>' + value  : '';
 					}
 				}, {

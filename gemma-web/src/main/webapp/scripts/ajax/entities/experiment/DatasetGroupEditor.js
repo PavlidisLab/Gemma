@@ -68,7 +68,8 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 									}],
 							split : true,
 							width:400,
-							height:200
+							height:200,
+							experimentNameAsLink:false // because will interfere with row selection
 						});
 
 				/*
@@ -204,8 +205,8 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 				this.detailsmask.show();
 				ExpressionExperimentController.getDescription(record.id, {
 							callback : function(data) {
-								Ext.DomHelper.overwrite(this.dataSetDetailsPanel.body, "<h1>" +
-												record.get('shortName') + "</h1><h2>" + record.get('name') +
+								Ext.DomHelper.overwrite(this.dataSetDetailsPanel.body, '<h1><a href="/Gemma/expressionExperiment/showExpressionExperiment.html?id='+record.id+'">' +
+												record.get('shortName') + "</a></h1><h2>" + record.get('name') +
 												"</h2><p>" + data + "</p>");
 								this.detailsmask.hide();
 							}.createDelegate(this)
