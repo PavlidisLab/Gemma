@@ -1285,7 +1285,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
              * mean). Note we don't do 1 - fp here -- high node degrees are still represented as values near 1 after
              * this transformation. See bug 2379
              */
-            result.put( g, MetaAnalysis.fisherCombinePvalues( vals ) );
+            if (vals.size() == 0){
+                result.put(g, null);
+            } else{
+                result.put( g, MetaAnalysis.fisherCombinePvalues( vals ) );
+            }
+            
         }
 
         return result;
