@@ -16,6 +16,8 @@ package ubic.gemma.analysis.util;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,13 +51,29 @@ public class ExperimentalDesignUtils {
     public static final String FACTOR_VALUE_RNAME_PREFIX = ExperimentalFactorService.FACTOR_VALUE_RNAME_PREFIX;
 
     /**
+     * Sort factors in a consistent way.
+     * 
+     * @param factors
+     * @return
+     */
+    public static List<ExperimentalFactor> sortFactors( Collection<ExperimentalFactor> factors ) {
+        List<ExperimentalFactor> facs = new ArrayList<ExperimentalFactor>();
+        facs.addAll( factors );
+        Collections.sort( facs, new Comparator<ExperimentalFactor>() {
+            @Override
+            public int compare( ExperimentalFactor o1, ExperimentalFactor o2 ) {
+                return o1.getId().compareTo( o2.getId() );
+            }
+        } );
+        return facs;
+    }
+
+    /**
      * Convert factors to a matrix usable in R. The rows are in the same order as the columns of our data matrix
      * (defined by samplesUsed).
      * 
-     * @param factors
-     * @param samplesUsed
      * @param factors in the order they will be used
-     * @param factorNames
+     * @param samplesUsed
      * @param baselines
      * @return a design matrix
      */
@@ -163,11 +181,9 @@ public class ExperimentalDesignUtils {
         if ( ef.getType() != null && ef.getType().equals( FactorType.CONTINUOUS ) ) return false;
 
         String category = ef.getCategory();
-        if(category != null && ef.getName() != null){
-            if ( category.equals( BATCH_FACTOR_CATEGORY_NAME ) 
-                && ef.getName().contains( BATCH_FACTOR_NAME )
-                && ef.getName().contains( BATCH_FACTOR_NAME_PREFIX ) ) 
-                return true;
+        if ( category != null && ef.getName() != null ) {
+            if ( category.equals( BATCH_FACTOR_CATEGORY_NAME ) && ef.getName().contains( BATCH_FACTOR_NAME )
+                    && ef.getName().contains( BATCH_FACTOR_NAME_PREFIX ) ) return true;
         }
 
         return false;

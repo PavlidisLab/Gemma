@@ -30,6 +30,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -107,8 +108,18 @@ public class DifferentialExpressionAnalysisConfig implements Serializable {
     /**
      * @param factorsToInclude the factorsToInclude to set
      */
+    public void setFactorsToInclude( List<ExperimentalFactor> factorsToInclude ) {
+        this.factorsToInclude = factorsToInclude;
+    }
+
+    /**
+     * @param factorsToInclude
+     */
     public void setFactorsToInclude( Collection<ExperimentalFactor> factorsToInclude ) {
-        this.factorsToInclude = new ArrayList<ExperimentalFactor>( factorsToInclude );
+        if ( factorsToInclude instanceof List<?> ) {
+            this.factorsToInclude = ( List<ExperimentalFactor> ) factorsToInclude;
+        }
+        this.factorsToInclude = ExperimentalDesignUtils.sortFactors( factorsToInclude );
     }
 
     /**

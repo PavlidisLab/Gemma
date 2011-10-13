@@ -108,37 +108,40 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
 
         Collection<DifferentialExpressionAnalysis> results;
 
-        AbstractDifferentialExpressionAnalyzer analyzer = differentialExpressionAnalyzer.determineAnalysis( ee, command
-                .getFactors(), command.getSubsetFactor() );
+        Collection<ExperimentalFactor> factors = command.getFactors();
+        AbstractDifferentialExpressionAnalyzer analyzer = differentialExpressionAnalyzer.determineAnalysis( ee,
+                factors, command.getSubsetFactor() );
 
         if ( analyzer == null ) {
             throw new IllegalStateException( "Data set cannot be analyzed" );
         }
 
-        assert command.getFactors() != null;
+        assert factors != null;
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
-        config.setFactorsToInclude( command.getFactors() );
+
+        config.setFactorsToInclude( factors );
         config.setSubsetFactor( command.getSubsetFactor() );
 
         /*
          * We only support interactions when there are exactly two factors.
          */
-        if ( command.isIncludeInteractions() && command.getFactors().size() == 2 ) {
+        if ( command.isIncludeInteractions() && factors.size() == 2 ) {
 
             /*
              * We should not include 'batch' in an interaction. But I don't want to enforce that here.
              */
-            for ( ExperimentalFactor ef : command.getFactors() ) {
+            for ( ExperimentalFactor ef : factors ) {
                 if ( BatchInfoPopulationService.isBatchFactor( ef ) ) {
                     log.warn( "Batch is included in the interaction!" );
                 }
             }
 
-            config.addInteractionToInclude( command.getFactors() );
+            config.addInteractionToInclude( factors );
         }
 
         results = differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee, config );
 
         return results;
     }
+
 }
