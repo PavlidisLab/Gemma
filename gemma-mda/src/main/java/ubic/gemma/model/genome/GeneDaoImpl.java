@@ -140,20 +140,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDao#find(ubic.gemma.model.genome.PhysicalLocation)
+     * @see ubic.gemma.model.genome.GeneDao#find(ubic.gemma.model.genome.PhysicalLocation )
      */
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
-        return findByPosition( physicalLocation.getChromosome(), physicalLocation.getNucleotide(), physicalLocation
-                .getNucleotide()
-                + physicalLocation.getNucleotideLength(), physicalLocation.getStrand() );
+        return findByPosition( physicalLocation.getChromosome(), physicalLocation.getNucleotide(),
+                physicalLocation.getNucleotide() + physicalLocation.getNucleotideLength(), physicalLocation.getStrand() );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficialNameInexact(java.lang.String)
+     * @see ubic.gemma.model.genome.GeneDao#findByOfficialNameInexact(java.lang.String )
      */
-    @SuppressWarnings( { "unchecked" })
+    @SuppressWarnings({ "unchecked" })
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
         final String query = "from GeneImpl g where g.officialName like :officialName order by g.officialName";
         org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
@@ -165,7 +164,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String)
      */
-    @SuppressWarnings( { "unchecked" })
+    @SuppressWarnings({ "unchecked" })
     @Override
     public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
         final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
@@ -182,7 +181,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
 
-        // FIXME Should return a collection of relativeLocationData in the case of ties
+        // FIXME Should return a collection of relativeLocationData in the case
+        // of ties
 
         if ( physicalLocation.getNucleotide() == null ) {
             throw new IllegalArgumentException( "Locations must have a nucleotide position" );
@@ -242,7 +242,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         candidate.setOnSameStrand( onSameStrand );
 
                         long range = 0;
-                        // note we use the 'real' location of the par, not the window.
+                        // note we use the 'real' location of the par, not the
+                        // window.
 
                         if ( geneStart > targetEnd ) {
                             // g -------oooooo
@@ -328,7 +329,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( existingGene != null ) {
             return existingGene;
         }
-        // We consider this abnormal because we expect most genes to have been loaded into the system already.
+        // We consider this abnormal because we expect most genes to have been
+        // loaded into the system already.
         log.warn( "*** Creating new gene: " + gene + " ***" );
         return create( gene );
     }
@@ -471,8 +473,10 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     // + "join fetch g.taxon t left join fetch t.externalDatabase"
     // + " left join fetch acc.externalDatabase left join fetch g.products gp "
     // + " left join fetch g.auditTrail at left join fetch at.events "
-    // + "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
-    // + " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
+    // +
+    // "left join fetch gp.accessions gpacc left join fetch gpacc.externalDatabase left join"
+    // +
+    // " fetch gp.physicalLocation gppl left join fetch gppl.chromosome chr left join fetch chr.taxon "
     // + " where g.id in (:gids)", "gids", ids );
     // }
 
@@ -603,7 +607,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
 
-        // note that with current index scheme, you have to have EE ids specified.
+        // note that with current index scheme, you have to have EE ids
+        // specified.
         if ( eeIds.size() > 0 ) {
             eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
@@ -683,7 +688,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
 
-        // note that with current index scheme, you have to have EE ids specified.
+        // note that with current index scheme, you have to have EE ids
+        // specified.
         if ( eeIds.size() > 0 ) {
             eeClause += " coexp.EXPRESSION_EXPERIMENT_FK in (";
             eeClause += StringUtils.join( eeIds.iterator(), "," );
@@ -691,7 +697,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         } else {
             log.warn( "This query may run very slowly without EE restriction" );
         }
-        // eeClause = " coexp.EXPRESSION_EXPERIMENT_FK = " + eeIds.iterator().next() + " AND ";
+        // eeClause = " coexp.EXPRESSION_EXPERIMENT_FK = " +
+        // eeIds.iterator().next() + " AND ";
 
         String knownGeneClause = "";
         if ( knownGenesOnly ) {
@@ -782,12 +789,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 assert cachedCVO.getQueryProbe() != null;
                 assert cachedCVO.getCoexpressedProbe() != null;
                 if ( cachedCVO.getQueryGene().getId().equals( cachedCVO.getCoexpressedGene() ) ) {
-                    // defensive check against self-links being in the cache (shouldn't happen)
+                    // defensive check against self-links being in the cache
+                    // (shouldn't happen)
                     continue;
                 }
-                addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(), cachedCVO
-                        .getPvalue(), cachedCVO.getScore(), cachedCVO.getCoexpressedGene(), cachedCVO.getGeneType(),
-                        cachedCVO.getCoexpressedProbe() );
+                addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(),
+                        cachedCVO.getPvalue(), cachedCVO.getScore(), cachedCVO.getCoexpressedGene(),
+                        cachedCVO.getGeneType(), cachedCVO.getCoexpressedProbe() );
 
                 assert coexpressions.contains( cachedCVO.getCoexpressedGene() );
             }
@@ -1116,7 +1124,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Integer ) r.iterator().next();
     }
 
-    @SuppressWarnings( { "unchecked", "cast" })
+    @SuppressWarnings({ "unchecked", "cast" })
     @Override
     protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
         Collection<Gene> genes;
@@ -1244,24 +1252,27 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util.Collection, java.util.Collection)
+     * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util .Collection, java.util.Collection)
      */
+    @Override
     public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees ) {
 
-        Map<CompositeSequence, Collection<Gene>> cs2GeneMap = CommonQueries.getCs2GeneMap( genes, this.getSession() );
+        Map<Long, Gene> idMap = EntityUtils.getIdMap( genes );
+
+        Map<Long, Collection<Long>> cs2GeneMap = CommonQueries.getCs2GeneIdMap( idMap.keySet(), this.getSession() );
 
         /*
          * When we aggregate, it's only over data sets that had the gene tested (inner join)
          */
         List<?> r = this.getHibernateTemplate().findByNamedParam(
                 "select p.probe, p.nodeDegreeRank from ProbeCoexpressionAnalysisImpl pca "
-                        + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe in (:ps)",
+                        + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe.id in (:ps)",
                 new String[] { "ps", "ees" }, new Object[] { cs2GeneMap.keySet(), ees } );
 
-        Map<Gene, DoubleArrayList> interm = new HashMap<Gene, DoubleArrayList>();
+        Map<Long, DoubleArrayList> interm = new HashMap<Long, DoubleArrayList>();
         for ( Gene g : genes ) {
-            interm.put( g, new DoubleArrayList() );
+            interm.put( g.getId(), new DoubleArrayList() );
         }
 
         for ( Object o : r ) {
@@ -1269,15 +1280,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             CompositeSequence cs = ( CompositeSequence ) oa[0];
             Double nodeDegreeRank = ( Double ) oa[1];
 
-            Collection<Gene> gs = cs2GeneMap.get( cs );
+            Collection<Long> gs = cs2GeneMap.get( cs );
 
-            // if ( gs.size() > 1 ) continue; // nonspecific - perhaps control this.
+            // if ( gs.size() > 1 ) continue; // nonspecific - perhaps control
+            // this.
             interm.get( gs.iterator().next() ).add( nodeDegreeRank );
         }
 
         // aggregate.
         Map<Gene, Double> result = new HashMap<Gene, Double>();
-        for ( Gene g : interm.keySet() ) {
+        for ( Long g : interm.keySet() ) {
             DoubleArrayList vals = interm.get( g );
             /*
              * Note: under the null, each node degree is drawn from a uniform(0,1); sampling properties for the mean of
@@ -1285,12 +1297,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
              * mean). Note we don't do 1 - fp here -- high node degrees are still represented as values near 1 after
              * this transformation. See bug 2379
              */
-            if (vals.size() == 0){
-                result.put(g, null);
-            } else{
-                result.put( g, MetaAnalysis.fisherCombinePvalues( vals ) );
+            Gene gene = idMap.get( g );
+            if ( vals.size() == 0 ) {
+                result.put( gene, null );
+            } else {
+                result.put( gene, MetaAnalysis.fisherCombinePvalues( vals ) );
             }
-            
+
         }
 
         return result;
@@ -1434,7 +1447,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * Gets all the CompositeSequences related to the gene identified by the given gene and arrayDesign. (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic.gemma.model.genome.Gene,
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleGetCompositeSequences(ubic. gemma.model.genome.Gene,
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @SuppressWarnings("unchecked")
@@ -1569,7 +1582,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma.model.genome.Taxon)
+     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
      */
     @SuppressWarnings("unchecked")
     @Override
