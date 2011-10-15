@@ -69,8 +69,10 @@
 						</goals>
 						<configuration>
 							<tasks>
-								<echo append="false" file="${project.build.directory}/classes/version.properties">
-									gemma.version=${project.version} built ${maven.build.timestamp}</echo>
+								<echo append="false"
+									file="${project.build.directory}/classes/version.properties">
+									gemma.version=${project.version} built
+									${maven.build.timestamp}</echo>
 							</tasks>
 						</configuration>
 					</execution>
@@ -388,10 +390,10 @@
 			<version>1.0.16</version>
 		</dependency>
 		<dependency>
-    <groupId>org.quartz-scheduler</groupId>
-    <artifactId>quartz</artifactId>
-    <version>2.1.0</version>
-</dependency>
+			<groupId>org.quartz-scheduler</groupId>
+			<artifactId>quartz</artifactId>
+			<version>1.8.5</version>
+		</dependency>
 		<dependency>
 			<groupId>spark</groupId>
 			<artifactId>spark</artifactId>
