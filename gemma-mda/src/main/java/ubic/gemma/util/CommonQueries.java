@@ -203,7 +203,7 @@ public class CommonQueries {
 
     /**
      * @param genes
-     * @pram session
+     * @param session
      * @return map of probes to input genes they map to. Other genes those probes might detect are not included.
      * @see getFullCs2GeneMap, which can be called on keyset of results of this method to get full mapping.
      */
