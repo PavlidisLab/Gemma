@@ -60,11 +60,11 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
-				<configuration>
+				<!-- <configuration>
 					<excludes>
 						<exclude>**/*Test*,**/Test*,**/All*Tests</exclude>
 					</excludes>
-				</configuration>
+				</configuration> -->
 			</plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>

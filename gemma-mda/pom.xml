@@ -101,106 +101,106 @@
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-datatype</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-webservice</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-service</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-process</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-meta</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-xml</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-persistence</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.profiles.uml2</groupId>
 						<artifactId>andromda-profile-presentation</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 						<type>xml.zip</type>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
 						<artifactId>andromda-spring-cartridge</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
 						<artifactId>andromda-hibernate-cartridge</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
 						<artifactId>andromda-webservice-cartridge</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
 						<artifactId>andromda-java-cartridge</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.cartridges</groupId>
 						<artifactId>andromda-jsf-cartridge</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.translationlibraries</groupId>
 						<artifactId>andromda-ocl-validation-library</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 					</dependency>
 					<dependency>
 						<groupId>org.andromda.translationlibraries</groupId>
 						<artifactId>andromda-ocl-query-library</artifactId>
 						<version>3.3</version>
-						<scope>provided</scope>
+						<scope>compile</scope>
 					</dependency>
 				</dependencies>
 			</plugin>
