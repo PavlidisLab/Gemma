@@ -455,10 +455,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
-					<argLine>
-						-Xmx1200M -ea -Djava.awt.headless=true
-						-XX:MaxPermSize=256m
-					</argLine>
+					<argLine>-Xmx1200M -ea -Djava.awt.headless=true -XX:MaxPermSize=256m</argLine>
 					<redirectTestOutputToFile>true</redirectTestOutputToFile>
 					<excludes>
 						<exclude>**/*Abstract*</exclude>
@@ -536,7 +533,7 @@
 		</repository>
 		<repository>
 			<id>mvnrepository.com</id>
-			<url>http://mvnrepository.com/artifact</url> <!--  quartz 1.6.5... -->
+			<url>http://mvnrepository.com/artifact</url> <!-- quartz 1.6.5... -->
 		</repository>
 		<repository>
 			<id>terracotta-releases</id>
@@ -646,8 +643,7 @@
 			</build>
 		</profile>
 		<profile>
-			<!-- For deployment where host is local (and ssh isn't available for builder, 
-				e.g. CI) -->
+			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
 			<id>local-deploy</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
