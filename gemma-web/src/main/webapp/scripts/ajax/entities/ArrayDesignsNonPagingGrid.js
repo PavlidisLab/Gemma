@@ -299,7 +299,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					renderer: function(value, metaData, record, rowIndex, colIndex, store){
 						return (value && record) ? 
 						'<a target="_blank" href="/Gemma/arrays/showArrayDesign.html?id=' +
-						record.id +'"></a>' + value  : '';
+						record.id +'">' + value +'</a>'  : '';
 					}
 				}, {
 					header: "Status",
