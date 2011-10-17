@@ -979,6 +979,7 @@ gemma.max.fileupload.size.bytes=
 								<value>browse</value>
 								<value>browseSpecificIds</value>
 								<value>browseByTaxon</value>
+								<value>loadCountsForDataSummaryTable</value>
 							</list>
 						</property>
 					</bean>

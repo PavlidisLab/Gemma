@@ -56,6 +56,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 
@@ -78,9 +79,12 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     @Autowired
     ExpressionExperimentService expressionExperimentService = null;
-
+    
     @Autowired
     SecurityService securityService = null;
+
+    @Autowired
+    TaxonService taxonService = null;
 
     @Autowired
     private CacheManager cacheManager = null;
@@ -148,8 +152,8 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
         updatedArrayDesigns.removeAll( newArrayDesigns );
         
         // build total, new and updated counts by taxon to display in data summary widget on front page
-        wn.setNewEECountPerTaxon( getExpressionExperimentCountsByTaxon( newExpressionExperiments ) );
-        wn.setUpdatedEECountPerTaxon( getExpressionExperimentCountsByTaxon( updatedExpressionExperiments) );
+        wn.setNewEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( newExpressionExperiments ) );
+        wn.setUpdatedEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( updatedExpressionExperiments) );
         
         wn.setNewAssayCount(getAssayCount( newExpressionExperiments ));
         
@@ -230,14 +234,52 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
             }
         }
         return eesPerTaxon;
-    }
+    } 
+    
+    private Map<Taxon, Collection<Long>> getExpressionExperimentIdsByTaxon(Collection<ExpressionExperiment> ees){
+        /*
+         * Sort taxa by name.
+         */
+        TreeMap<Taxon, Collection<Long>> eesPerTaxon = new TreeMap<Taxon, Collection<Long>>( new Comparator<Taxon>() {
+            @Override
+            public int compare( Taxon o1, Taxon o2 ) {
+                if(o1 == null){
+                    return 1;
+                }else if(o2 == null){
+                    return -1;
+                }else{
+                   return o1.getScientificName().compareTo( o2.getScientificName() );  
+                }                                   
+            }
+        } );
+                
+        ExpressionExperiment ee = null;
+        Taxon t = null;
+
+        Collection<Long> ids;
+        // get counts of new experiments by taxon
+        for ( Iterator<ExpressionExperiment> it = ees.iterator(); it.hasNext(); ) { 
+            ee = it.next();
+            t = expressionExperimentService.getTaxon(ee.getId());
+            if(t!=null){
+                if(eesPerTaxon.containsKey(t)){
+                    ids = eesPerTaxon.get(t);
+                }else{
+                    ids = new ArrayList<Long>();
+                }
+                ids.add( ee.getId() );
+                eesPerTaxon.put(t, ids);
+            }
+        }
+        return eesPerTaxon;
+    }    
 
     /**
      * Retrieve the latest WhatsNew report.
      * 
      * @return WhatsNew the latest WhatsNew report cache.
      */
-    public WhatsNew retrieveReport() {
+    public WhatsNew retrieveReport() {     
         WhatsNew wn = new WhatsNew();
         try {
             File newObjects = new File( HOME_DIR + File.separatorChar + WHATS_NEW_DIR + File.separatorChar
@@ -265,20 +307,36 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
             // load up all updated objects
             if ( updatedObjects.exists() ) {
+            
                 Collection<AuditableObject> aos = loadAuditableObjects( updatedObjects );
                 for ( AuditableObject object : aos ) {
+                    
+                    /*
+                     *  This call takes ~ 15-20 ms but it can be called many times if there are a lot of 
+                     *  updated experiments, meaning this loop can take >8500 ms (over tunnel for ~450 experiments).
+                     *  
+                     *  Loading objects could be avoided since we only need ids on the front end, but we would
+                     *  need to refactor the cache, because object-type is used
+                     *  to calculate counts for updated array design objects vs updated experiments
+                     *  
+                     *  This is probably not necessary because usually the number of updated or new experiments
+                     *  will be much lower than 450.
+                     */
+                    
                     Auditable auditable = fetch( wn, object );
 
                     if ( auditable == null ) continue;
 
                     wn.addUpdatedObjects( auditable );
+
                     updateDate( wn, object );
+
                 }
             }
-            
             // build total, new and updated counts by taxon to display in data summary widget on front page
-            wn.setNewEECountPerTaxon( getExpressionExperimentCountsByTaxon( wn.getNewExpressionExperiments() ) );
-            wn.setUpdatedEECountPerTaxon( getExpressionExperimentCountsByTaxon( wn.getUpdatedExpressionExperiments()) );
+            wn.setNewEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( wn.getNewExpressionExperiments() ) );
+            wn.setUpdatedEEIdsPerTaxon( getExpressionExperimentIdsByTaxon( wn.getUpdatedExpressionExperiments()) );
+        
         } catch ( Throwable e ) {
             log.error( e, e );
             return null;

@@ -449,6 +449,10 @@ ExpressionExperimentController.browseByTaxon = function(p0, p1, callback) {
 	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'browseByTaxon', p0, p1,
 			callback);
 }
+ExpressionExperimentController.loadCountsForDataSummaryTable = function(callback) {
+	dwr.engine._execute(ExpressionExperimentController._path, 'ExpressionExperimentController', 'loadCountsForDataSummaryTable', 
+			callback);
+}
 
 // ====================================================================================
 if (ExpressionExperimentDataFetchController == null)
