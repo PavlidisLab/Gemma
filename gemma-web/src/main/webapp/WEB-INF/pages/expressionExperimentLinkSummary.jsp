@@ -13,12 +13,12 @@
 	<p>
 		Use this page to view and manage expression experiments you have access to.
 	</p>
+	<security:authorize access="hasRole('GROUP_ADMIN')">
+		<div id="updateAllReports-area"></div>
+	</security:authorize>
 	<div id="controls"></div>
 	<div id="eemanage"></div>
 	<div id="taskId" style="display: none;"></div>
 	<div id="progress-area" style="padding: 15px;"></div>
-	<security:authorize access="hasRole('GROUP_ADMIN')">
-		<div id="updateAllReports-area"></div>
-	</security:authorize>
 
 </body>
