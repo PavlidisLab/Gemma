@@ -35,12 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSON;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
@@ -52,8 +50,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
-
-import com.sdicons.json.model.JSONArray;
 
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
@@ -68,13 +64,10 @@ import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
-import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
-import ubic.gemma.genome.gene.DatabaseBackedGeneSetValueObject;
-import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
@@ -123,7 +116,6 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchResultDisplayObject;
-import ubic.gemma.search.SearchResultTaxonComparator;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
@@ -338,8 +330,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private static final double BATCH_CONFOUND_THRESHOLD = 0.01;
 
     private static final Double BATCH_EFFECT_PVALTHRESHOLD = 0.01;
-
-    private static final int MAX_COMBO_PROMT_GROUP_SIZE = 100;
 
     /**
      * Exposed for AJAX calls.
@@ -1188,7 +1178,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private List<ExpressionExperiment> removeTroubledExperiments( List<ExpressionExperiment> records ) {
         List<ExpressionExperiment> untroubled = new ArrayList<ExpressionExperiment>( records );
         Map<Long, AuditEvent> troubleEvents = expressionExperimentReportService
-                .getTroubledEvents( ( Collection<ExpressionExperiment> ) records );
+                .getTroubledEvents( records );
         Long id = null;
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
         for ( ExpressionExperiment record : records ) {
@@ -1390,7 +1380,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public ModelAndView showAllExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
-        //buildCountsForDataSummaryTable(mav);
         return mav;
 
     }
@@ -1408,8 +1397,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         JSONObject summary = new JSONObject();
         net.sf.json.JSONArray taxonEntries = new net.sf.json.JSONArray();
         
-        Map<String, Long> stats = new HashMap<String, Long>();
-
         long bioAssayCount = bioAssayService.countAll(); 
         long arrayDesignCount = arrayDesignService.countAll();
         Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
@@ -1426,24 +1413,22 @@ public class ExpressionExperimentController extends AbstractTaskService {
         LinkedHashMap<String, Long> eesPerTaxonName = new LinkedHashMap<String, Long>();
         
         long expressionExperimentCount = 0; //expressionExperimentService.countAll();
-        long otherTaxaEECount = 0;
         for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
             Taxon t = it.next();
             Long c = unsortedEEsPerTaxon.get( t );
             
             eesPerTaxon.put( t ,c );
             eesPerTaxonName.put( t.getScientificName(), c );
-            
-            // TODO problem with this is we want to make a link to them.
-            if ( c < 10 ) {
-                // temporary, hide 'uncommon' taxa from this table. See bug 2052
+
+            // hide 'uncommon' taxa from this table. See bug 2052
+            // this bug proposed being able to make taxa private
+            // it is now marked as "won't fix" so I assume they want everything to be shown
+            // so I'll comment this out (for now)
+            /*if ( c < 10 ) {
                 otherTaxaEECount += c;
-                it.remove();
-            }
+                //it.remove();
+            }*/
             expressionExperimentCount += c;
-        }
-        if ( otherTaxaEECount > 0 ) {
-            // eesPerTaxon.put( otherTaxa, otherTaxaEECount );
         }
 
         // this is the slow part
@@ -1482,19 +1467,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 taxLine.put( "taxonName", t.getScientificName());
                 taxLine.put( "totalCount", eesPerTaxon.get( t ));
                 if(newEEsPerTaxon.containsKey( t )){
-                    taxLine.put( "newCount", ((Collection<Long>)newEEsPerTaxon.get( t )).size());
+                    taxLine.put( "newCount", newEEsPerTaxon.get( t ).size());
                     taxLine.put( "newIds", newEEsPerTaxon.get( t ));
                 }
                 if(updatedEEsPerTaxon.containsKey( t )){
-                    taxLine.put( "updatedCount", ((Collection<Long>)updatedEEsPerTaxon.get( t )).size());
+                    taxLine.put( "updatedCount", updatedEEsPerTaxon.get( t ).size());
                     taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ));
                 }
                 taxonEntries.add( taxLine );
             }
             
             summary.element( "sortedCountsPerTaxon", taxonEntries );
-            //summary.element( "newPerTaxonCount", newEEsPerTaxon );
-            //summary.element( "updatedPerTaxonCount", updatedEEsPerTaxon );
             
             //Get count for new and updated array designs
             int newArrayCount = (wn.getNewArrayDesigns()!=null)? wn.getNewArrayDesigns().size():0;
@@ -1521,8 +1504,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         summary.element( "bioAssayCount", bioAssayCount );
         summary.element( "arrayDesignCount", arrayDesignCount );
         
-        //summary.element( "taxonCount", eesPerTaxon );
-        //summary.element( "taxonCountByName", eesPerTaxonName );
         summary.element( "expressionExperimentCount", expressionExperimentCount );
         
 
