@@ -18,6 +18,7 @@ Gemma.MAX_GENES_PER_QUERY = 1000;
 /**
  * Table of genes 
  * 
+ * See also GeneMembersSaveGrid.js
  * 
  * @class GeneGrid
  * @extends Gemma.GemmaGridPanel
@@ -300,13 +301,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 	},
 
-	/**
-	 * 
-	 * NOTE: NEED TO OVERRIDE THIS METHOD IN GENE CHOOSER PANEL B/C IT SHOULD
-	 * GRAB ID OF GENE IN TOOLBAR TOO
-	 * 
-	 * @return {} list of all geneids currently held in the grid
-	 */
+
 	getGeneIds : function() {
 		var ids = [];
 		var all = this.getStore().getRange();
@@ -317,15 +312,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		return ids;
 	},
 
-	/**
-	 * 
-	 * NOTE: NEED TO OVERRIDE THIS METHOD IN GENE CHOOSER PANEL B/C IT SHOULD
-	 * GRAB ID OF GENE IN TOOLBAR TOO
-	 * 
-	 * gene = {id, officialSymbol, officialName, taxon, inList flag}
-	 * 
-	 * @return [] array of genes objects currently held in the grid
-	 */
+
 	getGenes : function() {
 		var genes = [];
 		var all = this.getStore().getRange();
@@ -361,20 +348,45 @@ Ext.reg('geneMembersGrid', Gemma.GeneMembersGrid);
  * boolean are shown if "reduced" (or any other value): only symbol and
  * description are shown
  * 
+ * Note configs 
  * 
  * @class GeneGrid
  * @extends Gemma.GemmaGridPanel
  */
 Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
-	allowSaveToSession:true, // controls presence of 'done' button
-	allowAdditions:true, // controls presence of top toolbar
-	allowRemovals:true, // controls presence of 'remove experiment' buttons on every row
-	sortableColumnsView:false, // controls whether the data appears in two columns or formatted into one
+	// take note of these config options
+	/**
+	 * @cfg {boolean} controls presence of 'done' button
+	 */
+	allowSaveToSession:true,
+	/**
+	 * @cfg {boolean} controls presence of top toolbar
+	 */
+	allowAdditions:true, 
+	/**
+	 * @cfg {boolean} controls presence of 'remove experiment' buttons on every row
+	 */
+	allowRemovals:true,
+	/**
+	 * @cfg {boolean} controls whether the data appears in two columns or formatted into one
+	 */
+	sortableColumnsView:false, 
+	/**
+	 * @cfg {boolean} controls whether the cancel button is visible
+	 */
 	hideCancel:false,
-	showSeparateSaveAs: false, // show a 'save as' button in addition to a save button
-	enableSaveOnlyAfterModification: false, // if save button is show, leave it disabled until an experiment is added or removed
-	
+	/**
+	 * @cfg {boolean}  controls whether to show a 'save as' button in addition to a save button
+	 */
+	showSeparateSaveAs: false,
+	/**
+	 * @cfg  {boolean} if save button is shown, this controls whether or not to leave it 
+	 * disabled until an experiment is added or removed
+	 */
+	enableSaveOnlyAfterModification: false,
+	// end of config options
+
 	initComponent : function() {
 				
 		if (this.allowAdditions) {
