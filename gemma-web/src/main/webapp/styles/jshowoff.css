@@ -123,7 +123,7 @@ p.jshowoff-controls {
 	background: #d2e7ec;
 	bottom: 0;
 	padding: 5px 0 5px 5px;
-	right: 113px;
+	right: 53px;
 	height: 32px;
 	z-index:150;
 	}
@@ -147,13 +147,13 @@ p.jshowoff-controls {
 	background-image: url(/Gemma/images/slideShow/gemmaThumbIcon.gif);
 	}
 .thumbFeatures .jshowoff-slidelink-1 {
-	background-image: url(/Gemma/images/slideShow/dbIcon.gif);
+	background-image: url(/Gemma/images/slideShow/databaseIcon_thea.png);
 	}
 .thumbFeatures .jshowoff-slidelink-2 {
 	background-image: url(/Gemma/images/slideShow/DiffExpIcon.jpg);
 	}
 .thumbFeatures .jshowoff-slidelink-3 {
-	background-image: url(/Gemma/images/slideShow/lockIcon.png);
+	background-image: url(/Gemma/images/slideShow/lockIcon_GNU-GPL.png);
 	}
 .thumbFeatures p.jshowoff-controls {
 	background: none;

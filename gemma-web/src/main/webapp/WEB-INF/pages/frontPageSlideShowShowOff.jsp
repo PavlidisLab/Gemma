@@ -1,5 +1,5 @@
 <link rel="stylesheet" type="text/css"
-	href="/Gemma/scripts/lib/jShowOff/jshowoff.css" />
+	href="/Gemma/styles/jshowoff.css" />
 
 
 <div id="frontPageSlideShow" width="100%" align="center" style="background: url(/Gemma/images/slideShow/bg_body_colour2.png) repeat; margin-bottom:30px; border-top: 1px solid gainsboro; border-bottom:1px solid gainsboro;">
@@ -15,7 +15,7 @@
 						<h1 style="text-align: center;">
 							Welcome to Gemma!
 						</h1>
-						<h2 style="text-align:center">Database and tools for meta-analysis of gene expression data</h2>
+						<h2 style="text-align:center">Database and tools for meta-analysis of functional genomics data</h2>
 					</td>
 				</tr>
 			</table>
@@ -36,18 +36,19 @@
 					</td>
 					<td class="slideTextTD" style="width:350px">
 						<h2 style="text-align: center;">
-							Microarray Database
+							Functional Genomics Database
 						</h2>
 						<ul style="clear: both;">
 							<li>
 							<span style="color:#EC7F2C;font-size:14pt">Over 3000 data sets </span>
-								<a title="" target="_blank"
-									href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">[+]</a>
+							</li>
+							<li>
+								Ongoing updates and additions
 							</li>
 							<c:if
 								test="${not empty updatedExpressionExperimentCount || not empty stats.updatedArrayDesignCount}">
 
-								<li>
+								<li> 
 									<c:if test="${not empty updatedExpressionExperimentCount}">
 									${ updatedExpressionExperimentCount} experiment<c:if
 											test="${updatedExpressionExperimentCount > 1}">s</c:if>
@@ -64,8 +65,6 @@
 
 									</c:if>
 									updated in the last week
-									<a title="" target="_blank"
-										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">[+]</a>
 								</li>
 							</c:if>
 							<c:if
@@ -84,20 +83,8 @@
 											test="${stats.newArrayDesignCount > 1}">s</c:if>
 									</c:if>
 									added in the last week
-									<a title="" target="_blank"
-										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">[+]</a>
 								</li>
 							</c:if>
-							<c:if
-								test="${ empty newExpressionExperimentCount && empty stats.updatedArrayDesignCount && empty updatedExpressionExperimentCount && empty stats.updatedArrayDesignCount}">
-								Ongoing updates and additions <a title="" target="_blank"
-										href="http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news">[+]</a>
-								</c:if>
-							<li>
-								2000+ published papers
-								<a title="" target="_blank"
-									href="/Gemma/bibRef/showAllEeBibRefs.html">[+]</a>
-							</li>
 						</ul>
 					</td>
 				</tr>
@@ -134,7 +121,7 @@
 			<table style="width:750px;margin-right:100px">
 				<tr>
 					<td>
-						<img src="/Gemma/images/slideShow/myGemma.png" style="padding:15px">
+						<img src="/Gemma/images/slideShow/myGemma2.png" style="padding:15px">
 					</td>
 					<td class="slideTextTD" >
 						<h2 style="text-align: center; margin-right:50px;">
@@ -166,7 +153,7 @@ jQuery.noConflict();
 		jQuery('#thumbfeatures').jshowoff( {
 			cssClass : 'thumbFeatures',
 			effect : 'slideLeft',
-			autoPlay: false, // default: true
+			autoPlay: true, // default: true
 			speed: 9000 // default: 3000 (ms)
 			
 		});
