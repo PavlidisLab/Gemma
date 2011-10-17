@@ -40,8 +40,8 @@ public class WhatsNew {
     private Collection<Auditable> newObjects;
     private Collection<Auditable> updatedObjects;
     private Map<Taxon, Long> eeCountPerTaxon;
-    private Map<Taxon, Long> newEECountPerTaxon;
-    private Map<Taxon, Long> updatedEECountPerTaxon;
+    private Map<Taxon, Collection<Long>> newEEIdsPerTaxon;
+    private Map<Taxon, Collection<Long>> updatedEEIdsPerTaxon;
     private int newAssayCount = 0;
     private Date date;
 
@@ -184,26 +184,26 @@ public class WhatsNew {
     /**
      * @param a map for the number of new expression experiments per taxon
      */
-    public void setNewEECountPerTaxon( Map<Taxon, Long> eeCountPerTaxon) {
-        this.newEECountPerTaxon = eeCountPerTaxon;
+    public void setNewEEIdsPerTaxon( Map<Taxon, Collection<Long>> eeCountPerTaxon) {
+        this.newEEIdsPerTaxon = eeCountPerTaxon;
     }
     /**
      * get a map for the number of new expression experiments per taxon
      */
-    public Map<Taxon, Long> getNewEECountPerTaxon() {
-        return this.newEECountPerTaxon;
+    public Map<Taxon, Collection<Long>> getNewEEIdsPerTaxon() {
+        return this.newEEIdsPerTaxon;
     }
     /**
      * @param a map for the number of updated expression experiments per taxon
      */
-    public void setUpdatedEECountPerTaxon( Map<Taxon, Long> eeCountPerTaxon) {
-        this.updatedEECountPerTaxon = eeCountPerTaxon;
+    public void setUpdatedEEIdsPerTaxon( Map<Taxon, Collection<Long>> map) {
+        this.updatedEEIdsPerTaxon = map;
     }
     /**
      * get a map for the number of updated expression experiments per taxon
      */
-    public Map<Taxon, Long> getUpdatedEECountPerTaxon( ) {
-        return this.updatedEECountPerTaxon;
+    public Map<Taxon, Collection<Long>> getUpdatedEEIdsPerTaxon( ) {
+        return this.updatedEEIdsPerTaxon;
     }
 
     /**
