@@ -19,7 +19,9 @@
 package ubic.gemma.web.controller.expression.experiment;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,15 +29,22 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.sf.json.JSON;
+import net.sf.json.JSONObject;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -43,6 +52,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
+
+import com.sdicons.json.model.JSONArray;
 
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
@@ -52,9 +63,12 @@ import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.analysis.preprocess.svd.SVDValueObject;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
+import ubic.gemma.analysis.report.WhatsNew;
+import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.model.TaxonValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
 import ubic.gemma.expression.experiment.QuantitationTypeValueObject;
@@ -315,6 +329,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
     @Autowired
     private SVDService svdService;
 
+    @Autowired
+    private WhatsNewService whatsNewService;
+    
     @Autowired
     private SessionListManager sessionListManager;
 
@@ -613,10 +630,10 @@ public class ExpressionExperimentController extends AbstractTaskService {
                     taxonService.thaw( registeredUserSet.getTaxon() );
                     if ( !taxonLimited || registeredUserSet.getTaxon().getId().equals( taxonId ) ) {
                         newSRDO = new SearchResultDisplayObject( registeredUserSet );
+                        ((ExpressionExperimentSetValueObject) newSRDO.getResultValueObject()).setPublik(securityService.isPublic( registeredUserSet ));
 
-                        // if set was automatically generated, don't label as user-created (technically was created by
-                        // admin user)
-                        if ( newSRDO.getName().indexOf( "All" ) != 0 ) {
+                        // private groups are treated differently than public ones in the UI
+                        if ( !((ExpressionExperimentSetValueObject) newSRDO.getResultValueObject()).isPublik() ) {
                             newSRDO.setUserOwned( true );
                             usersResults.add( newSRDO );
                         } else {
@@ -1213,7 +1230,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         JsonReaderResponse<ExpressionExperimentValueObject> returnVal = new JsonReaderResponse<ExpressionExperimentValueObject>(
-                valueObjects, valueObjects.size() );
+                valueObjects, records.size() );
         return returnVal;
     }
 
@@ -1373,91 +1390,145 @@ public class ExpressionExperimentController extends AbstractTaskService {
     public ModelAndView showAllExpressionExperiments( HttpServletRequest request, HttpServletResponse response ) {
 
         ModelAndView mav = new ModelAndView( "expressionExperiments" );
-        
-//        String sId = request.getParameter( "id" );
-//        String taxonId = request.getParameter( "taxonId" );
-//
-//        Collection<ExpressionExperimentValueObject> expressionExperiments = new ArrayList<ExpressionExperimentValueObject>();
-//        Collection<ExpressionExperimentValueObject> eeValObjectCol;
-//
-//        Collection<ExpressionExperimentValueObject> usersData;
-        // if ( taxonId != null ) {
-        // // if a taxon ID is specified, load all expression experiments for
-        // // this taxon
-        // try {
-        // Long tId = Long.parseLong( taxonId );
-        //
-        // /*
-        // * TODO: handle case of multiple taxa or 'other'.
-        // */
-        //
-        // Taxon taxon = taxonService.load( tId );
-        //
-        // if ( taxon == null ) {
-        // return mav.addObject( "message", "Invalid taxon id" );
-        // }
-        //
-        // eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( taxon, null, false );
-        // mav.addObject( "showAll", false );
-        // mav.addObject( "taxon", taxon );
-        // } catch ( NumberFormatException e ) {
-        // return mav.addObject( "message", "Invalid taxon id, must be an integer" );
-        // }
-        // } else if ( sId == null ) {
-        // mav.addObject( "showAll", true );
-        // eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, false );
-        // } else {
-        // Collection<Long> eeIdList = new ArrayList<Long>();
-        // String[] idList = StringUtils.split( sId, ',' );
-        // try {
-        // for ( int i = 0; i < idList.length; i++ ) {
-        // if ( StringUtils.isNotBlank( idList[i] ) ) {
-        // eeIdList.add( Long.parseLong( idList[i] ) );
-        // }
-        // }
-        // } catch ( NumberFormatException e ) {
-        // return mav.addObject( "message", "Invalid ids, must be a list of integers separated by commas." );
-        // }
-        // mav.addObject( "showAll", false );
-        // eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, eeIdList, false );
-        // }
-        //
-        // expressionExperiments.addAll( eeValObjectCol );
-        //
-        // // sort expression experiments by name first
-        // Collections.sort( ( List<ExpressionExperimentValueObject> ) expressionExperiments,
-        // new ExpressionExperimentValueObjectComparator() );
-        //        
-        // //System.out.println( "old way, before: "+ expressionExperiments.size() );
-        //
-        // if ( SecurityService.isUserAdmin() ) {
-        // expressionExperimentReportService.fillEventInformation( expressionExperiments );
-        // }
-        //
-        // if ( !SecurityService.isUserAdmin() ) {
-        // auditableUtil.removeTroubledEes( expressionExperiments );
-        // }
-        //
-        // //System.out.println( "old way, after: "+ expressionExperiments.size() );
-        // /*
-        // * Figure out which of the data sets belong to the current user (if anonymous, this won't do anything; is
-        // * administrator, they 'owned' is always true.)
-        // */
-        // usersData = this.getFilteredExpressionExperimentValueObjects( null,
-        // EntityUtils.getIds( expressionExperiments ), true );
-        //
-        // Long numExpressionExperiments = Long.valueOf( expressionExperiments.size() );
-        //
-        // mav.addObject( "expressionExperiments", expressionExperiments );
-        //
-        // mav.addObject( "eeids", EntityUtils.getIdStrings( usersData ).toArray( new String[] {} ) );
-
-        // mav.addObject( "numExpressionExperiments", numExpressionExperiments );
-
+        //buildCountsForDataSummaryTable(mav);
         return mav;
 
     }
 
+    /**
+     * AJAX  method to get data for database summary table, returned as a JSON object
+     * 
+     * the slow part here is loading each new or updated object in 
+     * whatsNewService.retrieveReport() -> fetch()
+     * 
+     * @return
+     */
+    public JSONObject loadCountsForDataSummaryTable(){
+        
+        JSONObject summary = new JSONObject();
+        net.sf.json.JSONArray taxonEntries = new net.sf.json.JSONArray();
+        
+        Map<String, Long> stats = new HashMap<String, Long>();
+
+        long bioAssayCount = bioAssayService.countAll(); 
+        long arrayDesignCount = arrayDesignService.countAll();
+        Map<Taxon, Long> unsortedEEsPerTaxon = expressionExperimentService.getPerTaxonCount();
+        
+        /*
+         * Sort taxa by name.
+         */
+        TreeMap<Taxon, Long> eesPerTaxon = new TreeMap<Taxon, Long>( new Comparator<Taxon>() {
+            @Override
+            public int compare( Taxon o1, Taxon o2 ) {
+                return o1.getScientificName().compareTo( o2.getScientificName() );
+            }
+        } );
+        LinkedHashMap<String, Long> eesPerTaxonName = new LinkedHashMap<String, Long>();
+        
+        long expressionExperimentCount = 0; //expressionExperimentService.countAll();
+        long otherTaxaEECount = 0;
+        for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
+            Taxon t = it.next();
+            Long c = unsortedEEsPerTaxon.get( t );
+            
+            eesPerTaxon.put( t ,c );
+            eesPerTaxonName.put( t.getScientificName(), c );
+            
+            // TODO problem with this is we want to make a link to them.
+            if ( c < 10 ) {
+                // temporary, hide 'uncommon' taxa from this table. See bug 2052
+                otherTaxaEECount += c;
+                it.remove();
+            }
+            expressionExperimentCount += c;
+        }
+        if ( otherTaxaEECount > 0 ) {
+            // eesPerTaxon.put( otherTaxa, otherTaxaEECount );
+        }
+
+        // this is the slow part
+        WhatsNew wn = whatsNewService.retrieveReport();
+        
+        if(wn == null){
+            Calendar c = Calendar.getInstance();
+            Date date = c.getTime();
+            date = DateUtils.addWeeks( date, -1 );
+            wn = whatsNewService.getReport( date );
+
+        }
+        if(wn != null){
+             //Get count for new assays
+            int newAssayCount = wn.getNewAssayCount();
+            
+            Collection<Long> newExpressionExperimentIds = (wn.getNewExpressionExperiments()!=null)?
+                    EntityUtils.getIds( wn.getNewExpressionExperiments() ):new ArrayList<Long>();
+            Collection<Long> updatedExpressionExperimentIds = (wn.getUpdatedExpressionExperiments() != null)?
+                    EntityUtils.getIds( wn.getUpdatedExpressionExperiments() ): new ArrayList<Long>();
+            
+                    
+            int newExpressionExperimentCount = (wn.getNewExpressionExperiments()!=null)?
+                                                        wn.getNewExpressionExperiments().size():0;
+            int updatedExpressionExperimentCount = (wn.getUpdatedExpressionExperiments() != null)?
+                                                        wn.getUpdatedExpressionExperiments().size():0;
+                       
+            /*Store counts for new and updated experiments by taxonId*/
+            Map<Taxon, Collection<Long>> newEEsPerTaxon = wn.getNewEEIdsPerTaxon();
+            Map<Taxon, Collection<Long>> updatedEEsPerTaxon = wn.getUpdatedEEIdsPerTaxon();
+                        
+            for ( Iterator<Taxon> it = unsortedEEsPerTaxon.keySet().iterator(); it.hasNext(); ) {
+                Taxon t = it.next();
+                JSONObject taxLine = new JSONObject();
+                taxLine.put( "taxonId", t.getId() );
+                taxLine.put( "taxonName", t.getScientificName());
+                taxLine.put( "totalCount", eesPerTaxon.get( t ));
+                if(newEEsPerTaxon.containsKey( t )){
+                    taxLine.put( "newCount", ((Collection<Long>)newEEsPerTaxon.get( t )).size());
+                    taxLine.put( "newIds", newEEsPerTaxon.get( t ));
+                }
+                if(updatedEEsPerTaxon.containsKey( t )){
+                    taxLine.put( "updatedCount", ((Collection<Long>)updatedEEsPerTaxon.get( t )).size());
+                    taxLine.put( "updatedIds", updatedEEsPerTaxon.get( t ));
+                }
+                taxonEntries.add( taxLine );
+            }
+            
+            summary.element( "sortedCountsPerTaxon", taxonEntries );
+            //summary.element( "newPerTaxonCount", newEEsPerTaxon );
+            //summary.element( "updatedPerTaxonCount", updatedEEsPerTaxon );
+            
+            //Get count for new and updated array designs
+            int newArrayCount = (wn.getNewArrayDesigns()!=null)? wn.getNewArrayDesigns().size():0;
+            int updatedArrayCount = (wn.getUpdatedArrayDesigns()!=null)? wn.getUpdatedArrayDesigns().size():0;
+            
+            boolean drawNewColumn = (newExpressionExperimentCount > 0 || newArrayCount > 0 || newAssayCount > 0)? true:false;
+            boolean drawUpdatedColumn = (updatedExpressionExperimentCount > 0 || updatedArrayCount > 0 )? true:false;
+            String date = (wn.getDate() != null)?DateFormat.getDateInstance(DateFormat.LONG).format(wn.getDate()): "";
+            date = date.replace( '-', ' ' );
+
+            summary.element( "updateDate",  date);
+            summary.element( "drawNewColumn", drawNewColumn);
+            summary.element( "drawUpdatedColumn", drawUpdatedColumn);
+            if(newAssayCount != 0) summary.element( "newBioAssayCount", new Long(newAssayCount) );
+            if(newArrayCount != 0) summary.element( "newArrayDesignCount", new Long(newArrayCount));
+            if(updatedArrayCount != 0) summary.element( "updatedArrayDesignCount", new Long(updatedArrayCount));
+            if(newExpressionExperimentCount != 0) summary.element( "newExpressionExperimentCount",  newExpressionExperimentCount);
+            if(updatedExpressionExperimentCount != 0) summary.element( "updatedExpressionExperimentCount", updatedExpressionExperimentCount);
+            if(newExpressionExperimentCount != 0) summary.element( "newExpressionExperimentIds",  newExpressionExperimentIds);
+            if(updatedExpressionExperimentCount != 0) summary.element( "updatedExpressionExperimentIds", updatedExpressionExperimentIds);
+
+        }
+               
+        summary.element( "bioAssayCount", bioAssayCount );
+        summary.element( "arrayDesignCount", arrayDesignCount );
+        
+        //summary.element( "taxonCount", eesPerTaxon );
+        //summary.element( "taxonCountByName", eesPerTaxonName );
+        summary.element( "expressionExperimentCount", expressionExperimentCount );
+        
+
+        return summary;
+    }    
+    
     /**
      * @param request
      * @param response
