@@ -70,14 +70,18 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					text: 'Search Analysis Results',
 					href: "/Gemma/analysesResultsSearch.html",
 					tooltip: "Search for differential and coexpression patterns"
-				}, {
+				},'-', {
 					text: 'Browse Datasets',
 					href: "/Gemma/expressionExperiment/showAllExpressionExperiments.html",
-					tooltip: "View the list of expression data sets"
+					tooltip: "View the list of Gemma's expression data sets"
 				}, {
-					text: 'Browse Arrays',
+					text: 'Browse Array Designs',
 					href: "/Gemma/arrays/showAllArrayDesigns.html",
-					tooltip: "View the list of expression platforms"
+					tooltip: "View the list of Gemma's expression platforms"
+				}, {
+					text: 'Browse Annotated Papers',
+					href: "/Gemma/bibRef/showAllEeBibRefs.html",
+					tooltip: "View the list of papers Gemma curators have annotated"
 				}],
 				listeners: {
 					mouseover: function(){
@@ -153,7 +157,6 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 				}
 			}
 		});
-		
 		var aboutBtn = new Ext.Button({
 			text: 'About',
 			menu: new Ext.menu.Menu({
@@ -167,6 +170,10 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					text: 'Help and Documentation',
 					href : "/Gemma/static/help.html",
 					tooltip:"Gemma overview and general help"
+				}, {
+					text: 'Updates',
+					href : "http://www.chibi.ubc.ca/faculty/pavlidis/wiki/display/gemma/All+news",
+					tooltip: "View recent data and software updates"
 				}, {
 					text: 'Downloads',
 					href : "http://www.chibi.ubc.ca/Gemma/resources/downloads.html",
@@ -414,7 +421,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 			autoEl: {
 				tag: 'a',
 				href: '/Gemma/home.html',
-				cn: '<img src="/Gemma/images/logo/gemma-sm52x208_text.png" style="padding-left:10px"/>'
+				cn: '<img src="/Gemma/images/logo/gemma-sm230x52_text.png" style="padding-left:10px"/>'
 			}
 		}, '->', {
 				ref: 'navToolbar',
