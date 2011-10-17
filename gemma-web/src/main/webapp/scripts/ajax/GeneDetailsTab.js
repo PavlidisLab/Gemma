@@ -58,6 +58,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 				});
 			}
 			this.loadMask.show();
+			
 			GeneController.loadGeneDetails(this.geneId, function(geneDetails){
 			
 			this.loadMask.hide();
@@ -84,7 +85,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							geneDetails.ncbiId +
 							'"><img alt="NCBI Gene Link" src="/Gemma/images/logo/ncbi.gif"/></a>'
 						}, {
-							fieldLabel: 'Homolgues',
+							fieldLabel: 'Homologues',
 							html: this.renderHomologues(geneDetails.homologues, geneDetails.name)
 						}, {
 							fieldLabel: 'Gene Groups',
