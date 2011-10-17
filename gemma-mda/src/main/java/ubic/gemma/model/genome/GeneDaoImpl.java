@@ -1257,18 +1257,21 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
             Collection<? extends BioAssaySet> ees ) {
+        org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch("getCoexpressionNodeDegree");
 
         Map<Long, Gene> idMap = EntityUtils.getIdMap( genes );
-
         Map<Long, Collection<Long>> cs2GeneMap = CommonQueries.getCs2GeneIdMap( idMap.keySet(), this.getSession() );
 
         /*
          * When we aggregate, it's only over data sets that had the gene tested (inner join)
          */
+        watch.start("DB query: "+ees.size() + " experiments, " + cs2GeneMap.keySet().size() + " probes.");
         List<?> r = this.getHibernateTemplate().findByNamedParam(
                 "select p.probe, p.nodeDegreeRank from ProbeCoexpressionAnalysisImpl pca "
                         + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe.id in (:ps)",
                 new String[] { "ps", "ees" }, new Object[] { cs2GeneMap.keySet(), ees } );
+        watch.stop();
+        watch.start("Post processs "+r.size()+" results");
 
         Map<Long, DoubleArrayList> interm = new HashMap<Long, DoubleArrayList>();
         for ( Gene g : genes ) {
@@ -1280,7 +1283,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             CompositeSequence cs = ( CompositeSequence ) oa[0];
             Double nodeDegreeRank = ( Double ) oa[1];
 
-            Collection<Long> gs = cs2GeneMap.get( cs );
+            Collection<Long> gs = cs2GeneMap.get( cs.getId() );
 
             // if ( gs.size() > 1 ) continue; // nonspecific - perhaps control
             // this.
@@ -1305,7 +1308,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             }
 
         }
-
+        watch.stop();
+        log.info( watch.prettyPrint() );
         return result;
     }
 
