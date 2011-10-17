@@ -792,30 +792,30 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         return eventMap;
     }
-    
+
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() throws Exception {
-        
+
         // get the expression experiment counts
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
         final String queryString = "select ad.id as id, ad.name as name, ad.shortName as shortName, "
-            + "ad.technologyType, ad.description, event.date as createdDate,  mergedInto  from ArrayDesignImpl ad "
-            + "left join ad.auditTrail as trail inner join trail.events as event left join ad.mergedInto as mergedInto "
-            + "where event.action='C' group by ad ";
-        
+                + "ad.technologyType, ad.description, event.date as createdDate,  mergedInto  from ArrayDesignImpl ad "
+                + "left join ad.auditTrail as trail inner join trail.events as event left join ad.mergedInto as mergedInto "
+                + "where event.action='C' group by ad ";
+
         try {
             Map<Long, String> arrayToTaxon = getArrayToPrimaryTaxonMap();
-            
+
             Query queryObject = super.getSession().createQuery( queryString );
-            
+
             Collection<ArrayDesignValueObject> result = processADValueObjectQueryResults( eeCounts, queryObject,
                     arrayToTaxon );
-            
+
             return result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
-        
+
     }
 
     /*
@@ -1259,8 +1259,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setShortName( list.getString( 2 ) );
 
                 TechnologyType color = ( TechnologyType ) list.get( 3 );
-                v.setTechnologyType( color );
-                if ( color != null ) v.setColor( color.getValue() );
+
+                if ( color != null ) {
+                    v.setTechnologyType( color.toString() );
+                    v.setColor( color.getValue() );
+                }
+
                 v.setDescription( list.getString( 4 ) );
                 v.setTaxon( arrayToTaxon.get( v.getId() ) );
 

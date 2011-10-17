@@ -78,7 +78,7 @@ public class ArrayDesignFormController extends BaseFormController {
         existing.setDescription( ad.getDescription() );
         existing.setName( ad.getName() );
         existing.setShortName( ad.getShortName() );
-        existing.setTechnologyType( ad.getTechnologyType() );
+        existing.setTechnologyType( TechnologyType.fromString( ad.getTechnologyType() ) );
 
         arrayDesignService.update( existing );
 

@@ -47,7 +47,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
             target.setShortName( source.getShortName() );
         }
         if ( copyIfNull || source.getTechnologyType() != null ) {
-            target.setTechnologyType( source.getTechnologyType() );
+            target.setTechnologyType( TechnologyType.fromString( source.getTechnologyType() ) );
         }
         if ( copyIfNull || source.getName() != null ) {
             target.setName( source.getName() );
@@ -198,8 +198,7 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      */
     public ArrayDesign find( final ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) {
         return this
-                .find(
-                        "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
+                .find( "from ubic.gemma.model.expression.arrayDesign.ArrayDesign as arrayDesign where arrayDesign.arrayDesign = :arrayDesign",
                         arrayDesign );
     }
 

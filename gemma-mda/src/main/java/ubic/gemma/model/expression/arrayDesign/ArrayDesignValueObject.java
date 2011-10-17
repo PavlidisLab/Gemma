@@ -54,20 +54,6 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     private Boolean isMerged;
 
-    /**
-     * @return the troubled
-     */
-    public Boolean getTroubled() {
-        return troubled;
-    }
-
-    /**
-     * @param troubled the troubled to set
-     */
-    public void setTroubled( Boolean troubled ) {
-        this.troubled = troubled;
-    }
-
     private Boolean isMergee;
 
     private Boolean isSubsumed;
@@ -104,11 +90,13 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     private String taxon;
 
-    private ubic.gemma.model.expression.arrayDesign.TechnologyType technologyType;
+    private String technologyType;
 
     private ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject troubleEvent;
 
     private ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject validationEvent;
+
+    private boolean hasAnnotationFile;
 
     public ArrayDesignValueObject() {
     }
@@ -140,9 +128,8 @@ public class ArrayDesignValueObject implements java.io.Serializable {
             String numProbesToKnownGenes, String numGenes, String dateCached, java.util.Date lastSequenceUpdate,
             java.util.Date lastSequenceAnalysis, java.util.Date lastGeneMapping, Boolean isSubsumed,
             Boolean isSubsumer, Boolean isMerged, Boolean isMergee, java.util.Date lastRepeatMask,
-            AuditEventValueObject troubleEvent,
-            AuditEventValueObject validationEvent, java.util.Date dateCreated,
-            String description, ubic.gemma.model.expression.arrayDesign.TechnologyType technologyType ) {
+            AuditEventValueObject troubleEvent, AuditEventValueObject validationEvent, java.util.Date dateCreated,
+            String description, String technologyType ) {
         this.name = name;
         this.shortName = shortName;
         this.designElementCount = designElementCount;
@@ -217,6 +204,7 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     /*
      * (non-Javadoc)
+     * 
      * @see Object#equals(Object)
      */
     @Override
@@ -276,6 +264,13 @@ public class ArrayDesignValueObject implements java.io.Serializable {
      */
     public Long getExpressionExperimentCount() {
         return this.expressionExperimentCount;
+    }
+
+    /**
+     * @return
+     */
+    public boolean getHasAnnotationFile() {
+        return hasAnnotationFile;
     }
 
     /**
@@ -458,8 +453,15 @@ public class ArrayDesignValueObject implements java.io.Serializable {
     /**
      * 
      */
-    public ubic.gemma.model.expression.arrayDesign.TechnologyType getTechnologyType() {
+    public String getTechnologyType() {
         return this.technologyType;
+    }
+
+    /**
+     * @return the troubled
+     */
+    public Boolean getTroubled() {
+        return troubled;
     }
 
     /**
@@ -472,9 +474,7 @@ public class ArrayDesignValueObject implements java.io.Serializable {
     }
 
     /**
-     * <p>
      * The last uncleared TroubleEvent associated with this ArrayDesign.
-     * </p>
      */
     public AuditEventValueObject getValidationEvent() {
         return this.validationEvent;
@@ -482,6 +482,7 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     /*
      * (non-Javadoc)
+     * 
      * @see Object#hashCode()
      */
     @Override
@@ -515,6 +516,10 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     public void setExpressionExperimentCount( Long expressionExperimentCount ) {
         this.expressionExperimentCount = expressionExperimentCount;
+    }
+
+    public void setHasAnnotationFile( boolean b ) {
+        this.hasAnnotationFile = b;
     }
 
     public void setHasBlatAssociations( Boolean hasBlatAssociations ) {
@@ -605,8 +610,15 @@ public class ArrayDesignValueObject implements java.io.Serializable {
         this.taxon = taxon;
     }
 
-    public void setTechnologyType( ubic.gemma.model.expression.arrayDesign.TechnologyType technologyType ) {
+    public void setTechnologyType( String technologyType ) {
         this.technologyType = technologyType;
+    }
+
+    /**
+     * @param troubled the troubled to set
+     */
+    public void setTroubled( Boolean troubled ) {
+        this.troubled = troubled;
     }
 
     public void setTroubleEvent( AuditEventValueObject troubleEvent ) {
@@ -619,6 +631,7 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     /*
      * (non-Javadoc)
+     * 
      * @see java.lang.Object#toString()
      */
     @Override
