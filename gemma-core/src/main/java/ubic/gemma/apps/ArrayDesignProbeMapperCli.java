@@ -129,6 +129,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                 queue = q;
             }
 
+            @Override
             public void run() {
                 SecurityContextHolder.setContext( context );
                 while ( true ) {

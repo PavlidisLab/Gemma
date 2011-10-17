@@ -79,6 +79,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     private static class GeneComparator implements Comparator<Gene> {
 
+        @Override
         public int compare( Gene g1, Gene g2 ) {
 
             Long i1 = g1.getId();
@@ -131,6 +132,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
          * 
          * @see java.lang.Comparable#compareTo(java.lang.Object)
          */
+        @Override
         public int compareTo( GenePair o2 ) {
             return this.getFirstGenes().iterator().next().getName().compareTo(
                     o2.getFirstGenes().iterator().next().getName() );
@@ -270,6 +272,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
 
     private static class ProbeComparator implements Comparator<CompositeSequence> {
 
+        @Override
         public int compare( CompositeSequence o1, CompositeSequence o2 ) {
 
             Long g1 = o1.getId();

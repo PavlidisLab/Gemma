@@ -24,8 +24,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
+import ubic.basecode.util.r.AbstractRClient;
 import ubic.basecode.util.r.RClient;
-import ubic.basecode.util.r.RServeClient;
 
 /**
  * Object used by the marray bioconductor package. See marrayRaw, marrayInfo, marrayLayout in the package documentations
@@ -73,7 +73,7 @@ public class MArrayRaw {
         if ( red == null || green == null ) throw new IllegalArgumentException( "Signal matrices must not be null" );
 
         log.debug( "Making marrayRaw object" );
-        String rawObjectName = "marrayraw." + RServeClient.variableIdentityNumber( red );
+        String rawObjectName = "marrayraw." + AbstractRClient.variableIdentityNumber( red );
 
         String redMaName = rc.assignMatrix( red );
         String greenMaName = rc.assignMatrix( green );
@@ -128,7 +128,7 @@ public class MArrayRaw {
     public String makeMArrayLayout( int gridRows, int gridColumns, int rowsPerGrid, int colsPerGrid ) {
         log.debug( "Making layout" );
         int numSpots = gridRows * gridColumns * rowsPerGrid * colsPerGrid;
-        String arrayLayoutName = "layout." + RServeClient.variableIdentityNumber( this );
+        String arrayLayoutName = "layout." + AbstractRClient.variableIdentityNumber( this );
         String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=" + gridRows + ", maNgc=" + gridColumns
                 + ", maNsr=" + rowsPerGrid + ", maNsc=" + colsPerGrid + ", maNspots=" + numSpots + ", maSub=TRUE)";
 
@@ -147,7 +147,7 @@ public class MArrayRaw {
     public String makeMArrayLayout( int numSpots ) {
         log.debug( "Making layout" );
 
-        String arrayLayoutName = "layout." + RServeClient.variableIdentityNumber( this );
+        String arrayLayoutName = "layout." + AbstractRClient.variableIdentityNumber( this );
         String makeLayoutCmd = arrayLayoutName + "<-new(\"marrayLayout\", maNgr=1 , maNgc=1, maNsr=1, maNsc="
                 + numSpots + ", maNspots=" + numSpots + ", maSub=TRUE)";
 
@@ -164,7 +164,7 @@ public class MArrayRaw {
      */
     public String makeMArrayInfo( List<String> labels ) {
         log.debug( "Making info" );
-        String infoName = "info." + RServeClient.variableIdentityNumber( labels );
+        String infoName = "info." + AbstractRClient.variableIdentityNumber( labels );
         String labelsVarName = rc.assignStringList( labels );
         String makeInfoCmd = infoName + "<-new(\"marrayInfo\", maLabels=" + labelsVarName + ")";
         rc.voidEval( makeInfoCmd );

@@ -194,6 +194,7 @@ public class ArrayDesignBlatCli extends ArrayDesignSequenceManipulatingCli {
                     queue = q;
                 }
 
+                @Override
                 public void run() {
                     SecurityContextHolder.setContext( context );
                     while ( true ) {

@@ -470,11 +470,13 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         int size = ees.size();
         final Map<Long, AuditEvent> trouble = eeService.getLastTroubleEvent( CollectionUtils.collect( ees,
                 new Transformer() {
+                    @Override
                     public Object transform( Object input ) {
                         return ( ( ExpressionExperiment ) input ).getId();
                     }
                 } ) );
         CollectionUtils.filter( ees, new Predicate() {
+            @Override
             public boolean evaluate( Object object ) {
                 boolean hasTrouble = trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
                 if ( hasTrouble ) {
