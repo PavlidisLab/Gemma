@@ -1,11 +1,17 @@
 package ubic.gemma.association.phenotype;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.basecode.ontology.providers.DiseaseOntologyService;
+import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
+import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.genome.Gene;
@@ -13,6 +19,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
+import ubic.gemma.ontology.OntologyService;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Component
@@ -26,6 +33,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private PhenotypeAssoManagerServiceHelper phenotypeAssoManagerServiceHelper;
+
+    @Autowired
+    private OntologyService ontologyService;
 
     /**
      * Links an Evidence to a Gene
@@ -94,6 +104,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return null;
         }
         return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
+    }
+
+    public Set<CharacteristicValueObject> findUniquePhenotpyesForGeneId( Long geneId ) {
+
+        Set<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
+
+        Collection<EvidenceValueObject> evidences = findEvidencesByGeneId( geneId );
+
+        for ( EvidenceValueObject evidenceVO : evidences ) {
+            phenotypes.addAll( evidenceVO.getPhenotypes() );
+        }
+        return phenotypes;
     }
 
     /**
@@ -227,6 +249,123 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 this.associationService.updateEvidence( phenotypeAssociation );
             }
         }
+    }
+
+    /**
+     * Giving a string, helps the user choose choose the phenotype they are looking for using the disease, hp and mp
+     * Ontologies
+     * 
+     * @param termUsed what the client typed in the phenotype box
+     * @return Collection<CharacteristicValueObject> list of terms to help the user
+     */
+    public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery,
+            Long geneId ) {
+
+        String[] tokens = searchQuery.split( " " );
+
+        searchQuery = "";
+
+        for ( int i = 0; i < tokens.length; i++ ) {
+
+            searchQuery = searchQuery + tokens[i] + "* ";
+
+            // last one
+            if ( i != tokens.length - 1 ) {
+                searchQuery = searchQuery + "AND ";
+            }
+        }
+
+        System.out.println( searchQuery );
+
+        Collection<CharacteristicValueObject> phenotypesFound = new ArrayList<CharacteristicValueObject>();
+
+        DiseaseOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
+        MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
+                .getMammalianPhenotypeOntologyService();
+        HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
+                .getHumanPhenotypeOntologyService();
+
+        // //////////////////////////////////////////////////////////////////////////////////////////
+        // for test TODO erase for real environment
+        while ( !diseaseOntologyService.isOntologyLoaded() || !mammalianPhenotypeOntologyService.isOntologyLoaded()
+                || !humanPhenotypeOntologyService.isOntologyLoaded() ) {
+            try {
+                wait( 1000 );
+            } catch ( InterruptedException e ) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            System.out.println( "waiting for Disease Ontology to load" );
+        }
+
+        // //////////////////////////////////////////////////////////////////////////////////////////
+
+        Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
+
+        // disease
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
+                diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
+
+        // mp
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
+                mammalianPhenotypeOntologyService.findTerm( searchQuery ),
+                PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
+
+        // hp
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
+                humanPhenotypeOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
+
+        // This list will contain exact match found in the Ontology search result
+        Collection<CharacteristicValueObject> phenotypesFound1 = new ArrayList<CharacteristicValueObject>();
+        // This list will contain phenotypes that are already present for that gene
+        Collection<CharacteristicValueObject> phenotypesFound2 = new ArrayList<CharacteristicValueObject>();
+        // This list will contain phenotypes that are a substring of the searchQuery
+        Collection<CharacteristicValueObject> phenotypesFound3 = new ArrayList<CharacteristicValueObject>();
+
+        // others
+        Collection<CharacteristicValueObject> phenotypesFound4 = new ArrayList<CharacteristicValueObject>();
+
+        // Set of all the phenotypes present on the gene
+        Set<CharacteristicValueObject> phenotypesOnGene = findUniquePhenotpyesForGeneId( geneId );
+
+        /*
+         * for each CharacteristicVO made from the Ontology search lets filter them and add them to a specific list if
+         * they satisfied the condition
+         */
+        for ( CharacteristicValueObject cha : phenotypes ) {
+
+            // Case 1, exact match
+            if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
+
+                // if also already present on that gene
+                if ( phenotypesOnGene.contains( cha ) ) {
+                    cha.setAlreadyPresentOnGene( true );
+                }
+                phenotypesFound1.add( cha );
+            }
+
+            // Case 2, phenotpye already present on Gene
+            else if ( phenotypesOnGene.contains( cha ) ) {
+                cha.setAlreadyPresentOnGene( true );
+                phenotypesFound2.add( cha );
+            }
+
+            // Case 3, contains a substring of the word
+            else if ( searchQuery.toLowerCase().indexOf( cha.getValue().toLowerCase() ) != -1 ) {
+                phenotypesFound3.add( cha );
+            } else {
+                phenotypesFound4.add( cha );
+
+            }
+        }
+
+        // place them in the correct order to display
+        phenotypesFound.addAll( phenotypesFound1 );
+        phenotypesFound.addAll( phenotypesFound2 );
+        phenotypesFound.addAll( phenotypesFound3 );
+        phenotypesFound.addAll( phenotypesFound4 );
+
+        return phenotypesFound;
     }
 
 }

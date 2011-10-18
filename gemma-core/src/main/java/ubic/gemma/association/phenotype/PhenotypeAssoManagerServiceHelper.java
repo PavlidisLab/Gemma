@@ -2,10 +2,12 @@ package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.DatabaseEntryValueObject;
@@ -368,6 +370,24 @@ public class PhenotypeAssoManagerServiceHelper {
         }
 
         return bibRef;
+    }
+
+    /** Ontology term to CharacteristicValueObject */
+    public Set<CharacteristicValueObject> ontology2PhenotypeVO( Collection<OntologyTerm> ontologyTerms,
+            String ontologyUsed ) {
+
+        Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
+
+        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+
+            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel(),
+                    PhenotypeAssociationConstants.PHENOTYPE, ontologyTerm.getUri(),
+                    PhenotypeAssociationConstants.PHENOTYPE_ONTOLOGY );
+            phenotype.setOntologyUsed( ontologyUsed );
+            characteristicsVO.add( phenotype );
+
+        }
+        return characteristicsVO;
     }
 
 }

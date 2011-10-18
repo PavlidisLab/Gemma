@@ -10,6 +10,10 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String valueUri = "";
 
     private long occurence = 0;
+    
+    private String ontologyUsed = null;
+    
+    private Boolean alreadyPresentOnGene = false;
 
     public CharacteristicValueObject( String value, String category ) {
         this.category = category;
@@ -105,5 +109,26 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             return this.category.compareTo( o.category );
         }
     }
+
+    public String getOntologyUsed() {
+        return ontologyUsed;
+    }
+
+    public void setOntologyUsed( String ontologyUsed ) {
+        this.ontologyUsed = ontologyUsed;
+    }
+
+    public Boolean getAlreadyPresentOnGene() {
+        return alreadyPresentOnGene;
+    }
+
+    public void setAlreadyPresentOnGene( Boolean alreadyPresentOnGene ) {
+        this.alreadyPresentOnGene = alreadyPresentOnGene;
+    }
+
+
+    
+    
+    
 
 }
