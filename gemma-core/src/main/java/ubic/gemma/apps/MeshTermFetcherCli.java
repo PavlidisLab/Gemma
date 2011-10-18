@@ -42,6 +42,8 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  */
 public class MeshTermFetcherCli extends AbstractCLI {
 
+    private static final int CHUNK_SIZE = 10;
+
     /**
      * @param args
      */
@@ -94,23 +96,20 @@ public class MeshTermFetcherCli extends AbstractCLI {
 
         try {
             Collection<Integer> ids = readIdsFromFile( file );
+            Collection<Integer> chunk = new ArrayList<Integer>();
+            for ( Integer i : ids ) {
 
-            Collection<BibliographicReference> refs = fetcher.retrieveByHTTP( ids );
+                chunk.add( i );
 
-            for ( BibliographicReference r : refs ) {
-                System.out.print( r.getPubAccession().getAccession() + "\t" );
-                Collection<MedicalSubjectHeading> meshTerms = r.getMeshTerms();
-                List<String> t = new ArrayList<String>();
-                for ( MedicalSubjectHeading mesh : meshTerms ) {
-                    String term = mesh.getTerm();
-                    if ( majorTopicsOnly && !mesh.getIsMajorTopic() ) continue;
-                    t.add( term );
+                if ( chunk.size() == CHUNK_SIZE ) {
+
+                    processChunk( fetcher, chunk );
+                    chunk.clear();
                 }
+            }
 
-                Collections.sort( t );
-                System.out.print( StringUtils.join( t, "|" ) );
-
-                System.out.print( "\n" );
+            if ( !chunk.isEmpty() ) {
+                processChunk( fetcher, chunk );
             }
 
         } catch ( IOException e ) {
@@ -118,6 +117,28 @@ public class MeshTermFetcherCli extends AbstractCLI {
         }
 
         return null;
+    }
+
+    private Collection<BibliographicReference> processChunk( PubMedXMLFetcher fetcher, Collection<Integer> ids )
+            throws IOException {
+        Collection<BibliographicReference> refs = fetcher.retrieveByHTTP( ids );
+
+        for ( BibliographicReference r : refs ) {
+            System.out.print( r.getPubAccession().getAccession() + "\t" );
+            Collection<MedicalSubjectHeading> meshTerms = r.getMeshTerms();
+            List<String> t = new ArrayList<String>();
+            for ( MedicalSubjectHeading mesh : meshTerms ) {
+                String term = mesh.getTerm();
+                if ( majorTopicsOnly && !mesh.getIsMajorTopic() ) continue;
+                t.add( term );
+            }
+
+            Collections.sort( t );
+            System.out.print( StringUtils.join( t, "|" ) );
+
+            System.out.print( "\n" );
+        }
+        return refs;
     }
 
     @Override
