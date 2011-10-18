@@ -38,6 +38,7 @@ import org.springframework.web.servlet.view.RedirectView;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.testing.BaseSpringWebTest;
 import ubic.gemma.util.ConfigUtils;
 
@@ -63,7 +64,7 @@ public class ArrayDesignFormControllerTest extends BaseSpringWebTest {
         ad.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDescription( "An array design created in the ArrayDesignFormControllerTest." );
         ad.setPrimaryTaxon( this.getTaxon( "human" ) );
-
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
         Contact c = Contact.Factory.newInstance();
         c.setName( RandomStringUtils.randomAlphabetic( 20 ) );
         ad.setDesignProvider( c );
@@ -107,8 +108,8 @@ public class ArrayDesignFormControllerTest extends BaseSpringWebTest {
         assertNull( "Got errors:" + errors, errors );
         assertNotNull( request.getSession().getAttribute( "messages" ) );
         assertTrue( mav.getView() instanceof RedirectView );
-        assertEquals( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId(), ( ( RedirectView ) mav.getView() )
-                .getUrl() );
+        assertEquals( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId(),
+                ( ( RedirectView ) mav.getView() ).getUrl() );
 
     }
 

@@ -29,6 +29,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
@@ -78,7 +79,10 @@ public class ArrayDesignFormController extends BaseFormController {
         existing.setDescription( ad.getDescription() );
         existing.setName( ad.getName() );
         existing.setShortName( ad.getShortName() );
-        existing.setTechnologyType( TechnologyType.fromString( ad.getTechnologyType() ) );
+        String technologyType = ad.getTechnologyType();
+        if ( StringUtils.isNotBlank( technologyType ) ) {
+            existing.setTechnologyType( TechnologyType.fromString( technologyType ) );
+        }
 
         arrayDesignService.update( existing );
 
