@@ -252,14 +252,32 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Giving a string, helps the user choose choose the phenotype they are looking for using the disease, hp and mp
-     * Ontologies
+     * Giving a phenotype searchQuery, return a selection choice to the user
      * 
-     * @param termUsed what the client typed in the phenotype box
-     * @return Collection<CharacteristicValueObject> list of terms to help the user
+     * @param termUsed is what the user typed
+     * @return Collection<CharacteristicValueObject> list of choices returned
+     */
+    public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery ) {
+        return searchOntologyForPhenotype( searchQuery, null );
+    }
+
+    /**
+     * Giving a phenotype searchQuery, return a selection choice to the user
+     * 
+     * @param termUsed is what the user typed
+     * @param geneId the id of the gene chosen
+     * @return Collection<CharacteristicValueObject> list of choices returned
      */
     public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery,
             Long geneId ) {
+
+        Collection<CharacteristicValueObject> phenotypesFound = new ArrayList<CharacteristicValueObject>();
+
+        boolean geneProvided = true;
+
+        if ( geneId == null ) {
+            geneProvided = false;
+        }
 
         String[] tokens = searchQuery.split( " " );
 
@@ -274,10 +292,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 searchQuery = searchQuery + "AND ";
             }
         }
-
-        System.out.println( searchQuery );
-
-        Collection<CharacteristicValueObject> phenotypesFound = new ArrayList<CharacteristicValueObject>();
 
         DiseaseOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
         MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
@@ -326,8 +340,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> phenotypesFound4 = new ArrayList<CharacteristicValueObject>();
 
         // Set of all the phenotypes present on the gene
-        Set<CharacteristicValueObject> phenotypesOnGene = findUniquePhenotpyesForGeneId( geneId );
+        Set<CharacteristicValueObject> phenotypesOnGene = null;
 
+        if ( geneProvided ) {
+            phenotypesOnGene = findUniquePhenotpyesForGeneId( geneId );
+        }
         /*
          * for each CharacteristicVO made from the Ontology search lets filter them and add them to a specific list if
          * they satisfied the condition
@@ -338,14 +355,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
 
                 // if also already present on that gene
-                if ( phenotypesOnGene.contains( cha ) ) {
+                if ( geneProvided && phenotypesOnGene.contains( cha ) ) {
                     cha.setAlreadyPresentOnGene( true );
                 }
                 phenotypesFound1.add( cha );
             }
 
             // Case 2, phenotpye already present on Gene
-            else if ( phenotypesOnGene.contains( cha ) ) {
+            else if ( geneProvided && phenotypesOnGene.contains( cha ) ) {
                 cha.setAlreadyPresentOnGene( true );
                 phenotypesFound2.add( cha );
             }
@@ -355,7 +372,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 phenotypesFound3.add( cha );
             } else {
                 phenotypesFound4.add( cha );
-
             }
         }
 

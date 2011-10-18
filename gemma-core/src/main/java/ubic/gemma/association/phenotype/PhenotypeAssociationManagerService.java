@@ -66,10 +66,19 @@ public interface PhenotypeAssociationManagerService {
     public void modifyEvidence( EvidenceValueObject evidenceValueObject );
 
     /**
-     * Giving a string, helps the user choose choose the phenotype they are looking for, getting terms in the Ontology
+     * Giving a phenotype searchQuery, return a selection choice to the user
      * 
-     * @param termUsed what the client typed in the phenotype box
-     * @return Collection<CharacteristicValueObject> list of terms to help the user
+     * @param termUsed is what the user typed
+     * @return Collection<CharacteristicValueObject> list of choices returned
+     */
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery );
+
+    /**
+     * Giving a phenotype searchQuery, return a selection choice to the user
+     * 
+     * @param termUsed is what the user typed
+     * @param geneId the id of the gene chosen
+     * @return Collection<CharacteristicValueObject> list of choices returned
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId );
 
