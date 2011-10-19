@@ -1,5 +1,9 @@
 Ext.namespace('Gemma');
-
+/**
+ * @class Gemma.ExperimentPagingStore
+ * @extends Ext.data.Store
+ * @param {Object} config
+ */
 Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
     constructor: function(config){
         Gemma.ExperimentPagingStore.superclass.constructor.call(this, config);
@@ -67,7 +71,11 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
     })
 
 });
-
+/**
+ * @class Gemma.ExperimentPagingStoreSelectedIds
+ * @extends Gemma.ExperimentPagingStore
+ * @param {Object} config
+ */
 Gemma.ExperimentPagingStoreSelectedIds = Ext.extend(Gemma.ExperimentPagingStore, {
 
     initComponent: function(){
@@ -90,7 +98,11 @@ Gemma.ExperimentPagingStoreSelectedIds = Ext.extend(Gemma.ExperimentPagingStore,
     })
 });
 
-
+/**
+ * @class Gemma.ExperimentPagingStoreTaxon
+ * @extends Gemma.ExperimentPagingStore
+ * @param {Object} config
+ */
 Gemma.ExperimentPagingStoreTaxon = Ext.extend(Gemma.ExperimentPagingStore, {
 
     initComponent: function(){
@@ -113,6 +125,11 @@ Gemma.ExperimentPagingStoreTaxon = Ext.extend(Gemma.ExperimentPagingStore, {
     })
 });
 
+/**
+ * @class Gemma.ExperimentPagingGrid
+ * @extends Ext.grid.GridPanel
+ * @param {Object} config
+ */
 Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     //width: 1000,
     loadMask: true,
@@ -171,6 +188,114 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         sortable: true,
         width: 0.1
     }],
+	
+	/**
+	 * private
+	 * @return a configured Gemma.ExperimentPagingStoreSelectedIds
+	 */
+	getIdsStore: function(ids){
+		var pageSize = this.myPageSize;
+		var pageStore = new Gemma.ExperimentPagingStoreSelectedIds({
+                autoLoad: {
+                    params: {
+                        start: 0,
+                        limit: pageSize
+                    }
+                },
+                baseParams: {
+                    ids: ids
+                }
+            });
+            
+        pageStore.on('load', function(store, records, options){
+                this.setTitle(records.length + ((records.length === 1) ? " Expression Experiment" : " Expression Experiments"));
+            }, this);
+        pageStore.setDefaultSort('name');
+			
+		return pageStore;
+	},
+	/**
+	 * Show the experiments indicated by the array of ids passed in
+	 * 
+	 * Steps:
+	 * 1) if necessary, unbind the current store from the paging toolbar and bind Gemma.ExperimentPagingStoreSelectedIds
+	 * 2) reconfigure the store with the new store (if necessary)
+	 * 3) load the (new) store with the ids from the parameter pass in
+	 * @param {Object} eeIds
+	 */
+	loadExperimentsById: function(eeIds){
+		// if the grid isn't using an id store, we need to change it
+		if(!(this.getStore() instanceof Gemma.ExperimentPagingStoreSelectedIds)){
+			var idsStore = this.getIdsStore(eeIds);
+			// bind new store to paging toolbar
+            this.getBottomToolbar().bind(idsStore);
+			// reconfigure grid to use new store
+			this.reconfigure(idsStore, this.getColumnModel());
+		}
+		else{
+			lastOptions = this.getStore().lastOptions;
+			Ext.apply(lastOptions.params, {
+			    ids:eeIds
+			});
+			this.getStore().reload(lastOptions);
+		}
+	},
+		
+	/**
+	 * private
+	 * @return a configured Gemma.ExperimentPagingStoreTaxon
+	 */
+	getTaxonStore: function(id){
+		var pageSize = this.myPageSize;
+		var pageStore = new Gemma.ExperimentPagingStoreTaxon({
+                autoLoad: {
+                    params: {
+                        start: 0,
+                        limit: pageSize
+                    }
+                },
+                baseParams: {
+                    taxonId: id
+                }
+            });
+			
+		this.setTitle("Expression Experiments For Taxon");
+        pageStore.on('load', function(store, records, options){
+			// problem for salmon because this will be child taxon, not parent
+			// TODO use parent taxon, need to add it to object coming from back end
+			if (records[0]) {
+				this.setTitle("Expression Experiments For Taxon: " + records[0].get('taxon'));
+			}
+		}, this);
+		
+		return pageStore;
+	},
+	/**
+	 * Show the experiments indicated by the array of ids passed in
+	 * 
+	 * Steps:
+	 * 1) if necessary, unbind the current store from the paging toolbar and bind Gemma.ExperimentPagingStoreSelectedIds
+	 * 2) reconfigure the store with the new store (if necessary)
+	 * 3) load the (new) store with the ids from the parameter pass in
+	 * @param {Object} eeIds
+	 */
+	loadExperimentsByTaxon: function(taxonId){
+		// if the grid isn't using an id store, we need to change it
+		if(!(this.getStore() instanceof Gemma.ExperimentPagingStoreTaxon)){
+			var store = this.getTaxonStore(taxonId);
+			// bind new store to paging toolbar
+            this.getBottomToolbar().bind(store);
+			// reconfigure grid to use new store
+			this.reconfigure(store, this.getColumnModel());
+		}
+		else{
+			lastOptions = this.getStore().lastOptions;
+			Ext.apply(lastOptions.params, {
+			    taxonId:taxonId
+			});
+			this.getStore().reload(lastOptions);
+		}
+	},
     initComponent: function(){
     
         this.showAll = !(document.URL.indexOf("?") > -1 && (document.URL.indexOf("id=") > -1 || document.URL.indexOf("taxonId=") > -1));
@@ -196,57 +321,24 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         }
         var pageStore;
         if (filterById) {
-            pageStore = new Gemma.ExperimentPagingStoreSelectedIds({
-                autoLoad: {
-                    params: {
-                        start: 0,
-                        limit: myPageSize
-                    }
-                },
-                baseParams: {
-                    ids: this.idSubset
-                }
-            });
-            
-            pageStore.on('load', function(store, records, options){
-                this.setTitle(records.length + ((records.length === 1) ? " Expression Experiment" : " Expression Experiments"));
-            }, this);
-        }
-        else 
-            if (filterByTaxon) {
-                pageStore = new Gemma.ExperimentPagingStoreTaxon({
-                    autoLoad: {
-                        params: {
-                            start: 0,
-                            limit: myPageSize
-                        }
-                    },
-                    baseParams: {
-                        taxonId: this.taxonId
-                    }
-                });
-                
-                this.setTitle("Expression Experiments For Taxon");
-                pageStore.on('load', function(store, records, options){
-                    // problem for salmon because this will be child taxon, not parent
-                    // TODO use parent taxon, need to add it to object coming from back end
-                    if (records[0]) {
-                        this.setTitle("Expression Experiments For Taxon: " + records[0].get('taxon'));
-                    }
-                    
-                }, this);
-            }
-            else {
-                this.setTitle("All Expression Experiments");
-                pageStore = new Gemma.ExperimentPagingStore({
-                    autoLoad: {
-                        params: {
-                            start: 0,
-                            limit: myPageSize
-                        }
-                    }
-                });
-            }
+			
+			pageStore = this.getIdsStore(this.idSubset);
+			
+		} else if (filterByTaxon) {
+			
+			pageStore = this.getTaxonStore(this.taxonId);
+			
+		} else {
+			this.setTitle("All Expression Experiments");
+			pageStore = new Gemma.ExperimentPagingStore({
+				autoLoad: {
+					params: {
+						start: 0,
+						limit: myPageSize
+					}
+				}
+			});
+		}
         pageStore.setDefaultSort('name');
         
         pageStore.on('load', function(store, records, options){
@@ -264,23 +356,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                 // create a store that browses with selected ids
                 var ids = selectedGroup.memberIds;
                 this.setTitle(selectedGroup.name + ": " + ids.length + " Expression Experiments");
-                pageStore = new Gemma.ExperimentPagingStoreSelectedIds({
-                    autoLoad: {
-                        params: {
-                            start: 0,
-                            limit: myPageSize
-                        }
-                    },
-                    baseParams: {
-                        ids: ids
-                    }
-                });
-                
-                // bind paging toolbar to new store
-                this.getBottomToolbar().bind(pageStore);
-                // bind new store to grid
-                this.reconfigure(pageStore, this.getColumnModel());
-                this.nowSubset();
+                this.loadExperimentsById(ids);
                 
                 // problem: if the user reaches this grid with a URL like '[...]?taxonId=4' and then does a search, the taxon 
                 // clause will still be in the URL

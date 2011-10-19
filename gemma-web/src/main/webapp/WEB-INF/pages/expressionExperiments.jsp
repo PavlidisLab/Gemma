@@ -41,21 +41,28 @@ $Id$
 			}
 		});
 
+		var eeGrid = new Gemma.ExperimentPagingGrid({
+		 	flex:1,
+			listeners: {
+				expand: onExpandCollapse,
+				collapse: onExpandCollapse
+			}
+		});
+	
+		summaryPanel.on('showExperimentsByIds', function(ids){
+			eeGrid.loadExperimentsById(ids);
+		});
+		summaryPanel.on('showExperimentsByTaxon', function(ids){
+			eeGrid.loadExperimentsByTaxon(ids);
+		});
+	
 		var mainPanel = new Ext.Panel({
 				layout:'vbox',
 				layoutConfig:{
 					align: 'stretch'
 				},
 		 		align: 'stretch',
-		 			items:[ summaryPanel, new Gemma.ExperimentPagingGrid(
-		 					{
-		 						flex:1,
-						        listeners: {
-						            expand: onExpandCollapse,
-						            collapse: onExpandCollapse
-						        }
-						     }) 
-						  ]
+		 			items:[ summaryPanel, eeGrid]
 			 	});
 		
 		var viewPort = new Gemma.GemmaViewPort({

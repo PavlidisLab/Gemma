@@ -7,6 +7,8 @@ Ext.namespace('Gemma');
  * 
  * a similar table appeared on the classic Gemma's front page
  */
+
+
 Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 	title: 'Summary & Updates',
 	collapsible: true,
@@ -56,6 +58,7 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 		
 		ExpressionExperimentController.loadCountsForDataSummaryTable(function(json){
 			// update the panel with counts
+			json.cmpId = Ext.id(this);
 			this.update(json);
 			this.countsLoaded = true;
 			
@@ -65,7 +68,6 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 			
 		}.createDelegate(this));
 	},
-	
 	/*tpl: new Ext.XTemplate(
 		'<table>', 
 		'<tr><td></td><td>Total</td><td>Updated</td><td>New</td></tr>',
@@ -116,10 +118,12 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 							'<b><a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">{expressionExperimentCount}</b>'+
 						'</td>'+
 						'<td align="right" style="padding-right: 10px">'+
-							'<b><a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id={updatedExpressionExperimentIds}">{updatedExpressionExperimentCount}</b>&nbsp;&nbsp;'+
+							'<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{updatedExpressionExperimentIds}],\'{cmpId}\');">'+
+							'{updatedExpressionExperimentCount}</a></b>&nbsp;&nbsp;'+
 						'</td>'+
 						'<td align="right">'+
-							'<b><a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id={newExpressionExperimentIds}">{newExpressionExperimentCount}</b>&nbsp;'+
+							'<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{newExpressionExperimentIds}],\'{cmpId}\');">'+
+							'{newExpressionExperimentCount}</a></b>&nbsp;'+
 						'</td>'+
 					'</tr>'+
 					'<tpl for="sortedCountsPerTaxon">'+ 
@@ -128,15 +132,15 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 								'<span style="white-space: nowrap"> <!-- for IE --> &emsp;'+ 
 								'{taxonName}'+
 							'</td><td align="right" style="padding-right: 10px">'+
-								'<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?taxonId={taxonId}">'+
+								'<a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleTaxonLink({taxonId},\'{parent.cmpId}\');">'+
 								'{totalCount}</a>'+
 							'</td><td align="right" style="padding-right: 10px">'+
-								'<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id={updatedIds}">'+
-								'{updatedCount}&nbsp;&nbsp;'+
+								'<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{updatedIds}],\'{parent.cmpId}\');">'+
+								'{updatedCount}</a></b>&nbsp;&nbsp;'+
 								'</a>'+
 							'</td><td align="right">'+
-								'<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id={newIds}">'+
-								'{newCount}&nbsp;'+
+								'<b><a style="cursor:pointer" onClick="Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink([{newIds}],\'{parent.cmpId}\');">'+
+								'{newCount}</a></b>&nbsp;'+
 								'</a>'+
 							'</td>'+
 						'</tr>'+
@@ -179,3 +183,10 @@ Gemma.ExpressionExperimentsSummaryPanel = Ext.extend(Ext.Panel, {
 	'</div>'+
 '</div>')
 });
+
+Gemma.ExpressionExperimentsSummaryPanel.handleIdsLink = function(ids, cmpId){
+		Ext.getCmp(cmpId).fireEvent('showExperimentsByIds', ids);
+	};
+Gemma.ExpressionExperimentsSummaryPanel.handleTaxonLink = function(id, cmpId){
+		Ext.getCmp(cmpId).fireEvent('showExperimentsByTaxon', id);
+	};
