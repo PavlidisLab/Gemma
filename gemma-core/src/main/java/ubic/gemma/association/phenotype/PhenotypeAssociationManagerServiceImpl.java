@@ -316,16 +316,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
-        // disease
+        // search disease ontology
         phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
                 diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
 
-        // mp
+        // search mp ontology
         phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
                 mammalianPhenotypeOntologyService.findTerm( searchQuery ),
                 PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
 
-        // hp
+        // search hp ontology
         phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
                 humanPhenotypeOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
 
@@ -335,9 +335,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> phenotypesFound2 = new ArrayList<CharacteristicValueObject>();
         // This list will contain phenotypes that are a substring of the searchQuery
         Collection<CharacteristicValueObject> phenotypesFound3 = new ArrayList<CharacteristicValueObject>();
-
-        // others
+        // Phenotypes present in the database already and found in the ontology search
         Collection<CharacteristicValueObject> phenotypesFound4 = new ArrayList<CharacteristicValueObject>();
+        // others
+        Collection<CharacteristicValueObject> phenotypesFound5 = new ArrayList<CharacteristicValueObject>();
 
         // Set of all the phenotypes present on the gene
         Set<CharacteristicValueObject> phenotypesOnGene = null;
@@ -345,6 +346,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( geneProvided ) {
             phenotypesOnGene = findUniquePhenotpyesForGeneId( geneId );
         }
+
+        // lets loas all phenotypes presents in the database
+        Collection<CharacteristicValueObject> allPhenotypes = findAllPhenotypes();
+
         /*
          * for each CharacteristicVO made from the Ontology search lets filter them and add them to a specific list if
          * they satisfied the condition
@@ -360,18 +365,20 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
                 phenotypesFound1.add( cha );
             }
-
             // Case 2, phenotpye already present on Gene
             else if ( geneProvided && phenotypesOnGene.contains( cha ) ) {
                 cha.setAlreadyPresentOnGene( true );
                 phenotypesFound2.add( cha );
             }
-
             // Case 3, contains a substring of the word
             else if ( searchQuery.toLowerCase().indexOf( cha.getValue().toLowerCase() ) != -1 ) {
                 phenotypesFound3.add( cha );
-            } else {
+            }
+            // Case 4, phenotypes already in Gemma database
+            else if ( allPhenotypes.contains( cha ) ) {
                 phenotypesFound4.add( cha );
+            } else {
+                phenotypesFound5.add( cha );
             }
         }
 
@@ -380,6 +387,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypesFound.addAll( phenotypesFound2 );
         phenotypesFound.addAll( phenotypesFound3 );
         phenotypesFound.addAll( phenotypesFound4 );
+        phenotypesFound.addAll( phenotypesFound5 );
 
         return phenotypesFound;
     }
