@@ -154,13 +154,23 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						tooltip : "# of Datasets that confirm coexpression",
 						sortable : true
 					}, {
+						id : 'nodeDegree',
+						header : "Node Degree",
+						dataIndex : "foundGeneNodeDegree",
+						width : 60,
+						renderer : this.nodeDegreeStyler.createDelegate(this),
+						tooltip : "nodeDegree",
+						sortable : true
+						
+					}, {
 						id : 'gene2GeneProteinAssociationStringUrl',
 						header : "PPI",
 						dataIndex : "gene2GeneProteinAssociationStringUrl",
 						width : 30,
 						renderer : this.proteinlinkStyler.createDelegate(this),
 						tooltip : "Evidence for interactions from external sources",
-						sortable : true
+						sortable : true,
+						hidden : true
 					},
 
 					{
@@ -170,7 +180,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						width : 75,
 						renderer : this.goStyler.createDelegate(this),
 						tooltip : "GO Similarity Score",
-						sortable : true
+						sortable : true,
+						hidden : true
 
 					}, {
 						id : 'datasets',
@@ -431,6 +442,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				name : "gene2GeneProteinInteractionConfidenceScore",
 				type : "string"
 			}, {
+				name : "foundGeneNodeDegree",
+				type : "float"
+			}, {
 				name : "containsMyData",
 				type : "boolean"
 			}, {
@@ -473,6 +487,18 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 
 		return result;
+	},
+	
+	// link for protein interactions
+	nodeDegreeStyler : function(value, metadata, record, row, col, ds) {
+
+		var d = record.data;
+		
+		if (d.foundGeneNodeDegree == null){
+			return 0;
+		}
+		
+		return Ext.util.Format.number(d.foundGeneNodeDegree, '0.0000');
 	},
 
 	/**
