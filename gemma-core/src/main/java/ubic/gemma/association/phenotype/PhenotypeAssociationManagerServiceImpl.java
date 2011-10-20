@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
@@ -22,7 +22,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObje
 import ubic.gemma.ontology.OntologyService;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
-@Component
+@Service
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService {
 
     @Autowired
@@ -44,7 +44,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param evidence The evidence
      * @return The Gene updated with the new evidence and phenotypes
      */
-    public GeneEvidencesValueObject linkGeneToEvidence( String geneNCBI, EvidenceValueObject evidence ) {
+    public GeneEvidencesValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
         // find the gene we wish to add the evidence and phenotype
         Gene gene = this.geneService.findByNCBIId( geneNCBI );
@@ -317,16 +317,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
         // search disease ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
 
         // search mp ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 mammalianPhenotypeOntologyService.findTerm( searchQuery ),
                 PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
 
         // search hp ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2PhenotypeVO(
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 humanPhenotypeOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
 
         // This list will contain exact match found in the Ontology search result

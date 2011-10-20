@@ -2,13 +2,10 @@ package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
 
-import org.springframework.stereotype.Service;
-
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
 
-@Service
 public interface PhenotypeAssociationManagerService {
 
     /**
@@ -18,7 +15,7 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return The Gene updated with the new evidence and phenotypes
      */
-    public GeneEvidencesValueObject linkGeneToEvidence( String geneNCBI, EvidenceValueObject evidence );
+    public GeneEvidencesValueObject create( String geneNCBI, EvidenceValueObject evidence );
 
     /**
      * Return all evidences for a specific gene NCBI
@@ -81,5 +78,6 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId );
+    
 
 }

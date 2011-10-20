@@ -92,7 +92,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 1 - call the service to add the phenotype association and save the results to the database
         // ********************************************************************************************
-        GeneEvidencesValueObject geneValue = phenoAssoService.linkGeneToEvidence( geneNCBI, evidence );
+        GeneEvidencesValueObject geneValue = phenoAssoService.create( geneNCBI, evidence );
         assertTrue( geneValue.getEvidences() != null && geneValue.getEvidences().size() >= 1 );
         // ********************************************************************************************
         // 2 - call the service to find all gene for a given phenotype

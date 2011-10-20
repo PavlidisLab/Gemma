@@ -37,6 +37,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceVa
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.persistence.PersisterHelper;
 
@@ -373,7 +374,7 @@ public class PhenotypeAssoManagerServiceHelper {
     }
 
     /** Ontology term to CharacteristicValueObject */
-    public Set<CharacteristicValueObject> ontology2PhenotypeVO( Collection<OntologyTerm> ontologyTerms,
+    public Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
             String ontologyUsed ) {
 
         Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
@@ -381,13 +382,30 @@ public class PhenotypeAssoManagerServiceHelper {
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
 
             CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel(),
-                    PhenotypeAssociationConstants.PHENOTYPE, ontologyTerm.getUri(),
-                    PhenotypeAssociationConstants.PHENOTYPE_ONTOLOGY );
+                    ontologyTerm.getUri() );
             phenotype.setOntologyUsed( ontologyUsed );
             characteristicsVO.add( phenotype );
 
         }
         return characteristicsVO;
+    }
+
+    
+    
+    public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm ) {
+
+        Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
+
+        Collection<TreeCharacteristicValueObject> childs = new HashSet<TreeCharacteristicValueObject>();
+
+        for ( OntologyTerm ot : ontologyTerms ) {
+            childs.add( ontology2TreeCharacteristicValueObjects( ot ) );
+        }
+        
+        TreeCharacteristicValueObject treeCharacteristicVO = new TreeCharacteristicValueObject(
+                ontologyTerm.getLabel(), ontologyTerm.getUri(), childs);
+
+        return treeCharacteristicVO;
     }
 
 }
