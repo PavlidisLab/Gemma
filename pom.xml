@@ -594,20 +594,6 @@
 			</releases>
 		</pluginRepository>
 		<pluginRepository>
-			<id>mojo</id>
-			<name>Mojo</name>
-			<url>http://snapshots.maven.codehaus.org/maven2/</url>
-			<layout>default</layout>
-			<snapshots>
-				<enabled>false</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</releases>
-		</pluginRepository>
-		<pluginRepository>
 			<id>pavlab</id>
 			<name>PavLab</name>
 			<url>
