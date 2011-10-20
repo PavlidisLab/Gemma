@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <uml:Profile xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" xmlns:uml="http://www.eclipse.org/uml2/1.0.0/UML" xmi:id="_16_8beta_62a020a_1256807755193_508228_378" name="StandardProfileL3" metamodelReference="_16_8beta_62a020a_1256807755239_960265_379">
-  <eAnnotations xmi:id="_1gFWUPreEeC57L1dMWNbBg" source="attributes">
-    <details xmi:id="_1gFWUfreEeC57L1dMWNbBg" key="version" value="0"/>
+  <eAnnotations xmi:id="_-ePGvvtOEeCdEOdjUgIk_A" source="attributes">
+    <details xmi:id="_-ePGv_tOEeCdEOdjUgIk_A" key="version" value="0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_1gFWUvreEeC57L1dMWNbBg" source="ePackages">
-    <contents xmi:type="ecore:EPackage" xmi:id="_1gFWU_reEeC57L1dMWNbBg" name="StandardProfileL3_0" nsURI="http:///StandardProfileL3_0_1f2EAPreEeC57L1dMWNbBg.profile.uml2" nsPrefix="StandardProfileL3_0"/>
+  <eAnnotations xmi:id="_-ePGwPtOEeCdEOdjUgIk_A" source="ePackages">
+    <contents xmi:type="ecore:EPackage" xmi:id="_-ePGwftOEeCdEOdjUgIk_A" name="StandardProfileL3_0" nsURI="http:///StandardProfileL3_0_-dVHgPtOEeCdEOdjUgIk_A.profile.uml2" nsPrefix="StandardProfileL3_0"/>
   </eAnnotations>
-  <eAnnotations xmi:id="_17e3IPreEeC57L1dMWNbBg" source="MagicDraw">
-    <details xmi:id="_17e3IfreEeC57L1dMWNbBg" key="md_id" value="_16_8beta_62a020a_1256807755193_508228_378"/>
+  <eAnnotations xmi:id="__EZHgPtOEeCdEOdjUgIk_A" source="MagicDraw">
+    <details xmi:id="__EZHgftOEeCdEOdjUgIk_A" key="md_id" value="_16_8beta_62a020a_1256807755193_508228_378"/>
   </eAnnotations>
   <packageImport xmi:id="_16_8beta_62a020a_1256807755239_960265_379">
-    <eAnnotations xmi:id="_17e3IvreEeC57L1dMWNbBg" source="MagicDraw">
-      <details xmi:id="_17e3I_reEeC57L1dMWNbBg" key="md_id" value="_16_8beta_62a020a_1256807755239_960265_379"/>
+    <eAnnotations xmi:id="__EZHgvtOEeCdEOdjUgIk_A" source="MagicDraw">
+      <details xmi:id="__EZHg_tOEeCdEOdjUgIk_A" key="md_id" value="_16_8beta_62a020a_1256807755239_960265_379"/>
     </eAnnotations>
     <importedPackage xmi:type="uml:Model" href="pathmap://UML2_METAMODELS/UML2.metamodel.uml2#_m8qbA686EdiEh75YJ_3n8g"/>
   </packageImport>
