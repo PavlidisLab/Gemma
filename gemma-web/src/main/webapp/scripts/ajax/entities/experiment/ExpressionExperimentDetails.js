@@ -321,7 +321,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
 		var i, geneSet;
 		for (i = 0; i < eeSets.length; i++) {
 			if (eeSets[i] && eeSets[i].name && eeSets[i].id) {
-				eeSetLinks.push(' <a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+eeSets[i].id+'">'+eeSets[i].name+'</a>');
+				eeSetLinks.push(' <a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+eeSets[i].id+'">'+eeSets[i].name+'</a>');
 			}
 		}
 		if(eeSetLinks.length === 0){
