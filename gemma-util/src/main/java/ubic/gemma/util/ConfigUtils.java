@@ -43,7 +43,6 @@ import org.apache.commons.logging.LogFactory;
  * @author pavlidis
  * @version $Id$
  */
-@SuppressWarnings("unchecked")
 public class ConfigUtils {
 
     /**
@@ -154,7 +153,7 @@ public class ConfigUtils {
 
         if ( log.isDebugEnabled() ) {
             log.debug( "********** Configuration details ***********" );
-            for ( Iterator it = config.getKeys(); it.hasNext(); ) {
+            for ( Iterator<?> it = config.getKeys(); it.hasNext(); ) {
                 String key = ( String ) it.next();
                 Object prop = config.getProperty( key );
                 log.debug( key + " = " + prop );
@@ -458,7 +457,7 @@ public class ConfigUtils {
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getKeys()
      */
-    public static Iterator getKeys() {
+    public static Iterator<?> getKeys() {
         return config.getKeys();
     }
 
@@ -467,7 +466,7 @@ public class ConfigUtils {
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getKeys(java.lang.String)
      */
-    public static Iterator getKeys( String key ) {
+    public static Iterator<?> getKeys( String key ) {
         return config.getKeys( key );
     }
 
@@ -485,14 +484,14 @@ public class ConfigUtils {
      * @return
      * @see org.apache.commons.configuration.AbstractConfiguration#getList(java.lang.String)
      */
-    public static List getList( String key ) {
+    public static List<?> getList( String key ) {
 
         try {
             return config.getList( key );
 
         } catch ( NoSuchElementException nsee ) {
             log.info( key + " is not configured, returning empty arrayList" );
-            return new ArrayList();
+            return new ArrayList<Object>();
         }
     }
 
@@ -502,7 +501,7 @@ public class ConfigUtils {
      * @return
      * @see org.apache.commons.configuration.CompositeConfiguration#getList(java.lang.String, java.util.List)
      */
-    public static List getList( String key, List defaultValue ) {
+    public static List<?> getList( String key, List<?> defaultValue ) {
         return config.getList( key, defaultValue );
     }
 

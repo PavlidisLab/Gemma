@@ -24,19 +24,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.apache.commons.collections.Transformer;
 import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -49,6 +46,7 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * Base class for CLIs that needs one or more expression experiment as an input. It offers the following ways of reading
@@ -105,8 +103,8 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     protected void addForceOption( String explanation ) {
         String defaultExplanation = "Ignore other reasons for skipping experiments (e.g., trouble) and overwrite existing data (see documentation for this tool to see exact behavior if not clear)";
         String usedExpl = explanation == null ? defaultExplanation : explanation;
-        Option forceOption = OptionBuilder.withArgName( "Force processing" ).withLongOpt( "force" ).withDescription(
-                usedExpl ).create( "force" );
+        Option forceOption = OptionBuilder.withArgName( "Force processing" ).withLongOpt( "force" )
+                .withDescription( usedExpl ).create( "force" );
         addOption( forceOption );
     }
 
@@ -131,23 +129,23 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                 .withLongOpt( "eeListfile" ).create( 'f' );
         addOption( eeFileListOption );
 
-        Option eeSetOption = OptionBuilder.hasArg().withArgName( "eeSetName" ).withDescription(
-                "Name of expression experiment set to use" ).create( "eeset" );
+        Option eeSetOption = OptionBuilder.hasArg().withArgName( "eeSetName" )
+                .withDescription( "Name of expression experiment set to use" ).create( "eeset" );
 
         addOption( eeSetOption );
 
-        Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" ).withDescription(
-                "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" ).create( 't' );
+        Option taxonOption = OptionBuilder.hasArg().withDescription( "taxon name" )
+                .withDescription( "Taxon of the expression experiments and genes" ).withLongOpt( "taxon" ).create( 't' );
         addOption( taxonOption );
 
         Option excludeEeOption = OptionBuilder.hasArg().withArgName( "Expression experiment list file" )
-                .withDescription( "File containing list of expression experiments to exclude" ).withLongOpt(
-                        "excludeEEFile" ).create( 'x' );
+                .withDescription( "File containing list of expression experiments to exclude" )
+                .withLongOpt( "excludeEEFile" ).create( 'x' );
         addOption( excludeEeOption );
 
-        Option eeSearchOption = OptionBuilder.hasArg().withArgName( "expressionQuery" ).withDescription(
-                "Use a query string for defining which expression experiments to use" ).withLongOpt( "expressionQuery" )
-                .create( 'q' );
+        Option eeSearchOption = OptionBuilder.hasArg().withArgName( "expressionQuery" )
+                .withDescription( "Use a query string for defining which expression experiments to use" )
+                .withLongOpt( "expressionQuery" ).create( 'q' );
         addOption( eeSearchOption );
 
     }
@@ -457,32 +455,34 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
      * 
      * @param ees
      */
-    @SuppressWarnings("unchecked")
     private void removeTroubledEes( Collection<BioAssaySet> ees ) {
         if ( ees == null || ees.size() == 0 ) {
             log.warn( "No experiments to remove troubled from" );
             return;
         }
+        // Map<Long, BioAssaySet> idMap = EntityUtils.getIdMap( ees );
+        final Collection<Long> untroubled = eeService.getUntroubled( EntityUtils.getIds( ees ) );
+
         BioAssaySet theOnlyOne = null;
         if ( ees.size() == 1 ) {
             theOnlyOne = ees.iterator().next();
         }
         int size = ees.size();
-        final Map<Long, AuditEvent> trouble = eeService.getLastTroubleEvent( CollectionUtils.collect( ees,
-                new Transformer() {
-                    @Override
-                    public Object transform( Object input ) {
-                        return ( ( ExpressionExperiment ) input ).getId();
-                    }
-                } ) );
+        // final Map<Long, AuditEvent> trouble = eeService.getLastTroubleEvent( CollectionUtils.collect( ees,
+        // new Transformer() {
+        // @Override
+        // public Object transform( Object input ) {
+        // return ( ( ExpressionExperiment ) input ).getId();
+        // }
+        // } ) );
         CollectionUtils.filter( ees, new Predicate() {
             @Override
             public boolean evaluate( Object object ) {
-                boolean hasTrouble = trouble.containsKey( ( ( ExpressionExperiment ) object ).getId() );
-                if ( hasTrouble ) {
+                boolean ok = untroubled.contains( ( ( ExpressionExperiment ) object ).getId() );
+                if ( !ok ) {
                     log.info( "Troubled: " + object );
                 }
-                return !hasTrouble;
+                return ok;
             }
         } );
         int newSize = ees.size();

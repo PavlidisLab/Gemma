@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<artifactId>gemma</artifactId>
 		<groupId>gemma</groupId>
@@ -60,16 +59,12 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
-				<!-- <configuration>
-					<excludes>
-						<exclude>**/*Test*,**/Test*,**/All*Tests</exclude>
-					</excludes>
-				</configuration> -->
+				<!-- <configuration> <excludes> <exclude>**/*Test*,**/Test*,**/All*Tests</exclude> </excludes> </configuration> -->
 			</plugin>
 			<plugin>
 				<artifactId>maven-antrun-plugin</artifactId>
 				<executions>
-					<!--  core does this too. We actually need this to get the classes directory made. Eclipse is unhappy. -->
+					<!-- core does this too. We actually need this to get the classes directory made. Eclipse is unhappy. -->
 					<execution>
 						<id>Generate version file</id>
 						<phase>process-classes</phase>
@@ -355,7 +350,7 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webmvc</artifactId>
-			<version>3.0.1.RELEASE</version>
+			<version>3.0.5.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.security</groupId>
@@ -440,11 +435,11 @@
 			<artifactId>jersey-server</artifactId>
 			<version>1.8</version>
 		</dependency>
-	 	<dependency>
+		<dependency>
 			<groupId>com.sun.jersey</groupId>
 			<artifactId>jersey-json</artifactId>
 			<version>1.8</version>
-		</dependency> 
+		</dependency>
 		<!-- Jersey + Spring -->
 		<dependency>
 			<groupId>com.sun.jersey.contribs</groupId>
@@ -484,11 +479,28 @@
 			<name>Java.net Repository for Maven</name>
 			<url>http://download.java.net/maven/2/</url>
 			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 		</repository>
 		<repository>
 			<id>tenesha</id>
 			<name>For recaptcha4j</name>
 			<url>http://www.tanesha.net/maven2</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 		</repository>
 	</repositories>
 </project>

@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2011 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
@@ -6,6 +20,12 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
 
+/**
+ * TODO Document Me
+ * 
+ * @author paul
+ * @version $Id$
+ */
 public interface PhenotypeAssociationManagerService {
 
     /**
@@ -46,21 +66,21 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @return A collection of the phenotypes with the gene occurence
      */
-    public Collection<CharacteristicValueObject> findAllPhenotypes();
+    public Collection<CharacteristicValueObject> loadAllPhenotypes();
 
     /**
      * Removes an evidence
      * 
      * @param id The Evidence database id
      */
-    public void removeEvidence( Long id );
+    public void remove( Long id );
 
     /**
      * Modify an existing evidence
      * 
      * @param evidenceValueObject the evidence with modified fields
      */
-    public void modifyEvidence( EvidenceValueObject evidenceValueObject );
+    public void update( EvidenceValueObject evidenceValueObject );
 
     /**
      * Giving a phenotype searchQuery, return a selection choice to the user
@@ -78,6 +98,5 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId );
-    
 
 }

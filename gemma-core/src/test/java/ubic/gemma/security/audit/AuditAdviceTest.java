@@ -41,7 +41,7 @@ import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserService;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.biomaterial.BioMaterial; 
+import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -176,6 +176,9 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         for ( GeneProduct prod : g.getProducts() ) {
             assertNotNull( prod.getAuditTrail() );
 
+            assertNotNull( prod.getStatus() );
+            assertNotNull( prod.getStatus().getId() );
+
             this.auditTrailService.thaw( prod );
             Collection<AuditEvent> events = prod.getAuditTrail().getEvents();
             assertEquals( 1, events.size() );
@@ -233,6 +236,9 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         assertNotNull( ee.getAuditTrail() );
         assertEquals( 1, ee.getAuditTrail().getEvents().size() );
+        assertNotNull( ee.getStatus() );
+        assertNotNull( ee.getStatus().getId() );
+        assertNotNull( ee.getStatus().getCreateDate() );
         assertNotNull( ee.getAuditTrail().getCreationEvent().getId() );
     }
 

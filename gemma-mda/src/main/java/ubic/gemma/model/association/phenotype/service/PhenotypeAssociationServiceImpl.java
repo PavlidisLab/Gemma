@@ -3,19 +3,18 @@ package ubic.gemma.model.association.phenotype.service;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.GenericExperimentDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
  * Service responsible of low level operations, used by PhenotypeAssociationManagerServiceImpl
  */
-@Component
+@Service
 public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationService {
 
     @Autowired
@@ -24,23 +23,26 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Autowired
     private GenericExperimentDao genericExperimentDao;
 
-    /** Using an phenotypeAssociation id removes the evidence */
-    public void removePhenotypeAssociation( Long id ) {
-        phenotypeAssociationDao.remove( id );
+    /**
+     * Using an phenotypeAssociation id removes the evidence
+     */
+    public void remove( PhenotypeAssociation pa ) {
+        pa.getGene().getPhenotypeAssociations().remove( pa );
+        phenotypeAssociationDao.remove( pa );
     }
 
     /** find Genes link to a phenotype */
-    public Collection<Gene> findCandidateGenes( String phenotypeValue ) {
+    public Collection<PhenotypeAssociation> findPhenotypeAssociations( String phenotypeValue ) {
         return phenotypeAssociationDao.findByPhenotype( phenotypeValue );
     }
 
-    /** find all phenotypes in Gemma */
-    public Collection<CharacteristicValueObject> findAllPhenotypes() {
-        return phenotypeAssociationDao.findAllPhenotypes();
+    /** find all phenotypes */
+    public Collection<PhenotypeAssociation> loadAll() {
+        return ( Collection<PhenotypeAssociation> ) phenotypeAssociationDao.loadAll();
     }
 
     /** create a GenericExperiment */
-    public GenericExperiment createGenericExperiment( GenericExperiment genericExperiment ) {
+    public GenericExperiment create( GenericExperiment genericExperiment ) {
         return genericExperimentDao.create( genericExperiment );
     }
 
@@ -48,15 +50,25 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
         return genericExperimentDao.findByPubmedID( pubmed );
     }
-    
+
     /** load an evidence given an ID */
-    public PhenotypeAssociation loadEvidence( Long id ) {
+    public PhenotypeAssociation load( Long id ) {
         return phenotypeAssociationDao.load( id );
     }
-    
+
     /** update an evidence */
-    public void updateEvidence( PhenotypeAssociation evidence ) {
+    public void update( PhenotypeAssociation evidence ) {
         phenotypeAssociationDao.update( evidence );
+    }
+
+    @Override
+    public Collection<CharacteristicValueObject> loadAllPhenotypes() {
+        return this.phenotypeAssociationDao.loadAllPhenotypes();
+    }
+
+    @Override
+    public PhenotypeAssociation create( PhenotypeAssociation p ) {
+        return this.phenotypeAssociationDao.create( p );
     }
 
 }

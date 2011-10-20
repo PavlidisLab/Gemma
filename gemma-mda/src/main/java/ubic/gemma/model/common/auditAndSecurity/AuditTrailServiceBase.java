@@ -32,12 +32,19 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
 
     @Autowired
     private ubic.gemma.model.common.auditAndSecurity.AuditTrailDao auditTrailDao;
-    
+
     @Autowired
     private ubic.gemma.model.common.auditAndSecurity.UserDao userDao;
 
     @Autowired
     private ubic.gemma.model.common.auditAndSecurity.AuditEventDao auditEventDao;
+
+    @Autowired
+    private StatusDao statusDao;
+
+    public StatusDao getStatusDao() {
+        return statusDao;
+    }
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addComment(ubic.gemma.model.common.Auditable,
@@ -120,6 +127,7 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
      * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#addUpdateEvent(ubic.gemma.model.common.Auditable,
      *      ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType, java.lang.String, java.lang.String)
      */
+    @Override
     public ubic.gemma.model.common.auditAndSecurity.AuditEvent addUpdateEvent(
             final ubic.gemma.model.common.Auditable auditable,
             final ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType auditEventType,

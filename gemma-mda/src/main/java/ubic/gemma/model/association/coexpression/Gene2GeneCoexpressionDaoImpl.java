@@ -25,8 +25,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import net.sf.ehcache.Element;
 
@@ -38,6 +40,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.TaxonUtility;
 
 /**
@@ -55,6 +58,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
     public Gene2GeneCoexpressionDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
+
+    private static boolean SINGLE_QUERY_FOR_LINKS = ConfigUtils.getBoolean( "store.gene.coexpression.bothways", true );
 
     /**
      * For storing information about gene results that are cached.
@@ -106,6 +111,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
     }
 
     static private class SupportComparator implements Comparator<Gene2GeneCoexpression> {
+        @Override
         public int compare( Gene2GeneCoexpression o1, Gene2GeneCoexpression o2 ) {
             return -o1.getNumDataSets().compareTo( o2.getNumDataSets() );
         }
@@ -131,7 +137,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      * .util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindCoexpressionRelationships(
             Collection<Gene> genes, int stringency, int maxResults, GeneCoexpressionAnalysis sourceAnalysis ) {
 
@@ -144,8 +149,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         Map<Gene, Collection<Gene2GeneCoexpression>> finalResult = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
         for ( Gene g : genes ) {
-            Element e = this.getGene2GeneCoexpressionCache().getCache().get(
-                    new GeneCached( g.getId(), sourceAnalysis.getId() ) );
+            Element e = this.getGene2GeneCoexpressionCache().getCache()
+                    .get( new GeneCached( g.getId(), sourceAnalysis.getId() ) );
             if ( e != null ) {
                 rawResults.addAll( ( List<Gene2GeneCoexpression> ) e.getValue() );
             } else {
@@ -213,8 +218,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
     /**
      * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDao#findCoexpressionRelationships(null,
-     *      java.util.Collection)
-     *      <p>
+     *      java.util.Collection) <p>
      *      Implementation note: we need the sourceAnalysis because although we normally have only one analysis per *
      *      taxon, when reanalyses are in progress there can be more than one temporarily.
      *      <p>
@@ -236,7 +240,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      * ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionDaoBase#handleFindInterCoexpressionRelationships
      * (java.util.Collection, ubic.gemma.model.analysis.Analysis, int)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Map<Gene, Collection<Gene2GeneCoexpression>> handleFindInterCoexpressionRelationships(
             Collection<Gene> genes, int stringency, GeneCoexpressionAnalysis sourceAnalysis ) {
@@ -256,8 +259,8 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
         Collection<Gene> genesNeeded = new HashSet<Gene>();
         for ( Gene g : genes ) {
-            Element e = this.getGene2GeneCoexpressionCache().getCache().get(
-                    new GeneCached( g.getId(), sourceAnalysis.getId() ) );
+            Element e = this.getGene2GeneCoexpressionCache().getCache()
+                    .get( new GeneCached( g.getId(), sourceAnalysis.getId() ) );
             if ( e != null ) {
                 /*
                  * FIXME findi results for the cached result that include the second gene at the appropriate stringency.
@@ -294,6 +297,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) "
                 + "and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
 
+        // we only use this if not SINGLE_QUERY_FOR_LINKS
         final String secondQueryString = "select g2g from " + g2gClassName
                 + " as g2g where g2g.secondGene = :qgene and g2g.firstGene in (:genes) "
                 + "and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
@@ -306,9 +310,11 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                     new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
                     new Object[] { queryGene, unseen, stringency, sourceAnalysis } );
 
-            r.addAll( this.getHibernateTemplate().findByNamedParam( secondQueryString,
-                    new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
-                    new Object[] { queryGene, unseen, stringency, sourceAnalysis } ) );
+            if ( !SINGLE_QUERY_FOR_LINKS ) {
+                r.addAll( this.getHibernateTemplate().findByNamedParam( secondQueryString,
+                        new String[] { "qgene", "genes", "stringency", "sourceAnalysis" },
+                        new Object[] { queryGene, unseen, stringency, sourceAnalysis } ) );
+            }
 
             List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
             Collections.sort( lr, new SupportComparator() );
@@ -336,10 +342,10 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      * @param object
      */
     protected void removeFromCache( Gene2GeneCoexpression object ) {
-        this.getGene2GeneCoexpressionCache().getCache().remove(
-                new GeneCached( object.getFirstGene().getId(), object.getSourceAnalysis().getId() ) );
-        this.getGene2GeneCoexpressionCache().getCache().remove(
-                new GeneCached( object.getFirstGene().getId(), object.getSourceAnalysis().getId() ) );
+        this.getGene2GeneCoexpressionCache().getCache()
+                .remove( new GeneCached( object.getFirstGene().getId(), object.getSourceAnalysis().getId() ) );
+        this.getGene2GeneCoexpressionCache().getCache()
+                .remove( new GeneCached( object.getFirstGene().getId(), object.getSourceAnalysis().getId() ) );
     }
 
     /**
@@ -367,7 +373,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
      * @param maxResults
      * @param sourceAnalysis
      */
-    @SuppressWarnings("unchecked")
     private List<Gene2GeneCoexpression> getCoexpressionRelationshipsFromDB( Collection<Gene> genes,
             GeneCoexpressionAnalysis sourceAnalysis ) {
 
@@ -384,8 +389,33 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
                 new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
-        r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
+
+        if ( !SINGLE_QUERY_FOR_LINKS ) {
+            r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
+                    new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
+        } else {
+
+            /*
+             * remove duplicates, since each link can be here twice. FIXME maybe could do at same time as caching.
+             */
+            int removed = 0;
+            Set<GeneLink> allSeen = new HashSet<GeneLink>();
+            for ( Iterator<Gene2GeneCoexpression> iterator = r.iterator(); iterator.hasNext(); ) {
+                Gene2GeneCoexpression g2g = ( Gene2GeneCoexpression ) iterator.next();
+                Gene g1 = g2g.getFirstGene();
+                Gene g2 = g2g.getSecondGene();
+                GeneLink seen = new GeneLink( g1, g2 );
+
+                if ( allSeen.contains( seen ) ) {
+                    iterator.remove();
+                    ++removed;
+                    continue;
+                }
+
+                allSeen.add( seen );
+            }
+            if ( removed > 0 ) log.info( "Removed " + removed + " duplicate links" );
+        }
 
         Collections.sort( r, new SupportComparator() );
 
@@ -416,12 +446,53 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         }
 
         for ( Gene gene : forCache.keySet() ) {
-            this.getGene2GeneCoexpressionCache().getCache().put(
-                    new Element( new GeneCached( gene.getId(), sourceAnalysis.getId() ), forCache.get( gene ) ) );
+            this.getGene2GeneCoexpressionCache().getCache()
+                    .put( new Element( new GeneCached( gene.getId(), sourceAnalysis.getId() ), forCache.get( gene ) ) );
         }
 
         return r;
 
+    }
+
+}
+
+class GeneLink {
+
+    private Gene g1;
+    private Gene g2;
+
+    public GeneLink( Gene g1, Gene g2 ) {
+        if ( g1.getId() < g2.getId() ) {
+            this.g1 = g1;
+            this.g2 = g2;
+        } else {
+            this.g1 = g2;
+            this.g2 = g1;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ( ( g1 == null ) ? 0 : g1.hashCode() );
+        result = prime * result + ( ( g2 == null ) ? 0 : g2.hashCode() );
+        return result;
+    }
+
+    @Override
+    public boolean equals( Object obj ) {
+        if ( this == obj ) return true;
+        if ( obj == null ) return false;
+        if ( getClass() != obj.getClass() ) return false;
+        GeneLink other = ( GeneLink ) obj;
+        if ( g1 == null ) {
+            if ( other.g1 != null ) return false;
+        } else if ( !g1.equals( other.g1 ) ) return false;
+        if ( g2 == null ) {
+            if ( other.g2 != null ) return false;
+        } else if ( !g2.equals( other.g2 ) ) return false;
+        return true;
     }
 
 }

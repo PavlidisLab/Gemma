@@ -18,6 +18,8 @@
  */
 package ubic.gemma.analysis.expression.coexpression;
 
+import hep.aida.bin.QuantileBin1D;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,13 +28,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import cern.colt.list.DoubleArrayList;
+import cern.jet.random.engine.MersenneTwister;
+import cern.jet.stat.Descriptive;
+
 import ubic.basecode.dataStructure.BitUtil;
+import ubic.basecode.dataStructure.matrix.MatrixUtil;
+import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.math.distribution.Histogram;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -43,6 +53,8 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysi
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegreeService;
 import ubic.gemma.model.association.coexpression.HumanGeneCoExpression;
 import ubic.gemma.model.association.coexpression.MouseGeneCoExpression;
 import ubic.gemma.model.association.coexpression.OtherGeneCoExpression;
@@ -52,8 +64,10 @@ import ubic.gemma.model.common.protocol.ProtocolService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information. The
@@ -68,6 +82,8 @@ import ubic.gemma.security.SecurityService;
 @Service
 public class GeneLinkCoexpressionAnalyzer {
     private static final int BATCH_SIZE = 500;
+
+    private static boolean SINGLE_QUERY_FOR_LINKS = ConfigUtils.getBoolean( "store.gene.coexpression.bothways", true );
 
     private static Log log = LogFactory.getLog( GeneLinkCoexpressionAnalyzer.class.getName() );
 
@@ -147,6 +163,9 @@ public class GeneLinkCoexpressionAnalyzer {
     private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
 
     @Autowired
+    private GeneService geneService;
+
+    @Autowired
     private PersisterHelper persisterHelper;
 
     @Autowired
@@ -157,6 +176,12 @@ public class GeneLinkCoexpressionAnalyzer {
 
     @Autowired
     private SecurityService securityService;
+
+    @Autowired
+    private GeneCoexpressionNodeDegreeService geneCoexpressionNodeDegreeService;
+
+    // Caution stateful
+    private List<GeneCoexpressionNodeDegree> allGeneNodeDegrees = new ArrayList<GeneCoexpressionNodeDegree>();
 
     /**
      * Perform a Gene-to-gene analysis for the given experiments and genes, subject to the other parameters. An
@@ -241,6 +266,91 @@ public class GeneLinkCoexpressionAnalyzer {
 
     public void setSecurityService( SecurityService securityService ) {
         this.securityService = securityService;
+    }
+
+    /**
+     * Finalize the node degree computation and persist it.
+     */
+    private void completeNodeDegreeComputations( boolean useDB ) {
+
+        DoubleArrayList l = new DoubleArrayList();
+
+        for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
+            l.add( n.getMean() );
+        }
+
+        QuantileBin1D f = new QuantileBin1D( true, l.size(), 0.0, 0.0, 1000, new MersenneTwister() );
+        f.addAllOf( l );
+        log.info( "Finalizing node degree computation" );
+        for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
+            n.setPermille( ( int ) Math.floor( 1000.0 * f.quantileInverse( n.getMean() ) ) );
+
+            if ( useDB ) {
+                geneCoexpressionNodeDegreeService.deleteFor( n.getGene() );
+                geneCoexpressionNodeDegreeService.create( n );
+            } else {
+                System.out.print( String.format( "%d\t%s\t%d\t%.2f\t%.2f\t%d\t%d\t%s\n", n.getGene().getId(), n
+                        .getGene().getOfficialSymbol(), n.getGene().getTaxon().getId(), n.getMean(), n.getVariance(), n
+                        .getNumTests(), n.getPermille(), n.getDistribution() ) );
+            }
+        }
+
+    }
+
+    /**
+     * @param queryGene
+     * @param expressionExperiments
+     */
+    private void computeNodeDegree( Gene queryGene, Collection<BioAssaySet> expressionExperiments ) {
+        Map<BioAssaySet, Double> nodeDegrees = geneService.getGeneCoexpressionNodeDegree( queryGene,
+                expressionExperiments );
+
+        Collection<Double> values = nodeDegrees.values();
+        if ( values.isEmpty() ) {
+            return;
+        }
+
+        GeneCoexpressionNodeDegree n = GeneCoexpressionNodeDegree.Factory.newInstance();
+        n.setGene( queryGene );
+        n.setNumTests( nodeDegrees.size() );
+
+        // FIXME should the mean be computed as the Fisher score?
+        double[] array = ArrayUtils.toPrimitive( nodeDegrees.values().toArray( new Double[] {} ) );
+        DoubleArrayList vals = new DoubleArrayList( array );
+
+        n.setMean( Descriptive.mean( vals ) );
+        n.setVariance( DescriptiveWithMissing.variance( vals ) );
+
+        String distribution = computeDistribution( vals );
+        n.setDistribution( distribution );
+
+        // so we can compute summary stats at the end.
+        this.allGeneNodeDegrees.add( n );
+
+    }
+
+    /**
+     * Compute a string to represent the distribution of node degree values.
+     * 
+     * @param vals
+     * @return
+     */
+    private String computeDistribution( DoubleArrayList vals ) {
+        /*
+         * Set up the distribution
+         */
+        int numBins = 10;
+        Histogram h = new Histogram( "", numBins, 0.0, 1.0 );
+        h.fill( MatrixUtil.fromList( vals ) );
+        int tallestBar = h.getBiggestBinSize();
+        StringBuilder buf = new StringBuilder();
+        for ( int i = 0; i < numBins; i++ ) {
+            int f = ( int ) Math.floor( 9.0 * h.getArray()[i] / tallestBar );
+            assert f < 10; // one digit
+            buf.append( f );
+        }
+        String distribution = buf.toString();
+        return distribution;
     }
 
     /**
@@ -357,6 +467,20 @@ public class GeneLinkCoexpressionAnalyzer {
     /**
      * @param expressionExperiments
      * @param toUseGenes
+     */
+    public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
+            boolean useDB ) {
+        allGeneNodeDegrees.clear();
+        for ( Gene queryGene : toUseGenes ) {
+            computeNodeDegree( queryGene, expressionExperiments );
+        }
+        log.info( "Finalizing node degree computation" );
+        completeNodeDegreeComputations( useDB );
+    }
+
+    /**
+     * @param expressionExperiments
+     * @param toUseGenes
      * @param stringency
      * @param knownGenesOnly
      * @param analysisName
@@ -412,21 +536,26 @@ public class GeneLinkCoexpressionAnalyzer {
                     }
 
                 }
-                // FIXME support using other than known genes (though we really don't do that now).
+
+                computeNodeDegree( queryGene, expressionExperiments );
 
                 processedGenes.add( queryGene );
                 if ( processedGenes.size() % 100 == 0 ) {
                     log.info( "Processed " + processedGenes.size() + " genes..." );
                 }
-            }
+            } // end loop over genes
 
             if ( analysis != null ) {
                 // All done...
                 analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
                 analysis.setEnabled( true );
                 geneCoexpressionAnalysisService.update( analysis );
+
                 securityService.makePublic( analysis );
             }
+
+            completeNodeDegreeComputations( analysis != null );
+
             log.info( totalLinks + " gene pairs processed." );
 
         } catch ( Exception e ) {
@@ -439,21 +568,6 @@ public class GeneLinkCoexpressionAnalyzer {
             throw new RuntimeException( e );
         }
         return processedGenes;
-    }
-
-    private String format( CoexpressionValueObject co ) {
-        StringBuilder buf = new StringBuilder();
-
-        buf.append( co.getQueryGene().getId() + "\t" );
-        buf.append( co.getQueryGene().getOfficialSymbol() + "\t" );
-        buf.append( co.getGeneId() + "\t" );
-        buf.append( co.getGeneName() + "\t" ); // this is not populated.
-        buf.append( co.getNumDatasetsTestedIn() + "\t" );
-        buf.append( co.getPositiveLinkSupport() + "\t" );
-        buf.append( co.getNegativeLinkSupport() + "\t" );
-        buf.append( BitUtil.prettyPrint( co.getDatasetsTestedInBytes() ) );
-
-        return buf.toString();
     }
 
     private Collection<GeneCoexpressionAnalysis> findExistingAnalysis( Taxon taxon ) {
@@ -515,6 +629,21 @@ public class GeneLinkCoexpressionAnalyzer {
         }
         log.info( "New EESet will be created" );
         return null;
+    }
+
+    private String format( CoexpressionValueObject co ) {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append( co.getQueryGene().getId() + "\t" );
+        buf.append( co.getQueryGene().getOfficialSymbol() + "\t" );
+        buf.append( co.getGeneId() + "\t" );
+        buf.append( co.getGeneName() + "\t" ); // this is not populated.
+        buf.append( co.getNumDatasetsTestedIn() + "\t" );
+        buf.append( co.getPositiveLinkSupport() + "\t" );
+        buf.append( co.getNegativeLinkSupport() + "\t" );
+        buf.append( BitUtil.prettyPrint( co.getDatasetsTestedInBytes() ) );
+
+        return buf.toString();
     }
 
     /**
@@ -618,14 +747,17 @@ public class GeneLinkCoexpressionAnalyzer {
             // note we just check the id to avoid any problems with thaw etc.
             if ( secondGene.getId().equals( firstGene.getId() ) ) {
                 /*
-                 * This is 'just in case'; they should have been removed earlier. These can leak in because we 1) there
-                 * can be two probes for the same genes that are coexpressed and 2) we allow them in initial query
+                 * This check is 'just in case'; they should have been removed earlier. These can leak in because we 1)
+                 * there can be two probes for the same genes that are coexpressed and 2) we allow them in initial query
                  * results
                  */
                 continue;
             }
 
-            if ( alreadyPersisted.contains( secondGene ) ) continue; // only need to go in one direction
+            /*
+             * If we store the links in both directions, only one query is needed for retrieval.
+             */
+            if ( !SINGLE_QUERY_FOR_LINKS && alreadyPersisted.contains( secondGene ) ) continue;
 
             if ( log.isDebugEnabled() )
                 log.debug( firstGene.getName() + " link to " + secondGene.getName() + " tested in "

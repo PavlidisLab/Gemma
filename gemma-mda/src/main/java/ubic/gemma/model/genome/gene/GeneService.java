@@ -23,6 +23,7 @@ import java.util.Map;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
@@ -187,6 +188,34 @@ public interface GeneService {
     public Collection<CompositeSequence> getCompositeSequencesById( Long id );
 
     /**
+     * Get summarized node degree
+     * 
+     * @param genes
+     * @return
+     */
+    public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
+
+    /**
+     * Get aggregated node degree based on a selected set of data sets. Likely to be slow.
+     * 
+     * @param genes
+     * @param ees
+     * @return
+     */
+    @Deprecated
+    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees );
+
+    /**
+     * Get dataset-by-dataset node degree information -- used to populate the tables for faster access methods.
+     * 
+     * @param gene
+     * @param ees
+     * @return map of BioAssaySet to relative rank.
+     */
+    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
+
+    /**
      * Gets all the genes for a given taxon
      */
     public Collection<Gene> getGenesByTaxon( Taxon taxon );
@@ -230,6 +259,16 @@ public interface GeneService {
     public Collection<Gene> loadMultiple( Collection<Long> ids );
 
     /**
+     * Returns a collection of Predicted Genes for the specified taxon
+     */
+    public Collection<PredictedGene> loadPredictedGenes( Taxon taxon );
+
+    /**
+     * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
+     */
+    public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( Taxon taxon );
+
+    /**
      * Load with objects already thawed.
      * 
      * @param ids
@@ -242,16 +281,6 @@ public interface GeneService {
      * @return
      */
     public Collection<GeneValueObject> loadValueObjects( Collection<Long> ids );
-
-    /**
-     * Returns a collection of Predicted Genes for the specified taxon
-     */
-    public Collection<PredictedGene> loadPredictedGenes( Taxon taxon );
-
-    /**
-     * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
-     */
-    public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( Taxon taxon );
 
     /**
      * @param genes
@@ -285,21 +314,7 @@ public interface GeneService {
      * @param gene
      */
     @Secured({ "GROUP_ADMIN" })
+    /* we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that */
     public void update( Gene gene );
-
-    /**
-     * @param genes
-     * @param ees
-     * @return
-     */
-    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees );
-
-    /**
-     * @param gene
-     * @param ees
-     * @return
-     */
-    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
 
 }

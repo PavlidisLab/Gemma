@@ -33,6 +33,7 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * A few utility methods to filter collections
@@ -66,6 +67,7 @@ public class AuditableUtil {
         final Map<Long, AuditEvent> trouble = arrayDesignService.getLastTroubleEvent( ids );
 
         CollectionUtils.filter( valueObjects, new Predicate() {
+            @Override
             public boolean evaluate( Object vo ) {
                 ArrayDesignValueObject vo2 = ( ArrayDesignValueObject ) vo;
                 AuditEvent event = trouble.get( vo2.getId() );
@@ -100,6 +102,7 @@ public class AuditableUtil {
         final Map<Long, AuditEvent> trouble = arrayDesignService.getLastTroubleEvent( ids );
 
         CollectionUtils.forAllDo( valueObjects, new Closure() {
+            @Override
             public void execute( Object vo ) {
                 ArrayDesignValueObject vo2 = ( ArrayDesignValueObject ) vo;
                 AuditEvent event = trouble.get( vo2.getId() );
@@ -122,17 +125,20 @@ public class AuditableUtil {
             return;
         }
 
+        final Collection<Long> untroubled = expressionExperimentService.getUntroubled( EntityUtils.getIds( eevos ) );
+
         Collection<Long> ees = new HashSet<Long>();
         for ( ExpressionExperimentValueObject eevo : eevos ) {
             ees.add( eevo.getId() );
         }
 
         int size = ees.size();
-        final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( ees );
+
         CollectionUtils.filter( eevos, new Predicate() {
+            @Override
             public boolean evaluate( Object e ) {
-                boolean hasTrouble = trouble.get( ( ( ExpressionExperimentValueObject ) e ).getId() ) != null;
-                return !hasTrouble;
+                boolean ok = untroubled.contains( ( ( ExpressionExperimentValueObject ) e ).getId() );
+                return ok;
             }
         } );
         int newSize = ees.size();

@@ -37,3 +37,4 @@ ubic.GEOMMTx.mappers.BirnLexMapper.mappings
 terracotta
 tc-config.xml
 ${null}
+ontology.index.dir

@@ -34,7 +34,6 @@ import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.util.AbstractCLI;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * @author pavlidis

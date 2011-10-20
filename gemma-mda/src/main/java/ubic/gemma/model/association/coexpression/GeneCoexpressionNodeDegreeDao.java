@@ -12,21 +12,17 @@
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-package ubic.gemma.model.association.phenotype;
+package ubic.gemma.model.association.coexpression;
 
-import java.util.Collection;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
 
 /**
- * @author nicolas
+ * @author paul
  * @version $Id$
  */
-public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
+public interface GeneCoexpressionNodeDegreeDao extends BaseDao<GeneCoexpressionNodeDegree> {
 
-    /** find Genes link to a phenotype */
-    public Collection<PhenotypeAssociation> findByPhenotype( String phenotypeValue );
+    public void deleteFor( Gene gene );
 
-    /** find all phenotypes */
-    public Collection<CharacteristicValueObject> loadAllPhenotypes();
 }

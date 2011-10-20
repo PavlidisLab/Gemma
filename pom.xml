@@ -1,5 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
@@ -501,8 +500,8 @@
 			</url>
 			<layout>default</layout>
 			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
 			</snapshots>
 			<releases>
 				<enabled>true</enabled>
@@ -513,41 +512,70 @@
 			<id>central</id>
 			<name>central</name>
 			<url>http://repo1.maven.org/maven2/</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 		</repository>
 		<repository>
 			<id>spring</id>
 			<name>Spring Portfolio Repository</name>
 			<url>http://s3.amazonaws.com/maven.springframework.org/release</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 		</repository>
 		<repository>
 			<id>jboss</id>
 			<url>https://repository.jboss.org/nexus/content/repositories/releases</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
 			<releases>
 				<enabled>true</enabled>
 				<updatePolicy>never</updatePolicy>
 			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>never</updatePolicy>
-			</snapshots>
 		</repository>
 		<repository>
 			<id>mvnrepository.com</id>
 			<url>http://mvnrepository.com/artifact</url> <!-- quartz 1.6.5... -->
-		</repository>
-		<repository>
-			<id>terracotta-releases</id>
-			<url>http://www.terracotta.org/download/reflector/releases</url>
+			<layout>default</layout>
+			<snapshots>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
+			</snapshots>
 			<releases>
 				<enabled>true</enabled>
 				<updatePolicy>never</updatePolicy>
 			</releases>
+		</repository>
+		<repository>
+			<id>terracotta-releases</id>
+			<url>http://www.terracotta.org/download/reflector/releases</url>
+			<layout>default</layout>
 			<snapshots>
 				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
 			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 		</repository>
-		<!-- <repository> <id>sonatype-sourceforge</id> <url>http://oss.sonatype.org/content/repositories/sourceforge-releases</url> 
-			</repository> -->
+		<!-- <repository> <id>sonatype-sourceforge</id> <url>http://oss.sonatype.org/content/repositories/sourceforge-releases</url> </repository> -->
 
 	</repositories>
 	<pluginRepositories>
@@ -555,26 +583,29 @@
 			<id>apache.plugin.snapshots</id>
 			<name>Apache Development Repository</name>
 			<url>http://cvs.apache.org/maven-snapshot-repository</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
+			<layout>default</layout>
 			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
 			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 		</pluginRepository>
 		<pluginRepository>
 			<id>mojo</id>
 			<name>Mojo</name>
 			<url>http://snapshots.maven.codehaus.org/maven2/</url>
 			<layout>default</layout>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
 			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
+				<enabled>false</enabled>
+				<updatePolicy>never</updatePolicy>
 			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>never</updatePolicy>
+			</releases>
 		</pluginRepository>
 		<pluginRepository>
 			<id>pavlab</id>

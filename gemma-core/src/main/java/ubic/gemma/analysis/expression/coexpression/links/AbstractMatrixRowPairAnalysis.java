@@ -106,6 +106,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * @return cern.colt.list.DoubleArrayList
      * @todo - put this somewhere more generically useful!
      */
+    @Override
     public DoubleArrayList getHistogramArrayList() {
         DoubleArrayList r = new DoubleArrayList( fastHistogram.length );
         for ( int i = 0; i < fastHistogram.length; i++ ) {
@@ -119,6 +120,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * 
      * @return cern.colt.list.ObjectArrayList
      */
+    @Override
     public ObjectArrayList getKeepers() {
         return keepers;
     }
@@ -130,6 +132,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         return results;
     }
 
+    @Override
     public double getNumUniqueGenes() {
         return numUniqueGenes;
     }
@@ -138,10 +141,12 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * @param rowEl
      * @return
      */
+    @Override
     public CompositeSequence getProbeForRow( ExpressionDataMatrixRowElement rowEl ) {
         return this.rowMapCache.get( rowEl );
     }
 
+    @Override
     public double getScoreInBin( int i ) {
         // bin 2048 = correlation of 1.0 2048/1024 - 1 = 1
         // bin 1024 = correlation of 0.0 1024/1024 - 1 = 0
@@ -163,8 +168,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
         if ( !histogramIsFilled ) {
             throw new IllegalStateException( "Don't call kurtosis when histogram isn't filled!" );
         }
-
-        double sumfour = 0.0;
         double sumsquare = 0.0;
         for ( int i = 0, n = results.rows(); i < n; i++ ) {
             for ( int j = i + 1, m = results.columns(); j < m; j++ ) {
@@ -176,7 +179,6 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
                     /** @todo calculate the value */
                 }
                 double deviation = r - globalMean;
-                sumfour += Math.pow( deviation, 4.0 );
                 sumsquare += deviation * deviation;
             }
         }
@@ -195,6 +197,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * @return The number of values stored in the correlation matrix.
      */
+    @Override
     public int numCached() {
         return results.cardinality();
     }
@@ -204,6 +207,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * 
      * @see ubic.gemma.analysis.expression.coexpression.links.MatrixRowPairAnalysis#size()
      */
+    @Override
     public int size() {
         return this.dataMatrix.rows();
     }
@@ -211,6 +215,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * 
      */
+    @Override
     public void setDuplicateMap( Map<CompositeSequence, Collection<Collection<Gene>>> probeToGeneMap ) {
         this.probeToGeneMap = probeToGeneMap;
         init();
@@ -221,6 +226,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * 
      * @param k double
      */
+    @Override
     public void setLowerTailThreshold( double k ) {
         lowerTailThreshold = k;
     }
@@ -229,6 +235,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * Set the number of mutually present values in a pairwise comparison that must be attained before the correlation
      * is stored. Note that you cannot set the value less than HARD_LIMIT_MIN_NUM_USED.
      */
+    @Override
     public void setMinNumpresent( int minSamplesToKeepCorrelation ) {
         if ( minSamplesToKeepCorrelation > HARD_LIMIT_MIN_NUM_USED ) this.minNumUsed = minSamplesToKeepCorrelation;
     }
@@ -236,6 +243,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * @param omitNegativeCorrelationLinks the omitNegativeCorrelationLinks to set
      */
+    @Override
     public void setOmitNegativeCorrelationLinks( boolean omitNegativeCorrelationLinks ) {
         this.omitNegativeCorrelationLinks = omitNegativeCorrelationLinks;
     }
@@ -243,6 +251,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * @param k double
      */
+    @Override
     public void setPValueThreshold( double k ) {
         if ( k < 0.0 || k > 1.0 ) {
             throw new IllegalArgumentException(
@@ -256,6 +265,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * 
      * @param k double
      */
+    @Override
     public void setUpperTailThreshold( double k ) {
         upperTailThreshold = k;
     }
@@ -266,6 +276,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
      * 
      * @param k boolean
      */
+    @Override
     public void setUseAbsoluteValue( boolean k ) {
         useAbsoluteValue = k;
     }
@@ -273,6 +284,7 @@ public abstract class AbstractMatrixRowPairAnalysis implements MatrixRowPairAnal
     /**
      * @param usePvalueThreshold the usePvalueThreshold to set
      */
+    @Override
     public void setUsePvalueThreshold( boolean usePvalueThreshold ) {
         this.usePvalueThreshold = usePvalueThreshold;
     }

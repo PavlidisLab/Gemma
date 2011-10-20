@@ -33,12 +33,28 @@ insert into AUDIT_TRAIL VALUES (12);
 insert into AUDIT_TRAIL VALUES (13);  
 insert into AUDIT_TRAIL VALUES (14);
 
+set @n:=now();
+
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (1,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (2,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (3,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (4,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (5,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (6,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (7,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (8,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (9,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (10,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (11,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (12,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (13,@n,0,0);
+insert into STATUS (ID, CREATE_DATE, TROUBLED, VALIDATED) VALUES (14,@n,0,0);
 
 -- username=administrator: id = 1, password = 'administrator', audit trail #1 using salt=username ('administrator')
-insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values (1, "UserImpl", "administrator",  "", "administrator", "b7338dcc17d6b6c199a75540aab6d0506567b980", 1, 1, "gemma@chibi.ubc.ca", "hint");
+insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT, STATUS_FK) values (1, "UserImpl", "administrator",  "", "administrator", "b7338dcc17d6b6c199a75540aab6d0506567b980", 1, 1, "gemma@chibi.ubc.ca", "hint",1);
 
 -- initialize the audit trails 
-set @n:=now();
+
 insert into AUDIT_EVENT VALUES (1, @n, 'C', 'From init script', '', 1, NULL, 1); 
 insert into AUDIT_EVENT VALUES (2, @n, 'C', 'From init script', '', 1, NULL, 2); 
 insert into AUDIT_EVENT VALUES (3, @n, 'C', 'From init script', '', 1, NULL, 3);  
@@ -56,12 +72,12 @@ insert into AUDIT_EVENT VALUES (14, @n, 'C', 'From init script', '', 1, NULL, 14
 
 
 -- username=gemmaAgent: id = 2, password = 'gemmaAgent', audit trail #2, using salt={username}
-insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT) values (2, "UserImpl", "gemmaAgent",  "", "gemmaAgent", "a99c3785155e31ac8f9273537f14e9304cc22f20", 1, 2, "gemma@chibi.ubc.ca", "hint");
+insert into CONTACT (ID, CLASS, NAME, LAST_NAME, USER_NAME, PASSWORD, ENABLED, AUDIT_TRAIL_FK, EMAIL, PASSWORD_HINT, STATUS_FK) values (2, "UserImpl", "gemmaAgent",  "", "gemmaAgent", "a99c3785155e31ac8f9273537f14e9304cc22f20", 1, 2, "gemma@chibi.ubc.ca", "hint",2);
 
 -- Note that 'Administrators' is a constant set in AuthorityConstants.
-insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (1, "Administrators", "Users with administrative rights", 3);
-insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (2, "Users", "Default group for all authenticated users", 4);
-insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK) VALUES (3, "Agents", "For 'autonomous' agents that run within the server context, such as scheduled tasks.", 5);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK, STATUS_FK) VALUES (1, "Administrators", "Users with administrative rights", 3,3);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK, STATUS_FK) VALUES (2, "Users", "Default group for all authenticated users", 4,4);
+insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK, STATUS_FK) VALUES (3, "Agents", "For 'autonomous' agents that run within the server context, such as scheduled tasks.", 5,5);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (1, "ADMIN", 1);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (2, "USER", 2);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (3, "AGENT", 3);
@@ -84,15 +100,15 @@ insert into TAXON (SCIENTIFIC_NAME,COMMON_NAME,NCBI_ID,IS_SPECIES,IS_GENES_USABL
 
 
 -- external databases
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION, WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/", 6, "LITERATURE");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("GO", "Gene Ontology database", "http://www.godatabase.org/dev/database/", "http://archive.godatabase.org", 7, "ONTOLOGY");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("GEO", "Gene Expression Omnibus", "http://www.ncbi.nlm.nih.gov/geo/", "ftp://ftp.ncbi.nih.gov/pub/geo/DATA", 8, "EXPRESSION");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("ArrayExpress", "EBI ArrayExpress", "http://www.ebi.ac.uk/arrayexpress/", "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/", 9, "EXPRESSION");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("Genbank", "NCBI Genbank", "http://www.ncbi.nlm.nih.gov/Genbank/index.html", "ftp://ftp.ncbi.nih.gov/genbank/", 10, "SEQUENCE");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("Entrez Gene", "NCBI Gene database", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene", "ftp://ftp.ncbi.nih.gov/gene/", 11, "SEQUENCE");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("Ensembl", "EMBL - EBI/Sanger Institute genome annotations", "http://www.ensembl.org/", "ftp://ftp.ensembl.org/pub/", 12, "GENOME");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("OBO_REL", "Open Biomedical Ontologies Relationships", "http://www.obofoundry.org/ro/", "", 13, "ONTOLOGY");
-insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE) values ("STRING", "STRING - Known and Predicted Protein-Protein Interactions", "http://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifiers=", "", 14, "PROTEIN");
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION, WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("PubMed", "PubMed database from NCBI", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=PubMed", "ftp://ftp.ncbi.nlm.nih.gov/pubmed/", 6, "LITERATURE", 6);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("GO", "Gene Ontology database", "http://www.godatabase.org/dev/database/", "http://archive.godatabase.org", 7, "ONTOLOGY", 7);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("GEO", "Gene Expression Omnibus", "http://www.ncbi.nlm.nih.gov/geo/", "ftp://ftp.ncbi.nih.gov/pub/geo/DATA", 8, "EXPRESSION", 8);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("ArrayExpress", "EBI ArrayExpress", "http://www.ebi.ac.uk/arrayexpress/", "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/", 9, "EXPRESSION", 9);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("Genbank", "NCBI Genbank", "http://www.ncbi.nlm.nih.gov/Genbank/index.html", "ftp://ftp.ncbi.nih.gov/genbank/", 10, "SEQUENCE", 10);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("Entrez Gene", "NCBI Gene database", "http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene", "ftp://ftp.ncbi.nih.gov/gene/", 11, "SEQUENCE", 11);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("Ensembl", "EMBL - EBI/Sanger Institute genome annotations", "http://www.ensembl.org/", "ftp://ftp.ensembl.org/pub/", 12, "GENOME", 12);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("OBO_REL", "Open Biomedical Ontologies Relationships", "http://www.obofoundry.org/ro/", "", 13, "ONTOLOGY", 13);
+insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL_FK, TYPE, STATUS_FK) values ("STRING", "STRING - Known and Predicted Protein-Protein Interactions", "http://string-db.org/version_8_2/newstring_cgi/show_network_section.pl?identifiers=", "", 14, "PROTEIN", 14);
 
 -- denormalized table joining genes and compositeSequences
 create table GENE2CS (

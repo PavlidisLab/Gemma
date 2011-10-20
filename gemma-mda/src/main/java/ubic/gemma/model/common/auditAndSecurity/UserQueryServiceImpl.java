@@ -22,6 +22,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 import java.sql.Date;
 import java.util.Collection;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class UserQueryServiceImpl implements UserQueryService {
 
+    @Autowired
     UserQueryDao userQueryDao;
 
     public UserQuery create( UserQuery userQuery ) {

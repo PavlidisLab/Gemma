@@ -113,8 +113,9 @@ abstract public class CommonPersister extends AbstractPersister {
      * 
      * @see ubic.gemma.loader.util.persister.Persister#persist(java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
+    @Override
     public Object persist( Object entity ) {
+
         if ( entity instanceof AuditTrail ) {
             return persistAuditTrail( ( AuditTrail ) entity );
         } else if ( entity instanceof User ) {
@@ -139,13 +140,14 @@ abstract public class CommonPersister extends AbstractPersister {
         } else if ( entity instanceof Characteristic ) {
             return null; // cascade
         } else if ( entity instanceof Collection ) {
-            return super.persist( ( Collection ) entity );
+            return super.persist( ( Collection<?> ) entity );
         } else if ( entity instanceof BibliographicReference ) {
             return persistBibliographicReference( ( BibliographicReference ) entity );
         }
         throw new UnsupportedOperationException( "Don't know how to persist a " + entity.getClass().getName() );
     }
 
+    @Override
     public Object persistOrUpdate( Object entity ) {
         if ( entity == null ) return null;
         throw new UnsupportedOperationException( "Don't know how to persistOrUpdate a " + entity.getClass().getName() );
@@ -319,7 +321,7 @@ abstract public class CommonPersister extends AbstractPersister {
             event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
         }
 
-        // events are persisted by composition.
+        // events are persisted by composition. 
         return auditTrailService.create( entity );
     }
 

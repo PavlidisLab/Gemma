@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.SequenceWriter;
 import ubic.gemma.loader.util.parser.BasicLineParser;
@@ -50,7 +48,6 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
  * @version $Id$
  */
 public class BlatResultParser extends BasicLineParser<BlatResult> {
-    protected static final Log log = LogFactory.getLog( BlatResultParser.class );
     private static final int NUM_BLAT_FIELDS = 21;
 
     private static final int MATCHES_FIELD = 0;
@@ -102,6 +99,7 @@ public class BlatResultParser extends BasicLineParser<BlatResult> {
      * 
      * @see baseCode.io.reader.BasicParser#parseOneLine(java.lang.String)
      */
+    @Override
     public BlatResult parseOneLine( String line ) {
 
         if ( StringUtils.isBlank( line ) ) return null;

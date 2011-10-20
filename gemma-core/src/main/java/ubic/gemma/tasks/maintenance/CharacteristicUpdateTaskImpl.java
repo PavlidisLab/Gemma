@@ -278,9 +278,9 @@ public class CharacteristicUpdateTaskImpl implements CharacteristicUpdateTask {
                 addToParent( vcFromDatabase, parent );
                 cFromDatabase = vcFromDatabase;
             } else if ( vcFromClient == null && vcFromDatabase != null ) {
-                cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance( vcFromDatabase
-                        .getValue(), vcFromDatabase.getCategory(), null, vcFromDatabase.getName(), vcFromDatabase
-                        .getDescription() // don't copy AuditTrail to avoid
+                cFromDatabase = characteristicService.create( Characteristic.Factory.newInstance(
+                        vcFromDatabase.getValue(), vcFromDatabase.getCategory(), null, null, vcFromDatabase.getName(),
+                        vcFromDatabase.getDescription() // don't copy AuditTrail or Status to avoid
                         // cascade
                         // error... vcFromDatabase.getAuditTrail()
                         , vcFromDatabase.getEvidenceCode() ) );

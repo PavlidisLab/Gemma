@@ -70,6 +70,8 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
         assertNotNull( ev.getId() );
         AuditTrail auditTrail = auditable.getAuditTrail();
         assertNotNull( auditTrail );
+        assertNotNull( auditable.getStatus() );
+        assertNotNull( auditable.getStatus().getLastUpdateDate() );
         assertEquals( size + 1, auditTrail.getEvents().size() );
         assertEquals( ArrayDesignGeneMappingEventImpl.class, ( ( List<AuditEvent> ) auditTrail.getEvents() ).get( size )
                 .getEventType().getClass() );

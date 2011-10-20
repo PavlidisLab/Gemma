@@ -56,7 +56,7 @@ public class PhenotypeSearchController extends BaseController {
 
     public JsonReaderResponse<CharacteristicValueObject> findAllPhenotypes() {
     	return new JsonReaderResponse<CharacteristicValueObject>(
-    			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.findAllPhenotypes()));
+    			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.loadAllPhenotypes()));
     }
 }
 

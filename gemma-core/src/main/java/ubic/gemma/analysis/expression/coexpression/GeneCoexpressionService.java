@@ -53,6 +53,7 @@ import ubic.gemma.model.association.TfGeneAssociation;
 import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -281,8 +282,9 @@ public class GeneCoexpressionService {
 
         if ( !allSupportingDatasets.isEmpty() ) {
 
-            Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( geneService
-                    .loadMultiple( allUsedGenes ), expressionExperimentService.loadMultiple( allSupportingDatasets ) );
+            Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree(
+                    geneService.loadMultiple( allUsedGenes ),
+                    expressionExperimentService.loadMultiple( allSupportingDatasets ) );
 
             Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
 
@@ -350,7 +352,7 @@ public class GeneCoexpressionService {
         Collection<Gene> foundGenes = new HashSet<Gene>();
         Collection<Gene> allUsedGenes = new HashSet<Gene>();
         allUsedGenes.addAll( queryGenes );
-        Collection<Long> allSupportingDatasets = new HashSet<Long>();
+
         for ( Gene queryGene : queryGenes ) {
 
             // Note we don't check if the gene taxon matches the experiments ...
@@ -409,8 +411,6 @@ public class GeneCoexpressionService {
                 cvo.setSupportingExperiments( supportingDatasets );
                 int numSupportingDatasets = supportingDatasets.size();
 
-                allSupportingDatasets.addAll( supportingDatasets );
-
                 /*
                  * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
                  * full set of data sets that were used in the original analysis.
@@ -440,7 +440,7 @@ public class GeneCoexpressionService {
         }
         allUsedGenes.addAll( foundGenes );
 
-        populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
+        populateNodeDegree( ecvos, allUsedGenes, eeIdsToUse );
 
         geneService.thawLite( foundGenes );
         if ( timer.getTime() > 1000 ) {
@@ -529,10 +529,10 @@ public class GeneCoexpressionService {
              * Fill in the support based on 'non-specific' probes.
              */
             if ( !cvo.getExpressionExperiments().isEmpty() ) {
-                ecvo.setNonSpecPosSupp( getNonSpecificLinkCount( cvo.getEEContributing2PositiveLinks(), cvo
-                        .getNonspecificEE() ) );
-                ecvo.setNonSpecNegSupp( getNonSpecificLinkCount( cvo.getEEContributing2NegativeLinks(), cvo
-                        .getNonspecificEE() ) );
+                ecvo.setNonSpecPosSupp( getNonSpecificLinkCount( cvo.getEEContributing2PositiveLinks(),
+                        cvo.getNonspecificEE() ) );
+                ecvo.setNonSpecNegSupp( getNonSpecificLinkCount( cvo.getEEContributing2NegativeLinks(),
+                        cvo.getNonspecificEE() ) );
             }
 
             ecvo.setNumTestedIn( cvo.getNumDatasetsTestedIn() );
@@ -791,9 +791,7 @@ public class GeneCoexpressionService {
         // populate the value objects.
         StopWatch timer = new StopWatch();
         Collection<Gene> allUsedGenes = new HashSet<Gene>();
-        
-        Collection<Long> allSupportingDatasets = new HashSet<Long>();
-        
+
         for ( Gene queryGene : queryGenes ) {
             timer.start();
 
@@ -808,12 +806,9 @@ public class GeneCoexpressionService {
              * For summary statistics
              */
             CountingMap<Long> supportCount = new CountingMap<Long>();
-           
+
             Collection<Long> allDatasetsWithSpecificProbes = new HashSet<Long>();
             Collection<Long> allTestedDataSets = new HashSet<Long>();
-
-            int linksMetPositiveStringency = 0;
-            int linksMetNegativeStringency = 0;
 
             Collection<Gene2GeneCoexpression> g2gs = gg2gs.get( queryGene );
 
@@ -924,13 +919,11 @@ public class GeneCoexpressionService {
                     if ( numSupportingDatasets != supportFromSpecificProbes )
                         cvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
 
-                    ++linksMetNegativeStringency;
                 } else {
                     cvo.setPosSupp( numSupportingDatasets );
                     if ( numSupportingDatasets != supportFromSpecificProbes )
                         cvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
                     cvo.setNegSupp( 0 );
-                    ++linksMetPositiveStringency;
                 }
                 cvo.setSupportKey( Math.max( cvo.getPosSupp(), cvo.getNegSupp() ) );
                 cvo.setNumTestedIn( numTestingDatasets );
@@ -951,12 +944,9 @@ public class GeneCoexpressionService {
 
                 seen.add( g2g );
 
-                allSupportingDatasets.addAll( supportingDatasets );
                 allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
             }
-
-            
 
             if ( timer.getTime() > 100 ) {
                 log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
@@ -975,8 +965,8 @@ public class GeneCoexpressionService {
             }
             timer.reset();
         } // Over querygenes
-        
-        populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
+
+        populateNodeDegree( ecvos, allUsedGenes, filteredEeIds );
         return ecvos;
 
     }
@@ -1203,7 +1193,7 @@ public class GeneCoexpressionService {
 
             }
 
-            populateNodeDegree( ecvos, allUsedGenes, allSupportingDatasets );
+            populateNodeDegree( ecvos, allUsedGenes, allTestedDataSets );
 
             if ( timer.getTime() > 1000 ) {
                 log.info( "Postprocess " + g2gs.size() + " results for " + queryGene.getOfficialSymbol() + "Phase II: "
@@ -1261,27 +1251,50 @@ public class GeneCoexpressionService {
     /**
      * @param ecvos
      * @param allUsedGenes
-     * @param allSupportingDatasets
+     * @param ees
      */
     private void populateNodeDegree( List<CoexpressionValueObjectExt> ecvos, Collection<Gene> allUsedGenes,
-            Collection<Long> allSupportingDatasets ) {
+            Collection<Long> ees ) {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        if ( !allSupportingDatasets.isEmpty() ) {
-            Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( allUsedGenes,
-                    expressionExperimentService.loadMultiple( allSupportingDatasets ) );
-            Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
-            for ( CoexpressionValueObjectExt coexp : ecvos ) {
-                coexp.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getQueryGene().getId() ) ) );
-                coexp.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getFoundGene().getId() ) ) );
+        Map<Gene, GeneCoexpressionNodeDegree> geneNodeDegrees = geneService
+                .getGeneCoexpressionNodeDegree( allUsedGenes );
+
+        for ( CoexpressionValueObjectExt coexp : ecvos ) {
+
+            GeneCoexpressionNodeDegree queryGeneNodeDegree = geneNodeDegrees.get( coexp.getQueryGene() );
+            if ( queryGeneNodeDegree == null ) {
+                coexp.setQueryGeneNodeDegree( -1.0 );
+            } else {
+                coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getPermille() / 1000.00 );
             }
-        } else {
-            for ( CoexpressionValueObjectExt coexp : ecvos ) {
-                coexp.setQueryGeneNodeDegree( 0d );
-                coexp.setFoundGeneNodeDegree( 0d );
+
+            GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get( coexp.getFoundGene() );
+            if ( foundGeneNodeDegree == null ) {
+                coexp.setFoundGeneNodeDegree( -1.0 );
+            } else {
+                coexp.setFoundGeneNodeDegree( foundGeneNodeDegree.getPermille() / 1000.00 );
             }
         }
+
+        /*
+         * Old, slower way
+         */
+        // if ( !ees.isEmpty() ) {
+        // Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree( allUsedGenes,
+        // expressionExperimentService.loadMultiple( ees ) );
+        // Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
+        // for ( CoexpressionValueObjectExt coexp : ecvos ) {
+        // coexp.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getQueryGene().getId() ) ) );
+        // coexp.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( coexp.getFoundGene().getId() ) ) );
+        // }
+        // } else {
+        // for ( CoexpressionValueObjectExt coexp : ecvos ) {
+        // coexp.setQueryGeneNodeDegree( 0d );
+        // coexp.setFoundGeneNodeDegree( 0d );
+        // }
+        // }
 
         if ( timer.getTime() > 10 ) log.info( "Node degree population:" + timer.getTime() + "ms" );
     }
@@ -1370,27 +1383,6 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * Ignore experiments that don't represent the genes we're querying for.
-     * 
-     * @param genes
-     * @return
-     */
-    private Collection<BioAssaySet> getPossibleExpressionExperiments( Collection<Gene> genes ) {
-        Collection<BioAssaySet> result = new HashSet<BioAssaySet>();
-        if ( genes.isEmpty() ) {
-            return result;
-        }
-
-        for ( Gene g : genes ) {
-            result.addAll( expressionExperimentService.findByGene( g ) );
-        }
-        if ( result.size() == 0 ) {
-            log.warn( "No datasets for gene. If this is unexpected, check that the GENE2CS table is up to date." );
-        }
-        return result;
-    }
-
-    /**
      * Retrieve all gene2gene coexpression information for the genes at the specified stringency, using methods that
      * don't filter by experiment.
      * 
@@ -1469,6 +1461,7 @@ public class GeneCoexpressionService {
                 expressionExperimentService.loadValueObjects( filteredIds ) );
 
         Collections.sort( eevos, new Comparator<ExpressionExperimentValueObject>() {
+            @Override
             public int compare( ExpressionExperimentValueObject eevo1, ExpressionExperimentValueObject eevo2 ) {
                 return eevo1.getId().compareTo( eevo2.getId() );
             }
@@ -1545,19 +1538,22 @@ public class GeneCoexpressionService {
             return;
         }
 
-        int size = ees.size();
-        final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( ees );
-        CollectionUtils.filter( ees, new Predicate() {
-            public boolean evaluate( Object id ) {
-                boolean hasTrouble = trouble.containsKey( id );
-                return !hasTrouble;
-            }
-        } );
-        int newSize = ees.size();
-        if ( newSize != size ) {
-            assert newSize < size;
-            log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
-        }
+         ees.retainAll(  expressionExperimentService.getUntroubled( ees ));
+
+        // int size = ees.size();
+        // final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( ees );
+        // CollectionUtils.filter( ees, new Predicate() {
+        // @Override
+        // public boolean evaluate( Object id ) {
+        // boolean hasTrouble = trouble.containsKey( id );
+        // return !hasTrouble;
+        // }
+        // } );
+        // int newSize = ees.size();
+        // if ( newSize != size ) {
+        // assert newSize < size;
+        // log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
+        // }
     }
 
     /**

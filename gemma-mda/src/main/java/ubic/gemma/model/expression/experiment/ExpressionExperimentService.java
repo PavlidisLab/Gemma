@@ -49,7 +49,7 @@ public interface ExpressionExperimentService {
      */
     public java.lang.Integer countAll();
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ExpressionExperiment create( ExpressionExperiment expressionExperiment );
 
     /**
@@ -57,13 +57,13 @@ public interface ExpressionExperimentService {
      * objects may need to be deleted before this can be run (example: analyses involving multiple experiments; these
      * will not be deleted automatically, though this behavior could be changed)
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void delete( ExpressionExperiment expressionExperiment );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment find( ExpressionExperiment expressionExperiment );
 
     /**
@@ -71,34 +71,34 @@ public interface ExpressionExperimentService {
      * @return Expeirments which have this accession. There can be more than one, because one GEO accesssion can result
      *         in multiple experiments in Gemma.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * @param accession
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByAccession( String accession );
 
     /**
      * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByBibliographicReference(
             ubic.gemma.model.common.description.BibliographicReference bibRef );
 
     /**
      * Given a bioMaterial returns an expressionExperiment
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByBioMaterial( ubic.gemma.model.expression.biomaterial.BioMaterial bm );
 
     /**
      * @param bioMaterials
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByBioMaterials( Collection<BioMaterial> bioMaterials );
 
     /**
@@ -108,35 +108,35 @@ public interface ExpressionExperimentService {
      * @param rank
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene, double rank );
 
     /**
      * @param factorValue
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByFactorValue( FactorValue factorValue );
 
     /**
      * @param factorValues
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByFactorValues( Collection<FactorValue> factorValues );
 
     /**
      * Returns a collection of expression experiments that have an AD that detects the given Gene (ie a probe on the AD
      * hybidizes to the given Gene)
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByGene( ubic.gemma.model.genome.Gene gene );
 
     /**
      * @param investigator
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByInvestigator(
             ubic.gemma.model.common.auditAndSecurity.Contact investigator );
 
@@ -144,27 +144,27 @@ public interface ExpressionExperimentService {
      * @param name
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByName( java.lang.String name );
 
     /**
      * gets all EE that match the given parent Taxon
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByParentTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * @param type
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByQuantitationType( QuantitationType type );
 
     /**
      * @param shortName
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment findByShortName( java.lang.String shortName );
 
     /**
@@ -174,14 +174,14 @@ public interface ExpressionExperimentService {
      * @param taxon
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * @param expressionExperiment
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     public ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
 
     /**
@@ -193,7 +193,7 @@ public interface ExpressionExperimentService {
      * Returns a collection of ArrayDesigns referenced by any of the BioAssays that make up the given
      * ExpressionExperiment.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
     /**
@@ -202,13 +202,13 @@ public interface ExpressionExperimentService {
      * @param expressionExperiment
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<BioAssayDimension> getBioAssayDimensions( ExpressionExperiment expressionExperiment );
 
     /**
      * Counts the number of biomaterials associated with this expression experiment.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Integer getBioMaterialCount( ExpressionExperiment expressionExperiment );
 
     /**
@@ -221,7 +221,7 @@ public interface ExpressionExperimentService {
      * Find vectors constrained to the given quantitation type and design elements. Returns vectors for all experiments
      * the user has access to.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             Collection<CompositeSequence> designElements,
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType );
@@ -229,7 +229,7 @@ public interface ExpressionExperimentService {
     /**
      * Get all the vectors for the given quantitation types.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public Collection<DesignElementDataVector> getDesignElementDataVectors(
             Collection<QuantitationType> quantitationTypes );
 
@@ -238,14 +238,14 @@ public interface ExpressionExperimentService {
      * @param type
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     public Map<ExpressionExperiment, AuditEvent> getLastArrayDesignUpdate(
             Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type );
 
     /**
      * Get the date of the last time any of the array designs associated with this experiment were updated.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public AuditEvent getLastArrayDesignUpdate( ExpressionExperiment expressionExperiment,
             java.lang.Class<? extends AuditEventType> eventType );
 
@@ -274,6 +274,14 @@ public interface ExpressionExperimentService {
     public Map<Long, AuditEvent> getLastTroubleEvent( Collection<Long> ids );
 
     /**
+     * Of the given EE ids, get the ones which are not troubled.
+     * 
+     * @param ids
+     * @return
+     */
+    public Collection<Long> getUntroubled( Collection<Long> ids );
+
+    /**
      * @param ids
      * @return
      */
@@ -283,7 +291,7 @@ public interface ExpressionExperimentService {
      * Function to get a count of expression experiments, grouped by Taxon
      */
     public Map<Taxon, Long> getPerTaxonCount();
-    
+
     /**
      * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials.
@@ -300,20 +308,20 @@ public interface ExpressionExperimentService {
      * Iterates over the quantiation types for a given expression experiment and returns the preferred quantitation
      * types.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<QuantitationType> getPreferredQuantitationType( ExpressionExperiment EE );
 
     /**
      * @param ee
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public Collection<ProcessedExpressionDataVector> getProcessedDataVectors( ExpressionExperiment ee );
 
     /**
      * Counts the number of ProcessedExpressionDataVectors.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Integer getProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment );
 
     /**
@@ -324,14 +332,14 @@ public interface ExpressionExperimentService {
     /**
      * Return all the quantitation types used by the given expression experiment
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment );
 
     /**
      * Get the quantitation types for the expression experiment, for the array design specified. This is really only
      * useful for expression experiments that use more than one array design.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<QuantitationType> getQuantitationTypes( ExpressionExperiment expressionExperiment,
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign );
 
@@ -339,7 +347,7 @@ public interface ExpressionExperimentService {
      * @param expressionExperiments
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments );
 
@@ -351,14 +359,14 @@ public interface ExpressionExperimentService {
      * @param limit
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_DATAVECTOR_COLLECTION_READ" })
     public Collection<DesignElementDataVector> getSamplingOfVectors(
             ubic.gemma.model.common.quantitationtype.QuantitationType quantitationType, java.lang.Integer limit );
 
     /**
      * Return any ExpressionExperimentSubSets this Experiment might have.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
     /**
@@ -367,10 +375,10 @@ public interface ExpressionExperimentService {
     public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long ExpressionExperimentID );
 
     @Monitored
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment load( java.lang.Long id );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadAll();
 
     /**
@@ -380,7 +388,7 @@ public interface ExpressionExperimentService {
      */
     public Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );
 
     /**
@@ -393,7 +401,7 @@ public interface ExpressionExperimentService {
      * 
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_DATA" })
     public Collection<ExpressionExperiment> loadMyExpressionExperiments();
 
     /**
@@ -407,7 +415,7 @@ public interface ExpressionExperimentService {
      * @return
      * @return
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<ExpressionExperiment> loadMySharedExpressionExperiments();
 
     /**
@@ -421,19 +429,19 @@ public interface ExpressionExperimentService {
     /**
      * @param expressionExperiment
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionExperiment thaw( ExpressionExperiment expressionExperiment );
 
     /**
      * Partially thaw the expression experiment given - do not thaw the raw data.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ExpressionExperiment thawLite( ExpressionExperiment expressionExperiment );
 
     /**
      * @param expressionExperiment
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperiment expressionExperiment );
 
     /**
@@ -444,42 +452,40 @@ public interface ExpressionExperimentService {
      * @param limit
      * @return map of EE to last update event date.
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_MAP_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_MAP_READ" })
     public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> idsOfFetched, Integer limit );
 
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadTroubled();
 
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadLackingFactors();
 
-    @Secured( { "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadLackingTags();
 
-
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( Integer start, Integer limit );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
-    
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending, Collection<Long> ids );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
+            boolean descending, Collection<Long> ids );
 
     public Integer count();
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
-
 
 }

@@ -88,6 +88,7 @@ public class PubMedXMLFetcher {
                 try {
                     Thread.sleep( 500 );
                 } catch ( InterruptedException e ) {
+                    // noop
                 }
             }
             if ( results == null || results.size() == 0 ) {

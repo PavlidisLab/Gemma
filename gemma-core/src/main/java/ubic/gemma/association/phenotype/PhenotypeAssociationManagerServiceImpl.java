@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
@@ -22,7 +22,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObje
 import ubic.gemma.ontology.OntologyService;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
-@Service
+@Component
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService {
 
     @Autowired
@@ -44,6 +44,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param evidence The evidence
      * @return The Gene updated with the new evidence and phenotypes
      */
+    @Override
     public GeneEvidencesValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
         // find the gene we wish to add the evidence and phenotype
@@ -64,11 +65,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // convert the valueObject received to the corresponding entity
         PhenotypeAssociation pheAsso = this.phenotypeAssoManagerServiceHelper.valueObject2Entity( evidence );
 
+        pheAsso.setGene( gene ); // Important.
+
+        pheAsso = associationService.create( pheAsso );
+
         // add the entity to the gene
         gene.getPhenotypeAssociations().add( pheAsso );
 
-        // save result
-        this.geneService.update( gene );
+        // save result -- WILL FAIL UNLESS YOU ARE AN ADMINISTRATOR
+        // this.geneService.update( gene );
 
         // return the saved gene result
         return new GeneEvidencesValueObject( gene );
@@ -80,6 +85,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
+    @Override
     public Collection<EvidenceValueObject> findEvidencesByGeneNCBI( String geneNCBI ) {
 
         Gene gene = geneService.findByNCBIId( geneNCBI );
@@ -96,6 +102,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneId The Evidence id
      * @return The Gene we are interested in
      */
+    @Override
     public Collection<EvidenceValueObject> findEvidencesByGeneId( Long geneId ) {
 
         Gene gene = geneService.load( geneId );
@@ -124,6 +131,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param 1 to many phenotypes
      * @return A collection of the genes found
      */
+    @Override
     public Collection<GeneEvidencesValueObject> findCandidateGenes( String... phenotypesValues ) {
 
         if ( phenotypesValues.length == 0 ) {
@@ -133,7 +141,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<GeneEvidencesValueObject> genesVO = new HashSet<GeneEvidencesValueObject>();
 
         // find all the Genes with the first phenotype
-        Collection<Gene> genes = this.associationService.findCandidateGenes( phenotypesValues[0] );
+        Collection<PhenotypeAssociation> pas = this.associationService.findPhenotypeAssociations( phenotypesValues[0] );
+
+        Collection<Gene> genes = new HashSet<Gene>();
+        for ( PhenotypeAssociation pa : pas ) {
+            genes.add( pa.getGene() );
+        }
+
         Collection<GeneEvidencesValueObject> genesWithFirstPhenotype = GeneEvidencesValueObject
                 .convert2GeneEvidencesValueObjects( genes );
 
@@ -202,13 +216,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @return A collection of the phenotypes with the gene occurence
      */
-    public Collection<CharacteristicValueObject> findAllPhenotypes() {
+    @Override
+    public Collection<CharacteristicValueObject> loadAllPhenotypes() {
         // find of all the phenotypes present in Gemma
-        Collection<CharacteristicValueObject> phenotypes = this.associationService.findAllPhenotypes();
+        Collection<CharacteristicValueObject> phenotypes = this.associationService.loadAllPhenotypes();
 
         // for each of them, find the occurence
         for ( CharacteristicValueObject phenotype : phenotypes ) {
-            phenotype.setOccurence( this.associationService.findCandidateGenes( phenotype.getValue() ).size() );
+            phenotype.setOccurence( this.associationService.findPhenotypeAssociations( phenotype.getValue() ).size() );
             // TODO for now lets use lowerCase until we have a tree
             phenotype.setValue( phenotype.getValue().toLowerCase() );
         }
@@ -221,8 +236,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @param id The Evidence database id
      */
-    public void removeEvidence( Long id ) {
-        this.associationService.removePhenotypeAssociation( id );
+    @Override
+    public void remove( Long id ) {
+        PhenotypeAssociation loaded = this.associationService.load( id );
+        if ( loaded != null ) this.associationService.remove( loaded );
     }
 
     /**
@@ -230,14 +247,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @param evidenceValueObject the evidence with modified fields
      */
-    public void modifyEvidence( EvidenceValueObject evidenceValueObject ) {
+    @Override
+    public void update( EvidenceValueObject evidenceValueObject ) {
 
         Long id = evidenceValueObject.getDatabaseId();
 
         if ( evidenceValueObject.getDatabaseId() != null ) {
 
             // load the phenotypeAssociation
-            PhenotypeAssociation phenotypeAssociation = this.associationService.loadEvidence( id );
+            PhenotypeAssociation phenotypeAssociation = this.associationService.load( id );
 
             if ( phenotypeAssociation != null ) {
 
@@ -246,7 +264,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         evidenceValueObject );
 
                 // update changes to database
-                this.associationService.updateEvidence( phenotypeAssociation );
+                this.associationService.update( phenotypeAssociation );
             }
         }
     }
@@ -257,6 +275,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param termUsed is what the user typed
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
+    @Override
     public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery ) {
         return searchOntologyForPhenotype( searchQuery, null );
     }
@@ -268,6 +287,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneId the id of the gene chosen
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
+    @Override
     public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery,
             Long geneId ) {
 
@@ -317,16 +337,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
         // search disease ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+        phenotypes.addAll( PhenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
 
         // search mp ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+        phenotypes.addAll( PhenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 mammalianPhenotypeOntologyService.findTerm( searchQuery ),
                 PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
 
         // search hp ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+        phenotypes.addAll( PhenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 humanPhenotypeOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
 
         // This list will contain exact match found in the Ontology search result
@@ -348,7 +368,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // lets loas all phenotypes presents in the database
-        Collection<CharacteristicValueObject> allPhenotypes = findAllPhenotypes();
+        Collection<CharacteristicValueObject> allPhenotypes = loadAllPhenotypes();
 
         /*
          * for each CharacteristicVO made from the Ontology search lets filter them and add them to a specific list if

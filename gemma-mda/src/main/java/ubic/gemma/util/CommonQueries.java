@@ -53,9 +53,7 @@ public class CommonQueries {
     /**
      * @param ees collection of expression experiments.
      * @return map of array designs to the experiments they were used in.
-     */
-    @SuppressWarnings("unchecked")
-    public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
+     */     public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
             Collection<ExpressionExperiment> ees, Session session ) {
         Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
 
@@ -69,7 +67,7 @@ public class CommonQueries {
         queryObject.setCacheable( true );
         queryObject.setParameterList( "ees", ees );
 
-        List qr = queryObject.list();
+        List<?> qr = queryObject.list();
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
             ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];

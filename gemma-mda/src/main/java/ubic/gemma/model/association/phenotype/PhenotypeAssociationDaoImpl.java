@@ -7,11 +7,11 @@ import org.hibernate.Criteria;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.AbstractDao;
 
@@ -25,24 +25,27 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** find Genes link to a phenotype */
-    @SuppressWarnings("unchecked")
-    public Collection<Gene> findByPhenotype( String phenotypeValue ) {
+    @Override
+    public Collection<PhenotypeAssociation> findByPhenotype( String phenotypeValue ) {
 
-        Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class )
-                .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY ).createCriteria( "phenotypeAssociations" )
-                .createCriteria( "phenotypes" ).add( Restrictions.like( "value", phenotypeValue ) );
+        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "phenotypes" )
+                .add( Restrictions.like( "value", phenotypeValue ) );
 
         return geneQueryCriteria.list();
 
     }
 
-    /** find all phenotypes */
-    public Collection<CharacteristicValueObject> findAllPhenotypes() {
+    /**
+     * find all phenotypes
+     */
+    @Override
+    public Collection<CharacteristicValueObject> loadAllPhenotypes() {
 
         Collection<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
         // TODO make hsql query
-        String queryString = "select value,value_uri,category,category_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value";
+        String queryString = "select distinct value,value_uri,category,category_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value";
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );

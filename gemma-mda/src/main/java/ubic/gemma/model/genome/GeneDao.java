@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
@@ -173,6 +174,12 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public java.util.Collection<Gene> findByOfficialName( String queryString, java.lang.String officialName );
 
     /**
+     * @param officialName
+     * @return
+     */
+    public Collection<Gene> findByOfficialNameInexact( String officialName );
+
+    /**
      * 
      */
     public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
@@ -212,12 +219,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * </p>
      */
     public java.util.Collection<Gene> findByOfficialSymbolInexact( String queryString, java.lang.String officialSymbol );
-
-    /**
-     * @param officialName
-     * @return
-     */
-    public Collection<Gene> findByOfficialNameInexact( String officialName );
 
     /**
      * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
@@ -328,6 +329,43 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public java.util.Collection<CompositeSequence> getCompositeSequencesById( long id );
 
     /**
+     * Get precomputed node degree based on all available data sets.
+     * 
+     * @param genes
+     * @return
+     */
+    public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes );
+
+    /**
+     * Get aggregated node degree based on a selected set of data sets. Likely to be slow.
+     * 
+     * @param genes
+     * @param ees
+     * @return
+     */
+    @Deprecated
+    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
+            Collection<? extends BioAssaySet> ees );
+
+    /**
+     * Get precomputed node degree based on all available data sets.
+     * 
+     * @param gene
+     * @return
+     */
+    public GeneCoexpressionNodeDegree getGeneCoexpressionNodeDegree( Gene gene );
+
+    /**
+     * Get node degree information for genes for specified experiments. Likely to be slow, used for populating the data
+     * for the faster methods.
+     * 
+     * @param gene
+     * @param ees
+     * @return
+     */
+    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
+
+    /**
      * <p>
      * returns a collections of genes that match the given taxon
      * </p>
@@ -340,11 +378,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * </p>
      */
     public java.util.Collection<Gene> getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * 
-     */
-    public java.util.Collection<Gene> load( java.util.Collection<Long> ids );
 
     /**
      * <p>
@@ -365,6 +398,12 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
 
     /**
+     * @param ids
+     * @return
+     */
+    public Collection<Gene> loadThawed( Collection<Long> ids );
+
+    /**
      * 
      */
     public Gene thaw( Gene gene );
@@ -381,26 +420,5 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * @see loadThawed, which you should use instead of this method if you know you want to load thawed objects.
      */
     public Collection<Gene> thawLite( java.util.Collection<Gene> genes );
-
-    /**
-     * @param ids
-     * @return
-     */
-    public Collection<Gene> loadThawed( Collection<Long> ids );
-
-    /**
-     * @param genes
-     * @param ees
-     * @return
-     */
-    public Map<Gene, Double> getGeneCoexpressionNodeDegree( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees );
-
-    /**
-     * @param gene
-     * @param ees
-     * @return
-     */
-    public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
 
 }

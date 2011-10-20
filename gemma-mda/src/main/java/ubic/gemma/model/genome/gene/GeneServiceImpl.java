@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
+import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -50,6 +51,7 @@ public class GeneServiceImpl extends GeneServiceBase {
 
     private static Log log = LogFactory.getLog( GeneServiceImpl.class.getName() );
 
+    @Override
     public Collection<Gene> find( PhysicalLocation physicalLocation ) {
         return this.getGeneDao().find( physicalLocation );
     }
@@ -64,8 +66,19 @@ public class GeneServiceImpl extends GeneServiceBase {
         return this.getGeneDao().findByOfficialNameInexact( officialName );
     }
 
+    @Override
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand ) {
         return this.getGeneDao().findNearest( physicalLocation, useStrand );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.gene.GeneService#getGeneCoexpressionNodeDegree(java.util.Collection)
+     */
+    @Override
+    public Map<Gene, GeneCoexpressionNodeDegree> getGeneCoexpressionNodeDegree( Collection<Gene> genes ) {
+        return this.getGeneDao().getGeneCoexpressionNodeDegree( genes );
     }
 
     @Override
@@ -74,6 +87,7 @@ public class GeneServiceImpl extends GeneServiceBase {
         return this.getGeneDao().getGeneCoexpressionNodeDegree( genes, ees );
     }
 
+    @Override
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
         return this.getGeneDao().getGeneCoexpressionNodeDegree( gene, ees );
     }
@@ -83,6 +97,7 @@ public class GeneServiceImpl extends GeneServiceBase {
      * 
      * @see ubic.gemma.model.genome.gene.GeneService#getMaxPhysicalLength(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public PhysicalLocation getMaxPhysicalLength( Gene gene ) {
         if ( gene == null ) return null;
 
@@ -180,6 +195,7 @@ public class GeneServiceImpl extends GeneServiceBase {
         return GeneValueObject.convert2ValueObjects( g );
     }
 
+    @Override
     public Gene thawLite( Gene gene ) {
         return this.getGeneDao().thawLite( gene );
     }
@@ -194,7 +210,6 @@ public class GeneServiceImpl extends GeneServiceBase {
      * 
      * @see gene.GeneServiceBase#handleCreate(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleCreate( Collection<Gene> genes ) throws Exception {
         return ( Collection<Gene> ) this.getGeneDao().create( genes );
@@ -343,7 +358,6 @@ public class GeneServiceImpl extends GeneServiceBase {
     /**
      * @see gene.GeneServiceBase#handleGetAllGenes()
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleLoadAll() throws Exception {
         return ( Collection<Gene> ) this.getGeneDao().loadAll();
@@ -361,7 +375,7 @@ public class GeneServiceImpl extends GeneServiceBase {
      */
     @Override
     protected Collection<Gene> handleLoadMultiple( Collection<Long> ids ) throws Exception {
-        return this.getGeneDao().load( ids );
+        return ( Collection<Gene> ) this.getGeneDao().load( ids );
     }
 
     @Override

@@ -30,7 +30,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.Session;
-
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
 import org.hibernate.persister.entity.EntityPersister;
@@ -51,6 +50,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailDao;
+import ubic.gemma.model.common.auditAndSecurity.StatusDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.auditAndSecurity.UserDao;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -88,6 +88,9 @@ public class AuditAdvice extends HibernateDaoSupport {
 
     @Autowired
     UserManager userManager;
+
+    @Autowired
+    StatusDao statusDao;
 
     private boolean AUDIT_CREATE = true;
 
@@ -176,6 +179,7 @@ public class AuditAdvice extends HibernateDaoSupport {
         if ( d == null || d.getId() == null ) return;
 
         AuditTrail at = addAuditTrailIfNeeded( d );
+        addStatusIfNeeded( d );
 
         assert at != null;
 
@@ -203,6 +207,15 @@ public class AuditAdvice extends HibernateDaoSupport {
             persistAndLogAuditEvent( d, user, at.getLast().getNote() );
         } catch ( UsernameNotFoundException e ) {
             log.warn( "No user, cannot add 'create' event" );
+        }
+
+    }
+
+    private void addStatusIfNeeded( Auditable d ) {
+        if ( d.getStatus() == null ) {
+            if ( log.isDebugEnabled() ) log.debug( "Adding status" );
+            statusDao.initializeStatus( d );
+            assert d.getStatus() != null && d.getStatus().getId() != null;
         }
 
     }
@@ -238,9 +251,14 @@ public class AuditAdvice extends HibernateDaoSupport {
             log.warn( "No create event for update method call on " + auditable + ", performing 'create' instead" );
             addCreateAuditEvent( auditable, " - Event added on update of existing object." );
         } else {
+            /*
+             * FIXME only save an update if the event has a note or is otherwise 'distinctive' ...
+             */
+
             User user = getCurrentUser();
             at.update( getUpdateEventNote( auditable ), user );
             persistAndLogAuditEvent( auditable, user, at.getLast().getNote() );
+            updateStatus( auditable );
         }
     }
 
@@ -336,6 +354,10 @@ public class AuditAdvice extends HibernateDaoSupport {
         } else {
             log.info( "NULL user: Cannot update the audit trail with a null user" );
         }
+    }
+
+    private void updateStatus( Auditable d ) {
+        statusDao.update( d );
     }
 
     /**

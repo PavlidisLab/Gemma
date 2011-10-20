@@ -62,28 +62,37 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     // private String toUseAnalysisName;
     private boolean knownGenesOnly = true;
     private boolean useDB = true;
+    private boolean nodeDegreeOnly = false;
 
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
         super.buildOptions();
 
-        Option geneFileOption = OptionBuilder.hasArg().withArgName( "Gene List File Name" ).withDescription(
-                "A text file that contains a list of gene symbols, with one gene symbol on each line" ).withLongOpt(
-                "geneFile" ).create( 'g' );
+        Option geneFileOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Gene List File Name" )
+                .withDescription( "A text file that contains a list of gene symbols, with one gene symbol on each line" )
+                .withLongOpt( "geneFile" ).create( 'g' );
 
-        Option stringencyOption = OptionBuilder.hasArg().withArgName( "stringency" ).withDescription(
-                "The stringency value: Defaults to " + DEFAULT_STRINGINCY ).withLongOpt( "stringency" ).create( 's' );
+        Option stringencyOption = OptionBuilder.hasArg().withArgName( "stringency" )
+                .withDescription( "The stringency value: Defaults to " + DEFAULT_STRINGINCY )
+                .withLongOpt( "stringency" ).create( 's' );
 
         Option allGenesOption = OptionBuilder.withDescription( "Run on all genes, including predicted and PARs" )
                 .create( ALLGENES_OPTION );
 
         Option noDBOption = OptionBuilder.withDescription( "Do not persist (print to stdout)" ).create( "nodb" );
 
+        Option nodeDegreeOnlyOption = OptionBuilder.withDescription( "Only populate the node degree information" )
+                .create( "nodes" );
+
         addOption( noDBOption );
         addOption( geneFileOption );
         addOption( stringencyOption );
         addOption( allGenesOption );
+
+        addOption( nodeDegreeOnlyOption );
 
     }
 
@@ -115,9 +124,14 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
 
         log.info( "Using " + this.expressionExperiments.size() + " Expression Experiments." );
         ( ( Probe2ProbeCoexpressionCache ) this.getBean( "probe2ProbeCoexpressionCache" ) ).setEnabled( false );
-        geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly,
-                analysisName, useDB );
 
+        if ( this.nodeDegreeOnly ) {
+            geneVoteAnalyzer.nodeDegreeAnalysis( expressionExperiments, toUseGenes, useDB );
+        } else {
+
+            geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly,
+                    analysisName, useDB );
+        }
         return null;
     }
 
@@ -132,6 +146,10 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         if ( this.hasOption( "nodb" ) ) {
             log.info( "Skipping database persisting of results" );
             this.useDB = false;
+        }
+
+        if ( this.hasOption( "nodes" ) ) {
+            this.nodeDegreeOnly = true;
         }
 
         if ( this.hasOption( 'g' ) ) {

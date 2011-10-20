@@ -30,8 +30,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -79,8 +77,6 @@ import ubic.gemma.web.view.TextView;
 @Controller
 @RequestMapping("/gene")
 public class GeneController extends BaseController {
-
-    private static Log log = LogFactory.getLog( GeneController.class );
 
     @Autowired
     private AllenBrainAtlasService allenBrainAtlasService = null;
@@ -228,7 +224,8 @@ public class GeneController extends BaseController {
     @RequestMapping(value = "/showGene.html", method = RequestMethod.GET)
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
-        if ( request.getParameter( "id" ) == null ) {
+        String idString = request.getParameter( "id" );
+        if ( idString == null ) {
             addMessage( request, "object.notfound", new Object[] { "Gene" } );
             return new ModelAndView( "index" );
         }
@@ -240,9 +237,10 @@ public class GeneController extends BaseController {
         Gene gene = null;
 
         try {
-            id = Long.parseLong( request.getParameter( "id" ) );
+            id = Long.parseLong( idString );
+            assert id != null;
             gene = geneService.load( id );
-            if ( id == null || gene == null ) {
+            if ( gene == null ) {
                 addMessage( request, "object.notfound", new Object[] { "Gene " + id } );
                 return new ModelAndView( "index" );
             }
@@ -369,37 +367,37 @@ public class GeneController extends BaseController {
         }
     }
 
-    /**
-     * @param gene
-     * @param mav
-     */
-    private void getAllenBrainImages( Gene gene, ModelAndView mav ) {
-        final Taxon mouse = this.taxonService.findByCommonName( "mouse" );
-        Gene mouseGene = gene;
-        if ( !gene.getTaxon().equals( mouse ) ) {
-            mouseGene = this.homologeneService.getHomologue( gene, mouse );
-        }
-
-        if ( mouseGene != null ) {
-            Collection<ImageSeries> imageSeries = null;
-
-            try {
-                imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
-                String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
-
-                Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
-
-                if ( !representativeImages.isEmpty() ) {
-                    mav.addObject( "abaImages", representativeImages );
-                    mav.addObject( "abaGeneUrl", abaGeneUrl );
-                    mav.addObject( "homologousMouseGene", mouseGene );
-                }
-            } catch ( IOException e ) {
-                log.warn( "Could not get ABA data: " + e );
-            }
-
-        }
-    }
+    // /**
+    // * @param gene
+    // * @param mav
+    // */
+    // private void getAllenBrainImages( Gene gene, ModelAndView mav ) {
+    // final Taxon mouse = this.taxonService.findByCommonName( "mouse" );
+    // Gene mouseGene = gene;
+    // if ( !gene.getTaxon().equals( mouse ) ) {
+    // mouseGene = this.homologeneService.getHomologue( gene, mouse );
+    // }
+    //
+    // if ( mouseGene != null ) {
+    // Collection<ImageSeries> imageSeries = null;
+    //
+    // try {
+    // imageSeries = allenBrainAtlasService.getRepresentativeSaggitalImages( mouseGene.getOfficialSymbol() );
+    // String abaGeneUrl = allenBrainAtlasService.getGeneUrl( mouseGene.getOfficialSymbol() );
+    //
+    // Collection<Image> representativeImages = allenBrainAtlasService.getImagesFromImageSeries( imageSeries );
+    //
+    // if ( !representativeImages.isEmpty() ) {
+    // mav.addObject( "abaImages", representativeImages );
+    // mav.addObject( "abaGeneUrl", abaGeneUrl );
+    // mav.addObject( "homologousMouseGene", mouseGene );
+    // }
+    // } catch ( IOException e ) {
+    // log.warn( "Could not get ABA data: " + e );
+    // }
+    //
+    // }
+    // }
 
     /**
      * AJAX NOTE: this method updates the value object passed in
@@ -482,19 +480,18 @@ public class GeneController extends BaseController {
             return mav;
         }
         Collection<Gene> genes = new ArrayList<Gene>();
-        if(geneIds != null){
-           for ( Long id : geneIds ) {
-               genes.add( geneService.load( id ) );
-           } 
+        if ( geneIds != null ) {
+            for ( Long id : geneIds ) {
+                genes.add( geneService.load( id ) );
+            }
         }
-        if(geneSetIds != null){
-           for ( Long id : geneSetIds ) {
+        if ( geneSetIds != null ) {
+            for ( Long id : geneSetIds ) {
                 for ( GeneSetMember gsm : geneSetService.load( id ).getMembers() ) {
                     genes.add( gsm.getGene() );
                 }
-            } 
+            }
         }
-        
 
         mav.addObject( "text", format4File( genes, geneSetName ) );
         watch.stop();

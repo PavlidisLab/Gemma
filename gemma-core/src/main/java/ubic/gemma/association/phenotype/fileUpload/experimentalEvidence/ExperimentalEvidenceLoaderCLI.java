@@ -1,3 +1,17 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2011 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ * 
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
+ */
 package ubic.gemma.association.phenotype.fileUpload.experimentalEvidence;
 
 import java.io.BufferedReader;
@@ -29,7 +43,12 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceVa
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
-/** take a tsv file for the CGMS and creates experimental evidences objects */
+/**
+ * take a tsv file for the CGMS and creates experimental evidences objects
+ * 
+ * @version $Id$
+ * @author nicolas
+ */
 public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
     // input file path
@@ -343,10 +362,10 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         if ( ot != null ) {
             lineInfo.getExperimentDesign()[index] = ot.getLabel();
             return ot.getUri();
-        } else {
-            System.out.println( "term not found in obi Ontology : " + search );
-            return null;
         }
+        System.out.println( "term not found in obi Ontology : " + search );
+        return null;
+
     }
 
     /** search term in the obi Ontology */
@@ -362,10 +381,10 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         if ( ot != null ) {
             lineInfo.getExperimentOBI()[index] = ot.getLabel();
             return ot.getUri();
-        } else {
-            System.out.println( "term not found in obi Ontology : " + search );
-            return null;
         }
+        System.out.println( "term not found in obi Ontology : " + search );
+        return null;
+
     }
 
     /** search term in the nifstd Ontology */
@@ -380,10 +399,10 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         if ( ot != null ) {
             lineInfo.getDevelopmentStage()[index] = ot.getLabel();
             return ot.getUri();
-        } else {
-            System.out.println( "term not found in nif Ontology : " + search );
-            return null;
         }
+        System.out.println( "term not found in nif Ontology : " + search );
+        return null;
+
     }
 
     /** search term in the fma Ontology */
@@ -398,10 +417,10 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         if ( ot != null ) {
             lineInfo.getOrganismPart()[index] = ot.getLabel();
             return ot.getUri();
-        } else {
-            System.out.println( "term not found in nif Ontology : " + search );
-            return null;
         }
+        System.out.println( "term not found in nif Ontology : " + search );
+        return null;
+
     }
 
     /** change each line of the file by Ontology terms */
@@ -608,8 +627,8 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
                 System.out.println( "Evidence " + evidenceNumber + " created" );
 
             } catch ( Exception e ) {
-                 System.out.println( "Evidence " + evidenceNumber + " was NOT Created: " + e.getMessage() );
-             //   throw e;
+                System.out.println( "Evidence " + evidenceNumber + " was NOT Created: " + e.getMessage() );
+                // throw e;
             }
             evidenceNumber++;
         }

@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-	<!--
-		$Id$
-	-->
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
-	xmlns:context="http://www.springframework.org/schema/context"
+<!-- $Id$ -->
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
        http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
@@ -17,10 +14,7 @@
 		base-package="ubic.gemma.analysis,ubic.gemma.preprocess,ubic.gemma.association,ubic.gemma.genome.gene.service,ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology,ubic.gemma.annotation,ubic.gemma.job,ubic.gemma.tasks"
 		name-generator="ubic.gemma.util.BeanNameGenerator" />
 
-	<!--
-		see
-		http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings
-	-->
+	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings -->
 	<aop:config>
 		<aop:pointcut id="serviceMethod" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
@@ -120,6 +114,7 @@
 				</value>
 				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml
 				</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Status.hbm.xml</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml
@@ -172,6 +167,8 @@
 				</value>
 				<value>classpath:ubic/gemma/model/association/coexpression/OtherGeneCoExpression.hbm.xml
 				</value>
+				<value>classpath:ubic/gemma/model/association/coexpression/GeneCoexpressionNodeDegree.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/association/GeneHomology.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml
@@ -200,20 +197,19 @@
 				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml</value>
 
 				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
-
 			</list>
 		</property>
 		<property name="hibernateProperties">
 			<props>
 				<prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>
 				<prop key="hibernate.cache.query_cache_factory">org.hibernate.cache.StandardQueryCacheFactory</prop>
-				<!-- <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop>-->
+				<!-- <prop key="hibernate.cache.region.factory_class">net.sf.ehcache.hibernate.EhCacheRegionFactory</prop> -->
 				<prop key="hibernate.max_fetch_depth">${gemma.hibernate.max_fetch_depth}</prop>
 				<prop key="hibernate.jdbc.fetch_size">${gemma.hibernate.jdbc_fetch_size}</prop>
 				<prop key="hibernate.default_batch_fetch_size">${gemma.hibernate.default_fetch_size}</prop>
 				<prop key="hibernate.jdbc.batch_size">${gemma.hibernate.jdbc_batch_size}</prop>
 				<prop key="hibernate.jdbc.batch_versioned_data">true</prop>
-				<!-- <prop key="hibernate.use_streams_for_binary">true</prop>--> <!--  I believe this is ignored unless passed in java -D... -->
+				<!-- <prop key="hibernate.use_streams_for_binary">true</prop> --> <!-- I believe this is ignored unless passed in java -D... -->
 				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
 				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
 				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
@@ -227,13 +223,11 @@
 		</property>
 
 		<!-- We have a annotation-configured ubic.gemma.persistence.ExternalCacheRegionFactory -->
-		<!--	<property name="cacheProvider">
-			<ref bean="externalCacheProvider" />
-		</property>-->
+		<!-- <property name="cacheProvider"> <ref bean="externalCacheProvider" /> </property> -->
 		<property name="cacheRegionFactory">
 			<ref bean="externalCacheRegionFactory" />
 		</property>
-		<!-- 	<property name="cacheRegionFactory" ref="cacheRegionFactory" />-->
+		<!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
 	</bean>
 
 	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">

@@ -18,11 +18,15 @@
  */
 package ubic.gemma.persistence;
 
+import java.util.Date;
+
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.Auditable;
+import ubic.gemma.model.common.auditAndSecurity.Status;
+import ubic.gemma.model.common.auditAndSecurity.StatusService;
 
 /**
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
@@ -37,12 +41,16 @@ import ubic.gemma.model.common.Auditable;
 public class PersisterHelper extends RelationshipPersister {
 
     @Autowired
+    StatusService statusService;
+
+    @Autowired
     public PersisterHelper( SessionFactory sessionFactory ) {
         super( sessionFactory );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -51,6 +59,9 @@ public class PersisterHelper extends RelationshipPersister {
         if ( entity instanceof Auditable ) {
             Auditable a = ( Auditable ) entity;
             a.setAuditTrail( persistAuditTrail( a.getAuditTrail() ) );
+
+            a.setStatus( statusService.create() );
+
             return super.persist( a );
         }
         this.getSession().flush();

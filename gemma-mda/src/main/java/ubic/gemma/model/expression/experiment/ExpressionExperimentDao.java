@@ -38,7 +38,8 @@ import ubic.gemma.persistence.BrowsingDao;
 /**
  * @see ExpressionExperiment
  */
-public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperiment>, BrowsingDao<ExpressionExperiment> {
+public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperiment>,
+        BrowsingDao<ExpressionExperiment> {
     /**
      * This constant is used as a transformation flag; entities can be converted automatically into value objects or
      * other types, different methods in a class implementing this interface support this feature: look for an
@@ -239,7 +240,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * </p>
      */
     public Map<Taxon, Long> getPerTaxonCount();
-    
+
     /**
      * Get map of ids to how many factor values the experiment has, counting only factor values which are associated
      * with biomaterials.
@@ -367,8 +368,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
 
     public Collection<ExpressionExperiment> findByAccession( String accession );
 
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending,
-            Collection<Long> ids );
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
+            boolean descending, Collection<Long> ids );
 
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
 
@@ -377,5 +378,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
 
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
+
+    public Collection<Long> getUntroubled( Collection<Long> ids );
 
 }

@@ -28,7 +28,6 @@ import java.util.Map;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -53,6 +52,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.monitor.Monitored;
 
 /**
@@ -88,7 +88,7 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
-        return this.getExpressionExperimentDao().browseSpecificIds( start, limit , ids );
+        return this.getExpressionExperimentDao().browseSpecificIds( start, limit, ids );
     }
 
     /*
@@ -97,29 +97,28 @@ public class ExpressionExperimentServiceImpl extends
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Intege,
      * java.lang.Integer, java.lang.String, boolean)
      */
-    
+
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         return this.getExpressionExperimentDao().browse( start, limit, orderField, descending );
     }
 
     @Override
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField, boolean descending, Collection<Long> ids ) {
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
+            boolean descending, Collection<Long> ids ) {
         return this.getExpressionExperimentDao().browseSpecificIds( start, limit, orderField, descending, ids );
     }
-    
+
     @Override
     public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
         return this.getExpressionExperimentDao().loadAllOrdered( orderField, descending );
     }
-    
+
     @Override
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
         return this.getExpressionExperimentDao().loadAllTaxonOrdered( orderField, descending, taxon );
     }
-    
-    
-    
+
     @Override
     public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
         return this.getExpressionExperimentDao().loadMultipleOrdered( orderField, descending, ids );
@@ -135,7 +134,6 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().count();
     }
 
-    
     /*
      * (non-Javadoc)
      * 
@@ -291,6 +289,10 @@ public class ExpressionExperimentServiceImpl extends
             Long toDelete = de.getId();
             this.getDifferentialExpressionAnalysisDao().remove( toDelete );
         }
+        
+        // TODO Remove SampleCoexpressionanalyses
+        
+        // TODO Remove PCA
 
         // Remove probe2probe links
         this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
@@ -612,7 +614,7 @@ public class ExpressionExperimentServiceImpl extends
     protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
         return this.getExpressionExperimentDao().getPerTaxonCount();
     }
-    
+
     @Override
     protected Map handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception {
         return this.getExpressionExperimentDao().getPopulatedFactorCounts( ids );
@@ -806,6 +808,21 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     protected void handleUpdate( ExpressionExperiment expressionExperiment ) throws Exception {
         this.getExpressionExperimentDao().update( expressionExperiment );
+    }
+
+    @Override
+    public Collection<Long> getUntroubled( Collection<Long> ids ) {
+        Collection<Long> firstPass = this.getExpressionExperimentDao().getUntroubled( ids );
+
+        // FIXME
+        /*
+         * Now check the array designs.
+         */
+        // Map<ArrayDesign, Collection<ExpressionExperiment>> ads = CommonQueries.getArrayDesignsUsed( ees, this
+        // .getSession() );
+        // this.getArrayDesignDao().getUntroubled(ads);
+
+        return firstPass;
     }
 
 }

@@ -50,7 +50,7 @@ public class PhenotypeWebService {
 	@Produces(MediaType.APPLICATION_JSON)
     public JsonReaderResponse<CharacteristicValueObject> findAllPhenotypes() {	
     	return new JsonReaderResponse<CharacteristicValueObject>(
-    			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.findAllPhenotypes()));
+    			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.loadAllPhenotypes()));
     }
 
     @GET

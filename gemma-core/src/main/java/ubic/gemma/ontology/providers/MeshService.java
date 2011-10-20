@@ -19,6 +19,10 @@
 package ubic.gemma.ontology.providers;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -28,6 +32,7 @@ import ubic.basecode.ontology.model.ChainedStatementObject;
 import ubic.basecode.ontology.model.CharacteristicStatement;
 import ubic.basecode.ontology.model.DataStatement;
 import ubic.basecode.ontology.model.ObjectPropertyImpl;
+import ubic.basecode.ontology.model.OntologyClassRestriction;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.search.OntologyIndexer;
 import ubic.basecode.ontology.search.OntologySearch;
@@ -52,11 +57,17 @@ import com.hp.hpl.jena.rdf.model.RDFNode;
 public class MeshService {
 
     private static Log log = LogFactory.getLog( MeshService.class.getName() );
-    private final static String MESH_ONT_URL = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
+
+    // This one is gone.
+    // private final static String MESH_ONT_URL = "http://www.berkeleybop.org/ontologies/obo-all/mesh/mesh.owl";
+
+    // private final static String MESH_ONT_URL = "http://bike.snu.ac.kr/sites/default/files/meshonto.owl";
+    private final static String MESH_ONT_URL = "http://onto.eva.mpg.de/obo/mesh.owl";
     private static final String MESH_INDEX_NAME = "mesh";
     private static OntModel model;
     private static IndexLARQ index;
     private static ExternalDatabase meshdb;
+
     static {
         model = OntologyLoader.loadPersistentModel( MESH_ONT_URL, false ); // no force.
         index = OntologyIndexer.indexOntology( MESH_INDEX_NAME, model );
@@ -64,6 +75,12 @@ public class MeshService {
         meshdb.setName( "mesh" );
         meshdb.setWebUri( MESH_ONT_URL );
     }
+
+    /**
+     * Cache of mesh -> parent terms
+     */
+    private static Map<String, Collection<OntologyTerm>> parentsCache = Collections
+            .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
     /**
      * Locate OntologyTerm for given plain text
@@ -83,6 +100,35 @@ public class MeshService {
             }
         }
         return null;
+    }
+
+    public static Collection<OntologyTerm> getAllParents( OntologyTerm entry ) {
+        return getAncestors( entry );
+    }
+
+    /**
+     * @param entry
+     * @return
+     */
+    public static Collection<OntologyTerm> getParents( OntologyTerm entry ) {
+        Collection<OntologyTerm> parents = entry.getParents( true );
+        Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
+        for ( OntologyTerm term : parents ) {
+
+            if ( term instanceof OntologyClassRestriction ) {
+                // log.info( "Skipping " + term );
+                // OntologyProperty restrictionOn = ( ( OntologyClassRestriction ) term ).getRestrictionOn();
+                // if ( restrictionOn.getLabel().equals( "part_of" ) ) {
+                // OntologyTerm restrictedTo = ( ( OntologyClassRestriction ) term ).getRestrictedTo();
+                // results.add( restrictedTo );
+                // }
+            } else {
+                // log.info( "Adding " + term );
+                results.add( term );
+            }
+        }
+
+        return results;
     }
 
     /**
@@ -110,7 +156,7 @@ public class MeshService {
      * @return the has_qualifier ObjectProperty that can be used to form statements about MESH term instances.
      */
     public static ubic.basecode.ontology.model.ObjectProperty hasQualifier() {
-        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#hasQualifier" );
+        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#hasQualifier" ); // FIXME not valid
         RDFNode node = property.inModel( model );
         model.setStrictMode( false );
         return new ObjectPropertyImpl( node.as( com.hp.hpl.jena.ontology.ObjectProperty.class ) );
@@ -120,11 +166,36 @@ public class MeshService {
      * @return the isMajorHeading ObjectProperty that can be used to form statements about MESH term instances.
      */
     public static ubic.basecode.ontology.model.DatatypeProperty isMajorHeading() {
-        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#isMajorHeading" );
+        Property property = model.createProperty( "http://purl.org/obo/owl/MESH#isMajorHeading" ); // FIXME not valid
         RDFNode node = property.inModel( model );
         model.setStrictMode( false );
-        return new ubic.basecode.ontology.model.DatatypePropertyImpl( node
-                .as( com.hp.hpl.jena.ontology.DatatypeProperty.class ) );
+        return new ubic.basecode.ontology.model.DatatypePropertyImpl(
+                node.as( com.hp.hpl.jena.ontology.DatatypeProperty.class ) );
+    }
+
+    /**
+     * @param entry
+     * @param includePartOf
+     * @return
+     */
+    private static Collection<OntologyTerm> getAncestors( OntologyTerm entry ) {
+
+        Collection<OntologyTerm> ancestors = parentsCache.get( entry.getUri() );
+        if ( ancestors == null ) {
+            ancestors = new HashSet<OntologyTerm>();
+
+            Collection<OntologyTerm> parents = getParents( entry );
+            if ( parents != null ) {
+                for ( OntologyTerm parent : parents ) {
+                    ancestors.add( parent );
+                    ancestors.addAll( getAncestors( parent ) );
+                }
+            }
+
+            ancestors = Collections.unmodifiableCollection( ancestors );
+            parentsCache.put( entry.getUri(), ancestors );
+        }
+        return new HashSet<OntologyTerm>( ancestors );
     }
 
     private static String munge( String plainText ) {

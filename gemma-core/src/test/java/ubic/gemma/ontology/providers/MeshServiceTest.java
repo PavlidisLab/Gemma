@@ -18,6 +18,9 @@
  */
 package ubic.gemma.ontology.providers;
 
+import java.util.Collection;
+
+import ubic.basecode.ontology.model.OntologyTerm;
 import junit.framework.TestCase;
 
 /**
@@ -33,6 +36,13 @@ public class MeshServiceTest extends TestCase {
         // note this is slow the first time but is fast once the index and model are initialized. At this writing
         // mesh.owl yields > 280,000 statements in the persistent store.
         return;
+    }
+
+    public void testGetParents() throws Exception {
+      //  OntologyTerm term = MeshService.find( "Thermography" );
+     //   assertNotNull( term );
+     //   Collection<OntologyTerm> parents = MeshService.getParents( term );
+      //  assertEquals( 10, parents.size() );
     }
 
 }

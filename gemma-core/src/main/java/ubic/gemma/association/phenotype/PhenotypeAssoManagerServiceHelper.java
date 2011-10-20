@@ -277,7 +277,7 @@ public class PhenotypeAssoManagerServiceHelper {
             }
 
             genericExperiment.getCharacteristics().addAll( characteristics );
-            phenotypeAssociationService.createGenericExperiment( genericExperiment );
+            phenotypeAssociationService.create( genericExperiment );
         }
 
         experimentalEvidence.setExperiment( genericExperiment );
@@ -374,8 +374,8 @@ public class PhenotypeAssoManagerServiceHelper {
     }
 
     /** Ontology term to CharacteristicValueObject */
-    public Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
-            String ontologyUsed ) {
+    public static Set<CharacteristicValueObject> ontology2CharacteristicValueObject(
+            Collection<OntologyTerm> ontologyTerms, String ontologyUsed ) {
 
         Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
 
@@ -390,9 +390,7 @@ public class PhenotypeAssoManagerServiceHelper {
         return characteristicsVO;
     }
 
-    
-    
-    public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm ) {
+    public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm ) {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
 
@@ -401,9 +399,9 @@ public class PhenotypeAssoManagerServiceHelper {
         for ( OntologyTerm ot : ontologyTerms ) {
             childs.add( ontology2TreeCharacteristicValueObjects( ot ) );
         }
-        
+
         TreeCharacteristicValueObject treeCharacteristicVO = new TreeCharacteristicValueObject(
-                ontologyTerm.getLabel(), ontologyTerm.getUri(), childs);
+                ontologyTerm.getLabel(), ontologyTerm.getUri(), childs );
 
         return treeCharacteristicVO;
     }
