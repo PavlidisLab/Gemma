@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>gemma</groupId>
 		<artifactId>gemma</artifactId>
-		<version>${project.version}</version>
+		<version>1.6-SNAPSHOT</version>
 	</parent>
 	<packaging>jar</packaging>
 	<dependencies>
@@ -211,15 +211,19 @@
 				<configuration>
 					<tasks>
 						<echo message="******* Building DDL file *******" />
-						<taskdef name="schemaexport" classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
+						<taskdef name="schemaexport"
+							classname="org.hibernate.tool.hbm2ddl.SchemaExportTask">
 							<classpath>
 								<path refid="maven.dependency.classpath" />
 							</classpath>
 						</taskdef>
 						<mkdir dir="target/schema" />
-						<schemaexport quiet="true" text="true" create="true" drop="false" delimiter=";"
-							output="${project.build.directory}/schema/gemma-ddl.sql" properties="${basedir}/src/main/resources/hibernate.properties">
-							<fileset dir="target/generated-sources/resources" includes="**/*.hbm.xml" />
+						<schemaexport quiet="true" text="true" create="true"
+							drop="false" delimiter=";"
+							output="${project.build.directory}/schema/gemma-ddl.sql"
+							properties="${basedir}/src/main/resources/hibernate.properties">
+							<fileset dir="target/generated-sources/resources"
+								includes="**/*.hbm.xml" />
 						</schemaexport>
 					</tasks>
 				</configuration>
@@ -288,7 +292,7 @@
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>sql-maven-plugin</artifactId>
-						<dependencies><!--  yes, this needs to be here. -->
+						<dependencies><!-- yes, this needs to be here. -->
 							<dependency>
 								<groupId>mysql</groupId>
 								<artifactId>mysql-connector-java</artifactId>
@@ -367,7 +371,8 @@
 			</activation>
 			<build>
 				<plugins>
-					<!-- todo when maven fixes bugs in properties/activation, put andromda here.-->
+					<!-- todo when maven fixes bugs in properties/activation, put andromda 
+						here. -->
 				</plugins>
 			</build>
 		</profile>
