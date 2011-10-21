@@ -1,8 +1,8 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-    <title><fmt:message key="phenotypes.title" /></title>
+    <title>Create Phenotype Association</title>
 
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	
-	<jwr:script src='/scripts/app/phenotypes.js' />
+	<jwr:script src='/scripts/app/phenotypeAssociationForm.js' />
 </head>

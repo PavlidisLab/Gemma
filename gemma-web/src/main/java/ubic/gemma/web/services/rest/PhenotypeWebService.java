@@ -15,6 +15,7 @@
 package ubic.gemma.web.services.rest;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**
@@ -46,9 +48,9 @@ public class PhenotypeWebService {
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @GET
-    @Path("/find-all-phenotypes")
+    @Path("/load-all-phenotypes")
 	@Produces(MediaType.APPLICATION_JSON)
-    public JsonReaderResponse<CharacteristicValueObject> findAllPhenotypes() {	
+    public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {	
     	return new JsonReaderResponse<CharacteristicValueObject>(
     			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.loadAllPhenotypes()));
     }
@@ -59,5 +61,12 @@ public class PhenotypeWebService {
     public JsonReaderResponse<GeneValueObject> findCandidateGenes(@QueryParam("phenotypeValue") List<String> phenotypeValues) {
     	return new JsonReaderResponse<GeneValueObject>(
     			new ArrayList<GeneValueObject>(phenotypeAssociationManagerService.findCandidateGenes(phenotypeValues.toArray(new String[0]))));
+    }
+
+    @GET
+    @Path("/find-evidences")
+	@Produces(MediaType.APPLICATION_JSON)
+    public Collection<EvidenceValueObject> findEvidences(@QueryParam("geneId") Long geneId) {
+    	return phenotypeAssociationManagerService.findEvidencesByGeneId(geneId);
     }
 }

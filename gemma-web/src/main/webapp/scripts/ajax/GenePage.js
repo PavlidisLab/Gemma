@@ -112,11 +112,23 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			minHeight: 150
 		});
 		
-		this.add({
-			xtype: 'genephenotypes',
-			geneid: geneId,
+		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
 			title: 'Phenotypes'
 		});
+		phenotypeEvidenceGridPanel.setProxy(
+			new Ext.data.DWRProxy({
+		        apiActionToHandlerMap: {
+	    	        read: {
+	        	        dwrFunction: GeneController.loadGeneEvidences,
+	            	    getDwrArgsFunction: function(request){
+	            	    	return [ geneId ];
+		                }
+	    	        }
+		        }
+	    	})
+		);
+		this.add(phenotypeEvidenceGridPanel);
+		
 		this.on('render', function(){
 			this.setActiveTab(0);
 		});

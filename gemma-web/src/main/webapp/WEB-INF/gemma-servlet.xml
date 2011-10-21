@@ -1294,17 +1294,17 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
-				<entry key="PhenotypeSearchController">
+				<entry key="PhenotypeController">
 					<bean class="org.directwebremoting.spring.CreatorConfig">
 						<property name="creator">
 							<bean class="org.directwebremoting.spring.BeanCreator">
-								<property name="bean" ref="phenotypeSearchController" />
+								<property name="bean" ref="phenotypeController" />
 							</bean>
 						</property>
 						<property name="includes">
 							<list>
-								<value>findAllPhenotypes</value>
 								<value>findCandidateGenes</value>
+								<value>loadAllPhenotypes</value>
 							</list>
 						</property>
 					</bean>

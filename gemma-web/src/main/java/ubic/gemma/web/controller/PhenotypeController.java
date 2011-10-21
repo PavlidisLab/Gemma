@@ -27,36 +27,51 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**
- * Controller for searching phenotypes
+ * Controller for phenotype
  * 
  * @author frances
  * @version $Id$
  */
 @Controller
-public class PhenotypeSearchController extends BaseController { 
+public class PhenotypeController extends BaseController { 
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
-	
     @RequestMapping("/phenotypes.html")
     public ModelAndView showAllPhenotypes() {
         return new ModelAndView("phenotypes");
     }
    
-    @RequestMapping("/phenotype-search.html")
-    public ModelAndView searchPhenotype() {
-        return new ModelAndView("phenotypeSearch");
+    @RequestMapping("/phenotypeAssociationForm.html")
+    public ModelAndView createPhenotypeAssociationForm() {
+        return new ModelAndView("phenotypeAssociationForm");
     }
 
-    public JsonReaderResponse<GeneValueObject> findCandidateGenes(String[] values) {
+//  Frances: This method is not being used and for testing purpose ONLY.    
+//    @RequestMapping("/phenotype-search.html")
+//    public ModelAndView searchPhenotype() {
+//        return new ModelAndView("phenotypeSearch");
+//    }
+
+    /**
+     * Returns all genes that have given phenotypes.
+     * 
+     * @param phenotypes
+     * @return all genes that have given phenotypes
+     */
+    public JsonReaderResponse<GeneValueObject> findCandidateGenes(String[] phenotypes) {
     	return new JsonReaderResponse<GeneValueObject>(
-    			new ArrayList<GeneValueObject>(phenotypeAssociationManagerService.findCandidateGenes(values)));
+    			new ArrayList<GeneValueObject>(phenotypeAssociationManagerService.findCandidateGenes(phenotypes)));
     }
 
-    public JsonReaderResponse<CharacteristicValueObject> findAllPhenotypes() {
+    /**
+     * Returns all phenotypes in the system.
+     * 
+     * @return all phenotypes in the system
+     */
+    public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {
     	return new JsonReaderResponse<CharacteristicValueObject>(
     			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.loadAllPhenotypes()));
     }
 }
-
