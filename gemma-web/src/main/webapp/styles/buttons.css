@@ -88,9 +88,13 @@
 }
  
 
+table.x-btn.highlightToggle{
+	padding: 2px;
+}
 table.x-btn-pressed.highlightToggle{
-	padding: 0px;
 	margin 7px;
+	border: 1px solid #FFA858;
+	padding: 1px;
 }
 .highlightToggle .x-btn-tl, .highlightToggle  .x-btn-tr, .highlightToggle .x-btn-tc, .highlightToggle .x-btn-ml, .highlightToggle .x-btn-mr, .highlightToggle .x-btn-mc, .highlightToggle .x-btn-bl, .highlightToggle .x-btn-br, .highlightToggle .x-btn-bc{
 	background-image:url('/Gemma/images/default/button/btn-match-panel.gif');
