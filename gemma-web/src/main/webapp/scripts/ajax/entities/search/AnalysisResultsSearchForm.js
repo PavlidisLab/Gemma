@@ -1,9 +1,15 @@
-/**
- * @author thea
- * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
- *          Exp $
- */
+
 Ext.namespace('Gemma');
+Gemma.MIN_STRINGENCY = 2;
+
+// this is the value used for CLASSIC coexpression and
+// diff expression searches
+Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY = 20;
+Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY = 20; 
+
+// max suggested number of elements to use for a diff ex viz query
+Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY = 100;
+Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY = 100;
 
 /**
  * The input for guided coexpression and differential expression searches. This
@@ -14,17 +20,10 @@ Ext.namespace('Gemma');
  * 'custom' analysis, I've used defaults for these options: Stringency = 2
  * "Force Probe query" = false "Use my data" = false "My genes only" = false
  * 
- * 
+ * @author thea
+ * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
+ *          Exp $
  */
-// this is the value used for CLASSIC coexpression and
-// diff expression searches
-Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY = 20;
-Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY = 20; 
-
-// max suggested number of elements to use for a diff ex viz query
-Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY = 100;
-Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY = 100;
-
 Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 	// collapsible:true,
@@ -1049,8 +1048,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					pressed : false
 				});
 		this.coexToggle.on('click', function() {
-					this.diffExToggle.toggle();
-				}, this);
+			this.coexToggle.toggle(true);
+			this.diffExToggle.toggle(false);
+		}, this);
 		this.diffExToggle = new Ext.Button({
 			text: "<span style=\"font-size:1.3em\">Differential Expression</span>",
 			scale: 'medium',
@@ -1060,8 +1060,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			pressed: true
 		});
 		this.diffExToggle.on('click', function() {
-					this.coexToggle.toggle();
-				}, this);
+			this.diffExToggle.toggle(true);
+			this.coexToggle.toggle(false);
+			
+		}, this);
 
 		this.searchBar = new Ext.Panel({
 
