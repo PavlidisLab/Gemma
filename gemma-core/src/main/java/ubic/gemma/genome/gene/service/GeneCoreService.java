@@ -19,14 +19,14 @@ public interface GeneCoreService {
      */
     public GeneDetailsValueObject loadGeneDetails( Long geneId );
     
-    
-    
+
     /**
-     * Make a search using a Gene name, used in the interface to add new evidences
+     * Search for genes (by name or symbol)
      * 
-     * @param name The search name we are looking for
-     * @return Collection all Gene name found for the search name entered
+     * @param query
+     * @param taxonId, can be null to not constrain by taxon
+     * @return Collection of Gene entity objects
      */
-    public Collection<GeneValueObject> searchByName(String name);
+    public Collection<GeneValueObject> searchGenes( String query, Long taxonId );
 
 }

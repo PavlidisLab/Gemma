@@ -56,6 +56,7 @@ import ubic.gemma.genome.gene.FreeTextGeneResultsValueObject;
 import ubic.gemma.genome.gene.GOGroupValueObject;
 import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
+import ubic.gemma.genome.gene.service.GeneCoreService;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.web.persistence.SessionListManager;
 import ubic.gemma.search.SearchService;
@@ -101,6 +102,9 @@ public class GenePickerController {
 
     @Autowired
     private GeneSetSearch geneSetSearch;
+
+    @Autowired
+    private GeneCoreService geneCoreService;
 
     @Autowired
     private SessionListManager sessionListManager;
@@ -241,28 +245,7 @@ public class GenePickerController {
      */
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
 
-        Taxon taxon = null;
-        if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
-        }
-        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
-
-        Collection<Gene> genes = new HashSet<Gene>();
-        if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
-            log.info( "No Genes for search: " + query + " taxon=" + taxonId );
-            return new HashSet<GeneValueObject>();
-        }
-        log.info( "Gene search: " + query + " taxon=" + taxonId + ", " + geneSearchResults.size() + " found" );
-
-        for ( SearchResult sr : geneSearchResults ) {
-            genes.add( ( Gene ) sr.getResultObject() );
-            log.debug( "Gene search result: " + ( ( Gene ) sr.getResultObject() ).getOfficialSymbol() );
-        }
-
-        Collection<GeneValueObject> geneValueObjects = GeneValueObject.convert2ValueObjects( genes );
-        log.debug( "Gene search: " + geneValueObjects.size() + " value objects returned." );
-        return geneValueObjects;
+        return geneCoreService.searchGenes(query, taxonId);
     }
 
     /**
