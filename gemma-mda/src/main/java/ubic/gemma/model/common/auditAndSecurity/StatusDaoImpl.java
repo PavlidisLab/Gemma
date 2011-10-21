@@ -73,7 +73,7 @@ public class StatusDaoImpl extends AbstractDao<Status> implements StatusDao {
         Status s = Status.Factory.newInstance();
         Date now = new Date();
         s.setCreateDate( now );
-        s.setLastUpdateDate( null );
+        s.setLastUpdateDate( now );
         s.setTroubled( false );
         s.setValidated( false );
         return this.create( s );
