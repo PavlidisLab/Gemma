@@ -4,7 +4,7 @@ Gemma.CytoscapePanel = Ext.extend(
 Ext.Panel, {
 
     title: 'Cytoscape',
-    
+
     layoutIndex: 0,
 
     currentResultsStringency: 2,
@@ -12,6 +12,12 @@ Ext.Panel, {
     currentNodeGeneIds: [],
 
     currentQueryGeneIds: [],
+    
+    //used to pass a subset of results that meet the stringency threshold to the coexpressionGrid widget displaying the results in a table
+    trimmedKnownGeneResults: [],
+    
+    //used to apply a filter to the graph to remove nodes when stringency changes
+    trimmedNodeIds: [],
 
     dataJSON: {
         nodes: [],
@@ -183,7 +189,7 @@ Ext.Panel, {
                     attrName: "nodeDegreeBin",
                     minValue: "#252525",
                     maxValue: "#BDBDBD"
-                    
+
                 }
 
             },
@@ -236,7 +242,7 @@ Ext.Panel, {
 
             color: {
 
- 
+
                 discreteMapper: {
                     attrName: "supportsign",
                     entries: [{
@@ -381,14 +387,14 @@ Ext.Panel, {
                                 });
                             }
                             this.loadMask.show();
-                            
-                            
-                            this.currentResultsStringency = this.coexCommand.stringency,
 
-    						this.currentNodeGeneIds= [];
 
-    						this.currentQueryGeneIds= [];
-                            
+                            this.currentResultsStringency = this.coexCommand.stringency;
+
+                            this.currentNodeGeneIds = [];
+
+                            this.currentQueryGeneIds = [];
+
 
                             //todo just pass in results object from form search to avoid below
                             var results = {};
@@ -428,27 +434,27 @@ Ext.Panel, {
             vis.addContextMenuItem("Extend this node", "nodes", function (evt) {
 
                 var rootNode = evt.target;
-                
-                var spinnerValue = vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
-                vis.panelRef.currentResultsStringency = spinnerValue;
+				//always have stringency 2
+                //var spinnerValue = vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
+                //vis.panelRef.currentResultsStringency = spinnerValue;
 
                 Ext.apply(
                 vis.panelRef.coexCommand, {
-                	stringency: spinnerValue,
+                    //stringency: spinnerValue,
                     geneIds: [rootNode.data.geneid],
                     queryGenesOnly: false
                 });
 
-				//this probably means that this node has already been extended, i.e. nothing will happen so stuff beneath doesn't need to happen
+                //this probably means that this node has already been extended, i.e. nothing will happen so stuff beneath doesn't need to happen
                 //warn user with a warning
                 if (vis.panelRef.currentQueryGeneIds.indexOf(rootNode.data.geneid) === -1) {
                     vis.panelRef.currentQueryGeneIds.push(rootNode.data.geneid);
-                }                
-                
+                }
+
                 vis.panelRef.loadMask.show();
-                
+
                 ExtCoexpressionSearchController.doSearchQuick2(
-                vis.panelRef.coexCommand, {                	
+                vis.panelRef.coexCommand, {
                     callback: vis.panelRef.extendThisNodeInitialCoexSearchCallback.createDelegate(vis.panelRef)
 
                 });
@@ -474,18 +480,17 @@ Ext.Panel, {
                         }
 
                     }
-                    
-                                   
-                	var spinnerValue = vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
-                	vis.panelRef.currentResultsStringency = spinnerValue;
+
+					//always have stringency two
+                    //var spinnerValue = vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
+                    //vis.panelRef.currentResultsStringency = spinnerValue;
 
                     Ext.apply(
-                    vis.panelRef.coexCommand, {
-                    	stringency: spinnerValue,
+                    vis.panelRef.coexCommand, {                        
                         geneIds: extendedNodesGeneIdArray,
                         queryGenesOnly: false
                     });
-                    
+
 
                     vis.panelRef.loadMask.show();
                     ExtCoexpressionSearchController.doSearchQuick2(
@@ -510,16 +515,18 @@ Ext.Panel, {
 
 
                     var selectedNodesGeneIdArray = [];
-
+                    
                     var sNodesLength = selectedNodes.length;
                     var i;
                     for (i = 0; i < sNodesLength; i++) {
 
-                        selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
+                        selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;                        
 
                     }
 
                     vis.panelRef.currentQueryGeneIds = selectedNodesGeneIdArray;
+                    
+                    vis.panelRef.updateSearchFormGenes(selectedNodesGeneIdArray);
 
                     Ext.apply(
                     vis.panelRef.coexCommand, {
@@ -562,6 +569,7 @@ Ext.Panel, {
                     }
 
                     vis.panelRef.currentQueryGeneIds = selectedNodesGeneIdArray;
+                    vis.panelRef.updateSearchFormGenes(selectedNodesGeneStringArray);
 
                     Ext.apply(
                     vis.panelRef.coexCommand, {
@@ -596,21 +604,41 @@ Ext.Panel, {
                     var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
 
                     if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
-
+/*
                         vis.panelRef.loadMask.show();
 
                         //constructDataJson with current results
                         vis.panelRef.dataJSON = vis.panelRef.constructDataJSONFilter(vis.panelRef.queryGenes, vis.panelRef.knownGeneResults, true, spinner.getValue());
 
-                        vis.panelRef.loadMask.hide();
+                        vis.panelRef.loadMask.hide();                        
 
                         vis.panelRef.drawGraph();
+                    	*/
+                    	
+                    	
+                    	
+                    	vis.panelRef.trimKnownGeneResults();
+        				vis.panelRef.coexGridRef.loadData(false, vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults, null);
+                        
+                        vis.filter("edges", function(edge){
+                        	
+                        	return edge.data.support >= vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
+                        	
+                        });
+                        vis.filter("nodes", function(node){
+                        	
+                        	return  vis.panelRef.trimmedNodeIds.indexOf(node.data.geneid)!==-1;                    	
+                        	
+                        	
+                        });
+                        
+                        
 
                     } else { //new search
-                       
                         Ext.apply(
                         vis.panelRef.coexCommand, {
-                            stringency: spinner.getValue(),
+                        	//always make 2 for now
+                            //stringency: 2,
                             geneIds: vis.panelRef.currentQueryGeneIds,
                             queryGenesOnly: false
                         });
@@ -626,7 +654,7 @@ Ext.Panel, {
                 }, this);
 
 
-            }            
+            }
 
             if (!vis.panelRef.getTopToolbar().getComponent('nodeDegreeEmphasis').hasListener('click')) {
 
@@ -646,7 +674,26 @@ Ext.Panel, {
 
             if (!vis.panelRef.getTopToolbar().getComponent('changeLayout').hasListener('click')) {
                 vis.panelRef.getTopToolbar().getComponent('changeLayout').addListener('click', function () {
-                    vis.layout("ForceDirected");
+                	
+                	
+                	var options = { 
+                		/*
+     drag:          0.2,
+     gravitation:   -200,
+     minDistance:   1,
+     maxDistance:   400,
+     mass:          2,
+     tension:       0.2,
+     weightAttr:    "weight",
+     restLength:    100,
+     iterations:    200,
+     maxTime:       10000,
+     */
+     autoStabilize: false
+};
+                	
+                	
+                    vis.layout({name:"ForceDirected", options: options});
                 }, this);
             }
 
@@ -667,8 +714,9 @@ Ext.Panel, {
             });
 
             vis.addContextMenuItem("Export Graph as graphml", "none", function () {
-
-                var htmlString = vis.graphml();
+            	
+            	
+            	var htmlString = vis.graphml();
 
                 var win = new Ext.Window({
                     title: 'graphml',
@@ -712,7 +760,24 @@ Ext.Panel, {
 
 
             });
-
+            
+            if (vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue() > vis.panelRef.currentResultsStringency){
+            
+            vis.panelRef.trimKnownGeneResults();
+        				vis.panelRef.coexGridRef.loadData(false, vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults, null);
+                        
+                        vis.filter("edges", function(edge){
+                        	
+                        	return edge.data.support >= vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
+                        	
+                        });
+                        vis.filter("nodes", function(node){
+                        	
+                        	return  vis.panelRef.trimmedNodeIds.indexOf(node.data.geneid)!==-1;                    	
+                        	
+                        	
+                        });
+			}
 
         });
         //end vis.ready()        
@@ -799,7 +864,7 @@ Ext.Panel, {
             return lowVis;
         }
 
-        
+
     },
 
     completeCoexSearchCallback: function (result) {
@@ -817,8 +882,8 @@ Ext.Panel, {
     },
 
     initialCoexSearchCallback: function (result) {
-    	
-    	this.currentResultsStringency = this.coexCommand.stringency;
+
+        this.currentResultsStringency = this.coexCommand.stringency;
 
         this.currentNodeGeneIds = [];
         var qlength = result.queryGenes.length;
@@ -871,9 +936,9 @@ Ext.Panel, {
 
     extendThisNodeInitialCoexSearchCallback: function (result) {
 
-		var qgenes = result.queryGenes;
+        var qgenes = result.queryGenes;
         var knowngenes = result.knownGeneResults;
-		
+
         var kglength = knowngenes.length;
 
         var completeSearchFlag = false;
@@ -908,13 +973,19 @@ Ext.Panel, {
     },
 
     extendThisNodeCompleteCoexSearchCallback: function (result) {
-    	
-    	this.queryGenes = result.queryGenes;
-    	this.knownGeneResults = result.knownGeneResults;
+
+        this.queryGenes = result.queryGenes;
+        this.knownGeneResults = result.knownGeneResults;
 
         this.dataJSON = this.constructDataJSON(result.queryGenes, result.knownGeneResults);
-        this.loadMask.hide();
+                
+         this.loadMask.hide();
+        
         this.drawGraph();
+            
+                        
+         
+        
     },
 
 
@@ -1025,9 +1096,7 @@ Ext.Panel, {
 
             } //end if(!filterResults
         } // end for (<kglength)
-
         //if we are filtering, we need to loop through again to add edges that we missed the first time (because we were unsure whether both nodes would be in the graph)
-       
         if (filterCurrentResults) {
 
             var completeGraphEdges = [];
@@ -1073,7 +1142,6 @@ Ext.Panel, {
 
             } // end for (<kglength)
 
-
         }
 
         var qlength = qgenes.length;
@@ -1086,7 +1154,7 @@ Ext.Panel, {
 
             if (graphNodeIds.indexOf(qgenes[i].id) === -1) {
 
-                
+
 
                 //check if this gene was part of current/previous query
                 if (this.currentQueryGeneIds.indexOf(qgenes[i].id) !== -1) {
@@ -1106,7 +1174,7 @@ Ext.Panel, {
                         nodeDegree: 0
                     });
 
-					graphNodeIds.push(qgenes[i].id);
+                    graphNodeIds.push(qgenes[i].id);
 
                 }
 
@@ -1139,6 +1207,97 @@ Ext.Panel, {
 
 
 
+    },
+
+    //populates trimmed data based on stringency
+    trimKnownGeneResults: function () {
+
+        var filterStringency = this.getTopToolbar().getComponent('stringencySpinner').getValue();
+
+        //helper array to prevent duplicate nodes from being entered
+        var graphNodeIds = [];
+
+        var trimmedGeneResults = [];
+        
+        var knowngenes = this.knownGeneResults;
+
+        var kglength = knowngenes.length;
+        for (i = 0; i < kglength; i++) {
+
+            // go in only if the query or known gene is contained in the original query geneids AND the stringency is >= the filter stringency
+            if (((this.currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) !== -1 || (this.currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) !== -1)) && (knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency))
+
+            ) {
+
+                if (graphNodeIds.indexOf(knowngenes[i].foundGene.id) === -1) {
+
+
+                    graphNodeIds.push(knowngenes[i].foundGene.id);
+                }
+
+
+                if (graphNodeIds.indexOf(knowngenes[i].queryGene.id) === -1) {
+
+
+                    graphNodeIds.push(knowngenes[i].queryGene.id);
+                }
+                
+                trimmedGeneResults.push(knowngenes[i]);
+
+            } //end if
+        } // end for (<kglength)
+        //if we are filtering, we need to loop through again to add edges that we missed the first time (because we were unsure whether both nodes would be in the graph)
+        for (i = 0; i < kglength; i++) {
+
+            //if both nodes of the edge are in the graph, and it meets the stringency threshold, and neither of the nodes are query genes(because there edges have already been added) 
+            if (graphNodeIds.indexOf(knowngenes[i].foundGene.id) !== -1 && graphNodeIds.indexOf(knowngenes[i].queryGene.id) !== -1 && (knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency) && this.currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) === -1 && this.currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) === -1) {
+
+                trimmedGeneResults.push(knowngenes[i]);
+
+            }
+
+
+        } // end for (<kglength)
+
+        this.trimmedKnownGeneResults = trimmedGeneResults;
+        
+        this.trimmedNodeIds = graphNodeIds;
+
+    },
+    
+    updateSearchFormGenes : function(geneIds){
+    	
+    	//clear current
+    	this.searchPanelRef.geneChoosers.removeAll();
+    	//add new genesearchandpreview
+    	this.searchPanelRef.addGeneChooser();
+    	//grab new genesearchandpreview
+    	var geneChooser = Ext.getCmp('geneChooser' + (this.searchPanelRef.geneChooserIndex));
+    	    	
+    	var genesToPreview=[];
+    	var genesToPreviewIds=[];
+    	
+    	var knowngenes = this.knownGeneResults;
+
+        var kglength = knowngenes.length;
+        for (i = 0; i < kglength; i++) {
+
+            // go in only if the query or known gene is contained in the original query geneids AND the stringency is >= the filter stringency
+            if (genesToPreviewIds.indexOf(knowngenes[i].foundGene.id)===-1 && geneIds.indexOf(knowngenes[i].foundGene.id) !== -1 )
+             {
+
+                genesToPreview.push(knowngenes[i].foundGene);
+                genesToPreviewIds.push(knowngenes[i].foundGene.id);
+
+            } //end if
+        } // end for (<kglength)
+    	
+    	//add new genes
+    	geneChooser.getGenesFromCytoscape(genesToPreview, genesToPreviewIds);
+    	
+    	
     }
+    
+    
 
 });

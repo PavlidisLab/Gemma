@@ -169,13 +169,7 @@ Ext.onReady(function() {
 					width:900
 				});
 		*/
-		var cytoscapePanel = new Gemma.CytoscapePanel({
-					title : "cytoscape",
-					queryGenes : result.queryGenes,
-					knownGeneResults : result.knownGeneResults,
-					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),								
-					width:850
-				});
+		
 		/*
 		var knownGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
 				width : 900,
@@ -195,6 +189,16 @@ Ext.onReady(function() {
 				//hidden:true
 			});
 		}
+		
+		var cytoscapePanel = new Gemma.CytoscapePanel({
+					title : "cytoscape",
+					queryGenes : result.queryGenes,
+					knownGeneResults : result.knownGeneResults,
+					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
+					coexGridRef: knownGeneGrid,
+					searchPanelRef: searchPanel,
+					width:850
+				});
 		
 		
 		

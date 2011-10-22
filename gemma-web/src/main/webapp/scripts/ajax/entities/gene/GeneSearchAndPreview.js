@@ -368,6 +368,76 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneSelectionEditorBtn.show();
 		this.fireEvent('select');
 	},
+	/**
+	 * Allows cytoscapepanel to update query genes in form based on selection made in visualisation
+	 * from the GUI.  A stripped down version of getGenesFromList because we already have the GeneValueObjects
+	 * from the search results and there is no need for a call to the back end
+	 * 
+	 * @param {}
+	 *            e
+	 */
+	getGenesFromCytoscape : function(genesToPreview, geneIds, taxonId) {
+		var taxonName;
+		if (!taxonId && this.searchForm.getTaxonId()) {
+			taxonId = this.searchForm.getTaxonId();
+			taxonName = this.searchForm.getTaxonName();
+		}else{
+			taxonId = this.symbolList._taxonCombo.getTaxon().id;
+			taxonName = this.symbolList._taxonCombo.getTaxon().data.commonName;
+		}
+
+		if (isNaN(taxonId)) {
+			Ext.Msg.alert("Missing information", "Please select a taxon.");
+			return;
+		}
+		
+		this.searchForm.geneIds = geneIds;
+		this.geneIds = geneIds;
+		var newGeneSet = new SessionBoundGeneSetValueObject();
+		newGeneSet.modified = false;
+		newGeneSet.geneIds = geneIds;
+		newGeneSet.taxonId = taxonId;
+		newGeneSet.name = 'From Symbol List';
+		newGeneSet.description = 'Group made from gene symbols entered.';
+		newGeneSet.size = geneIds.length;
+		newGeneSet.id = null;
+		this.selectedGeneOrGroup = newGeneSet;
+		this.selectedGeneOrGroup.memberIds = geneIds;
+		this.selectedGeneOrGroup.resultValueObject = newGeneSet;
+
+		this.searchForm.taxonChanged(taxonId, taxonName);
+		this.geneCombo.disable().hide();
+		this.helpBtn.hide();
+		this.symbolListButton.hide();
+		this.removeBtn.setPosition(300,0);
+		this.fireEvent('madeFirstSelection');
+		this.doLayout();
+		
+		// write to the gene preview panel
+		for (i = 0; i < genesToPreview.length; i++) {
+			this.previewPart.genePreviewContent.update(genesToPreview[i]);
+		}
+		this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + " genes)");
+		this.geneSelectionEditorBtn.setText((geneIds.length - genesToPreview.length)+
+				 ' more - Edit');
+		this.geneSelectionEditorBtn.enable();
+		this.geneSelectionEditorBtn.show();
+		this.previewPart.genePreviewContent.show();
+		this.previewPart.show();
+
+		if (geneIds.size() <= this.searchForm.PREVIEW_SIZE) {
+			this.previewPart.moreIndicator.update('');
+		}else{
+			this.previewPart.moreIndicator.update('[...]');
+		}
+
+		if (geneIds.size() <= 1) {
+			this.geneSelectionEditorBtn.setText('0 more - Edit');
+			this.geneSelectionEditorBtn.enable().show();
+		}
+		
+		this.fireEvent('select');
+	},
 	initComponent : function() {
 
 		/**
