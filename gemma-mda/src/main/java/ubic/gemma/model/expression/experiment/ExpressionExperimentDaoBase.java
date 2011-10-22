@@ -20,6 +20,7 @@ package ubic.gemma.model.expression.experiment;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,9 +29,7 @@ import java.util.Set;
 
 import org.springframework.orm.hibernate3.HibernateCallback;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -38,10 +37,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ExpressionExperiment</code>.
- * </p>
  * 
  * @see ExpressionExperiment
  * @version $Id$
@@ -192,8 +189,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     public ExpressionExperiment find( final int transform, final ExpressionExperiment expressionExperiment ) {
         return this
-                .find(
-                        transform,
+                .find( transform,
                         "from ExpressionExperiment as expressionExperiment where expressionExperiment.expressionExperiment = :expressionExperiment",
                         expressionExperiment );
     }
@@ -565,6 +561,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getArrayDesignAuditEvents(Collection)
      */
+    @Deprecated
     public Map getArrayDesignAuditEvents( final Collection<Long> ids ) {
         try {
             return this.handleGetArrayDesignAuditEvents( ids );
@@ -658,10 +655,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getLastArrayDesignUpdate(Collection, Class)
      */
-    public Map<ExpressionExperiment, AuditEvent> getLastArrayDesignUpdate(
-            final Collection<ExpressionExperiment> expressionExperiments, final Class<? extends AuditEventType> type ) {
+    public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
         try {
-            return this.handleGetLastArrayDesignUpdate( expressionExperiments, type );
+            return this.handleGetLastArrayDesignUpdate( expressionExperiments );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.getLastArrayDesignUpdate(Collection expressionExperiments, Class type)' --> "
@@ -672,10 +668,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getLastArrayDesignUpdate(ExpressionExperiment, Class)
      */
-    public AuditEvent getLastArrayDesignUpdate( final ExpressionExperiment ee,
-            final Class<? extends AuditEventType> eventType ) {
+    public Date getLastArrayDesignUpdate( final ExpressionExperiment ee ) {
         try {
-            return this.handleGetLastArrayDesignUpdate( ee, eventType );
+            return this.handleGetLastArrayDesignUpdate( ee );
         } catch ( Throwable th ) {
             throw new RuntimeException(
                     "Error performing 'ExpressionExperimentDao.getLastArrayDesignUpdate(ExpressionExperiment ee, Class eventType)' --> "
@@ -707,7 +702,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             throw new RuntimeException( "Error performing 'ExpressionExperimentDao.getPerTaxonCount()' --> " + th, th );
         }
     }
-    
+
     /**
      * @see ExpressionExperimentDao#getPopulatedFactorCounts(Collection)
      */
@@ -728,7 +723,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
         } catch ( Throwable th ) {
             throw new RuntimeException(
-                    "Error performing 'ExpressionExperimentDao.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> " + th, th );
+                    "Error performing 'ExpressionExperimentDao.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> "
+                            + th, th );
         }
     }
 
@@ -917,18 +913,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         final Collection results = this.getHibernateTemplate().loadAll( ExpressionExperimentImpl.class );
         this.transformEntities( transform, results );
         return results;
-    }
-
-    /**
-     * @see ExpressionExperimentDao#loadAllValueObjects()
-     */
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjects() {
-        try {
-            return this.handleLoadAllValueObjects();
-        } catch ( Throwable th ) {
-            throw new RuntimeException( "Error performing 'ExpressionExperimentDao.loadAllValueObjects()' --> " + th,
-                    th );
-        }
     }
 
     /**
@@ -1172,15 +1156,13 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getLastArrayDesignUpdate(Collection, Class)}
      */
-    protected abstract Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate(
-            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type )
-            throws Exception;
+    protected abstract Map<Long, Date> handleGetLastArrayDesignUpdate(
+            Collection<ExpressionExperiment> expressionExperiments ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getLastArrayDesignUpdate(ExpressionExperiment, Class)}
      */
-    protected abstract AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment ee,
-            Class<? extends AuditEventType> eventType ) throws Exception;
+    protected abstract Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getMaskedPreferredQuantitationType(ExpressionExperiment)}
@@ -1192,7 +1174,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * Performs the core logic for {@link #getPerTaxonCount()}
      */
     protected abstract Map<Taxon, Long> handleGetPerTaxonCount() throws Exception;
-    
+
     /**
      * Performs the core logic for {@link #getPopulatedFactorCounts(Collection)}
      */
@@ -1257,11 +1239,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * Performs the core logic for {@link #load(Collection)}
      */
     protected abstract Collection<ExpressionExperiment> handleLoad( Collection<Long> ids ) throws Exception;
-
-    /**
-     * Performs the core logic for {@link #loadAllValueObjects()}
-     */
-    protected abstract Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() throws Exception;
 
     /**
      * Performs the core logic for {@link #loadValueObjects(Collection)}

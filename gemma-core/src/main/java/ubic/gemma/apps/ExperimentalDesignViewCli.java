@@ -17,6 +17,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.util.AbstractSpringAwareCLI;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author paul
@@ -55,7 +56,8 @@ public class ExperimentalDesignViewCli extends AbstractSpringAwareCLI {
         ExperimentalDesignService eds = ( ExperimentalDesignService ) getBean( "experimentalDesignService" );
 
         ExpressionExperimentService ees = ( ExpressionExperimentService ) getBean( "expressionExperimentService" );
-        Collection<ExpressionExperimentValueObject> experiments = ees.loadAllValueObjects();
+        Collection<ExpressionExperimentValueObject> experiments = ees.loadValueObjects( EntityUtils.getIds( ees
+                .loadAll() ) );
 
         Map<Long, ExpressionExperimentValueObject> ed2ee = new HashMap<Long, ExpressionExperimentValueObject>();
 

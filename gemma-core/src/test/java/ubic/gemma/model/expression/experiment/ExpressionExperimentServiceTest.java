@@ -182,12 +182,6 @@ public class ExpressionExperimentServiceTest extends BaseSpringContextTest {
     }
 
     @Test
-    public final void testLoadAllValueObjects() throws Exception {
-        Collection<ExpressionExperimentValueObject> list = expressionExperimentService.loadAllValueObjects();
-        assertNotNull( list );
-    }
-
-    @Test
     public final void testLoadValueObjects() throws Exception {
         Collection<Long> ids = new HashSet<Long>();
         Long id = ee.getId();

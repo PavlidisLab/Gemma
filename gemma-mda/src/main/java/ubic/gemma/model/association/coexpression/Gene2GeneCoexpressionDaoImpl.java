@@ -394,6 +394,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             r.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
                     new String[] { "genes", "sourceAnalysis" }, new Object[] { genes, sourceAnalysis } ) );
         } else {
+            if ( r.isEmpty() ) return r;
 
             /*
              * remove duplicates, since each link can be here twice. FIXME maybe could do at same time as caching.
@@ -401,7 +402,7 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             int removed = 0;
             Set<GeneLink> allSeen = new HashSet<GeneLink>();
             for ( Iterator<Gene2GeneCoexpression> iterator = r.iterator(); iterator.hasNext(); ) {
-                Gene2GeneCoexpression g2g = ( Gene2GeneCoexpression ) iterator.next();
+                Gene2GeneCoexpression g2g = iterator.next();
                 Gene g1 = g2g.getFirstGene();
                 Gene g2 = g2g.getSecondGene();
                 GeneLink seen = new GeneLink( g1, g2 );
@@ -415,10 +416,20 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                 allSeen.add( seen );
             }
             if ( removed > 0 ) log.info( "Removed " + removed + " duplicate links" );
+
+            if ( r.isEmpty() ) throw new IllegalStateException( "Removed everything!" );
         }
 
         Collections.sort( r, new SupportComparator() );
 
+        cacheCoexpression( genes, sourceAnalysis, r );
+
+        return r;
+
+    }
+
+    private void cacheCoexpression( Collection<Gene> genes, GeneCoexpressionAnalysis sourceAnalysis,
+            List<Gene2GeneCoexpression> r ) {
         /*
          * Cache all values.
          */
@@ -449,9 +460,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             this.getGene2GeneCoexpressionCache().getCache()
                     .put( new Element( new GeneCached( gene.getId(), sourceAnalysis.getId() ), forCache.get( gene ) ) );
         }
-
-        return r;
-
     }
 
 }

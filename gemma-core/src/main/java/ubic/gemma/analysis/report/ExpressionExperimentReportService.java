@@ -48,7 +48,7 @@ public interface ExpressionExperimentReportService {
      * 
      * @return
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT" })
     public abstract void generateSummaryObjects();
 
     /**
@@ -71,8 +71,9 @@ public interface ExpressionExperimentReportService {
      * @return
      */
     public Map<Long, Date> fillEventInformation( Collection<ExpressionExperimentValueObject> vos );
-    
+
     public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees );
+
     /**
      * @param vos
      */

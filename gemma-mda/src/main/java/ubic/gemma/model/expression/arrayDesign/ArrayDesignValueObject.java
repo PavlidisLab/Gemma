@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
-
 /**
  * Value object for quickly displaying varied information about Array Designs.
  * 
@@ -88,15 +86,23 @@ public class ArrayDesignValueObject implements java.io.Serializable {
 
     private Boolean troubled = false;
 
+    private Boolean validated = false;
+
     private String taxon;
 
     private String technologyType;
 
-    private ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject troubleEvent;
-
-    private ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject validationEvent;
-
     private boolean hasAnnotationFile;
+
+    private String troubleDetails = "(Details of trouble not populated)";
+
+    public Boolean getValidated() {
+        return validated;
+    }
+
+    public String getTroubleDetails() {
+        return troubleDetails;
+    }
 
     public ArrayDesignValueObject() {
     }
@@ -116,8 +122,8 @@ public class ArrayDesignValueObject implements java.io.Serializable {
                         .getNumProbesToPredictedGenes(), otherBean.getNumProbesToKnownGenes(), otherBean.getNumGenes(),
                 otherBean.getDateCached(), otherBean.getLastSequenceUpdate(), otherBean.getLastSequenceAnalysis(),
                 otherBean.getLastGeneMapping(), otherBean.getIsSubsumed(), otherBean.getIsSubsumer(), otherBean
-                        .getIsMerged(), otherBean.getIsMergee(), otherBean.getLastRepeatMask(), otherBean
-                        .getTroubleEvent(), otherBean.getValidationEvent(), otherBean.getDateCreated(), otherBean
+                        .getIsMerged(), otherBean.getIsMergee(), otherBean.getLastRepeatMask(),
+                otherBean.getTroubled(), otherBean.getValidated(), otherBean.getDateCreated(), otherBean
                         .getDescription(), otherBean.getTechnologyType() );
     }
 
@@ -128,8 +134,8 @@ public class ArrayDesignValueObject implements java.io.Serializable {
             String numProbesToKnownGenes, String numGenes, String dateCached, java.util.Date lastSequenceUpdate,
             java.util.Date lastSequenceAnalysis, java.util.Date lastGeneMapping, Boolean isSubsumed,
             Boolean isSubsumer, Boolean isMerged, Boolean isMergee, java.util.Date lastRepeatMask,
-            AuditEventValueObject troubleEvent, AuditEventValueObject validationEvent, java.util.Date dateCreated,
-            String description, String technologyType ) {
+            boolean troubleEvent, boolean validationEvent, java.util.Date dateCreated, String description,
+            String technologyType ) {
         this.name = name;
         this.shortName = shortName;
         this.designElementCount = designElementCount;
@@ -156,8 +162,8 @@ public class ArrayDesignValueObject implements java.io.Serializable {
         this.isMerged = isMerged;
         this.isMergee = isMergee;
         this.lastRepeatMask = lastRepeatMask;
-        this.troubleEvent = troubleEvent;
-        this.validationEvent = validationEvent;
+        this.troubled = troubleEvent;
+        this.validated = validationEvent;
         this.dateCreated = dateCreated;
         this.description = description;
         this.technologyType = technologyType;
@@ -194,8 +200,8 @@ public class ArrayDesignValueObject implements java.io.Serializable {
             this.setIsMerged( otherBean.getIsMerged() );
             this.setIsMergee( otherBean.getIsMergee() );
             this.setLastRepeatMask( otherBean.getLastRepeatMask() );
-            this.setTroubleEvent( otherBean.getTroubleEvent() );
-            this.setValidationEvent( otherBean.getValidationEvent() );
+            this.setTroubled( otherBean.getTroubled() );
+            this.setValidated( otherBean.getValidated() );
             this.setDateCreated( otherBean.getDateCreated() );
             this.setDescription( otherBean.getDescription() );
             this.setTechnologyType( otherBean.getTechnologyType() );
@@ -465,19 +471,17 @@ public class ArrayDesignValueObject implements java.io.Serializable {
     }
 
     /**
-     * <p>
      * The last uncleared TroubleEvent associated with this ArrayDesign.
-     * </p>
      */
-    public AuditEventValueObject getTroubleEvent() {
-        return this.troubleEvent;
+    public Boolean getTroubleEvent() {
+        return this.troubled;
     }
 
     /**
      * The last uncleared TroubleEvent associated with this ArrayDesign.
      */
-    public AuditEventValueObject getValidationEvent() {
-        return this.validationEvent;
+    public Boolean getValidationEvent() {
+        return this.validated;
     }
 
     /*
@@ -621,12 +625,12 @@ public class ArrayDesignValueObject implements java.io.Serializable {
         this.troubled = troubled;
     }
 
-    public void setTroubleEvent( AuditEventValueObject troubleEvent ) {
-        this.troubleEvent = troubleEvent;
+    public void setTroubleDetails( String troubleEvent ) {
+        this.troubleDetails = troubleEvent;
     }
 
-    public void setValidationEvent( AuditEventValueObject validationEvent ) {
-        this.validationEvent = validationEvent;
+    public void setValidated( Boolean validated ) {
+        this.validated = validated;
     }
 
     /*

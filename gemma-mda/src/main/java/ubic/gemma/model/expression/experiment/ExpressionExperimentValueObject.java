@@ -31,7 +31,7 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 
 /**
  * @author kelsey
- * @version
+ * @version $Id$
  */
 public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
@@ -161,11 +161,11 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     private String technologyType;
 
-    private AuditEventValueObject troubleFlag;
+    private String troubleDetails = "Reason for trouble not populated)";
 
-    private AuditEventValueObject validatedAnnotations;
+    private boolean troubled = false;
 
-    private AuditEventValueObject validatedFlag;
+    private boolean validated = false;
 
     private String pcaAnalysisEventType;
 
@@ -191,39 +191,38 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
                 otherBean.getSource(), otherBean.getAccession(), otherBean.getBioAssayCount(), otherBean.getTaxon(),
                 otherBean.getTaxonId(), otherBean.getBioMaterialCount(), otherBean.getDesignElementDataVectorCount(),
                 otherBean.getArrayDesignCount(), otherBean.getShortName(), otherBean.getLinkAnalysisEventType(),
-                otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidatedFlag(), otherBean.getTechnologyType(),
+                otherBean.getDateArrayDesignLastUpdated(), otherBean.getValidated(), otherBean.getTechnologyType(),
                 otherBean.isHasBothIntensities(), otherBean.getNumAnnotations(), otherBean.getNumPopulatedFactors(),
                 otherBean.getDateDifferentialAnalysis(), otherBean.getSampleRemovedFlags(), otherBean.isIsPublic(),
                 otherBean.isCurrentUserHasWritePermission(), otherBean.getClazz(), otherBean.getSourceExperiment(),
                 otherBean.getPubmedId(), otherBean.getInvestigators(), otherBean.getOwner(),
-                otherBean.getDateCreated(), otherBean.getTroubleFlag(), otherBean.getCoexpressionLinkCount(), otherBean
+                otherBean.getDateCreated(), otherBean.getTroubled(), otherBean.getCoexpressionLinkCount(), otherBean
                         .getProcessedDataVectorComputationEventType(), otherBean.getMissingValueAnalysisEventType(),
                 otherBean.getDateLinkAnalysis(), otherBean.getRawCoexpressionLinkCount(), otherBean
                         .getDateProcessedDataVectorComputation(), otherBean.getDateMissingValueAnalysis(), otherBean
                         .getProcessedExpressionVectorCount(), otherBean.getDateLastUpdated(),
                 otherBean.getDateCached(), otherBean.getHasProbeSpecificForQueryGene(), otherBean.getMinPvalue(),
                 otherBean.getHasEitherIntensity(), otherBean.getExperimentalDesign(), otherBean.getAutoTagDate(),
-                otherBean.getValidatedAnnotations(), otherBean.getDifferentialExpressionAnalyses(), otherBean
-                        .getDateBatchFetch(), otherBean.getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(),
-                otherBean.getBatchFetchEventType() );
+                otherBean.getDifferentialExpressionAnalyses(), otherBean.getDateBatchFetch(), otherBean
+                        .getDatePcaAnalysis(), otherBean.getPcaAnalysisEventType(), otherBean.getBatchFetchEventType(),
+                otherBean.getTroubleDetails() );
     }
 
     public ExpressionExperimentValueObject( Long id, String name, String externalDatabase, String externalUri,
             String source, String accession, Integer bioAssayCount, String taxon, Long taxonId,
             Integer bioMaterialCount, Integer designElementDataVectorCount, Integer arrayDesignCount, String shortName,
-            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, AuditEventValueObject validatedFlag,
+            String linkAnalysisEventType, Date dateArrayDesignLastUpdated, boolean validatedFlag,
             String technologyType, boolean hasBothIntensities, Integer numAnnotations, Integer numPopulatedFactors,
             Date dateDifferentialAnalysis, Collection<AuditEventValueObject> sampleRemovedFlags, boolean isPublic,
             boolean currentUserHasWritePermission, String clazz, Long sourceExperiment, Integer pubmedId,
-            String investigators, String owner, Date dateCreated, AuditEventValueObject troubleFlag,
-            Integer coexpressionLinkCount, String processedDataVectorComputationEventType,
-            String missingValueAnalysisEventType, Date dateLinkAnalysis, Integer rawCoexpressionLinkCount,
-            Date dateProcessedDataVectorComputation, Date dateMissingValueAnalysis,
-            Integer processedExpressionVectorCount, Date dateLastUpdated, Date dateCached,
-            Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
-            Long experimentalDesign, Date autoTagDate, AuditEventValueObject validatedAnnotations,
+            String investigators, String owner, Date dateCreated, boolean troubleFlag, Integer coexpressionLinkCount,
+            String processedDataVectorComputationEventType, String missingValueAnalysisEventType,
+            Date dateLinkAnalysis, Integer rawCoexpressionLinkCount, Date dateProcessedDataVectorComputation,
+            Date dateMissingValueAnalysis, Integer processedExpressionVectorCount, Date dateLastUpdated,
+            Date dateCached, Boolean hasProbeSpecificForQueryGene, Double minPvalue, Boolean hasEitherIntensity,
+            Long experimentalDesign, Date autoTagDate,
             Collection<DifferentialExpressionAnalysisValueObject> diffAnalyses, Date batchAnalysisDate,
-            Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType ) {
+            Date pcaAnalysisDate, String pcaAnalysisEventType, String batchFetchEventType, String troubleDetails ) {
         this.id = id;
         this.name = name;
         this.externalDatabase = externalDatabase;
@@ -239,7 +238,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.shortName = shortName;
         this.linkAnalysisEventType = linkAnalysisEventType;
         this.dateArrayDesignLastUpdated = dateArrayDesignLastUpdated;
-        this.validatedFlag = validatedFlag;
+        this.validated = validatedFlag;
         this.technologyType = technologyType;
         this.hasBothIntensities = hasBothIntensities;
         this.numAnnotations = numAnnotations;
@@ -254,7 +253,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.investigators = investigators;
         this.owner = owner;
         this.dateCreated = dateCreated;
-        this.troubleFlag = troubleFlag;
+        this.troubled = troubleFlag;
         this.coexpressionLinkCount = coexpressionLinkCount;
         this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
         this.missingValueAnalysisEventType = missingValueAnalysisEventType;
@@ -269,13 +268,13 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.minPvalue = minPvalue;
         this.hasEitherIntensity = hasEitherIntensity;
         this.experimentalDesign = experimentalDesign;
-        this.validatedAnnotations = validatedAnnotations;
         this.autoTagDate = autoTagDate;
         this.differentialExpressionAnalyses = diffAnalyses;
         this.dateBatchFetch = batchAnalysisDate;
         this.datePcaAnalysis = pcaAnalysisDate;
         this.pcaAnalysisEventType = pcaAnalysisEventType;
         this.batchFetchEventType = batchFetchEventType;
+        this.troubleDetails = troubleDetails;
     }
 
     /**
@@ -310,7 +309,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             this.setShortName( otherBean.getShortName() );
             this.setLinkAnalysisEventType( otherBean.getLinkAnalysisEventType() );
             this.setDateArrayDesignLastUpdated( otherBean.getDateArrayDesignLastUpdated() );
-            this.setValidatedFlag( otherBean.getValidatedFlag() );
+            this.setValidated( otherBean.getValidated() );
             this.setTechnologyType( otherBean.getTechnologyType() );
             this.setHasBothIntensities( otherBean.isHasBothIntensities() );
             this.setNumAnnotations( otherBean.getNumAnnotations() );
@@ -324,7 +323,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             this.setInvestigators( otherBean.getInvestigators() );
             this.setOwner( otherBean.getOwner() );
             this.setDateCreated( otherBean.getDateCreated() );
-            this.setTroubleFlag( otherBean.getTroubleFlag() );
+            this.setTroubled( otherBean.getTroubled() );
             this.setCoexpressionLinkCount( otherBean.getCoexpressionLinkCount() );
             this.setProcessedDataVectorComputationEventType( otherBean.getProcessedDataVectorComputationEventType() );
             this.setMissingValueAnalysisEventType( otherBean.getMissingValueAnalysisEventType() );
@@ -341,23 +340,9 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
             this.setDatePcaAnalysis( otherBean.getDatePcaAnalysis() );
             this.setPcaAnalysisEventType( otherBean.getPcaAnalysisEventType() );
             this.setBatchFetchEventType( otherBean.getBatchFetchEventType() );
+
+            this.setTroubleDetails( otherBean.getTroubleDetails() );
         }
-    }
-
-    public String getPcaAnalysisEventType() {
-        return pcaAnalysisEventType;
-    }
-
-    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
-        this.pcaAnalysisEventType = pcaAnalysisEventType;
-    }
-
-    public String getBatchFetchEventType() {
-        return batchFetchEventType;
-    }
-
-    public void setBatchFetchEventType( String batchFetchEventType ) {
-        this.batchFetchEventType = batchFetchEventType;
     }
 
     /**
@@ -379,6 +364,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public Date getAutoTagDate() {
         return autoTagDate;
+    }
+
+    public String getBatchFetchEventType() {
+        return batchFetchEventType;
     }
 
     /**
@@ -607,6 +596,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         return this.owner;
     }
 
+    public String getPcaAnalysisEventType() {
+        return pcaAnalysisEventType;
+    }
+
     /**
      * 
      */
@@ -695,22 +688,19 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
     /**
      * 
      */
-    public AuditEventValueObject getTroubleFlag() {
-        return this.troubleFlag;
+    public boolean getTroubled() {
+        return this.troubled;
     }
 
-    /**
-     * @return the validatedAnnotations
-     */
-    public AuditEventValueObject getValidatedAnnotations() {
-        return validatedAnnotations;
+    public String getTroubleDetails() {
+        return troubleDetails;
     }
 
     /**
      * 
      */
-    public AuditEventValueObject getValidatedFlag() {
-        return this.validatedFlag;
+    public boolean getValidated() {
+        return this.validated;
     }
 
     /**
@@ -764,6 +754,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
      */
     public void setAutoTagDate( Date date ) {
         this.autoTagDate = date;
+    }
+
+    public void setBatchFetchEventType( String batchFetchEventType ) {
+        this.batchFetchEventType = batchFetchEventType;
     }
 
     public void setBioAssayCount( Integer bioAssayCount ) {
@@ -914,6 +908,10 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.owner = owner;
     }
 
+    public void setPcaAnalysisEventType( String pcaAnalysisEventType ) {
+        this.pcaAnalysisEventType = pcaAnalysisEventType;
+    }
+
     public void setProcessedDataVectorComputationEventType( String processedDataVectorComputationEventType ) {
         this.processedDataVectorComputationEventType = processedDataVectorComputationEventType;
     }
@@ -973,19 +971,16 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
         this.technologyType = technologyType;
     }
 
-    public void setTroubleFlag( AuditEventValueObject troubleFlag ) {
-        this.troubleFlag = troubleFlag;
+    public void setTroubleDetails( String troubleDetails ) {
+        this.troubleDetails = troubleDetails;
     }
 
-    /**
-     * @param validatedAnnotations the validatedAnnotations to set
-     */
-    public void setValidatedAnnotations( AuditEventValueObject validatedAnnotations ) {
-        this.validatedAnnotations = validatedAnnotations;
+    public void setTroubled( Boolean troubleFlag ) {
+        this.troubled = troubleFlag;
     }
 
-    public void setValidatedFlag( AuditEventValueObject validatedFlag ) {
-        this.validatedFlag = validatedFlag;
+    public void setValidated( Boolean validatedFlag ) {
+        this.validated = validatedFlag;
     }
 
 }

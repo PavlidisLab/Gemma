@@ -52,7 +52,6 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.monitor.Monitored;
 
 /**
@@ -289,9 +288,9 @@ public class ExpressionExperimentServiceImpl extends
             Long toDelete = de.getId();
             this.getDifferentialExpressionAnalysisDao().remove( toDelete );
         }
-        
+
         // TODO Remove SampleCoexpressionanalyses
-        
+
         // TODO Remove PCA
 
         // Remove probe2probe links
@@ -516,16 +515,15 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate(
-            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type )
+    protected Map<Long, Date> handleGetLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments )
             throws Exception {
-        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( expressionExperiments, type );
+        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( expressionExperiments );
     }
 
     @Override
     @SuppressWarnings("unchecked")
-    protected AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment ee, Class eventType ) throws Exception {
-        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( ee, eventType );
+    protected Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception {
+        return this.getExpressionExperimentDao().getLastArrayDesignUpdate( ee );
     }
 
     /*

@@ -353,8 +353,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getNameLink() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         if ( object != null ) {
-            return AnchorTagUtil.getExpressionExperimentLink( object.getId(), StringUtils.abbreviate( object.getName(),
-                    75 ), object.getName() );
+            return AnchorTagUtil.getExpressionExperimentLink( object.getId(),
+                    StringUtils.abbreviate( object.getName(), 75 ), object.getName() );
         }
         return "No design";
     }
@@ -366,10 +366,9 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getTroubleFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuilder buf = new StringBuilder();
-        if ( object.getTroubleFlag() != null ) {
-            buf
-                    .append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( object.getTroubleFlag().toString() ) );
+        if ( object.getTroubled() ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt='trouble' title='" );
+            buf.append( StringEscapeUtils.escapeHtml( object.getTroubleDetails() ) );
             buf.append( "' />" );
         }
         return buf.toString();
@@ -379,8 +378,7 @@ public class ExpressionExperimentWrapper extends TableDecorator {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuilder buf = new StringBuilder();
         if ( object.getSampleRemovedFlags() != null && object.getSampleRemovedFlags().size() > 0 ) {
-            buf
-                    .append( "&nbsp;<img src='/Gemma/images/icons/exclamation.png' height='16' width='16' alt='validated' title='" );
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/exclamation.png' height='16' width='16' alt='validated' title='" );
             buf.append( StringEscapeUtils.escapeHtml( object.getSampleRemovedFlags().iterator().next().toString() ) ); // todo:
             // support
             // multiple.
@@ -401,10 +399,8 @@ public class ExpressionExperimentWrapper extends TableDecorator {
     public String getValidatedFlag() {
         ExpressionExperimentValueObject object = ( ExpressionExperimentValueObject ) getCurrentRowObject();
         StringBuilder buf = new StringBuilder();
-        if ( object.getValidatedFlag() != null ) {
-            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='" );
-            buf.append( StringEscapeUtils.escapeHtml( object.getValidatedFlag().toString() ) );
-            buf.append( "' />" );
+        if ( object.getValidated() ) {
+            buf.append( "&nbsp;<img src='/Gemma/images/icons/ok.png' height='16' width='16' alt='validated' title='Has been validated by a curator' />" );
         }
         return buf.toString();
     }

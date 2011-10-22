@@ -53,7 +53,8 @@ public class CommonQueries {
     /**
      * @param ees collection of expression experiments.
      * @return map of array designs to the experiments they were used in.
-     */     public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
+     */
+    public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
             Collection<ExpressionExperiment> ees, Session session ) {
         Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
 
@@ -98,14 +99,14 @@ public class CommonQueries {
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
         queryObject.setParameter( "ee", ee );
-        List list = queryObject.list();
+        List<?> list = queryObject.list();
         /*
          * Thaw the TT.
          */
         for ( ArrayDesign ad : ( Collection<ArrayDesign> ) list ) {
             ad.getTechnologyType();
         }
-        return list;
+        return ( Collection<ArrayDesign> ) list;
     }
 
     /**

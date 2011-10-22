@@ -157,6 +157,8 @@ public class GeneCoexpressionService {
         ExpressionExperimentSet eeSet = geneCoexpressionAnalysisService.findCurrent( taxon )
                 .getExpressionExperimentSetAnalyzed();
 
+        assert !eeIds.isEmpty();
+
         return getFilteredCannedAnalysisResults2( eeSet, eeIds, genes, stringency, maxResults, queryGenesOnly );
 
     }
@@ -1534,26 +1536,11 @@ public class GeneCoexpressionService {
     private void removeTroubledEes( Collection<Long> ees ) {
 
         if ( ees == null || ees.size() == 0 ) {
-            log.warn( "No experiments to remove troubled from" );
             return;
         }
 
-         ees.retainAll(  expressionExperimentService.getUntroubled( ees ));
+        ees.retainAll( expressionExperimentService.getUntroubled( ees ) );
 
-        // int size = ees.size();
-        // final Map<Long, AuditEvent> trouble = expressionExperimentService.getLastTroubleEvent( ees );
-        // CollectionUtils.filter( ees, new Predicate() {
-        // @Override
-        // public boolean evaluate( Object id ) {
-        // boolean hasTrouble = trouble.containsKey( id );
-        // return !hasTrouble;
-        // }
-        // } );
-        // int newSize = ees.size();
-        // if ( newSize != size ) {
-        // assert newSize < size;
-        // log.info( "Removed " + ( size - newSize ) + " experiments with 'trouble' flags, leaving " + newSize );
-        // }
     }
 
     /**

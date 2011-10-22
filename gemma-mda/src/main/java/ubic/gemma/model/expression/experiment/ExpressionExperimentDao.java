@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -164,16 +163,16 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * @param ids
      * @return
+     * @deprecated not used.
      */
+    @Deprecated
     public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( Collection<Long> ids );
 
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Gets the AuditEvents of the specified expression experiment ids. This returns a map of id -> AuditEvent. If the
      * events do not exist, the map entry will point to null.
-     * </p>
      */
     public Map<Long, Collection<AuditEvent>> getAuditEvents( Collection<Long> ids );
 
@@ -216,15 +215,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     /**
      * 
      */
-    public Map<ExpressionExperiment, AuditEvent> getLastArrayDesignUpdate(
-            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type );
+    public Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
 
     /**
-     * <p>
      * Gets the last audit event for the AD's associated with the given EE.
-     * </p>
      */
-    public AuditEvent getLastArrayDesignUpdate( ExpressionExperiment ee, Class<? extends AuditEventType> eventType );
+    public Date getLastArrayDesignUpdate( ExpressionExperiment ee );
 
     /**
      * <p>
@@ -305,16 +301,9 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ExpressionExperimentSubSet> getSubSets( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Gets the taxon for the given expressionExperiment
-     * </p>
      */
     public ubic.gemma.model.genome.Taxon getTaxon( Long ExpressionExperimentID );
-
-    /**
-     * 
-     */
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjects();
 
     /**
      * 
@@ -379,6 +368,12 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
 
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
 
+    /**
+     * Includes ones which are untroubled and which don't have a troubled ArrayDesign.
+     * 
+     * @param ids
+     * @return
+     */
     public Collection<Long> getUntroubled( Collection<Long> ids );
 
 }

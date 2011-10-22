@@ -260,6 +260,8 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
             return;
         }
 
+        charGen.init();
+
         Thread loadThread = new Thread( new Runnable() {
             public void run() {
 

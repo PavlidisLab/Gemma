@@ -99,7 +99,6 @@ insert into acl_object_identity (id, object_id_class, object_id_identity, parent
 --
 -- give GROUP_ADMIN admin priv on everything - we don't need to give it to a specific user.
 --
-
 -- user 1 = administrator, grant admin to sid=1 (GROUP_ADMIN)
 insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failure, acl_object_identity, sid) values (1, 1, 16, 1, 0, 0, 1, 1);
 insert into acl_entry (id, ace_order, mask, granting, audit_success, audit_failure, acl_object_identity, sid) values (2, 1, 16, 1, 0, 0, 2, 1);

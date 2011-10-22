@@ -44,7 +44,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.MailEngine;
@@ -63,16 +62,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
     /**
      * The query used to repopulate the contents of the GENE2CS table.
      */
-    // private static final String GENE2CS_REPOPULATE_QUERY =
-    // "INSERT INTO GENE2CS (GENE, CS, GTYPE) SELECT DISTINCT gene.ID AS GENE, cs.ID AS CS, gene.class AS geneType "
-    // +
-    // " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
-    // +
-    // " WHERE gene.CLASS <> 'GeneProductImpl' and geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and "
-    // + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK;";
-
-    // revised query to only use genes, not PredictedGenes or PARs
-    private static final String GENE2CS_REPOPULATE_QUERY = "INSERT INTO GENE2CS (GENE, CS, GTYPE) SELECT DISTINCT gene.ID AS GENE, cs.ID AS CS, gene.class AS geneType "
+    private static final String GENE2CS_REPOPULATE_QUERY = "INSERT INTO GENE2CS (GENE, CS, GTYPE, AD) "
+            + "SELECT DISTINCT gene.ID, cs.ID, gene.class, cs.ARRAY_DESIGN_FK "
             + " FROM CHROMOSOME_FEATURE AS gene, CHROMOSOME_FEATURE AS geneprod,BIO_SEQUENCE2_GENE_PRODUCT AS bsgp,COMPOSITE_SEQUENCE cs "
             + " WHERE gene.CLASS = 'GeneImpl' and geneprod.GENE_FK = gene.ID and bsgp.GENE_PRODUCT_FK = geneprod.ID and "
             + " bsgp.BIO_SEQUENCE_FK = cs.BIOLOGICAL_CHARACTERISTIC_FK;";
@@ -88,9 +79,6 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
 
     @Autowired
     private AuditEventService auditEventService;
-
-    @Autowired
-    private ArrayDesignService arrayDesignService;
 
     @Autowired
     private MailEngine mailEngine;
@@ -134,7 +122,8 @@ public class TableMaintenanceUtilImpl implements TableMaintenenceUtil {
                 for ( Auditable a : updatedObj ) {
                     if ( a instanceof ArrayDesign ) {
                         for ( AuditEvent ae : auditEventService.getEvents( a ) ) {
-                            if ( ae == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed any more
+                            if ( ae == null ) continue; // legacy of ordered-list which could end up with gaps; should
+                                                        // not be needed any more
                             if ( ae.getEventType() != null && ae.getEventType() instanceof ArrayDesignGeneMappingEvent
                                     && ae.getDate().after( status.getLastUpdate() ) ) {
                                 needToRefresh = true;

@@ -81,7 +81,14 @@ insert into USER_GROUP (ID, NAME, DESCRIPTION, AUDIT_TRAIL_FK, STATUS_FK) VALUES
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (1, "ADMIN", 1);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (2, "USER", 2);
 insert into GROUP_AUTHORITY (ID, AUTHORITY, GROUP_FK) VALUES (3, "AGENT", 3);
+
+-- make admin in the admin group
 insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (1, 1);
+
+-- add admin to the user group (note that there is no need for a corresponding ACL entry)
+insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (2, 1);
+
+-- add agent to the agent group
 insert into GROUP_MEMBERS (USER_GROUPS_FK, GROUP_MEMBERS_FK) VALUES (3, 2);
 
 
@@ -114,11 +121,13 @@ insert into EXTERNAL_DATABASE (NAME, DESCRIPTION,  WEB_URI, FTP_URI, AUDIT_TRAIL
 create table GENE2CS (
 	GENE BIGINT not null, 
 	CS BIGINT not null, 
-	GTYPE CHAR(25) not null,
+	GTYPE BIGINT not null,
+	AD BIGINT not null,
 	INDEX USING HASH (GENE),
 	INDEX USING HASH (CS),
-	INDEX USING HASH (GTYPE)
-) ENGINE=InnoDB;
+	INDEX USING HASH (GTYPE),
+	INDEX USING HASH (AD)
+);
 
 -- denormalize probe2probe coexpressions
 -- see init-triggers for triggers that populate these denormalized fields

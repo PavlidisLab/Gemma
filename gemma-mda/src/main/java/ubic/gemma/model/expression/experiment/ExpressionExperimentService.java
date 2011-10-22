@@ -27,7 +27,6 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.userdetails.User;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -235,19 +234,16 @@ public interface ExpressionExperimentService {
 
     /**
      * @param expressionExperiments
-     * @param type
      * @return
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
-    public Map<ExpressionExperiment, AuditEvent> getLastArrayDesignUpdate(
-            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public Map<Long, Date> getLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments );
 
     /**
      * Get the date of the last time any of the array designs associated with this experiment were updated.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
-    public AuditEvent getLastArrayDesignUpdate( ExpressionExperiment expressionExperiment,
-            java.lang.Class<? extends AuditEventType> eventType );
+    public Date getLastArrayDesignUpdate( ExpressionExperiment expressionExperiment );
 
     /**
      * Gets the AuditEvents of the latest link analyses for the specified expression experiment ids. This returns a map
@@ -381,13 +377,6 @@ public interface ExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadAll();
 
-    /**
-     * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
-     * 
-     * @return
-     */
-    public Collection<ExpressionExperimentValueObject> loadAllValueObjects();
-
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );
 
@@ -420,6 +409,8 @@ public interface ExpressionExperimentService {
 
     /**
      * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
+     * <p>
+     * If the argument is a list, this will return a list in the same order.
      * 
      * @param ids
      * @return

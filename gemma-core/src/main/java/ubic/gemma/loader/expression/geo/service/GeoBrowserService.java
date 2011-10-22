@@ -265,14 +265,15 @@ public class GeoBrowserService implements InitializingBean {
             ArrayDesign arrayDesign = arrayDesignService.findByShortName( gpl );
             if ( arrayDesign != null ) {
                 String trouble = "";
-                AuditEvent lastTroubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
-                if ( lastTroubleEvent != null ) {
-                    trouble = "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
-                            + lastTroubleEvent.getNote() + "\"/>";
+                if ( arrayDesign.getStatus().getTroubled() ) {
+                    AuditEvent lastTroubleEvent = auditTrailService.getLastTroubleEvent( arrayDesign );
+                    if ( lastTroubleEvent != null ) {
+                        trouble = "&nbsp;<img src='/Gemma/images/icons/warning.png' height='16' width='16' alt=\"troubled\" title=\""
+                                + lastTroubleEvent.getNote() + "\"/>";
+                    }
                 }
-                buf
-                        .append( "<p><strong>Array design in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
-                                + arrayDesign.getId() + "\">" + gpl + "</a></strong>" + trouble );
+                buf.append( "<p><strong>Array design in Gemma:&nbsp;<a target=\"_blank\" href=\"/Gemma/arrays/showArrayDesign.html?id="
+                        + arrayDesign.getId() + "\">" + gpl + "</a></strong>" + trouble );
             } else {
                 buf.append( "<p><strong>" + gpl + " [New to Gemma]</strong>" );
             }
@@ -364,9 +365,8 @@ public class GeoBrowserService implements InitializingBean {
             ExpressionExperiment ee = this.expressionExperimentService.findByShortName( gse );
 
             if ( ee != null ) {
-                buf
-                        .append( "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
-                                + ee.getId() + "\">" + gse + "</a></strong>" );
+                buf.append( "\n<p><strong><a target=\"_blank\" href=\"/Gemma/expressionExperiment/showExpressionExperiment.html?id="
+                        + ee.getId() + "\">" + gse + "</a></strong>" );
             } else {
                 buf.append( "\n<p><strong>" + gse + " [new to Gemma]</strong>" );
             }

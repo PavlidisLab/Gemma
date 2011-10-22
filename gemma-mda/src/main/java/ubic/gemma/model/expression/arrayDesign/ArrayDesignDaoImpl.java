@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -48,7 +47,6 @@ import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -273,101 +271,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         }
         log.debug( "Creating new arrayDesign: " + arrayDesign.getName() );
         return create( arrayDesign );
-    }
-
-    /**
-     * @return
-     */
-    private Map<Long, String> getArrayToPrimaryTaxonMap() {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        final String csString = "select  ad.primaryTaxon, ad from ArrayDesignImpl ad ";
-        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
-        csQueryObject.setReadOnly( true );
-        csQueryObject.setCacheable( true );
-
-        List<?> csList = csQueryObject.list();
-
-        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
-        Taxon t = null;
-        for ( Object object : csList ) {
-            Object[] oa = ( Object[] ) object;
-            t = ( Taxon ) oa[0];
-            ArrayDesign ad = ( ArrayDesign ) oa[1];
-
-            if ( !raw.containsKey( ad ) ) {
-                raw.put( ad, new TreeSet<String>() );
-            }
-
-            if ( t.getCommonName() != null ) {
-                raw.get( ad ).add( t.getCommonName() );
-            }
-
-        }
-
-        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        for ( ArrayDesign ad : raw.keySet() ) {
-            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
-            arrayToTaxon.put( ad.getId(), taxonListString );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
-        }
-
-        return arrayToTaxon;
-
-    }
-
-    /**
-     * @param ids
-     * @return
-     */
-    private Map<Long, String> getArrayToPrimaryTaxonMap( Collection<Long> ids ) {
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        final String csString = "select  ad.primaryTaxon, ad from ArrayDesignImpl ad where ad.id in (:ids)";
-        org.hibernate.Query csQueryObject = super.getSession().createQuery( csString );
-        csQueryObject.setReadOnly( true );
-        csQueryObject.setCacheable( true );
-
-        csQueryObject.setParameterList( "ids", ids );
-
-        List<?> csList = csQueryObject.list();
-
-        Map<ArrayDesign, Collection<String>> raw = new HashMap<ArrayDesign, Collection<String>>();
-        Taxon t = null;
-        for ( Object object : csList ) {
-            Object[] oa = ( Object[] ) object;
-            t = ( Taxon ) oa[0];
-            ArrayDesign ad = ( ArrayDesign ) oa[1];
-
-            if ( !raw.containsKey( ad ) ) {
-                raw.put( ad, new TreeSet<String>() );
-            }
-
-            if ( t.getCommonName() != null ) {
-                raw.get( ad ).add( t.getCommonName() );
-            }
-
-        }
-
-        Map<Long, String> arrayToTaxon = new HashMap<Long, String>();
-        for ( ArrayDesign ad : raw.keySet() ) {
-            String taxonListString = StringUtils.join( raw.get( ad ), "; " );
-            arrayToTaxon.put( ad.getId(), taxonListString );
-        }
-
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Get array design taxa: " + timer.getTime() + "ms" );
-        }
-
-        return arrayToTaxon;
-
     }
 
     /**
@@ -693,7 +596,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             return eventMap;
         }
 
-        final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad inner join ad.mergees subs where ad.id in (:ids) group by ad";
+        final String queryString = "select ad.id, count(subs) from ArrayDesignImpl as ad left join ad.mergees subs where ad.id in (:ids) group by ad";
         List<Object[]> list = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
         for ( Object[] o : list ) {
@@ -796,25 +699,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
     @Override
     protected Collection<ArrayDesignValueObject> handleLoadAllValueObjects() throws Exception {
 
-        // get the expression experiment counts
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap();
-        final String queryString = "select ad.id as id, ad.name as name, ad.shortName as shortName, "
-                + "ad.technologyType, ad.description, event.date as createdDate,  mergedInto  from ArrayDesignImpl ad "
-                + "left join ad.auditTrail as trail inner join trail.events as event left join ad.mergedInto as mergedInto "
-                + "where event.action='C' group by ad ";
 
-        try {
-            Map<Long, String> arrayToTaxon = getArrayToPrimaryTaxonMap();
+        final String queryString = "select ad.id, ad.name, ad.shortName, "
+                + "ad.technologyType, ad.description,s.createDate, m, s.troubled, s.validated, t.commonName"
+                + " from ArrayDesignImpl ad join ad.status s join ad.primaryTaxon t  left join ad.mergedInto m";
 
-            Query queryObject = super.getSession().createQuery( queryString );
+        Query queryObject = super.getSession().createQuery( queryString );
 
-            Collection<ArrayDesignValueObject> result = processADValueObjectQueryResults( eeCounts, queryObject,
-                    arrayToTaxon );
+        Collection<ArrayDesignValueObject> result = processADValueObjectQueryResults( eeCounts, queryObject );
 
-            return result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
+        return result;
 
     }
 
@@ -869,9 +764,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadMultiple(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection<ArrayDesign> handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.isEmpty() ) return new HashSet<ArrayDesign>();
         final String queryString = "select ad from ArrayDesignImpl as ad where ad.id in (:ids) ";
         return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
@@ -890,26 +784,17 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             return new ArrayList<ArrayDesignValueObject>();
         }
 
-        Map<Long, String> arrayToTaxon = getArrayToPrimaryTaxonMap( ids );
         Map<Long, Integer> eeCounts = this.getExpressionExperimentCountMap( ids );
 
-        final String queryString = "select ad.id as id, ad.name as name, "
-                + "ad.shortName as shortName, "
-                + "ad.technologyType, ad.description, "
-                + "event.date as createdDate,  mergedInto   "
-                + "from ArrayDesignImpl ad "
-                + "left join ad.auditTrail as trail inner join trail.events as event  left join ad.mergedInto as mergedInto "
-                + " where ad.id in (:ids) and event.action='C' group by ad  ";
+        final String queryString = "select ad.id, ad.name, ad.shortName, "
+                + "ad.technologyType, ad.description,s.createDate, m, s.troubled, s.validated, t.commonName"
+                + " from ArrayDesignImpl ad join ad.status s join ad.primaryTaxon t left join ad.mergedInto m where ad.id in (:ids)  ";
 
-        try {
+        Query queryObject = super.getSession().createQuery( queryString );
+        queryObject.setParameterList( "ids", ids );
 
-            Query queryObject = super.getSession().createQuery( queryString );
-            queryObject.setParameterList( "ids", ids );
+        return processADValueObjectQueryResults( eeCounts, queryObject );
 
-            return processADValueObjectQueryResults( eeCounts, queryObject, arrayToTaxon );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
     }
 
     /*
@@ -1246,7 +1131,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @return
      */
     private Collection<ArrayDesignValueObject> processADValueObjectQueryResults( Map<Long, Integer> eeCounts,
-            final Query queryObject, Map<Long, String> arrayToTaxon ) {
+            final Query queryObject ) {
         Collection<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
 
         queryObject.setCacheable( true );
@@ -1259,23 +1144,28 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
                 v.setShortName( list.getString( 2 ) );
 
                 TechnologyType color = ( TechnologyType ) list.get( 3 );
-
                 if ( color != null ) {
                     v.setTechnologyType( color.toString() );
                     v.setColor( color.getValue() );
                 }
 
                 v.setDescription( list.getString( 4 ) );
-                v.setTaxon( arrayToTaxon.get( v.getId() ) );
+
+                v.setDateCreated( list.getDate( 5 ) );
+
+                v.setIsMergee( list.get( 6 ) != null );
+
+                v.setTroubled( list.getBoolean( 7 ) );
+
+                v.setValidated( list.getBoolean( 8 ) );
+
+                v.setTaxon( list.getString( 9 ) );
 
                 if ( !eeCounts.containsKey( v.getId() ) ) {
                     v.setExpressionExperimentCount( 0L );
                 } else {
                     v.setExpressionExperimentCount( eeCounts.get( v.getId() ).longValue() );
                 }
-                v.setDateCreated( list.getDate( 5 ) );
-
-                v.setIsMergee( list.get( 6 ) != null );
 
                 result.add( v );
             }

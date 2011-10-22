@@ -43,7 +43,6 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
@@ -125,8 +124,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = auditEventService.getLastEvents(
                 arrayDesigns, typesToGet );
 
-        Map<Long, AuditEvent> troubleEvents = arrayDesignService.getLastTroubleEvent( ids );
-        Map<Long, AuditEvent> validationEvents = arrayDesignService.getLastValidationEvent( ids );
         Map<Auditable, AuditEvent> geneMappingEvents = events.get( ArrayDesignGeneMappingEvent.class );
         Map<Auditable, AuditEvent> sequenceUpdateEvents = events.get( ArrayDesignSequenceUpdateEvent.class );
         Map<Auditable, AuditEvent> sequenceAnalysisEvents = events.get( ArrayDesignSequenceAnalysisEvent.class );
@@ -163,8 +160,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
                     adVo.setLastRepeatMask( event.getDate() );
                 }
             }
-            adVo.setTroubleEvent( (troubleEvents.get( id ) == null)?null:new AuditEventValueObject( troubleEvents.get( id ) ) );
-            adVo.setValidationEvent( (validationEvents.get( id ) == null)?null: new AuditEventValueObject( validationEvents.get( id ) ) );
+
         }
 
         watch.stop();
@@ -281,7 +277,7 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
      * 
      * @see ubic.gemma.analysis.report.ArrayDesignReportService#generateArrayDesignReport()
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT" })
     public void generateArrayDesignReport() {
         initDirectories();
         log.info( "Generating global report" );

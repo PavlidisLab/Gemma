@@ -49,21 +49,18 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisValueObject;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionSummaryValueObject;
+import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignAnalysisEvent;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
@@ -74,7 +71,6 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ProcessedVectorComputationEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedAnnotations;
-import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
@@ -84,7 +80,7 @@ import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 
 /**
- * Handles creation, serialization and/or marshalling of reports about expression experiments. Reports are stored in
+ * Handles creation, serialization and/or marshaling of reports about expression experiments. Reports are stored in
  * ExpressionExperimentValueObjects.
  * 
  * @author jsantos
@@ -133,9 +129,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private Class<? extends AuditEventType>[] eventTypes = new Class[] { LinkAnalysisEvent.class,
             MissingValueAnalysisEvent.class, ProcessedVectorComputationEvent.class, ValidatedAnnotations.class,
             DifferentialExpressionAnalysisEvent.class, AutomatedAnnotationEvent.class,
-            BatchInformationFetchingEvent.class, PCAAnalysisEvent.class, ValidatedFlagEvent.class /*
-                                                                                                   * keep last
-                                                                                                   */};
+            BatchInformationFetchingEvent.class, PCAAnalysisEvent.class };
 
     /**
      * Cache to hold stats in memory. This is used to avoid hittinig the disk for reports too often.
@@ -187,9 +181,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     }
 
     /**
-     * Populate information about how many annotations there are, and how many factor values there are.
-     * 
-     * Batch is not counted towards the number of factors
+     * Populate information about how many annotations there are, and how many factor values there are. Batch is not
+     * counted towards the number of factors
      * 
      * @param vos
      */
@@ -244,8 +237,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
 
-        Map<Long, AuditEvent> troubleEvents = getEvents( ees, TroubleStatusFlagEvent.class );
-        Map<Long, AuditEvent> arrayDesignEvents = getEvents( ees, ArrayDesignGeneMappingEvent.class );
+        Collection<Long> troubledEEs = getTroubled( ees );
+        Map<Long, Date> lastArrayDesignUpdates = expressionExperimentService.getLastArrayDesignUpdate( ees );
         Collection<Class<? extends AuditEventType>> typesToGet = Arrays.asList( eventTypes );
 
         Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> events = getEvents( ees, typesToGet );
@@ -253,8 +246,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         Map<Auditable, AuditEvent> linkAnalysisEvents = events.get( LinkAnalysisEvent.class );
         Map<Auditable, AuditEvent> missingValueAnalysisEvents = events.get( MissingValueAnalysisEvent.class );
         Map<Auditable, AuditEvent> rankComputationEvents = events.get( ProcessedVectorComputationEvent.class );
-        Map<Auditable, AuditEvent> validationEvents = events.get( ValidatedFlagEvent.class );
-        Map<Auditable, AuditEvent> validatedAnnotationEvents = events.get( ValidatedAnnotations.class );
+
+        Collection<Long> validatedEEs = getValidated( ees );
+
         Map<Auditable, AuditEvent> differentialAnalysisEvents = events.get( DifferentialExpressionAnalysisEvent.class );
         Map<Auditable, AuditEvent> autotaggerEvents = events.get( AutomatedAnnotationEvent.class );
         Map<Auditable, AuditEvent> batchFetchEvents = events.get( BatchInformationFetchingEvent.class );
@@ -286,10 +280,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     Date date = event.getDate();
                     eeVo.setDateLinkAnalysis( date );
 
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
-
                     eeVo.setLinkAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
@@ -299,10 +289,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 if ( event != null ) {
                     Date date = event.getDate();
                     eeVo.setDateMissingValueAnalysis( date );
-
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
 
                     eeVo.setMissingValueAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
@@ -314,10 +300,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     Date date = event.getDate();
                     eeVo.setDateProcessedDataVectorComputation( date );
 
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
-
                     eeVo.setProcessedDataVectorComputationEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
@@ -328,10 +310,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     Date date = event.getDate();
                     eeVo.setDateDifferentialAnalysis( date );
 
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
-                    // eeVo.setLastDifferentialAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
@@ -341,9 +319,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     Date date = event.getDate();
                     eeVo.setDatePcaAnalysis( date );
 
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
                     eeVo.setPcaAnalysisEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
@@ -354,52 +329,35 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                     Date date = event.getDate();
                     eeVo.setDateBatchFetch( date );
 
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
                     eeVo.setBatchFetchEventType( event.getEventType().getClass().getSimpleName() );
                 }
             }
 
-            if ( arrayDesignEvents.containsKey( id ) ) {
-                AuditEvent event = arrayDesignEvents.get( id );
-                if ( event != null ) {
-                    Date date = event.getDate();
-
-                    if ( date.after( mostRecentDate ) ) {
-                        mostRecentDate = date;
-                    }
-
-                    eeVo.setDateArrayDesignLastUpdated( date );
-                }
+            if ( lastArrayDesignUpdates.containsKey( id ) ) {
+                Date date = lastArrayDesignUpdates.get( id );
+                eeVo.setDateArrayDesignLastUpdated( date );
             }
 
-            if ( validationEvents.containsKey( ee ) ) {
-                AuditEvent validated = validationEvents.get( ee );
-                // auditEventService.thaw( validated );
+            if ( validatedEEs.contains( ee.getId() ) ) {
 
-                if ( validated.getDate().after( mostRecentDate ) ) {
-                    mostRecentDate = validated.getDate();
-                }
-
-                eeVo.setValidatedFlag( new AuditEventValueObject( validated ) );
+                eeVo.setValidated( true );
 
             }
-
-            if ( validatedAnnotationEvents.containsKey( ee ) ) {
-                AuditEvent validated = validationEvents.get( ee );
-
-                if ( validated != null ) {
-
-                    // auditEventService.thaw( validated );
-
-                    if ( validated.getDate().after( mostRecentDate ) ) {
-                        mostRecentDate = validated.getDate();
-                    }
-
-                    eeVo.setValidatedAnnotations( new AuditEventValueObject( validated ) );
-                }
-            }
+            //
+            // if ( validatedAnnotationEvents.containsKey( ee ) ) {
+            // AuditEvent validated = validationEvents.get( ee );
+            //
+            // if ( validated != null ) {
+            //
+            // // auditEventService.thaw( validated );
+            //
+            // if ( validated.getDate().after( mostRecentDate ) ) {
+            // mostRecentDate = validated.getDate();
+            // }
+            //
+            // eeVo.setValidatedAnnotations( new AuditEventValueObject( validated ) );
+            // }
+            // }
 
             if ( autotaggerEvents.containsKey( ee ) ) {
                 AuditEvent taggerEvent = autotaggerEvents.get( ee );
@@ -431,15 +389,12 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
             }
 
-            if ( troubleEvents.containsKey( id ) ) {
-                AuditEvent trouble = troubleEvents.get( id );
-                // we find we are getting lazy-load exceptions from this guy.
-                // auditEventService.thaw( trouble );
-                eeVo.setTroubleFlag( new AuditEventValueObject( trouble ) );
+            if ( troubledEEs.contains( id ) ) {
+                eeVo.setTroubled( true );
+            }
 
-                if ( trouble.getDate().after( mostRecentDate ) ) {
-                    mostRecentDate = trouble.getDate();
-                }
+            if ( validatedEEs.contains( id ) ) {
+                eeVo.setValidated( true );
             }
 
             if ( mostRecentDate.after( new Date( 0 ) ) ) results.put( ee.getId(), mostRecentDate );
@@ -448,6 +403,23 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         if ( timer.getTime() > 1000 ) log.info( "Retrieving audit events took " + timer.getTime() + "ms" );
 
         return results;
+    }
+
+    private Collection<Long> getValidated( Collection<ExpressionExperiment> ees ) {
+        Collection<Long> result = new HashSet<Long>();
+        for ( ExpressionExperiment ee : ees ) {
+            if ( ee.getStatus().getValidated() ) {
+                result.add( ee.getId() );
+            }
+        }
+        return result;
+    }
+
+    private Collection<Long> getTroubled( Collection<ExpressionExperiment> ees ) {
+        Collection<Long> ids = EntityUtils.getIds( ees );
+        Collection<Long> untroubled = expressionExperimentService.getUntroubled( ids );
+        ids.removeAll( untroubled );
+        return ids;
     }
 
     /**
@@ -509,9 +481,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     public ExpressionExperimentValueObject generateSummaryObject( Long id ) {
-        Collection ids = new ArrayList<Long>();
+        Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
         if ( results.size() > 0 ) {
@@ -525,10 +496,11 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObjects()
      */
-    @Secured( { "GROUP_AGENT" })
+    @Secured({ "GROUP_AGENT" })
     public void generateSummaryObjects() {
         initDirectories( false );
-        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadAllValueObjects();
+        Collection<Long> ids = EntityUtils.getIds( expressionExperimentService.loadAll() );
+        Collection<ExpressionExperimentValueObject> vos = expressionExperimentService.loadValueObjects( ids );
         updateStats( vos );
     }
 
@@ -667,8 +639,10 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @param ees
      * @param type
      * @return
+     * @deprecated use getStatus().getTroubled() instead.
      */
     @Override
+    @Deprecated
     public Map<Long, AuditEvent> getTroubledEvents( Collection<ExpressionExperiment> ees ) {
         return getEvents( ees, TroubleStatusFlagEvent.class );
     }
@@ -679,7 +653,9 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @param ees
      * @param type
      * @return
+     * @deprecated not needed
      */
+    @Deprecated
     private Map<Long, AuditEvent> getEvents( Collection<ExpressionExperiment> ees, Class<? extends AuditEventType> type ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -688,20 +664,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Map<? extends Auditable, AuditEvent> events = null;
 
-        /*
-         * Two special cases: array designs (because they are not directly associated) and trouble events (because we
-         * have to check that there isn't a ok event after) - so have to use the EE service, not the AuditEventService.
-         */
-        if ( type.equals( ArrayDesignAnalysisEvent.class ) ) {
-            events = expressionExperimentService.getLastArrayDesignUpdate( ees, type );
-        } else if ( type.equals( TroubleStatusFlagEvent.class ) ) {
-            // This service unlike the others needs ids not EE objects
-            Collection<Long> eeIds = EntityUtils.getIds( ees );
-            return expressionExperimentService.getLastTroubleEvent( eeIds );
-
-        } else {
-            events = auditEventService.getLastEvent( ees, type );
-        }
+        events = auditEventService.getLastEvent( ees, type );
 
         for ( Auditable a : events.keySet() ) {
             result.put( ( ( ExpressionExperiment ) a ).getId(), events.get( a ) );
@@ -884,9 +847,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );
-        eeVo
-                .setProcessedExpressionVectorCount( expressionExperimentService
-                        .getProcessedExpressionVectorCount( tempEe ) );
+        eeVo.setProcessedExpressionVectorCount( expressionExperimentService.getProcessedExpressionVectorCount( tempEe ) );
 
         eeVo.setDifferentialExpressionAnalyses( getDiffExpressedProbes( tempEe, CUT_OFF ) );
 

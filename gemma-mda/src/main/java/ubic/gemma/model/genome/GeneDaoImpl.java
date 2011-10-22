@@ -618,7 +618,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         final Collection<Long> eeIds = getEEIds( ees );
 
         String queryString = getNativeBatchQueryString( p2pClassName, "firstVector", "secondVector", eeIds,
-                knownGenesOnly, interGeneOnly );
+                interGeneOnly );
 
         Session session = this.getSession( false );
         org.hibernate.Query queryObject = setCoexpQueryParameters( session, genes, id, queryString );
@@ -701,8 +701,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
             final Collection<Long> eeIds = getEEIds( eesToSearch );
 
-            String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds,
-                    knownGenesOnly );
+            String queryString = getNativeQueryString( p2pClassName, "firstVector", "secondVector", eeIds );
 
             Session session = this.getSession( false );
             org.hibernate.Query queryObject = setCoexpQueryParameters( session, gene, id, queryString );
@@ -1156,7 +1155,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return
      */
     private String getNativeBatchQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds,
-            boolean knownGenesOnly, boolean interGeneOnly ) {
+            boolean interGeneOnly ) {
         String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
@@ -1169,11 +1168,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             eeClause += ") AND ";
         } else {
             log.warn( "This query may run very slowly without EE restriction" );
-        }
-
-        String knownGeneClause = "";
-        if ( knownGenesOnly ) {
-            knownGeneClause = " gcOut.GTYPE = 'GeneImpl' AND ";
         }
 
         String interGeneOnlyClause = "";
@@ -1199,7 +1193,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * </pre>
          */
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType, gcIn.GENE as queryGeneId FROM GENE2CS gcIn INNER JOIN "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcIn.GENE as queryGeneId FROM GENE2CS gcIn INNER JOIN "
                 + p2pClass
                 + " coexp FORCE INDEX (EEKey) ON gcIn.CS=coexp."
                 + inKey
@@ -1209,7 +1203,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
                 + " WHERE "
                 + eeClause
-                + knownGeneClause + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
+                + " gcIn.GENE in (:ids) " + interGeneOnlyClause;
 
         return query;
     }
@@ -1236,8 +1230,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param knownGenesOnly
      * @return
      */
-    private String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds,
-            boolean knownGenesOnly ) {
+    private String getNativeQueryString( String p2pClassName, String in, String out, Collection<Long> eeIds ) {
         String inKey = in.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String outKey = out.equals( "firstVector" ) ? "FIRST_DESIGN_ELEMENT_FK" : "SECOND_DESIGN_ELEMENT_FK";
         String eeClause = "";
@@ -1253,11 +1246,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
         // eeClause = " coexp.EXPRESSION_EXPERIMENT_FK = " +
         // eeIds.iterator().next() + " AND ";
-
-        String knownGeneClause = "";
-        if ( knownGenesOnly ) {
-            knownGeneClause = " gcOut.GTYPE = 'GeneImpl' AND ";
-        }
 
         String p2pClass = getP2PTableNameForClassName( p2pClassName );
 
@@ -1275,7 +1263,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * </pre>
          */
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
-                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut, gcOut.GTYPE as geneType FROM GENE2CS gcIn INNER JOIN "
+                + "gcIn.CS as csIdIn, gcOut.CS as csIdOut FROM GENE2CS gcIn INNER JOIN "
                 + p2pClass
                 + " coexp FORCE INDEX (EEKey) ON gcIn.CS=coexp."
                 + inKey
@@ -1285,7 +1273,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 + " INNER JOIN INVESTIGATION ee ON ee.ID=coexp.EXPRESSION_EXPERIMENT_FK "
                 + " WHERE "
                 + eeClause
-                + knownGeneClause + " gcIn.GENE=:id ";
+                + " gcIn.GENE=:id ";
 
         // AND gcOut.GENE <> :id // Omit , see below!
 

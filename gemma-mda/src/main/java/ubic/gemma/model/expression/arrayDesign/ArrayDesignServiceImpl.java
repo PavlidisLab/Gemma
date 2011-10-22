@@ -323,10 +323,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             AuditEvent lastEvent = null;
 
             if ( events == null ) {
-                lastEventMap.put( arrayDesignId, null );
+                // lastEventMap.put( arrayDesignId, null );
             } else {
                 lastEvent = this.getAuditEventDao().getLastOutstandingTroubleEvent( events );
-                lastEventMap.put( arrayDesignId, lastEvent );
+                if ( lastEvent != null ) {
+                    lastEventMap.put( arrayDesignId, lastEvent );
+                }
 
                 /*
                  * TODO how to deal with merged/subsumed arrays in this case?
@@ -356,12 +358,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
             AuditEvent lastEvent = null;
 
             if ( events == null ) {
-                lastEventMap.put( arrayDesignId, null );
+                // lastEventMap.put( arrayDesignId, null );
             } else {
                 ArrayDesign ad = this.load( arrayDesignId );
 
                 lastEvent = this.getAuditEventDao().getLastEvent( ad, ValidatedFlagEvent.class );
-                lastEventMap.put( arrayDesignId, lastEvent );
+                if ( lastEvent != null ) lastEventMap.put( arrayDesignId, lastEvent );
 
                 /*
                  * TODO how to deal with merged/subsumed arrays in this case?

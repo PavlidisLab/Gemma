@@ -85,6 +85,15 @@ public class PredictedCharacteristicFactory implements InitializingBean {
             return;
         }
 
+        init();
+
+    }
+
+    /**
+     * Force initialization
+     */
+    public void init() {
+
         if ( initializing.get() ) {
             log.info( "Already loading..." );
             return;
@@ -113,7 +122,6 @@ public class PredictedCharacteristicFactory implements InitializingBean {
         loadThread.start();
 
         log.info( "Started Label initialization" );
-
     }
 
     private void checkReady() {

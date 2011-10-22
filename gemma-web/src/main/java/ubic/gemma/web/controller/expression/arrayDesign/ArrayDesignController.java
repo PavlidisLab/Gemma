@@ -66,7 +66,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.search.SearchResult;
@@ -371,7 +370,7 @@ public class ArrayDesignController extends AbstractTaskService {
         }
 
     }
-    
+
     /**
      * AJAX
      * 
@@ -383,15 +382,15 @@ public class ArrayDesignController extends AbstractTaskService {
     public Collection<ArrayDesignValueObject> getArrayDesigns( Collection<Long> arrayDesignIds, boolean showMergees,
             boolean showOrphans ) {
         List<ArrayDesignValueObject> result = new ArrayList<ArrayDesignValueObject>();
-        
+
         // If no IDs are specified, then load all expressionExperiments and show the summary (if available)
         if ( arrayDesignIds == null || arrayDesignIds.isEmpty() ) {
             result.addAll( arrayDesignService.loadAllValueObjects() );
-            
+
         } else {// if ids are specified, then display only those arrayDesigns
             result.addAll( arrayDesignService.loadValueObjects( arrayDesignIds ) );
         }
-        
+
         // Filter...
         Collection<ArrayDesignValueObject> toHide = new HashSet<ArrayDesignValueObject>();
         for ( ArrayDesignValueObject a : result ) {
@@ -403,9 +402,9 @@ public class ArrayDesignController extends AbstractTaskService {
             }
         }
         result.removeAll( toHide );
-        
+
         Collections.sort( result, new ArrayDesignValueObjectComparator() );
-        
+
         return result;
     }
 
@@ -418,12 +417,10 @@ public class ArrayDesignController extends AbstractTaskService {
      * @return
      */
     public Collection<ArrayDesignValueObject> loadArrayDesignsForShowAll( Collection<Long> arrayDesignIds ) {
-        
+
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( arrayDesignIds, true, true );
-        
-        // flag or remove troubled - these are not usable. If we're admin, show them anyway.
+
         if ( SecurityService.isUserAdmin() ) {
-            auditableUtil.flagTroubledArrayDesigns( valueObjects );
             arrayDesignReportService.fillEventInformation( valueObjects );
             arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
         } else {
@@ -431,7 +428,7 @@ public class ArrayDesignController extends AbstractTaskService {
         }
 
         arrayDesignReportService.fillInValueObjects( valueObjects );
-        
+
         return valueObjects;
     }
 
@@ -444,39 +441,41 @@ public class ArrayDesignController extends AbstractTaskService {
      * @return
      */
     public ArrayDesignValueObject loadArrayDesignsSummary() {
-        
+
         return arrayDesignReportService.getSummaryObject();
     }
+
     /**
      * AJAX
+     * 
      * @param ArrayDesignValueObject
      * @return
      */
-    public String getSummaryForArrayDesign(Long id){
-        
+    public String getSummaryForArrayDesign( Long id ) {
+
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjects( ids );
         arrayDesignReportService.fillInValueObjects( advos );
-        
-        if(!advos.isEmpty() && advos.toArray()[0]!= null){
+
+        if ( !advos.isEmpty() && advos.toArray()[0] != null ) {
             ArrayDesignValueObject advo = ( ArrayDesignValueObject ) advos.toArray()[0];
             StringBuilder buf = new StringBuilder();
 
             buf.append( "<div style=\"float:left\" >" );
-        
+
             if ( advo.getNumProbeAlignments() != null ) {
                 buf.append( ArrayDesignHtmlUtil.getSummaryHtml( advo ) );
             } else {
                 buf.append( "[Not avail.]" );
             }
-    
+
             buf.append( "</div>" );
             return buf.toString();
         }
         return "[Not avail.]";
     }
-    
+
     /**
      * Exposed for AJAX calls.
      * 
@@ -552,58 +551,40 @@ public class ArrayDesignController extends AbstractTaskService {
     @RequestMapping("/showAllArrayDesigns.html")
     public ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response ) {
 
-        /*StopWatch overallWatch = new StopWatch();
-        overallWatch.start();
-
-        String sId = request.getParameter( "id" );
-        String sShowMerge = request.getParameter( "showMerg" );
-        String sShowOrph = request.getParameter( "showOrph" );
-
-        boolean showMergees = Boolean.parseBoolean( sShowMerge );
-        boolean showOrphans = Boolean.parseBoolean( sShowOrph );
-
-        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
-
-        Collection<Long> ids = new ArrayList<Long>();
-        if ( sId != null ) {
-            String[] idList = StringUtils.split( sId, ',' );
-            for ( int i = 0; i < idList.length; i++ ) {
-                try {
-                    ids.add( new Long( idList[i] ) );
-                } catch ( NumberFormatException e ) {
-                    // just keep going
-                }
-            }
-            if ( ids.isEmpty() ) {
-                throw new IllegalArgumentException( "No valid ids in " + sId );
-            }
-        }
-
-        Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMergees, showOrphans );
-        
-        // flag or remove troubled - these are not usable. If we're admin, show them anyway.
-        if ( SecurityService.isUserAdmin() ) {
-            auditableUtil.flagTroubledArrayDesigns( valueObjects );
-        } else {
-            auditableUtil.removeTroubledArrayDesigns( valueObjects );
-        }
-
-        arrayDesignReportService.fillInValueObjects( valueObjects );
-        arrayDesignReportService.fillEventInformation( valueObjects );
-        arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
-
-        int numArrayDesigns = valueObjects.size();
+        /*
+         * StopWatch overallWatch = new StopWatch(); overallWatch.start();
+         * 
+         * String sId = request.getParameter( "id" ); String sShowMerge = request.getParameter( "showMerg" ); String
+         * sShowOrph = request.getParameter( "showOrph" );
+         * 
+         * boolean showMergees = Boolean.parseBoolean( sShowMerge ); boolean showOrphans = Boolean.parseBoolean(
+         * sShowOrph );
+         * 
+         * ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
+         * 
+         * Collection<Long> ids = new ArrayList<Long>(); if ( sId != null ) { String[] idList = StringUtils.split( sId,
+         * ',' ); for ( int i = 0; i < idList.length; i++ ) { try { ids.add( new Long( idList[i] ) ); } catch (
+         * NumberFormatException e ) { // just keep going } } if ( ids.isEmpty() ) { throw new IllegalArgumentException(
+         * "No valid ids in " + sId ); } }
+         * 
+         * Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMergees, showOrphans );
+         * 
+         * // flag or remove troubled - these are not usable. If we're admin, show them anyway. if (
+         * SecurityService.isUserAdmin() ) { auditableUtil.flagTroubledArrayDesigns( valueObjects ); } else {
+         * auditableUtil.removeTroubledArrayDesigns( valueObjects ); }
+         * 
+         * arrayDesignReportService.fillInValueObjects( valueObjects ); arrayDesignReportService.fillEventInformation(
+         * valueObjects ); arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
+         * 
+         * int numArrayDesigns = valueObjects.size(); ModelAndView mav = new ModelAndView( "arrayDesigns" );
+         * mav.addObject( "showMergees", showMergees ); mav.addObject( "showOrphans", showOrphans ); mav.addObject(
+         * "arrayDesigns", valueObjects ); mav.addObject( "numArrayDesigns", numArrayDesigns ); mav.addObject(
+         * "summary", summary );
+         * 
+         * // log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms for " + numArrayDesigns );
+         */
         ModelAndView mav = new ModelAndView( "arrayDesigns" );
-        mav.addObject( "showMergees", showMergees );
-        mav.addObject( "showOrphans", showOrphans );
-        mav.addObject( "arrayDesigns", valueObjects );
-        mav.addObject( "numArrayDesigns", numArrayDesigns );
-        mav.addObject( "summary", summary );
 
-      //  log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms for " + numArrayDesigns );
-*/
-        ModelAndView mav = new ModelAndView( "arrayDesigns" );
-        
         return mav;
     }
 
@@ -613,7 +594,7 @@ public class ArrayDesignController extends AbstractTaskService {
      * @param errors
      * @return
      */
-    @RequestMapping( { "/showArrayDesign.html", "/" })
+    @RequestMapping({ "/showArrayDesign.html", "/" })
     public ModelAndView showArrayDesign( HttpServletRequest request, HttpServletResponse response ) {
         String name = request.getParameter( "name" );
         String idStr = request.getParameter( "id" );
@@ -943,37 +924,31 @@ public class ArrayDesignController extends AbstractTaskService {
             log.info( "Removed " + ( size - newSize ) + " array designs with 'trouble' flags, leaving " + newSize );
         }
     }
-    
 
     /**
      * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
-     * level? Is there security for ArrayDesigns?
-     * 
-     * ids can be null
+     * level? Is there security for ArrayDesigns? ids can be null
      * 
      * @param batch
      * @return
      */
-    
-    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Collection<Long> ids, boolean showMerged, boolean showOrphans) {
 
-        int limit = batch.getLimit();
-        int origStart = batch.getStart();
+    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Collection<Long> ids,
+            boolean showMerged, boolean showOrphans ) {
+
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
-     // flag or remove troubled - these are not usable. If we're admin, show them anyway.
-        if ( SecurityService.isUserAdmin() ) {
-            auditableUtil.flagTroubledArrayDesigns( valueObjects );
-        } else {
+
+        if ( !SecurityService.isUserAdmin() ) {
             auditableUtil.removeTroubledArrayDesigns( valueObjects );
         }
         int count = valueObjects.size();
-        
+
         arrayDesignReportService.fillInValueObjects( valueObjects );
         arrayDesignReportService.fillEventInformation( valueObjects );
         arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
-                
+
         JsonReaderResponse<ArrayDesignValueObject> returnVal = new JsonReaderResponse<ArrayDesignValueObject>(
-                new ArrayList<ArrayDesignValueObject>(valueObjects), count );
+                new ArrayList<ArrayDesignValueObject>( valueObjects ), count );
 
         return returnVal;
     }

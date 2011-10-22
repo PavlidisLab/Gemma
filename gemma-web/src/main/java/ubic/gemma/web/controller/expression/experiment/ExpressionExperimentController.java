@@ -75,7 +75,6 @@ import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.entrez.pubmed.PubMedSearch;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.BatchInformationFetchingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -974,9 +973,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
             finalResult.setBatchEffect( batchEffect( ee ) );
         }
 
-        AuditEvent lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee, null );
+        Date lastArrayDesignUpdate = expressionExperimentService.getLastArrayDesignUpdate( ee );
         if ( lastArrayDesignUpdate != null ) {
-            finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.getDate().toString() );
+            finalResult.setLastArrayDesignUpdateDate( lastArrayDesignUpdate.toString() );
         }
 
         // experiment sets this ee belongs to
@@ -1172,14 +1171,17 @@ public class ExpressionExperimentController extends AbstractTaskService {
      */
     private List<ExpressionExperiment> removeTroubledExperiments( List<ExpressionExperiment> records ) {
         List<ExpressionExperiment> untroubled = new ArrayList<ExpressionExperiment>( records );
-        Map<Long, AuditEvent> troubleEvents = expressionExperimentReportService.getTroubledEvents( records );
-        Long id = null;
+        // Map<Long, AuditEvent> troubleEvents = expressionExperimentReportService.getTroubledEvents( records );
+        // Long id = null;
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
         for ( ExpressionExperiment record : records ) {
-            id = record.getId();
-            if ( troubleEvents.containsKey( id ) ) {
+            if ( record.getStatus().getTroubled() ) {
                 toRemove.add( record );
             }
+            // id = record.getId();
+            // if ( troubleEvents.containsKey( id ) ) {
+            // toRemove.add( record );
+            // }
         }
         untroubled.removeAll( toRemove );
         return untroubled;
@@ -1960,6 +1962,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private Collection<ExpressionExperimentValueObject> getEEVOsForManager( Long taxonId, Collection<Long> ids,
             boolean filterDataByUser, Integer limit, Integer filter ) {
         Collection<ExpressionExperimentValueObject> eeValObjectCol;
+
+        // taxon specific?
         if ( taxonId != null ) {
             Taxon taxon = taxonService.load( taxonId );
             if ( taxon == null ) {
@@ -1972,6 +1976,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
 
         } else if ( ids == null || ids.isEmpty() ) {
+            // load everything.
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, null, filterDataByUser );
         } else {
             eeValObjectCol = this.getFilteredExpressionExperimentValueObjects( null, ids, filterDataByUser );
@@ -2065,25 +2070,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         StopWatch timer = new StopWatch();
         timer.start();
 
-        List<ExpressionExperimentValueObject> valueObjs = new ArrayList<ExpressionExperimentValueObject>();
-
-        /*
-         * just using expressionExperimentService.loadValueObjects( allIds ) doesn't maintain order using experiment
-         * 
-         * using objects already loaded from db to create value objects doesn't fill in the taxon or assay count fields
-         * (so "valueObjs = ExpressionExperimentValueObject.convert2ValueObjectsOrdered( securedEEs );" won't work)
-         * 
-         * expressionExperimentService.loadValueObjects( tmp ) makes a call to db to get all fields needed for a fully
-         * populated experiment value object
-         */
-
-        Collection<Long> tmp = new ArrayList<Long>();
-        for ( ExpressionExperiment ee : securedEEs ) {
-            tmp.add( ee.getId() );
-            // TODO add expressionExperimentService.loadValueObject(Long id)
-            valueObjs.addAll( expressionExperimentService.loadValueObjects( tmp ) );
-            tmp.clear();
-        }
+        // this method keeps order.
+        List<ExpressionExperimentValueObject> valueObjs = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
+                .loadValueObjects( EntityUtils.getIds( securedEEs ) );
 
         if ( SecurityService.isUserAdmin() ) {
             for ( ExpressionExperimentValueObject vo : valueObjs ) {

@@ -19,6 +19,7 @@
 package ubic.gemma.model.expression.experiment;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,7 +125,8 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
      */
-    public Collection<ExpressionExperiment> findByAccession( final ubic.gemma.model.common.description.DatabaseEntry accession ) {
+    public Collection<ExpressionExperiment> findByAccession(
+            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
         try {
             return this.handleFindByAccession( accession );
         } catch ( Throwable th ) {
@@ -414,10 +416,9 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getLastArrayDesignUpdate(Collection, java.lang.Class)
      */
-    public Map<ExpressionExperiment, AuditEvent> getLastArrayDesignUpdate( final Collection expressionExperiments,
-            final java.lang.Class type ) {
+    public Map<Long, Date> getLastArrayDesignUpdate( final Collection expressionExperiments ) {
         try {
-            return this.handleGetLastArrayDesignUpdate( expressionExperiments, type );
+            return this.handleGetLastArrayDesignUpdate( expressionExperiments );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.getLastArrayDesignUpdate(Collection expressionExperiments, java.lang.Class type)' --> "
@@ -428,10 +429,9 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getLastArrayDesignUpdate(ExpressionExperiment, java.lang.Class)
      */
-    public AuditEvent getLastArrayDesignUpdate( final ExpressionExperiment expressionExperiment,
-            final java.lang.Class<? extends AuditEventType> eventType ) {
+    public Date getLastArrayDesignUpdate( final ExpressionExperiment expressionExperiment ) {
         try {
-            return this.handleGetLastArrayDesignUpdate( expressionExperiment, eventType );
+            return this.handleGetLastArrayDesignUpdate( expressionExperiment );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
                     "Error performing 'ExpressionExperimentService.getLastArrayDesignUpdate(ExpressionExperiment expressionExperiment, java.lang.Class eventType)' --> "
@@ -513,7 +513,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
                     "Error performing 'ExpressionExperimentService.getPerTaxonCount()' --> " + th, th );
         }
     }
-    
+
     /**
      * @see ExpressionExperimentService#getPopulatedFactorCounts(Collection)
      */
@@ -535,8 +535,8 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
             return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
         } catch ( Throwable th ) {
             throw new ExpressionExperimentServiceException(
-                    "Error performing 'ExpressionExperimentService.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> " + th,
-                    th );
+                    "Error performing 'ExpressionExperimentService.getPopulatedFactorCountsExcludeBatch(Collection ids)' --> "
+                            + th, th );
         }
     }
 
@@ -990,15 +990,14 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * Performs the core logic for {@link #getLastArrayDesignUpdate(Collection, java.lang.Class)}
      */
-    protected abstract Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate(
-            Collection<ExpressionExperiment> expressionExperiments, java.lang.Class<? extends AuditEventType> type )
-            throws java.lang.Exception;
+    protected abstract Map<Long, Date> handleGetLastArrayDesignUpdate(
+            Collection<ExpressionExperiment> expressionExperiments ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastArrayDesignUpdate(ExpressionExperiment, java.lang.Class)}
      */
-    protected abstract AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment expressionExperiment,
-            java.lang.Class eventType ) throws java.lang.Exception;
+    protected abstract Date handleGetLastArrayDesignUpdate( ExpressionExperiment expressionExperiment )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getLastLinkAnalysis(Collection)}
@@ -1034,7 +1033,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
      * Performs the core logic for {@link #getPerTaxonCount()}
      */
     protected abstract Map<Taxon, Long> handleGetPerTaxonCount() throws java.lang.Exception;
-    
+
     /**
      * Performs the core logic for {@link #getPopulatedFactorCounts(Collection)}
      */
@@ -1043,7 +1042,8 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * Performs the core logic for {@link #getPopulatedFactorCountsExcludeBatch(Collection)}
      */
-    protected abstract Map handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws java.lang.Exception;
+    protected abstract Map handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getPreferredQuantitationType(ExpressionExperiment)}

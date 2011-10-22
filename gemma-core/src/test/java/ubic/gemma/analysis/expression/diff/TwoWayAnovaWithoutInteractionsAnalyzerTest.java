@@ -44,8 +44,6 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  */
 public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
-    private Log log = LogFactory.getLog( this.getClass() );
-
     @Autowired
     TwoWayAnovaWithoutInteractionsAnalyzer analyzer = null;
 
@@ -64,8 +62,8 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
         configureMocks();
 
-        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment, Arrays
-                .asList( new ExperimentalFactor[] { experimentalFactorA_Area, experimentalFactorB } ) );
+        Collection<DifferentialExpressionAnalysis> expressionAnalyses = analyzer.run( expressionExperiment,
+                Arrays.asList( new ExperimentalFactor[] { experimentalFactorA_Area, experimentalFactorB } ) );
         DifferentialExpressionAnalysis expressionAnalysis = expressionAnalyses.iterator().next();
         Collection<ExpressionAnalysisResultSet> resultSets = expressionAnalysis.getResultSets();
 

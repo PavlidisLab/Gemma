@@ -60,7 +60,7 @@ public class EntityUtils {
 
     /**
      * @param entities
-     * @return
+     * @return either a list (if entities was a list) or collection of ids.
      */
     public static Collection<Long> getIds( Collection<? extends Object> entities ) {
 

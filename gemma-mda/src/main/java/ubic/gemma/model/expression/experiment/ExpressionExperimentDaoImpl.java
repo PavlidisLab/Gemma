@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -354,9 +353,48 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     @Override
     public Collection<Long> getUntroubled( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam(
-                "select e.id from ExpressionExperimentImpl e join e.status s where s.troubled = 0 and e.id in (:ids)",
-                "ids", ids );
+        Collection<Long> batch = new HashSet<Long>();
+        Collection<Long> firstPass = new HashSet<Long>();
+
+        /*
+         * First check the EEs themselves.
+         */
+        String eeQueryString = "select e.id from ExpressionExperimentImpl e join e.status s where s.troubled = 0 and e.id in (:ids)";
+        for ( Long id : ids ) {
+            batch.add( id );
+            if ( batch.size() == BATCH_SIZE ) {
+                firstPass.addAll( this.getHibernateTemplate().findByNamedParam( eeQueryString, "ids", batch ) );
+                batch.clear();
+            }
+
+        }
+        if ( !batch.isEmpty() ) {
+            firstPass.addAll( this.getHibernateTemplate().findByNamedParam( eeQueryString, "ids", batch ) );
+        }
+
+        /*
+         * Then we have to go to the array design. (we could attempt to do this in the same query, above)
+         */
+
+        Collection<Long> result = new HashSet<Long>();
+        final String eeAdQuery = "select ee.id from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad inner join ad.status s where ee.id in (:ees) and s.troubled = 0";
+
+        batch.clear();
+        for ( Long id : firstPass ) {
+            batch.add( id );
+            if ( batch.size() == BATCH_SIZE ) {
+                result.addAll( this.getHibernateTemplate().findByNamedParam( eeAdQuery, "ees", batch ) );
+                batch.clear();
+            }
+
+        }
+
+        if ( !batch.isEmpty() ) {
+            result.addAll( this.getHibernateTemplate().findByNamedParam( eeAdQuery, "ees", batch ) );
+        }
+
+        return result;
     }
 
     /*
@@ -368,20 +406,16 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     public Collection<ExpressionExperiment> loadAll() {
         Collection<ExpressionExperiment> ees = null;
         final String queryString = "from ExpressionExperimentImpl";
-        try {
-            Session session = this.getSession();
-            org.hibernate.Query queryObject = session.createQuery( queryString );
-            queryObject.setReadOnly( true );
-            queryObject.setCacheable( true );
-            StopWatch timer = new StopWatch();
-            timer.start();
-            ees = queryObject.list();
-            if ( timer.getTime() > 1000 ) {
-                log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
-            }
-            this.releaseSession( session );
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+
+        Session session = this.getSession();
+        org.hibernate.Query queryObject = session.createQuery( queryString );
+        queryObject.setReadOnly( true );
+        queryObject.setCacheable( true );
+        StopWatch timer = new StopWatch();
+        timer.start();
+        ees = queryObject.list();
+        if ( timer.getTime() > 1000 ) {
+            log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
         }
         return ees;
     }
@@ -726,7 +760,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         final String queryString = "select distinct ee.ID as eeID FROM "
                 + "GENE2CS g2s, COMPOSITE_SEQUENCE cs, PROCESSED_EXPRESSION_DATA_VECTOR dedv, INVESTIGATION ee "
-                + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID AND g2s.gene = :geneID AND dedv.RANK_BY_MEAN >= :rank";
+                + "WHERE g2s.CS = cs.ID AND cs.ID = dedv.DESIGN_ELEMENT_FK AND dedv.EXPRESSION_EXPERIMENT_FK = ee.ID"
+                + " AND g2s.gene = :geneID AND dedv.RANK_BY_MEAN >= :rank";
 
         Collection<Long> eeIds = null;
 
@@ -923,6 +958,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetArrayDesignAuditEvents(java.util.
      * Collection)
      */
+    @Deprecated
     @Override
     protected Map<Long, Map<Long, Collection<AuditEvent>>> handleGetArrayDesignAuditEvents( Collection<Long> ids )
             throws Exception {
@@ -1123,70 +1159,24 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastArrayDesignUpdate(java.util.
      * Collection, java.lang.Class)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map<ExpressionExperiment, AuditEvent> handleGetLastArrayDesignUpdate(
-            Collection<ExpressionExperiment> expressionExperiments, Class<? extends AuditEventType> type )
+    protected Map<Long, Date> handleGetLastArrayDesignUpdate( Collection<ExpressionExperiment> expressionExperiments )
             throws Exception {
-        // helps make sure we use the query cache.
-        List<ExpressionExperiment> eeList = new ArrayList<ExpressionExperiment>( expressionExperiments );
+        final String queryString = "select ee.id, max(s.lastUpdateDate) from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed a join a.status s "
+                + " where ee in (:ees) group by ee.id ";
 
-        Collections.sort( eeList, new Comparator<ExpressionExperiment>() {
-            @Override
-            public int compare( ExpressionExperiment o1, ExpressionExperiment o2 ) {
-                return o1.getId().compareTo( o2.getId() );
-            }
-        } );
+        List<?> res = this.getHibernateTemplate().findByNamedParam( queryString, "ees", expressionExperiments );
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+        assert ( !res.isEmpty() );
 
-        Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = CommonQueries.getArrayDesignsUsed( eeList,
-                this.getSession( false ) );
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) log.info( "Get array designs used for EEs: " + timer.getTime() );
-        timer.reset();
-
-        List<String> classes = CommonQueries.getEventTypeClassHierarchy( type, this.getSession() );
-        List<ArrayDesign> ads = new ArrayList<ArrayDesign>( eeAdMap.keySet() );
-        final String queryString = "select ad,event from ArrayDesignImpl ad inner join ad.auditTrail trail inner join trail.events event inner join event.eventType et "
-                + " where ad in (:ads) and et.class in ("
-                + StringUtils.join( classes, "," )
-                + ") order by event.date desc ";
-
-        Map<ExpressionExperiment, AuditEvent> result = new HashMap<ExpressionExperiment, AuditEvent>();
-
-        Session session = super.getSession();
-        org.hibernate.Query queryObject = session.createQuery( queryString );
-        queryObject.setCacheable( true );
-        queryObject.setParameterList( "ads", ads );
-
-        timer.start();
-        List qr = queryObject.list();
-        timer.stop();
-        if ( timer.getTime() > 1000 ) log.info( "Read events: " + timer.getTime() );
-        timer.reset();
-        timer.start();
-
-        if ( qr.isEmpty() ) return result;
-
-        for ( Object o : qr ) {
-            Object[] ar = ( Object[] ) o;
-            ArrayDesign ad = ( ArrayDesign ) ar[0];
-            AuditEvent e = ( AuditEvent ) ar[1];
-
-            Collection<ExpressionExperiment> eesForAd = eeAdMap.get( ad );
-
-            // only one event per object, please - the most recent.
-            for ( ExpressionExperiment ee : eesForAd ) {
-                if ( result.containsKey( ee ) ) continue;
-                result.put( ee, e );
-            }
+        Map<Long, Date> result = new HashMap<Long, Date>();
+        for ( Object o : res ) {
+            Object[] oa = ( Object[] ) o;
+            Long id = ( Long ) oa[0];
+            Date d = ( Date ) oa[1];
+            result.put( id, d );
         }
-
-        if ( timer.getTime() > 1000 ) log.info( "Process events: " + timer.getTime() );
-
         return result;
     }
 
@@ -1198,35 +1188,23 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * model.expression.experiment.ExpressionExperiment, java.lang.Class)
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected AuditEvent handleGetLastArrayDesignUpdate( ExpressionExperiment ee, Class eventType )
-            throws java.lang.Exception {
+    protected Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws java.lang.Exception {
 
-        String classRestriction = "";
-        if ( eventType != null ) {
-            classRestriction = " and et.class = '" + eventType.getSimpleName() + "Impl'";
-        }
-        final String queryString = "select distinct event from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed a inner join a.auditTrail trail inner join trail.events event left outer join event.eventType et "
-                + " where ee = :ee " + classRestriction + " order by event.date desc ";
+        final String queryString = "select max(s.lastUpdateDate) from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed a join a.status s " + " where ee = :ee ";
 
-        Session session = super.getSession();
-        org.hibernate.Query queryObject = session.createQuery( queryString );
-        queryObject.setCacheable( true );
-        queryObject.setMaxResults( 1 );
-        queryObject.setParameter( "ee", ee );
-        Collection results = queryObject.list();
-        session.clear();
-        if ( results.size() == 0 ) return null;
-        return ( AuditEvent ) results.iterator().next();
+        List<?> res = this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
 
+        assert ( !res.isEmpty() );
+
+        return ( Date ) res.iterator().next();
     }
 
     @Override
     @SuppressWarnings("unchecked")
     protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
         String queryString = "select q from ExpressionExperimentImpl e inner join e.quantitationTypes q where e = :ee and q.isMaskedPreferred = true";
-        List k = this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
+        List<?> k = this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
         if ( k.size() == 1 ) {
             return ( QuantitationType ) k.iterator().next();
         } else if ( k.size() > 1 ) {
@@ -1506,7 +1484,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<ExpressionExperiment> handleLoad( Collection ids ) throws Exception {
+    protected Collection<ExpressionExperiment> handleLoad( Collection<Long> ids ) throws Exception {
         StopWatch timer = new StopWatch();
         timer.start();
         if ( ids == null || ids.size() == 0 ) {
@@ -1515,7 +1493,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         Collection<ExpressionExperiment> ees = null;
         final String queryString = "from ExpressionExperimentImpl ee where ee.id in (:ids) ";
-        List idList = new ArrayList( ids );
+        List<Long> idList = new ArrayList<Long>( ids );
         Collections.sort( idList );
 
         try {
@@ -1538,106 +1516,108 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadAllValueObjects()
-     */
-    @Override
-    protected Collection<ExpressionExperimentValueObject> handleLoadAllValueObjects() throws Exception {
-        return handleLoadValueObjects( null );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoadValueObjects(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperimentValueObject> handleLoadValueObjects( Collection<Long> ids )
             throws Exception {
-        Map<Long, ExpressionExperimentValueObject> vo = new HashMap<Long, ExpressionExperimentValueObject>();
+        Map<Long, ExpressionExperimentValueObject> vo = new LinkedHashMap<Long, ExpressionExperimentValueObject>();
 
+        boolean isList = ids != null && ids instanceof List;
         if ( ids != null && ids.size() == 0 ) {
+            if ( isList ) {
+                return new ArrayList<ExpressionExperimentValueObject>();
+            }
             return new HashSet<ExpressionExperimentValueObject>();
         }
 
         String idRestrictionClause = "";
-        if ( ids != null ) idRestrictionClause = "and ee.id in (:ids) ";
+        if ( ids != null ) idRestrictionClause = "where ee.id in (:ids) ";
 
         final String queryString = "select ee.id as id, " // 0
-                + "ee.name as name, " // 1
-                + "ED.name as externalDatabaseName, " // 2
-                + "ED.webUri as externalDatabaseUri, " // 3
-                + "ee.source as source, " // 4
-                + "acc.accession as accession, " // 5
-                + "taxon.commonName as taxonCommonName," // 6
-                + "taxon.id as taxonId," // 7
-                + "count(distinct BA) as bioAssayCount, " // 8
-                + "count(distinct AD) as arrayDesignCount, " // 9
-                + "ee.shortName as shortName, " // 10
-                + "eventCreated.date as createdDate, " // 11
+                + "ee.name, " // 1
+                + "ED.name, " // 2
+                + "ED.webUri, " // 3
+                + "ee.source, " // 4
+                + "acc.accession, " // 5
+                + "taxon.commonName," // 6
+                + "taxon.id," // 7
+                + "count(distinct BA), " // 8
+                + "count(distinct AD), " // 9
+                + "ee.shortName, " // 10
+                + "s.createDate, " // 11
                 + "AD.technologyType, ee.class, " // 12, 13
-                + " EDES.id as designId " // 14
-                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA left join ee.auditTrail atr left join atr.events as eventCreated "
+                + " EDES.id  " // 14
+                + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
-                + " inner join ee.experimentalDesign as EDES "
-                + " where eventCreated.action='C' "
-                + idRestrictionClause + " group by ee order by ee.name";
+                + " inner join ee.experimentalDesign as EDES join ee.status as s "
+                + idRestrictionClause
+                + " group by ee.id ";
 
-        try {
-
-            Query queryObject = super.getSession().createQuery( queryString );
-            Map<Long, Collection<QuantitationType>> qtMap;
-            if ( ids != null ) {
-                List<Long> idl = new ArrayList<Long>( ids );
-                Collections.sort( idl ); // so it's consistent and therefore cacheable.
-                qtMap = getQuantitationTypeMap( idl );
-                queryObject.setParameterList( "ids", idl );
-                // System.out.println(queryObject.getQueryString() +"\nparam:"+idl);
-            } else {
-                qtMap = getQuantitationTypeMap( null );
-            }
-
-            queryObject.setCacheable( true );
-            List list = queryObject.list();
-            // System.out.println("size of query results: "+list.size());
-            for ( Object object : list ) {
-
-                Object[] res = ( Object[] ) object;
+        Query queryObject = super.getSession().createQuery( queryString );
+        Map<Long, Collection<QuantitationType>> qtMap;
+        if ( ids != null ) {
+            for ( Long id : ids ) {
                 ExpressionExperimentValueObject v = new ExpressionExperimentValueObject();
-                Long eeId = ( Long ) res[0];
+                vo.put( id, v );
+            }
+            List<Long> idl = new ArrayList<Long>( ids );
+            Collections.sort( idl ); // so it's consistent and therefore cacheable.
+            qtMap = getQuantitationTypeMap( idl );
+            queryObject.setParameterList( "ids", idl );
+        } else {
+            qtMap = getQuantitationTypeMap( null );
+        }
 
-                if ( vo.containsKey( eeId ) ) {
-                    v = vo.get( eeId );
-                }
+        queryObject.setCacheable( true );
+        List<?> list = queryObject.list();
+        for ( Object object : list ) {
 
-                v.setId( eeId );
-                v.setName( ( String ) res[1] );
-                v.setExternalDatabase( ( String ) res[2] );
-                v.setExternalUri( ( String ) res[3] );
-                v.setSource( ( String ) res[4] );
-                v.setAccession( ( String ) res[5] );
-                v.setTaxon( ( String ) res[6] );
-                v.setTaxonId( ( Long ) res[7] );
-                v.setBioAssayCount( ( ( Long ) res[8] ).intValue() );
-                v.setArrayDesignCount( ( ( Long ) res[9] ).intValue() );
-                v.setShortName( ( String ) res[10] );
-                v.setDateCreated( ( ( Date ) res[11] ) );
-                if ( res[12] != null ) v.setTechnologyType( ( ( TechnologyType ) res[12] ).toString() );
-                if ( !qtMap.isEmpty() && v.getTechnologyType() != null ) {
-                    fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
-                }
-                v.setClazz( ( String ) res[13] );
-                v.setExperimentalDesign( ( Long ) res[14] );
+            Object[] res = ( Object[] ) object;
+
+            Long eeId = ( Long ) res[0];
+
+            ExpressionExperimentValueObject v;
+            if ( vo.containsKey( eeId ) ) {
+                v = vo.get( eeId );
+            } else {
+                v = new ExpressionExperimentValueObject();
                 vo.put( eeId, v );
             }
 
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+            v.setId( eeId );
+            v.setName( ( String ) res[1] );
+            v.setExternalDatabase( ( String ) res[2] );
+            v.setExternalUri( ( String ) res[3] );
+            v.setSource( ( String ) res[4] );
+            v.setAccession( ( String ) res[5] );
+            v.setTaxon( ( String ) res[6] );
+            v.setTaxonId( ( Long ) res[7] );
+            v.setBioAssayCount( ( ( Long ) res[8] ).intValue() );
+            v.setArrayDesignCount( ( ( Long ) res[9] ).intValue() );
+            v.setShortName( ( String ) res[10] );
+            v.setDateCreated( ( ( Date ) res[11] ) );
+            Object technology = res[12];
+            if ( technology != null ) v.setTechnologyType( ( ( TechnologyType ) technology ).toString() );
+            if ( !qtMap.isEmpty() && v.getTechnologyType() != null ) {
+                fillQuantitationTypeInfo( qtMap, v, eeId, v.getTechnologyType() );
+            }
+            v.setClazz( ( String ) res[13] );
+            v.setExperimentalDesign( ( Long ) res[14] );
+            vo.put( eeId, v );
         }
 
+        if ( isList ) {
+            List<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
+            for ( Long id : vo.keySet() ) {
+                result.add( vo.get( id ) );
+            }
+            return result;
+        }
         return vo.values();
+
     }
 
     /*
@@ -1786,8 +1766,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     /**
      * @return map of EEids to Qts.
      */
-    @SuppressWarnings("unchecked")
-    private Map<Long, Collection<QuantitationType>> getQuantitationTypeMap( Collection eeids ) {
+    private Map<Long, Collection<QuantitationType>> getQuantitationTypeMap( Collection<Long> eeids ) {
         String queryString = "select ee, qts  from ExpressionExperimentImpl as ee inner join ee.quantitationTypes as qts ";
         if ( eeids != null ) {
             queryString = queryString + " where ee.id in (:eeids)";
@@ -1795,7 +1774,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
         // make sure we use the cache.
         if ( eeids != null ) {
-            List idList = new ArrayList( eeids );
+            List<Long> idList = new ArrayList<Long>( eeids );
             Collections.sort( idList );
             queryObject.setParameterList( "eeids", idList );
         }
@@ -1806,7 +1785,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         StopWatch timer = new StopWatch();
         timer.start();
-        List resultsList = queryObject.list();
+        List<?> resultsList = queryObject.list();
         timer.stop();
         if ( timer.getTime() > 1000 ) {
             log.info( "Got QT info in " + timer.getTime() + "ms" );
