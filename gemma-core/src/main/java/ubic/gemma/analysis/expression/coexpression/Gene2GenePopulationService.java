@@ -276,7 +276,8 @@ public class Gene2GenePopulationService {
         DoubleArrayList l = new DoubleArrayList();
 
         for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
-            l.add( n.getMedian() );
+            // l.add( n.getMedian() );
+            l.add( n.getPvalue() );
         }
 
         DoubleArrayList ranks = Rank.rankTransform( l );
