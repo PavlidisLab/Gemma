@@ -301,7 +301,7 @@ public class LinkAnalysisService {
     }
 
     private void audit( ExpressionExperiment ee, String note, LinkAnalysisEvent eventType ) {
-        expressionExperimentReportService.generateSummaryObject( ee.getId() );
+        expressionExperimentReportService.generateSummary( ee.getId() );
         auditTrailService.addUpdateEvent( ee, eventType, note );
     }
 

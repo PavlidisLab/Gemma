@@ -36,7 +36,7 @@ public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentR
         if ( command.doAll() ) {
             expressionExperimentReportService.generateSummaryObjects();
         } else if ( command.getExpressionExperiment() != null ) {
-            expressionExperimentReportService.generateSummaryObject( command.getExpressionExperiment().getId() );
+            expressionExperimentReportService.generateSummary( command.getExpressionExperiment().getId() );
         } else {
             log.warn( "TaskCommand was not valid, nothing being done" );
         }

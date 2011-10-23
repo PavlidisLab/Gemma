@@ -80,7 +80,7 @@ public class DifferentialExpressionAnalyzerService {
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService = null;
 
     @Autowired
-    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+    private AnalysisSelectionAndExecutionService differentialExpressionAnalyzer;
 
     @Autowired
     ExpressionDataFileService expressionDataFileService;
@@ -627,7 +627,7 @@ public class DifferentialExpressionAnalyzerService {
         /*
          * Update the report
          */
-        expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
+        expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
         return savedResults;
     }

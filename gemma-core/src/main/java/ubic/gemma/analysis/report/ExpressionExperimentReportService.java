@@ -40,7 +40,7 @@ public interface ExpressionExperimentReportService {
     /**
      * Generate a value object that contain summary information about links, biomaterials, and datavectors
      */
-    public abstract ExpressionExperimentValueObject generateSummaryObject( Long id );
+    public abstract ExpressionExperimentValueObject generateSummary( Long id );
 
     /**
      * Generates reports on ALL experiments, including 'private' ones. This should only be run by administrators as it

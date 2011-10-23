@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DifferentialExpressionAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
-    DifferentialExpressionAnalyzer analysis = null;
+    AnalysisSelectionAndExecutionService analysis = null;
 
     /**
      * * Tests determineAnalysis.

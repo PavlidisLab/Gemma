@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
+import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.analysis.expression.diff.OneWayAnovaAnalyzer;
 import ubic.gemma.analysis.expression.diff.TTestAnalyzer;
 import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithInteractionsAnalyzer;
@@ -98,7 +98,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     private DifferentialExpressionAnalysisTask differentialExpressionAnalysisTask;
 
     @Autowired
-    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+    private AnalysisSelectionAndExecutionService differentialExpressionAnalyzer;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -249,7 +249,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         return super.run( cmd );
     }
 
-    public void setDifferentialExpressionAnalyzer( DifferentialExpressionAnalyzer differentialExpressionAnalyzer ) {
+    public void setDifferentialExpressionAnalyzer( AnalysisSelectionAndExecutionService differentialExpressionAnalyzer ) {
         this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
     }
 

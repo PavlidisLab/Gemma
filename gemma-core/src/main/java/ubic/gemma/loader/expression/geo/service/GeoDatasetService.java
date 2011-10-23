@@ -697,7 +697,7 @@ public class GeoDatasetService extends AbstractGeoService {
             if ( entity instanceof ExpressionExperiment ) {
                 ExpressionExperiment expressionExperiment = ( ExpressionExperiment ) entity;
 
-                this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
+                this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
                 expressionExperiment = this.expressionExperimentService.thawLite( expressionExperiment );
 

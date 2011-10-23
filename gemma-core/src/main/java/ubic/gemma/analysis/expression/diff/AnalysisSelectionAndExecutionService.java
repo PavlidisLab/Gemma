@@ -48,9 +48,9 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @version $Id$
  */
 @Service
-public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
+public class AnalysisSelectionAndExecutionService implements ApplicationContextAware {
 
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalyzer.class );
+    private static Log log = LogFactory.getLog( AnalysisSelectionAndExecutionService.class );
 
     private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
 
@@ -84,8 +84,8 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
      */
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment,
             DifferentialExpressionAnalysisConfig config ) {
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, config
-                .getFactorsToInclude(), config.getAnalysisType(), config.getSubsetFactor() );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment,
+                config.getFactorsToInclude(), config.getAnalysisType(), config.getSubsetFactor() );
 
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
@@ -110,6 +110,8 @@ public class DifferentialExpressionAnalyzer implements ApplicationContextAware {
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }
+
+        log.info( "Analysis will be done using " + analyzer.getClass().getSimpleName() );
 
         Collection<DifferentialExpressionAnalysis> analyses = analyzer.run( expressionExperiment, factors );
 

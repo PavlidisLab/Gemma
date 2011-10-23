@@ -481,7 +481,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * 
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
      */
-    public ExpressionExperimentValueObject generateSummaryObject( Long id ) {
+    public ExpressionExperimentValueObject generateSummary( Long id ) {
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );

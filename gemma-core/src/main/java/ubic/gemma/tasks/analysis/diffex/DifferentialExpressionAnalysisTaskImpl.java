@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzer;
+import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.job.TaskMethod;
@@ -57,7 +57,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private DifferentialExpressionAnalyzer differentialExpressionAnalyzer;
+    private AnalysisSelectionAndExecutionService differentialExpressionAnalyzer;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;

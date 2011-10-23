@@ -30,6 +30,8 @@ import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -60,6 +62,18 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
 
     @Autowired
     GenericAncovaAnalyzer analyzer;
+
+    @Autowired
+    AnalysisSelectionAndExecutionService analysisService = null;
+
+    @Autowired
+    DifferentialExpressionAnalyzerService differentialExpressionAnalyzerService;
+
+    @Autowired
+    DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+
+    @Autowired
+    private DifferentialExpressionResultService differentialExpressionResultService = null;
 
     ExpressionExperiment ee;
 
@@ -114,6 +128,9 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     @Test
     public void test() throws Exception {
 
+        AbstractAnalyzer aa = analysisService.determineAnalysis( ee, null, null );
+        assertTrue( aa instanceof TwoWayAnovaWithInteractionsAnalyzer );
+
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
 
         Collection<ExperimentalFactor> factors = ee.getExperimentalDesign().getExperimentalFactors();
@@ -123,9 +140,39 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         config.getInteractionsToInclude().add( factors );
 
         Collection<DifferentialExpressionAnalysis> result = analyzer.run( ee, config );
+        assertEquals( 1, result.size() );
 
         DifferentialExpressionAnalysis analysis = result.iterator().next();
 
+        checkResults( analysis );
+
+        differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
+        Collection<DifferentialExpressionAnalysis> autoran = differentialExpressionAnalyzerService
+                .doDifferentialExpressionAnalysis( ee );
+        assertEquals( 1, autoran.size() );
+        checkResults( autoran.iterator().next() );
+
+        Collection<DifferentialExpressionAnalysis> persistent = differentialExpressionAnalyzerService
+                .runDifferentialExpressionAnalyses( ee );
+        assertEquals( 1, persistent.size() );
+        checkResults( persistent.iterator().next() );
+
+        DifferentialExpressionAnalysis refetched = differentialExpressionAnalysisService.load( persistent.iterator()
+                .next().getId() );
+
+        differentialExpressionAnalysisService.thaw( refetched );
+        for ( ExpressionAnalysisResultSet ears : refetched.getResultSets() ) {
+            differentialExpressionResultService.thaw( ears );
+
+        }
+
+        checkResults( refetched );
+    }
+
+    /**
+     * @param analysis
+     */
+    public void checkResults( DifferentialExpressionAnalysis analysis ) {
         Collection<ExpressionAnalysisResultSet> resultSets = analysis.getResultSets();
 
         assertEquals( 3, resultSets.size() );
@@ -147,6 +194,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
             } else {
                 interaction = true;
             }
+
+            this.differentialExpressionAnalysisService.getResultSets( ee );
 
             assertEquals( 8, results.size() );
 

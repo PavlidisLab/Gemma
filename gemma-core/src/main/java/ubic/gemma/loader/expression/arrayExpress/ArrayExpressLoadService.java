@@ -625,7 +625,7 @@ public class ArrayExpressLoadService {
     private void updateReports( ExpressionExperiment expressionExperiment ) {
         Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
 
-        this.expressionExperimentReportService.generateSummaryObject( expressionExperiment.getId() );
+        this.expressionExperimentReportService.generateSummary( expressionExperiment.getId() );
 
         expressionExperiment = this.expressionExperimentService.thawLite( expressionExperiment );
 

@@ -111,8 +111,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         /* Supports: running on all data sets that have not been run since a given date. */
         super.addDateOption();
 
-        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true ).withDescription(
-                "The top (most significant) results to display." ).create();
+        Option topOpt = OptionBuilder.withLongOpt( "top" ).hasArg( true )
+                .withDescription( "The top (most significant) results to display." ).create();
         super.addOption( topOpt );
 
         super.addAutoOption();
@@ -122,8 +122,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
         // Option forceAnalysisOpt = OptionBuilder.hasArg( false ).withDescription( "Force the run." ).create( 'r' );
         // super.addOption( forceAnalysisOpt );
 
-        Option factors = OptionBuilder.hasArg().withDescription(
-                "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
+        Option factors = OptionBuilder.hasArg()
+                .withDescription( "ID numbers or names of the factor(s) to use, comma-delimited" ).create( "factors" );
 
         super.addOption( factors );
 
@@ -257,7 +257,7 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 ExperimentalFactorValueObject fvo = new ExperimentalFactorValueObject( experimentalFactor );
 
                 if ( ignoreBatch && BatchInfoPopulationService.isBatchFactor( experimentalFactor ) ) {
-                    log.debug( "Skipping batch:" + experimentalFactor );
+                    log.info( "Ignoring batch factor:" + experimentalFactor );
                     continue;
                 }
 
@@ -306,7 +306,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
             ee = this.eeService.thawLite( ee );
 
-            if ( ee.getExperimentalDesign().getExperimentalFactors().size() == 0 ) {
+            Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
+            if ( experimentalFactors.size() == 0 ) {
                 if ( this.expressionExperiments.size() == 1 ) {
                     /*
                      * Only need to be noisy if this is the only ee. Batch processing should be less so.
@@ -335,25 +336,27 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
                 /*
                  * Automagically
                  */
-                if ( ee.getExperimentalDesign().getExperimentalFactors().size() > 3 ) {
-                    throw new RuntimeException( "Experiment has too many factors to run automatically: "
-                            + ee.getShortName() );
-                }
 
                 Collection<ExperimentalFactor> factorsToUse = new HashSet<ExperimentalFactor>();
 
                 if ( this.ignoreBatch ) {
-                    for ( ExperimentalFactor ef : ee.getExperimentalDesign().getExperimentalFactors() ) {
+                    for ( ExperimentalFactor ef : experimentalFactors ) {
                         if ( !ExperimentalDesignUtils.isBatch( ef ) ) {
                             factorsToUse.add( ef );
                         }
                     }
                 } else {
-                    factorsToUse.addAll( ee.getExperimentalDesign().getExperimentalFactors() );
+
+                    factorsToUse.addAll( experimentalFactors );
                 }
 
                 if ( factorsToUse.isEmpty() ) {
-                    throw new Exception( "No factors available for " + ee.getShortName() );
+                    throw new RuntimeException( "No factors available for " + ee.getShortName() );
+                }
+
+                if ( factorsToUse.size() > 3 ) {
+                    throw new RuntimeException( "Experiment has too many factors to run automatically: "
+                            + ee.getShortName() );
                 }
 
                 results = this.differentialExpressionAnalyzerService.runDifferentialExpressionAnalyses( ee,

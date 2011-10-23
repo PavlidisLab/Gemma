@@ -42,7 +42,6 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * A helper class for the differential expression analyzers. This class contains helper methods commonly needed when
  * performing an analysis.
  * 
- * @spring.bean id="differentialExpressionAnalysisHelperService"
  * @author keshav
  * @version $Id$
  */
@@ -366,17 +365,17 @@ public class DifferentialExpressionAnalysisHelperService {
                 /*
                  * This amounts to a missing value.
                  */
-                 throw new IllegalArgumentException(
-                         "Biomaterial does not have a combination of factors matching the model; design error?: " + m );
-               // continue;
+                throw new IllegalArgumentException(
+                        "Biomaterial does not have a combination of factors matching the model; design error?: " + m );
+                // continue;
             }
 
             seenPairings.put( factorValuesFromBioMaterial, m );
         }
         if ( seenPairings.size() != factorValuePairings.size() ) {
-            log.warn( "Biomaterial not paired with all factor values for each experimental factor.  Found "
-                    + seenPairings.size() + " but should have " + factorValuePairings.size()
-                    + ".  Incomplete block design." );
+            log.warn( "Biomaterial not paired with all factor values for each of " + experimentalFactors.size()
+                    + " experimental factors.  Found " + seenPairings.size() + " pairings but should have "
+                    + factorValuePairings.size() + ".  Incomplete block design." );
             return false;
         }
         return true;
