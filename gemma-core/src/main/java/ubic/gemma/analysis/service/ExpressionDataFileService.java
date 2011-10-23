@@ -48,6 +48,7 @@ import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.analysis.expression.diff.ContrastResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisResult;
@@ -371,6 +372,15 @@ public class ExpressionDataFileService {
     }
 
     /**
+     * @param analysis
+     * @param forceRewrite
+     * @return
+     */
+    public File writeOrLocateDiffExpressionDataFile( DifferentialExpressionAnalysis analysis, boolean forceRewrite ) {
+        throw new UnsupportedOperationException( "Not implemented yet" );
+    }
+
+    /**
      * @param ee
      * @return
      */
@@ -448,12 +458,10 @@ public class ExpressionDataFileService {
         buf.append( DISCLAIMER );
         if ( geneAnnotations.isEmpty() ) {
             log.info( "Micro Array Annotation File Missing for Experiment, unable to include annotation information" );
-            buf
-                    .append( "# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
+            buf.append( "# The micro array annotation file is missing for this Experiment, unable to include gene annotation information \n" );
             buf.append( "probeId_1 \t probeId_2 \t score \n" );
         } else
-            buf
-                    .append( "probe_1 \t gene_symbol_1 \t gene_name_1 \t probe_2 \t gene_symbol_2 \t gene_name_2 \t score \n" );
+            buf.append( "probe_1 \t gene_symbol_1 \t gene_name_1 \t probe_2 \t gene_symbol_2 \t gene_name_2 \t score \n" );
 
         // Data
         for ( ProbeLink link : probeLinks ) {
@@ -502,6 +510,16 @@ public class ExpressionDataFileService {
         StringBuilder buf = new StringBuilder();
         buf.append( makeDiffExpressionFileHeader( ee, geneAnnotations ) );
 
+        analysisResultSetsToString( results, geneAnnotations, buf );
+
+        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
+        writer.write( buf.toString() );
+        writer.flush();
+        writer.close();
+    }
+
+    public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
+            Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
 
         List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults = null;
@@ -511,60 +529,15 @@ public class ExpressionDataFileService {
          */
 
         for ( ExpressionAnalysisResultSet ears : results ) {
-            differentialExpressionResultService.thaw( ears );
-
-            if ( sortedFirstColumnOfResults == null ) { // Sort P values in ears (because 1st column)
-                sortedFirstColumnOfResults = new ArrayList<DifferentialExpressionAnalysisResult>( ears.getResults() );
-                Collections.sort( sortedFirstColumnOfResults, DifferentialExpressionAnalysisResultComparator.Factory
-                        .newInstance() );
-            }
-
-            // Generate a description of the factors involved "(factor1, factor2, ...., factorN)"
-            String factorColumnName = "(";
-            for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
-                factorColumnName += ef.getName() + ",";
-            }
-            factorColumnName = StringUtils.chomp( factorColumnName, "," ) + ")";
-
-            // Generate headers
-            buf.append( "\tQValue" + factorColumnName );
-            buf.append( "\tPValue" + factorColumnName );
-
-            // Generate probe details
-            for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
-                StringBuilder probeBuffer = new StringBuilder();
-
-                if ( dear instanceof ProbeAnalysisResult ) {
-                    CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
-
-                    // Make a hashmap so we can organize the data by probe with factors as colums
-                    // Need to cache the information untill we have it organized in the correct format to write
-                    Long csid = cs.getId();
-                    if ( probe2String.containsKey( csid ) ) {
-                        probeBuffer = probe2String.get( csid );
-                    } else {// no entry for probe yet
-                        probeBuffer.append( cs.getName() );
-                        if ( geneAnnotations.containsKey( csid ) )
-                            probeBuffer.append( "\t" + geneAnnotations.get( csid )[1] + "\t"
-                                    + geneAnnotations.get( csid )[2] );
-                        probe2String.put( csid, probeBuffer );
-                    }
-
-                    probeBuffer.append( "\t" + String.format( DECIMAL_FORMAT, dear.getCorrectedPvalue() ) + "\t"
-                            + String.format( DECIMAL_FORMAT, dear.getPvalue() ) );
-                } else {
-                    log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
-                            + dear.getClass() + " with id: " + dear.getId() );
-                }
-
-            } // ears.getResults loop
+            sortedFirstColumnOfResults = analysisResultSetToString( ears, geneAnnotations, buf, probe2String,
+                    sortedFirstColumnOfResults );
 
         } // ears loop
 
         buf.append( "\n" );
 
         if ( sortedFirstColumnOfResults == null ) {
-            throw new IllegalStateException( "No results for " + ee );
+            throw new IllegalStateException( "No results for " );
         }
 
         // Dump the probe data in the sorted order of the 1st column that we orginally sorted
@@ -581,11 +554,67 @@ public class ExpressionDataFileService {
                 buf.append( "\n" );
             }
         }
+    }
 
-        Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
-        writer.write( buf.toString() );
-        writer.flush();
-        writer.close();
+    /**
+     * @param ears
+     * @param geneAnnotations
+     * @param buf
+     * @param probe2String
+     * @param sortedFirstColumnOfResults
+     * @return
+     */
+    public List<DifferentialExpressionAnalysisResult> analysisResultSetToString( ExpressionAnalysisResultSet ears,
+            Map<Long, String[]> geneAnnotations, StringBuilder buf, Map<Long, StringBuilder> probe2String,
+            List<DifferentialExpressionAnalysisResult> sortedFirstColumnOfResults ) {
+        differentialExpressionResultService.thaw( ears );
+
+        if ( sortedFirstColumnOfResults == null ) { // Sort P values in ears (because 1st column)
+            sortedFirstColumnOfResults = new ArrayList<DifferentialExpressionAnalysisResult>( ears.getResults() );
+            Collections.sort( sortedFirstColumnOfResults,
+                    DifferentialExpressionAnalysisResultComparator.Factory.newInstance() );
+        }
+
+        // Generate a description of the factors involved "(factor1, factor2, ...., factorN)"
+        String factorColumnName = "(";
+        for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
+            factorColumnName += ef.getName() + ",";
+        }
+        factorColumnName = StringUtils.chomp( factorColumnName, "," ) + ")";
+
+        // Generate headers
+        buf.append( "\tQValue" + factorColumnName );
+        buf.append( "\tPValue" + factorColumnName );
+
+        // Generate probe details
+        for ( DifferentialExpressionAnalysisResult dear : ears.getResults() ) {
+            StringBuilder probeBuffer = new StringBuilder();
+
+            if ( dear instanceof ProbeAnalysisResult ) {
+                CompositeSequence cs = ( ( ProbeAnalysisResult ) dear ).getProbe();
+
+                // Make a hashmap so we can organize the data by probe with factors as colums
+                // Need to cache the information untill we have it organized in the correct format to write
+                Long csid = cs.getId();
+                if ( probe2String.containsKey( csid ) ) {
+                    probeBuffer = probe2String.get( csid );
+                } else {// no entry for probe yet
+                    probeBuffer.append( cs.getName() );
+                    if ( geneAnnotations.containsKey( csid ) )
+                        probeBuffer.append( "\t" + geneAnnotations.get( csid )[1] + "\t"
+                                + geneAnnotations.get( csid )[2] );
+                    probe2String.put( csid, probeBuffer );
+                }
+
+                probeBuffer.append( "\t" + String.format( DECIMAL_FORMAT, dear.getCorrectedPvalue() ) + "\t"
+                        + String.format( DECIMAL_FORMAT, dear.getPvalue() ) );
+            } else {
+                log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
+                        + dear.getClass() + " with id: " + dear.getId() );
+            }
+
+        } // ears.getResults loop
+        return sortedFirstColumnOfResults;
     }
 
     /**
@@ -629,8 +658,7 @@ public class ExpressionDataFileService {
         // Different Headers if Gene Annotations missing.
         if ( geneAnnotations.isEmpty() ) {
             log.info( "Annotation file is missing for this experiment, unable to include gene annotation information" );
-            buf
-                    .append( "# The annotation file is missing for this Experiment, unable to include gene annotation information \n" );
+            buf.append( "# The annotation file is missing for this Experiment, unable to include gene annotation information \n" );
             buf.append( "Probe_Name" );
         } else {
             buf.append( "Probe_Name\tGene_Name\tGene_Symbol" );// column information
@@ -797,13 +825,12 @@ public class ExpressionDataFileService {
      * @param geneAnnotations
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     private void writeVectors( File file, PrimitiveType representation,
             Collection<? extends DesignElementDataVector> vectors, Map<Long, String[]> geneAnnotations )
             throws IOException {
         designElementDataVectorService.thaw( vectors );
 
-        ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
 
         writeMatrix( file, geneAnnotations, expressionDataMatrix );
     }

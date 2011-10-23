@@ -345,7 +345,7 @@ public class ArrayDesignAnnotationService {
                 continue;
             }
 
-            List<Collection<OntologyTerm>> goTerms = new ArrayList<Collection<OntologyTerm>>();
+            Set<OntologyTerm> goTerms = new LinkedHashSet<OntologyTerm>();
             Set<String> genes = new LinkedHashSet<String>();
             Set<String> geneDescriptions = new LinkedHashSet<String>();
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
@@ -378,7 +378,7 @@ public class ArrayDesignAnnotationService {
                 geneDescriptions.add( StringUtils.join( new TransformIterator( retained.iterator(),
                         descriptionExtractor ), "$" ) );
 
-                goTerms.add( clusterGoTerms );
+                goTerms.addAll( clusterGoTerms );
             }
 
             String geneString = StringUtils.join( genes, "|" );
@@ -407,14 +407,13 @@ public class ArrayDesignAnnotationService {
     public int generateAnnotationFile( Writer writer, Collection<Gene> genes, OutputType type ) {
         for ( Gene gene : genes ) {
             Collection<OntologyTerm> ontos = getGoTerms( gene, type );
-            List<Collection<OntologyTerm>> termList = new ArrayList<Collection<OntologyTerm>>();
-            termList.add( ontos );
+
             String ncbiId = gene.getNcbiId();
             ncbiId = ncbiId == null ? "" : ncbiId;
             String geneString = gene.getOfficialSymbol();
             String geneDescriptionString = gene.getOfficialName();
             try {
-                writeAnnotationLine( writer, geneString, ncbiId, geneDescriptionString, termList );
+                writeAnnotationLine( writer, geneString, ncbiId, geneDescriptionString, ontos );
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
@@ -545,7 +544,7 @@ public class ArrayDesignAnnotationService {
      * @throws IOException Adds one line at a time to the annotation file
      */
     private void writeAnnotationLine( Writer writer, String probeId, String gene, String description,
-            List<Collection<OntologyTerm>> goTerms ) throws IOException {
+            Collection<OntologyTerm> goTerms ) throws IOException {
 
         if ( log.isDebugEnabled() ) log.debug( "Generating line for annotation file  \n" );
 
@@ -566,11 +565,7 @@ public class ArrayDesignAnnotationService {
             return;
         }
 
-        List<String> clusterGoterms = new ArrayList<String>();
-        for ( Collection<OntologyTerm> oe : goTerms ) {
-            clusterGoterms.add( StringUtils.join( new TransformIterator( oe.iterator(), goTermExtractor ), "|" ) );
-        }
-        String goterms = StringUtils.join( clusterGoterms, "|" );
+        String goterms = StringUtils.join( new TransformIterator( goTerms.iterator(), goTermExtractor ), "|" );
         writer.write( goterms );
 
         writer.write( "\n" );

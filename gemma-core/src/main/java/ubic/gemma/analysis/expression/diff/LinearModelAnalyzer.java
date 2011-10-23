@@ -334,8 +334,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                     log.info( "Analyzing subset: " + subsetFactorValue );
 
-                    List<BioMaterial> bioMaterials = ExperimentalDesignUtils.getOrderedSamples( subsets
-                            .get( subsetFactorValue ), factors );
+                    List<BioMaterial> bioMaterials = ExperimentalDesignUtils.getOrderedSamples(
+                            subsets.get( subsetFactorValue ), factors );
 
                     /*
                      * make a EESubSet
@@ -352,8 +352,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     /*
                      * Run analysis on the subset.
                      */
-                    DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, config, subsets
-                            .get( subsetFactorValue ), bioMaterials, factors, subsetFactorValue );
+                    DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, config,
+                            subsets.get( subsetFactorValue ), bioMaterials, factors, subsetFactorValue );
 
                     results.add( analysis );
 
@@ -1050,8 +1050,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         for ( FactorValue fv : subSetSamples.keySet() ) {
             List<BioMaterial> samplesInSubset = subSetSamples.get( fv );
             assert samplesInSubset.size() < samplesUsed.size();
-            samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset, config
-                    .getFactorsToInclude() );
+            samplesInSubset = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesInSubset,
+                    config.getFactorsToInclude() );
             ExpressionDataDoubleMatrix subMatrix = new ExpressionDataDoubleMatrix( samplesInSubset, dmatrix );
             subMatrices.put( fv, subMatrix );
         }
@@ -1068,6 +1068,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      */
     private boolean onLogScale( QuantitationType quantitationType,
             DoubleMatrix<CompositeSequence, BioMaterial> namedMatrix ) {
+
         if ( quantitationType.getScale() != null ) {
             if ( quantitationType.getScale().equals( ScaleType.LOG2 ) ) {
                 return true;
@@ -1075,6 +1076,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 // pretty unlikely -- if we see this, it might be a mistake.
                 throw new UnsupportedOperationException(
                         "Sorry, data on log-10 scale is not supported yet. Please check that it really is on log-10 scale." );
+            } else if ( quantitationType.getScale().equals( ScaleType.LN ) ) {
+                // pretty unlikely -- if we see this, it might be a mistake.
+                throw new UnsupportedOperationException(
+                        "Sorry, data on natural log scale is not supported yet. Please check that it really is on log-e scale." );
             } else if ( quantitationType.getScale().equals( ScaleType.LOGBASEUNKNOWN ) ) {
                 throw new UnsupportedOperationException(
                         "Sorry, data on an unknown log scale is not supported. Please check the quantitation types, and make sure the data is expressed in terms of log2 or un-logged data" );
@@ -1134,9 +1139,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 Thread.sleep( 1000 );
 
                 if ( timer.getTime() - lasttime > updateIntervalMillis ) {
-                    log
-                            .info( String.format( "Analysis running, %.1f minutes elapsed ...",
-                                    timer.getTime() / 60000.00 ) );
+                    log.info( String.format( "Analysis running, %.1f minutes elapsed ...", timer.getTime() / 60000.00 ) );
                     lasttime = timer.getTime();
                 }
 
@@ -1259,8 +1262,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         MatrixWriter<Double> mw = new MatrixWriter<Double>();
         try {
             mw.write( new FileWriter( File.createTempFile( "data.", ".txt" ) ), dmatrix, null, true, false );
-            ubic.basecode.io.writer.MatrixWriter dem = new ubic.basecode.io.writer.MatrixWriter( new FileWriter( File
-                    .createTempFile( "design.", ".txt" ) ) );
+            ubic.basecode.io.writer.MatrixWriter dem = new ubic.basecode.io.writer.MatrixWriter( new FileWriter(
+                    File.createTempFile( "design.", ".txt" ) ) );
             dem.writeMatrix( designMatrix, true );
 
         } catch ( IOException e ) {

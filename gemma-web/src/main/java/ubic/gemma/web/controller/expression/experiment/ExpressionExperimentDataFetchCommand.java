@@ -26,15 +26,19 @@ import ubic.gemma.job.TaskCommand;
  */
 public class ExpressionExperimentDataFetchCommand extends TaskCommand {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     private Long quantitationTypeId;
     private Long expressionExperimentId;
     private boolean filter;
     private Long experimentalDesignId;
     private String format;
+    private boolean forceRewrite = false;
+
+    private Long analysisId;
+
+    public Long getAnalysisId() {
+        return analysisId;
+    }
 
     public Long getExperimentalDesignId() {
         return experimentalDesignId;
@@ -56,6 +60,14 @@ public class ExpressionExperimentDataFetchCommand extends TaskCommand {
         return filter;
     }
 
+    public boolean isForceRewrite() {
+        return forceRewrite;
+    }
+
+    public void setAnalysisId( Long analysisId ) {
+        this.analysisId = analysisId;
+    }
+
     public void setExperimentalDesignId( Long experimentalDesignId ) {
         this.experimentalDesignId = experimentalDesignId;
     }
@@ -66,6 +78,10 @@ public class ExpressionExperimentDataFetchCommand extends TaskCommand {
 
     public void setFilter( boolean filter ) {
         this.filter = filter;
+    }
+
+    public void setForceRewrite( boolean forceRewrite ) {
+        this.forceRewrite = forceRewrite;
     }
 
     public void setFormat( String format ) {

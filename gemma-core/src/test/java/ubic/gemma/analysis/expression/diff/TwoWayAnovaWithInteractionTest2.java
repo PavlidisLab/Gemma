@@ -85,7 +85,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
         metaData.setTaxon( taxonService.findByCommonName( "mouse" ) );
         metaData.setQuantitationTypeName( "whatever" );
-        metaData.setScale( ScaleType.LOG2 );
+        // metaData.setScale( ScaleType.LOG2 ); // this is actually wrong!
+        metaData.setScale( ScaleType.LINEAR );
 
         ArrayDesign f = ArrayDesign.Factory.newInstance();
         f.setShortName( "GSE8441_test" );
@@ -106,7 +107,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
      * <pre>
      * expMatFile <- "GSE8441_expmat_8probes.txt"
      * expDesignFile <- "606_GSE8441_expdesign.data.txt"
-     * expMat <- read.table(expMatFile, header = TRUE, row.names = 1, sep = "\t", quote="")
+     * expMat <- log2(read.table(expMatFile, header = TRUE, row.names = 1, sep = "\t", quote=""))
      * expDesign <- read.table(expDesignFile, header = TRUE, row.names = 1, sep = "\t", quote="")
      * 
      * expData <- expMat[rownames(expDesign)]
@@ -209,18 +210,18 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
                 if ( probe.getName().equals( "205969_at" ) ) {
                     if ( sexFactor ) {
                         found1 = true;
-                        assertEquals( 0.3616, pvalue, 0.001 );
+                        assertEquals( 0.3333, pvalue, 0.001 );
                     } else if ( interaction ) {
                         found2 = true;
-                        assertEquals( 0.6454, pvalue, 0.001 );
+                        assertEquals( 0.8480, pvalue, 0.001 );
                     } else {
                         found3 = true;
-                        assertEquals( 0.1645, pvalue, 0.001 );
+                        assertEquals( 0.1323, pvalue, 0.001 );
                     }
                 } else if ( probe.getName().equals( "217757_at" ) ) {
                     if ( interaction ) {
                         found4 = true;
-                        assertEquals( 0.5925, pvalue, 0.001 );
+                        assertEquals( 0.7621, pvalue, 0.001 );
                     }
                 }
             }

@@ -34,6 +34,8 @@ import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -218,17 +220,30 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
 
             StopWatch watch = new StopWatch();
             watch.start();
-
+            File f;
             assert this.command != null;
-            Long eeId = this.command.getExpressionExperimentId();
-            ExpressionExperiment ee = expressionExperimentService.load( eeId );
 
-            if ( ee == null ) {
-                throw new RuntimeException(
-                        "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
+            if ( this.command.getAnalysisId() != null ) {
+
+                DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.load(command.getAnalysisId());
+                f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( analysis, command.isForceRewrite() );
+
+                
+            } else if ( this.command.getExpressionExperimentId() != null ) {
+
+                Long eeId = this.command.getExpressionExperimentId();
+                ExpressionExperiment ee = expressionExperimentService.load( eeId );
+
+                if ( ee == null ) {
+                    throw new RuntimeException(
+                            "No data available (either due to lack of authorization, or use of an invalid entity identifier)" );
+                }
+
+                f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, command.isForceRewrite() );
+
+            } else {
+                throw new IllegalArgumentException( "Must provide either experiment or specific analysis to provide" );
             }
-
-            File f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, false );
 
             watch.stop();
             log.debug( "Finished writing and downloading differential expression file; done in " + watch.getTime()
@@ -252,6 +267,9 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
+    
+    @Autowired
+    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 
     /**
      * Regular spring MVC request to fetch a file that already has been generated. It is assumed that the file is in the

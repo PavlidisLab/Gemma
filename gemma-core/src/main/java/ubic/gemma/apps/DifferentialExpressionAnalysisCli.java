@@ -31,6 +31,7 @@ import org.apache.commons.lang.time.StopWatch;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.eventType.DifferentialExpressionAnalysisEvent;
@@ -82,6 +83,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
      * Whether batch factors should be included (if they exist)
      */
     protected boolean ignoreBatch = false;
+
+    private ExpressionDataFileService expressionDataFileService;
+
+    private boolean noDB = false;
 
     /*
      * (non-Javadoc)
@@ -143,6 +148,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         super.addOption( ignoreBatchOption );
 
+        super.addOption( "nodb", false, "Output only to STDOUT instead of database" );
+
     }
 
     /*
@@ -160,6 +167,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         this.differentialExpressionAnalyzerService = ( DifferentialExpressionAnalyzerService ) this
                 .getBean( "differentialExpressionAnalyzerService" );
+
+        this.expressionDataFileService = ( ExpressionDataFileService ) this.getBean( "expressionDataFileService" );
 
         SecurityService securityService = ( SecurityService ) this.getBean( "securityService" );
 
@@ -211,6 +220,10 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
 
         if ( hasOption( "ignorebatch" ) ) {
             this.ignoreBatch = true;
+        }
+
+        if ( hasOption( "nodb" ) ) {
+            this.noDB = true;
         }
 
         if ( hasOption( "factors" ) ) {
@@ -366,6 +379,8 @@ public class DifferentialExpressionAnalysisCli extends ExpressionExperimentManip
             if ( results == null ) {
                 throw new Exception( "Failed to process differential expression for experiment " + ee.getShortName() );
             }
+
+            // expressionDataFileService.writeOrLocateDiffExpressionDataFile( results.iterator().next(), true );
 
             successObjects.add( ee.toString() );
 

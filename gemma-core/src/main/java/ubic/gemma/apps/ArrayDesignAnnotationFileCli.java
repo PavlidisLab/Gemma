@@ -117,19 +117,25 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
     protected void buildOptions() {
         super.buildOptions();
 
-        Option annotationFileOption = OptionBuilder.hasArg().withArgName( "Annotation file name" ).withDescription(
-                "The name of the Annotation file to be generated [Default = Accession number]" ).withLongOpt(
-                "annotation" ).create( 'f' );
+        Option annotationFileOption = OptionBuilder.hasArg().withArgName( "Annotation file name" )
+                .withDescription( "The name of the Annotation file to be generated [Default = Accession number]" )
+                .withLongOpt( "annotation" ).create( 'f' );
 
-        Option genesIncludedOption = OptionBuilder.hasArg().withArgName( "Genes to include" ).withDescription(
-                "The type of genes that will be included: all or standard."
-                        + " All includes predicted genes and probe aligned regions. "
-                        + "Standard mode only includes known genes [Default = standard]" ).withLongOpt( "genes" )
-                .create( 'g' );
+        Option genesIncludedOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Genes to include" )
+                .withDescription(
+                        "The type of genes that will be included: all or standard."
+                                + " All includes predicted genes and probe aligned regions. "
+                                + "Standard mode only includes known genes [Default = standard]" )
+                .withLongOpt( "genes" ).create( 'g' );
 
-        Option annotationType = OptionBuilder.hasArg().withArgName( "Type of annotation file" ).withDescription(
-                "Which GO terms to add to the annotation file:  short, long, or bioprocess; 'all' to generate all 3 "
-                        + "[Default=short (no parents)]. If you select bioprocess, parents are not included." )
+        Option annotationType = OptionBuilder
+                .hasArg()
+                .withArgName( "Type of annotation file" )
+                .withDescription(
+                        "Which GO terms to add to the annotation file:  short, long, or bioprocess; 'all' to generate all 3 "
+                                + "[Default=short (no parents)]. If you select bioprocess, parents are not included." )
                 .withLongOpt( "type" ).create( 't' );
 
         Option fileLoading = OptionBuilder
@@ -147,20 +153,22 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
                                 + "Creates 3 zip files for each AD, no parents, parents, biological process. Overrides all other settings except '--taxon'." )
                 .withLongOpt( "batch" ).create( 'b' );
 
-        Option geneListFile = OptionBuilder.hasArg().withDescription(
-                "Create from a file containing a list of gene symbols instead of probe ids" ).create(
-                GENENAME_LISTFILE_OPTION );
+        Option geneListFile = OptionBuilder.hasArg()
+                .withDescription( "Create from a file containing a list of gene symbols instead of probe ids" )
+                .create( GENENAME_LISTFILE_OPTION );
         addOption( geneListFile );
 
-        Option taxonNameOption = OptionBuilder.hasArg().withDescription(
-                "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
-                        + "known genes for the taxon, or with --all-arrays to process all arrays for the taxon." )
+        Option taxonNameOption = OptionBuilder
+                .hasArg()
+                .withDescription(
+                        "Taxon short name e.g. 'mouse' (use with --genefile, or alone to process all "
+                                + "known genes for the taxon, or with --all-arrays to process all arrays for the taxon." )
                 .create( "taxon" );
         addOption( taxonNameOption );
 
-        Option overWriteOption = OptionBuilder.withArgName( "Overwrites existing files" ).withDescription(
-                "If set will overwrite existing annotation files in the output directory" ).withLongOpt( "overwrite" )
-                .create( 'o' );
+        Option overWriteOption = OptionBuilder.withArgName( "Overwrites existing files" )
+                .withDescription( "If set will overwrite existing annotation files in the output directory" )
+                .withLongOpt( "overwrite" ).create( 'o' );
 
         addOption( annotationFileOption );
         addOption( annotationType );
@@ -463,7 +471,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         InputStream is = new FileInputStream( geneFileName );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
         String line = null;
-        int lineNumber = 0;
         GeneService geneService = ( GeneService ) getBean( "geneService" );
         TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
         Taxon taxon = taxonService.findByCommonName( taxonName );
@@ -472,7 +479,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         }
         Collection<Gene> genes = new HashSet<Gene>();
         while ( ( line = br.readLine() ) != null ) {
-            lineNumber++;
             if ( StringUtils.isBlank( line ) ) {
                 continue;
             }
