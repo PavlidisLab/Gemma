@@ -96,8 +96,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
          * Figure out if it is two-channel
          */
         boolean isTwoChannel = false;
-        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment, this
-                .getSession() );
+        Collection<ArrayDesign> arrayDesignsUsed = CommonQueries.getArrayDesignsUsed( expressionExperiment,
+                this.getSession() );
         for ( ArrayDesign ad : arrayDesignsUsed ) {
             TechnologyType technologyType = ad.getTechnologyType();
 
@@ -165,7 +165,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<? extends DesignElementDataVector> find( ArrayDesign arrayDesign,
             QuantitationType quantitationType ) {
@@ -200,7 +199,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<ProcessedExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev   where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
@@ -208,7 +206,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<ProcessedExpressionDataVector> find( QuantitationType quantitationType ) {
         final String queryString = "select dev from ProcessedExpressionDataVectorImpl dev   where  "
                 + "  dev.quantitationType = :quantitationType ";
@@ -367,7 +364,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getProcessedVectors(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee ) {
         final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
         Collection<ProcessedExpressionDataVector> result = this.getHibernateTemplate().findByNamedParam( queryString,
@@ -381,7 +377,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param limit
      * @return
      */
-    @SuppressWarnings("unchecked")
     public Collection<ProcessedExpressionDataVector> getProcessedVectors( ExpressionExperiment ee, Integer limit ) {
         final String queryString = " from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
 
@@ -405,7 +400,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @see ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao#getRanks(java.util.Collection,
      * java.util.Collection, ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
-    @SuppressWarnings("unchecked")
     public Map<ExpressionExperiment, Map<Gene, Collection<Double>>> getRanks(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes, RankMethod method ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
@@ -465,7 +459,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * .experiment.ExpressionExperiment, java.util.Collection,
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
-    @SuppressWarnings("unchecked")
     public Map<Gene, Collection<Double>> getRanks( ExpressionExperiment expressionExperiment, Collection<Gene> genes,
             RankMethod method ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
@@ -519,7 +512,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * .experiment.ExpressionExperiment,
      * ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorDao.RankMethod)
      */
-    @SuppressWarnings("unchecked")
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
         List qr = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
@@ -544,7 +536,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
     }
 
-    @SuppressWarnings("unchecked")
     public Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> getRanksByProbe(
             Collection<ExpressionExperiment> expressionExperiments, Collection<Gene> genes ) {
         Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genes, this.getSession() );
@@ -803,8 +794,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
             Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed( getExperiments( ees ),
                     this.getSession() ).keySet();
-            Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, arrays, this
-                    .getSession() );
+            Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, arrays,
+                    this.getSession() );
 
             if ( cs2gene.size() == 0 ) {
                 if ( results.isEmpty() ) {

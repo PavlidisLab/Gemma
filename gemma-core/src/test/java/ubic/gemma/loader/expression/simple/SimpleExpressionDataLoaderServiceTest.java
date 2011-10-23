@@ -30,12 +30,13 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
- 
+
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
@@ -72,6 +73,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         ads.add( ad );
@@ -163,8 +165,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         assertNotNull( ee );
         assertEquals( 200, ee.getRawExpressionDataVectors().size() );
         assertEquals( 59, ee.getBioAssays().size() );
-        // 
+        //
     }
 
-  
 }

@@ -26,8 +26,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +34,7 @@ import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaD
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -53,7 +52,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContextTest {
-    private static Log log = LogFactory.getLog( ExperimentalDesignImportDuplicateValueTest.class.getName() );
 
     @Autowired
     MgedOntologyService mos;
@@ -98,7 +96,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         ad.setShortName( "gfoobly_" + randomName() );
         ad.setName( "foobly doo loo" );
         ad.setPrimaryTaxon( human );
-
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
         metaData.getArrayDesigns().add( ad );
 
         ee = s.load( metaData, data );

@@ -28,8 +28,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +38,7 @@ import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -57,8 +56,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
-
-    private static Log log = LogFactory.getLog( ExperimentalDesignImporterTest.class.getName() );
 
     ExpressionExperiment ee;
 
@@ -113,6 +110,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         ad.setShortName( adName );
         ad.setName( "foobly foo" );
         ad.setPrimaryTaxon( human );
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         metaData.getArrayDesigns().add( ad );
 
@@ -220,8 +218,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
                     assertNotNull( c.getValue() );
                     assertNotNull( c.getCategoryUri() );
                 } else {
-                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic", fv
-                            .getMeasurement() );
+                    assertNotNull( fv.getValue() + " should have a measurement or a characteristic",
+                            fv.getMeasurement() );
                 }
 
                 if ( fv.getExperimentalFactor().getName().equals( "PMI (h)" ) ) {
