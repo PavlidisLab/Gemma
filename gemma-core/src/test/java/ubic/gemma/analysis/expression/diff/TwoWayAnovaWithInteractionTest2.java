@@ -128,7 +128,8 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
     @Test
     public void test() throws Exception {
 
-        AbstractAnalyzer aa = analysisService.determineAnalysis( ee, null, null );
+        AbstractAnalyzer aa = analysisService.determineAnalysis( ee, ee.getExperimentalDesign()
+                .getExperimentalFactors(), null );
         assertTrue( aa instanceof TwoWayAnovaWithInteractionsAnalyzer );
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();

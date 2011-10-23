@@ -67,7 +67,8 @@ public class AnalysisSelectionAndExecutionService implements ApplicationContextA
      */
     public Collection<DifferentialExpressionAnalysis> analyze( ExpressionExperiment expressionExperiment ) {
 
-        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, null, null );
+        AbstractDifferentialExpressionAnalyzer analyzer = determineAnalysis( expressionExperiment, expressionExperiment
+                .getExperimentalDesign().getExperimentalFactors(), null );
         if ( analyzer == null ) {
             throw new RuntimeException( "Could not locate an appropriate analyzer" );
         }

@@ -393,6 +393,9 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
 
         expressionExperiment.setExperimentalDesign( experimentalDesign );
 
+        experimentalFactorA_Area.setExperimentalDesign( experimentalDesign );
+        experimentalFactorB.setExperimentalDesign( experimentalDesign );
+
         quantitationType = QuantitationType.Factory.newInstance();
         quantitationType.setName( "quantitation type" );
         quantitationType.setRepresentation( PrimitiveType.DOUBLE );
@@ -427,12 +430,12 @@ public abstract class BaseAnalyzerConfigurationTest extends BaseSpringContextTes
     protected void configureMockAnalysisServiceHelper( int numMethodCalls ) throws Exception {
         this.expressionDataMatrixService = EasyMock.createMock( ExpressionDataMatrixService.class );
 
-        org.easymock.EasyMock.expect(
-                expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) ).andReturn(
-                new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
-        org.easymock.EasyMock.expect(
-                expressionDataMatrixService.getProcessedExpressionDataVectors( expressionExperiment ) ).andReturn(
-                this.vectors ).times( numMethodCalls );
+        org.easymock.EasyMock
+                .expect( expressionDataMatrixService.getProcessedExpressionDataMatrix( expressionExperiment ) )
+                .andReturn( new ExpressionDataDoubleMatrix( this.vectors ) ).times( numMethodCalls );
+        org.easymock.EasyMock
+                .expect( expressionDataMatrixService.getProcessedExpressionDataVectors( expressionExperiment ) )
+                .andReturn( this.vectors ).times( numMethodCalls );
         EasyMock.replay( expressionDataMatrixService );
     }
 

@@ -143,8 +143,9 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         } catch ( AlreadyExistsInSystemException e ) {
             if ( e.getData() instanceof List ) {
                 newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
+            } else {
+                newee = ( ExpressionExperiment ) e.getData();
             }
-            newee = ( ExpressionExperiment ) e.getData();
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {
                 return null;

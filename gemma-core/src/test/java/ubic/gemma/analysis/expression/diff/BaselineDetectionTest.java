@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.After;
@@ -84,7 +85,11 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
             ee = ( ExpressionExperiment ) results.iterator().next();
         } catch ( AlreadyExistsInSystemException e ) {
             // OK.
-            ee = ( ExpressionExperiment ) e.getData();
+            if ( e.getData() instanceof List ) {
+                ee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
+            } else {
+                ee = ( ExpressionExperiment ) e.getData();
+            }
         }
         ee = eeService.thawLite( ee );
         if ( ee.getExperimentalDesign().getExperimentalFactors().isEmpty() ) {
