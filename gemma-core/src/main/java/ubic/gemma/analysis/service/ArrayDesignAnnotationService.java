@@ -34,8 +34,10 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPOutputStream;
 
@@ -344,8 +346,8 @@ public class ArrayDesignAnnotationService {
             }
 
             List<Collection<OntologyTerm>> goTerms = new ArrayList<Collection<OntologyTerm>>();
-            List<String> genes = new ArrayList<String>();
-            List<String> geneDescriptions = new ArrayList<String>();
+            Set<String> genes = new LinkedHashSet<String>();
+            Set<String> geneDescriptions = new LinkedHashSet<String>();
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
                 Collection<Gene> retained = new HashSet<Gene>();
@@ -370,8 +372,7 @@ public class ArrayDesignAnnotationService {
                 }
 
                 // This will break if gene symbols contain ",".
-                genes.add( StringUtils
-                        .join( new TransformIterator( retained.iterator(), officialSymbolExtractor ), "," ) );
+                genes.add( StringUtils.join( new TransformIterator( retained.iterator(), officialSymbolExtractor ), "," ) );
 
                 // This breaks if the descriptions contain "$".
                 geneDescriptions.add( StringUtils.join( new TransformIterator( retained.iterator(),
@@ -502,8 +503,8 @@ public class ArrayDesignAnnotationService {
      */
     private Collection<OntologyTerm> getGoTerms( Gene gene, OutputType ty ) {
 
-        Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>( gene2GOAssociationService
-                .findByGene( gene ) );
+        Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>(
+                gene2GOAssociationService.findByGene( gene ) );
 
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
         if ( ontos.size() == 0 ) return results;
@@ -554,7 +555,7 @@ public class ArrayDesignAnnotationService {
         if ( description == null ) {
             formattedDescription = "";
         } else {
-            // Try to help ensure file is readable by third-party programs like R. See bug 1851 
+            // Try to help ensure file is readable by third-party programs like R. See bug 1851
             formattedDescription = formattedDescription.replaceAll( "#", "_" );
         }
 
