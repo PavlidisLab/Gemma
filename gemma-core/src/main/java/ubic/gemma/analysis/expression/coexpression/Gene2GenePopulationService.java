@@ -317,15 +317,12 @@ public class Gene2GenePopulationService {
         Map<BioAssaySet, Double> nodeDegrees = geneService.getGeneCoexpressionNodeDegree( queryGene,
                 expressionExperiments );
 
+        if ( nodeDegrees == null || nodeDegrees.isEmpty() ) return;
+
         /*
          * The values we get are the Fisher's p-values for the node degrees of the individual probe-level data. High
          * values mean high node degree.
          */
-
-        Collection<Double> values = nodeDegrees.values();
-        if ( values.isEmpty() ) {
-            return;
-        }
 
         GeneCoexpressionNodeDegree n = GeneCoexpressionNodeDegree.Factory.newInstance();
         n.setGene( queryGene );

@@ -439,6 +439,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees ) {
         Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
 
+        if ( ees.isEmpty() ) throw new IllegalArgumentException( "You must provide at least one experiment" );
+
+        if ( probes.isEmpty() ) {
+            return null;
+        }
+
         List<?> r = this.getHibernateTemplate().findByNamedParam(
                 "select  pca.experimentAnalyzed, p.nodeDegreeRank from ProbeCoexpressionAnalysisImpl pca "
                         + "join pca.probesUsed p where pca.experimentAnalyzed in (:ees) and p.probe in (:ps)",
