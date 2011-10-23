@@ -23,6 +23,7 @@ import hep.aida.bin.QuantileBin1D;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,13 +37,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import cern.colt.list.DoubleArrayList;
-import cern.jet.random.engine.MersenneTwister;
+import cern.jet.random.engine.DRand;
+import cern.jet.random.engine.RandomEngine;
 import cern.jet.stat.Descriptive;
 
 import ubic.basecode.dataStructure.BitUtil;
 import ubic.basecode.dataStructure.matrix.MatrixUtil;
 import ubic.basecode.math.DescriptiveWithMissing;
+import ubic.basecode.math.Rank;
 import ubic.basecode.math.distribution.Histogram;
+import ubic.basecode.math.metaanalysis.MetaAnalysis;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
@@ -70,22 +74,22 @@ import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information. The
- * results are tied to a specific Analysis that can be referred to by clients. In practice only one 'gene2gene' analysis
- * is maintained for each taxon, in which all the datasets for the taxon are used. Results are then filtered to include
- * only the datasets that the user included. The gene2gene analysis for each taxon must be updated periodically to
- * include new datasets.
+ * Used to analyze already-persisted probe-level 'links' and turn them into gene-level coexpression information
+ * (including node degree). The results are tied to a specific Analysis that can be referred to by clients. In practice
+ * only one 'gene2gene' analysis is maintained for each taxon, in which all the datasets for the taxon are used. Results
+ * are then filtered to include only the datasets that the user included. The gene2gene analysis for each taxon must be
+ * updated periodically to include new datasets.
  * 
  * @author paul
  * @version $Id$
  */
 @Service
-public class GeneLinkCoexpressionAnalyzer {
+public class Gene2GenePopulationService {
     private static final int BATCH_SIZE = 500;
 
     private static boolean SINGLE_QUERY_FOR_LINKS = ConfigUtils.getBoolean( "store.gene.coexpression.bothways", true );
 
-    private static Log log = LogFactory.getLog( GeneLinkCoexpressionAnalyzer.class.getName() );
+    private static Log log = LogFactory.getLog( Gene2GenePopulationService.class.getName() );
 
     /**
      * @param experimentsAnalyzed
@@ -190,18 +194,11 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param expressionExperiments The experiments to limit the analyiss to.
      * @param toUseGenes The genes to limit the analysis to, as query genes.
      * @param stringency The minimum support before a gene2gene link will be stored
-     * @param knownGenesOnly if true, only 'known genes' (not predicted/PARs) will be used. Usually we set this to be
-     *        true. (in fact 'false' is currently not supported)
      * @param analysisName Name of the analysis as it will appear in the system
      * @param useDB If false, the results will not be saved to the database but written to stdout.
      */
     public void analyze( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes, int stringency,
-            boolean knownGenesOnly, String analysisName, boolean useDB ) {
-
-        if ( !knownGenesOnly ) {
-            throw new UnsupportedOperationException(
-                    "Sorry, using other than 'known genes' is not currently supported." );
-        }
+            String analysisName, boolean useDB ) {
 
         log.info( "Initializing gene link analysis ... " );
 
@@ -225,8 +222,7 @@ public class GeneLinkCoexpressionAnalyzer {
             assert analysis != null;
         }
 
-        doAnalysis( expressionExperiments, toUseGenes, stringency, knownGenesOnly, analysisName, genesToAnalyzeMap,
-                analysis );
+        doAnalysis( expressionExperiments, toUseGenes, stringency, analysisName, genesToAnalyzeMap, analysis );
 
         if ( useDB ) {
             // FIXME Small risk here: there may be two enabled analyses until the next call is completed. If it fails we
@@ -268,30 +264,41 @@ public class GeneLinkCoexpressionAnalyzer {
         this.securityService = securityService;
     }
 
+    private static RandomEngine randomNumberGenerator = new DRand( new Date() );
+
     /**
      * Finalize the node degree computation and persist it.
+     * 
+     * @param useDB if false, instead of saving to the database it will be printed to stdout.
      */
     private void completeNodeDegreeComputations( boolean useDB ) {
 
         DoubleArrayList l = new DoubleArrayList();
 
         for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
-            l.add( n.getMean() );
+            l.add( n.getMedian() );
         }
 
-        QuantileBin1D f = new QuantileBin1D( true, l.size(), 0.0, 0.0, 1000, new MersenneTwister() );
+        DoubleArrayList ranks = Rank.rankTransform( l );
+
+        QuantileBin1D f = new QuantileBin1D( true, l.size(), 0.0, 0.0, l.size(), randomNumberGenerator );
         f.addAllOf( l );
         log.info( "Finalizing node degree computation" );
-        for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
-            n.setPermille( ( int ) Math.floor( 1000.0 * f.quantileInverse( n.getMean() ) ) );
+
+        for ( int i = 0; i < this.allGeneNodeDegrees.size(); i++ ) {
+
+            GeneCoexpressionNodeDegree n = this.allGeneNodeDegrees.get( i );
+            double rank = ranks.get( i );
+
+            n.setRank( rank / ranks.size() );
 
             if ( useDB ) {
                 geneCoexpressionNodeDegreeService.deleteFor( n.getGene() );
                 geneCoexpressionNodeDegreeService.create( n );
             } else {
-                System.out.print( String.format( "%d\t%s\t%d\t%.2f\t%.2f\t%d\t%d\t%s\n", n.getGene().getId(), n
-                        .getGene().getOfficialSymbol(), n.getGene().getTaxon().getId(), n.getMean(), n.getVariance(), n
-                        .getNumTests(), n.getPermille(), n.getDistribution() ) );
+                System.out.print( String.format( "%d\t%s\t%d\t%.2f\t%.2f\t%.2f\t%d\t%.2f\t%s\n", n.getGene().getId(), n
+                        .getGene().getOfficialSymbol(), n.getGene().getTaxon().getId(), n.getMedian(), n
+                        .getMedianDeviation(), n.getPvalue(), n.getNumTests(), n.getRank(), n.getDistribution() ) );
             }
         }
 
@@ -302,8 +309,14 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param expressionExperiments
      */
     private void computeNodeDegree( Gene queryGene, Collection<BioAssaySet> expressionExperiments ) {
+
         Map<BioAssaySet, Double> nodeDegrees = geneService.getGeneCoexpressionNodeDegree( queryGene,
                 expressionExperiments );
+
+        /*
+         * The values we get are the Fisher's p-values for the node degrees of the individual probe-level data. High
+         * values mean high node degree.
+         */
 
         Collection<Double> values = nodeDegrees.values();
         if ( values.isEmpty() ) {
@@ -314,12 +327,17 @@ public class GeneLinkCoexpressionAnalyzer {
         n.setGene( queryGene );
         n.setNumTests( nodeDegrees.size() );
 
-        // FIXME should the mean be computed as the Fisher score?
         double[] array = ArrayUtils.toPrimitive( nodeDegrees.values().toArray( new Double[] {} ) );
         DoubleArrayList vals = new DoubleArrayList( array );
 
-        n.setMean( Descriptive.mean( vals ) );
-        n.setVariance( DescriptiveWithMissing.variance( vals ) );
+        /*
+         * Because everything is rank transformed, we use the median and mad. Later we re-rank everything anyway.
+         */
+        double pvalue = MetaAnalysis.fisherCombinePvalues( vals );
+
+        n.setPvalue( pvalue );
+        n.setMedian( Descriptive.median( vals ) );
+        n.setMedianDeviation( DescriptiveWithMissing.mad( vals ) );
 
         String distribution = computeDistribution( vals );
         n.setDistribution( distribution );
@@ -465,6 +483,9 @@ public class GeneLinkCoexpressionAnalyzer {
     }
 
     /**
+     * Populate the node degree table, without analyzing coexpression. This method is public simply to allow
+     * initialization of the table
+     * 
      * @param expressionExperiments
      * @param toUseGenes
      */
@@ -482,15 +503,13 @@ public class GeneLinkCoexpressionAnalyzer {
      * @param expressionExperiments
      * @param toUseGenes
      * @param stringency
-     * @param knownGenesOnly
      * @param analysisName
      * @param genesToAnalyzeMap
      * @param analysis if null, no results will be saved to the database, and will be printed to stdout instead.
      * @return genes that were processed.
      */
     private Collection<Gene> doAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
-            int stringency, boolean knownGenesOnly, String analysisName, Map<Long, Gene> genesToAnalyzeMap,
-            GeneCoexpressionAnalysis analysis ) {
+            int stringency, String analysisName, Map<Long, Gene> genesToAnalyzeMap, GeneCoexpressionAnalysis analysis ) {
         int totalLinks = 0;
         Collection<Gene> processedGenes = new HashSet<Gene>();
         Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzer.getOrderingMap( expressionExperiments );
@@ -503,38 +522,36 @@ public class GeneLinkCoexpressionAnalyzer {
 
                 // Do it
                 CoexpressionCollectionValueObject coexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis(
-                        queryGene, expressionExperiments, stringency, knownGenesOnly, 0 );
+                        queryGene, expressionExperiments, stringency, 0 );
 
                 // persist it or write out
-                if ( knownGenesOnly && coexpressions.getNumKnownGenes() > 0 ) {
-                    StopWatch timer = new StopWatch();
-                    if ( analysis != null ) {
-                        timer.start();
-                        Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
-                                coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
-                        totalLinks += created.size();
-                        timer.stop();
-                        if ( timer.getTime() > 1000 ) {
-                            log.info( "Persist links: " + timer.getTime() + "ms" );
-                        }
-                    } else {
-                        List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
-                        int usedLinks = 0;
-                        for ( CoexpressionValueObject co : coexps ) {
-                            if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
-                                continue;
-                            }
-                            Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
-                            if ( processedGenes.contains( secondGene ) ) {
-                                continue;
-                            }
-                            usedLinks++;
-                            totalLinks++;
-                            System.out.println( format( co ) );
-                        }
-                        if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
-                    }
 
+                StopWatch timer = new StopWatch();
+                if ( analysis != null ) {
+                    timer.start();
+                    Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
+                            coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
+                    totalLinks += created.size();
+                    timer.stop();
+                    if ( timer.getTime() > 1000 ) {
+                        log.info( "Persist links: " + timer.getTime() + "ms" );
+                    }
+                } else {
+                    List<CoexpressionValueObject> coexps = coexpressions.getAllGeneCoexpressionData( stringency );
+                    int usedLinks = 0;
+                    for ( CoexpressionValueObject co : coexps ) {
+                        if ( !genesToAnalyzeMap.containsKey( co.getGeneId() ) ) {
+                            continue;
+                        }
+                        Gene secondGene = genesToAnalyzeMap.get( co.getGeneId() );
+                        if ( processedGenes.contains( secondGene ) ) {
+                            continue;
+                        }
+                        usedLinks++;
+                        totalLinks++;
+                        System.out.println( format( co ) );
+                    }
+                    if ( usedLinks > 0 ) log.info( usedLinks + " links printed for " + queryGene );
                 }
 
                 computeNodeDegree( queryGene, expressionExperiments );

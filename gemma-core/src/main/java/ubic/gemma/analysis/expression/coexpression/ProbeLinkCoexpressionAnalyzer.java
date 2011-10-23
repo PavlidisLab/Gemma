@@ -89,21 +89,19 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param ees Collection of ExpressionExperiments that will be considered.
      * @param stringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1 will
      *        be silently used.
-     * @param knownGenesOnly if false, 'predicted genes' and 'probe aligned regions' will be populated.
      * @param limit The maximum number of results that will be fully populated. Set to 0 to fill all (batch mode)
      * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
      * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
     public Map<Gene, CoexpressionCollectionValueObject> linkAnalysis( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, int stringency, boolean knownGenesOnly, boolean interGenesOnly,
-            int limit ) {
+            Collection<? extends BioAssaySet> ees, int stringency, boolean interGenesOnly, int limit ) {
 
         /*
          * Start with raw results
          */
         Map<Gene, CoexpressionCollectionValueObject> result = geneService.getCoexpressedGenes( genes, ees, stringency,
-                knownGenesOnly, interGenesOnly );
+                interGenesOnly );
 
         /*
          * Perform postprocessing gene by gene. It is possible this could be sped up by doing batches.
@@ -145,20 +143,17 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @param ees Collection of ExpressionExperiments that will be considered.
      * @param inputStringency A positive non-zero integer. If a value less than or equal to zero is entered, the value 1
      *        will be silently used.
-     * @param knownGenesOnly if false, 'predicted genes' and 'probe aligned regions' will be populated.
      * @param limit The maximum number of results that will be fully populated. Set to 0 to fill all (batch mode)
      * @see ubic.gemma.model.genome.GeneDao.getCoexpressedGenes
      * @see ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject
      * @return Fully initialized CoexpressionCollectionValueObject.
      */
     public CoexpressionCollectionValueObject linkAnalysis( Gene gene, Collection<? extends BioAssaySet> ees,
-            int inputStringency, boolean knownGenesOnly, int limit ) {
+            int inputStringency, int limit ) {
 
         int stringency = inputStringency <= 0 ? 1 : inputStringency;
 
-        if ( log.isDebugEnabled() )
-            log.debug( "Link query for " + gene.getName() + " stringency=" + stringency + " knowngenesonly?="
-                    + knownGenesOnly );
+        if ( log.isDebugEnabled() ) log.debug( "Link query for " + gene.getName() + " stringency=" + stringency );
 
         /*
          * Identify data sets the query gene is expressed in - this is fast (?) and provides an upper bound for EEs we
@@ -178,7 +173,7 @@ public class ProbeLinkCoexpressionAnalyzer {
          * quick.
          */
         CoexpressionCollectionValueObject coexpressions = geneService.getCoexpressedGenes( gene, eesQueryTestedIn,
-                stringency, knownGenesOnly );
+                stringency );
 
         /*
          * Finish the postprocessing.
@@ -539,14 +534,12 @@ public class ProbeLinkCoexpressionAnalyzer {
             result[i] = 0x0;
         }
 
-        int i = 0;
         for ( BioAssaySet ee : ees ) {
             Long eeid = ee.getId();
             Integer index = eeIdOrder.get( eeid );
             if ( eesTestingGene.get( index ) ) {
                 BitUtil.set( result, index );
             }
-            i++;
         }
         return result;
     }

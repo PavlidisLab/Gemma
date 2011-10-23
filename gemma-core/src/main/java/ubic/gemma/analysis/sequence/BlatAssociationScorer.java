@@ -284,6 +284,8 @@ public class BlatAssociationScorer {
         for ( GeneProduct geneProduct : geneProduct2BlatAssociations.keySet() ) {
             Collection<BlatAssociation> geneProductBlatAssociations = geneProduct2BlatAssociations.get( geneProduct );
 
+            if ( geneProductBlatAssociations.isEmpty() ) continue;
+
             if ( geneProductBlatAssociations.size() == 1 ) {
                 keepers.add( geneProductBlatAssociations.iterator().next() );
                 continue;

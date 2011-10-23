@@ -56,7 +56,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.GeneProduct;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.util.BusinessKey;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.EntityUtils;
@@ -338,16 +337,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
-     */
-    @Override
-    public Gene geneValueObjectToEntity( GeneValueObject geneValueObject ) {
-        return this.load( geneValueObject.getId() );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
      * @see ubic.gemma.model.genome.GeneDao#getGeneCoexpressionNodeDegree(java.util.Collection)
      */
     @Override
@@ -579,8 +568,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( final Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGeneOnly )
-            throws Exception {
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly ) throws Exception {
 
         if ( genes.size() == 0 || ees.size() == 0 ) {
             throw new IllegalArgumentException( "nothing to search" );
@@ -595,8 +583,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         if ( genes.size() == 1 ) {
             Gene soleQueryGene = genes.iterator().next();
-            coexpressions
-                    .put( soleQueryGene, this.getCoexpressedGenes( soleQueryGene, ees, stringency, knownGenesOnly ) );
+            coexpressions.put( soleQueryGene, this.getCoexpressedGenes( soleQueryGene, ees, stringency ) );
             return coexpressions;
         }
 
@@ -635,7 +622,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         for ( CoexpressionCollectionValueObject coexp : coexpressions.values() ) {
-            postProcessSpecificity( knownGenesOnly, coexp );
+            postProcessSpecificity( coexp );
         }
 
         return coexpressions;
@@ -655,7 +642,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      */
     @Override
     protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( final Gene gene,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly ) throws Exception {
+            Collection<? extends BioAssaySet> ees, Integer stringency ) throws Exception {
 
         Gene givenG = gene;
         final long id = givenG.getId();
@@ -734,7 +721,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             return coexpressions;
         }
 
-        postProcessSpecificity( knownGenesOnly, coexpressions );
+        postProcessSpecificity( coexpressions );
 
         return coexpressions;
     }
@@ -1345,24 +1332,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     }
 
     /**
-     * @param coexpressions
-     * @param knownGenesOnly this probably doesn't matter much, as results are already determined, but defensive
-     *        programming.
-     *        <p>
+     * @param coexpressions <p>
      *        Performance notes: Empirically this rarely takes very long, definitely less than 1s in vast majority of
      *        cases. I changed the logging to trigger at 250ms get a bit better resolution - PP feb 2010
      */
-    private void postProcess( CoexpressionCollectionValueObject coexpressions, boolean knownGenesOnly ) {
+    private void postProcess( CoexpressionCollectionValueObject coexpressions ) {
 
         StopWatch watch = new StopWatch();
         watch.start();
 
         postProcessKnownGenes( coexpressions );
-
-        if ( !knownGenesOnly ) {
-            postProcessProbeAlignedRegions( coexpressions );
-            postProcessPredictedGenes( coexpressions );
-        }
 
         watch.stop();
         Long elapsed = watch.getTime();
@@ -1401,13 +1380,11 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /**
      * Fill in specificity information.
      * 
-     * @param knownGenesOnly
      * @param coexpressions
      * @throws Exception <p>
      *         Performance notes: This often takes 3-5 seconds. PP Feb 2010
      */
-    private void postProcessSpecificity( boolean knownGenesOnly, final CoexpressionCollectionValueObject coexpressions )
-            throws Exception {
+    private void postProcessSpecificity( final CoexpressionCollectionValueObject coexpressions ) throws Exception {
         // fill in information about the query gene
         StopWatch timer = new StopWatch();
         timer.start();
@@ -1426,7 +1403,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         coexpressions.setQueryGeneSpecifityInfo( querySpecificity );
         coexpressions.setTargetGeneSpecificityInfo( targetSpecificity );
 
-        postProcess( coexpressions, knownGenesOnly );
+        postProcess( coexpressions );
     }
 
     /**

@@ -267,41 +267,19 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
     public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene );
 
     /**
-     * Converts an instance of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's entity.
-     */
-    public ubic.gemma.model.genome.Gene geneValueObjectToEntity(
-            ubic.gemma.model.genome.gene.GeneValueObject geneValueObject );
-
-    /**
-     * Copies the fields of {@link ubic.gemma.model.genome.gene.GeneValueObject} to the specified entity.
-     * 
-     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
-     *        TRUE, it will be copied regardless of its value.
-     */
-    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject sourceVO,
-            ubic.gemma.model.genome.Gene targetEntity, boolean copyIfNull );
-
-    /**
-     * Converts a Collection of instances of type {@link ubic.gemma.model.genome.gene.GeneValueObject} to this DAO's
-     * entity.
-     */
-    public void geneValueObjectToEntityCollection( java.util.Collection<Gene> instances );
-
-    /**
      * Function to get coexpressed genes given a set of genes and a collection of expressionExperiments. The return
      * value is a Map of CoexpressionCollectionValueObjects.
      * 
      * @param genes
      * @param ees
      * @param stringency
-     * @param knownGenesOnly
      * @param interGeneOnly if true, only links among the query genes will be returned. This is ingored if only a single
      *        gene is entered
      * @return
      */
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
             Collection<ubic.gemma.model.genome.Gene> genes, java.util.Collection<? extends BioAssaySet> ees,
-            java.lang.Integer stringency, boolean knownGenesOnly, boolean interGeneOnly );
+            java.lang.Integer stringency, boolean interGeneOnly );
 
     /**
      * <p>
@@ -310,7 +288,7 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * </p>
      */
     public CoexpressionCollectionValueObject getCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly );
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency );
 
     /**
      * 

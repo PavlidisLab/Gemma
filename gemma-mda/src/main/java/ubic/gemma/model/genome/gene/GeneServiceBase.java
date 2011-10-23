@@ -189,10 +189,9 @@ public abstract class GeneServiceBase implements GeneService {
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( final Collection<Gene> genes,
-            final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean knownGenesOnly,
-            final boolean interGenesOnly ) {
+            final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
         try {
-            return this.handleGetCoexpressedGenes( genes, ees, stringency, knownGenesOnly, interGenesOnly );
+            return this.handleGetCoexpressedGenes( genes, ees, stringency, interGenesOnly );
         } catch ( Throwable th ) {
             throw new GeneServiceException(
                     "Error performing 'GeneService.getCoexpressedGenes(Collection<Gene> genes, Collection ees, Integer stringency, boolean knownGenesOnly)' --> "
@@ -204,9 +203,9 @@ public abstract class GeneServiceBase implements GeneService {
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
     public CoexpressionCollectionValueObject getCoexpressedGenes( final Gene gene,
-            final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean knownGenesOnly ) {
+            final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
         try {
-            return this.handleGetCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
+            return this.handleGetCoexpressedGenes( gene, ees, stringency );
         } catch ( Throwable th ) {
             throw new GeneServiceException(
                     "Error performing 'GeneService.getCoexpressedGenes(Gene gene, Collection ees, Integer stringency, boolean knownGenesOnly)' --> "
@@ -477,14 +476,13 @@ public abstract class GeneServiceBase implements GeneService {
      * Performs the core logic for {@link #getCoexpressedGenes(Gene, Collection, Integer, boolean)}
      */
     protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly )
-            throws Exception;
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getCoexpressedGenes(Gene, Collection, Integer, boolean)}
      */
     protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( Gene gene,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly ) throws Exception;
+            Collection<? extends BioAssaySet> ees, Integer stringency ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getCompositeSequenceCountById(Long)}

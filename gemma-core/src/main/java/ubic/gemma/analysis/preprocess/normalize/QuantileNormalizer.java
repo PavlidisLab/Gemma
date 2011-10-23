@@ -53,9 +53,7 @@ public class QuantileNormalizer<R, C> extends RCommander implements Normalizer<R
      */
     public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix ) {
         log.debug( "Normalizing..." );
-        /*
-         * FIXME this will not work correctly with missing values
-         */
+
         String matrixvar = this.rc.assignMatrix( dataMatrix );
         this.rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );
         DoubleMatrix<String, String> plainResult = rc.retrieveMatrix( "result" );

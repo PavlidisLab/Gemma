@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author kelsey
@@ -147,6 +148,14 @@ public class GeneValueObject implements java.io.Serializable {
         this.taxonScientificName = taxonScientificName;
         this.taxonCommonName = taxonCommonName;
         this.aliases = aliases;
+    }
+
+    public GeneValueObject( Long geneId, String geneSymbol, String geneOfficialName, Taxon taxon ) {
+        this.id = geneId;
+        this.officialSymbol = geneSymbol;
+        this.officialName = geneOfficialName;
+        this.taxonId = taxon.getId();
+        this.taxonCommonName = taxon.getCommonName();
     }
 
     /**

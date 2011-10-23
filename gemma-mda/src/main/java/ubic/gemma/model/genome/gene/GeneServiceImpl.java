@@ -175,8 +175,8 @@ public class GeneServiceImpl extends GeneServiceBase {
 
     @Override
     public Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly ) {
-        return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, knownGenesOnly, interGenesOnly );
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly ) {
+        return this.getGeneDao().getCoexpressedGenes( genes, ees, stringency, interGenesOnly );
     }
 
     @Override
@@ -309,8 +309,8 @@ public class GeneServiceImpl extends GeneServiceBase {
      */
     @Override
     protected CoexpressionCollectionValueObject handleGetCoexpressedGenes( Gene gene,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly ) throws Exception {
-        return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
+            Collection<? extends BioAssaySet> ees, Integer stringency ) throws Exception {
+        return this.getGeneDao().getCoexpressedGenes( gene, ees, stringency );
     }
 
     @Override

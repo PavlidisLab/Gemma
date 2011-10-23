@@ -27,13 +27,10 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionV
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
-import ubic.gemma.model.genome.gene.GeneValueObject;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.Gene</code>.
- * </p>
  * 
  * @see ubic.gemma.model.genome.Gene
  */
@@ -42,29 +39,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
 
     @Autowired
     private Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache;
-
-    /**
-     * This anonymous transformer is designed to transform entities or report query results (which result in an array of
-     * objects) to {@link ubic.gemma.model.genome.gene.GeneValueObject} using the Jakarta Commons-Collections
-     * Transformation API.
-     */
-    protected org.apache.commons.collections.Transformer GENEVALUEOBJECT_TRANSFORMER = new org.apache.commons.collections.Transformer() {
-        public Object transform( Object input ) {
-            Object result = null;
-            if ( input instanceof ubic.gemma.model.genome.Gene ) {
-                result = toGeneValueObject( ( ubic.gemma.model.genome.Gene ) input );
-            } else if ( input instanceof Object[] ) {
-                result = toGeneValueObject( ( Object[] ) input );
-            }
-            return result;
-        }
-    };
-
-    protected final org.apache.commons.collections.Transformer GeneValueObjectToEntityTransformer = new org.apache.commons.collections.Transformer() {
-        public Object transform( Object input ) {
-            return geneValueObjectToEntity( ( ubic.gemma.model.genome.gene.GeneValueObject ) input );
-        }
-    };
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#countAll()
@@ -90,8 +64,9 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.genome.Gene ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends Gene> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( transform, entityIterator.next() );
                         }
                         return null;
                     }
@@ -296,7 +271,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         argNames.add( "officialName" );
         java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
+
         return results;
     }
 
@@ -466,53 +441,15 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject,
-     *      ubic.gemma.model.genome.Gene)
-     */
-    public void geneValueObjectToEntity( ubic.gemma.model.genome.gene.GeneValueObject source,
-            ubic.gemma.model.genome.Gene target, boolean copyIfNull ) {
-        if ( copyIfNull || source.getOfficialSymbol() != null ) {
-            target.setOfficialSymbol( source.getOfficialSymbol() );
-        }
-        if ( copyIfNull || source.getOfficialName() != null ) {
-            target.setOfficialName( source.getOfficialName() );
-        }
-        if ( copyIfNull || source.getNcbiId() != null ) {
-            target.setNcbiId( source.getNcbiId() );
-        }
-        if ( copyIfNull || source.getName() != null ) {
-            target.setName( source.getName() );
-        }
-        if ( copyIfNull || source.getDescription() != null ) {
-            target.setDescription( source.getDescription() );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntityCollection(java.util.Collection)
-     */
-    public final void geneValueObjectToEntityCollection( java.util.Collection instances ) {
-        if ( instances != null ) {
-            for ( final java.util.Iterator iterator = instances.iterator(); iterator.hasNext(); ) {
-                // - remove an objects that are null or not of the correct instance
-                if ( !( iterator.next() instanceof ubic.gemma.model.genome.gene.GeneValueObject ) ) {
-                    iterator.remove();
-                }
-            }
-            org.apache.commons.collections.CollectionUtils.transform( instances, GeneValueObjectToEntityTransformer );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection,
      *      java.lang.Integer, boolean)
      */
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes(
             final Collection<ubic.gemma.model.genome.Gene> genes,
             final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
-            final boolean knownGenesOnly, final boolean interGeneOnly ) {
+            final boolean interGeneOnly ) {
         try {
-            return this.handleGetCoexpressedGenes( genes, ees, stringency, knownGenesOnly, interGeneOnly );
+            return this.handleGetCoexpressedGenes( genes, ees, stringency, interGeneOnly );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.GeneDao.getCoexpressedGenes(ubic.gemma.model.genome.Gene gene, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
@@ -525,10 +462,9 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      *      java.lang.Integer, boolean)
      */
     public CoexpressionCollectionValueObject getCoexpressedGenes( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency,
-            final boolean knownGenesOnly ) {
+            final java.util.Collection<? extends BioAssaySet> ees, final java.lang.Integer stringency ) {
         try {
-            return this.handleGetCoexpressedGenes( gene, ees, stringency, knownGenesOnly );
+            return this.handleGetCoexpressedGenes( gene, ees, stringency );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
                     "Error performing 'ubic.gemma.model.genome.GeneDao.getCoexpressedGenes(ubic.gemma.model.genome.Gene gene, java.util.Collection ees, java.lang.Integer stringency, boolean knownGenesOnly)' --> "
@@ -770,39 +706,6 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene)
-     */
-    public ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( final ubic.gemma.model.genome.Gene entity ) {
-        final ubic.gemma.model.genome.gene.GeneValueObject target = new ubic.gemma.model.genome.gene.GeneValueObject();
-        toGeneValueObject( entity, target );
-        return target;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene,
-     *      ubic.gemma.model.genome.gene.GeneValueObject)
-     */
-    public void toGeneValueObject( ubic.gemma.model.genome.Gene source,
-            ubic.gemma.model.genome.gene.GeneValueObject target ) {
-        target.setId( source.getId() );
-        target.setName( source.getName() );
-        target.setNcbiId( source.getNcbiId() );
-        target.setOfficialSymbol( source.getOfficialSymbol() );
-        target.setOfficialName( source.getOfficialName() );
-        target.setDescription( source.getDescription() );
-        target.setAliases( GeneValueObject.getAliasStrings( source ) );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObjectCollection(java.util.Collection)
-     */
-    public final void toGeneValueObjectCollection( java.util.Collection entities ) {
-        if ( entities != null ) {
-            org.apache.commons.collections.CollectionUtils.transform( entities, GENEVALUEOBJECT_TRANSFORMER );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.common.SecurableDao#update(java.util.Collection)
      */
 
@@ -857,16 +760,14 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
             ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     protected abstract Map<Gene, CoexpressionCollectionValueObject> handleGetCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGeneOnly )
-            throws Exception;
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGeneOnly ) throws Exception;
 
     /**
      * Performs the core logic for
      * {@link #getCoexpressedGenes(ubic.gemma.model.genome.Gene, java.util.Collection, java.lang.Integer, boolean)}
      */
     protected abstract CoexpressionCollectionValueObject handleGetCoexpressedGenes( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency, boolean knownGenesOnly )
-            throws java.lang.Exception;
+            java.util.Collection<? extends BioAssaySet> ees, java.lang.Integer stringency ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getCompositeSequenceCountById(long)}
@@ -932,84 +833,5 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * Performs the core logic for {@link #thawLite(java.util.Collection)}
      */
     protected abstract Collection<Gene> handleThawLite( java.util.Collection<Gene> genes ) throws java.lang.Exception;
-
-    /**
-     * Default implementation for transforming the results of a report query into a value object. This implementation
-     * exists for convenience reasons only. It needs only be overridden in the {@link GeneDaoImpl} class if you intend
-     * to use reporting queries.
-     * 
-     * @see ubic.gemma.model.genome.GeneDao#toGeneValueObject(ubic.gemma.model.genome.Gene)
-     */
-    protected ubic.gemma.model.genome.gene.GeneValueObject toGeneValueObject( Object[] row ) {
-        ubic.gemma.model.genome.gene.GeneValueObject target = null;
-        if ( row != null ) {
-            final int numberOfObjects = row.length;
-            for ( int ctr = 0; ctr < numberOfObjects; ctr++ ) {
-                final Object object = row[ctr];
-                if ( object instanceof ubic.gemma.model.genome.Gene ) {
-                    target = toGeneValueObject( ( ubic.gemma.model.genome.Gene ) object );
-                    break;
-                }
-            }
-        }
-        return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.genome.Gene)} method.
-     * This method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.GeneDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.Gene)
-     */
-
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:
-                toGeneValueObjectCollection( entities );
-                break;
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.genome.GeneDao</code>, please note that the {@link #TRANSFORM_NONE} constant denotes no
-     * transformation, so the entity itself will be returned.
-     * <p/>
-     * This method will return instances of these types:
-     * <ul>
-     * <li>{@link ubic.gemma.model.genome.Gene} - {@link #TRANSFORM_NONE}</li>
-     * <li>{@link ubic.gemma.model.genome.gene.GeneValueObject} - {@link TRANSFORM_GENEVALUEOBJECT}</li>
-     * </ul>
-     * If the integer argument value is unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.genome.GeneDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Object transformEntity( final int transform, final ubic.gemma.model.genome.Gene entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case ubic.gemma.model.genome.GeneDao.TRANSFORM_GENEVALUEOBJECT:
-                    target = toGeneValueObject( entity );
-                    break;
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
-    }
 
 }

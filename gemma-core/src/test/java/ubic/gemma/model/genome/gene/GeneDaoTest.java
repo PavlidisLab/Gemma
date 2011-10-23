@@ -39,7 +39,6 @@ import ubic.gemma.model.genome.GeneDao;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -50,9 +49,6 @@ public class GeneDaoTest extends BaseSpringContextTest {
 
     @Autowired
     private GeneDao geneDao = null;
-
-    @Autowired
-    TaxonService taxonService;
 
     @Test
     public void testFindByAccessionNcbi() {
@@ -170,7 +166,7 @@ public class GeneDaoTest extends BaseSpringContextTest {
         taxon.setIsGenesUsable( true );
         gene.setTaxon( taxon );
         Collection<ExpressionExperiment> ees = new ArrayList<ExpressionExperiment>();
-        CoexpressionCollectionValueObject genes = geneDao.getCoexpressedGenes( gene, ees, 1, false );
+        CoexpressionCollectionValueObject genes = geneDao.getCoexpressedGenes( gene, ees, 1 );
         assertNotNull( genes );
     }
 

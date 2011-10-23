@@ -79,7 +79,7 @@ public abstract class AbstractCLI {
 
     private static final char VERBOSITY_OPTION = 'v';
     private static final String HEADER = "Options:";
-    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2008 University of British Columbia.";
+    public static final String FOOTER = "The Gemma project, Copyright (c) 2007-2011 University of British Columbia.";
     private static final int DEFAULT_PORT = 3306;
     private static int DEFAULT_VERBOSITY = 4; // info.
     protected static Log log = LogFactory.getLog( AbstractCLI.class );
@@ -170,7 +170,6 @@ public abstract class AbstractCLI {
         return this.options.addOptionGroup( group );
     }
 
-    @SuppressWarnings("unchecked")
     public List getArgList() {
         return commandLine.getArgList();
     }
@@ -205,7 +204,6 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getOptions()
      */
-    @SuppressWarnings("unchecked")
     public final Collection getOptions() {
         return this.options.getOptions();
     }
@@ -238,7 +236,6 @@ public abstract class AbstractCLI {
      * @return
      * @see org.apache.commons.cli.Options#getRequiredOptions()
      */
-    @SuppressWarnings("unchecked")
     public final List getRequiredOptions() {
         return this.options.getRequiredOptions();
     }
@@ -382,8 +379,8 @@ public abstract class AbstractCLI {
                 .withDescription(
                         "Constrain to run only on entities with analyses older than the given date. "
                                 + "For example, to run only on entities that have not been analyzed in the last 10 days, use '-10d'. "
-                                + "If there is no record of when the analysis was last run, it will be run." ).create(
-                        "mdate" );
+                                + "If there is no record of when the analysis was last run, it will be run." )
+                .create( "mdate" );
 
         addOption( dateOption );
     }
@@ -393,9 +390,9 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addAutoOption() {
-        Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME ).withDescription(
-                "Attempt to process entities that need processing based on workflow criteria." ).create(
-                AUTO_OPTION_NAME );
+        Option autoSeekOption = OptionBuilder.withArgName( AUTO_OPTION_NAME )
+                .withDescription( "Attempt to process entities that need processing based on workflow criteria." )
+                .create( AUTO_OPTION_NAME );
 
         addOption( autoSeekOption );
     }
@@ -408,13 +405,13 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addHostAndPortOptions( boolean hostRequired, boolean portRequired ) {
-        Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg().withDescription(
-                "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( HOST_OPTION );
+        Option hostOpt = OptionBuilder.withArgName( "host" ).withLongOpt( "host" ).hasArg()
+                .withDescription( "Hostname to use (Default = " + DEFAULT_HOST + ")" ).create( HOST_OPTION );
 
         hostOpt.setRequired( hostRequired );
 
-        Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg().withDescription(
-                "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( PORT_OPTION );
+        Option portOpt = OptionBuilder.withArgName( "port" ).withLongOpt( "port" ).hasArg()
+                .withDescription( "Port to use on host (Default = " + DEFAULT_PORT + ")" ).create( PORT_OPTION );
 
         portOpt.setRequired( portRequired );
 
@@ -427,8 +424,8 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addThreadsOption() {
-        Option threadsOpt = OptionBuilder.withArgName( "numThreads" ).hasArg().withDescription(
-                "Number of threads to use for batch processing." ).create( THREADS_OPTION );
+        Option threadsOpt = OptionBuilder.withArgName( "numThreads" ).hasArg()
+                .withDescription( "Number of threads to use for batch processing." ).create( THREADS_OPTION );
         options.addOption( threadsOpt );
     }
 
@@ -438,13 +435,15 @@ public abstract class AbstractCLI {
      */
     @SuppressWarnings("static-access")
     protected void addUserNameAndPasswordOptions( boolean required ) {
-        this.usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg().withDescription(
-                "User name for accessing the system (optional for some tools)" ).create( USERNAME_OPTION );
+        this.usernameOpt = OptionBuilder.withArgName( "user" ).withLongOpt( "user" ).hasArg()
+                .withDescription( "User name for accessing the system (optional for some tools)" )
+                .create( USERNAME_OPTION );
 
         usernameOpt.setRequired( required );
 
-        this.passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg().withDescription(
-                "Password for accessing the system (optional for some tools)" ).create( PASSWORD_CONSTANT );
+        this.passwordOpt = OptionBuilder.withArgName( "passwd" ).withLongOpt( "password" ).hasArg()
+                .withDescription( "Password for accessing the system (optional for some tools)" )
+                .create( PASSWORD_CONSTANT );
         passwordOpt.setRequired( required );
 
         options.addOption( usernameOpt );

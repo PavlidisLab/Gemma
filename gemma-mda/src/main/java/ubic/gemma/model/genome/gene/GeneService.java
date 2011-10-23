@@ -153,7 +153,7 @@ public interface GeneService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency, boolean knownGenesOnly, boolean interGenesOnly );
+            Collection<? extends BioAssaySet> ees, Integer stringency,  boolean interGenesOnly );
 
     /**
      * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
@@ -167,7 +167,7 @@ public interface GeneService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public CoexpressionCollectionValueObject getCoexpressedGenes( Gene gene, Collection<? extends BioAssaySet> ees,
-            Integer stringency, boolean knownGenesOnly );
+            Integer stringency );
 
     /**
      * @param id
@@ -207,7 +207,8 @@ public interface GeneService {
             Collection<? extends BioAssaySet> ees );
 
     /**
-     * Get dataset-by-dataset node degree information -- used to populate the tables for faster access methods.
+     * Get dataset-by-dataset node degree information -- used to populate the tables for faster access methods. This
+     * method is likely to be slow.
      * 
      * @param gene
      * @param ees

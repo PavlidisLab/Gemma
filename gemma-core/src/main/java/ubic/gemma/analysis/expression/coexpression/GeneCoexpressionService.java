@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,7 +52,6 @@ import ubic.gemma.model.association.TfGeneAssociationService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpression;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
-import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -77,22 +74,6 @@ import ubic.gemma.util.EntityUtils;
 @Service
 @Lazy
 public class GeneCoexpressionService {
-
-    /*
-     * I assume the reason Genes weren't being loaded before is that it was too time consuming, so we'll do this
-     * instead...
-     */
-    private static class SimpleGene extends Gene {
-        private static final long serialVersionUID = 1L;
-
-        public SimpleGene( Long id, String name, String officialName, Taxon taxon ) {
-            super();
-            this.setId( id );
-            this.setOfficialSymbol( name );
-            this.setOfficialName( officialName );
-            this.setTaxon( taxon );
-        }
-    }
 
     private static Log log = LogFactory.getLog( GeneCoexpressionService.class.getName() );
 
@@ -237,14 +218,14 @@ public class GeneCoexpressionService {
 
         if ( genes.size() == 1 ) {
             Gene soleQueryGene = genes.iterator().next();
-            allCoexpressions.put( soleQueryGene, probeLinkCoexpressionAnalyzer.linkAnalysis( soleQueryGene, ees,
-                    stringency, knownGenesOnly, maxResults ) );
+            allCoexpressions.put( soleQueryGene,
+                    probeLinkCoexpressionAnalyzer.linkAnalysis( soleQueryGene, ees, stringency, maxResults ) );
         } else {
             /*
              * Batch mode
              */
-            allCoexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( genes, ees, stringency, knownGenesOnly,
-                    queryGenesOnly, maxResults );
+            allCoexpressions = probeLinkCoexpressionAnalyzer.linkAnalysis( genes, ees, stringency, queryGenesOnly,
+                    maxResults );
         }
 
         Collection<Long> allUsedGenes = new HashSet<Long>();
@@ -284,15 +265,14 @@ public class GeneCoexpressionService {
 
         if ( !allSupportingDatasets.isEmpty() ) {
 
-            Map<Gene, Double> geneNodeDegrees = geneService.getGeneCoexpressionNodeDegree(
-                    geneService.loadMultiple( allUsedGenes ),
-                    expressionExperimentService.loadMultiple( allSupportingDatasets ) );
+            Map<Gene, GeneCoexpressionNodeDegree> geneNodeDegrees = geneService
+                    .getGeneCoexpressionNodeDegree( geneService.loadMultiple( allUsedGenes ) );
 
             Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
 
             for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
-                c.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getQueryGene().getId() ) ) );
-                c.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getFoundGene().getId() ) ) );
+                c.setQueryGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getQueryGene().getId() ) ).getRank() );
+                c.setFoundGeneNodeDegree( geneNodeDegrees.get( idMap.get( c.getFoundGene().getId() ) ).getRank() );
             }
         } else {
             for ( CoexpressionValueObjectExt c : result.getKnownGeneResults() ) {
@@ -342,7 +322,7 @@ public class GeneCoexpressionService {
         ExpressionExperimentSet eeSet = expressionExperimentSetService.load( eeSetId );
         expressionExperimentSetService.thaw( eeSet );
         Collection<Long> allEEIdsInSet = EntityUtils.getIds( eeSet.getExperiments() );
-        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( allEEIdsInSet );
+        Map<Integer, Long> positionToIDMap = Gene2GenePopulationService.getPositionToIdMap( allEEIdsInSet );
 
         List<CoexpressionValueObjectExt> ecvos = new ArrayList<CoexpressionValueObjectExt>();
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
@@ -399,11 +379,11 @@ public class GeneCoexpressionService {
                  * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there were
                  * 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the analyzer.
                  */
-                Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
+                Collection<Long> supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g,
                         positionToIDMap );
 
                 if ( specificProbesOnly ) {
-                    Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
+                    Collection<Long> specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g,
                             positionToIDMap );
                     supportingDatasets.retainAll( specificDatasets );
                 }
@@ -512,8 +492,8 @@ public class GeneCoexpressionService {
 
             CoexpressionValueObjectExt ecvo = new CoexpressionValueObjectExt();
             ecvo.setQueryGene( new GeneValueObject( queryGene ) );
-            ecvo.setFoundGene( new GeneValueObject( new SimpleGene( cvo.getGeneId(), cvo.getGeneName(), cvo
-                    .getGeneOfficialName(), queryGene.getTaxon() ) ) );
+            ecvo.setFoundGene( new GeneValueObject( cvo.getGeneId(), cvo.getGeneName(), cvo.getGeneOfficialName(),
+                    queryGene.getTaxon() ) );
 
             ecvo.setPosSupp( cvo.getPositiveLinkSupport() );
             ecvo.setNegSupp( cvo.getNegativeLinkSupport() );
@@ -773,8 +753,8 @@ public class GeneCoexpressionService {
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
         expressionExperimentSetService.thaw( baseSet );
-        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( EntityUtils
-                .getIds( baseSet.getExperiments() ) );
+        Map<Integer, Long> positionToIDMap = Gene2GenePopulationService.getPositionToIdMap( EntityUtils.getIds( baseSet
+                .getExperiments() ) );
 
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
@@ -867,7 +847,7 @@ public class GeneCoexpressionService {
                 timer2.reset();
                 timer2.start();
 
-                Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
+                Collection<Long> testingDatasets = Gene2GenePopulationService.getTestedExperimentIds( g2g,
                         positionToIDMap );
                 testingDatasets.retainAll( filteredEeIds );
 
@@ -875,7 +855,7 @@ public class GeneCoexpressionService {
                  * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there were
                  * 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the analyzer.
                  */
-                Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
+                Collection<Long> supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g,
                         positionToIDMap );
 
                 // necessary in case any were filtered out.
@@ -883,7 +863,7 @@ public class GeneCoexpressionService {
 
                 cvo.setSupportingExperiments( supportingDatasets );
 
-                Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
+                Collection<Long> specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g,
                         positionToIDMap );
 
                 /*
@@ -1002,8 +982,8 @@ public class GeneCoexpressionService {
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
         expressionExperimentSetService.thaw( baseSet );
-        Map<Integer, Long> positionToIDMap = GeneLinkCoexpressionAnalyzer.getPositionToIdMap( EntityUtils
-                .getIds( baseSet.getExperiments() ) );
+        Map<Integer, Long> positionToIDMap = Gene2GenePopulationService.getPositionToIdMap( EntityUtils.getIds( baseSet
+                .getExperiments() ) );
 
         /*
          * This set of links must be filtered to include those in the data sets being analyzed.
@@ -1109,7 +1089,7 @@ public class GeneCoexpressionService {
 
                 populateInteractions( proteinInteractionMap, regulatedBy, regulates, foundGene, cvo );
 
-                Collection<Long> testingDatasets = GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g,
+                Collection<Long> testingDatasets = Gene2GenePopulationService.getTestedExperimentIds( g2g,
                         positionToIDMap );
                 testingDatasets.retainAll( filteredEeIds );
 
@@ -1117,7 +1097,7 @@ public class GeneCoexpressionService {
                  * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there were
                  * 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the analyzer.
                  */
-                Collection<Long> supportingDatasets = GeneLinkCoexpressionAnalyzer.getSupportingExperimentIds( g2g,
+                Collection<Long> supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g,
                         positionToIDMap );
 
                 // necessary in case any were filtered out.
@@ -1125,7 +1105,7 @@ public class GeneCoexpressionService {
 
                 cvo.setSupportingExperiments( supportingDatasets );
 
-                Collection<Long> specificDatasets = GeneLinkCoexpressionAnalyzer.getSpecificExperimentIds( g2g,
+                Collection<Long> specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g,
                         positionToIDMap );
 
                 /*
@@ -1269,14 +1249,14 @@ public class GeneCoexpressionService {
             if ( queryGeneNodeDegree == null ) {
                 coexp.setQueryGeneNodeDegree( -1.0 );
             } else {
-                coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getPermille() / 1000.00 );
+                coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getRank() );
             }
 
             GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get( coexp.getFoundGene() );
             if ( foundGeneNodeDegree == null ) {
                 coexp.setFoundGeneNodeDegree( -1.0 );
             } else {
-                coexp.setFoundGeneNodeDegree( foundGeneNodeDegree.getPermille() / 1000.00 );
+                coexp.setFoundGeneNodeDegree( foundGeneNodeDegree.getRank() );
             }
         }
 
@@ -1438,7 +1418,7 @@ public class GeneCoexpressionService {
         Collection<Long> relevantEEIds = new HashSet<Long>();
         List<Long> relevantEEIdList = new ArrayList<Long>();
         for ( Gene2GeneCoexpression g2g : g2gs ) {
-            relevantEEIds.addAll( GeneLinkCoexpressionAnalyzer.getTestedExperimentIds( g2g, positionToIDMap ) );
+            relevantEEIds.addAll( Gene2GenePopulationService.getTestedExperimentIds( g2g, positionToIDMap ) );
         }
         relevantEEIdList.addAll( relevantEEIds );
         Collections.sort( relevantEEIdList );
@@ -1529,8 +1509,6 @@ public class GeneCoexpressionService {
     }
 
     /**
-     * FIXME partly duplicates code from ExpressionExperimentManipulatingCLI / AuditableUtil.
-     * 
      * @param ees
      */
     private void removeTroubledEes( Collection<Long> ees ) {

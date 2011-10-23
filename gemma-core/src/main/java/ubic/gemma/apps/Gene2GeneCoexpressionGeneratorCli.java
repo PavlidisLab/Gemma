@@ -25,7 +25,7 @@ import java.util.Collection;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
 
-import ubic.gemma.analysis.expression.coexpression.GeneLinkCoexpressionAnalyzer;
+import ubic.gemma.analysis.expression.coexpression.Gene2GenePopulationService;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -40,7 +40,6 @@ import ubic.gemma.model.genome.Gene;
  */
 public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManipulatingCLI {
 
-    private static final String ALLGENES_OPTION = "allgenes";
     private static final int DEFAULT_STRINGINCY = 2;
 
     public static void main( String[] args ) {
@@ -55,12 +54,10 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         }
     }
 
-    private GeneLinkCoexpressionAnalyzer geneVoteAnalyzer;
+    private Gene2GenePopulationService geneVoteAnalyzer;
     private Collection<Gene> toUseGenes;
     private int toUseStringency;
 
-    // private String toUseAnalysisName;
-    private boolean knownGenesOnly = true;
     private boolean useDB = true;
     private boolean nodeDegreeOnly = false;
 
@@ -79,9 +76,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
                 .withDescription( "The stringency value: Defaults to " + DEFAULT_STRINGINCY )
                 .withLongOpt( "stringency" ).create( 's' );
 
-        Option allGenesOption = OptionBuilder.withDescription( "Run on all genes, including predicted and PARs" )
-                .create( ALLGENES_OPTION );
-
         Option noDBOption = OptionBuilder.withDescription( "Do not persist (print to stdout)" ).create( "nodb" );
 
         Option nodeDegreeOnlyOption = OptionBuilder.withDescription( "Only populate the node degree information" )
@@ -90,7 +84,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         addOption( noDBOption );
         addOption( geneFileOption );
         addOption( stringencyOption );
-        addOption( allGenesOption );
 
         addOption( nodeDegreeOnlyOption );
 
@@ -129,8 +122,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             geneVoteAnalyzer.nodeDegreeAnalysis( expressionExperiments, toUseGenes, useDB );
         } else {
 
-            geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, knownGenesOnly,
-                    analysisName, useDB );
+            geneVoteAnalyzer.analyze( this.expressionExperiments, toUseGenes, toUseStringency, analysisName, useDB );
         }
         return null;
     }
@@ -164,12 +156,8 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
             } catch ( IOException e ) {
                 throw new RuntimeException( e );
             }
-        } else if ( knownGenesOnly ) {
-            toUseGenes = super.geneService.loadKnownGenes( taxon );
         } else {
             toUseGenes = super.geneService.loadKnownGenes( taxon );
-            toUseGenes.addAll( geneService.loadPredictedGenes( taxon ) );
-            toUseGenes.addAll( geneService.loadProbeAlignedRegions( taxon ) );
         }
 
         if ( toUseGenes.size() < 2 ) {
@@ -179,9 +167,6 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
         toUseStringency = DEFAULT_STRINGINCY;
         if ( this.hasOption( 's' ) ) {
             toUseStringency = Integer.parseInt( this.getOptionValue( 's' ) );
-        }
-        if ( this.hasOption( ALLGENES_OPTION ) ) {
-            this.knownGenesOnly = false;
         }
 
     }
@@ -205,7 +190,7 @@ public class Gene2GeneCoexpressionGeneratorCli extends ExpressionExperimentManip
     }
 
     private void initSpringBeans() {
-        geneVoteAnalyzer = ( GeneLinkCoexpressionAnalyzer ) this.getBean( "geneLinkCoexpressionAnalyzer" );
+        geneVoteAnalyzer = ( Gene2GenePopulationService ) this.getBean( "gene2GenePopulationService" );
 
     }
 }
