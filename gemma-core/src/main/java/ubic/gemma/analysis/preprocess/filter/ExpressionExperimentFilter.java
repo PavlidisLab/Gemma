@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -375,6 +376,11 @@ public class ExpressionExperimentFilter {
      */
     private boolean isTwoColor() {
         Boolean answer = null;
+
+        if ( arrayDesignsUsed.isEmpty() ) {
+            throw new IllegalStateException();
+        }
+
         for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
             TechnologyType techType = arrayDesign.getTechnologyType();
             boolean isTwoC = techType.equals( TechnologyType.TWOCOLOR ) || techType.equals( TechnologyType.DUALMODE );
@@ -473,7 +479,8 @@ public class ExpressionExperimentFilter {
 
     private boolean usesAffymetrix() {
         for ( ArrayDesign arrayDesign : arrayDesignsUsed ) {
-            if ( arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) {
+            if ( StringUtils.isNotBlank( arrayDesign.getName() )
+                    && arrayDesign.getName().toUpperCase().contains( "AFFYMETRIX" ) ) {
                 return true;
             }
         }

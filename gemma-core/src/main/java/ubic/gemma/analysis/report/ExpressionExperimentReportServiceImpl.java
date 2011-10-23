@@ -859,10 +859,8 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         eeVo.setDateCached( timestamp );
 
         auditTrailService.thaw( tempEe.getAuditTrail() );
-        if ( tempEe.getAuditTrail() != null ) {
-            eeVo.setDateCreated( tempEe.getAuditTrail().getCreationEvent().getDate() );
-        }
-        eeVo.setDateLastUpdated( tempEe.getAuditTrail().getLast().getDate() );
+        eeVo.setDateCreated( tempEe.getStatus().getCreateDate() );
+        eeVo.setDateLastUpdated( tempEe.getStatus().getLastUpdateDate() );
 
         saveValueObject( eeVo );
 

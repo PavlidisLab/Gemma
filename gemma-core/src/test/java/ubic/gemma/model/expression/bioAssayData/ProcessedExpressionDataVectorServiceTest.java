@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
@@ -124,7 +125,6 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
     /**
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<ExpressionExperiment> getDataset() throws Exception {
         // Dataset uses spotted arrays, 11 samples.
         String path = ConfigUtils.getString( "gemma.home" );
@@ -141,6 +141,9 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
             tcmv.computeMissingValues( newee, 1.5, null );
             // No masked preferred computation.
         } catch ( AlreadyExistsInSystemException e ) {
+            if ( e.getData() instanceof List ) {
+                newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
+            }
             newee = ( ExpressionExperiment ) e.getData();
         } catch ( Exception e ) {
             if ( e.getCause() instanceof IOException && e.getCause().getMessage().contains( "502" ) ) {

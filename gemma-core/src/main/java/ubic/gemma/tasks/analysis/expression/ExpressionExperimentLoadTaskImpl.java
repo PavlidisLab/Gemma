@@ -26,6 +26,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.analysis.preprocess.svd.SVDService;
@@ -53,13 +54,7 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
     private ArrayExpressLoadService arrayExpressLoadService;
 
     @Autowired
-    private ExpressionExperimentService eeService;
-
-    @Autowired
-    private TwoChannelMissingValues twoChannelMissingValueService;
-
-    @Autowired
-    private SVDService svdService;
+    private PreprocessorService preprocessorService;
 
     /*
      * (non-Javadoc)
@@ -81,8 +76,8 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
 
         TaskResult result;
         if ( jsEeLoadCommand.isArrayExpress() ) {
-            ExpressionExperiment dataset = arrayExpressLoadService.load( accession, jsEeLoadCommand
-                    .getArrayDesignName(), jsEeLoadCommand.isAllowArrayExpressDesign() );
+            ExpressionExperiment dataset = arrayExpressLoadService.load( accession,
+                    jsEeLoadCommand.getArrayDesignName(), jsEeLoadCommand.isAllowArrayExpressDesign() );
             ExpressionExperiment minimalDataset = null;
             if ( dataset != null ) {
                 /* Don't send the full experiment to the space. Instead, create a minimal result. */
@@ -144,63 +139,8 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
         log.info( "Postprocessing ..." );
         for ( ExpressionExperiment ee : ees ) {
 
-            postProcess( ee );
+            preprocessorService.process( ee );
         }
     }
-
-    /**
-     * @param ee
-     */
-    private void postProcess( ExpressionExperiment ee ) {
-        Collection<ArrayDesign> arrayDesignsUsed = eeService.getArrayDesignsUsed( ee );
-        if ( arrayDesignsUsed.size() > 1 ) {
-            log.warn( "Skipping postprocessing because experiment uses "
-                    + "multiple array types. Please check valid entry and run postprocessing separately." );
-        }
-
-        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
-        processForMissingValues( ee, arrayDesignUsed );
-        processForSampleCorrelation( ee );
-        // we could do the batch (raw data) processing here, but it's often slow.
-        processForPca( ee );
-    }
-
-    /**
-     * @param ee
-     * @return
-     */
-    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
-
-        boolean wasProcessed = false;
-
-        TechnologyType tt = design.getTechnologyType();
-        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
-            log.info( ee + " uses a two-color array design, processing for missing values ..." );
-            ee = eeService.thawLite( ee );
-            twoChannelMissingValueService.computeMissingValues( ee );
-            wasProcessed = true;
-        }
-
-        return wasProcessed;
-    }
-
-    /**
-     * @param ee
-     */
-    private void processForPca( ExpressionExperiment ee ) {
-        svdService.svd( ee );
-    }
-
-    /**
-     * Create the heatmaps used to judge similarity among samples.
-     * 
-     * @param ee
-     */
-    private void processForSampleCorrelation( ExpressionExperiment ee ) {
-        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
-    }
-
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
 }

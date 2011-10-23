@@ -37,12 +37,15 @@ import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.basecode.io.reader.DoubleMatrixReader;
+import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.quantitationtype.GeneralType;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
+import ubic.gemma.model.common.quantitationtype.ScaleType;
+import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
@@ -90,6 +93,9 @@ public class SimpleExpressionDataLoaderService {
 
     @Autowired
     PersisterHelper persisterHelper;
+
+    @Autowired
+    PreprocessorService preprocessorService;
 
     @Autowired
     TaxonService taxonService;
@@ -208,9 +214,7 @@ public class SimpleExpressionDataLoaderService {
         log.info( "Found " + rows.size() + " data rows for " + design );
 
         if ( rows.size() == 0 ) {
-            log
-                    .warn( "An array design was entered ( " + design
-                            + " ) for which there are no matching rows in the data" );
+            log.warn( "An array design was entered ( " + design + " ) for which there are no matching rows in the data" );
             return null;
         }
 
@@ -284,7 +288,11 @@ public class SimpleExpressionDataLoaderService {
 
         validate( experiment );
 
-        return ( ExpressionExperiment ) persisterHelper.persist( experiment );
+        experiment = ( ExpressionExperiment ) persisterHelper.persist( experiment );
+
+        preprocessorService.createProcessedVectors( experiment );
+
+        return experiment;
     }
 
     /**
@@ -297,6 +305,7 @@ public class SimpleExpressionDataLoaderService {
         Collection<ArrayDesign> arrayDesigns = metaData.getArrayDesigns();
 
         Collection<ArrayDesign> existingDesigns = new HashSet<ArrayDesign>();
+
         ArrayDesign newDesign = null;
 
         for ( ArrayDesign design : arrayDesigns ) {
@@ -420,13 +429,13 @@ public class SimpleExpressionDataLoaderService {
         result.setIsNormalized( Boolean.TRUE );
         result.setIsBackgroundSubtracted( Boolean.TRUE );
         result.setIsBackground( false );
-
-        result.setName( metaData.getQuantitationTypeName() );
+        result.setName( StringUtils.isBlank( metaData.getQuantitationTypeName() ) ? "QT for " + metaData.getShortName()
+                : metaData.getQuantitationTypeName() );
         result.setDescription( metaData.getQuantitationTypeDescription() );
-        result.setType( metaData.getType() );
+        result.setType( metaData.getType() == null ? StandardQuantitationType.AMOUNT : metaData.getType() );
         result.setIsMaskedPreferred( metaData.getIsMaskedPreferred() );
 
-        result.setScale( metaData.getScale() );
+        result.setScale( metaData.getScale() == null ? ScaleType.LINEAR : metaData.getScale() );
         result.setIsRatio( metaData.getIsRatio() );
 
         return result;

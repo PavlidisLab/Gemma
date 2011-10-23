@@ -31,7 +31,6 @@ import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
-import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
@@ -54,6 +53,10 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * <li>Ordering of vectors with respect to the experimental design? [probably not, this isn't a problem]
  * <li>Autotagger
  * </ol>
+ * <p>
+ * WORK IN PROGRESS
+ * </p
+ * .
  * 
  * @author paul
  * @version $Id$
@@ -102,29 +105,29 @@ public class PreprocessorService {
     /**
      * @param ee
      */
-    private void process( ExpressionExperiment ee ) {
+    // private void process( ExpressionExperiment ee ) {
+    //
+    // processForMissingValues( ee );
+    //
+    // /*
+    // * Normalize here?
+    // */
+    //
 
-        processForMissingValues( ee );
+    //
+    // batchInfoPopulationService.fillBatchInformation( ee );
+    // svdService.svd( ee );
+    //
+    // /*
+    // * Batch correct here.
+    // */
+    //
+    // sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+    // }
 
-        /*
-         * Normalize here?
-         */
-
-        Collection<ProcessedExpressionDataVector> dataVectors = processedExpressionDataVectorCreateService
-                .computeProcessedExpressionData( ee );
-
-        batchInfoPopulationService.fillBatchInformation( ee );
-        svdService.svd( ee );
-
-        /*
-         * Batch correct here.
-         */
-
-        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+    public void createProcessedVectors( ExpressionExperiment ee ) {
+        processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
     }
-
-    @Autowired
-    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 
     /**
      * @param ee
@@ -150,4 +153,61 @@ public class PreprocessorService {
 
         return wasProcessed;
     }
+
+    /**
+     * @param ee
+     */
+    public void process( ExpressionExperiment ee ) {
+
+        ee = expressionExperimentService.thaw( ee );
+
+        Collection<ArrayDesign> arrayDesignsUsed = expressionExperimentService.getArrayDesignsUsed( ee );
+        if ( arrayDesignsUsed.size() > 1 ) {
+            log.warn( "Skipping postprocessing because experiment uses "
+                    + "multiple array types. Please check valid entry and run postprocessing separately." );
+        }
+
+        ArrayDesign arrayDesignUsed = arrayDesignsUsed.iterator().next();
+        processForMissingValues( ee, arrayDesignUsed );
+        processForSampleCorrelation( ee );
+        processForPca( ee );
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    private boolean processForMissingValues( ExpressionExperiment ee, ArrayDesign design ) {
+
+        boolean wasProcessed = false;
+
+        TechnologyType tt = design.getTechnologyType();
+        if ( tt == TechnologyType.TWOCOLOR || tt == TechnologyType.DUALMODE ) {
+            log.info( ee + " uses a two-color array design, processing for missing values ..." );
+            ee = expressionExperimentService.thawLite( ee );
+            twoChannelMissingValueService.computeMissingValues( ee );
+            wasProcessed = true;
+        }
+
+        return wasProcessed;
+    }
+
+    /**
+     * @param ee
+     */
+    private void processForPca( ExpressionExperiment ee ) {
+        svdService.svd( ee );
+    }
+
+    /**
+     * Create the heatmaps used to judge similarity among samples.
+     * 
+     * @param ee
+     */
+    private void processForSampleCorrelation( ExpressionExperiment ee ) {
+        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+    }
+
+    @Autowired
+    private SampleCoexpressionMatrixService sampleCoexpressionMatrixService;
 }

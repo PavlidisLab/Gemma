@@ -64,7 +64,7 @@ import ubic.gemma.ontology.providers.MgedOntologyService;
  * <p>
  * Example of format, where 'Category' is an MGED term and 'Type' is either "Categorical' or 'Continuous' with no extra
  * white space around the '='s. The ID column MUST match the names on the BioAssays the design will be attached to. Main
- * section is tab-delmited. Column headings in the main table must match the identifiers given in the header.
+ * section is tab-delimited. Column headings in the main table must match the identifiers given in the header.
  * </p>
  * 
  * <pre>
@@ -79,6 +79,9 @@ import ubic.gemma.ontology.providers.MgedOntologyService;
  *    f-ad     35  Bipolar     28  Unknown 
  *    f-af     60  Bipolar     70  Little or none
  * </pre>
+ * <p>
+ * Note for testing: Files downloaded from Gemma may have an "ExternalIdentifier" column after the ID column. This
+ * should be removed before attempting to load the data back into Gemma.
  * 
  * @author Paul
  * @version $Id$
@@ -246,9 +249,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                 throw new IOException( "EF description must have two fields with a single ':' in between (" + line
                         + ")" );
             }
-            String factorName = StringUtils.strip( fields[0].replaceFirst( Pattern
-                    .quote( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR )
-                    + "\\s*", "" ) );
+            String factorName = StringUtils.strip( fields[0].replaceFirst(
+                    Pattern.quote( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) + "\\s*", "" ) );
 
             experimentalFactorValueNames.add( factorName );
             String category = StringUtils.strip( fields[1] );
@@ -375,9 +377,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             // $Run time : Category=EnvironmentalHistory Type=categorical
             String[] experimentalFactorfields = experimentalFactorFileLine.split( ":" );
 
-            String factorValue = ( StringUtils.strip( experimentalFactorfields[0].replaceFirst( Pattern
-                    .quote( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR )
-                    + "\\s*", "" ) ) ).trim();
+            String factorValue = ( StringUtils.strip( experimentalFactorfields[0].replaceFirst(
+                    Pattern.quote( EXPERIMENTAL_FACTOR_DESCRIPTION_LINE_INDICATOR ) + "\\s*", "" ) ) ).trim();
             String categoryAndType = StringUtils.strip( experimentalFactorfields[1] );
             String[] categoryAndTypeFields = StringUtils.split( categoryAndType );
 
@@ -402,8 +403,8 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
             experimentalFactorFromFile.setType( factorType.equalsIgnoreCase( "CATEGORICAL" ) ? FactorType.CATEGORICAL
                     : FactorType.CONTINUOUS );
 
-            addFactorValuesToExperimentalFactor( experimentalFactorFromFile, getMapFactorSampleValues( headerFields,
-                    factorValueLines ), factorType );
+            addFactorValuesToExperimentalFactor( experimentalFactorFromFile,
+                    getMapFactorSampleValues( headerFields, factorValueLines ), factorType );
 
             if ( !checkForDuplicateExperimentalFactorOnExperimentalDesign( experimentalDesign,
                     experimentalFactorFromFile ) ) {
