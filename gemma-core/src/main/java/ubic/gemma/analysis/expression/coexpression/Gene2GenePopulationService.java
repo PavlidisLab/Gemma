@@ -277,6 +277,9 @@ public class Gene2GenePopulationService {
 
         for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
             // l.add( n.getMedian() );
+            /*
+             * The final ranks are based on the pvalues, not the medians.
+             */
             l.add( n.getPvalue() );
         }
 
