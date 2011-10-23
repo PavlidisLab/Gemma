@@ -18,11 +18,8 @@
  */
 package ubic.gemma.analysis.preprocess.normalize;
 
-import java.io.IOException;
-
-import ubic.basecode.dataStructure.matrix.DenseDoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
-import ubic.gemma.analysis.util.RCommander;
+import ubic.basecode.math.MatrixNormalizer;
 
 /**
  * Perform quantile normalization on a matrix, as described in:
@@ -33,40 +30,30 @@ import ubic.gemma.analysis.util.RCommander;
  * <p>
  * Bolstad, B. M., Irizarry R. A., Astrand, M, and Speed, T. P. (2003) _A Comparison of Normalization Methods for High
  * Density Oligonucleotide Array Data Based on Bias and Variance._ Bioinformatics 19(2) ,pp 185-193. <a
- * href="http://www.stat.berkeley.edu/~bolstad/normalize/normalize.html">web page</a>
+ * href="http://www.stat.berkeley.edu/~bolstad/normalize/normalize.html">web page</a>.
+ * <p>
+ * However, note that this deals with missing values differently than the Bioconductor implementation.
  * 
  * @author pavlidis
  * @version $Id$
+ * @see ubic.baseCode.math.MatrixNormalizer
  */
-public class QuantileNormalizer<R, C> extends RCommander implements Normalizer<R, C> {
+public class QuantileNormalizer<R, C> implements Normalizer<R, C> {
 
-    public QuantileNormalizer() throws IOException {
+    public QuantileNormalizer() {
         super();
-        this.rc.voidEval( "library(preprocessCore)" );
+        // this.rc.voidEval( "library(preprocessCore)" );
     }
 
     /*
      * (non-Javadoc)
      * 
-     * @see
-     * ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DenseDoubleMatrix2DNamed)
+     * @see ubic.gemma.model.analysis.preprocess.Normalizer#normalize(baseCode.dataStructure.matrix.DoubleMatrix)
      */
     public DoubleMatrix<R, C> normalize( DoubleMatrix<R, C> dataMatrix ) {
-        log.debug( "Normalizing..." );
 
-        String matrixvar = this.rc.assignMatrix( dataMatrix );
-        this.rc.voidEval( "result<-normalize.quantiles(" + matrixvar + ")" );
-        DoubleMatrix<String, String> plainResult = rc.retrieveMatrix( "result" );
-
-        /*
-         * IMPORTANT this assumes that normalize.quantiles gives us the matrix back with the same row/col ordering as
-         * the original!
-         */
-        DoubleMatrix<R, C> finalResult = new DenseDoubleMatrix<R, C>( plainResult.getRawMatrix() );
-        finalResult.setColumnNames( dataMatrix.getColNames() );
-        finalResult.setRowNames( dataMatrix.getRowNames() );
-
-        return finalResult;
+        MatrixNormalizer<R, C> m = new MatrixNormalizer<R, C>();
+        return m.quantileNormalize( dataMatrix );
 
     }
 }

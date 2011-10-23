@@ -42,15 +42,11 @@ public class ExpressionDataQuantileNormalizer {
 
         DoubleMatrix<CompositeSequence, BioMaterial> rawMatrix = matrix.getMatrix();
 
-        try {
-            QuantileNormalizer<CompositeSequence, BioMaterial> normalizer = new QuantileNormalizer<CompositeSequence, BioMaterial>();
-            DoubleMatrix<CompositeSequence, BioMaterial> normalized = normalizer.normalize( rawMatrix );
+        QuantileNormalizer<CompositeSequence, BioMaterial> normalizer = new QuantileNormalizer<CompositeSequence, BioMaterial>();
+        DoubleMatrix<CompositeSequence, BioMaterial> normalized = normalizer.normalize( rawMatrix );
 
-            for ( int i = 0; i < normalized.rows(); i++ ) {
-                matrix.setRow( i, ArrayUtils.toObject( normalized.getRow( i ) ) );
-            }
-        } catch ( IOException e ) {
-            throw new RuntimeException( e );
+        for ( int i = 0; i < normalized.rows(); i++ ) {
+            matrix.setRow( i, ArrayUtils.toObject( normalized.getRow( i ) ) );
         }
 
     }

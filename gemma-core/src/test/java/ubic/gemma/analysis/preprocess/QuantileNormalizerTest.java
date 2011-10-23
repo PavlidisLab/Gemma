@@ -58,30 +58,19 @@ public class QuantileNormalizerTest {
     DoubleMatrix<String, String> tester;
     QuantileNormalizer<String, String> qn;
 
-    private boolean connected = false;
-
     @Before
     public void setUp() throws Exception {
         DoubleMatrixReader reader = new DoubleMatrixReader();
         tester = reader.read( this.getClass().getResourceAsStream( "/data/testdata.txt" ) );
         assert tester != null;
 
-        try {
-            qn = new QuantileNormalizer<String, String>();
-            connected = true;
-        } catch ( Exception e ) {
-            log.error( e );
-            connected = false;
-        }
-
+        qn = new QuantileNormalizer<String, String>();
         log.debug( "Setup done" );
     }
 
     @After
     public void tearDown() throws Exception {
-
         tester = null;
-        if ( connected ) qn.cleanup();
     }
 
     /*
@@ -89,10 +78,6 @@ public class QuantileNormalizerTest {
      */
     @Test
     public void testNormalize() {
-        if ( !connected ) {
-            log.warn( "Could not access R, skipping test." );
-            return;
-        }
         DoubleMatrix<String, String> result = qn.normalize( tester );
         assertEquals( -0.525, result.get( 0, 9 ), 0.001 );
 
