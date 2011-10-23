@@ -144,6 +144,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
         ad.setName( RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setPrimaryTaxon( taxon );
+        ad.setTechnologyType( TechnologyType.ONECOLOR );
         Collection<ArrayDesign> ads = new HashSet<ArrayDesign>();
         ads.add( ad );
         metaData.setArrayDesigns( ads );
