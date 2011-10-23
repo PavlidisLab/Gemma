@@ -315,7 +315,7 @@ public class AnalysisSelectionAndExecutionService implements ApplicationContextA
                 }
             }
             /* Check for block design and execute two way anova (with or without interactions). */
-            if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment )
+            if ( !differentialExpressionAnalysisHelperService.blockComplete( expressionExperiment, experimentalFactors )
                     || !okForInteraction ) {
                 return this.applicationContext.getBean( TwoWayAnovaWithoutInteractionsAnalyzer.class );
             }

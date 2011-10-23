@@ -34,6 +34,7 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.analysis.diff.BaseAnalyzerConfigurationTest#configureMocks()
      */
     @Override
@@ -53,17 +54,6 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
     public void testCheckBiologicalReplicates() throws Exception {
         boolean result = differentialExpressionAnalysisHelperService.checkBiologicalReplicates( expressionExperiment,
                 expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
-        assertTrue( result );
-    }
-
-    /**
-     * Tests the AnalyzerHelper.checkBlockDesign method.
-     * <p>
-     * Expected result: null exception
-     */
-    @Test
-    public void testCheckBlockDesign() throws Exception {
-        boolean result = differentialExpressionAnalysisHelperService.checkBlockDesign( expressionExperiment );
         assertTrue( result );
     }
 

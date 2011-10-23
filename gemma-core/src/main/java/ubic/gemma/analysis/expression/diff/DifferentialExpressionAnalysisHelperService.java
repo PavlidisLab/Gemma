@@ -210,22 +210,6 @@ public class DifferentialExpressionAnalysisHelperService {
 
     /**
      * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
-     * false otherwise.
-     * 
-     * @param expressionExperiment
-     * @return boolean
-     */
-    public boolean blockComplete( ExpressionExperiment expressionExperiment ) {
-
-        boolean completeBlock = checkBlockDesign( expressionExperiment );
-        boolean hasAllReps = checkBiologicalReplicates( expressionExperiment, expressionExperiment
-                .getExperimentalDesign().getExperimentalFactors() );
-
-        return completeBlock && hasAllReps;
-    }
-
-    /**
-     * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
      * false otherwise. When determining completeness, a biomaterial's factor values are only considered if they are
      * equivalent to one of the input experimental factors.
      * 
@@ -380,26 +364,6 @@ public class DifferentialExpressionAnalysisHelperService {
         }
         return true;
 
-    }
-
-    /**
-     * Determines if each biomaterial in the expression experiment for the given quantitation type for the given
-     * bioassay dimension has a factor value from each of the experimental factors.
-     * 
-     * @param expressionExperiment
-     * @return
-     * @throws Exception
-     */
-    protected boolean checkBlockDesign( ExpressionExperiment expressionExperiment ) {
-
-        Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
-
-        /*
-         * second, make sure each biomaterial has factor values from one experimental factor paired with factor values
-         * from the other experimental factors
-         */
-        Collection<ExperimentalFactor> efs = expressionExperiment.getExperimentalDesign().getExperimentalFactors();
-        return checkBlockDesign( biomaterials, efs );
     }
 
     /**
