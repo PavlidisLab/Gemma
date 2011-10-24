@@ -661,7 +661,7 @@ public class ExpressionDataFileService {
             buf.append( "# The annotation file is missing for this Experiment, unable to include gene annotation information \n" );
             buf.append( "Probe_Name" );
         } else {
-            buf.append( "Probe_Name\tGene_Name\tGene_Symbol" );// column information
+            buf.append( "Probe_Name\tGene_Symbol\tGene_Name" );// column information
         }
 
         return buf.toString();
