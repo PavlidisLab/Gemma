@@ -493,8 +493,12 @@ public class Gene2GenePopulationService {
     public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
             boolean useDB ) {
         allGeneNodeDegrees.clear();
+        int count = 0;
         for ( Gene queryGene : toUseGenes ) {
             computeNodeDegree( queryGene, expressionExperiments );
+            if ( count++ % 200 == 0 ) {
+                log.info( count + "/" + toUseGenes.size() + " genes analyzed for node degree" );
+            }
         }
         log.info( "Finalizing node degree computation" );
         completeNodeDegreeComputations( useDB );

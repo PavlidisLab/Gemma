@@ -34,6 +34,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringWriter;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -100,6 +102,7 @@ import ubic.gemma.tasks.analysis.expression.ProcessedExpressionDataVectorCreateT
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.controller.BaseController;
+import ubic.gemma.web.view.TextView;
 import cern.colt.list.DoubleArrayList;
 
 /**
@@ -259,6 +262,15 @@ public class ExpressionExperimentQCController extends BaseController {
         DoubleMatrix<String, String> matrix = new DenseDoubleMatrix<String, String>( omatrix.getRawMatrix() );
         matrix.setRowNames( stringNames );
         matrix.setColumnNames( stringNames );
+
+        if ( text != null && text ) {
+            StringWriter s = new StringWriter();
+            MatrixWriter<String, String> mw = new MatrixWriter<String, String>( s, new DecimalFormat( "#.##" ) );
+            mw.writeMatrix( matrix, true );
+            ModelAndView mav = new ModelAndView( new TextView() );
+            mav.addObject( TextView.TEXT_PARAM, s.toString() );
+            return mav;
+        }
 
         /*
          * Blank out the diagonal so it doesn't affect the colour scale.
@@ -863,8 +875,10 @@ public class ExpressionExperimentQCController extends BaseController {
                          */
 
                         DefaultXYDataset series = new DefaultXYDataset();
-                        series.addSeries( plotname, new double[][] { ArrayUtils.toPrimitive( eigenGene ),
-                                ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
+                        series.addSeries(
+                                plotname,
+                                new double[][] { ArrayUtils.toPrimitive( eigenGene ),
+                                        ArrayUtils.toPrimitive( values.toArray( new Double[] {} ) ) } );
 
                         // don't show x-axis label, which would otherwise be efs.get( efId )
                         chart = ChartFactory.createScatterPlot( title, null, "eigen" + ( component + 1 ), series,

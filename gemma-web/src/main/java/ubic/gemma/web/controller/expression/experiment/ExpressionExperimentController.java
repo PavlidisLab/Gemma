@@ -2300,7 +2300,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         ModelAndView mav = new ModelAndView( new TextView() );
         if ( ( eeIds == null || eeIds.isEmpty() ) && ( eeSetIds == null || eeSetIds.isEmpty() ) ) {
-            mav.addObject( "text", "Could not find genes to match expression experiment ids: {" + eeIds
+            mav.addObject( TextView.TEXT_PARAM, "Could not find genes to match expression experiment ids: {" + eeIds
                     + "} or expression experiment set ids {" + eeSetIds + "}" );
             return mav;
         }
@@ -2313,7 +2313,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         }
 
-        mav.addObject( "text", format4File( ees, eeSetName ) );
+        mav.addObject( TextView.TEXT_PARAM, format4File( ees, eeSetName ) );
         watch.stop();
         Long time = watch.getTime();
 
