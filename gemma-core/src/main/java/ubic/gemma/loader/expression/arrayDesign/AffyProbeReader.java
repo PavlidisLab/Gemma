@@ -28,8 +28,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
@@ -98,8 +96,6 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  */
 public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Collection<Reporter>> {
 
-    protected static final Log log = LogFactory.getLog( AffyProbeReader.class );
-
     private int sequenceField = 4;
 
     private Map<CompositeSequence, Collection<Reporter>> reporterMap = new HashMap<CompositeSequence, Collection<Reporter>>();
@@ -143,7 +139,6 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
      * @see baseCode.io.reader.BasicLineParser#parseOneLine(java.lang.String)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<Reporter> parseOneLine( String line ) {
 
         if ( StringUtils.isEmpty( line ) ) {
@@ -252,7 +247,7 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
         probeSet.setName( probeSetId );
 
         if ( !reporterMap.containsKey( probeSet ) ) {
-            reporterMap.put( probeSet, new HashSet() );
+            reporterMap.put( probeSet, new HashSet<Reporter>() );
         }
 
         reporter.setCompositeSequence( probeSet );

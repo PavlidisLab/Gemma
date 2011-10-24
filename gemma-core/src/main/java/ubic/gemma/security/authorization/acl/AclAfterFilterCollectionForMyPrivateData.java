@@ -79,25 +79,25 @@ public class AclAfterFilterCollectionForMyPrivateData extends AbstractAclProvide
                     return null;
                 }
 
-                Filterer filterer = null;
+                Filterer<Object> filterer = null;
 
                 boolean wasSingleton = false;
                 if ( returnedObject instanceof Collection ) {
-                    Collection collection = ( Collection ) returnedObject;
-                    filterer = new CollectionFilterer( collection );
+                    Collection<Object> collection = ( Collection<Object> ) returnedObject;
+                    filterer = new CollectionFilterer<Object>( collection );
                 } else if ( returnedObject.getClass().isArray() ) {
                     Object[] array = ( Object[] ) returnedObject;
-                    filterer = new ArrayFilterer( array );
+                    filterer = new ArrayFilterer<Object>( array );
                 } else {
                     // shortcut, just put the object in a collection. (PP)
                     wasSingleton = true;
-                    Collection coll = new HashSet();
+                    Collection<Object> coll = new HashSet<Object>();
                     coll.add( returnedObject );
-                    filterer = new CollectionFilterer<Securable>( coll );
+                    filterer = new CollectionFilterer<Object>( coll );
                 }
 
                 // Locate unauthorised Collection elements
-                Iterator collectionIter = filterer.iterator();
+                Iterator<Object> collectionIter = filterer.iterator();
 
                 /*
                  * Collect up the securables
@@ -129,8 +129,8 @@ public class AclAfterFilterCollectionForMyPrivateData extends AbstractAclProvide
                 }
 
                 if ( wasSingleton ) {
-                    if ( ( ( Collection ) filterer.getFilteredObject() ).size() == 1 ) {
-                        return ( ( Collection ) filterer.getFilteredObject() ).iterator().next();
+                    if ( ( ( Collection<Object> ) filterer.getFilteredObject() ).size() == 1 ) {
+                        return ( ( Collection<Object> ) filterer.getFilteredObject() ).iterator().next();
                     }
                     return null;
 
