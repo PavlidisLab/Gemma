@@ -1175,7 +1175,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         // Long id = null;
         Collection<ExpressionExperiment> toRemove = new ArrayList<ExpressionExperiment>();
         for ( ExpressionExperiment record : records ) {
-            if ( record.getStatus().getTroubled() ) {
+            if ( record.getStatus() != null && record.getStatus().getTroubled() ) {
                 toRemove.add( record );
             }
             // id = record.getId();
@@ -1343,6 +1343,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 orderBy = "bioAssayCount";
             } else if ( o.equals( "taxon" ) ) {
                 orderBy = "taxon";
+            } else if ( o.equals( "troubled" ) ) {
+                orderBy = "troubled";
             } else {
                 throw new IllegalArgumentException( "Unknown sort field: " + o );
             }

@@ -62,7 +62,10 @@ Gemma.ExperimentPagingStore = Ext.extend(Ext.data.Store, {
             name: "dateCreated",
             type: "date"
         }, {
-            name: "troubleFlag"
+            name: "troubled",
+			sortDir: 'DESC'
+        }, {
+            name: "troubleDetails"
         }]
     }),
     
@@ -161,12 +164,12 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         }
     }, {
         header: "Status",
-        dataIndex: 'troubleFlag',
+        dataIndex: 'troubled',
         sortable: true,
         width: 0.03,
         hidden: true,
         renderer: function(value, metaData, record, rowIndex, colIndex, store){
-            return (value) ? '<img title="' + value.detail + ' (' + value.note + ')" src="http://sandbox.chibi.ubc.ca/Gemma/images/icons/warning.png"/>' : '';
+            return (value) ? '<img title="' + record.troubleDetails + '" src="/Gemma/images/icons/warning.png"/>' : '';
         }
     }, {
         header: "Short Name",
@@ -453,7 +456,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     adjustForIsAdmin: function(isAdmin){
         if (isAdmin) {
             // if user is admin, update the column model to show the status column
-            var index = this.getColumnModel().findColumnIndex('troubleFlag');
+            var index = this.getColumnModel().findColumnIndex('troubled');
             this.getColumnModel().setHidden(index, !isAdmin);
         }
         

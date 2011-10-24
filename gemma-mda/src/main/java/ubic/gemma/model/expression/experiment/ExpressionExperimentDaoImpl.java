@@ -428,6 +428,10 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                     + "order by sample.sourceTaxon " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "bioAssayCount" ) ) {
             qs += "inner join ee.bioAssays as ba " + "group by ee.id " + "order by count(ba) "
+            + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "troubled" ) ) {
+            qs += "inner join ee.status as status "
+                    + "order by status.troubled "
                     + ( descending ? "desc" : "" );
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             qs += " order by ee." + orderField + " " + ( descending ? "desc" : "" );
