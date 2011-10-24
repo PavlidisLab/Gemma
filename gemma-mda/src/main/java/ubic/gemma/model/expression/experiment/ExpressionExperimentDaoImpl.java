@@ -444,14 +444,20 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
         String qs = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba "
-                + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
+                + "inner join ba.samplesUsed as sample ";
+        String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
 
         if ( orderField.equals( "taxon" ) ) {
-            qs += " order by sample.sourceTaxon " + ( descending ? "desc" : "" );
+            qs += where + " order by sample.sourceTaxon " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "bioAssayCount" ) ) {
-            qs += "group by ee.id order by count(distinct ba) " + ( descending ? "desc" : "" );
-        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
-            qs += " order by ee." + orderField + " " + ( descending ? "desc" : "" );
+            qs += where + "group by ee.id order by count(distinct ba) " + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "troubled" ) ) {
+            qs += "inner join ee.status as status "
+                + where 
+                + "order by status.troubled "
+                + ( descending ? "desc" : "" );
+    } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            qs += where + " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
         Query query = this.getSession().createQuery( qs );
         query.setParameter( "taxon", taxon );
