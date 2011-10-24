@@ -34,7 +34,7 @@ function hideTopBar(divID) {
 </script>
 
 
-<input type="hidden" id="dontReloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogout" value="false">
 <!-- div id="topBarUpdates"
 	style="background-color: #FFFFCC; border: 1px solid #FFCC66; float: left; margin-left: 150px; margin-top: -70px; padding: 5px; width: 84%; text-align: center;">
 	Welcome to the new Gemma!

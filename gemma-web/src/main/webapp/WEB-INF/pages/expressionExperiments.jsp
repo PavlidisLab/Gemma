@@ -74,4 +74,4 @@ $Id$
 
 </script>
 
-<input type="hidden" id="dontReloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogout" value="false">

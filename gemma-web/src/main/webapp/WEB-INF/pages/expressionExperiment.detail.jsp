@@ -34,7 +34,7 @@
 <input id="taxonName" type="hidden" value="${taxonName}  " />
 <input id="eeShortName" type="hidden" value="${expressionExperiment.shortName}  " />
 
-<input type="hidden" id="dontReloadOnLogout" value="false">
+<input type="hidden" id="reloadOnLogout" value="true">
 <input type="hidden" id="reloadOnLogin" value="true"/>
 
 <div spellcheck="false" id="eedetails">

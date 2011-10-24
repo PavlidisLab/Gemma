@@ -31,7 +31,7 @@
 <input id="geneSetName" type="hidden" value="${geneSetName}" />
 
 
-<input type="hidden" id="dontReloadOnLogout" value="false">
+<input type="hidden" id="reloadOnLogout" value="true">
 <input type="hidden" id="reloadOnLogin" value="true"/>
 
 <div spellcheck="false">

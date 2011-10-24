@@ -21,7 +21,7 @@
 	});
 	</script>
 </head>
-<input type="hidden" id="dontReloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogout" value="false">
 <div id="messages"></div>
 <div style="height: 1em; margin-bottom: " id="validation-messages"></div>
 <div style="margin-bottom: 10px" id="general-search-form"></div>

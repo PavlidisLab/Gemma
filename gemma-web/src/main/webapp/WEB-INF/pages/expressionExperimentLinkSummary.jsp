@@ -21,4 +21,7 @@
 	<div id="taskId" style="display: none;"></div>
 	<div id="progress-area" style="padding: 15px;"></div>
 
+<input type="hidden" id="reloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogin" value="true"/>
+
 </body>

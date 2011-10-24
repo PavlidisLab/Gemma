@@ -30,7 +30,7 @@
 <input id="eeSetId" type="hidden" value="${eeSetId}" />
 <input id="eeSetName" type="hidden" value="${eeSetName}" />
 
-<input type="hidden" id="dontReloadOnLogout" value="false">
+<input type="hidden" id="reloadOnLogout" value="true">
 <input type="hidden" id="reloadOnLogin" value="true"/>
 
 <div spellcheck="false">

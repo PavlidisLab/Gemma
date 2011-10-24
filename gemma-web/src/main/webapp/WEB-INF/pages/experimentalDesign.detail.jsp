@@ -11,6 +11,9 @@
 	<jwr:script src='/scripts/app/ExperimentalDesign.js' />
 </head>
 
+<input type="hidden" id="reloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogin" value="true"/>
+
 <input type="hidden" id="expressionExperimentID" value="${expressionExperiment.id}" />
 <input type="hidden" id="experimentalDesignID" value="${experimentalDesign.id}" />
 <input type="hidden" id="currentUserCanEdit" value="${currentUserCanEdit}" />

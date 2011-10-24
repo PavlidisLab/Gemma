@@ -6,7 +6,6 @@
 </head>
 
 
-<input type="hidden" id="dontReloadOnLogout" value="true">
 <script type="text/javascript">
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider( ));
 	Ext.onReady(function(){
@@ -18,7 +17,7 @@
 
 
 </script>
-<input type="hidden" id="dontReloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogout" value="false">
 <input type="hidden" id="reloadOnLogin" value="true"/>
 
 <h1>
