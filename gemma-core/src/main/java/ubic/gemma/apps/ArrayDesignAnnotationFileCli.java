@@ -56,7 +56,7 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
  * Given nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
  * 
  * @author klc
- * @versio $Id$
+ * @version $Id$
  */
 public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatingCli {
 
@@ -510,7 +510,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         Collection<Gene> genes = geneService.loadKnownGenes( taxon );
         log.info( "Taxon has " + genes.size() + " 'known' genes" );
         int numProcessed = arrayDesignAnnotationService.generateAnnotationFile( new PrintWriter( System.out ), genes,
-                OutputType.SHORT );
+                type );
         log.info( "Processed " + numProcessed + " genes that were found" );
     }
 
