@@ -82,8 +82,8 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
             return this.handleLoad( id );
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
-                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.load(java.lang.Long id)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.load(java.lang.Long id)' "
+                            +"id = "+id+"; --> "+ th, th );
         }
     }
 

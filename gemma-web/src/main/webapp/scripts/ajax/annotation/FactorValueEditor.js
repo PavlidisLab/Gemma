@@ -299,6 +299,15 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						params : [this.experimentalFactor]
 					});
 		}
+		
+		this.on('factorvaluedelete',function(fvs) {
+		this.store.reload();
+		this.refresh();
+		this.store.rejectChanges();
+		var ct = this.getTopToolbar().characteristicToolbar;
+		ct.factorValueCombo.store.reload();
+	});
+		
 	}, // init component
 
 	onRender : function(c, p) {
@@ -323,6 +332,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			ct.on("delete", function() {
 						// console.log("deleting factorvalue(s)");
 						var selected = this.getSelectedRecords();
+						this.store.reload();
 						var callback = function() {
 							this.factorValuesChanged.call(this, selected);
 						}.createDelegate(this);
@@ -348,6 +358,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	factorValuesDeleted : function(fvs) {
+		this.store.reload();
 		this.refresh();
 		this.store.rejectChanges();
 		var ct = this.getTopToolbar().characteristicToolbar;

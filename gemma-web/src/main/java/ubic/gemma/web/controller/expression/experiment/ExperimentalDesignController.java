@@ -36,6 +36,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import ubic.gemma.expression.experiment.FactorValueDeletion;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -90,6 +91,9 @@ public class ExperimentalDesignController extends BaseController {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
+    
+    @Autowired
+    private FactorValueDeletion factorValueDeletion = null;
 
     @Autowired
     private FactorValueService factorValueService = null;
@@ -312,36 +316,10 @@ public class ExperimentalDesignController extends BaseController {
      * @param efIds a collection of FactorValue ids
      */
     public void deleteFactorValues( EntityDelegator e, Collection<Long> fvIds ) {
+
+        
         if ( e == null || e.getId() == null ) return;
-        for ( Long fvId : fvIds ) {
-            FactorValue fv = factorValueService.load( fvId );
-
-            if ( fv == null ) {
-                throw new IllegalArgumentException( "No factor value with id=" + fvId + " could be loaded" );
-            }
-
-            if ( fv.getExperimentalFactor() == null ) {
-                throw new IllegalStateException( "No experimental factor for factor value " + fv.getId() );
-            }
-
-            /*
-             * Determine if there are any biomaterials that use the factor value in question.
-             */
-            if ( !bioMaterialService.findByFactorValue( fv ).isEmpty() ) {
-                /*
-                 * If so, check to see if there are any diff results that use this factor. FIXME This might have to run
-                 * in a background thread
-                 */
-                ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
-                Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                        .findByFactor( ef );
-                for ( DifferentialExpressionAnalysis a : analyses ) {
-                    differentialExpressionAnalysisService.delete( a );
-                }
-            }
-
-            factorValueService.delete( fv );
-        }
+            factorValueDeletion.deleteFactorValues(fvIds);
     }
 
     /**
@@ -460,9 +438,13 @@ public class ExperimentalDesignController extends BaseController {
     public void setCharacteristicService( CharacteristicService characteristicService ) {
         this.characteristicService = characteristicService;
     }
-
+    
     public void setExperimentalDesignImporter( ExperimentalDesignImporter experimentalDesignImporter ) {
         this.experimentalDesignImporter = experimentalDesignImporter;
+    }
+
+    public void setFactorValueDeletion( FactorValueDeletion factorValueDeletion) {
+        this.factorValueDeletion = factorValueDeletion;
     }
 
     /**

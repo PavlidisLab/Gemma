@@ -83,7 +83,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 				this.getSelectionModel().on("selectionchange", function(model) {
 							var selected = model.getSelections();
 							if (selected.length == 1) {
-								this.fireEvent("experimentalfactorselected", selected[0]);
+								this.fireEvent("experimentalfactorselected", selected[0].data);
 							}
 
 						}.createDelegate(this));
@@ -259,8 +259,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			factorCreated : function(factor) {
 				this.refresh();
-				var efs = [factor];
-				this.fireEvent('experimentalfactorselected', this, efs);
+				this.fireEvent('experimentalfactorselected', factor);
 			},
 
 			recordsChanged : function(records) {

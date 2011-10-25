@@ -25,7 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -124,14 +124,16 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                     public Object doInHibernate( Session session ) throws HibernateException {
 
                         log.debug( "Deleting: " + toDelete );
-                        session.lock( toDelete, LockMode.NONE );
-
+                        session.buildLockRequest(LockOptions.NONE).lock(toDelete); 
+                        
                         final String queryString = "from BioMaterialImpl as bm inner join bm.factorValues AS fv "
                                 + "WHERE fv = :fv";
 
                         Query query = session.createQuery( queryString );
                         query.setEntity( "fv", toDelete );
+                        session.refresh( toDelete );  // for multiple deletes
                         for ( Object[] row : ( List<Object[]> ) query.list() ) {
+
                             BioMaterial bm = ( BioMaterial ) row[0];
                             bm.getFactorValues().remove( toDelete );
                             session.update( bm );
@@ -146,12 +148,15 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
         /*
          * This rigamarole is to avoid the dreaded "would be reattached" error.
+         * Also, enables multiple deletes to be run in the same transaction
          */
         this.getHibernateTemplate().flush();
+        this.getHibernateTemplate().refresh(factorValue); // for multiple deletes
         this.getHibernateTemplate().evict( factorValue );
         this.getHibernateTemplate().evict( factorValue.getExperimentalFactor() );
 
         this.getHibernateTemplate().delete( factorValue );
+        this.getHibernateTemplate().flush();  // for multiple deletes
     }
 
     /**
