@@ -1242,17 +1242,19 @@ public class GeneCoexpressionService {
 
         Map<Gene, GeneCoexpressionNodeDegree> geneNodeDegrees = geneService
                 .getGeneCoexpressionNodeDegree( allUsedGenes );
+        
+        Map<Long, Gene> idMap = EntityUtils.getIdMap( geneNodeDegrees.keySet() );
 
         for ( CoexpressionValueObjectExt coexp : ecvos ) {
 
-            GeneCoexpressionNodeDegree queryGeneNodeDegree = geneNodeDegrees.get( coexp.getQueryGene() );
+            GeneCoexpressionNodeDegree queryGeneNodeDegree = geneNodeDegrees.get( idMap.get(coexp.getQueryGene().getId()) );
             if ( queryGeneNodeDegree == null ) {
                 coexp.setQueryGeneNodeDegree( -1.0 );
             } else {
                 coexp.setQueryGeneNodeDegree( queryGeneNodeDegree.getRank() );
             }
 
-            GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get( coexp.getFoundGene() );
+            GeneCoexpressionNodeDegree foundGeneNodeDegree = geneNodeDegrees.get( idMap.get(coexp.getFoundGene().getId()) );
             if ( foundGeneNodeDegree == null ) {
                 coexp.setFoundGeneNodeDegree( -1.0 );
             } else {
