@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
+import java.util.Collection;
+
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
@@ -44,4 +46,12 @@ public interface SampleCoexpressionAnalysisDao extends BaseDao<SampleCoexpressio
      * @return
      */
     public boolean hasAnalysis( ExpressionExperiment ee );
+
+    /**
+     * Remove any associated with the given experiment
+     * 
+     * @param ee
+     */
+    public void remove( ExpressionExperiment ee );
+
 }

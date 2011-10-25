@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -289,9 +290,14 @@ public class ExpressionExperimentServiceImpl extends
             this.getDifferentialExpressionAnalysisDao().remove( toDelete );
         }
 
-        // TODO Remove SampleCoexpressionanalyses
+        // remove any sample coexpression matrices
+        this.getSampleCoexpressionAnalysisDao().remove( ee );
 
-        // TODO Remove PCA
+        // Remove PCA
+        PrincipalComponentAnalysis pca = this.getPrincipalComponentAnalysisDao().findByExperiment( ee );
+        if ( pca != null ) {
+            this.getPrincipalComponentAnalysisDao().remove( pca );
+        }
 
         // Remove probe2probe links
         this.getProbe2ProbeCoexpressionDao().deleteLinks( ee );
@@ -521,7 +527,6 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected Date handleGetLastArrayDesignUpdate( ExpressionExperiment ee ) throws Exception {
         return this.getExpressionExperimentDao().getLastArrayDesignUpdate( ee );
     }
@@ -533,9 +538,8 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastLinkAnalysis(java.util.Collection
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, AuditEvent> handleGetLastLinkAnalysis( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastLinkAnalysis( Collection<Long> ids ) throws Exception {
 
         return getLastEvent( ids, LinkAnalysisEvent.Factory.newInstance() );
 
@@ -548,9 +552,8 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastMissingValueAnalysis(java
      * .util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, AuditEvent> handleGetLastMissingValueAnalysis( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastMissingValueAnalysis( Collection<Long> ids ) throws Exception {
         return getLastEvent( ids, MissingValueAnalysisEvent.Factory.newInstance() );
     }
 
@@ -597,9 +600,8 @@ public class ExpressionExperimentServiceImpl extends
      * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetLastValidationEvent(java.util
      * .Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, AuditEvent> handleGetLastValidationEvent( Collection ids ) throws Exception {
+    protected Map<Long, AuditEvent> handleGetLastValidationEvent( Collection<Long> ids ) throws Exception {
         return getLastEvent( ids, ValidatedFlagEvent.Factory.newInstance() );
     }
 

@@ -81,6 +81,29 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         this.getSession().save( sas );
     }
 
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SampleCoexpressionAnalysis> findAnalysesByExperiment( ExpressionExperiment ee ) {
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+                " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee );
+        return ( Collection<SampleCoexpressionAnalysis> ) r;
+    }
+
+    /**
+     * @param ee
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private Collection<SampleCoexpressionMatrix> findByExperiment( ExpressionExperiment ee ) {
+        List<?> r = this.getHibernateTemplate().findByNamedParam(
+                "select sa.sampleCoexpressionMatrix"
+                        + " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee );
+        return ( Collection<SampleCoexpressionMatrix> ) r;
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -89,8 +112,10 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
      * expression.experiment.ExpressionExperiment)
      */
     public boolean hasAnalysis( ExpressionExperiment ee ) {
-        return !this.getHibernateTemplate().findByNamedParam(
-                " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee ).isEmpty();
+        return !this
+                .getHibernateTemplate()
+                .findByNamedParam( " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee",
+                        ee ).isEmpty();
     }
 
     /*
@@ -127,26 +152,23 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         return result;
     }
 
-    /**
-     * @param ee
-     * @return
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisDao#remove(ubic.gemma.model.expression
+     * .experiment.ExpressionExperiment)
      */
     @SuppressWarnings("unchecked")
-    private Collection<SampleCoexpressionAnalysis> findAnalysesByExperiment( ExpressionExperiment ee ) {
+    @Override
+    public void remove( ExpressionExperiment ee ) {
+
         List<?> r = this.getHibernateTemplate().findByNamedParam(
-                " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee );
-        return ( Collection<SampleCoexpressionAnalysis> ) r;
+                "select sa " + " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee );
+
+        if ( r.isEmpty() ) return;
+
+        this.remove( ( Collection<? extends SampleCoexpressionAnalysis> ) r );
     }
 
-    /**
-     * @param ee
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    private Collection<SampleCoexpressionMatrix> findByExperiment( ExpressionExperiment ee ) {
-        List<?> r = this.getHibernateTemplate().findByNamedParam(
-                "select sa.sampleCoexpressionMatrix"
-                        + " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee );
-        return ( Collection<SampleCoexpressionMatrix> ) r;
-    }
 }

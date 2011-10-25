@@ -26,7 +26,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
+import ubic.gemma.model.analysis.expression.coexpression.SampleCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
+import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
@@ -67,6 +69,12 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
 
     @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
+    
+    @Autowired
+    private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
+    
+    @Autowired
+    private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
 
     @Autowired
     private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
@@ -505,7 +513,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getPerTaxonCount()
      */
-    public Map getPerTaxonCount() {
+    public Map<Taxon, Long> getPerTaxonCount() {
         try {
             return this.handleGetPerTaxonCount();
         } catch ( Throwable th ) {
@@ -564,6 +572,14 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
                     "Error performing 'ExpressionExperimentService.getPreferredDesignElementDataVectorCount(ExpressionExperiment expressionExperiment)' --> "
                             + th, th );
         }
+    }
+
+    public SampleCoexpressionAnalysisDao getSampleCoexpressionAnalysisDao() {
+        return sampleCoexpressionAnalysisDao;
+    }
+
+    public PrincipalComponentAnalysisDao getPrincipalComponentAnalysisDao() {
+        return principalComponentAnalysisDao;
     }
 
     /**
