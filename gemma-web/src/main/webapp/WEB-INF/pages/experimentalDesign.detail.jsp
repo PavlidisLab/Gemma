@@ -69,7 +69,8 @@
 			<td>
 				<c:choose>
 					<c:when test="${not empty expressionExperiment.description}">
-				${expressionExperiment.description}
+				<textarea rows=12 readonly="true" 
+					style="width:700px;background-color:white;border:1px solid gainsboro">${expressionExperiment.description}</textarea>
 			</c:when>
 					<c:otherwise>(Description not available)</c:otherwise>
 				</c:choose>
