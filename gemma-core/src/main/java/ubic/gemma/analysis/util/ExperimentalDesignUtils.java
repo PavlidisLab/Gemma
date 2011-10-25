@@ -80,8 +80,8 @@ public class ExperimentalDesignUtils {
     public static ObjectMatrix<String, String, Object> buildDesignMatrix( List<ExperimentalFactor> factors,
             List<BioMaterial> samplesUsed, Map<ExperimentalFactor, FactorValue> baselines ) {
 
-        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<String, String, Object>( samplesUsed
-                .size(), factors.size() );
+        ObjectMatrix<String, String, Object> designMatrix = new ObjectMatrixImpl<String, String, Object>(
+                samplesUsed.size(), factors.size() );
 
         Map<ExperimentalFactor, String> factorNamesInR = new LinkedHashMap<ExperimentalFactor, String>();
         for ( ExperimentalFactor factor : factors ) {
@@ -171,6 +171,20 @@ public class ExperimentalDesignUtils {
             return true;
 
         return false;
+    }
+
+    /**
+     * @param factors
+     * @return a new collection (same order as the input)
+     */
+    public static Collection<ExperimentalFactor> factorsWithoutBatch( Collection<ExperimentalFactor> factors ) {
+        Collection<ExperimentalFactor> result = new ArrayList<ExperimentalFactor>();
+        for ( ExperimentalFactor f : factors ) {
+            if ( !isBatch( f ) ) {
+                result.add( f );
+            }
+        }
+        return result;
     }
 
     /**

@@ -32,6 +32,7 @@ import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.TwoWayAnovaWithoutInteractionsAnalyzer;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService.AnalysisType;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
@@ -117,25 +118,28 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
 
         ee = expressionExperimentService.thawLite( ee );
 
+        Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils.factorsWithoutBatch( ee
+                .getExperimentalDesign().getExperimentalFactors() );
+
         AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
-                null, null );
+                factorsWithoutBatch, null );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
 
-        for ( ExperimentalFactor factor : ee.getExperimentalDesign().getExperimentalFactors() ) {
+        for ( ExperimentalFactor factor : factorsWithoutBatch ) {
             result.getFactors().add( new ExperimentalFactorValueObject( factor ) );
         }
 
         if ( analyzer == null ) {
             /*
-             * Either there are no viable automatic choices, or there are no factors...
+             * Either there are no viable automatic choices, or there are no usable factors...
              */
-            if ( ee.getExperimentalDesign().getExperimentalFactors().size() < 2 ) {
+            if ( factorsWithoutBatch.size() < 2 ) {
                 throw new IllegalStateException( "This data set does not seem suitable for analysis." );
             }
 
         } else if ( analyzer instanceof TTestAnalyzer ) {
-            if ( ee.getExperimentalDesign().getExperimentalFactors().iterator().next().getFactorValues().size() == 1 ) {
+            if ( factorsWithoutBatch.iterator().next().getFactorValues().size() == 1 ) {
                 result.setType( AnalysisType.OSTTEST );
             } else {
                 result.setType( AnalysisType.TTEST );
@@ -153,7 +157,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     }
 
     /**
-     * AJAX entry point.
+     * AJAX entry point when running completely automatically.
      * 
      * @param cmd
      * @return
@@ -169,7 +173,8 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         ee = expressionExperimentService.thawLite( ee );
 
         DifferentialExpressionAnalysisTaskCommand cmd = new DifferentialExpressionAnalysisTaskCommand( ee );
-        cmd.setFactors( ee.getExperimentalDesign().getExperimentalFactors() );
+        cmd.setFactors( ExperimentalDesignUtils.factorsWithoutBatch( ee.getExperimentalDesign()
+                .getExperimentalFactors() ) );
 
         return super.run( cmd );
     }
