@@ -7,10 +7,8 @@
  */
 Ext.namespace('Gemma');
 
-/**
+/*
  * The maximum number of genes we allow users to put in at once.
- * 
- * @type Number
  */
 Gemma.MAX_GENES_PER_QUERY = 1000;
 
@@ -20,8 +18,8 @@ Gemma.MAX_GENES_PER_QUERY = 1000;
  * 
  * See also GeneMembersSaveGrid.js
  * 
- * @class GeneGrid
- * @extends Gemma.GemmaGridPanel
+ * @class Gemma.GeneMembersGrid
+ * @extends Ext.grid.GridPanel
  */
 Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
@@ -350,56 +348,76 @@ Ext.reg('geneMembersGrid', Gemma.GeneMembersGrid);
  * 
  * Note configs 
  * 
- * @class GeneGrid
- * @extends Gemma.GemmaGridPanel
+ * @class Gemma.GeneMembersSaveGrid
+ * @extends Gemma.GeneMembersGrid
  */
 Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
 	// take note of these config options
 	/**
-	 * @cfg {boolean} controls presence of 'done' button
+	 * @cfg controls presence of 'done' button
 	 */
 	allowSaveToSession:true,
 	/**
-	 * @cfg {boolean} controls presence of top toolbar
+	 * @cfg controls presence of top toolbar
 	 */
 	allowAdditions:true, 
 	/**
-	 * @cfg {boolean} controls presence of 'remove experiment' buttons on every row
+	 * @cfg controls presence of 'remove experiment' buttons on every row
 	 */
 	allowRemovals:true,
 	/**
-	 * @cfg {boolean} controls whether the data appears in two columns or formatted into one
+	 * @cfg controls whether the data appears in two columns or formatted into one
 	 */
 	sortableColumnsView:false, 
 	/**
-	 * @cfg {boolean} controls whether the cancel button is visible
+	 * @cfg controls whether the cancel button is visible
 	 */
 	hideCancel:false,
 	/**
-	 * @cfg {boolean}  controls whether to show a 'save as' button in addition to a save button
+	 * @cfg controls whether to show a 'save as' button in addition to a save button
 	 */
 	showSeparateSaveAs: false,
 	/**
-	 * @cfg  {boolean} if save button is shown, this controls whether or not to leave it 
+	 * @cfg if save button is shown, this controls whether or not to leave it 
 	 * disabled until an experiment is added or removed
 	 */
 	enableSaveOnlyAfterModification: false,
 	// end of config options
 
 	initComponent : function() {
-				
+		
+		var extraButtons = [];
+		if(this.allowRemovals){
+			var removeSelectedBtn = new Ext.Button({
+				text: 'Remove Selected',
+				icon: "/Gemma/images/icons/cross.png",
+				hidden: true,
+				handler: function(){
+					var records = this.getSelectionModel().getSelections();
+					this.getStore().remove(records);
+					removeSelectedBtn.setVisible(false);
+				},
+				scope:this
+			});
+			extraButtons = [removeSelectedBtn];
+			
+			this.getSelectionModel().on('rowselect', function(selModel){
+				removeSelectedBtn.setVisible(selModel.getCount() > 1);
+			}, this);
+
+		}
+		
 		if (this.allowAdditions) {
 			Ext.apply(this, {
 				tbar: new Gemma.GeneAndGroupAdderToolbar({
-					extraButtons: this.extraButtons,
+					extraButtons: extraButtons,
 					geneComboWidth: this.width - 50,
 					geneGrid: this,
 					taxonId: this.taxonId
 				})
 			});
 		}
-
 		
 		var columns = [];
 		if (this.sortableColumnsView) {
@@ -1004,6 +1022,10 @@ Gemma.GeneAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 });
 
 
+/**
+ * classic 'grid' version of a gene listing
+ * @class Gemma.GeneGroupMemberPanelClassic
+ */
 Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
 
 	initComponent : function() {

@@ -527,7 +527,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			name: 'geneSelectionEditor',
 			// hidden: 'true',
 			hideHeaders: true,
-			width: 450,
+			width: 500,
 			height: 500,
 			frame: false
 		});
@@ -567,7 +567,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					// closeAction: 'hide',
 					closable : false,
 					layout : 'fit',
-					width : 450,
+					width : 500,
 					height : 500,
 					items : this.geneSelectionEditor,
 					title : 'Edit Your Gene Selection'

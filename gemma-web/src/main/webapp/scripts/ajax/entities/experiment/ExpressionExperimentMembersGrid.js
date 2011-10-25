@@ -118,9 +118,32 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	initComponent : function() {
 
+		
+		var extraButtons = [];
+		if(this.allowRemovals){
+			var removeSelectedBtn = new Ext.Button({
+				text: 'Remove Selected',
+				icon: "/Gemma/images/icons/cross.png",
+				hidden: true,
+				handler: function(){
+					var records = this.getSelectionModel().getSelections();
+					this.getStore().remove(records);
+					removeSelectedBtn.setVisible(false);
+				},
+				scope:this
+			});
+			extraButtons = [removeSelectedBtn];
+			
+			this.getSelectionModel().on('rowselect', function(selModel){
+				removeSelectedBtn.setVisible(selModel.getCount() > 1);
+			}, this);
+
+		}
+		
 		if(this.allowAdditions){
 			Ext.apply(this, {
 				tbar: new Gemma.ExperimentAndGroupAdderToolbar({
+					extraButtons: extraButtons,
 					ref: 'eeAdderTBar',
 					eeGrid : this
 				})
@@ -762,6 +785,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
  */
 Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 
+	extraButtons: [],
 	initComponent: function(){
 	
 		Gemma.ExperimentAndGroupAdderToolbar.superclass.initComponent.call(this);
@@ -773,12 +797,12 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 			listeners: {
 				'select': {
 					fn: function(combo, rec, index){
-						this.addButton.enable();
+						this.addBtn.enable();
 						if (rec.data.size === 1) {
-							this.addButton.setText('Add 1 experiment');
+							this.addBtn.setText('Add 1 experiment');
 						}
 						else {
-							this.addButton.setText('Add ' + rec.data.size + ' experiments');
+							this.addBtn.setText('Add ' + rec.data.size + ' experiments');
 						}
 						
 					}.createDelegate(this)
@@ -786,7 +810,7 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 			}
 		});
 		
-		this.addButton = new Ext.Toolbar.Button({
+		this.addBtn = new Ext.Toolbar.Button({
 			icon: "/Gemma/images/icons/add.png",
 			cls: "x-btn-text-icon",
 			tooltip: "Add selected experiment(s) to the list",
@@ -795,16 +819,17 @@ Gemma.ExperimentAndGroupAdderToolbar = Ext.extend(Ext.Toolbar,{
 			handler: function(){
 				this.eeGrid.addExperiments(this.eeCombo.getExpressionExperimentGroup());
 				this.eeCombo.reset();
-				this.addButton.setText('Add');
-				this.addButton.disable();
+				this.addBtn.setText('Add');
+				this.addBtn.disable();
 			}.createDelegate(this)
 		});
 		
 	},
 	afterRender: function(c, l){
 		Gemma.ExperimentAndGroupAdderToolbar.superclass.afterRender.call(this, c, l);
+		this.add(this.eeCombo, this.addBtn);
 		
-		this.add(this.eeCombo, this.addButton);
+		this.addButton(this.extraButtons);
 		
 	}
 });

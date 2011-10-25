@@ -16,10 +16,6 @@ Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 			},
 
 			initComponent : function() {
-				Ext.apply(this, {
-							selModel : new Ext.grid.RowSelectionModel({})
-						});
-
 				Gemma.GemmaGridPanel.superclass.initComponent.call(this);
 				this.addEvents('refresh');
 			},

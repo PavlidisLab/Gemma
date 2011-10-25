@@ -255,7 +255,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					hideHeaders : true,
 					frame : false,
 					queryText : this.experimentCombo.getValue(),
-					width : 450,
+					width : 500,
 					height : 500
 				});
 
@@ -298,7 +298,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					// closeAction: 'hide',
 					closable : false,
 					layout : 'fit',
-					width : 450,
+					width : 500,
 					height : 500,
 					items : this.experimentSelectionEditor,
 					title : 'Edit Your Experiment Selection'
