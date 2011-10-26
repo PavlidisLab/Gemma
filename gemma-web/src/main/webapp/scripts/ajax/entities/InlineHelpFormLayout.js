@@ -2,6 +2,7 @@
  * Adds tooltip/qtip to field labels in forms
  * 
  * IE9 doesn't work with "ext:qtip" markup, so we use 'title' attribute instead
+ * --> looks like it may work now! Run more checks to be sure.
  * 
  * Adds the following fields for IE:
  * - fieldTip (no HTML markup allowed)

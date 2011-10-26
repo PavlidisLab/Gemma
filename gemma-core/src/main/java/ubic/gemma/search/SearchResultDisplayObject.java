@@ -85,6 +85,7 @@ public class SearchResultDisplayObject implements Comparable<SearchResultDisplay
     public SearchResultDisplayObject() {
     }
     /**
+     * this method does not set the publik variable for the returned object (cannot autowire security service from here)
      * @param searchResult
      */
     public SearchResultDisplayObject( SearchResult searchResult ) {

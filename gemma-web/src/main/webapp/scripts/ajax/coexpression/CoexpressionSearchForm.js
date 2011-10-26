@@ -1,3 +1,4 @@
+
 /**
  * The input for coexpression searches. This form has two main parts: a GeneChooserPanel, and the coexpression search
  * parameters.
@@ -11,8 +12,6 @@
  * 
  * @version $Id$
  */
-
-Gemma.MIN_STRINGENCY = 2;
 
 Gemma.CoexpressionSearchForm = Ext.extend(Ext.Panel, {
 

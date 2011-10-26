@@ -395,10 +395,10 @@ Gemma.MetaHeatmapApp = Ext.extend(Ext.Panel, {
 
 		/*************** end of selection grids **********************/
 
-		this.TOTAL_NUMBER_OF_COLUMNS = 0;
+		var TOTAL_NUMBER_OF_COLUMNS = 0;
 		var datasetGroupIndex;
 		for (datasetGroupIndex = 0; datasetGroupIndex < this.visualizationData.resultSetValueObjects.length; datasetGroupIndex++) {
-			this.TOTAL_NUMBER_OF_COLUMNS = this.TOTAL_NUMBER_OF_COLUMNS +
+			TOTAL_NUMBER_OF_COLUMNS = TOTAL_NUMBER_OF_COLUMNS +
 					this.visualizationData.resultSetValueObjects[datasetGroupIndex].length;
 		}
 		

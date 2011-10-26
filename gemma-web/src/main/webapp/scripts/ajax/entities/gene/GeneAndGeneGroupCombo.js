@@ -15,7 +15,11 @@
  */
 
 Ext.namespace('Gemma');
-
+/**
+ * combo to display search results for genes and gene groups (including session bound groups
+ * and GO groups)
+ * @class Gemma.GeneAndGeneGroupCombo
+ */
 Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 
 	name : 'geneAndGeneGroupCombo',

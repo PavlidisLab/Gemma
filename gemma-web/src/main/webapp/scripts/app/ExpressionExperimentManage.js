@@ -1,12 +1,13 @@
 Ext.namespace('Gemma');
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
 
+Gemma.DEFAULT_NUMBER_EXPERIMENTS = 50;
+
 /**
  * Show table of multiple experiments
  * 
  * @see EEManager
  */
-Gemma.DEFAULT_NUMBER_EXPERIMENTS = 50;
 Ext.onReady(function() {
 	Ext.QuickTips.init();
 	Ext.state.Manager.setProvider(new Ext.state.CookieProvider());

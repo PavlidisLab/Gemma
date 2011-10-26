@@ -12,8 +12,6 @@
  * @version $Id$
  */
 
-Gemma.MIN_STRINGENCY = 2;
-
 Gemma.GeneSessionSaveForm = Ext.extend(Ext.Panel, {
 
 	layout : 'table',

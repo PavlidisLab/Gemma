@@ -540,13 +540,13 @@ var Heatmap = function() {
 			return colors[v];
 		}
 
-		/**
-		 * Add a legend to the heatmap
-		 */
 
 		var MAX_LEGEND_HEIGHT = 10;
 		var LEGEND_WIDTH = 64;
 
+		/**
+		 * Add a legend to the heatmap
+		 */
 		function insertLegend(container, vertical) {
 
 			if (!container) {

@@ -59,7 +59,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 this.editable = experimentDetails.canCurrentUserEditExperiment;
                 
                 this.loadMask.hide();
-                /*DETAILS TAB*/
+                // DETAILS TAB
                 this.add(new Gemma.ExpressionExperimentDetails({
                     title: 'Details',
                     experimentDetails: experimentDetails,
@@ -67,7 +67,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     admin: this.admin
                 }));
                 
-                /*EXPERIMENT DESIGN TAB*/
+                // EXPERIMENT DESIGN TAB
                 
                 var batchInfo = '';
                 if (experimentDetails.hasBatchInformation) {
@@ -104,7 +104,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     }
                 });
                 
-                /*VISUALISATION TAB*/
+                // VISUALISATION TAB
                 var title = '';
                 var downloadLink = '';
                 var geneList = [];
@@ -133,7 +133,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                 });
                 
                 
-                /*DIAGNOSTICS TAB*/
+                // DIAGNOSTICS TAB
                 var refreshDiagnosticsLink = '';
                 if (this.editable || isAdmin) {
                     refreshDiagnosticsLink = '<a href="refreshCorrMatrix.html?id=' + experimentDetails.id + '"><img ' +
@@ -153,7 +153,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
 					items: [this.refreshDiagnosticsBtn,{html:experimentDetails.QChtml,border:false}]
                 });
                 
-                /*QUANTITATION TYPES TAB*/
+                // QUANTITATION TYPES TAB
                 this.add(new Gemma.ExpressionExperimentQuantitationTypeGrid({
                     title: 'Quantitation Types',
                     eeid: experimentDetails.id

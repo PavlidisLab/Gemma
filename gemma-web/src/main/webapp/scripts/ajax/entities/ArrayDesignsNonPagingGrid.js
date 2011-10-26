@@ -77,7 +77,8 @@ Gemma.ArrayDesignsStore = Ext.extend(Ext.data.Store, {
 				var count = 0;
 				for (i = 0; i < value.length; i++) {
 					if (value[i]) {
-						count++;
+						// want sorting to also group by status type & put troubled at top
+						count+=Math.pow(value.length-i, value.length-i); 
 					}
 				}
 				return count;
@@ -304,7 +305,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 				}, {
 					header: "Status",
 					dataIndex: 'statusArray',
-					width: 0.04,
+					width: 0.05,
 					renderer: function(value, metaData, record, rowIndex, colIndex, store){
 						var statusString = "";
 						

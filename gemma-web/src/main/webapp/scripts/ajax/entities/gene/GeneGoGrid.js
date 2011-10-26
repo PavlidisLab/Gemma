@@ -1,5 +1,9 @@
 Ext.namespace('Gemma');
-
+/**
+ * Gene go grid
+ * @class Gemma.GeneGOGrid
+ * @extends Gemma.GemmaGridPanel
+ */
 Gemma.GeneGOGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	
 	viewConfig : {

@@ -72,7 +72,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		
 		// panel to hold all results of searches 
 		resultsPanel = new Ext.TabPanel({
-			border: false,
+			border: true,
 			//hidden: true,
 			//deferredRender: true,
 			bodyStyle: 'text-align:left;',
