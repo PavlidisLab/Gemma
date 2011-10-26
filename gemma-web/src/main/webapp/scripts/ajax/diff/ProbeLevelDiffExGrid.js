@@ -253,7 +253,7 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 			var gene = record.data.gene;
 			var geneId;
 
-			// Gene object might not be availiable in store, if not check if geneId is embeded in page.
+			// Gene object might not be available in store, if not check if geneId is embeded in page.
 			if (gene != null) {
 				geneId = gene.id;
 			} else {
@@ -273,9 +273,8 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 						title : title,
 						thumbnails : false,
 						downloadLink : String.format('/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}', eeid, geneId),
-						readMethod : DEDVController.getDEDVForDiffExVisualizationByExperiment
+						readMethod: DEDVController.getDEDVForDiffExVisualizationByExperiment
 					});
-
 			this.visDifWindow.show({
 						params : [eeid, geneId, Gemma.DIFFEXVIS_QVALUE_THRESHOLD]
 					});

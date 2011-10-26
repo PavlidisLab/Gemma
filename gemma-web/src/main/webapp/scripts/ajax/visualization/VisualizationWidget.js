@@ -561,10 +561,21 @@ Gemma.VisualizationWithThumbsWindow = Ext.extend(Ext.Window, {
 			this.title = config.title; 
 			delete config.title;
 		}
-		var panelConfigParam = config;
+		var panelConfigParam = {};
+		
 		// add extra config params to panel
 		// The $H() construct creates a prototype-extended Hash.
+		// subclass defaults
 		$H(this.extraPanelParams).each(function(pair){
+			panelConfigParam[pair.key] = pair.value;
+		});
+		// add extra config params to panel
+		// The $H() construct creates a prototype-extended Hash.
+		// instatiation configs
+		$H(config).each(function(pair){
+			panelConfigParam[pair.key] = pair.value;
+		});
+		$H(config.extraPanelParams).each(function(pair){
 			panelConfigParam[pair.key] = pair.value;
 		});
 		this.panelConfigParam = panelConfigParam;
