@@ -71,9 +71,11 @@ Gemma.Search.app = function( ) {
 			if (searchArrays) {
 				scopes = scopes + "A";
 			}
-			if (searchSequences) {
+			// removed until sequences have a page
+			// see bug 2233
+			/*if (searchSequences) {
 				scopes = scopes + "S";
-			}
+			}*/
 			if (searchGeneSets) {
 				scopes = scopes + "M";
 			}
@@ -236,9 +238,11 @@ Gemma.Search.GeneralSearch = Ext.extend(Ext.Panel,{
 			if (searchArrays) {
 				scopes = scopes + "A";
 			}
-			if (searchSequences) {
+			// removed until sequences have a page
+			// see bug 2233
+			/*if (searchSequences) {
 				scopes = scopes + "S";
-			}
+			}*/
 			if (searchGeneSets) {
 				scopes = scopes + "M";
 			}
@@ -325,11 +329,13 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 						} else {
 							Ext.getCmp('search-genes-chkbx').setValue(false);
 						}
-						if (params.scope.indexOf('S') > -1) {
+						// removed until sequences have a page
+						// see bug 2233
+						/*if (params.scope.indexOf('S') > -1) {
 							Ext.getCmp('search-seqs-chkbx').setValue(true);
-						} else {
-							Ext.getCmp('search-seqs-chkbx').setValue(false);
-						}
+						} else {*/
+						Ext.getCmp('search-seqs-chkbx').setValue(false);
+						//}
 						if (params.scope.indexOf('M') > -1) {
 							Ext.getCmp('search-genesets-chkbx').setValue(true);
 						} else {
@@ -398,14 +404,14 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 										layout: 'table',
 										ref: 'searchForSelects',
 										layoutConfig:{
-											columns:4
+											columns:3
 										},
 										collapsible : true,
 										collapsed : false,
 										autoHeight : true,
 										defaultType : 'checkbox',
 										title : 'Items to search for',
-										width : 500,
+										width : 400,
 										items : [{
 													id : 'search-genes-chkbx',
 													name : "searchGenes",
@@ -422,21 +428,6 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													applyState : function(state) {
 														this.setValue(state.value);
 													}
-												}, {
-													id : 'search-seqs-chkbx',
-													name : "searchSequences",
-													boxLabel : "Sequences",
-													stateful : true,
-													stateEvents : ['check'],
-													getState : function() {
-														return {
-															value : this.getValue()
-														};
-													},
-													applyState : function(state) {
-														this.setValue(state.value);
-													},
-													hideLabel : true
 												}, {
 													id : 'search-exps-chkbx',
 													name : "searchExperiments",
@@ -483,6 +474,21 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 														this.setValue(state.value);
 													},
 													hideLabel : true
+												}, {
+													id : 'search-eesets-chkbx',
+													name : "searchEESets",
+													boxLabel : "Experiment sets",
+													stateful : true,
+													stateEvents : ['check'],
+													getState : function() {
+														return {
+															value : this.getValue()
+														};
+													},
+													applyState : function(state) {
+														this.setValue(state.value);
+													},
+													hideLabel : true
 												},{
 													id : 'search-prbs-chkbx',
 													name : "searchProbes",
@@ -499,9 +505,9 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													},
 													hideLabel : true
 												}, {
-													id : 'search-eesets-chkbx',
-													name : "searchEESets",
-													boxLabel : "Experiment sets",
+													id : 'search-seqs-chkbx',
+													name : "searchSequences",
+													boxLabel : "Sequences",
 													stateful : true,
 													stateEvents : ['check'],
 													getState : function() {
@@ -512,7 +518,12 @@ Gemma.SearchForm = Ext.extend(Ext.form.FormPanel, {
 													applyState : function(state) {
 														this.setValue(state.value);
 													},
-													hideLabel : true
+													// sequence results don't link anywhere
+													// see bug 2233
+													hideLabel : true,
+													checked:false,
+													hidden:true,
+													disabled:true
 												}]
 									},{
 										hidden: !showAdvancedOptions,
