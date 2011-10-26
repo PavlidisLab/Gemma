@@ -2,6 +2,7 @@ package ubic.gemma.association.phenotype;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -9,6 +10,7 @@ import java.util.TreeSet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
@@ -19,6 +21,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
@@ -71,9 +74,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // add the entity to the gene
         gene.getPhenotypeAssociations().add( pheAsso );
-
-        // save result -- WILL FAIL UNLESS YOU ARE AN ADMINISTRATOR
-        // this.geneService.update( gene );
 
         // return the saved gene result
         return new GeneEvidencesValueObject( gene );
@@ -207,7 +207,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
             }
         }
-
         return genesVO;
     }
 
@@ -218,12 +217,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<CharacteristicValueObject> loadAllPhenotypes() {
+
+        System.out.println( System.currentTimeMillis() );
+
         // find of all the phenotypes present in Gemma
         Collection<CharacteristicValueObject> phenotypes = this.associationService.loadAllPhenotypes();
 
         // for each of them, find the occurence
         for ( CharacteristicValueObject phenotype : phenotypes ) {
-            phenotype.setOccurence( this.associationService.findPhenotypeAssociations( phenotype.getValue() ).size() );
+
+            phenotype.setOccurence( this.associationService.findGenesWithPhenotype( phenotype.getValue() ) );
+
             // TODO for now lets use lowerCase until we have a tree
             phenotype.setValue( phenotype.getValue().toLowerCase() );
         }
@@ -287,6 +291,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneId the id of the gene chosen
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
+    // TO DO test and discuss more
     @Override
     public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery,
             Long geneId ) {
@@ -337,16 +342,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
         // search disease ontology
-        phenotypes.addAll( PhenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
 
         // search mp ontology
-        phenotypes.addAll( PhenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 mammalianPhenotypeOntologyService.findTerm( searchQuery ),
                 PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
 
         // search hp ontology
-        phenotypes.addAll( PhenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
                 humanPhenotypeOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
 
         // This list will contain exact match found in the Ontology search result
@@ -410,6 +415,95 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypesFound.addAll( phenotypesFound5 );
 
         return phenotypesFound;
+    }
+
+    // TODO NOT TO BE USED WAS COMMITED BECAUSE OF OTHER CODE, FAST DRAFT, WILL BE CHANGED SOON
+    public synchronized Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
+
+        // represents each phenotype as a tree of terms
+        TreeSet<TreeCharacteristicValueObject> col = new TreeSet<TreeCharacteristicValueObject>();
+
+        // all phenotypes in the Gemma database
+        Collection<CharacteristicValueObject> allPhenotypes = loadAllPhenotypes();
+
+        DiseaseOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
+        MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
+                .getMammalianPhenotypeOntologyService();
+        HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
+                .getHumanPhenotypeOntologyService();
+
+        // //////////////////////////////////////////////////////////////////////////////////////////
+        // for test TODO erase for real environment
+        while ( !diseaseOntologyService.isOntologyLoaded() || !mammalianPhenotypeOntologyService.isOntologyLoaded()
+                || !humanPhenotypeOntologyService.isOntologyLoaded() ) {
+
+            try {
+                wait( 1000 );
+            } catch ( InterruptedException e ) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            System.out.println( "waiting for Disease Ontology to load" );
+        }
+
+        // //////////////////////////////////////////////////////////////////////////////////////////
+
+        for ( CharacteristicValueObject c : allPhenotypes ) {
+
+            OntologyTerm ontologyTerm = diseaseOntologyService.getTerm( c.getValueUri() );
+
+            if ( ontologyTerm == null ) {
+                ontologyTerm = mammalianPhenotypeOntologyService.getTerm( c.getValueUri() );
+            }
+
+            if ( ontologyTerm == null ) {
+                ontologyTerm = humanPhenotypeOntologyService.getTerm( c.getValueUri() );
+            }
+
+            // create a tree for the term
+            TreeCharacteristicValueObject treeCharacteristicValueObject = this.phenotypeAssoManagerServiceHelper
+                    .ontology2TreeCharacteristicValueObjects( ontologyTerm );
+            // set flag that this node represents a phenotype in the database
+            treeCharacteristicValueObject.setWasFound( true );
+
+            col.add( treeCharacteristicValueObject );
+        }
+
+        // map of all phenotypes found in the tree
+        HashMap<String, TreeCharacteristicValueObject> hs = new HashMap<String, TreeCharacteristicValueObject>();
+
+        // this will be the final result of combining all trees found into less trees without the terms that are not in
+        // the database
+        Collection<TreeCharacteristicValueObject> finalTrees = new TreeSet<TreeCharacteristicValueObject>();
+
+        // the deepest tree is the first one, was order by deep
+        TreeCharacteristicValueObject treeC = col.first();
+        col.remove( treeC );
+        finalTrees.add( treeC );
+        this.phenotypeAssoManagerServiceHelper.addTermsToHash( treeC, hs );
+
+        for ( TreeCharacteristicValueObject treeVO : col ) {
+
+            // look if the phenotype is present in a previous tree
+            TreeCharacteristicValueObject treeExist = hs.get( treeVO.getValueUri() );
+
+            // look first if can be place in one tree
+            if ( treeExist != null ) {
+                treeExist.setWasFound( true );
+            }
+            // if not add terms to hashmap
+            else {
+                finalTrees.add( treeVO );
+                this.phenotypeAssoManagerServiceHelper.addTermsToHash( treeVO, hs );
+            }
+        }
+
+        // remove unused nodes
+        for ( TreeCharacteristicValueObject tc : finalTrees ) {
+            tc.removeUnused();
+        }
+
+        return finalTrees;
     }
 
 }

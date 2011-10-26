@@ -1,5 +1,6 @@
 package ubic.gemma.model.association.phenotype;
 
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -25,6 +26,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     }
 
     /** find Genes link to a phenotype */
+    @SuppressWarnings("unchecked")
     @Override
     public Collection<PhenotypeAssociation> findByPhenotype( String phenotypeValue ) {
 
@@ -34,6 +36,25 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return geneQueryCriteria.list();
 
+    }
+
+    /** find the number of Genes with a phenotype */
+    @Override
+    public Long findGenesWithPhenotype( String phenotypeValue ) {
+
+        Long value = null;
+
+        // TODO make hsql query
+        String queryString = "select count( distinct GENE_FK) from PHENOTYPE_ASSOCIATION where id in( SELECT PHENOTYPE_ASSOCIATION_FK FROM CHARACTERISTIC where value='"
+                + phenotypeValue + "')";
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        if ( results.next() ) {
+            value = ( ( BigInteger ) results.get( 0 ) ).longValue();
+        }
+
+        return value;
     }
 
     /**

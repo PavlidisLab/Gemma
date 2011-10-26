@@ -1,6 +1,7 @@
 package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -374,8 +375,8 @@ public class PhenotypeAssoManagerServiceHelper {
     }
 
     /** Ontology term to CharacteristicValueObject */
-    public static Set<CharacteristicValueObject> ontology2CharacteristicValueObject(
-            Collection<OntologyTerm> ontologyTerms, String ontologyUsed ) {
+    public Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
+            String ontologyUsed ) {
 
         Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
 
@@ -390,7 +391,7 @@ public class PhenotypeAssoManagerServiceHelper {
         return characteristicsVO;
     }
 
-    public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm ) {
+    public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm ) {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
 
@@ -403,7 +404,27 @@ public class PhenotypeAssoManagerServiceHelper {
         TreeCharacteristicValueObject treeCharacteristicVO = new TreeCharacteristicValueObject(
                 ontologyTerm.getLabel(), ontologyTerm.getUri(), childs );
 
+        int maxDeep = 0;
+
+        // look for max deep
+        for ( TreeCharacteristicValueObject t : childs ) {
+            if ( t.getDeep() > maxDeep ) {
+                maxDeep = t.getDeep();
+            }
+        }
+        maxDeep++;
+        treeCharacteristicVO.setDeep( maxDeep );
+
         return treeCharacteristicVO;
+    }
+
+    public void addTermsToHash( TreeCharacteristicValueObject tree, HashMap<String, TreeCharacteristicValueObject> hs ) {
+
+        for ( TreeCharacteristicValueObject t : tree.getChilds() ) {
+            hs.put( t.getValueUri(), t );
+
+            addTermsToHash( t, hs );
+        }
     }
 
 }

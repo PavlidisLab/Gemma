@@ -19,6 +19,7 @@ import java.util.Collection;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 
 /**
  * TODO Document Me
@@ -98,5 +99,9 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId );
+
+    // TO DO
+    /** return all the phenotypes as a tree */
+    public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree();
 
 }

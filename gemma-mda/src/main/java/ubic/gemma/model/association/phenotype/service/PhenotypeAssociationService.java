@@ -82,4 +82,6 @@ public interface PhenotypeAssociationService {
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( PhenotypeAssociation evidence );
 
+    public Long findGenesWithPhenotype( String phenotypeValue );
+
 }

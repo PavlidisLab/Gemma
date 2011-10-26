@@ -37,6 +37,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /** find all phenotypes */
+    @SuppressWarnings("unchecked")
     public Collection<PhenotypeAssociation> loadAll() {
         return ( Collection<PhenotypeAssociation> ) phenotypeAssociationDao.loadAll();
     }
@@ -69,6 +70,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public PhenotypeAssociation create( PhenotypeAssociation p ) {
         return this.phenotypeAssociationDao.create( p );
+    }
+
+    /** find the number of Genes with a phenotype */
+    @Override
+    public Long findGenesWithPhenotype( String phenotypeValue ) {
+        return this.phenotypeAssociationDao.findGenesWithPhenotype( phenotypeValue );
     }
 
 }
