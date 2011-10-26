@@ -26,8 +26,10 @@ import javax.ws.rs.core.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.service.GeneCoreService;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
 
 /**
  * RESTful web services for gene 
@@ -42,6 +44,9 @@ public class GeneWebService {
 	
     @Autowired
     private GeneCoreService geneCoreService = null;
+    
+    @Autowired
+    private PhenotypeAssociationManagerService phenotypeAssociationManagerService = null;
 
     @GET
     @Path("/find-gene-details")
@@ -54,5 +59,12 @@ public class GeneWebService {
 		valueObjects.add(geneCoreService.loadGeneDetails(geneId));
 		
 		return valueObjects;
+    }
+
+    @GET
+    @Path("/find-genes-with-evidences")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Collection<GeneEvidencesValueObject> findGenesWithEvidences(@QueryParam("geneSymbol") String geneSymbol) {
+		return phenotypeAssociationManagerService.findGenesWithEvidences(geneSymbol, null);
     }
 }
