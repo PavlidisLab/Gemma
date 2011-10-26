@@ -23,6 +23,7 @@ import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.GenericExperimentDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
@@ -46,7 +47,7 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /** find Genes link to a phenotype */
-    public Collection<PhenotypeAssociation> findPhenotypeAssociations( String phenotypeValue ) {
+    public Collection<Gene> findPhenotypeAssociations( String phenotypeValue ) {
         return phenotypeAssociationDao.findByPhenotype( phenotypeValue );
     }
 

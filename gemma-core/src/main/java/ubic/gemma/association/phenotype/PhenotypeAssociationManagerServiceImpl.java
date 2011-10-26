@@ -171,12 +171,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<GeneEvidencesValueObject> genesVO = new HashSet<GeneEvidencesValueObject>();
 
         // find all the Genes with the first phenotype
-        Collection<PhenotypeAssociation> pas = this.associationService.findPhenotypeAssociations( phenotypesValues[0] );
-
-        Collection<Gene> genes = new HashSet<Gene>();
-        for ( PhenotypeAssociation pa : pas ) {
-            genes.add( pa.getGene() );
-        }
+        Collection<Gene> genes = this.associationService.findPhenotypeAssociations( phenotypesValues[0] );
 
         Collection<GeneEvidencesValueObject> genesWithFirstPhenotype = GeneEvidencesValueObject
                 .convert2GeneEvidencesValueObjects( genes );

@@ -20,6 +20,7 @@ import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
@@ -43,7 +44,7 @@ public interface PhenotypeAssociationService {
      * @param phenotypeValue FIXME what is this supposed to be?
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> findPhenotypeAssociations( String phenotypeValue );
+    public Collection<Gene> findPhenotypeAssociations( String phenotypeValue );
 
     /**
      * create a GenericExperiment

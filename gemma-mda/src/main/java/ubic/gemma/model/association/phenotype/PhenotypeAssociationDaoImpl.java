@@ -27,6 +27,7 @@ import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.persistence.AbstractDao;
 
@@ -42,10 +43,11 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find Genes link to a phenotype */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<PhenotypeAssociation> findByPhenotype( String phenotypeValue ) {
+    public Collection<Gene> findByPhenotype( String phenotypeValue ) {
 
-        Criteria geneQueryCriteria = super.getSession().createCriteria( PhenotypeAssociation.class )
-                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "phenotypes" )
+        Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
+                .createCriteria( "phenotypeAssociations" ).createCriteria( "phenotypes" )
                 .add( Restrictions.like( "value", phenotypeValue ) );
 
         return geneQueryCriteria.list();
