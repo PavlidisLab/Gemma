@@ -77,11 +77,14 @@ public interface PhenotypeAssociationService {
     public PhenotypeAssociation load( Long id );
 
     /**
-     * Supdate a PhenotypeAssociation
+     * update a PhenotypeAssociation
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( PhenotypeAssociation evidence );
 
-    public Long findGenesWithPhenotype( String phenotypeValue );
+    /**
+     * count the number of Genes with a phenotype
+     */
+    public Long countGenesWithPhenotype( String phenotypeValue );
 
 }

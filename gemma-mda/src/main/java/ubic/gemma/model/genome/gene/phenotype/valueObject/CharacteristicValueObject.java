@@ -117,7 +117,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             return this.value.compareToIgnoreCase( o.value );
         }
         return this.category.compareTo( o.category );
-
     }
 
     public String getOntologyUsed() {

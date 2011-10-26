@@ -30,6 +30,8 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
     /** find all phenotypes */
     public Collection<CharacteristicValueObject> loadAllPhenotypes();
 
-    /** find the number of Genes with a phenotype */
-    public Long findGenesWithPhenotype( String phenotypeValue );
+    /**
+     * count the number of Genes with a phenotype
+     */
+    public Long countGenesWithPhenotype( String phenotypeValue );
 }

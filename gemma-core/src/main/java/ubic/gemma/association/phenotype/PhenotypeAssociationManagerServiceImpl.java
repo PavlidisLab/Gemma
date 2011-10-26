@@ -1,9 +1,28 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2007 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
 package ubic.gemma.association.phenotype;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -17,12 +36,17 @@ import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
+import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.search.SearchResult;
+import ubic.gemma.search.SearchService;
+import ubic.gemma.search.SearchSettings;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Component
@@ -39,6 +63,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private OntologyService ontologyService;
+
+    @Autowired
+    private SearchService searchService;
+
+    @Autowired
+    private TaxonService taxonService;
 
     /**
      * Links an Evidence to a Gene
@@ -113,7 +143,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
 
-    public Set<CharacteristicValueObject> findUniquePhenotpyesForGeneId( Long geneId ) {
+    private Set<CharacteristicValueObject> findUniquePhenotpyesForGeneId( Long geneId ) {
 
         Set<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
 
@@ -218,15 +248,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<CharacteristicValueObject> loadAllPhenotypes() {
 
-        System.out.println( System.currentTimeMillis() );
-
         // find of all the phenotypes present in Gemma
         Collection<CharacteristicValueObject> phenotypes = this.associationService.loadAllPhenotypes();
 
         // for each of them, find the occurence
         for ( CharacteristicValueObject phenotype : phenotypes ) {
 
-            phenotype.setOccurence( this.associationService.findGenesWithPhenotype( phenotype.getValue() ) );
+            phenotype.setOccurence( this.associationService.countGenesWithPhenotype( phenotype.getValue() ) );
 
             // TODO for now lets use lowerCase until we have a tree
             phenotype.setValue( phenotype.getValue().toLowerCase() );
@@ -280,7 +308,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     @Override
-    public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery ) {
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery ) {
         return searchOntologyForPhenotype( searchQuery, null );
     }
 
@@ -293,8 +321,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     // TO DO test and discuss more
     @Override
-    public synchronized Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery,
-            Long geneId ) {
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId ) {
 
         Collection<CharacteristicValueObject> phenotypesFound = new ArrayList<CharacteristicValueObject>();
 
@@ -323,21 +350,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .getMammalianPhenotypeOntologyService();
         HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
                 .getHumanPhenotypeOntologyService();
-
-        // //////////////////////////////////////////////////////////////////////////////////////////
-        // for test TODO erase for real environment
-        while ( !diseaseOntologyService.isOntologyLoaded() || !mammalianPhenotypeOntologyService.isOntologyLoaded()
-                || !humanPhenotypeOntologyService.isOntologyLoaded() ) {
-            try {
-                wait( 1000 );
-            } catch ( InterruptedException e ) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            System.out.println( "waiting for Disease Ontology to load" );
-        }
-
-        // //////////////////////////////////////////////////////////////////////////////////////////
 
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
@@ -418,7 +430,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     // TODO NOT TO BE USED WAS COMMITED BECAUSE OF OTHER CODE, FAST DRAFT, WILL BE CHANGED SOON
-    public synchronized Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
+    public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
         // represents each phenotype as a tree of terms
         TreeSet<TreeCharacteristicValueObject> col = new TreeSet<TreeCharacteristicValueObject>();
@@ -431,22 +443,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .getMammalianPhenotypeOntologyService();
         HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
                 .getHumanPhenotypeOntologyService();
-
-        // //////////////////////////////////////////////////////////////////////////////////////////
-        // for test TODO erase for real environment
-        while ( !diseaseOntologyService.isOntologyLoaded() || !mammalianPhenotypeOntologyService.isOntologyLoaded()
-                || !humanPhenotypeOntologyService.isOntologyLoaded() ) {
-
-            try {
-                wait( 1000 );
-            } catch ( InterruptedException e ) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            System.out.println( "waiting for Disease Ontology to load" );
-        }
-
-        // //////////////////////////////////////////////////////////////////////////////////////////
 
         for ( CharacteristicValueObject c : allPhenotypes ) {
 
@@ -504,6 +500,47 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return finalTrees;
+    }
+
+    /**
+     * Does a Gene search (by name or symbol) for a query and return only Genes with evidences
+     * 
+     * @param query
+     * @param taxonId, can be null to not constrain by taxon
+     * @return Collection<GeneEvidencesValueObject> list of Genes
+     */
+    @Override
+    public Collection<GeneEvidencesValueObject> findGenesWithEvidences( String query, Long taxonId ) {
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+        }
+        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
+        List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
+
+        Collection<Gene> genes = new HashSet<Gene>();
+        if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
+            return new HashSet<GeneEvidencesValueObject>();
+        }
+
+        for ( SearchResult sr : geneSearchResults ) {
+            genes.add( ( Gene ) sr.getResultObject() );
+        }
+
+        Collection<GeneEvidencesValueObject> geneEvidencesValueObjects = GeneEvidencesValueObject
+                .convert2GeneEvidencesValueObjects( genes );
+
+        Collection<GeneEvidencesValueObject> geneValueObjectsFilter = new ArrayList<GeneEvidencesValueObject>();
+
+        for ( GeneEvidencesValueObject gene : geneEvidencesValueObjects ) {
+
+            if ( gene.getEvidences() != null && gene.getEvidences().size() != 0 ) {
+
+                geneValueObjectsFilter.add( gene );
+            }
+        }
+
+        return geneValueObjectsFilter;
     }
 
 }

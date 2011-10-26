@@ -104,4 +104,13 @@ public interface PhenotypeAssociationManagerService {
     /** return all the phenotypes as a tree */
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree();
 
+    /**
+     * Does a Gene search (by name or symbol) for a query and return only Genes with evidences
+     * 
+     * @param query
+     * @param taxonId, can be null to not constrain by taxon
+     * @return Collection<GeneEvidencesValueObject> list of Genes
+     */
+    public Collection<GeneEvidencesValueObject> findGenesWithEvidences( String query, Long taxonId );
+
 }
