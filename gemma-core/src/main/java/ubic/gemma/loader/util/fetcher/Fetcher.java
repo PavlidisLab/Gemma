@@ -26,16 +26,4 @@ public interface Fetcher {
      */
     public void setForce( boolean force );
 
-    // /**
-    // * @param uri The base URI. This is concatenated with the identifier to form the file URIs to be handled by this.
-    // */
-    // public void setBaseUri( URI uri );
-    //
-    // /**
-    // * @param uri The location where fetched files will be placed. If it does not exist, and a directory can be
-    // created,
-    // * it will be created by this.
-    // */
-    // public void setTargetUri( URI uri );
-
 }

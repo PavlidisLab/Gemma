@@ -38,11 +38,11 @@ public class GeneImplTest extends TestCase {
         super.setUp();
         aTax = Taxon.Factory.newInstance();
         aTax.setScientificName( "Foobius Barius" );
-        aTax.setIsSpecies(true);
+        aTax.setIsSpecies( true );
         aTax.setIsGenesUsable( true );
         bTax = Taxon.Factory.newInstance();
         bTax.setScientificName( "Barioobius foobarius" );
-        bTax.setIsSpecies(true);
+        bTax.setIsSpecies( true );
         bTax.setIsGenesUsable( true );
         Chromosome c = Chromosome.Factory.newInstance();
         c.setName( "X" );
@@ -72,8 +72,8 @@ public class GeneImplTest extends TestCase {
         Gene a = Gene.Factory.newInstance();
         Gene b = Gene.Factory.newInstance();
 
-        a.setNcbiId( "foo" );
-        b.setNcbiId( "foo" );
+        a.setNcbiGeneId( 1234 );
+        b.setNcbiGeneId( 1234 );
 
         assertEquals( a, b );
 

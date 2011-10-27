@@ -43,6 +43,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> create( Collection<GeneSet> sets ) {
         return ( Collection<GeneSet> ) this.geneSetDao.create( sets );
@@ -53,6 +54,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(ubic.gemma.model.genome.gene.GeneSet)
      */
+    @Override
     public GeneSet create( GeneSet geneset ) {
         return this.geneSetDao.create( geneset );
     }
@@ -62,6 +64,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.geneSetDao.findByGene( gene );
     }
@@ -70,6 +73,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @param gene
      * @return
      */
+    @Override
     public Collection<GeneSet> findByName( String name ) {
         return this.geneSetDao.findByName( name );
     }
@@ -89,6 +93,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> load( Collection<Long> ids ) {
         return ( Collection<GeneSet> ) this.geneSetDao.load( ids );
@@ -100,6 +105,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.lang.Long)
      */
+    @Override
     public GeneSet load( Long id ) {
         return this.geneSetDao.load( id );
     }
@@ -109,6 +115,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> loadAll() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
@@ -129,6 +136,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadMyGeneSets()
      */
+    @Override
     public Collection<GeneSet> loadMyGeneSets() {
         return loadAll();
     }
@@ -143,6 +151,7 @@ public class GeneSetServiceImpl implements GeneSetService {
         return this.geneSetDao.loadAll( tax );
     }
 
+    @Override
     public Collection<GeneSet> loadMySharedGeneSets() {
         return loadAll();
     }
@@ -152,6 +161,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(java.util.Collection)
      */
+    @Override
     public void remove( Collection<GeneSet> sets ) {
         this.geneSetDao.remove( sets );
     }
@@ -161,6 +171,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#remove(ubic.gemma.model.genome.gene.GeneSet)
      */
+    @Override
     public void remove( GeneSet geneset ) {
         this.geneSetDao.remove( geneset );
     }
@@ -174,6 +185,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(java.util.Collection)
      */
+    @Override
     public void update( Collection<GeneSet> sets ) {
         this.geneSetDao.update( sets );
 
@@ -184,6 +196,7 @@ public class GeneSetServiceImpl implements GeneSetService {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetService#update(ubic.gemma.model.genome.gene.GeneSet)
      */
+    @Override
     public void update( GeneSet geneset ) {
         this.geneSetDao.update( geneset );
 

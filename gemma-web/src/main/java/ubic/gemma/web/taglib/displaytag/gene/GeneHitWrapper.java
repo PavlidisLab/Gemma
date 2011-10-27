@@ -23,7 +23,7 @@ public class GeneHitWrapper extends TableDecorator {
     public String getNcbiLink() {
         CompassHit hit = ( CompassHit ) getCurrentRowObject();
         String ncbiLink = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
-                + ( ( Gene ) hit.getData() ).getNcbiId() + "'>(ncbi)</a>";
+                + ( ( Gene ) hit.getData() ).getNcbiGeneId() + "'>(ncbi)</a>";
         return ncbiLink;
     }
 

@@ -52,8 +52,8 @@ public class GeneEvidencesValueObject extends GeneValueObject {
                         .getPhenotypeAssociations() );
 
                 converted.add( new GeneEvidencesValueObject( g.getId(), g.getName(), getAliasStrings( g ), g
-                        .getNcbiId(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g
-                        .getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(),
+                        .getNcbiGeneId().toString(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(),
+                        null, g.getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(),
                         evidencesFromPhenotype ) );
             }
         }

@@ -185,7 +185,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
         for ( String entrezGeneid : entreGeneids ) {
             if ( !entrezGeneid.isEmpty() ) {
                 Gene gene = Gene.Factory.newInstance();
-                gene.setNcbiId( entrezGeneid );
+                gene.setNcbiGeneId( Integer.parseInt( entrezGeneid ) );
                 genes.add( gene );
                 if ( log.isDebugEnabled() ) log.debug( "Entry found for entrezGeneid " + entrezGeneid );
             }
@@ -251,8 +251,8 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
      * @return Combined protein 1 and protein 2 ids representing an identifier for this protein interaction
      */
     public String getProteinProteinInteractionId( StringProteinProteinInteraction stringProteinProteinInteraction ) {
-        return stringProteinProteinInteraction.getProtein1().concat( PROTEIN2PROTEINLINK ).concat(
-                stringProteinProteinInteraction.getProtein2() );
+        return stringProteinProteinInteraction.getProtein1().concat( PROTEIN2PROTEINLINK )
+                .concat( stringProteinProteinInteraction.getProtein2() );
     }
 
     /**

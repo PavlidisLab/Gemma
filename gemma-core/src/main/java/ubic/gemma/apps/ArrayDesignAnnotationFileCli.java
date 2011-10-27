@@ -53,7 +53,7 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
  * <p>
  * Given a batch file creates all the Annotation files for the AD's specified in the batch file
  * <p>
- * Given nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
+ * AGiven nothing creates annotation files for every AD that isn't subsumed or merged into another AD.
  * 
  * @author klc
  * @version $Id$
@@ -438,7 +438,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             return false;
         }
 
-        Writer writer = arrayDesignAnnotationService.initOutputFile( fileBaseName, this.overWrite );
+        Writer writer = arrayDesignAnnotationService.initOutputFile( arrayDesign, fileBaseName, this.overWrite );
 
         // if no writer then we should abort (this could happen in case where we don't want to overwrite files)
         if ( writer == null ) {

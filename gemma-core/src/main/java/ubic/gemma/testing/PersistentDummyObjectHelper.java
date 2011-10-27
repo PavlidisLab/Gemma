@@ -712,7 +712,7 @@ public class PersistentDummyObjectHelper {
      */
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = GeneProduct.Factory.newInstance();
-        gp.setNcbiId( RandomStringUtils.randomAlphanumeric( 10 ) );
+        gp.setNcbiGi( RandomStringUtils.randomAlphanumeric( 10 ) );
         gp.setName( RandomStringUtils.randomAlphanumeric( 6 ) );
         gp.setGene( gene );
         return ( GeneProduct ) persisterHelper.persist( gp );

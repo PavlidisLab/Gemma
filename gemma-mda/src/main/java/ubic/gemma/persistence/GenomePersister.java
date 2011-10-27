@@ -20,8 +20,11 @@ package ubic.gemma.persistence;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -39,6 +42,8 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastResult;
@@ -83,6 +88,9 @@ abstract public class GenomePersister extends CommonPersister {
     @Autowired
     protected BlastResultService blastResultService;
 
+    @Autowired
+    protected AnnotationAssociationService annotationAssociationService;
+
     protected Map<Object, Taxon> seenTaxa = new HashMap<Object, Taxon>();
 
     protected Map<Object, Chromosome> seenChromosomes = new HashMap<Object, Chromosome>();
@@ -91,6 +99,54 @@ abstract public class GenomePersister extends CommonPersister {
 
     public GenomePersister( SessionFactory sessionFactory ) {
         super( sessionFactory );
+    }
+
+    /**
+     * @param existingGene
+     * @param toRemove
+     */
+    public void detatchDefunctGeneProducts( Gene existingGene, Collection<GeneProduct> toRemove ) {
+        for ( GeneProduct geneProduct : toRemove ) {
+            log.info( "Removing association of " + geneProduct + " with " + existingGene + "" );
+            existingGene.getProducts().remove( geneProduct );
+
+            /*
+             * Have to delete any BlatAssociations.
+             */
+            Collection<BlatAssociation> blatAssociationsToRemove = new HashSet<BlatAssociation>();
+            Collection<BlatAssociation> blatAssociations = this.blatAssociationService.find( existingGene );
+            for ( BlatAssociation ba : blatAssociations ) {
+                if ( ba.getGeneProduct().equals( toRemove ) ) {
+                    blatAssociationsToRemove.add( ba );
+                }
+            }
+
+            if ( !blatAssociationsToRemove.isEmpty() ) {
+                // REMOVE
+                for ( BlatAssociation blatAssociation : blatAssociationsToRemove ) {
+                    blatAssociationService.remove( blatAssociation );
+                }
+
+            }
+
+            Collection<AnnotationAssociation> annotationAssociations = this.annotationAssociationService
+                    .find( existingGene );
+            Collection<AnnotationAssociation> annotationAssociationsToRemove = new HashSet<AnnotationAssociation>();
+            for ( AnnotationAssociation ba : annotationAssociations ) {
+                if ( ba.getGeneProduct().equals( toRemove ) ) {
+                    annotationAssociationsToRemove.add( ba );
+                }
+            }
+
+            if ( !annotationAssociationsToRemove.isEmpty() ) {
+                // REMOVE
+                for ( AnnotationAssociation annotationAssociation : annotationAssociationsToRemove ) {
+                    annotationAssociationService.remove( annotationAssociation );
+                }
+
+            }
+
+        }
     }
 
     /*
@@ -276,16 +332,27 @@ abstract public class GenomePersister extends CommonPersister {
 
     /**
      * @param gene
+     * @return
      */
     protected Gene persistGene( Gene gene ) {
+        return persistGene( gene, true );
+    }
+
+    /**
+     * @param gene
+     * @param checkFirst check if it exists already.
+     */
+    protected Gene persistGene( Gene gene, boolean checkFirst ) {
         if ( gene == null ) return null;
         if ( !isTransient( gene ) ) return gene;
 
-        Gene existingGene = geneService.find( gene );
+        if ( checkFirst ) {
+            Gene existingGene = geneService.find( gene );
 
-        if ( existingGene != null ) {
-            if ( log.isDebugEnabled() ) log.debug( "Gene exists, will not update" );
-            return existingGene;
+            if ( existingGene != null ) {
+                if ( log.isDebugEnabled() ) log.debug( "Gene exists, will not update" );
+                return existingGene;
+            }
         }
 
         log.debug( "New gene: " + gene );
@@ -341,7 +408,7 @@ abstract public class GenomePersister extends CommonPersister {
         fillInGeneProductAssociations( geneProduct );
 
         if ( isTransient( geneProduct.getGene() ) ) {
-            // this results in the persistenct of the geneproducts, but only if the gene is transient.
+            // this results in the persistence of the gene products, but only if the gene is transient.
             geneProduct.setGene( persistGene( geneProduct.getGene() ) );
         } else {
             geneProduct = geneProductService.create( geneProduct );
@@ -352,7 +419,7 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         return geneProduct;
-        // ;
+
     }
 
     /**
@@ -397,28 +464,46 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         if ( existingGene == null ) {
-            return persistGene( gene );
+            return persistGene( gene, false );
         }
 
-        log.debug( "Updating " + existingGene );
+        if ( log.isDebugEnabled() ) log.debug( "Updating " + existingGene );
 
+        return updateGene( existingGene, gene );
+
+    }
+
+    /**
+     * @param existingGene
+     * @param newGeneInfo the non-persistent gene we are copying information from
+     * @return
+     */
+    public Gene updateGene( Gene existingGene, Gene newGeneInfo ) {
         // updated gene products.
         existingGene = geneService.thaw( existingGene );
-        // NCBI id can be null if gene has been loaded from a gene info file
-        String existingNcbiId = existingGene.getNcbiId();
-        if ( existingNcbiId != null && !existingNcbiId.equals( gene.getNcbiId() ) ) {
-            log.info( "NCBI ID Change for " + existingGene + ", new id =" + gene.getNcbiId() );
-            String previousId = gene.getPreviousNcbiId();
-            if ( previousId != null ) {
-                if ( !previousId.equals( existingGene.getNcbiId() ) ) {
-                    throw new IllegalStateException( "The NCBI ID for " + gene
-                            + " has changed and the previous NCBI id on record with NCBI (" + gene.getPreviousNcbiId()
-                            + ") doesn't match either." );
-                }
-                existingGene.setPreviousNcbiId( existingGene.getNcbiId() );
-                existingGene.setNcbiId( gene.getNcbiId() );
 
+        // NCBI id can be null if gene has been loaded from a gene info file
+        Integer existingNcbiId = existingGene.getNcbiGeneId();
+        if ( existingNcbiId != null && !existingNcbiId.equals( newGeneInfo.getNcbiGeneId() ) ) {
+            log.info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
+            String previousId = newGeneInfo.getPreviousNcbiId();
+            if ( previousId != null ) {
+                if ( !previousId.equals( existingGene.getNcbiGeneId().toString() ) ) {
+                    throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
+                            + " has changed and the previous NCBI id on record with NCBI ("
+                            + newGeneInfo.getPreviousNcbiId() + ") doesn't match either." );
+                }
+                existingGene.setPreviousNcbiId( existingGene.getNcbiGeneId().toString() );
+                existingGene.setNcbiGeneId( newGeneInfo.getNcbiGeneId() );
             }
+        }
+
+        /*
+         * We might want to change this behaviour to clear the value if the updated one has none. For now I just want to
+         * avoid wiping data.
+         */
+        if ( StringUtils.isNotBlank( newGeneInfo.getEnsemblId() ) ) {
+            existingGene.setEnsemblId( newGeneInfo.getEnsemblId() );
         }
 
         // We assume the taxon hasn't changed.
@@ -427,54 +512,126 @@ abstract public class GenomePersister extends CommonPersister {
         for ( DatabaseEntry de : existingGene.getAccessions() ) {
             updatedacMap.put( de.getAccession(), de );
         }
-        for ( DatabaseEntry de : gene.getAccessions() ) {
+        for ( DatabaseEntry de : newGeneInfo.getAccessions() ) {
             if ( !updatedacMap.containsKey( de.getAccession() ) ) {
                 fillInDatabaseEntry( de );
                 existingGene.getAccessions().add( de );
             }
         }
 
-        existingGene.setName( gene.getName() );
-        existingGene.setDescription( gene.getDescription() );
-        existingGene.setOfficialName( gene.getOfficialName() );
-        existingGene.setOfficialSymbol( gene.getOfficialSymbol() );
-
-        existingGene.setPhysicalLocation( gene.getPhysicalLocation() );
-        existingGene.setCytogenicLocation( gene.getCytogenicLocation() );
+        existingGene.setName( newGeneInfo.getName() );
+        existingGene.setDescription( newGeneInfo.getDescription() );
+        existingGene.setOfficialName( newGeneInfo.getOfficialName() );
+        existingGene.setOfficialSymbol( newGeneInfo.getOfficialSymbol() );
+        existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
+        existingGene.setCytogenicLocation( newGeneInfo.getCytogenicLocation() );
 
         fillChromosomeLocationAssociations( existingGene.getPhysicalLocation() );
         fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
 
         existingGene.getAliases().clear();
-        existingGene.getAliases().addAll( gene.getAliases() );
+        existingGene.getAliases().addAll( newGeneInfo.getAliases() );
 
         /*
          * This is the only tricky part - the gene products. We update them if they are already there, and add them if
-         * not. We do not delete 'old' ones that the new gene instance does not have, because they might be from
-         * differenct sources. For example, Ensembl.
+         * not. We do not normally delete 'old' ones that the new gene instance does not have, because they might be
+         * from different sources. For example, Ensembl or GoldenPath. -- UNLESS the product has an NCBI GI because we
+         * know those come from NCBI.
          */
         Map<String, GeneProduct> updatedGpMap = new HashMap<String, GeneProduct>();
-        for ( GeneProduct gp : existingGene.getProducts() ) {
-            updatedGpMap.put( gp.getName(), gp );
+
+        for ( GeneProduct existingGp : existingGene.getProducts() ) {
+            updatedGpMap.put( existingGp.getName(), existingGp );
+            updatedGpMap.put( existingGp.getNcbiGi(), existingGp );
         }
 
-        for ( GeneProduct possiblyNewProduct : gene.getProducts() ) {
-            if ( updatedGpMap.containsKey( possiblyNewProduct.getName() ) ) {
-                log.debug( "Updating gene product based on name: " + possiblyNewProduct );
-                updateGeneProduct( updatedGpMap.get( possiblyNewProduct.getName() ), possiblyNewProduct );
+        Set<String> gis = new HashSet<String>();
+        for ( GeneProduct newGeneProductInfo : newGeneInfo.getProducts() ) {
+            if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
+                log.debug( "Updating gene product based on name: " + newGeneProductInfo );
+                GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getName() );
+                updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+            } else if ( updatedGpMap.containsKey( newGeneProductInfo.getNcbiGi() ) ) {
+                log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
+                GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getNcbiGi() );
+                updateGeneProduct( existingGeneProduct, newGeneProductInfo );
             } else {
-                // it is, in fact, new.
-                possiblyNewProduct.setGene( existingGene );
-                fillInGeneProductAssociations( possiblyNewProduct );
-                log.debug( "New product for " + existingGene + ": " + possiblyNewProduct );
-                existingGene.getProducts().add( possiblyNewProduct );
+                GeneProduct existingGeneProduct = geneProductService.find( newGeneProductInfo );
+                if ( existingGeneProduct == null ) {
+                    // it is, in fact, new, so far as we can tell.
+                    newGeneProductInfo.setGene( existingGene );
+                    fillInGeneProductAssociations( newGeneProductInfo );
+                    log.info( "New product for " + existingGene + ": " + newGeneProductInfo );
+                    existingGene.getProducts().add( newGeneProductInfo );
+                } else {
+                    /*
+                     * This can only happen if this gene product is associated with a different gene. This actually
+                     * seems to happen when a transcript is associated with two genes in NCBI, so the switching is
+                     * actually not useful to us, but we do it anyway to be consistent (and in case it really does
+                     * matter). The rarity of this makes me think it is a mistake in NCBI (in all cases so far, it's a
+                     * genome-duplicated gene, so there may be an arbitrary choice to make ). The problem for us is at
+                     * this point in processing, we don't know if the gene is going to get 'reattached' to its original
+                     * gene.
+                     */
+                    assert existingGeneProduct != null;
+                    existingGeneProduct = geneProductService.thaw( existingGeneProduct );
+                    Gene oldGeneForExistingGeneProduct = existingGeneProduct.getGene();
+                    if ( oldGeneForExistingGeneProduct != null ) {
+                        Gene geneInfo = newGeneProductInfo.getGene(); // transient.
+                        if ( !oldGeneForExistingGeneProduct.equals( geneInfo ) ) {
+                            log.warn( "Switching gene product from one gene to another: "
+                                    + existingGeneProduct
+                                    + " switching to "
+                                    + geneInfo
+                                    + " (often this means an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
+
+                            // / Here we just remove its old association.
+                            oldGeneForExistingGeneProduct = geneService.thaw( oldGeneForExistingGeneProduct );
+                            oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
+                            geneService.update( oldGeneForExistingGeneProduct );
+
+                            if ( oldGeneForExistingGeneProduct.getProducts().isEmpty() ) {
+                                log.warn( "Gene has no products left after removing that gene product (but it might change later): "
+                                        + oldGeneForExistingGeneProduct );
+                            }
+                        }
+
+                        assert !oldGeneForExistingGeneProduct.getProducts().contains( existingGeneProduct );
+                    } else {
+                        log.info( "Attaching orphaned gene product to " + existingGene + " : " + existingGeneProduct );
+                    }
+
+                    existingGeneProduct.setGene( existingGene );
+                    existingGene.getProducts().add( existingGeneProduct );
+                    assert existingGeneProduct.getGene().equals( existingGene );
+
+                    updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+
+                }
+            }
+            gis.add( newGeneProductInfo.getNcbiGi() );
+        }
+
+        /*
+         * Check for deletions.
+         */
+        Collection<GeneProduct> toRemove = new HashSet<GeneProduct>();
+        if ( !gis.isEmpty() ) {
+            for ( GeneProduct gp : existingGene.getProducts() ) {
+                if ( StringUtils.isNotBlank( gp.getNcbiGi() ) && !gis.contains( gp.getNcbiGi() ) ) {
+                    toRemove.add( gp );
+                }
+            }
+            if ( !toRemove.isEmpty() ) {
+                detatchDefunctGeneProducts( existingGene, toRemove );
             }
         }
 
-        geneService.update( existingGene );
+        geneService.update( existingGene ); // will orphaned gene products be deleted by cascade?
+
+        if ( !toRemove.isEmpty() ) geneProductService.remove( toRemove );
 
         return existingGene;
-
     }
 
     /**
@@ -495,7 +652,9 @@ abstract public class GenomePersister extends CommonPersister {
             return persistGeneProduct( geneProduct );
         }
 
-        return updateGeneProduct( existing, geneProduct );
+        updateGeneProduct( existing, geneProduct );
+
+        return existing;
     }
 
     /**
@@ -574,10 +733,10 @@ abstract public class GenomePersister extends CommonPersister {
             }
         }
 
-        if ( geneProduct.getCdsPhysicalLocation() != null ) {
-            geneProduct.getCdsPhysicalLocation().setChromosome(
-                    persistChromosome( geneProduct.getCdsPhysicalLocation().getChromosome() ) );
-        }
+        // if ( geneProduct.getCdsPhysicalLocation() != null ) {
+        // geneProduct.getCdsPhysicalLocation().setChromosome(
+        // persistChromosome( geneProduct.getCdsPhysicalLocation().getChromosome() ) );
+        // }
 
         if ( geneProduct.getPhysicalLocation() != null ) {
             geneProduct.getPhysicalLocation().setChromosome(
@@ -720,58 +879,37 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
-     * @param existing
-     * @param geneProduct information from this is copied onto the 'existing' gene product.
-     * @return
+     * @param existingGeneProduct
+     * @param updatedGeneProductInfo information from this is copied onto the 'existing' gene product.
+     * @param object
      */
-    private GeneProduct updateGeneProduct( GeneProduct existing, GeneProduct geneProduct ) {
-        assert !isTransient( existing.getGene() );
+    private void updateGeneProduct( GeneProduct existingGeneProduct, GeneProduct updatedGeneProductInfo ) {
+        Gene geneForExistingGeneProduct = existingGeneProduct.getGene();
+        assert !isTransient( geneForExistingGeneProduct );
 
-        existing = geneProductService.thaw( existing );
+        existingGeneProduct = geneProductService.thaw( existingGeneProduct );
 
-        existing.setName( geneProduct.getName() );
-        existing.setDescription( geneProduct.getDescription() );
-        existing.setNcbiId( geneProduct.getNcbiId() );
+        // Update all the fields. Note that realistically, some of these can't have changed or we wouldn't have even
+        // found the 'existing' one (name GI in particular)
 
-        addAnyNewAccessions( existing, geneProduct );
+        existingGeneProduct.setName( updatedGeneProductInfo.getName() );
+        existingGeneProduct.setDescription( updatedGeneProductInfo.getDescription() );
+        existingGeneProduct.setNcbiGi( updatedGeneProductInfo.getNcbiGi() );
 
-        existing.setCdsPhysicalLocation( geneProduct.getCdsPhysicalLocation() );
-        if ( existing.getCdsPhysicalLocation() != null ) {
-            existing.getCdsPhysicalLocation().setChromosome(
-                    persistChromosome( existing.getCdsPhysicalLocation().getChromosome() ) );
+        addAnyNewAccessions( existingGeneProduct, updatedGeneProductInfo );
+
+        existingGeneProduct.setPhysicalLocation( updatedGeneProductInfo.getPhysicalLocation() );
+        if ( existingGeneProduct.getPhysicalLocation() != null ) {
+            existingGeneProduct.getPhysicalLocation().setChromosome(
+                    persistChromosome( existingGeneProduct.getPhysicalLocation().getChromosome() ) );
         }
 
-        existing.setPhysicalLocation( geneProduct.getPhysicalLocation() );
-        if ( existing.getPhysicalLocation() != null ) {
-
-            existing.getPhysicalLocation().setChromosome(
-                    persistChromosome( existing.getPhysicalLocation().getChromosome() ) );
-
-            // // sanity check, as we've had this problem...somehow.
-            // if ( existing.getPhysicalLocation() != null && existing.getGene() != null
-            // && existing.getPhysicalLocation().getChromosome() != null ) {
-            // /*
-            // * Rethaw.
-            // */
-            // existing = geneProductService.thaw( existing );
-            //
-            // if ( !existing.getPhysicalLocation().getChromosome().getTaxon().equals( existing.getGene().getTaxon() ) )
-            // {
-            // throw new IllegalStateException( "Taxa don't match for gene product location and gene" );
-            // }
-            // }
-        }
-
-        existing.setExons( geneProduct.getExons() );
-        if ( existing.getExons() != null ) {
-
-            for ( PhysicalLocation exon : existing.getExons() ) {
+        existingGeneProduct.setExons( updatedGeneProductInfo.getExons() );
+        if ( existingGeneProduct.getExons() != null ) {
+            for ( PhysicalLocation exon : existingGeneProduct.getExons() ) {
                 exon.setChromosome( persistChromosome( exon.getChromosome() ) );
             }
         }
 
-        // geneProductService.update( existing );
-
-        return existing;
     }
 }

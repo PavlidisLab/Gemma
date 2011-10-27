@@ -84,7 +84,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
         Taxon taxon = taxonService.findByScientificName( "Homo sapiens" );
 
         if ( !setupDone ) {
-            // insert the needed genes and geneproducts into the system.(can use NCBI gene loader, but for subset)
+            // insert the needed genes and gene products into the system.(can use NCBI gene loader, but for subset)
             NcbiGeneLoader loader = new NcbiGeneLoader();
             loader.setTaxonService( ( TaxonService ) this.getBean( "taxonService" ) );
             loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
@@ -94,7 +94,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
             String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";
 
-            loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true );
+            loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, null, true );
 
             // needed to fill in the sequence information for blat scoring.
             InputStream sequenceFile = this.getClass().getResourceAsStream(

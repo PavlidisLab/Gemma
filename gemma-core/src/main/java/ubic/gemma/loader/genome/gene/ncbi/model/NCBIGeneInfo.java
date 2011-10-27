@@ -79,21 +79,6 @@ import java.util.Map;
  */
 public class NCBIGeneInfo {
 
-    private int taxId;
-    private String geneId;
-    private String defaultSymbol;
-    private String locusTag;
-    private Collection<String> synonyms = new HashSet<String>();
-    private Map<String, String> dbXrefs = new HashMap<String, String>();
-    private String chromosome;
-    private String mapLocation;
-    private String description;
-    private GeneType geneType;
-    private boolean symbolIsFromAuthority;
-    private boolean nameIsFromAuthority;
-    private NomenclatureStatus nomenclatureStatus;
-    private NcbiGeneHistory history;
-
     /**
      * See http://www.ncbi.nlm.nih.gov/IEB/ToolBox/CPP_DOC/lxr/source/src/objects/entrezgene/entrezgene.asn unknown (0)
      * , 36
@@ -143,180 +128,24 @@ public class NCBIGeneInfo {
         }
     }
 
-    /**
-     * @return Returns the chromosome.
-     */
-    public String getChromosome() {
-        return this.chromosome;
-    }
+    private int taxId;
+    private String geneId;
+    private String defaultSymbol;
+    private String locusTag;
+    private Collection<String> synonyms = new HashSet<String>();
+    private Map<String, String> dbXrefs = new HashMap<String, String>();
+    private String chromosome;
+    private String mapLocation;
+    private String description;
+    private GeneType geneType;
+    private boolean symbolIsFromAuthority;
+    private boolean nameIsFromAuthority;
 
-    /**
-     * @param chromosome The chromosome to set.
-     */
-    public void setChromosome( String chromosome ) {
-        this.chromosome = chromosome;
-    }
+    private NomenclatureStatus nomenclatureStatus;
 
-    /**
-     * @return Returns the defaultSymbol.
-     */
-    public String getDefaultSymbol() {
-        return this.defaultSymbol;
-    }
+    private NcbiGeneHistory history;
 
-    /**
-     * @param defaultSymbol The defaultSymbol to set.
-     */
-    public void setDefaultSymbol( String defaultSymbol ) {
-        this.defaultSymbol = defaultSymbol;
-    }
-
-    /**
-     * @return Returns the description.
-     */
-    public String getDescription() {
-        return this.description;
-    }
-
-    /**
-     * @param description The description to set.
-     */
-    public void setDescription( String description ) {
-        this.description = description;
-    }
-
-    /**
-     * @return Returns the geneId.
-     */
-    public String getGeneId() {
-        return this.geneId;
-    }
-
-    /**
-     * @param geneId The geneId to set.
-     */
-    public void setGeneId( String geneId ) {
-        this.geneId = geneId;
-    }
-
-    /**
-     * @return Returns the geneType.
-     */
-    public GeneType getGeneType() {
-        return this.geneType;
-    }
-
-    /**
-     * @param geneType The geneType to set.
-     */
-    public void setGeneType( GeneType geneType ) {
-        this.geneType = geneType;
-    }
-
-    /**
-     * @return Returns the locusTag.
-     */
-    public String getLocusTag() {
-        return this.locusTag;
-    }
-
-    /**
-     * @param locusTag The locusTag to set.
-     */
-    public void setLocusTag( String locusTag ) {
-        this.locusTag = locusTag;
-    }
-
-    /**
-     * @return Returns the mapLocation.
-     */
-    public String getMapLocation() {
-        return this.mapLocation;
-    }
-
-    /**
-     * @param mapLocation The mapLocation to set.
-     */
-    public void setMapLocation( String mapLocation ) {
-        this.mapLocation = mapLocation;
-    }
-
-    /**
-     * @return Returns the nameIsFromAuthority.
-     */
-    public boolean isNameIsFromAuthority() {
-        return this.nameIsFromAuthority;
-    }
-
-    /**
-     * @param nameIsFromAuthority The nameIsFromAuthority to set.
-     */
-    public void setNameIsFromAuthority( boolean nameIsFromAuthority ) {
-        this.nameIsFromAuthority = nameIsFromAuthority;
-    }
-
-    /**
-     * @return Returns the nomenclatureStatus.
-     */
-    public NomenclatureStatus getNomenclatureStatus() {
-        return this.nomenclatureStatus;
-    }
-
-    /**
-     * @param nomenclatureStatus The nomenclatureStatus to set.
-     */
-    public void setNomenclatureStatus( NomenclatureStatus nomenclatureStatus ) {
-        this.nomenclatureStatus = nomenclatureStatus;
-    }
-
-    /**
-     * @return Returns the symbolIsFromAuthority.
-     */
-    public boolean isSymbolIsFromAuthority() {
-        return this.symbolIsFromAuthority;
-    }
-
-    /**
-     * @param symbolIsFromAuthority The symbolIsFromAuthority to set.
-     */
-    public void setSymbolIsFromAuthority( boolean symbolIsFromAuthority ) {
-        this.symbolIsFromAuthority = symbolIsFromAuthority;
-    }
-
-    /**
-     * @return Returns the taxId.
-     */
-    public int getTaxId() {
-        return this.taxId;
-    }
-
-    /**
-     * @param taxId The taxId to set.
-     */
-    public void setTaxId( int taxId ) {
-        this.taxId = taxId;
-    }
-
-    /**
-     * @return Returns the dbXrefs.
-     */
-    public Map<String, String> getDbXrefs() {
-        return this.dbXrefs;
-    }
-
-    /**
-     * @return Returns the synonyms.
-     */
-    public Collection<String> getSynonyms() {
-        return this.synonyms;
-    }
-
-    /**
-     * @param synonym
-     */
-    public void addToSynonyms( String synonym ) {
-        this.synonyms.add( synonym );
-    }
+    private String ensemblId;
 
     /**
      * @param dbName
@@ -327,6 +156,59 @@ public class NCBIGeneInfo {
     }
 
     /**
+     * @param synonym
+     */
+    public void addToSynonyms( String synonym ) {
+        this.synonyms.add( synonym );
+    }
+
+    /**
+     * @return Returns the chromosome.
+     */
+    public String getChromosome() {
+        return this.chromosome;
+    }
+
+    /**
+     * @return Returns the dbXrefs.
+     */
+    public Map<String, String> getDbXrefs() {
+        return this.dbXrefs;
+    }
+
+    /**
+     * @return Returns the defaultSymbol.
+     */
+    public String getDefaultSymbol() {
+        return this.defaultSymbol;
+    }
+
+    /**
+     * @return Returns the description.
+     */
+    public String getDescription() {
+        return this.description;
+    }
+
+    public String getEnsemblId() {
+        return ensemblId;
+    }
+
+    /**
+     * @return Returns the geneId.
+     */
+    public String getGeneId() {
+        return this.geneId;
+    }
+
+    /**
+     * @return Returns the geneType.
+     */
+    public GeneType getGeneType() {
+        return this.geneType;
+    }
+
+    /**
      * @return the history
      */
     public NcbiGeneHistory getHistory() {
@@ -334,10 +216,141 @@ public class NCBIGeneInfo {
     }
 
     /**
+     * @return Returns the locusTag.
+     */
+    public String getLocusTag() {
+        return this.locusTag;
+    }
+
+    /**
+     * @return Returns the mapLocation.
+     */
+    public String getMapLocation() {
+        return this.mapLocation;
+    }
+
+    /**
+     * @return Returns the nomenclatureStatus.
+     */
+    public NomenclatureStatus getNomenclatureStatus() {
+        return this.nomenclatureStatus;
+    }
+
+    /**
+     * @return Returns the synonyms.
+     */
+    public Collection<String> getSynonyms() {
+        return this.synonyms;
+    }
+
+    /**
+     * @return Returns the taxId.
+     */
+    public int getTaxId() {
+        return this.taxId;
+    }
+
+    /**
+     * @return Returns the nameIsFromAuthority.
+     */
+    public boolean isNameIsFromAuthority() {
+        return this.nameIsFromAuthority;
+    }
+
+    /**
+     * @return Returns the symbolIsFromAuthority.
+     */
+    public boolean isSymbolIsFromAuthority() {
+        return this.symbolIsFromAuthority;
+    }
+
+    /**
+     * @param chromosome The chromosome to set.
+     */
+    public void setChromosome( String chromosome ) {
+        this.chromosome = chromosome;
+    }
+
+    /**
+     * @param defaultSymbol The defaultSymbol to set.
+     */
+    public void setDefaultSymbol( String defaultSymbol ) {
+        this.defaultSymbol = defaultSymbol;
+    }
+
+    /**
+     * @param description The description to set.
+     */
+    public void setDescription( String description ) {
+        this.description = description;
+    }
+
+    public void setEnsemblId( String ensemblId ) {
+        this.ensemblId = ensemblId;
+
+    }
+
+    /**
+     * @param geneId The geneId to set.
+     */
+    public void setGeneId( String geneId ) {
+        this.geneId = geneId;
+    }
+
+    /**
+     * @param geneType The geneType to set.
+     */
+    public void setGeneType( GeneType geneType ) {
+        this.geneType = geneType;
+    }
+
+    /**
      * @param history the history to set
      */
     public void setHistory( NcbiGeneHistory history ) {
         this.history = history;
+    }
+
+    /**
+     * @param locusTag The locusTag to set.
+     */
+    public void setLocusTag( String locusTag ) {
+        this.locusTag = locusTag;
+    }
+
+    /**
+     * @param mapLocation The mapLocation to set.
+     */
+    public void setMapLocation( String mapLocation ) {
+        this.mapLocation = mapLocation;
+    }
+
+    /**
+     * @param nameIsFromAuthority The nameIsFromAuthority to set.
+     */
+    public void setNameIsFromAuthority( boolean nameIsFromAuthority ) {
+        this.nameIsFromAuthority = nameIsFromAuthority;
+    }
+
+    /**
+     * @param nomenclatureStatus The nomenclatureStatus to set.
+     */
+    public void setNomenclatureStatus( NomenclatureStatus nomenclatureStatus ) {
+        this.nomenclatureStatus = nomenclatureStatus;
+    }
+
+    /**
+     * @param symbolIsFromAuthority The symbolIsFromAuthority to set.
+     */
+    public void setSymbolIsFromAuthority( boolean symbolIsFromAuthority ) {
+        this.symbolIsFromAuthority = symbolIsFromAuthority;
+    }
+
+    /**
+     * @param taxId The taxId to set.
+     */
+    public void setTaxId( int taxId ) {
+        this.taxId = taxId;
     }
 
 }

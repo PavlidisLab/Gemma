@@ -48,6 +48,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#countAll()
      */
+    @Override
     public Integer countAll() {
         try {
             return this.handleCountAll();
@@ -59,6 +60,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#create(Collection)
      */
+    @Override
     public Collection<Gene> create( final Collection<Gene> genes ) {
         try {
             return this.handleCreate( genes );
@@ -70,6 +72,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#create(Gene)
      */
+    @Override
     public Gene create( final Gene gene ) {
         try {
             return this.handleCreate( gene );
@@ -81,6 +84,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#find(Gene)
      */
+    @Override
     public Gene find( final Gene gene ) {
         try {
             return this.handleFind( gene );
@@ -92,6 +96,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findByAccession(String, ubic.gemma.model.common.description.ExternalDatabase)
      */
+    @Override
     public Gene findByAccession( final String accession,
             final ubic.gemma.model.common.description.ExternalDatabase source ) {
         try {
@@ -106,6 +111,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findByAlias(String)
      */
+    @Override
     public Collection<Gene> findByAlias( final String search ) {
         try {
             return this.handleFindByAlias( search );
@@ -117,7 +123,8 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findByNCBIId(String)
      */
-    public Gene findByNCBIId( final String accession ) {
+    @Override
+    public Gene findByNCBIId( Integer accession ) {
         try {
             return this.handleFindByNCBIId( accession );
         } catch ( Throwable th ) {
@@ -129,6 +136,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findByOfficialName(String)
      */
+    @Override
     public Collection<Gene> findByOfficialName( final String officialName ) {
         try {
             return this.handleFindByOfficialName( officialName );
@@ -141,6 +149,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findByOfficialSymbol(String)
      */
+    @Override
     public Collection<Gene> findByOfficialSymbol( final String officialSymbol ) {
         try {
             return this.handleFindByOfficialSymbol( officialSymbol );
@@ -153,6 +162,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findByOfficialSymbol(String, Taxon)
      */
+    @Override
     public Gene findByOfficialSymbol( final String symbol, final Taxon taxon ) {
         try {
             return this.handleFindByOfficialSymbol( symbol, taxon );
@@ -165,6 +175,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findByOfficialSymbolInexact(String)
      */
+    @Override
     public Collection<Gene> findByOfficialSymbolInexact( final String officialSymbol ) {
         try {
             return this.handleFindByOfficialSymbolInexact( officialSymbol );
@@ -177,6 +188,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#findOrCreate(Gene)
      */
+    @Override
     public Gene findOrCreate( final Gene gene ) {
         try {
             return this.handleFindOrCreate( gene );
@@ -188,6 +200,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
+    @Override
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( final Collection<Gene> genes,
             final Collection<? extends BioAssaySet> ees, final Integer stringency, final boolean interGenesOnly ) {
         try {
@@ -202,6 +215,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#getCoexpressedGenes(Gene, Collection, Integer, boolean)
      */
+    @Override
     public CoexpressionCollectionValueObject getCoexpressedGenes( final Gene gene,
             final Collection<? extends BioAssaySet> ees, final Integer stringency ) {
         try {
@@ -216,6 +230,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#getCompositeSequenceCountById(Long)
      */
+    @Override
     public long getCompositeSequenceCountById( final Long id ) {
         try {
             return this.handleGetCompositeSequenceCountById( id );
@@ -228,6 +243,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#getCompositeSequences(Gene, ArrayDesign)
      */
+    @Override
     public Collection<CompositeSequence> getCompositeSequences( final Gene gene, final ArrayDesign arrayDesign ) {
         try {
             return this.handleGetCompositeSequences( gene, arrayDesign );
@@ -241,6 +257,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#getCompositeSequencesById(Long)
      */
+    @Override
     public Collection<CompositeSequence> getCompositeSequencesById( final Long id ) {
         try {
             return this.handleGetCompositeSequencesById( id );
@@ -253,6 +270,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#getGenesByTaxon(Taxon)
      */
+    @Override
     public Collection<Gene> getGenesByTaxon( final Taxon taxon ) {
         try {
             return this.handleGetGenesByTaxon( taxon );
@@ -264,6 +282,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#loadMicroRNAs(Taxon)
      */
+    @Override
     public Collection<Gene> loadMicroRNAs( final Taxon taxon ) {
         try {
             return this.handleGetMicroRnaByTaxon( taxon );
@@ -276,6 +295,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#load(long)
      */
+    @Override
     public Gene load( final long id ) {
         try {
             return this.handleLoad( id );
@@ -287,6 +307,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#loadAll()
      */
+    @Override
     public Collection<Gene> loadAll() {
         try {
             return this.handleLoadAll();
@@ -298,6 +319,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#loadKnownGenes(Taxon)
      */
+    @Override
     public Collection<Gene> loadKnownGenes( final Taxon taxon ) {
         try {
             return this.handleLoadKnownGenes( taxon );
@@ -309,6 +331,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#loadMultiple(Collection)
      */
+    @Override
     public Collection<Gene> loadMultiple( final Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
@@ -320,6 +343,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#loadPredictedGenes(Taxon)
      */
+    @Override
     public Collection<PredictedGene> loadPredictedGenes( final Taxon taxon ) {
         try {
             return this.handleLoadPredictedGenes( taxon );
@@ -332,6 +356,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#loadProbeAlignedRegions(Taxon)
      */
+    @Override
     public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( final Taxon taxon ) {
         try {
             return this.handleLoadProbeAlignedRegions( taxon );
@@ -344,6 +369,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#remove(String)
      */
+    @Override
     public void remove( Gene gene ) {
         try {
             this.handleRemove( gene );
@@ -355,6 +381,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#remove(Collection)
      */
+    @Override
     public void remove( final Collection<Gene> genes ) {
         try {
             this.handleRemove( genes );
@@ -373,6 +400,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#thaw(Gene)
      */
+    @Override
     public Gene thaw( final Gene gene ) {
         try {
             return this.handleThaw( gene );
@@ -384,6 +412,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#thawLite(Collection)
      */
+    @Override
     public Collection<Gene> thawLite( final Collection<Gene> genes ) {
         try {
             return this.handleThawLite( genes );
@@ -395,6 +424,7 @@ public abstract class GeneServiceBase implements GeneService {
     /**
      * @see GeneService#update(Gene)
      */
+    @Override
     public void update( final Gene gene ) {
         try {
             this.handleUpdate( gene );
@@ -443,9 +473,9 @@ public abstract class GeneServiceBase implements GeneService {
     protected abstract Collection<Gene> handleFindByAlias( String search ) throws Exception;
 
     /**
-     * Performs the core logic for {@link #findByNCBIId(String)}
+     * Performs the core logic for {@link #findByNCBIId(Integer)}
      */
-    protected abstract Gene handleFindByNCBIId( String accession ) throws Exception;
+    protected abstract Gene handleFindByNCBIId( Integer accession ) throws Exception;
 
     /**
      * Performs the core logic for {@link #findByOfficialName(String)}

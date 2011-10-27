@@ -53,7 +53,6 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#find(ubic.gemma.model.genome.gene.GeneProduct)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
@@ -65,7 +64,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
             log.debug( queryObject );
 
-            java.util.List results = queryObject.list();
+            java.util.List<GeneProduct> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -77,6 +76,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
                     Gene gene = geneProduct.getGene();
                     Collections.sort( results, new Comparator<GeneProduct>() {
+                        @Override
                         public int compare( GeneProduct arg0, GeneProduct arg1 ) {
                             return arg0.getId().compareTo( arg1.getId() );
                         }
@@ -110,7 +110,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                             log.error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
                             debug( results );
                             log.error( "Returning arbitrary match " + results.iterator().next() );
-                            return ( GeneProduct ) results.iterator().next();
+                            return results.iterator().next();
                         }
 
                         if ( numFound > 1 ) {
@@ -118,7 +118,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                                     + " genes" );
                             debug( results );
                             log.error( "Returning arbitrary match " + results.iterator().next() );
-                            return ( GeneProduct ) results.iterator().next();
+                            return results.iterator().next();
                         }
                     }
 
@@ -163,7 +163,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setLong( "id", geneProductValueObject.getId() );
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
 
             if ( ( results == null ) || ( results.size() == 0 ) ) return null;
 
@@ -190,10 +190,9 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByName(java.lang.String)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
-    protected Collection handleGetGenesByName( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp where  gp.name = :search";
         try {
@@ -212,12 +211,11 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByNcbiId(java.lang.String)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
-    protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByNcbiId( String search ) throws Exception {
         Collection<Gene> genes = null;
-        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp where gp.ncbiId = :search";
+        final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp where gp.ncbiGi = :search";
         try {
             org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
             queryObject.setString( "search", search );
@@ -234,10 +232,9 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleLoad(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection<GeneProduct> handleLoad( Collection ids ) throws Exception {
         Collection<GeneProduct> geneProducts = null;
         final String queryString = "select distinct gp from GeneProductImpl gp where gp.id in (:ids)";
         try {
@@ -254,7 +251,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     /**
      * @param results
      */
-    private void debug( List results ) {
+    private void debug( List<?> results ) {
 
         StringBuilder buf = new StringBuilder();
         buf.append( "\n" );
@@ -265,10 +262,9 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public GeneProduct thaw( GeneProduct existing ) {
-        List re = this
+        List<?> re = this
                 .getHibernateTemplate()
                 .findByNamedParam(
                         "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "

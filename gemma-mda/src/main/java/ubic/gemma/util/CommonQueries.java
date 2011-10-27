@@ -54,15 +54,14 @@ public class CommonQueries {
      * @param ees collection of expression experiments.
      * @return map of array designs to the experiments they were used in.
      */
-    public static Map<ArrayDesign, Collection<ExpressionExperiment>> getArrayDesignsUsed(
-            Collection<ExpressionExperiment> ees, Session session ) {
-        Map<ArrayDesign, Collection<ExpressionExperiment>> eeAdMap = new HashMap<ArrayDesign, Collection<ExpressionExperiment>>();
+    public static Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> ees, Session session ) {
+        Map<ArrayDesign, Collection<Long>> eeAdMap = new HashMap<ArrayDesign, Collection<Long>>();
 
         // Safety 1st....
         if ( ees == null || ees.isEmpty() ) return eeAdMap;
 
-        final String eeAdQuery = "select distinct ee,ad from ExpressionExperimentImpl as ee inner join "
-                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee in (:ees)";
+        final String eeAdQuery = "select distinct ee.id,ad from ExpressionExperimentImpl as ee inner join "
+                + "ee.bioAssays b inner join b.arrayDesignUsed ad fetch all properties where ee.id in (:ees)";
 
         org.hibernate.Query queryObject = session.createQuery( eeAdQuery );
         queryObject.setCacheable( true );
@@ -71,10 +70,10 @@ public class CommonQueries {
         List<?> qr = queryObject.list();
         for ( Object o : qr ) {
             Object[] ar = ( Object[] ) o;
-            ExpressionExperiment ee = ( ExpressionExperiment ) ar[0];
+            Long ee = ( Long ) ar[0];
             ArrayDesign ad = ( ArrayDesign ) ar[1];
             if ( !eeAdMap.containsKey( ad ) ) {
-                eeAdMap.put( ad, new HashSet<ExpressionExperiment>() );
+                eeAdMap.put( ad, new HashSet<Long>() );
             }
             eeAdMap.get( ad ).add( ee );
         }
@@ -116,7 +115,6 @@ public class CommonQueries {
      * @param session
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static Collection<CompositeSequence> getCompositeSequences( Gene gene, Session session ) {
 
         final String csQueryString = "select distinct cs from GeneImpl as gene"

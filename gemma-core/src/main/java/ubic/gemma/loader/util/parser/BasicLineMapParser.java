@@ -99,7 +99,7 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
             put( key, newItem );
 
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
-                String message = "Parsed " + linesParsed + " lines..., last had key " + key;
+                String message = "Parsed " + linesParsed + " lines, last had key " + key;
                 log.info( message );
             }
 

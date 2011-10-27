@@ -91,7 +91,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
             String stringency = getNodeValue( requestElement, "stringency" );
 
             Collection<Gene> queryGenes = new LinkedList<Gene>();
-            Gene queryGene = geneService.findByNCBIId( queryGeneId );
+            Gene queryGene = geneService.findByNCBIId(  Integer.parseInt(queryGeneId ));
             if ( queryGene == null ) {
                 String msg = "Query gene with id [" + queryGeneId + "] cannot be found.";
                 return buildBadResponse( document, msg );
@@ -99,7 +99,7 @@ public class GeneCoexpressionSearchEndpoint extends AbstractGemmaEndpoint {
             queryGenes.add( queryGene );
 
             if ( pairQueryGeneId != null ) {
-                Gene queryGene2 = geneService.findByNCBIId( pairQueryGeneId );
+                Gene queryGene2 = geneService.findByNCBIId( Integer.parseInt( pairQueryGeneId ));
                 if ( queryGene2 == null ) {
                     String msg = "Query gene with id [" + pairQueryGeneId + "] cannot be found.";
                     return buildBadResponse( document, msg );

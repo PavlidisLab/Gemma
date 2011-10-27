@@ -51,6 +51,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
+    @Override
     public Collection<? extends GeneSet> create( final Collection<? extends GeneSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneSet.create - 'genesets' can not be null" );
@@ -68,6 +69,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
+    @Override
     public GeneSet create( GeneSet entity ) {
         if ( entity == null ) {
             throw new IllegalArgumentException( "GeneSet.create - 'geneset' can not be null" );
@@ -83,6 +85,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.getHibernateTemplate().findByNamedParam(
@@ -94,6 +97,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<GeneSet> findByName( String name ) {
         if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
@@ -124,6 +128,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<? extends GeneSet> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from GeneSetImpl where id in (:ids)", "ids", ids );
@@ -134,6 +139,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
      */
+    @Override
     public GeneSet load( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "CandidateGeneList.load - 'id' can not be null" );
@@ -147,6 +153,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#loadAll()
      */
+    @Override
     public Collection<? extends GeneSet> loadAll() {
         final java.util.Collection<GeneSetImpl> results = this.getHibernateTemplate().loadAll( GeneSetImpl.class );
         return results;
@@ -171,6 +178,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
      */
+    @Override
     public void remove( Collection<? extends GeneSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneSet.remove - 'Collection of geneSet' can not be null" );
@@ -183,6 +191,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
      */
+    @Override
     public void remove( GeneSet entity ) {
         if ( entity == null ) {
             throw new IllegalArgumentException( "GeneSet.remove - 'geneset entity' can not be null" );
@@ -196,6 +205,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
      */
+    @Override
     public void remove( Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "GeneSet.remove - 'id' can not be null" );
@@ -212,6 +222,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
      */
+    @Override
     public void update( final Collection<? extends GeneSet> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneSet.update - 'Collection of geneSets' can not be null" );
@@ -228,6 +239,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
      */
+    @Override
     public void update( GeneSet entity ) {
         if ( entity == null ) {
             throw new IllegalArgumentException( "GeneSet.update - 'geneSet' can not be null" );

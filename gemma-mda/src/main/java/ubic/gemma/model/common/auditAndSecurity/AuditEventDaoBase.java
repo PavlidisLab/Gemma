@@ -57,7 +57,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return entities;
     }
 
-    
     @SuppressWarnings("unchecked")
     public Collection<? extends AuditEvent> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
@@ -77,6 +76,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getEvents(ubic.gemma.model.common.Auditable)
      */
     public List<AuditEvent> getEvents( Auditable auditable ) {
@@ -85,6 +85,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(ubic.gemma.model.common.Auditable,
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
@@ -94,6 +95,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastAuditEvent(java.util.Collection,
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
@@ -104,6 +106,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastTypedAuditEvents(java.util.Collection)
      */
     public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastTypedAuditEvents(
@@ -150,7 +153,7 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#loadAll(int)
      */
-    
+
     @SuppressWarnings("unchecked")
     public java.util.Collection<? extends AuditEvent> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(

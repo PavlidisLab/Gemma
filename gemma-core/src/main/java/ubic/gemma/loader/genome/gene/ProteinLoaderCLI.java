@@ -44,7 +44,9 @@ import ubic.gemma.util.SpringContextUtil;
  * 
  * @author anshu
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class ProteinLoaderCLI {
 
     // TODO extend AbstractCLI

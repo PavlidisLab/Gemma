@@ -575,12 +575,12 @@ public class ExpressionDataFileService {
                     DifferentialExpressionAnalysisResultComparator.Factory.newInstance() );
         }
 
-        // Generate a description of the factors involved "(factor1, factor2, ...., factorN)"
+        // Generate a description of the factors involved "(factor1:factor2: .... :factorN)"
         String factorColumnName = "(";
         for ( ExperimentalFactor ef : ears.getExperimentalFactors() ) {
-            factorColumnName += ef.getName() + ",";
+            factorColumnName += ef.getName() + ":";
         }
-        factorColumnName = StringUtils.chomp( factorColumnName, "," ) + ")";
+        factorColumnName = StringUtils.chomp( factorColumnName, ":" ) + ")";
 
         // Generate headers
         buf.append( "\tQValue" + factorColumnName );
@@ -600,9 +600,16 @@ public class ExpressionDataFileService {
                     probeBuffer = probe2String.get( csid );
                 } else {// no entry for probe yet
                     probeBuffer.append( cs.getName() );
-                    if ( geneAnnotations.containsKey( csid ) )
-                        probeBuffer.append( "\t" + geneAnnotations.get( csid )[1] + "\t"
-                                + geneAnnotations.get( csid )[2] );
+                    if ( geneAnnotations.containsKey( csid ) ) {
+                        String[] annotationStrings = geneAnnotations.get( csid );
+                        probeBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
+
+                        if ( annotationStrings.length > 3 ) {
+                            // ncbi id.
+                            probeBuffer.append( "\t" + annotationStrings[3] );
+                        }
+                    }
+
                     probe2String.put( csid, probeBuffer );
                 }
 
@@ -662,6 +669,11 @@ public class ExpressionDataFileService {
             buf.append( "Probe_Name" );
         } else {
             buf.append( "Probe_Name\tGene_Symbol\tGene_Name" );// column information
+
+            if ( geneAnnotations.values().iterator().next().length > 4 ) {
+                buf.append( "\tNCBI_ID" ); // leaving out the Gemma ID.
+            }
+            // buf.append("\n"); // FIXME this wasn't here before, do we need it?
         }
 
         return buf.toString();
@@ -715,7 +727,8 @@ public class ExpressionDataFileService {
 
     /**
      * @param ads
-     * @return Map of composite sequence ids to an array of strings: [probe name,genes symbol(s), gene Name(s)].
+     * @return Map of composite sequence ids to an array of strings: [probe name, genes symbol(s), gene Name(s), gemma
+     *         id(s), ncbi id(s)].
      */
     private Map<Long, String[]> getGeneAnnotationsAsStrings( Collection<ArrayDesign> ads ) {
         Map<Long, String[]> annots = new HashMap<Long, String[]>();
@@ -794,7 +807,7 @@ public class ExpressionDataFileService {
     private void writeJson( File file, PrimitiveType representation,
             Collection<? extends DesignElementDataVector> vectors ) throws IOException {
         designElementDataVectorService.thaw( vectors );
-        ExpressionDataMatrix expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
+        ExpressionDataMatrix<?> expressionDataMatrix = ExpressionDataMatrixBuilder.getMatrix( representation, vectors );
         Writer writer = new OutputStreamWriter( new GZIPOutputStream( new FileOutputStream( file ) ) );
         MatrixWriter matrixWriter = new MatrixWriter();
         matrixWriter.writeJSON( writer, expressionDataMatrix, true );

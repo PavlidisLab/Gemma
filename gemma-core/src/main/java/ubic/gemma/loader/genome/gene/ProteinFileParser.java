@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.genome.Gene;
@@ -42,10 +40,10 @@ import ubic.gemma.model.genome.gene.GeneProductType;
  * 
  * @author anshu
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class ProteinFileParser extends BasicLineParser<GeneProduct> {
-
-    private static Log log = LogFactory.getLog( ProteinFileParser.class.getName() );
 
     public static final int FIELDS_PER_ROW = 3;
 
@@ -73,15 +71,12 @@ public class ProteinFileParser extends BasicLineParser<GeneProduct> {
                     + " fields, expected " + FIELDS_PER_ROW );
         }
 
-        Collection<Gene> c;
         GeneProduct gp = GeneProduct.Factory.newInstance();
         Gene g1 = null;
         String id = null;
         id = fields[2];
-        c = geneDao.findByNcbiId( id ); // FIXME this should only parse, not use the database.
-        if ( ( c != null ) && ( c.size() == 1 ) ) {
-            g1 = ( c.iterator() ).next();
-        } else {
+        g1 = geneDao.findByNcbiId( Integer.parseInt( id ) ); // FIXME this should only parse, not use the database.
+        if ( g1 == null ) {
             throw new RuntimeException( "gene " + id + " not found. Entry skipped." );
         }
         if ( ( fields[3] ).startsWith( "NM_" ) ) {
@@ -90,7 +85,7 @@ public class ProteinFileParser extends BasicLineParser<GeneProduct> {
             gp.setType( GeneProductType.PROTEIN );
         }
         gp.setGene( g1 );
-        gp.setNcbiId( fields[3] );
+        gp.setNcbiGi( fields[3] );
         gp.setName( fields[3] );
         gp.setDescription( fields[3] );
 

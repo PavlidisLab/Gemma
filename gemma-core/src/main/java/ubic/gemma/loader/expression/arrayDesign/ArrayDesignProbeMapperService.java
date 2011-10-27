@@ -249,11 +249,11 @@ public class ArrayDesignProbeMapperService {
 
             String probeId = fields[0];
             String seqName = fields[1];
-            
+
             /*
              * FIXME. We have to allow NCBI gene ids here.
              */
-            String geneSymbol = fields[2]; 
+            String geneSymbol = fields[2];
 
             if ( StringUtils.isBlank( geneSymbol ) ) {
                 numSkipped++;
@@ -275,7 +275,6 @@ public class ArrayDesignProbeMapperService {
             Gene geneDetails = null;
 
             StringTokenizer st = new StringTokenizer( geneSymbol, "|" );
-
             while ( st.hasMoreTokens() ) {
                 String geneToken = st.nextToken();
                 geneDetails = geneService.findByOfficialSymbol( geneToken.trim(), taxon );

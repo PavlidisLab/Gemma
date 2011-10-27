@@ -340,8 +340,12 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         for ( LitEvidenceLineInfo lineInfo : linesFromFile ) {
 
             i++;
-
-            Gene gene = this.geneService.findByNCBIId( lineInfo.getGeneID() );
+            Gene gene = null;
+            try {
+                gene = this.geneService.findByNCBIId( Integer.parseInt( lineInfo.getGeneID() ) );
+            } catch ( NumberFormatException e ) {
+                // ok.
+            }
 
             if ( gene == null ) {
                 System.err.println( "Gene not found in Gemma: " + lineInfo.getGeneID() + " Description: "

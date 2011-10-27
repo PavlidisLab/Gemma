@@ -20,6 +20,8 @@ package ubic.gemma.model.genome.gene;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.gene.GeneProductService</code>, provides access to all
@@ -36,6 +38,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#countAll()
      */
+    @Override
     public java.lang.Integer countAll() {
         try {
             return this.handleCountAll();
@@ -48,6 +51,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#create(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     public ubic.gemma.model.genome.gene.GeneProduct create( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         try {
             return this.handleCreate( geneProduct );
@@ -61,6 +65,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#delete(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     public void delete( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         try {
             this.handleDelete( geneProduct );
@@ -74,6 +79,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#find(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     public ubic.gemma.model.genome.gene.GeneProduct find( final ubic.gemma.model.genome.gene.GeneProduct gProduct ) {
         try {
             return this.handleFind( gProduct );
@@ -87,6 +93,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     public ubic.gemma.model.genome.gene.GeneProduct findOrCreate(
             final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         try {
@@ -101,7 +108,8 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#getGenesByName(java.lang.String)
      */
-    public java.util.Collection getGenesByName( final java.lang.String search ) {
+    @Override
+    public java.util.Collection<Gene> getGenesByName( final java.lang.String search ) {
         try {
             return this.handleGetGenesByName( search );
         } catch ( Throwable th ) {
@@ -114,7 +122,8 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#getGenesByNcbiId(java.lang.String)
      */
-    public java.util.Collection getGenesByNcbiId( final java.lang.String search ) {
+    @Override
+    public java.util.Collection<Gene> getGenesByNcbiId( final java.lang.String search ) {
         try {
             return this.handleGetGenesByNcbiId( search );
         } catch ( Throwable th ) {
@@ -127,6 +136,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#load(java.lang.Long)
      */
+    @Override
     public ubic.gemma.model.genome.gene.GeneProduct load( final java.lang.Long id ) {
         try {
             return this.handleLoad( id );
@@ -140,7 +150,8 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    @Override
+    public java.util.Collection<GeneProduct> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -160,6 +171,7 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#update(ubic.gemma.model.genome.gene.GeneProduct)
      */
+    @Override
     public void update( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         try {
             this.handleUpdate( geneProduct );
@@ -209,12 +221,13 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #getGenesByName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleGetGenesByName( java.lang.String search ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleGetGenesByName( java.lang.String search )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getGenesByNcbiId(java.lang.String)}
      */
-    protected abstract java.util.Collection handleGetGenesByNcbiId( java.lang.String search )
+    protected abstract java.util.Collection<Gene> handleGetGenesByNcbiId( java.lang.String search )
             throws java.lang.Exception;
 
     /**
@@ -226,7 +239,8 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<GeneProduct> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.genome.gene.GeneProduct)}

@@ -174,7 +174,7 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         g.setName( name );
         g.setOfficialName( name );
         g.setOfficialSymbol( name );
-        g.setNcbiId( ncbiId );
+        g.setNcbiGeneId( Integer.parseInt( ncbiId ) );
         g.setTaxon( t );
         List<GeneProduct> ggg = new ArrayList<GeneProduct>();
         ggg.add( super.getTestPersistentGeneProduct( g ) );

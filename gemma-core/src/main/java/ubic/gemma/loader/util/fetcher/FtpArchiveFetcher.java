@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.taskdefs.Expand;
@@ -176,27 +177,39 @@ public abstract class FtpArchiveFetcher extends FtpFetcher implements ArchiveFet
      * @param newDir
      * @param seekFile
      */
-    protected void unPack( final File outputFile ) {
+    protected void unPack( final File toUnpack ) {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             @SuppressWarnings("synthetic-access")
             public Boolean call() {
+                File extractedFile = new File( FileTools.chompExtension( toUnpack.getAbsolutePath() ) );
+                /*
+                 * Decide if an existing file is plausibly usable. Err on the side of caution.
+                 */
+                if ( allowUseExisting && extractedFile.canRead() && extractedFile.length() >= toUnpack.length()
+                        && !FileUtils.isFileNewer( toUnpack, extractedFile ) ) {
+                    log.warn( "Expanded file exists, skipping re-expansion: " + extractedFile );
+                    return Boolean.TRUE;
+                }
+
                 if ( expander != null ) {
-                    expander.setSrc( outputFile );
-                    expander.setDest( outputFile.getParentFile() );
+                    expander.setSrc( toUnpack );
+                    expander.setDest( toUnpack.getParentFile() );
                     expander.perform();
-                } else if ( outputFile.getAbsolutePath().toLowerCase().endsWith( "zip" ) ) {
+                } else if ( toUnpack.getAbsolutePath().toLowerCase().endsWith( "zip" ) ) {
                     try {
-                        FileTools.unZipFiles( outputFile.getAbsolutePath() );
+                        FileTools.unZipFiles( toUnpack.getAbsolutePath() );
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
+
                 } else { // gzip.
                     try {
-                        FileTools.unGzipFile( outputFile.getAbsolutePath() );
+                        FileTools.unGzipFile( toUnpack.getAbsolutePath() );
                     } catch ( IOException e ) {
                         throw new RuntimeException( e );
                     }
                 }
+
                 return Boolean.TRUE;
             }
 

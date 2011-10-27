@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionCache;
@@ -34,8 +35,7 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  * 
  * @see ubic.gemma.model.genome.Gene
  */
-public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeatureDaoImpl<Gene> implements
-        ubic.gemma.model.genome.GeneDao {
+public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.gemma.model.genome.GeneDao {
 
     @Autowired
     private Probe2ProbeCoexpressionCache probe2ProbeCoexpressionCache;
@@ -55,8 +55,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<? extends Gene> create( final int transform,
-            final java.util.Collection<? extends Gene> entities ) {
+    public java.util.Collection<? extends Gene> create( final java.util.Collection<? extends Gene> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Gene.create - 'entities' can not be null" );
         }
@@ -66,7 +65,7 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator<? extends Gene> entityIterator = entities.iterator(); entityIterator
                                 .hasNext(); ) {
-                            create( transform, entityIterator.next() );
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -77,39 +76,25 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#create(int transform, ubic.gemma.model.genome.Gene)
      */
-    public Object create( final int transform, final ubic.gemma.model.genome.Gene gene ) {
+    public Gene create( final ubic.gemma.model.genome.Gene gene ) {
         if ( gene == null ) {
             throw new IllegalArgumentException( "Gene.create - 'gene' can not be null" );
         }
         this.getHibernateTemplate().save( gene );
-        return this.transformEntity( transform, gene );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#create(java.util.Collection)
-     */
-    public java.util.Collection<? extends Gene> create( final java.util.Collection<? extends Gene> entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#create(ubic.gemma.model.genome.Gene)
-     */
-    public Gene create( ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.create( TRANSFORM_NONE, gene );
+        return gene;
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#find(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
 
-    public Gene find( final int transform, final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
+    public Gene find( final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( gene );
         argNames.add( "gene" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<?> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
+                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -118,30 +103,14 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Gene ) result );
         return ( Gene ) result;
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#find(int, ubic.gemma.model.genome.Gene)
      */
-    public Gene find( final int transform, final ubic.gemma.model.genome.Gene gene ) {
-        return this.find( transform, "from ubic.gemma.model.genome.Gene as gene where gene.gene = :gene", gene );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#find(java.lang.String, ubic.gemma.model.genome.Gene)
-     */
-    public ubic.gemma.model.genome.Gene find( final java.lang.String queryString,
-            final ubic.gemma.model.genome.Gene gene ) {
-        return this.find( TRANSFORM_NONE, queryString, gene );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#find(ubic.gemma.model.genome.Gene)
-     */
-    public ubic.gemma.model.genome.Gene find( ubic.gemma.model.genome.Gene gene ) {
-        return this.find( TRANSFORM_NONE, gene );
+    public Gene find( final ubic.gemma.model.genome.Gene gene ) {
+        return this.find( "from ubic.gemma.model.genome.Gene as gene where gene.gene = :gene", gene );
     }
 
     /**
@@ -173,82 +142,39 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(int, java.lang.String)
-     */
-
-    public java.util.Collection<Gene> findByNcbiId( final int transform, final java.lang.String ncbiId ) {
-        return this.findByNcbiId( transform, "from GeneImpl g where g.ncbiId = :ncbiId", ncbiId );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
+    public Gene findByNcbiId( Integer ncbiId ) {
 
-    public java.util.Collection<Gene> findByNcbiId( final int transform, final java.lang.String queryString,
-            final java.lang.String ncbiId ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( ncbiId );
-        argNames.add( "ncbiId" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(java.lang.String)
-     */
-
-    public java.util.Collection<Gene> findByNcbiId( java.lang.String ncbiId ) {
-        return this.findByNcbiId( TRANSFORM_NONE, ncbiId );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByNcbiId(java.lang.String, java.lang.String)
-     */
-
-    @Override
-    public java.util.Collection<Gene> findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
-        return this.findByNcbiId( TRANSFORM_NONE, queryString, ncbiId );
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam(
+                "from GeneImpl g where g.ncbiGeneId = :n", "n", ncbiId );
+        if ( results.size() > 1 ) {
+            throw new RuntimeException( "more than one gene with ncbi id =" + ncbiId );
+        }
+        if ( results.isEmpty() ) return null;
+        return ( Gene ) results.iterator().next();
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficalSymbol(int, java.lang.String)
      */
-    public java.util.Collection<Gene> findByOfficalSymbol( final int transform, final java.lang.String officialSymbol ) {
-        return this.findByOfficalSymbol( transform,
+    public java.util.Collection<Gene> findByOfficalSymbol( final java.lang.String officialSymbol ) {
+        return this.findByOfficalSymbol(
                 "from GeneImpl g where g.officialSymbol=:officialSymbol order by g.officialName", officialSymbol );
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficalSymbol(int, java.lang.String, java.lang.String)
      */
-    public java.util.Collection<Gene> findByOfficalSymbol( final int transform, final java.lang.String queryString,
+    public java.util.Collection<Gene> findByOfficalSymbol( final java.lang.String queryString,
             final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( officialSymbol );
         argNames.add( "officialSymbol" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficalSymbol(java.lang.String)
-     */
-    public java.util.Collection<Gene> findByOfficalSymbol( java.lang.String officialSymbol ) {
-        return this.findByOfficalSymbol( TRANSFORM_NONE, officialSymbol );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficalSymbol(java.lang.String, java.lang.String)
-     */
-    public java.util.Collection<Gene> findByOfficalSymbol( final java.lang.String queryString,
-            final java.lang.String officialSymbol ) {
-        return this.findByOfficalSymbol( TRANSFORM_NONE, queryString, officialSymbol );
+        return ( Collection<Gene> ) results;
     }
 
     /**
@@ -269,10 +195,10 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( officialName );
         argNames.add( "officialName" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
-        return results;
+        return ( Collection<Gene> ) results;
     }
 
     /**
@@ -307,10 +233,9 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String)
      */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( final int transform,
-            final java.lang.String officialSymbol ) {
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
         return this
-                .findByOfficialSymbolInexact( transform,
+                .findByOfficialSymbolInexact(
                         "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol",
                         officialSymbol );
     }
@@ -318,31 +243,15 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     /**
      * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(int, java.lang.String, java.lang.String)
      */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( final int transform,
-            final java.lang.String queryString, final java.lang.String officialSymbol ) {
+    public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String queryString,
+            final java.lang.String officialSymbol ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( officialSymbol );
         argNames.add( "officialSymbol" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(java.lang.String)
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol ) {
-        return this.findByOfficialSymbolInexact( TRANSFORM_NONE, officialSymbol );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByOfficialSymbolInexact(java.lang.String, java.lang.String)
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String queryString,
-            final java.lang.String officialSymbol ) {
-        return this.findByOfficialSymbolInexact( TRANSFORM_NONE, queryString, officialSymbol );
+        return ( Collection<Gene> ) results;
     }
 
     /**
@@ -350,17 +259,15 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      *      ubic.gemma.model.genome.PhysicalLocation)
      */
 
-    @Override
-    public java.util.Collection<Gene> findByPhysicalLocation( final int transform, final java.lang.String queryString,
+    public java.util.Collection<Gene> findByPhysicalLocation( final java.lang.String queryString,
             final ubic.gemma.model.genome.PhysicalLocation location ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( location );
         argNames.add( "location" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
+        return ( Collection<Gene> ) results;
     }
 
     /**
@@ -368,38 +275,16 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      */
 
     @Override
-    public java.util.Collection<Gene> findByPhysicalLocation( final int transform,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation( transform,
+    public java.util.Collection<Gene> findByPhysicalLocation( final ubic.gemma.model.genome.PhysicalLocation location ) {
+        return this.findByPhysicalLocation(
                 "from ubic.gemma.model.genome.Gene as gene where gene.location = :location", location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(java.lang.String,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-
-    @Override
-    public java.util.Collection<Gene> findByPhysicalLocation( final java.lang.String queryString,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation( TRANSFORM_NONE, queryString, location );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation)
-     */
-
-    @Override
-    public java.util.Collection<Gene> findByPhysicalLocation( ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation( TRANSFORM_NONE, location );
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#findOrCreate(int, java.lang.String, ubic.gemma.model.genome.Gene)
      */
 
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.Gene gene ) {
+    public Object findOrCreate( final java.lang.String queryString, final ubic.gemma.model.genome.Gene gene ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( gene );
@@ -414,30 +299,14 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Gene ) result );
         return result;
     }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#findOrCreate(int, ubic.gemma.model.genome.Gene)
      */
-    public Object findOrCreate( final int transform, final ubic.gemma.model.genome.Gene gene ) {
-        return this.findOrCreate( transform, "from ubic.gemma.model.genome.Gene as gene where gene.gene = :gene", gene );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findOrCreate(java.lang.String, ubic.gemma.model.genome.Gene)
-     */
-    public ubic.gemma.model.genome.Gene findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.findOrCreate( TRANSFORM_NONE, queryString, gene );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#findOrCreate(ubic.gemma.model.genome.Gene)
-     */
-    public ubic.gemma.model.genome.Gene findOrCreate( ubic.gemma.model.genome.Gene gene ) {
-        return ( ubic.gemma.model.genome.Gene ) this.findOrCreate( TRANSFORM_NONE, gene );
+    public Gene findOrCreate( final ubic.gemma.model.genome.Gene gene ) {
+        return ( Gene ) this.findOrCreate( "from ubic.gemma.model.genome.Gene as gene where gene.gene = :gene", gene );
     }
 
     /**
@@ -550,20 +419,12 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
      * @see ubic.gemma.model.genome.GeneDao#load(int, java.lang.Long)
      */
 
-    public Object load( final int transform, final java.lang.Long id ) {
+    public Gene load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Gene.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.genome.GeneImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.genome.Gene ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#load(java.lang.Long)
-     */
-
-    public Gene load( java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.Gene ) this.load( TRANSFORM_NONE, id );
+        return ( Gene ) entity;
     }
 
     /**
@@ -580,21 +441,12 @@ public abstract class GeneDaoBase extends ubic.gemma.model.genome.ChromosomeFeat
     }
 
     /**
-     * @see ubic.gemma.model.genome.GeneDao#loadAll()
-     */
-
-    public java.util.Collection<Gene> loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.GeneDao#loadAll(int)
      */
 
-    public java.util.Collection<Gene> loadAll( final int transform ) {
+    public java.util.Collection<Gene> loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.GeneImpl.class );
-        this.transformEntities( transform, results );
         return results;
     }
 

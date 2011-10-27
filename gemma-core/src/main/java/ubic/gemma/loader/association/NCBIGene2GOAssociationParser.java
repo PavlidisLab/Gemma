@@ -124,6 +124,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.parser.BasicLineMapParser#getResults()
      */
     @Override
@@ -160,7 +161,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         Gene2GOAssociation g2GOAss = Gene2GOAssociation.Factory.newInstance();
 
         Gene gene = Gene.Factory.newInstance();
-        gene.setNcbiId( values[GENE_ID] );
+        gene.setNcbiGeneId( Integer.parseInt( values[GENE_ID] ) );
 
         gene.setTaxon( t );
         VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();

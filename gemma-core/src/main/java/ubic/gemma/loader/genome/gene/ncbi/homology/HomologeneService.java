@@ -123,7 +123,7 @@ public class HomologeneService {
         Long groupId;
 
         try {
-            groupId = this.getHomologeneGroup( Long.parseLong( gene.getNcbiId() ) );
+            groupId = this.getHomologeneGroup( gene.getNcbiGeneId().longValue() );
         } catch ( NumberFormatException e ) {
             return genes;
         }
@@ -328,7 +328,7 @@ public class HomologeneService {
         Collection<Long> skippedNcbiIds = new ArrayList<Long>();
 
         for ( Long ncbiId : ncbiIds ) {
-            Gene gene = this.geneService.findByNCBIId( ncbiId.toString() );
+            Gene gene = this.geneService.findByNCBIId( ncbiId.intValue() );
             if ( gene == null ) {
                 skippedNcbiIds.add( ncbiId );
                 continue;

@@ -373,7 +373,7 @@ public class DatabaseViewGenerator {
 
         Gene g = genes.iterator().next();
 
-        if ( StringUtils.isBlank( g.getNcbiId() ) ) return null;
+        if (   g.getNcbiGeneId() == null ) return null;
 
         Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
 
@@ -386,7 +386,7 @@ public class DatabaseViewGenerator {
             String factorValueDescription = ExperimentalDesignUtils.prettyString( factorValue );
 
             buf.append( String.format( "%d\t%s\t%s\t%d\t%s\t%s\t%s\t%s\t%s\n", ee.getId(), ee.getShortName(), g
-                    .getNcbiId(), g.getId(), factorName, factorURI, baselineDescription, factorValueDescription,
+                    .getNcbiGeneId().toString(), g.getId(), factorName, factorURI, baselineDescription, factorValueDescription,
                     direction ) );
         }
 

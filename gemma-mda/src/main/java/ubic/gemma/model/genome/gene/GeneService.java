@@ -91,7 +91,7 @@ public interface GeneService {
      * @param accession
      * @return
      */
-    public Gene findByNCBIId( String accession );
+    public Gene findByNCBIId( Integer accession );
 
     /**
      * @param officialName

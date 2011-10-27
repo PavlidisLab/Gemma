@@ -172,7 +172,7 @@ public class StringBiomartProteinConverterTest {
         Collection<Gene> genes = stringBiomartProteinConverter.getNcbiGene( "ENSMUSP00000111623" );
         assertEquals( 2, genes.size() );
         for ( Gene gene : genes ) {
-            assertTrue( ( gene.getNcbiId().equals( "100040601" ) ) || ( gene.getNcbiId().equals( "245269" ) ) );
+            assertTrue( ( gene.getNcbiGeneId().equals(  100040601  ) ) || ( gene.getNcbiGeneId().equals(  245269  ) ) );
         }
     }
 

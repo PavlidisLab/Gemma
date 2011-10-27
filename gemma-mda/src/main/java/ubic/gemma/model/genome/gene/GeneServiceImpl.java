@@ -254,15 +254,8 @@ public class GeneServiceImpl extends GeneServiceBase {
     }
 
     @Override
-    protected Gene handleFindByNCBIId( String accession ) throws Exception {
-        Collection<Gene> genes = this.getGeneDao().findByNcbiId( accession );
-        if ( genes.size() > 1 ) {
-            log.warn( "More than one gene with accession=" + accession );
-        } else if ( genes.size() == 1 ) {
-            return genes.iterator().next();
-        }
-        return null;
-
+    protected Gene handleFindByNCBIId( Integer accession ) throws Exception {
+        return this.getGeneDao().findByNcbiId( accession );
     }
 
     /**

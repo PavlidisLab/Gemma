@@ -93,10 +93,11 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     public Gene convert( NCBIGeneInfo info ) {
         Gene gene = Gene.Factory.newInstance();
 
-        gene.setNcbiId( info.getGeneId() );
+        gene.setNcbiGeneId( Integer.parseInt( info.getGeneId() ) );
         gene.setName( info.getDefaultSymbol() );
         gene.setOfficialSymbol( info.getDefaultSymbol() );
         gene.setOfficialName( info.getDescription() );
+        gene.setEnsemblId( info.getEnsemblId() );
 
         if ( info.getHistory() != null ) {
             if ( info.getHistory().getCurrentId() != null ) {
@@ -158,13 +159,18 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
     @SuppressWarnings("unchecked")
     public Object convert( Object sourceDomainObject ) {
         if ( sourceDomainObject instanceof Collection ) {
-            return this.convert( ( Collection ) sourceDomainObject );
+            return this.convert( ( Collection<Object> ) sourceDomainObject );
         }
         assert sourceDomainObject instanceof NCBIGene2Accession;
         NCBIGene2Accession ncbiGene = ( NCBIGene2Accession ) sourceDomainObject;
         return convert( ncbiGene.getInfo() );
     }
 
+    /**
+     * @param acc
+     * @param gene
+     * @return
+     */
     public Collection<GeneProduct> convert( NCBIGene2Accession acc, Gene gene ) {
         Collection<GeneProduct> geneProducts = new HashSet<GeneProduct>();
         // initialize up to two Gene Products
@@ -175,7 +181,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             GeneProduct rna = GeneProduct.Factory.newInstance();
 
             // set available fields
-            rna.setNcbiId( acc.getRnaNucleotideGI() );
+            rna.setNcbiGi( acc.getRnaNucleotideGI() );
             rna.setGene( gene );
             rna.setName( acc.getRnaNucleotideAccession() );
             rna.setType( GeneProductType.RNA );
@@ -215,7 +221,7 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
             GeneProduct protein = GeneProduct.Factory.newInstance();
 
             // set available fields
-            protein.setNcbiId( acc.getProteinGI() );
+            protein.setNcbiGi( acc.getProteinGI() );
             protein.setGene( gene );
             protein.setName( acc.getProteinAccession() );
             protein.setType( GeneProductType.PROTEIN );

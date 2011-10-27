@@ -43,9 +43,9 @@ public class GeneValueObject implements java.io.Serializable {
 
         for ( Gene g : genes ) {
             if ( g == null ) continue;
-            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiId(), g
-                    .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
-                    .getTaxon().getScientificName(), g.getTaxon().getCommonName() ) );
+            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiGeneId()
+                    .toString(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon()
+                    .getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName() ) );
         }
 
         return converted;
@@ -97,7 +97,7 @@ public class GeneValueObject implements java.io.Serializable {
 
     public GeneValueObject( Gene gene ) {
         this.id = gene.getId();
-        this.ncbiId = gene.getNcbiId();
+        this.ncbiId = gene.getNcbiGeneId().toString();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
         this.taxonScientificName = gene.getTaxon().getScientificName();
@@ -116,9 +116,9 @@ public class GeneValueObject implements java.io.Serializable {
     public GeneValueObject( GeneSetMember otherBean ) {
 
         this( otherBean.getGene().getId(), otherBean.getGene().getName(), getAliasStrings( otherBean.getGene() ),
-                otherBean.getGene().getNcbiId(), otherBean.getGene().getOfficialSymbol(), otherBean.getGene()
-                        .getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(), otherBean
-                        .getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName(), otherBean
+                otherBean.getGene().getNcbiGeneId().toString(), otherBean.getGene().getOfficialSymbol(), otherBean
+                        .getGene().getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(),
+                otherBean.getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName(), otherBean
                         .getGene().getTaxon().getCommonName() );
     }
 

@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;
@@ -64,6 +65,8 @@ public class MatrixWriter<T> {
      * @param matrix
      * @param geneAnnotations Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
      *        gene Name]
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService.readAnnotationFileAsString for how the stringified
+     *      annotations are set up.
      * @param writeHeader
      * @throws IOException
      */
@@ -204,6 +207,8 @@ public class MatrixWriter<T> {
      * @param writeGeneInfo
      * @param columns
      * @param buf
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService.readAnnotationFileAsString for how the stringified
+     *      annotations are set up.
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<T> matrix,
             Map<Long, ? extends Object> geneAnnotations, boolean writeSequence, boolean writeGeneInfo, int columns,
@@ -215,6 +220,9 @@ public class MatrixWriter<T> {
 
         if ( writeGeneInfo && geneAnnotations != null && !geneAnnotations.isEmpty() ) {
             buf.append( "\tGeneSymbol\tGeneName" );
+            if ( ( ( String[] ) geneAnnotations.values().iterator().next() ).length > 3 ) {
+                buf.append( "\tNCBIid" );
+            }
         }
 
         for ( BioMaterial bioMaterial : orderedBioMaterials ) {
@@ -232,6 +240,9 @@ public class MatrixWriter<T> {
      * @param geneAnnotations Map of composite sequence ids to an array of strings. If null, nothing will be added to
      *        the text. If there are no genes for the probe, then blanks will be added. In each array, the first string
      *        is expected to respresent the gene symbols, the second the names. Any other array elements are ignored.
+     *        The array of annotations is like this: [probe name,genes symbol, gene Name, gemma gene id, ncbi id]
+     * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService.readAnnotationFileAsString for how the stringified
+     *      annotations are set up.
      */
     private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe, Map<Long, String[]> geneAnnotations ) {
         if ( geneAnnotations == null || geneAnnotations.isEmpty() ) return;
@@ -279,17 +290,23 @@ public class MatrixWriter<T> {
         if ( genes != null ) {
             List<String> gs = new ArrayList<String>();
             List<String> gn = new ArrayList<String>();
+            List<Long> ids = new ArrayList<Long>();
+            List<String> ncbiIds = new ArrayList<String>();
             for ( Gene gene : genes ) {
                 gs.add( gene.getOfficialSymbol() );
                 gn.add( gene.getOfficialName() );
+                ids.add( gene.getId() );
+                ncbiIds.add( gene.getNcbiGeneId() == null ? "" : gene.getNcbiGeneId().toString() );
             }
             // tab has already been added before FIXME make sure this format is consistent with other files!!
             buf.append( StringUtils.join( gs.toArray(), '|' ) );
             buf.append( "\t" );
             buf.append( StringUtils.join( gn.toArray(), '|' ) );
             buf.append( "\t" );
+            buf.append( StringUtils.join( ncbiIds.toArray(), '|' ) );
+            // note I'm leaving out the Gemma gene ID
         } else {
-            buf.append( "\t\t" );
+            buf.append( "\t\t\t" );
         }
     }
 

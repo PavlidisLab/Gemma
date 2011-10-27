@@ -517,18 +517,26 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @SuppressWarnings({ "cast" })
     @Override
     protected Gene handleFindByAccession( String accession, ExternalDatabase source ) throws Exception {
-        Collection<Gene> genes;
+        Collection<Gene> genes = new HashSet<Gene>();
         final String accessionQuery = "select g from GeneImpl g inner join g.accessions a where a.accession = :accession";
         final String externalDbquery = accessionQuery + " and a.externalDatabase = :source";
 
         if ( source == null ) {
             genes = this.getHibernateTemplate().findByNamedParam( accessionQuery, "accession", "accession" );
             if ( genes.size() == 0 ) {
-                genes = this.findByNcbiId( accession );
+                try {
+                    return this.findByNcbiId( Integer.parseInt( accession ) );
+                } catch ( NumberFormatException e ) {
+
+                }
             }
         } else {
             if ( source.getName().equalsIgnoreCase( "NCBI" ) ) {
-                genes = this.findByNcbiId( accession );
+                try {
+                    return this.findByNcbiId( Integer.parseInt( accession ) );
+                } catch ( NumberFormatException e ) {
+
+                }
             } else {
                 genes = this.getHibernateTemplate().findByNamedParam( externalDbquery,
                         new String[] { "accession", "source" }, new Object[] { accession, source } );

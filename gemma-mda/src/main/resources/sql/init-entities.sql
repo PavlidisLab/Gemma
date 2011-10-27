@@ -8,9 +8,12 @@ delete from AUDIT_TRAIL;
 -- alter CHROMOSOME_FEATURE for case insensitive search
 ALTER TABLE CHROMOSOME_FEATURE MODIFY OFFICIAL_SYMBOL varchar(255) character set latin1 default NULL;
 ALTER TABLE CHROMOSOME_FEATURE MODIFY NAME varchar(255) character set latin1 default NULL;
-ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_ID varchar(255) character set latin1 default NULL;
+-- ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_ID varchar(255) character set latin1 default NULL;
+ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_GI varchar(255) character set latin1 default NULL;
+ALTER TABLE CHROMOSOME_FEATURE MODIFY NCBI_GENE_ID  int(11) UNIQUE;
 -- alter GENE_ALIAS for case insensitive search
 ALTER TABLE GENE_ALIAS MODIFY ALIAS varchar(255) character set latin1 default NULL;
+
 
 -- wider columns.
 alter table BIO_SEQUENCE modify SEQUENCE LONGTEXT;

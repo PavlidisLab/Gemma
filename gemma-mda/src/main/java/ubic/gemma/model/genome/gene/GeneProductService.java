@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.genome.Gene;
@@ -36,13 +38,13 @@ public interface GeneProductService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ubic.gemma.model.genome.gene.GeneProduct create( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void delete( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
@@ -53,7 +55,7 @@ public interface GeneProductService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     /**
@@ -90,9 +92,12 @@ public interface GeneProductService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( ubic.gemma.model.genome.gene.GeneProduct geneProduct );
 
     public GeneProduct thaw( GeneProduct existing );
+
+    @Secured({ "GROUP_ADMIN" })
+    public void remove( Collection<GeneProduct> toRemove );
 
 }

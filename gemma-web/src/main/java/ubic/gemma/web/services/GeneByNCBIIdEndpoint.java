@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- *Given an NCBI ID, will return the matching Gemma gene id. The result is a 2D array mapping the NCBI IDs to the Gene
+ * Given an NCBI ID, will return the matching Gemma gene id. The result is a 2D array mapping the NCBI IDs to the Gene
  * IDs.
  * 
  * @author gavin
@@ -85,7 +85,12 @@ public class GeneByNCBIIdEndpoint extends AbstractGemmaEndpoint {
         for ( String ncbi : ncbiInput ) {
 
             String geneId;
-            Gene gene = geneService.findByNCBIId( ncbi );
+            Gene gene = null;
+            try {
+                gene = geneService.findByNCBIId( Integer.parseInt( ncbi ) );
+            } catch ( NumberFormatException e ) {
+                //
+            }
             if ( gene == null )
                 geneId = "NaN";
             else

@@ -45,10 +45,10 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
 
             // to be unambiguous need NCBI id OR (symbol + taxon + (name OR physical location))
 
-            boolean bothHaveNcbi = this.getNcbiId() != null && that.getNcbiId() != null;
+            boolean bothHaveNcbi = this.getNcbiGeneId() != null && that.getNcbiGeneId() != null;
 
             if ( bothHaveNcbi ) {
-                return this.getNcbiId().equals( that.getNcbiId() );
+                return this.getNcbiGeneId().equals( that.getNcbiGeneId() );
             }
 
             boolean bothHaveSymbol = this.getOfficialSymbol() != null && that.getOfficialSymbol() != null;
@@ -74,7 +74,7 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
                     return false; // can't decide, assume unequal.
                 }
             }
-            return false; // 
+            return false; //
 
         }
         return true;
@@ -91,7 +91,7 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        buf.append( this.getClass().getSimpleName() );
+        buf.append( this.getClass().getSimpleName().replace( "Impl", "" ) );
         buf.append( this.getId() == null ? " " : " Id:" + this.getId() + " " );
         buf.append( this.getOfficialSymbol() + " " );
         buf.append( this.getOfficialName() == null ? "" : this.getOfficialName() + " " );
@@ -100,15 +100,18 @@ public class GeneImpl extends ubic.gemma.model.genome.Gene {
         // buf.append( this.getOfficialName() == null && this.getPhysicalLocation() != null ? "["
         // + this.getPhysicalLocation() + "] " : "" );
 
-        buf.append( this.getNcbiId() == null ? "" : " (NCBI " + this.getNcbiId() + ")" );
+        buf.append( this.getNcbiGeneId() == null ? "" : " (NCBI " + this.getNcbiGeneId() + ")" );
         return buf.toString();
     }
 
+    /**
+     * @return
+     */
     private int computeHashCode() {
         int hashCode = 29;
 
-        if ( this.getNcbiId() != null ) {
-            hashCode += this.getNcbiId().hashCode();
+        if ( this.getNcbiGeneId() != null ) {
+            hashCode += this.getNcbiGeneId().hashCode();
             return hashCode;
         }
 

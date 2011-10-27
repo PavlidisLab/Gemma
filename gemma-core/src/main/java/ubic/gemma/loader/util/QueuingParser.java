@@ -28,7 +28,7 @@ import java.util.concurrent.BlockingQueue;
  * @author pavlidis
  * @version $Id$
  */
-public interface QueuingParser {
+public interface QueuingParser<T> {
 
     /**
      * Parse an input stream, storing the results in the passed queue (which can be used by a consumer)
@@ -37,6 +37,6 @@ public interface QueuingParser {
      * @param queue
      * @throws IOException
      */
-    public void parse( InputStream inputStream, BlockingQueue<?> queue ) throws IOException;
+    public void parse( InputStream inputStream, BlockingQueue<T> queue ) throws IOException;
 
 }

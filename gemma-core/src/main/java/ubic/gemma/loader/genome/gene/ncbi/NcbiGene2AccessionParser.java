@@ -40,7 +40,8 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
  * @version $Id$
  * @see NCBIGene2Accession
  */
-public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession> implements QueuingParser {
+public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession> implements
+        QueuingParser<NcbiGeneData> {
 
     /**
      * 
@@ -58,15 +59,14 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
 
     private int count = 0;
 
-    @SuppressWarnings("unchecked")
-    public void parse( InputStream is, BlockingQueue aQueue ) throws IOException {
+    public void parse( InputStream is, BlockingQueue<NcbiGeneData> aQueue ) throws IOException {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aQueue;
         super.parse( is );
     }
-
-    @SuppressWarnings("unchecked")
-    public void parse( File f, BlockingQueue queue1, Map geneInfo1 ) throws IOException {
+ 
+    public void parse( File f, BlockingQueue<NcbiGeneData> queue1, Map<String, NCBIGeneInfo> geneInfo1 )
+            throws IOException {
         this.queue = queue1;
         this.geneInfo = geneInfo1;
         super.parse( f );

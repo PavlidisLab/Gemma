@@ -39,7 +39,8 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
     private String GENEINFO_FILE = "gene_info.gz";
     private String GENE2ACCESSION_FILE = "gene2accession.gz";
     private String GENEHISTORY_FILE = "gene_history.gz";
-
+    private String GENE2ENSEMBL_FILE = "gene2ensembl.gz";
+    
     private String filePath = null;
 
     public NcbiGeneLoaderCLI() {
@@ -67,7 +68,9 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
             String geneInfoFile = filePath + File.separatorChar + GENEINFO_FILE;
             String gene2AccFile = filePath + File.separatorChar + GENE2ACCESSION_FILE;
             String geneHistoryFile = filePath + File.separatorChar + GENEHISTORY_FILE;
-            loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true ); // do filtering of taxa
+            String geneEnsemblFile = filePath + File.separatorChar + GENE2ENSEMBL_FILE;
+            
+            loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, true ); // do filtering of taxa
         } else { /* defaults to download files remotely. */
             loader.load( true );
         }

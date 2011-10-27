@@ -67,15 +67,6 @@ public class ExpressionExperimentServiceImpl extends
 
     private Log log = LogFactory.getLog( this.getClass() );
 
-    @Override
-    public Collection<ExpressionExperiment> findByAccession( String accession ) {
-        return this.getExpressionExperimentDao().findByAccession( accession );
-    }
-
-    public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
-        return this.getExpressionExperimentDao().findByQuantitationType( type );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -87,20 +78,13 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().browse( start, limit );
     }
 
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
-        return this.getExpressionExperimentDao().browseSpecificIds( start, limit, ids );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Intege,
-     * java.lang.Integer, java.lang.String, boolean)
-     */
-
     @Override
     public List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending ) {
         return this.getExpressionExperimentDao().browse( start, limit, orderField, descending );
+    }
+
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids ) {
+        return this.getExpressionExperimentDao().browseSpecificIds( start, limit, ids );
     }
 
     @Override
@@ -109,20 +93,12 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().browseSpecificIds( start, limit, orderField, descending, ids );
     }
 
-    @Override
-    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
-        return this.getExpressionExperimentDao().loadAllOrdered( orderField, descending );
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
-        return this.getExpressionExperimentDao().loadAllTaxonOrdered( orderField, descending, taxon );
-    }
-
-    @Override
-    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
-        return this.getExpressionExperimentDao().loadMultipleOrdered( orderField, descending, ids );
-    }
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.description.BibliographicReferenceService#browse(java.lang.Intege,
+     * java.lang.Integer, java.lang.String, boolean)
+     */
 
     /*
      * (non-Javadoc)
@@ -134,14 +110,33 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().count();
     }
 
+    @Override
+    public Collection<ExpressionExperiment> findByAccession( String accession ) {
+        return this.getExpressionExperimentDao().findByAccession( accession );
+    }
+
+    public ExpressionExperiment findByQuantitationType( QuantitationType type ) {
+        return this.getExpressionExperimentDao().findByQuantitationType( type );
+    }
+
+    @Override
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
+        return this.getExpressionExperimentDao().findByTaxon( taxon, limit );
+    }
+
     /*
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentService#findByUpdatedLimit(java.util.Collection,
      * java.lang.Integer)
      */
-    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
         return this.getExpressionExperimentDao().findByUpdatedLimit( ids, limit );
+    }
+
+    @Override
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
+        return this.getExpressionExperimentDao().findByUpdatedLimit( limit );
     }
 
     /*
@@ -166,6 +161,36 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
+    public Collection<Long> getUntroubled( Collection<Long> ids ) {
+        Collection<Long> firstPass = this.getExpressionExperimentDao().getUntroubled( ids );
+
+        /*
+         * Now check the array designs.
+         */
+        Map<ArrayDesign, Collection<Long>> ads = this.getExpressionExperimentDao().getArrayDesignsUsed( firstPass );
+        Collection<Long> troubled = new HashSet<Long>();
+        for ( ArrayDesign a : ads.keySet() ) {
+            if ( a.getStatus().getTroubled() ) {
+                troubled.addAll( ads.get( a ) );
+            }
+        }
+
+        firstPass.removeAll( troubled );
+
+        return firstPass;
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending ) {
+        return this.getExpressionExperimentDao().loadAllOrdered( orderField, descending );
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
+        return this.getExpressionExperimentDao().loadAllTaxonOrdered( orderField, descending, taxon );
+    }
+
+    @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
         return this.getExpressionExperimentDao().loadLackingFactors();
     }
@@ -173,6 +198,11 @@ public class ExpressionExperimentServiceImpl extends
     @Override
     public Collection<ExpressionExperiment> loadLackingTags() {
         return this.getExpressionExperimentDao().loadLackingTags();
+    }
+
+    @Override
+    public List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids ) {
+        return this.getExpressionExperimentDao().loadMultipleOrdered( orderField, descending, ids );
     }
 
     /*
@@ -198,42 +228,6 @@ public class ExpressionExperimentServiceImpl extends
     public Collection<ExpressionExperiment> loadTroubled() {
         Map<Long, AuditEvent> lastTroubleEvents = this.getLastTroubleEvents();
         return this.loadMultiple( lastTroubleEvents.keySet() );
-    }
-
-    /**
-     * @param ids
-     * @param type
-     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
-     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
-     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
-     */
-    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
-
-        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
-        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
-        AuditEvent last;
-        for ( ExpressionExperiment experiment : ees ) {
-            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
-            lastEventMap.put( experiment.getId(), last );
-        }
-        return lastEventMap;
-    }
-
-    /**
-     * @return
-     */
-    private Map<Long, AuditEvent> getLastTroubleEvents() {
-        Collection<ExpressionExperiment> ees = this.loadAll();
-
-        // this checks the array designs, too.
-        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
-
-        Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
-        for ( Auditable a : directEvents.keySet() ) {
-            troubleMap.put( a.getId(), directEvents.get( a ) );
-        }
-
-        return troubleMap;
     }
 
     @Override
@@ -438,6 +432,12 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findByParentTaxon( taxon );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleFindByShortName(java.lang.String)
+     */
     @Override
     protected ExpressionExperiment handleFindByShortName( String shortName ) throws Exception {
         return this.getExpressionExperimentDao().findByShortName( shortName );
@@ -467,8 +467,15 @@ public class ExpressionExperimentServiceImpl extends
         return this.getExpressionExperimentDao().findOrCreate( expressionExperiment );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentServiceBase#handleGetAnnotationCounts(java.util.Collection
+     * )
+     */
     @Override
-    protected Map handleGetAnnotationCounts( Collection<Long> ids ) throws Exception {
+    protected Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids ) throws Exception {
         return this.getExpressionExperimentDao().getAnnotationCounts( ids );
     }
 
@@ -810,19 +817,40 @@ public class ExpressionExperimentServiceImpl extends
         this.getExpressionExperimentDao().update( expressionExperiment );
     }
 
-    @Override
-    public Collection<Long> getUntroubled( Collection<Long> ids ) {
-        Collection<Long> firstPass = this.getExpressionExperimentDao().getUntroubled( ids );
+    /**
+     * @param ids
+     * @param type
+     * @returns a map of the expression experiment ids to the last audit event for the given audit event type the map
+     *          can contain nulls if the specified auditEventType isn't found for a given expression experiment id
+     * @see AuditableDao.getLastAuditEvent and getLastTypedAuditEvents for faster methods.
+     */
+    private Map<Long, AuditEvent> getLastEvent( Collection<Long> ids, AuditEventType type ) {
 
-        // FIXME
-        /*
-         * Now check the array designs.
-         */
-        // Map<ArrayDesign, Collection<ExpressionExperiment>> ads = CommonQueries.getArrayDesignsUsed( ees, this
-        // .getSession() );
-        // this.getArrayDesignDao().getUntroubled(ads);
+        Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
+        Collection<ExpressionExperiment> ees = this.loadMultiple( ids );
+        AuditEvent last;
+        for ( ExpressionExperiment experiment : ees ) {
+            last = this.getAuditEventDao().getLastEvent( experiment, type.getClass() );
+            lastEventMap.put( experiment.getId(), last );
+        }
+        return lastEventMap;
+    }
 
-        return firstPass;
+    /**
+     * @return
+     */
+    private Map<Long, AuditEvent> getLastTroubleEvents() {
+        Collection<ExpressionExperiment> ees = this.loadAll();
+
+        // this checks the array designs, too.
+        Map<Auditable, AuditEvent> directEvents = this.getAuditEventDao().getLastOutstandingTroubleEvents( ees );
+
+        Map<Long, AuditEvent> troubleMap = new HashMap<Long, AuditEvent>();
+        for ( Auditable a : directEvents.keySet() ) {
+            troubleMap.put( a.getId(), directEvents.get( a ) );
+        }
+
+        return troubleMap;
     }
 
 }

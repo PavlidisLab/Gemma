@@ -367,7 +367,7 @@ public class ArrayDesignServiceTest extends BaseSpringContextTest {
      */
     @Test
     public void testThaw() throws Exception {
-        ad = super.getTestPersistentArrayDesign( 100, true );
+        ad = super.getTestPersistentArrayDesign( 5, true );
 
         ad = arrayDesignService.load( ad.getId() );
 

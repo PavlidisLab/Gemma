@@ -21,11 +21,9 @@ package ubic.gemma.model.expression.experiment;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +42,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -78,44 +77,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     private static final int BATCH_SIZE = 1000;
 
     static Log log = LogFactory.getLog( ExpressionExperimentDaoImpl.class.getName() );
-
-    /**
-     * Sort a map's values.
-     * <p>
-     * TODO: put this somewhere where it might be used by others. For another implementation see ErmineJ
-     * GeneSetPvalRun.getSortedClasses
-     * <p>
-     * Based on a concept at www.xinotes.org/notes/note/306
-     * 
-     * @param m
-     * @param desc
-     * @return
-     */
-    private static List<?> sortByValue( final Map<?, ?> m, final boolean desc ) {
-        List<Object> keys = new ArrayList<Object>();
-        keys.addAll( m.keySet() );
-        Collections.sort( keys, new Comparator<Object>() {
-            @Override
-            public int compare( Object o1, Object o2 ) {
-                Object v1 = m.get( o1 );
-                Object v2 = m.get( o2 );
-                if ( v1 == null ) {
-                    return v2 == null ? 0 : 1;
-                } else if ( v2 == null ) {
-                    return 1;
-                } else if ( v1 instanceof Comparable ) {
-                    int v = ( ( Comparable ) v1 ).compareTo( v2 );
-                    if ( desc ) {
-                        return -v;
-                    }
-                    return v;
-                } else {
-                    return 0;
-                }
-            }
-        } );
-        return keys;
-    }
 
     @Autowired
     public ExpressionExperimentDaoImpl( SessionFactory sessionFactory ) {
@@ -255,46 +216,17 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * java.lang.Integer)
      */
     @Override
-    @SuppressWarnings("unchecked")
-    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
-        Map<ExpressionExperiment, Date> result = new HashMap<ExpressionExperiment, Date>();
-        if ( ids.isEmpty() ) return result;
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit ) {
+        if ( ids.isEmpty() || limit <= 0 ) return new ArrayList<ExpressionExperiment>();
 
         Session s = this.getSession();
 
-        /*
-         * Get the most recent update date for all the experiments requested. I cannot figure out how to get an 'order
-         * by' on this query, so we always have to get everything and sort afterwards.
-         */
-        String queryString = "select e, (select max(ev.date) from e.auditTrail.events ev ) from ExpressionExperimentImpl e where e.id in (:ids) ";
+        String queryString = "select e from ExpressionExperimentImpl e join e.status s where e.id in (:ids) order by s.lastUpdateDate desc ";
 
         Query q = s.createQuery( queryString );
         q.setParameterList( "ids", ids );
-        // q.setMaxResults( Math.abs( limit ) );
-        List list = q.list();
-
-        for ( Object o : list ) {
-            Object[] oa = ( Object[] ) o;
-            result.put( ( ExpressionExperiment ) oa[0], ( Date ) oa[1] );
-            // log.info( ( ( ExpressionExperiment ) oa[0] ).getShortName() + " " + oa[1] );
-        }
-
-        List<?> sortedKeys = sortByValue( result, limit > 0 );
-
-        assert sortedKeys.size() == ids.size() : "Expected " + ids.size() + ", got " + sortedKeys.size();
-
-        int j = 0;
-        for ( Iterator<?> i = sortedKeys.iterator(); i.hasNext(); ) {
-            Object next = i.next();
-            if ( j >= Math.abs( limit ) ) {
-                result.remove( next );
-            }
-            j++;
-        }
-
-        assert result.size() <= Math.abs( limit ) : "Expected " + Math.abs( limit ) + ", got " + result.size();
-
-        return result;
+        q.setMaxResults( limit );
+        return q.list();
 
     }
 
@@ -329,6 +261,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
         return CommonQueries.getArrayDesignsUsed( expressionExperiment, this.getSession() );
+    }
+
+    @Override
+    public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids ) {
+        return CommonQueries.getArrayDesignsUsed( eeids, this.getSession() );
     }
 
     @Override
@@ -397,6 +334,15 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return result;
     }
 
+    @Override
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit ) {
+        Session s = this.getSession();
+        String queryString = "select e from ExpressionExperimentImpl e join e.status s order by s.lastUpdateDate desc ";
+        Query q = s.createQuery( queryString );
+        q.setMaxResults( limit );
+        return q.list();
+    }
+
     /*
      * Override to take advantage of query cache. (non-Javadoc)
      * 
@@ -428,11 +374,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                     + "order by sample.sourceTaxon " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "bioAssayCount" ) ) {
             qs += "inner join ee.bioAssays as ba " + "group by ee.id " + "order by count(ba) "
-            + ( descending ? "desc" : "" );
-        } else if ( orderField.equals( "troubled" ) ) {
-            qs += "inner join ee.status as status "
-                    + "order by status.troubled "
                     + ( descending ? "desc" : "" );
+        } else if ( orderField.equals( "troubled" ) ) {
+            qs += "inner join ee.status as status " + "order by status.troubled " + ( descending ? "desc" : "" );
         } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             qs += " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
@@ -442,8 +386,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     @Override
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon ) {
-        String qs = "select distinct ee from ExpressionExperimentImpl as ee "
-                + "inner join ee.bioAssays as ba "
+        String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample ";
         String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
 
@@ -452,11 +395,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         } else if ( orderField.equals( "bioAssayCount" ) ) {
             qs += where + "group by ee.id order by count(distinct ba) " + ( descending ? "desc" : "" );
         } else if ( orderField.equals( "troubled" ) ) {
-            qs += "inner join ee.status as status "
-                + where 
-                + "order by status.troubled "
-                + ( descending ? "desc" : "" );
-    } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
+            qs += "inner join ee.status as status " + where + "order by status.troubled " + ( descending ? "desc" : "" );
+        } else { // (orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" )){
             qs += where + " order by ee." + orderField + " " + ( descending ? "desc" : "" );
         }
         Query query = this.getSession().createQuery( qs );
@@ -923,13 +863,28 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByTaxon(ubic.gemma.model.genome.
      * Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleFindByTaxon( Taxon taxon ) throws Exception {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon";
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDao#findByTaxon(ubic.gemma.model.genome.Taxon,
+     * int)
+     */
+    @Override
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit ) {
+        final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
+                + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample join ee.status s where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon order by s.lastUpdateDate desc";
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+        tpl.setMaxResults( limit );
+        return tpl.findByNamedParam( queryString, "taxon", taxon );
     }
 
     /*
@@ -1558,7 +1513,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "ee.shortName, " // 10
                 + "s.createDate, " // 11
                 + "AD.technologyType, ee.class, " // 12, 13
-                + " EDES.id  " // 14
+                + " EDES.id,  " // 14
+                + " s.lastUpdateDate " // 15
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
@@ -1616,6 +1572,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             }
             v.setClazz( ( String ) res[13] );
             v.setExperimentalDesign( ( Long ) res[14] );
+            v.setDateLastUpdated( ( ( Date ) res[15] ) );
             vo.put( eeId, v );
         }
 

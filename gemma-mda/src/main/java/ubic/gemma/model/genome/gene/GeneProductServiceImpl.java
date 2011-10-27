@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * @see ubic.gemma.model.genome.gene.GeneProductService
  */
@@ -76,7 +78,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
-    protected Collection handleGetGenesByName( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
         return this.getGeneProductDao().getGenesByName( search );
     }
 
@@ -86,7 +88,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleGetGenesByNcbiId(java.lang.String)
      */
     @Override
-    protected Collection handleGetGenesByNcbiId( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByNcbiId( String search ) throws Exception {
         return this.getGeneProductDao().getGenesByNcbiId( search );
     }
 
@@ -104,7 +106,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      * @see ubic.gemma.model.genome.gene.GeneProductServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         return this.getGeneProductDao().load( ids );
     }
 
@@ -119,6 +121,11 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     @Override
     public GeneProduct thaw( GeneProduct existing ) {
         return this.getGeneProductDao().thaw( existing );
+    }
+
+    @Override
+    public void remove( Collection<GeneProduct> toRemove ) {
+        this.getGeneProductDao().remove( toRemove );
     }
 
 }

@@ -35,8 +35,6 @@ import ubic.gemma.util.ConfigUtils;
  */
 public class HomologeneFetcher extends FtpFetcher {
 
-
-
     /**
      * @throws ConfigurationException
      */
@@ -71,7 +69,6 @@ public class HomologeneFetcher extends FtpFetcher {
     protected String formRemoteFilePath( String identifier ) {
         return remoteBaseDir + identifier;
     }
-
 
     @Override
     public void setNetDataSourceUtil() {

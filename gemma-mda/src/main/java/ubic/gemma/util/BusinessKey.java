@@ -251,29 +251,40 @@ public class BusinessKey {
     public static void addRestrictions( Criteria queryObject, Gene gene ) {
         if ( gene.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene.getId() ) );
-        } else if ( StringUtils.isNotBlank( gene.getNcbiId() ) ) {
+        } else if ( gene.getNcbiGeneId() != null ) {
+            /*
+             * These are unambiguous identifiers.
+             */
             if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
                 /*
                  * Check to see if the new gene used to use an id that is in the system.
                  */
-                Collection<String> ncbiIds = new HashSet<String>();
-                ncbiIds.add( gene.getNcbiId() );
-                ncbiIds.add( gene.getPreviousNcbiId() );
-                queryObject.add( Restrictions.in( "ncbiId", ncbiIds ) );
+                Collection<Integer> ncbiIds = new HashSet<Integer>();
+                ncbiIds.add( gene.getNcbiGeneId() );
+                try {
+                    ncbiIds.add( Integer.parseInt( gene.getPreviousNcbiId() ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "Previous Ncbi id wasn't parseable to an int: " + gene.getPreviousNcbiId() );
+                }
+                queryObject.add( Restrictions.in( "ncbiGeneId", ncbiIds ) );
             } else {
-                queryObject.add( Restrictions.eq( "ncbiId", gene.getNcbiId() ) );
+                queryObject.add( Restrictions.eq( "ncbiGeneId", gene.getNcbiGeneId() ) );
             }
         } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
+            /*
+             * Second choice, but not unambiguous even within a taxon unless we know the physical location
+             */
             queryObject.add( Restrictions.eq( "officialSymbol", gene.getOfficialSymbol() ) );
 
             attachCriteria( queryObject, gene.getTaxon(), "taxon" );
 
-            // Need either the official name or the location to be unambiguous.
+            // Need either the official name AND the location to be unambiguous.
             if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
                 queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
-            } else if ( gene.getPhysicalLocation() != null ) {
-                // This causes more problems than it is worth.
-                // attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
+            }
+
+            if ( gene.getPhysicalLocation() != null ) {
+                attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
             }
 
         } else {
@@ -382,8 +393,9 @@ public class BusinessKey {
      * @param databaseEntry
      */
     public static void addRestrictions( DetachedCriteria queryObject, DatabaseEntry databaseEntry ) {
-        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
-                "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
+        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) )
+                .createCriteria( "externalDatabase" )
+                .add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
     }
 
     /**
@@ -567,7 +579,7 @@ public class BusinessKey {
     public static void checkKey( Gene gene ) {
         if ( ( ( gene.getOfficialSymbol() == null || gene.getTaxon() == null ) && gene.getPhysicalLocation() == null
                 && gene.getProducts() == null && gene.getProducts().size() == 0 )
-                && gene.getNcbiId() == null ) {
+                && gene.getNcbiGeneId() == null ) {
             throw new IllegalArgumentException(
                     "No valid key for "
                             + gene
@@ -638,7 +650,7 @@ public class BusinessKey {
      */
     public static void checkValidKey( Gene gene ) {
         if ( gene == null
-                || ( gene.getNcbiId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() )
+                || ( gene.getNcbiGeneId() == null && ( StringUtils.isBlank( gene.getOfficialSymbol() )
                         || gene.getTaxon() == null || StringUtils.isBlank( gene.getOfficialName() ) ) ) ) {
             throw new IllegalArgumentException(
                     "Gene does not have valid key (needs NCBI numeric id or Official Symbol + Official Name + Taxon" );
@@ -661,7 +673,7 @@ public class BusinessKey {
 
         boolean ok = true;
 
-        if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) && StringUtils.isBlank( geneProduct.getName() ) )
+        if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) && StringUtils.isBlank( geneProduct.getName() ) )
             ok = true;
 
         if ( !ok ) {
@@ -790,8 +802,8 @@ public class BusinessKey {
     public static void createQueryObject( Criteria queryObject, GeneProduct geneProduct ) {
         if ( geneProduct.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", geneProduct.getId() ) );
-        } else if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) ) {
-            queryObject.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
+        } else if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
+            queryObject.add( Restrictions.eq( "ncbiGi", geneProduct.getNcbiGi() ) );
         } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) { // NM_XXXXX etc.
             queryObject.add( Restrictions.eq( "name", geneProduct.getName() ) );
 
@@ -903,8 +915,9 @@ public class BusinessKey {
 
     private static void attachCriteria( Criteria queryObject, DatabaseEntry databaseEntry ) {
 
-        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) ).createCriteria(
-                "externalDatabase" ).add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
+        queryObject.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) )
+                .createCriteria( "externalDatabase" )
+                .add( Restrictions.eq( "name", databaseEntry.getExternalDatabase().getName() ) );
 
     }
 
@@ -968,8 +981,8 @@ public class BusinessKey {
     public static void createQueryObject( Criteria queryObject, Gene2GeneProteinAssociation gene2GeneProteinAssociation ) {
         if ( gene2GeneProteinAssociation.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene2GeneProteinAssociation.getId() ) );
-        } else if ( StringUtils.isNotBlank( gene2GeneProteinAssociation.getFirstGene().getNcbiId() )
-                && StringUtils.isNotBlank( gene2GeneProteinAssociation.getSecondGene().getNcbiId() ) ) {
+        } else if ( gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId() != null
+                && gene2GeneProteinAssociation.getSecondGene().getNcbiGeneId() != null ) {
             queryObject.add( Restrictions.eq( "firstGene", gene2GeneProteinAssociation.getFirstGene() ) );
             queryObject.add( Restrictions.eq( "secondGene", gene2GeneProteinAssociation.getSecondGene() ) );
         }
@@ -1006,10 +1019,10 @@ public class BusinessKey {
     public static void createQueryObject( Criteria queryObject, ExpressionExperimentSubSet entity ) {
         /*
          * Note that we don't match on name.
-         */ 
+         */
 
         queryObject.add( Restrictions.eq( "sourceExperiment", entity.getSourceExperiment() ) );
-        
+
         queryObject.add( Restrictions.sizeEq( "bioAssays", entity.getBioAssays().size() ) );
 
         queryObject.createCriteria( "bioAssays" ).add(

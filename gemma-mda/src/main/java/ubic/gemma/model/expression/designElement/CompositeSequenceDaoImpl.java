@@ -72,8 +72,8 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * Add your 'where' clause to this.
      */
     private static final String nativeBaseSummaryQueryString = "SELECT cs.ID as deID, cs.NAME as deName, bs.NAME as bsName, bsDb.ACCESSION as bsdbacc, ssr.ID as ssrid,"
-            + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_ID as gpNcbi, geneProductRNA.GENE_FK as geneid, "
-            + "geneProductRNA.TYPE as type, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc "
+            + "geneProductRNA.ID as gpId,geneProductRNA.NAME as gpName,geneProductRNA.NCBI_GI as gpNcbi, geneProductRNA.GENE_FK as geneid, "
+            + "geneProductRNA.TYPE as type, gene.ID as gId,gene.OFFICIAL_SYMBOL as gSymbol,gene.NCBI_GENE_ID as gNcbi, ad.SHORT_NAME as adShortName, ad.ID as adId, cs.DESCRIPTION as deDesc "
             + " from "
             + "COMPOSITE_SEQUENCE cs "
             + "left join BIO_SEQUENCE bs on BIOLOGICAL_CHARACTERISTIC_FK=bs.ID "
@@ -533,10 +533,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         // This uses the 'full' query, assuming that this list isn't too big.
         String nativeQueryString = nativeBaseSummaryQueryString + " WHERE cs.ID IN (" + buf.toString() + ")";
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
-        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" ).addScalar(
-                "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" ).addScalar( "geneid" )
-                .addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" ).addScalar( "gNcbi" ).addScalar(
-                        "adShortName" ).addScalar( "adId" );
+        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
+                .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
+                .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
+                .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
         queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this for CLOB or Hibernate is unhappy
         queryObject.setMaxResults( MAX_CS_RECORDS );
         return queryObject.list();
@@ -569,10 +569,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( nativeQueryString );
         queryObject.setParameter( "id", id );
-        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" ).addScalar(
-                "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" ).addScalar( "geneid" )
-                .addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" ).addScalar( "gNcbi" ).addScalar(
-                        "adShortName" ).addScalar( "adId" );
+        queryObject.addScalar( "deID" ).addScalar( "deName" ).addScalar( "bsName" ).addScalar( "bsdbacc" )
+                .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
+                .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
+                .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
         queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this for CLOB or Hibernate is unhappy
         queryObject.setMaxResults( limit );
         return queryObject.list();

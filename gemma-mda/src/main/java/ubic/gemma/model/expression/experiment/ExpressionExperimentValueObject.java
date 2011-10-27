@@ -33,7 +33,8 @@ import ubic.gemma.model.common.auditAndSecurity.AuditEventValueObject;
  * @author kelsey
  * @version $Id$
  */
-public class ExpressionExperimentValueObject implements java.io.Serializable {
+public class ExpressionExperimentValueObject implements java.io.Serializable,
+        Comparable<ExpressionExperimentValueObject> {
     /**
      * The serial version UID of this class. Needed for serialization.
      */
@@ -981,6 +982,11 @@ public class ExpressionExperimentValueObject implements java.io.Serializable {
 
     public void setValidated( Boolean validatedFlag ) {
         this.validated = validatedFlag;
+    }
+
+    @Override
+    public int compareTo( ExpressionExperimentValueObject arg0 ) {
+        return this.getId().compareTo( arg0.getId() );
     }
 
 }

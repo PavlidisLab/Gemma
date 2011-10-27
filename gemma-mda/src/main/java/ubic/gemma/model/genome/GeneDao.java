@@ -25,45 +25,12 @@ import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionV
 import ubic.gemma.model.association.coexpression.GeneCoexpressionNodeDegree;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
+import ubic.gemma.persistence.BaseDao;
 
 /**
  * @see ubic.gemma.model.genome.Gene
  */
-public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Gene> {
-    /**
-     * This constant is used as a transformation flag; entities can be converted automatically into value objects or
-     * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>.
-     * <p/>
-     * This specific flag denotes entities must be transformed into objects of type
-     * {@link ubic.gemma.model.genome.gene.GeneValueObject}.
-     */
-    public final static int TRANSFORM_GENEVALUEOBJECT = 1;
-
-    /**
-     * 
-     */
-    public java.lang.Integer countAll();
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, ubic.gemma.model.genome.Gene)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #find(int, ubic.gemma.model.genome.Gene gene)}.
-     * </p>
-     */
-    public Gene find( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.Gene)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Gene find( int transform, ubic.gemma.model.genome.Gene gene );
+public interface GeneDao extends BaseDao<Gene> {
 
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
@@ -103,75 +70,15 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
 
     /**
      * <p>
-     * Does the same thing as {@link #findByOfficalSymbol(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficalSymbol( int transform, java.lang.String officialSymbol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficalSymbol(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficalSymbol(int, java.lang.String officialSymbol)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficalSymbol( int transform, String queryString,
-            java.lang.String officialSymbol );
-
-    /**
-     * <p>
      * Finder based on the official name.
      * </p>
      */
     public java.util.Collection<Gene> findByOfficalSymbol( java.lang.String officialSymbol );
 
     /**
-     * <p>
-     * Does the same thing as {@link #findByOfficalSymbol(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficalSymbol(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficalSymbol( String queryString, java.lang.String officialSymbol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialName(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialName( int transform, java.lang.String officialName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialName(boolean, java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficialName(int, java.lang.String officialName)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialName( int transform, String queryString,
-            java.lang.String officialName );
-
-    /**
      * 
      */
     public java.util.Collection<Gene> findByOfficialName( java.lang.String officialName );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialName(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficialName(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialName( String queryString, java.lang.String officialName );
 
     /**
      * @param officialName
@@ -184,27 +91,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      */
     public ubic.gemma.model.genome.Gene findByOfficialSymbol( java.lang.String symbol,
             ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialSymbolInexact(java.lang.String)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( int transform, java.lang.String officialSymbol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialSymbolInexact(boolean, java.lang.String)} with an additional
-     * argument called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query
-     * string defined in {@link #findByOfficialSymbolInexact(int, java.lang.String officialSymbol)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( int transform, String queryString,
-            java.lang.String officialSymbol );
 
     /**
      * 
@@ -231,35 +117,6 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * @return
      */
     public RelativeLocationData findNearest( PhysicalLocation physicalLocation, boolean useStrand );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, ubic.gemma.model.genome.Gene)} with an additional argument
-     * called <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string
-     * defined in {@link #findOrCreate(int, ubic.gemma.model.genome.Gene gene)}.
-     * </p>
-     */
-    public Object findOrCreate( int transform, String queryString, ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.Gene)} with an additional flag called
-     * <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder results will
-     * <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants defined here
-     * then finder results <strong>WILL BE</strong> passed through an operation which can optionally transform the
-     * entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public Object findOrCreate( int transform, ubic.gemma.model.genome.Gene gene );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(ubic.gemma.model.genome.Gene)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findOrCreate(ubic.gemma.model.genome.Gene)}.
-     * </p>
-     */
-    public ubic.gemma.model.genome.Gene findOrCreate( String queryString, ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
@@ -398,5 +255,11 @@ public interface GeneDao extends ubic.gemma.model.genome.ChromosomeFeatureDao<Ge
      * @see loadThawed, which you should use instead of this method if you know you want to load thawed objects.
      */
     public Collection<Gene> thawLite( java.util.Collection<Gene> genes );
+
+    public Gene findByNcbiId( Integer accession );
+
+    public Integer countAll();
+
+    Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
 
 }

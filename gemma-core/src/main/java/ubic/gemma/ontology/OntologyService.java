@@ -750,8 +750,8 @@ public class OntologyService implements InitializingBean {
         vc.setCategoryUri( "http://purl.org/commons/hcls/gene" );
         vc.setValue( g.getOfficialSymbol() + " [" + g.getTaxon().getCommonName() + "]" + " " + g.getOfficialName() );
         vc.setDescription( g.toString() );
-        if ( g.getNcbiId() != null ) {
-            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiId() );
+        if ( g.getNcbiGeneId() != null ) {
+            vc.setValueUri( "http://purl.org/commons/record/ncbi_gene/" + g.getNcbiGeneId() );
         }
         return vc;
     }

@@ -85,7 +85,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public GeneEvidencesValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
         // find the gene we wish to add the evidence and phenotype
-        Gene gene = this.geneService.findByNCBIId( geneNCBI );
+        Gene gene = this.geneService.findByNCBIId( Integer.parseInt( geneNCBI ) );
 
         // convert all evidence for this gene to valueObject
         Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
@@ -122,7 +122,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<EvidenceValueObject> findEvidencesByGeneNCBI( String geneNCBI ) {
 
-        Gene gene = geneService.findByNCBIId( geneNCBI );
+        Gene gene = geneService.findByNCBIId( Integer.parseInt( geneNCBI ) );
 
         if ( gene == null ) {
             return null;

@@ -43,6 +43,21 @@ import ubic.gemma.util.monitor.Monitored;
  */
 public interface ExpressionExperimentService {
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> browse( Integer start, Integer limit );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
+            boolean descending, Collection<Long> ids );
+
+    public Integer count();
+
     /**
      * Count how many ExpressionExperiments are in the database
      */
@@ -67,18 +82,18 @@ public interface ExpressionExperimentService {
 
     /**
      * @param accession
+     * @return
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> findByAccession( String accession );
+
+    /**
+     * @param accession
      * @return Expeirments which have this accession. There can be more than one, because one GEO accesssion can result
      *         in multiple experiments in Gemma.
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
-
-    /**
-     * @param accession
-     * @return
-     */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> findByAccession( String accession );
 
     /**
      * given a bibliographicReference returns a collection of EE that have that reference that BibliographicReference
@@ -177,6 +192,28 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
+     * @param taxon
+     * @param limit
+     * @return in order of last update (most recent first)
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> findByTaxon( ubic.gemma.model.genome.Taxon taxon, int limit );
+
+    /**
+     * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
+     * (limit < 0).
+     * 
+     * @param idsOfFetched
+     * @param limit
+     * @return EEs in order of decreasing last update event date.
+     */
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> idsOfFetched, Integer limit );
+
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit );
+
+    /**
      * @param expressionExperiment
      * @return
      */
@@ -268,14 +305,6 @@ public interface ExpressionExperimentService {
      * @return
      */
     public Map<Long, AuditEvent> getLastTroubleEvent( Collection<Long> ids );
-
-    /**
-     * Of the given EE ids, get the ones which are not troubled.
-     * 
-     * @param ids
-     * @return
-     */
-    public Collection<Long> getUntroubled( Collection<Long> ids );
 
     /**
      * @param ids
@@ -370,6 +399,14 @@ public interface ExpressionExperimentService {
      */
     public ubic.gemma.model.genome.Taxon getTaxon( java.lang.Long ExpressionExperimentID );
 
+    /**
+     * Of the given EE ids, get the ones which are not troubled.
+     * 
+     * @param ids
+     * @return
+     */
+    public Collection<Long> getUntroubled( Collection<Long> ids );
+
     @Monitored
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExpressionExperiment load( java.lang.Long id );
@@ -378,7 +415,22 @@ public interface ExpressionExperimentService {
     public Collection<ExpressionExperiment> loadAll();
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
+
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadLackingFactors();
+
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadLackingTags();
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadMultiple( Collection<Long> ids );
+
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
 
     /**
      * Returns the {@link ExpressionExperiment}s for the currently logged in {@link User} - i.e, ones for which the
@@ -407,6 +459,9 @@ public interface ExpressionExperimentService {
     @Secured({ "GROUP_USER", "AFTER_ACL_FILTER_MY_PRIVATE_DATA" })
     public Collection<ExpressionExperiment> loadMySharedExpressionExperiments();
 
+    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<ExpressionExperiment> loadTroubled();
+
     /**
      * TODO SECURE: How to secure value objects, should take a secured EE or a collection of secured EE's....?
      * <p>
@@ -434,49 +489,5 @@ public interface ExpressionExperimentService {
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated
-     * (limit < 0).
-     * 
-     * @param idsOfFetched
-     * @param limit
-     * @return map of EE to last update event date.
-     */
-    @Secured({ "GROUP_USER", "AFTER_ACL_MAP_READ" })
-    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> idsOfFetched, Integer limit );
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> loadTroubled();
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> loadLackingFactors();
-
-    @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<ExpressionExperiment> loadLackingTags();
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> loadAllOrdered( String orderField, boolean descending );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> browse( Integer start, Integer limit );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> browse( Integer start, Integer limit, String orderField, boolean descending );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, Collection<Long> ids );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public List<ExpressionExperiment> browseSpecificIds( Integer start, Integer limit, String orderField,
-            boolean descending, Collection<Long> ids );
-
-    public Integer count();
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> loadMultipleOrdered( String orderField, boolean descending, Collection<Long> ids );
-
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
 
 }

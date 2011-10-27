@@ -80,7 +80,7 @@ public class StringProteinInteractionLoader {
     private AtomicBoolean loaderDone;
 
     /**
-     *Constructor ensure that the concurrent flags are set.
+     * Constructor ensure that the concurrent flags are set.
      */
     public StringProteinInteractionLoader() {
         converterDone = new AtomicBoolean( false );
@@ -248,16 +248,16 @@ public class StringProteinInteractionLoader {
                     continue;
                 }
                 // check they are genes gemma knows about
-                Gene geneOne = geneService.findByNCBIId( gene2GeneProteinAssociation.getFirstGene().getNcbiId() );
-                Gene geneTwo = geneService.findByNCBIId( gene2GeneProteinAssociation.getSecondGene().getNcbiId() );
+                Gene geneOne = geneService.findByNCBIId( gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId() );
+                Gene geneTwo = geneService.findByNCBIId( gene2GeneProteinAssociation.getSecondGene().getNcbiGeneId() );
 
                 if ( geneOne == null ) {
-                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getFirstGene().getNcbiId()
+                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getFirstGene().getNcbiGeneId()
                             + " not in Gemma" );
                     continue;
                 }
                 if ( geneTwo == null ) {
-                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getSecondGene().getNcbiId()
+                    log.warn( "Gene with NCBI id=" + gene2GeneProteinAssociation.getSecondGene().getNcbiGeneId()
                             + " not in Gemma" );
                     continue;
                 }

@@ -349,7 +349,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * @param limit
      * @return
      */
-    public Map<ExpressionExperiment, Date> findByUpdatedLimit( Collection<Long> ids, Integer limit );
+    public List<ExpressionExperiment> findByUpdatedLimit( Collection<Long> ids, Integer limit );
 
     public Collection<ExpressionExperiment> loadLackingFactors();
 
@@ -375,5 +375,20 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * @return
      */
     public Collection<Long> getUntroubled( Collection<Long> ids );
+
+    public List<ExpressionExperiment> findByUpdatedLimit( int limit );
+
+    /**
+     * @param taxon
+     * @param limit
+     * @return
+     */
+    public List<ExpressionExperiment> findByTaxon( Taxon taxon, int limit );
+
+    /**
+     * @param firstPass
+     * @return
+     */
+    public Map<ArrayDesign, Collection<Long>> getArrayDesignsUsed( Collection<Long> eeids );
 
 }

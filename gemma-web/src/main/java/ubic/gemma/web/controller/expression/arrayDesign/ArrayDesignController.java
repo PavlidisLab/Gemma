@@ -805,7 +805,6 @@ public class ArrayDesignController extends AbstractTaskService {
         taxonService.thaw( primaryTaxon );
 
         String taxonListString = primaryTaxon.getScientificName();
-        int i = 0;
         if ( !taxonSet.isEmpty() ) {
             Collection<String> taxonList = new TreeSet<String>();
             for ( Taxon taxon : taxonSet ) {
@@ -813,8 +812,6 @@ public class ArrayDesignController extends AbstractTaskService {
 
                 taxonService.thaw( taxon );
                 taxonList.add( taxon.getScientificName() );
-
-                i++;
             }
 
             if ( taxonList.size() > 0 ) {
@@ -904,25 +901,12 @@ public class ArrayDesignController extends AbstractTaskService {
             return;
         }
 
-        Collection<Long> ids = new HashSet<Long>();
-        for ( ArrayDesignValueObject advo : valueObjects ) {
-            ids.add( advo.getId() );
-        }
-
-        int size = valueObjects.size();
-        final Map<Long, AuditEvent> trouble = arrayDesignService.getLastTroubleEvent( ids );
-
         CollectionUtils.filter( valueObjects, new Predicate() {
             public boolean evaluate( Object vo ) {
-                boolean hasTrouble = trouble.get( ( ( ArrayDesignValueObject ) vo ).getId() ) != null;
+                boolean hasTrouble = ( ( ArrayDesignValueObject ) vo ).getTroubled();
                 return !hasTrouble;
             }
         } );
-        int newSize = valueObjects.size();
-        if ( newSize != size ) {
-            assert newSize < size;
-            log.info( "Removed " + ( size - newSize ) + " array designs with 'trouble' flags, leaving " + newSize );
-        }
     }
 
     /**

@@ -41,14 +41,14 @@ public class GenomePersisterTest extends BaseSpringContextTest {
 
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
-        gene.setNcbiId( RandomStringUtils.randomAlphabetic( 10 ) );
+        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.randomNumeric( 10 ) ) );
 
         Collection<GeneProduct> gps = new HashSet<GeneProduct>();
         for ( int i = 0; i < 10; i++ ) {
             GeneProduct gp = GeneProduct.Factory.newInstance();
             gp.setName( RandomStringUtils.randomAlphabetic( 10 ) );
             gp.setGene( gene );
-            gp.setNcbiId( RandomStringUtils.randomAlphabetic( 10 ) );
+            gp.setNcbiGi( RandomStringUtils.randomAlphabetic( 10 ) );
             gps.add( gp );
         }
 
@@ -73,12 +73,12 @@ public class GenomePersisterTest extends BaseSpringContextTest {
     public void testPersistGeneProduct() throws Exception {
         Gene gene = Gene.Factory.newInstance();
         gene.setName( RandomStringUtils.randomAlphabetic( 10 ) );
-        gene.setNcbiId( RandomStringUtils.randomAlphabetic( 10 ) );
+        gene.setNcbiGeneId( Integer.parseInt( RandomStringUtils.randomNumeric( 10 ) ) );
 
         GeneProduct gp = GeneProduct.Factory.newInstance();
         gp.setName( RandomStringUtils.randomAlphabetic( 10 ) );
         gp.setGene( gene );
-        gp.setNcbiId( RandomStringUtils.randomAlphabetic( 10 ) );
+        gp.setNcbiGi( RandomStringUtils.randomAlphabetic( 10 ) );
         gene.getProducts().add( gp );
 
         gp = ( GeneProduct ) this.persisterHelper.persist( gp );

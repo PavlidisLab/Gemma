@@ -248,7 +248,12 @@ public class GeneController extends BaseController {
             ncbiId = request.getParameter( "ncbiid" );
 
             if ( StringUtils.isNotBlank( ncbiId ) ) {
-                gene = geneService.findByNCBIId( ncbiId );
+                try {
+                    gene = geneService.findByNCBIId( Integer.parseInt( ncbiId ) );
+                } catch ( NumberFormatException e1 ) {
+                    addMessage( request, "object.notfound", new Object[] { "Gene" } );
+                    return new ModelAndView( "index" );
+                }
             } else {
                 addMessage( request, "object.notfound", new Object[] { "Gene" } );
                 return new ModelAndView( "index" );
@@ -519,7 +524,7 @@ public class GeneController extends BaseController {
         // add header
         strBuff.append( "Gene Symbol\tGene Name\tNCBI ID\n" );
         for ( Gene gene : genes ) {
-            strBuff.append( gene.getOfficialSymbol() + "\t" + gene.getOfficialName() + "\t" + gene.getNcbiId() );
+            strBuff.append( gene.getOfficialSymbol() + "\t" + gene.getOfficialName() + "\t" + gene.getNcbiGeneId() );
             strBuff.append( "\n" );
         }
 

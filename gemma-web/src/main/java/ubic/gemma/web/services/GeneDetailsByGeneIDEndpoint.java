@@ -32,7 +32,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 
 /**
- *Given a collection of Gemma gene IDs, will return the matching NCBI Ids. The result is a 2D array mapping the gene
+ * Given a collection of Gemma gene IDs, will return the matching NCBI Ids. The result is a 2D array mapping the gene
  * IDs to the NCBI IDs.
  * 
  * @author gavin
@@ -95,11 +95,11 @@ public class GeneDetailsByGeneIDEndpoint extends AbstractGemmaEndpoint {
             e1.appendChild( document.createTextNode( gene.getId().toString() ) );
             responseElement.appendChild( e1 );
 
-            String ncbiId = gene.getNcbiId();
-            if ( ncbiId == null ) ncbiId = "NaN";
+            Integer ncbiId = gene.getNcbiGeneId();
+            if ( ncbiId == null ) ncbiId = -1;
 
             Element e2 = document.createElement( "ncbi_id" );
-            e2.appendChild( document.createTextNode( ncbiId ) );
+            e2.appendChild( document.createTextNode( ncbiId.toString() ) );
             responseElement.appendChild( e2 );
 
             Element e3 = document.createElement( "official_name" );

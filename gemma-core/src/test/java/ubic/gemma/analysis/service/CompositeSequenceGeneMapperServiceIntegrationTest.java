@@ -86,7 +86,6 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     /**
      *
      */
-    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
 
@@ -99,7 +98,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "platform" ) );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( arrayAccession,
-                    true, true, false, false  );
+                    true, true, false, false );
             ad = ads.iterator().next();
 
             ad = arrayDesignService.thaw( ad );
@@ -208,7 +207,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
         String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
         String gene2AccFile = filePath + File.separatorChar + "selected_gene2accession.gz";
         String geneHistoryFile = filePath + File.separatorChar + "selected_gene_history.gz";
-        loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, true );
+        loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, null, true );
     }
 
     /**

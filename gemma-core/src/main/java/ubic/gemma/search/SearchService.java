@@ -476,7 +476,13 @@ public class SearchService implements InitializingBean {
 
             // Get results from general search using the found gene's gene symbol
             String ncbiAccessionFromUri = StringUtils.substringAfterLast( uriString, "/" );
-            Gene g = geneService.findByNCBIId( ncbiAccessionFromUri );
+            Gene g = null;
+
+            try {
+                g = geneService.findByNCBIId( Integer.parseInt( ncbiAccessionFromUri ) );
+            } catch ( NumberFormatException e ) {
+                // ok
+            }
             if ( g == null ) {
                 Map<Class<?>, List<SearchResult>> justCharacteristicResults = new HashMap<Class<?>, List<SearchResult>>();
                 List<SearchResult> sortedCharacteristicResults = new ArrayList<SearchResult>();
@@ -1066,9 +1072,9 @@ public class SearchService implements InitializingBean {
         List<SearchResult> convertedSearchResults = new ArrayList<SearchResult>();
         for ( SearchResult searchResult : searchResults ) {
             if ( BioSequence.class.isAssignableFrom( searchResult.getResultClass() ) ) {
-                SearchResult convertedSearchResult = new SearchResult( BioSequenceValueObject
-                        .fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult.getResultObject() ) ),
-                        searchResult.getScore(), searchResult.getHighlightedText() );
+                SearchResult convertedSearchResult = new SearchResult(
+                        BioSequenceValueObject.fromEntity( bioSequenceService.thaw( ( BioSequence ) searchResult
+                                .getResultObject() ) ), searchResult.getScore(), searchResult.getHighlightedText() );
                 convertedSearchResults.add( convertedSearchResult );
             } // else if ...
             else {
@@ -1316,7 +1322,12 @@ public class SearchService implements InitializingBean {
         /*
          * First search by accession. If we find it, stop.
          */
-        Gene result = geneService.findByNCBIId( searchString );
+        Gene result = null;
+        try {
+            result = geneService.findByNCBIId( Integer.parseInt( searchString ) );
+        } catch ( NumberFormatException e ) {
+            //
+        }
         if ( result != null ) {
             results.add( this.dbHitToSearchResult( null, result ) );
         } else {

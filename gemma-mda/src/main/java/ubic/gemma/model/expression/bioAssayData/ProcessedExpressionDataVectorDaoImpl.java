@@ -46,6 +46,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @author Paul
@@ -413,7 +414,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 + " inner join dedv.designElement de  "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
 
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
+        List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
                 new Object[] { cs2gene.keySet(), expressionExperiments } );
 
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> result = new HashMap<ExpressionExperiment, Map<Gene, Collection<Double>>>();
@@ -472,7 +473,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 + " inner join dedv.designElement de  "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment = ee ";
 
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ee" },
+        List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ee" },
                 new Object[] { cs2gene.keySet(), expressionExperiment } );
 
         Map<Gene, Collection<Double>> result = new HashMap<Gene, Collection<Double>>();
@@ -514,7 +515,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      */
     public Map<CompositeSequence, Double> getRanks( ExpressionExperiment expressionExperiment, RankMethod method ) {
         final String queryString = "select dedv.designElement, dedv.rankByMean, dedv.rankByMax from ProcessedExpressionDataVectorImpl dedv where dedv.expressionExperiment = :ee";
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+        List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
         Map<CompositeSequence, Double> result = new HashMap<CompositeSequence, Double>();
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;
@@ -549,7 +550,7 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
                 + " inner join dedv.designElement de  "
                 + " where dedv.designElement in ( :cs ) and dedv.expressionExperiment in (:ees) ";
 
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
+        List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, new String[] { "cs", "ees" },
                 new Object[] { cs2gene.keySet(), expressionExperiments } );
 
         Map<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>> resultnew = new HashMap<ExpressionExperiment, Map<Gene, Map<CompositeSequence, Double[]>>>();
@@ -792,8 +793,8 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
 
         if ( needToSearch.size() != 0 ) {
 
-            Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed( getExperiments( ees ),
-                    this.getSession() ).keySet();
+            Collection<ArrayDesign> arrays = CommonQueries.getArrayDesignsUsed(
+                    EntityUtils.getIds( getExperiments( ees ) ), this.getSession() ).keySet();
             Map<CompositeSequence, Collection<Gene>> cs2gene = CommonQueries.getCs2GeneMap( genesToSearch, arrays,
                     this.getSession() );
 
@@ -1047,7 +1048,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param ee
      * @return
      */
-    @SuppressWarnings("unchecked")
     protected Collection<RawExpressionDataVector> getMissingValueVectors( ExpressionExperiment ee ) {
         final String queryString = "select dedv from RawExpressionDataVectorImpl dedv "
                 + "inner join dedv.quantitationType q where q.type = 'PRESENTABSENT'"
@@ -1059,7 +1059,6 @@ public class ProcessedExpressionDataVectorDaoImpl extends DesignElementDataVecto
      * @param ee
      * @return
      */
-    @SuppressWarnings("unchecked")
     protected Collection<RawExpressionDataVector> getPreferredDataVectors( ExpressionExperiment ee ) {
         final String queryString = "select dedv from RawExpressionDataVectorImpl dedv inner join dedv.quantitationType q "
                 + " where q.isPreferred = true  and dedv.expressionExperiment = :ee ";

@@ -41,10 +41,10 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
 
         if ( this.getId() == null || that.getId() == null || !this.getId().equals( that.getId() ) ) {
 
-            boolean bothHaveNcbi = this.getNcbiId() != null && that.getNcbiId() != null;
+            boolean bothHaveNcbiGi = this.getNcbiGi() != null && that.getNcbiGi() != null;
 
-            if ( bothHaveNcbi ) {
-                return this.getNcbiId().equals( that.getNcbiId() );
+            if ( bothHaveNcbiGi ) {
+                return this.getNcbiGi().equals( that.getNcbiGi() );
             }
 
             boolean bothHaveGene = this.getGene() != null && that.getGene() != null;
@@ -54,7 +54,7 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
                     && this.getGene().equals( that.getGene() ) ) {
                 return true;
             }
-            return false; // 
+            return false; //
 
         }
         return true;
@@ -88,8 +88,8 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
     private int computeHashCode() {
         int hashCode = 0;
 
-        if ( this.getNcbiId() != null ) {
-            hashCode += this.getNcbiId().hashCode();
+        if ( this.getNcbiGi() != null ) {
+            hashCode += this.getNcbiGi().hashCode();
         } else if ( this.getName() != null && this.getGene() != null ) {
             hashCode += this.getName().hashCode();
             hashCode += this.getGene().hashCode();

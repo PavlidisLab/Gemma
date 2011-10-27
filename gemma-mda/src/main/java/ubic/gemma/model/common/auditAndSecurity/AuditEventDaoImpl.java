@@ -52,6 +52,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.TroubleStatusFlagEvent
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.util.CommonQueries;
+import ubic.gemma.util.EntityUtils;
 
 /**
  * @see ubic.gemma.model.common.auditAndSecurity.AuditEvent
@@ -67,7 +68,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * Classes that we track for 'updated since'. This is used for "What's new" functionality.
      */
     private static String[] AUDITABLES_TO_TRACK_FOR_WHATSNEW = {
-    // "ubic.gemma.model.expression.analysis.ExpressionAnalysisImpl",
+            // "ubic.gemma.model.expression.analysis.ExpressionAnalysisImpl",
             "ubic.gemma.model.expression.arrayDesign.ArrayDesignImpl",
             // "ubic.gemma.model.common.description.BibliographicReferenceImpl",
             // "ubic.gemma.model.common.auditAndSecurity.ContactImpl",
@@ -85,7 +86,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * @return Collection of Auditables
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
@@ -110,8 +110,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * @return Collection of Auditables
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected java.util.Collection handleGetUpdatedSinceDate( java.util.Date date ) {
+    protected java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
         Collection<Auditable> result = new HashSet<Auditable>();
         for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
             String queryString = "select distinct adb from "
@@ -233,7 +232,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * @return
      * @throws java.lang.Exception
      */
-    @SuppressWarnings("unchecked")
     protected ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastEvent( final AuditTrail auditTrail,
             Class<? extends AuditEventType> type ) {
 
@@ -287,7 +285,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
      * @see ubic.gemma.model.common.AuditableDaoBase#handleGetLastAuditEvent(java.util.Collection,
      * ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Auditable, AuditEvent> handleGetLastEvent( final Collection<? extends Auditable> auditables,
             Class<? extends AuditEventType> type ) {
@@ -317,7 +314,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
                 queryObject.setParameterList( "trails", batch );
                 queryObject.setReadOnly( true );
 
-                List qr = queryObject.list();
+                List<?> qr = queryObject.list();
                 if ( qr == null || qr.isEmpty() ) {
                     batch.clear();
                     continue;
@@ -342,7 +339,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             queryObject.setParameterList( "trails", batch ); // if too many will fail.
             queryObject.setReadOnly( true );
 
-            List qr = queryObject.list();
+            List<?> qr = queryObject.list();
             if ( qr == null || qr.isEmpty() ) return result;
 
             for ( Object o : qr ) {
@@ -452,7 +449,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
             queryObject.setCacheable( true );
             queryObject.setParameter( "trails", atmap.keySet() );
 
-            List qr = queryObject.list();
+            List<?> qr = queryObject.list();
             if ( qr == null || qr.isEmpty() ) return result;
 
             for ( Object o : qr ) {
@@ -547,14 +544,15 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         }
 
         if ( !ees.isEmpty() ) {
-            Map<ArrayDesign, Collection<ExpressionExperiment>> ads = CommonQueries.getArrayDesignsUsed( ees, this
-                    .getSession() );
+            Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
+            Map<ArrayDesign, Collection<Long>> ads = CommonQueries.getArrayDesignsUsed( eemap.keySet(),
+                    this.getSession() );
 
             Map<Auditable, AuditEvent> arrayDesignTrouble = getLastOutstandingTroubleEvents( ads.keySet() );
 
             for ( Entry<Auditable, AuditEvent> e : arrayDesignTrouble.entrySet() ) {
-                for ( ExpressionExperiment ee : ads.get( e.getKey() ) ) {
-                    results.put( ee, e.getValue() );
+                for ( Long ee : ads.get( e.getKey() ) ) {
+                    results.put( eemap.get( ee ), e.getValue() );
                 }
             }
             results.putAll( arrayDesignTrouble );
@@ -630,7 +628,7 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
         for ( String clazz : clazzmap.keySet() ) {
             final String trailQuery = "select a, a.auditTrail from " + clazz + " a where a in (:auditables) ";
-            List res = template.findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
+            List<?> res = template.findByNamedParam( trailQuery, "auditables", clazzmap.get( clazz ) );
             for ( Object o : res ) {
                 Object[] ar = ( Object[] ) o;
                 AuditTrail t = ( AuditTrail ) ar[1];

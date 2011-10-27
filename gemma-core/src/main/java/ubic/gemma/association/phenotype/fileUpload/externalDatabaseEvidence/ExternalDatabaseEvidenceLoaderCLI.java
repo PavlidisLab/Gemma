@@ -344,7 +344,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
             i++;
 
-            Gene gene = this.geneService.findByNCBIId( lineInfo.getGeneID() );
+            Gene gene = this.geneService.findByNCBIId( Integer.parseInt( lineInfo.getGeneID() ) );
 
             if ( gene == null ) {
                 System.err.println( "Gene not found in Gemma: " + lineInfo.getGeneID() + " Description: "

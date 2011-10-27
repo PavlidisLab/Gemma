@@ -56,10 +56,10 @@ public class GeneWrapper extends TableDecorator {
     public String getNcbiLink() {
         Gene object = ( Gene ) getCurrentRowObject();
 
-        if ( object.getNcbiId() == null ) return "";
+        if ( object.getNcbiGeneId() == null ) return "";
 
         String ncbiLink = "<a href='http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?db=gene&cmd=Retrieve&dopt=full_report&list_uids="
-                + object.getNcbiId() + "'>(ncbi)</a>";
+                + object.getNcbiGeneId() + "'>(ncbi)</a>";
         return ncbiLink;
     }
 

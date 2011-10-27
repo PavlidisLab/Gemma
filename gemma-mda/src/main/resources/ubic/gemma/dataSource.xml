@@ -25,13 +25,13 @@
 			<value>false</value>
 		</property>
 		<property name="initialSize">
-			<value>12</value>
+			<value>${gemma.db.initpoolsize}</value>
 		</property>
 		<property name="maxActive">
-			<value>70</value>
+			<value>${gemma.db.maxactive}</value>
 		</property>
 		<property name="maxIdle">
-			<value>10</value>
+			<value>${gemma.db.maxpoolidle}</value>
 		</property>
 		<property name="maxWait">
 			<value>100000</value>

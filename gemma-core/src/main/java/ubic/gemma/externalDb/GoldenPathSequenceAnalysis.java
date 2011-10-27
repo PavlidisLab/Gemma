@@ -120,7 +120,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return The best overlap with any exons from an mRNA in the selected region.
      * @see getThreePrimeDistances
      */
-    @SuppressWarnings("unchecked")
     private int checkRNAs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap, String strand, Gene gene ) {
 
@@ -148,7 +147,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
                 }
 
                 int overlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, mRNA );
-                if ( log.isDebugEnabled() ) log.debug( "overlap with " + mRNA.getNcbiId() + "=" + overlap );
+                if ( log.isDebugEnabled() ) log.debug( "overlap with " + mRNA.getNcbiGeneId() + "=" + overlap );
                 if ( overlap > maxOverlap ) {
                     if ( log.isDebugEnabled() ) log.debug( "Best mRNA overlap=" + overlap );
                     maxOverlap = overlap;
@@ -224,7 +223,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             int maxOverlap = exonOverlap;
             for ( Gene est : ests ) {
                 int overlap = SequenceManipulation.getGeneExonOverlaps( chromosome, starts, sizes, null, est );
-                if ( log.isDebugEnabled() ) log.debug( "overlap with " + est.getNcbiId() + "=" + overlap );
+                if ( log.isDebugEnabled() ) log.debug( "overlap with " + est.getNcbiGeneId() + "=" + overlap );
                 if ( overlap > maxOverlap ) {
                     if ( log.isDebugEnabled() ) log.debug( "Best EST overlap=" + overlap );
                     maxOverlap = overlap;
@@ -278,8 +277,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             int totalSize = SequenceManipulation.totalSize( sizes );
 
             if ( config.isUseMrnas() && exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
-                int newOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
-                        .getStrand(), geneProduct.getGene() );
+                int newOverlap = checkRNAs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap,
+                        geneLoc.getStrand(), geneProduct.getGene() );
 
                 if ( newOverlap > exonOverlap ) {
                     log.debug( "mRNA overlap was higher than primary transcript" );
@@ -288,8 +287,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
             }
 
             if ( config.isUseEsts() && exonOverlap / ( double ) ( totalSize ) < RECHECK_OVERLAP_THRESHOLD ) {
-                int newOverlap = checkESTs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap, geneLoc
-                        .getStrand() );
+                int newOverlap = checkESTs( chromosome, queryStart, queryEnd, starts, sizes, exonOverlap,
+                        geneLoc.getStrand() );
 
                 if ( newOverlap > exonOverlap ) {
                     log.debug( "Exon overlap was higher than mrna or  primary transcript" );
@@ -348,7 +347,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // 2. region is contained within the gene: txStart < start & txEnd > end;
         // 3. region overlaps start of gene: txStart > start & txStart < end.
         // 4. region overlaps end of gene: txEnd > start & txEnd < end
-        //           
+        //
         try {
 
             Object[] params;
@@ -473,7 +472,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         // 2. region is contained within the gene: txStart < start & txEnd > end;
         // 3. region overlaps start of gene: txStart > start & txStart < end.
         // 4. region overlaps end of gene: txEnd > start & txEnd < end
-        //           
+        //
         try {
 
             Object[] params;
@@ -863,7 +862,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Gene gene = Gene.Factory.newInstance();
 
-                        gene.setNcbiId( rs.getString( 1 ) );
+                        gene.setNcbiGeneId( Integer.parseInt( rs.getString( 1 ) ) );
                         gene.setOfficialSymbol( rs.getString( 2 ) );
                         gene.setName( gene.getOfficialSymbol() );
 
@@ -911,7 +910,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param regionEnd
      * @return The ESTs which overlap the query region. (using the all_est table)
      */
-    @SuppressWarnings("unchecked")
     public Collection<Gene> findESTs( final String chromosome, Long regionStart, Long regionEnd, String strand ) {
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
@@ -945,7 +943,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
 
                         Gene gene = Gene.Factory.newInstance();
 
-                        gene.setNcbiId( rs.getString( 1 ) );
+                        gene.setNcbiGeneId( Integer.parseInt( rs.getString( 1 ) ) ); // STRING
                         gene.setOfficialSymbol( rs.getString( 2 ) );
                         gene.setName( gene.getOfficialSymbol() );
 
@@ -1060,8 +1058,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      */
     public Collection<? extends BioSequence2GeneProduct> getThreePrimeDistances( BlatResult br,
             ThreePrimeDistanceMethod method ) {
-        return findAssociations( br.getTargetChromosome().getName(), br.getTargetStart(), br.getTargetEnd(), br
-                .getTargetStarts(), br.getBlockSizes(), br.getStrand(), method, new ProbeMapperConfig() );
+        return findAssociations( br.getTargetChromosome().getName(), br.getTargetStart(), br.getTargetEnd(),
+                br.getTargetStarts(), br.getBlockSizes(), br.getStrand(), method, new ProbeMapperConfig() );
     }
 
     /**
@@ -1240,7 +1238,7 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
         if ( gene.getPhysicalLocation() != null ) chromosome = gene.getPhysicalLocation().getChromosome();
         Collection<PhysicalLocation> exons = blocksToPhysicalLocations( exonSizeInts, exonStartInts, chromosome );
         gp.setExons( exons );
-        gp.setName( gene.getNcbiId() );
+        gp.setName( gene.getNcbiGeneId().toString() ); // this isn't right?
         Collection<GeneProduct> products = new HashSet<GeneProduct>();
         products.add( gp );
         gene.setProducts( products );

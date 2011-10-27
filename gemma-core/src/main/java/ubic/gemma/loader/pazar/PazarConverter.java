@@ -63,11 +63,20 @@ public class PazarConverter implements Converter<PazarRecord, PazarAssociation> 
         PazarAssociation a = PazarAssociation.Factory.newInstance();
 
         String targetAcc = sourceDomainObject.getTargetGeneAcc();
-
-        Gene targetGene = geneService.findByNCBIId( targetAcc );
+        Gene targetGene = null;
+        try {
+            targetGene = geneService.findByNCBIId( Integer.parseInt( targetAcc ) );
+        } catch ( NumberFormatException e ) {
+            // ok.
+        }
 
         String tfAcc = sourceDomainObject.getTfAcc();
-        Gene tfGene = geneService.findByNCBIId( tfAcc );
+        Gene tfGene = null;
+        try {
+            tfGene = geneService.findByNCBIId( Integer.parseInt( tfAcc ) );
+        } catch ( NumberFormatException e ) {
+            // ok.
+        }
 
         if ( targetGene == null ) {
             log.warn( "Failed to map a gene:" + targetAcc );
@@ -84,5 +93,4 @@ public class PazarConverter implements Converter<PazarRecord, PazarAssociation> 
 
         return a;
     }
-
 }

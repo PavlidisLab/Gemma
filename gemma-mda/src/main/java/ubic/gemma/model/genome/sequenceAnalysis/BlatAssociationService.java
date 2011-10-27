@@ -26,7 +26,7 @@ import org.springframework.security.access.annotation.Secured;
  */
 public interface BlatAssociationService {
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation create(
             ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
 
@@ -38,7 +38,10 @@ public interface BlatAssociationService {
 
     public void thaw( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation blatAssociation );
+
+    @Secured({ "GROUP_ADMIN" })
+    public void remove( BlatAssociation blatAssociation );
 
 }

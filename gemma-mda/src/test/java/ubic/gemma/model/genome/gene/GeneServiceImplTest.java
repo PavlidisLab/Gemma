@@ -78,7 +78,7 @@ public class GeneServiceImplTest extends TestCase {
 
         g3 = Gene.Factory.newInstance();
         g3.setOfficialName( "rabble" );
-        g3.setNcbiId( "12345" );
+        g3.setNcbiGeneId( 12345 );
         g3.setOfficialSymbol( "rab3" );
         g3.setId( ( long ) 1234 );
 
@@ -179,10 +179,10 @@ public class GeneServiceImplTest extends TestCase {
 
     public void testFindByNcbiId() {
         reset( geneDaoMock );
-        geneDaoMock.findByNcbiId( "12345" );
-        expectLastCall().andReturn( justRabble );
+        geneDaoMock.findByNcbiId( 12345 );
+        expectLastCall().andReturn( g3 );
         replay( geneDaoMock );
-        svc.findByNCBIId( "12345" );
+        svc.findByNCBIId( 12345 );
         verify( geneDaoMock );
     }
 

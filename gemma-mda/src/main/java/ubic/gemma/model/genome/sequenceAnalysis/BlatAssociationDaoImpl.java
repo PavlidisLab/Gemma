@@ -88,8 +88,8 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
             Criteria queryObject = super.getSession().createCriteria( BlatAssociation.class );
             Criteria innerQuery = queryObject.createCriteria( "geneProduct" );
 
-            if ( StringUtils.isNotBlank( geneProduct.getNcbiId() ) ) {
-                innerQuery.add( Restrictions.eq( "ncbiId", geneProduct.getNcbiId() ) );
+            if ( StringUtils.isNotBlank( geneProduct.getNcbiGi() ) ) {
+                innerQuery.add( Restrictions.eq( "ncbiGi", geneProduct.getNcbiGi() ) );
             }
 
             if ( StringUtils.isNotBlank( geneProduct.getName() ) ) {

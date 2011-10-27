@@ -49,6 +49,7 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
     public NCBIGeneFileFetcher() {
         super();
         this.setExcludePattern( ".gz" );
+        this.setAllowUseExisting( true );
         initArchiveHandler( "gz" );
     }
 

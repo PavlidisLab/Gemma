@@ -35,23 +35,17 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.DoubleType;
-import org.hibernate.type.IntegerType;
 import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
 
-import ubic.gemma.model.analysis.expression.diff.ContrastResult;
-import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
-import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneSetImpl;
 
 /**
  * @author keshav
@@ -101,11 +95,11 @@ public class DifferentialExpressionResultDaoImpl extends
             + " order by dear.CORRECTED_P_VALUE_BIN DESC";
 
     private static final String fetchProbeAnalysisResultByResultSetAndGeneQuery = "select dear.ID "
-        + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par "
-        + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
-        + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
-        + " order by dear.CORRECTED_P_VALUE_BIN DESC";
-    
+            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par "
+            + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
+            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
+            + " order by dear.CORRECTED_P_VALUE_BIN DESC";
+
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -115,10 +109,40 @@ public class DifferentialExpressionResultDaoImpl extends
      * (non-Javadoc)
      * 
      * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#countNumberOfDifferentiallyExpressedProbes
+     * (long, double)
+     */
+    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
+        DetachedCriteria criteria = DetachedCriteria.forClass( HitListSize.class );
+
+        criteria.add( Restrictions.eq( "id", resultSetId ) );
+        criteria.add( Restrictions.eq( "thresholdQValue", threshold ) );
+
+        List<?> results = this.getHibernateTemplate().findByCriteria( criteria );
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + HitListSize.class.getName()
+                                + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+                return ( ( HitListSize ) result ).getNumberOfProbes();
+            }
+            return 0;
+        }
+        return 0;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
      * .gemma.model.genome.Gene )
      */
-    @SuppressWarnings("unchecked")
     public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene ) {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -128,7 +152,7 @@ public class DifferentialExpressionResultDaoImpl extends
         HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
         tpl.setCacheQueries( true );
 
-        List qresult = tpl.findByNamedParam( fetchResultsByGene, "gene", gene );
+        List<?> qresult = tpl.findByNamedParam( fetchResultsByGene, "gene", gene );
 
         for ( Object o : qresult ) {
 
@@ -156,7 +180,6 @@ public class DifferentialExpressionResultDaoImpl extends
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#findResultsForGeneInExperiments(ubic
      * .gemma.model.genome.Gene, java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     public Map<BioAssaySet, List<ProbeAnalysisResult>> find( Gene gene, Collection<BioAssaySet> experimentsAnalyzed ) {
 
         Map<BioAssaySet, List<ProbeAnalysisResult>> results = new HashMap<BioAssaySet, List<ProbeAnalysisResult>>();
@@ -171,8 +194,8 @@ public class DifferentialExpressionResultDaoImpl extends
         String[] paramNames = { "gene", "experimentsAnalyzed" };
         Object[] objectValues = { gene, experimentsAnalyzed };
 
-        List qresult = this.getHibernateTemplate().findByNamedParam( fetchResultsByGeneAndExperimentsQuery, paramNames,
-                objectValues );
+        List<?> qresult = this.getHibernateTemplate().findByNamedParam( fetchResultsByGeneAndExperimentsQuery,
+                paramNames, objectValues );
 
         for ( Object o : qresult ) {
 
@@ -193,10 +216,12 @@ public class DifferentialExpressionResultDaoImpl extends
         return results;
     }
 
-    /**
+    /*
+     * (non-Javadoc)
      * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#find(java.util.Collection, double,
+     * java.lang.Integer)
      */
-    @SuppressWarnings("unchecked")
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experiments,
             double qvalueThreshold, Integer limit ) {
@@ -221,7 +246,7 @@ public class DifferentialExpressionResultDaoImpl extends
         String[] paramNames = { "experimentsAnalyzed", "threshold" };
         Object[] objectValues = { experiments, qvalueThreshold };
 
-        List qresult = tpl.findByNamedParam( fetchResultsByExperimentsQuery, paramNames, objectValues );
+        List<?> qresult = tpl.findByNamedParam( fetchResultsByExperimentsQuery, paramNames, objectValues );
 
         for ( Object o : qresult ) {
 
@@ -250,7 +275,6 @@ public class DifferentialExpressionResultDaoImpl extends
      * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, double, integer)
      */
-    @SuppressWarnings("unchecked")
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene, double threshold, Integer limit ) {
 
@@ -274,7 +298,7 @@ public class DifferentialExpressionResultDaoImpl extends
         String[] paramNames = { "gene", "threshold" };
         Object[] objectValues = { gene, threshold };
 
-        List qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
+        List<?> qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
 
         for ( Object o : qresult ) {
 
@@ -306,7 +330,6 @@ public class DifferentialExpressionResultDaoImpl extends
      * @seeubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#
      * findResultsForGeneInExperimentsMetThreshold(ubic.gemma.model.genome.Gene, java.util.Collection, double, Integer)
      */
-    @SuppressWarnings("unchecked")
     public java.util.Map<ubic.gemma.model.expression.experiment.BioAssaySet, java.util.List<ProbeAnalysisResult>> find(
             ubic.gemma.model.genome.Gene gene,
             java.util.Collection<ubic.gemma.model.expression.experiment.BioAssaySet> experimentsAnalyzed,
@@ -334,7 +357,7 @@ public class DifferentialExpressionResultDaoImpl extends
         String[] paramNames = { "gene", "experimentsAnalyzed", "threshold" };
         Object[] objectValues = { gene, experimentsAnalyzed, threshold };
 
-        List qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
+        List<?> qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
 
         for ( Object o : qresult ) {
 
@@ -357,61 +380,6 @@ public class DifferentialExpressionResultDaoImpl extends
             log.info( "Diff ex results: " + timer.getTime() + " ms" );
         }
 
-        return results;
-    }
-
-    /**
-     * Given a list of result sets finds the results that met the given threshold
-     * 
-     * @param resultsAnalyzed
-     * @param threshold
-     * @param limit - max number of results to return.
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
-            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
-
-        Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>>();
-
-        if ( resultsAnalyzed.size() == 0 ) {
-            return results;
-        }
-
-        // Integer bin = Math.log10(threshold);
-
-        StopWatch timer = new StopWatch();
-        timer.start();
-        String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold order by r.correctedPvalue";
-
-        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
-
-        if ( limit != null ) {
-            tpl.setMaxResults( limit );
-        }
-
-        String[] paramNames = { "resultsAnalyzed", "threshold" };
-        Object[] objectValues = { resultsAnalyzed, threshold };
-
-        List qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
-
-        for ( Object o : qresult ) {
-
-            Object[] oa = ( Object[] ) o;
-            ExpressionAnalysisResultSet ee = ( ExpressionAnalysisResultSet ) oa[0];
-            ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
-
-            if ( !results.containsKey( ee ) ) {
-                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
-            }
-
-            results.get( ee ).add( probeResult );
-        }
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Diff ex results: " + timer.getTime() + " ms" );
-        }
         return results;
     }
 
@@ -450,7 +418,61 @@ public class DifferentialExpressionResultDaoImpl extends
 
         return results;
     }
-    
+
+    /**
+     * Given a list of result sets finds the results that met the given threshold
+     * 
+     * @param resultsAnalyzed
+     * @param threshold
+     * @param limit - max number of results to return.
+     * @return
+     */
+    public java.util.Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> findInResultSets(
+            java.util.Collection<ExpressionAnalysisResultSet> resultsAnalyzed, double threshold, Integer limit ) {
+
+        Map<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>> results = new HashMap<ExpressionAnalysisResultSet, List<ProbeAnalysisResult>>();
+
+        if ( resultsAnalyzed.size() == 0 ) {
+            return results;
+        }
+
+        // Integer bin = Math.log10(threshold);
+
+        StopWatch timer = new StopWatch();
+        timer.start();
+        String qs = fetchResultsByResultSetQuery + " and r.correctedPvalue < :threshold order by r.correctedPvalue";
+
+        HibernateTemplate tpl = new HibernateTemplate( this.getSessionFactory() );
+
+        if ( limit != null ) {
+            tpl.setMaxResults( limit );
+        }
+
+        String[] paramNames = { "resultsAnalyzed", "threshold" };
+        Object[] objectValues = { resultsAnalyzed, threshold };
+
+        List<?> qresult = tpl.findByNamedParam( qs, paramNames, objectValues );
+
+        for ( Object o : qresult ) {
+
+            Object[] oa = ( Object[] ) o;
+            ExpressionAnalysisResultSet ee = ( ExpressionAnalysisResultSet ) oa[0];
+            ProbeAnalysisResult probeResult = ( ProbeAnalysisResult ) oa[1];
+
+            if ( !results.containsKey( ee ) ) {
+                results.put( ee, new ArrayList<ProbeAnalysisResult>() );
+            }
+
+            results.get( ee ).add( probeResult );
+        }
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Diff ex results: " + timer.getTime() + " ms" );
+        }
+        return results;
+    }
+
     public List<Long> findProbeAnalysisResultIdsInResultSet( Long geneId, Long resultSetId, Integer limit ) {
 
         StopWatch timer = new StopWatch();
@@ -460,7 +482,8 @@ public class DifferentialExpressionResultDaoImpl extends
 
         try {
             Session session = super.getSession();
-            org.hibernate.SQLQuery queryObject = session.createSQLQuery( fetchProbeAnalysisResultByResultSetAndGeneQuery );
+            org.hibernate.SQLQuery queryObject = session
+                    .createSQLQuery( fetchProbeAnalysisResultByResultSetAndGeneQuery );
 
             queryObject.setLong( "gene_id", geneId );
             queryObject.setLong( "rs_id", resultSetId );
@@ -478,61 +501,10 @@ public class DifferentialExpressionResultDaoImpl extends
 
         timer.stop();
         if ( log.isDebugEnabled() )
-            log.debug( "Fetching ProbeResultIds from resultSet " + resultSetId + " for gene " + geneId
-                    + " took : " + timer.getTime() + " ms" );
+            log.debug( "Fetching ProbeResultIds from resultSet " + resultSetId + " for gene " + geneId + " took : "
+                    + timer.getTime() + " ms" );
 
         return results;
-    }
-    
-    
-    public Collection<ProbeAnalysisResult> loadAll() {
-        throw new UnsupportedOperationException( "Sorry, that would be nuts" );
-    }
-
-    /**
-     * 
-     */
-    public void thaw( final ProbeAnalysisResult result ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
-
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( result, LockMode.NONE );
-                Hibernate.initialize( result );
-
-                CompositeSequence cs = result.getProbe();
-                Hibernate.initialize( cs );
-
-                Collection<ContrastResult> contrasts = result.getContrasts();
-                for ( ContrastResult contrast : contrasts ) {
-                    FactorValue f = contrast.getFactorValue();
-                    Hibernate.initialize( f );
-                    Boolean is_baseline = f.getIsBaseline();
-                }
-
-                return null;
-            }
-        } );
-    }
-
-    public void thaw( final Collection<ProbeAnalysisResult> results ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
-
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                for ( ProbeAnalysisResult result : results ) {
-                    session.lock( result, LockMode.NONE );
-                    Hibernate.initialize( result );
-
-                    CompositeSequence cs = result.getProbe();
-                    Hibernate.initialize( cs );
-                }
-
-                return null;
-            }
-        } );
     }
 
     /*
@@ -543,9 +515,8 @@ public class DifferentialExpressionResultDaoImpl extends
      * (java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
-    protected Map handleGetExperimentalFactors( Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults )
-            throws Exception {
+    protected Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> handleGetExperimentalFactors(
+            Collection<ProbeAnalysisResult> differentialExpressionAnalysisResults ) throws Exception {
         StopWatch timer = new StopWatch();
         timer.start();
         Map<ProbeAnalysisResult, Collection<ExperimentalFactor>> factorsByResult = new HashMap<ProbeAnalysisResult, Collection<ExperimentalFactor>>();
@@ -559,7 +530,7 @@ public class DifferentialExpressionResultDaoImpl extends
         String[] paramNames = { "differentialExpressionAnalysisResults" };
         Object[] objectValues = { differentialExpressionAnalysisResults };
 
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
+        List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, paramNames, objectValues );
 
         if ( qr == null || qr.isEmpty() ) return factorsByResult;
 
@@ -591,7 +562,6 @@ public class DifferentialExpressionResultDaoImpl extends
      * ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResultDaoBase#handleGetExperimentalFactors
      * (ubic.gemma.model.expression.analysis.DifferentialExpressionAnalysisResult)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExperimentalFactor> handleGetExperimentalFactors(
             ProbeAnalysisResult differentialExpressionAnalysisResult ) throws Exception {
@@ -606,30 +576,72 @@ public class DifferentialExpressionResultDaoImpl extends
 
     }
 
-    public Integer countNumberOfDifferentiallyExpressedProbes( long resultSetId, double threshold ) {
-        DetachedCriteria criteria = DetachedCriteria.forClass( HitListSize.class );
-
-        criteria.add( Restrictions.eq( "id", resultSetId ) );
-        criteria.add( Restrictions.eq( "thresholdQValue", threshold ) );
-
-        List results = this.getHibernateTemplate().findByCriteria( criteria );
-        Object result = null;
-        if ( results != null ) {
-            if ( results.size() > 1 ) {
-                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                        "More than one instance of '" + HitListSize.class.getName()
-                                + "' was found when executing query" );
-
-            } else if ( results.size() == 1 ) {
-                result = results.iterator().next();
-            }
-        }
-        return ( ( HitListSize ) result ).getNumberOfProbes();
-    }
-    
-    public ProbeAnalysisResult load (Long id) {        
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoBase#load(java.lang.Long)
+     */
+    public ProbeAnalysisResult load( Long id ) {
         return this.getHibernateTemplate().get( ProbeAnalysisResultImpl.class, id );
     }
-        
+
+    public Collection<ProbeAnalysisResult> loadAll() {
+        throw new UnsupportedOperationException( "Sorry, that would be nuts" );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#thaw(java.util.Collection)
+     */
+    public void thaw( final Collection<ProbeAnalysisResult> results ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( ProbeAnalysisResult result : results ) {
+                    session.lock( result, LockMode.NONE );
+                    Hibernate.initialize( result );
+
+                    CompositeSequence cs = result.getProbe();
+                    Hibernate.initialize( cs );
+                }
+
+                return null;
+            }
+        } );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDao#thaw(ubic.gemma.model.analysis.expression
+     * .diff.ProbeAnalysisResult)
+     */
+    public void thaw( final ProbeAnalysisResult result ) {
+        HibernateTemplate templ = this.getHibernateTemplate();
+
+        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                session.lock( result, LockMode.NONE );
+                Hibernate.initialize( result );
+
+                CompositeSequence cs = result.getProbe();
+                Hibernate.initialize( cs );
+
+                Collection<ContrastResult> contrasts = result.getContrasts();
+                for ( ContrastResult contrast : contrasts ) {
+                    FactorValue f = contrast.getFactorValue();
+                    Hibernate.initialize( f );
+                    f.getIsBaseline();
+                }
+
+                return null;
+            }
+        } );
+    }
 
 }

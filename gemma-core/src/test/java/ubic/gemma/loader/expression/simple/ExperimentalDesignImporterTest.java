@@ -59,6 +59,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
     ExpressionExperiment ee;
 
+    String adName = RandomStringUtils.randomAlphabetic( 10 );
+
     @Autowired
     MgedOntologyService mos;
 
@@ -97,7 +99,8 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
 
         Taxon human = taxonService.findByCommonName( "human" );
 
-        metaData.setShortName( RandomStringUtils.randomAlphabetic( 10 ) );
+        String eeShortName = RandomStringUtils.randomAlphabetic( 10 );
+        metaData.setShortName( eeShortName );
         metaData.setDescription( "bar" );
         metaData.setIsRatio( false );
         metaData.setTaxon( human );
@@ -106,7 +109,7 @@ public class ExperimentalDesignImporterTest extends BaseSpringContextTest {
         metaData.setType( StandardQuantitationType.AMOUNT );
 
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
-        String adName = RandomStringUtils.randomAlphabetic( 10 );
+
         ad.setShortName( adName );
         ad.setName( "foobly foo" );
         ad.setPrimaryTaxon( human );

@@ -69,10 +69,10 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
 
     @Autowired
     private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
-    
+
     @Autowired
     private SampleCoexpressionAnalysisDao sampleCoexpressionAnalysisDao;
-    
+
     @Autowired
     private PrincipalComponentAnalysisDao principalComponentAnalysisDao;
 
@@ -214,7 +214,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#findByFactorValues(Collection)
      */
-    public Collection<ExpressionExperiment> findByFactorValues( final Collection factorValues ) {
+    public Collection<ExpressionExperiment> findByFactorValues( final Collection<FactorValue> factorValues ) {
         try {
             return this.handleFindByFactorValues( factorValues );
         } catch ( Throwable th ) {
@@ -318,7 +318,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getAnnotationCounts(Collection)
      */
-    public Map getAnnotationCounts( final Collection<Long> ids ) {
+    public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
         try {
             return this.handleGetAnnotationCounts( ids );
         } catch ( Throwable th ) {
@@ -424,7 +424,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getLastArrayDesignUpdate(Collection, java.lang.Class)
      */
-    public Map<Long, Date> getLastArrayDesignUpdate( final Collection expressionExperiments ) {
+    public Map<Long, Date> getLastArrayDesignUpdate( final Collection<ExpressionExperiment> expressionExperiments ) {
         try {
             return this.handleGetLastArrayDesignUpdate( expressionExperiments );
         } catch ( Throwable th ) {
@@ -970,7 +970,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * Performs the core logic for {@link #getAnnotationCounts(Collection)}
      */
-    protected abstract Map handleGetAnnotationCounts( Collection<Long> ids ) throws java.lang.Exception;
+    protected abstract Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getArrayDesignsUsed(ExpressionExperiment)}

@@ -48,6 +48,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#find(ubic.gemma.model.genome.sequenceAnalysis.BlatResult)
      */
     @Override
@@ -62,6 +63,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.ProbeAlignedRegionDaoBase#findByPhysicalLocation(ubic.gemma.model.genome.PhysicalLocation
      * )
@@ -74,15 +76,6 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
         final String strand = location.getStrand();
 
         return findByPosition( chrom, targetStart, targetEnd, strand );
-    }
-
-    /*
-     * (non-Javadoc)
-     * @see ubic.gemma.model.genome.GeneDao#geneValueObjectToEntity(ubic.gemma.model.genome.gene.GeneValueObject)
-     */
-    @Override
-    public ProbeAlignedRegion geneValueObjectToEntity( GeneValueObject geneValueObject ) {
-        return this.load( geneValueObject.getId() );
     }
 
     /**
@@ -113,8 +106,7 @@ public class ProbeAlignedRegionDaoImpl extends ubic.gemma.model.genome.ProbeAlig
             }
         } );
     }
-
-    @SuppressWarnings( { "unchecked" })
+ 
     private Collection<ProbeAlignedRegion> findByPosition( Chromosome chrom, final Long targetStart,
             final Long targetEnd, final String strand ) {
 

@@ -69,7 +69,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         geneNCBI = RandomStringUtils.randomNumeric( 6 );
         // Phenotype
         phenotypeValue = RandomStringUtils.randomAlphabetic( 6 );
-        phenotypeCategory =  RandomStringUtils.randomAlphabetic( 6 );
+        phenotypeCategory = RandomStringUtils.randomAlphabetic( 6 );
 
         // Evidence
         CharacteristicValueObject phenotype = new CharacteristicValueObject( phenotypeValue, phenotypeCategory );
@@ -213,7 +213,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         g.setName( "RAT1" );
         g.setOfficialName( "RAT1" );
         g.setOfficialSymbol( "RAT1" );
-        g.setNcbiId( ncbiId );
+        g.setNcbiGeneId( Integer.parseInt( ncbiId ) );
         g.setTaxon( rat );
         g.getProducts().add( super.getTestPersistentGeneProduct( g ) );
         g = ( Gene ) persisterHelper.persist( g );

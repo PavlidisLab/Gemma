@@ -42,6 +42,7 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationServiceBase#handleFind(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -71,6 +72,11 @@ public class BlatAssociationServiceImpl extends ubic.gemma.model.genome.sequence
     @Override
     protected void handleUpdate( BlatAssociation blatAssociation ) throws Exception {
         this.getBlatAssociationDao().update( blatAssociation );
+    }
+
+    @Override
+    public void remove( BlatAssociation blatAssociation ) {
+        this.getBlatAssociationDao().remove( blatAssociation );
     }
 
 }

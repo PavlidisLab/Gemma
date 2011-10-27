@@ -18,14 +18,11 @@
  */
 package ubic.gemma.persistence;
 
-import java.util.Date;
-
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.Status;
 import ubic.gemma.model.common.auditAndSecurity.StatusService;
 
 /**

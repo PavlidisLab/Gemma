@@ -21,7 +21,6 @@ package ubic.gemma.datastructure.matrix;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -69,13 +68,12 @@ public class ExpressionDataWriterUtils {
     }
 
     /**
-     * Contstructs a bioassay name. This is useful when writing out data to a file.
+     * Constructs a bioassay name. This is useful when writing out data to a file.
      * 
      * @param matrix
      * @param assayColumnIndex The column index in the matrix.
      * @return
      */
-    @SuppressWarnings("unchecked")
     public static String constructBioAssayName( ExpressionDataMatrix matrix, int assayColumnIndex ) {
 
         BioMaterial bioMaterialForColumn = matrix.getBioMaterialForColumn( assayColumnIndex );
@@ -94,13 +92,8 @@ public class ExpressionDataWriterUtils {
         StringBuffer colBuf = new StringBuffer();
         colBuf.append( bioMaterial.getName() + DELIMITER_BETWEEN_BIOMATERIAL_AND_BIOASSAYS );
 
-        for ( Iterator<BioAssay> it = bioAssays.iterator(); it.hasNext(); ) {
-            BioAssay ba = it.next();
-            colBuf.append( ba.getName() );
-            if ( it.hasNext() ) {
-                colBuf.append( "," );
-            }
-        }
+        colBuf.append( StringUtils.join( bioAssays, "." ) );
+
         String colName = StringUtils.deleteWhitespace( colBuf.toString() );
 
         String rCompatibleColName = constructRCompatibleBioAssayName( colName );
@@ -113,11 +106,9 @@ public class ExpressionDataWriterUtils {
      * @return
      */
     private static String constructRCompatibleBioAssayName( String colName ) {
-
         colName = StringUtils.replaceChars( colName, ':', '.' );
         colName = StringUtils.replaceChars( colName, '|', '.' );
         colName = StringUtils.replaceChars( colName, '-', '.' );
-
         return colName;
     }
 
