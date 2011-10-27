@@ -24,27 +24,20 @@ import java.util.HashSet;
 
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
-    private Collection<TreeCharacteristicValueObject> childs = null;
-    private boolean wasFound = false;
+    private Collection<TreeCharacteristicValueObject> children = null;
+    /** phenotype present in the database */
+    private boolean dbPhenotype = false;
 
     private int deep = 0;
 
     public TreeCharacteristicValueObject( String value, String valueUri,
-            Collection<TreeCharacteristicValueObject> childs ) {
+            Collection<TreeCharacteristicValueObject> children ) {
         super( value, "", valueUri, "" );
-        this.childs = childs;
+        this.children = children;
     }
 
-    public Collection<TreeCharacteristicValueObject> getChilds() {
-        return childs;
-    }
-
-    public void setWasFound( boolean wasFound ) {
-        this.wasFound = wasFound;
-    }
-
-    public boolean isWasFound() {
-        return wasFound;
+    public Collection<TreeCharacteristicValueObject> getChildren() {
+        return children;
     }
 
     public int getDeep() {
@@ -57,6 +50,14 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     public String toString() {
         return toString( 0 );
+    }
+
+    public boolean isDbPhenotype() {
+        return dbPhenotype;
+    }
+
+    public void setDbPhenotype( boolean dbPhenotype ) {
+        this.dbPhenotype = dbPhenotype;
     }
 
     public String toString( int level ) {
@@ -72,7 +73,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         output = output + getValue() + "\n";
 
         level++;
-        for ( TreeCharacteristicValueObject treeVO : childs ) {
+        for ( TreeCharacteristicValueObject treeVO : children ) {
             output = output + treeVO.toString( level );
 
         }
@@ -81,12 +82,17 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     @Override
+    /** order TreeCharacteristicValueObjects by deep */
     public int compareTo( CharacteristicValueObject c ) {
 
         if ( c instanceof TreeCharacteristicValueObject ) {
 
             TreeCharacteristicValueObject t = ( TreeCharacteristicValueObject ) c;
-            if ( this.deep > t.deep ) {
+
+            // same deep, lets order by value
+            if ( this.deep == t.deep ) {
+                return this.getValue().compareToIgnoreCase( c.getValue() );
+            } else if ( this.deep > t.deep ) {
                 return -1;
             } else {
                 return 1;
@@ -97,27 +103,35 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         }
     }
 
-    public void removeUnused() {
+    /** remove all nodes in the trees found in the Ontology but not in db */
+    public void removeUnusedPhenotypes() {
 
-        Collection<TreeCharacteristicValueObject> newRealChilds = new HashSet<TreeCharacteristicValueObject>();
-        findRealChild( newRealChilds );
-        childs = newRealChilds;
+        Collection<TreeCharacteristicValueObject> newChildren = findNewChildren();
 
-        for ( TreeCharacteristicValueObject tc : childs ) {
-            tc.removeUnused();
+        // the new childs nodes, all node between root and flag children were removed
+        children = newChildren;
+
+        // for the new childs found remove all nodes that were not flag between the childs and the next flagged child if
+        // any
+        for ( TreeCharacteristicValueObject tc : children ) {
+            tc.removeUnusedPhenotypes();
         }
-
     }
 
-    private void findRealChild( Collection<TreeCharacteristicValueObject> newRealChilds ) {
+    /** remove all nodes in the trees found between the root and a child node that was flag */
+    private Collection<TreeCharacteristicValueObject> findNewChildren() {
 
-        for ( TreeCharacteristicValueObject t : childs ) {
-            if ( t.isWasFound() ) {
-                newRealChilds.add( t );
+        Collection<TreeCharacteristicValueObject> newChildren = new HashSet<TreeCharacteristicValueObject>();
+
+        for ( TreeCharacteristicValueObject t : children ) {
+            if ( t.isDbPhenotype() ) {
+                newChildren.add( t );
             } else {
-                t.findRealChild( newRealChilds );
+                t.findNewChildren();
             }
         }
+
+        return newChildren;
     }
 
 }

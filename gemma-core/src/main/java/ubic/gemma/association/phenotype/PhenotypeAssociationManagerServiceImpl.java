@@ -70,6 +70,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private TaxonService taxonService;
 
+    private DiseaseOntologyService diseaseOntologyService = null;
+    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
+    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
+
     /**
      * Links an Evidence to a Gene
      * 
@@ -340,11 +344,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        DiseaseOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
-                .getMammalianPhenotypeOntologyService();
-        HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
-                .getHumanPhenotypeOntologyService();
+        useDiseaseMpHPOntologies();
 
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
@@ -424,74 +424,71 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return phenotypesFound;
     }
 
-    // TODO NOT TO BE USED WAS COMMITED BECAUSE OF OTHER CODE, FAST DRAFT, WILL BE CHANGED SOON
+    /**
+     * 1- Loads all phenotypes in Gemma 2- For each phenotype construct a tree 3- Order the trees by deep 4- For each
+     * tree place it in an other deeper tree if possible 5- Remove phenotypes in trees not in the database
+     * 
+     * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
+     */
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
-        // represents each phenotype as a tree of terms
-        TreeSet<TreeCharacteristicValueObject> col = new TreeSet<TreeCharacteristicValueObject>();
+        // represents each phenotype and childs found in the Ontology, TreeSet used to order trees by deep
+        TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
 
-        // all phenotypes in the Gemma database
-        Collection<CharacteristicValueObject> allPhenotypes = loadAllPhenotypes();
+        // all phenotypes in Gemma
+        Collection<CharacteristicValueObject> allPhenotypes = this.associationService.loadAllPhenotypes();
 
-        DiseaseOntologyService diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = ontologyService
-                .getMammalianPhenotypeOntologyService();
-        HumanPhenotypeOntologyService humanPhenotypeOntologyService = ontologyService
-                .getHumanPhenotypeOntologyService();
+        // use specific ontologies
+        useDiseaseMpHPOntologies();
 
+        // for each phenotype in Gemma construct its subtree of children
         for ( CharacteristicValueObject c : allPhenotypes ) {
 
-            OntologyTerm ontologyTerm = diseaseOntologyService.getTerm( c.getValueUri() );
+            // find the ontology term using the valueURI
+            OntologyTerm ontologyTerm = findPhenotypeInOntology( c.getValueUri() );
 
-            if ( ontologyTerm == null ) {
-                ontologyTerm = mammalianPhenotypeOntologyService.getTerm( c.getValueUri() );
-            }
-
-            if ( ontologyTerm == null ) {
-                ontologyTerm = humanPhenotypeOntologyService.getTerm( c.getValueUri() );
-            }
-
-            // create a tree for the term
+            // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
             TreeCharacteristicValueObject treeCharacteristicValueObject = this.phenotypeAssoManagerServiceHelper
                     .ontology2TreeCharacteristicValueObjects( ontologyTerm );
-            // set flag that this node represents a phenotype in the database
-            treeCharacteristicValueObject.setWasFound( true );
 
-            col.add( treeCharacteristicValueObject );
+            // set flag that this node represents a phenotype in the database
+            treeCharacteristicValueObject.setDbPhenotype( true );
+
+            treesPhenotypes.add( treeCharacteristicValueObject );
         }
 
-        // map of all phenotypes found in the tree
-        HashMap<String, TreeCharacteristicValueObject> hs = new HashMap<String, TreeCharacteristicValueObject>();
+        // keep track of all phenotypes found in the trees, used to find quickly the position to add subtrees
+        HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
 
         // this will be the final result of combining all trees found into less trees without the terms that are not in
         // the database
         Collection<TreeCharacteristicValueObject> finalTrees = new TreeSet<TreeCharacteristicValueObject>();
 
         // the deepest tree is the first one, was order by deep
-        TreeCharacteristicValueObject treeC = col.first();
-        col.remove( treeC );
-        finalTrees.add( treeC );
-        this.phenotypeAssoManagerServiceHelper.addTermsToHash( treeC, hs );
+        TreeCharacteristicValueObject treeC = treesPhenotypes.pollFirst();
 
-        for ( TreeCharacteristicValueObject treeVO : col ) {
+        // add tree to final result, the deepest tree cannot be a subtree of any other tree
+        this.phenotypeAssoManagerServiceHelper.addToFinalResult( treeC, phenotypeFoundInTree, finalTrees );
 
-            // look if the phenotype is present in a previous tree
-            TreeCharacteristicValueObject treeExist = hs.get( treeVO.getValueUri() );
+        // for all other tree, create a new tree in not found in a deepest tree
+        for ( TreeCharacteristicValueObject treeVO : treesPhenotypes ) {
 
-            // look first if can be place in one tree
+            // look if the phenotype is present in a deepest tree
+            TreeCharacteristicValueObject treeExist = phenotypeFoundInTree.get( treeVO.getValueUri() );
+
+            // if a deepest tree contain the phenotype, flag the node
             if ( treeExist != null ) {
-                treeExist.setWasFound( true );
+                treeExist.setDbPhenotype( true );
             }
-            // if not add terms to hashmap
+            // if wasnt found in a deepest tree, create a new tree
             else {
-                finalTrees.add( treeVO );
-                this.phenotypeAssoManagerServiceHelper.addTermsToHash( treeVO, hs );
+                this.phenotypeAssoManagerServiceHelper.addToFinalResult( treeVO, phenotypeFoundInTree, finalTrees );
             }
         }
 
-        // remove unused nodes
+        // remove all nodes in the trees found in the Ontology but not in db
         for ( TreeCharacteristicValueObject tc : finalTrees ) {
-            tc.removeUnused();
+            tc.removeUnusedPhenotypes();
         }
 
         return finalTrees;
@@ -536,6 +533,26 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return geneValueObjectsFilter;
+    }
+
+    /** Use specific Ontologies from ontologyService */
+    private void useDiseaseMpHPOntologies() {
+        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
+        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
+        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+    }
+
+    private OntologyTerm findPhenotypeInOntology( String valueURI ) {
+
+        OntologyTerm ontologyTerm = this.diseaseOntologyService.getTerm( valueURI );
+
+        if ( ontologyTerm == null ) {
+            ontologyTerm = this.mammalianPhenotypeOntologyService.getTerm( valueURI );
+        }
+        if ( ontologyTerm == null ) {
+            ontologyTerm = this.humanPhenotypeOntologyService.getTerm( valueURI );
+        }
+        return ontologyTerm;
     }
 
 }

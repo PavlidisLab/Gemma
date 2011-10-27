@@ -409,6 +409,7 @@ public class PhenotypeAssoManagerServiceHelper {
         return characteristicsVO;
     }
 
+    /** Ontology term to TreeCharacteristicValueObject */
     public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm ) {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
@@ -431,14 +432,30 @@ public class PhenotypeAssoManagerServiceHelper {
             }
         }
         maxDeep++;
+        // deepest child found
         treeCharacteristicVO.setDeep( maxDeep );
 
         return treeCharacteristicVO;
     }
 
-    public void addTermsToHash( TreeCharacteristicValueObject tree, HashMap<String, TreeCharacteristicValueObject> hs ) {
+    /** Add tree to finalResult and keep track of its nodes */
+    public void addToFinalResult( TreeCharacteristicValueObject tree,
+            HashMap<String, TreeCharacteristicValueObject> hs, Collection<TreeCharacteristicValueObject> finalTrees ) {
 
-        for ( TreeCharacteristicValueObject t : tree.getChilds() ) {
+        tree.setDeep( 0 );
+
+        finalTrees.add( tree );
+
+        // keep track in a HashMap of all nodes found
+        for ( TreeCharacteristicValueObject t : tree.getChildren() ) {
+            hs.put( t.getValueUri(), t );
+            addTermsToHash( t, hs );
+        }
+    }
+
+    private void addTermsToHash( TreeCharacteristicValueObject tree, HashMap<String, TreeCharacteristicValueObject> hs ) {
+
+        for ( TreeCharacteristicValueObject t : tree.getChildren() ) {
             hs.put( t.getValueUri(), t );
 
             addTermsToHash( t, hs );
