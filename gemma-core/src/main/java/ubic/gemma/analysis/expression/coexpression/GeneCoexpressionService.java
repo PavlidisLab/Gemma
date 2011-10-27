@@ -769,6 +769,11 @@ public class GeneCoexpressionService {
         Collection<Gene2GeneCoexpression> seen = new HashSet<Gene2GeneCoexpression>();
 
         queryGenes = geneService.thawLite( gg2gs.keySet() );
+        
+        //return empty collection if no coexpression results
+        if (queryGenes.isEmpty()){
+        	return ecvos;
+        }
 
         // populate the value objects.
         StopWatch timer = new StopWatch();
