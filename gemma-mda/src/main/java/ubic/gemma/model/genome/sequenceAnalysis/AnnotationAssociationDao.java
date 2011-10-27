@@ -12,6 +12,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.biosequence.BioSequence;
+import ubic.gemma.model.genome.gene.GeneProduct;
 
 /**
  * @author paul
@@ -42,5 +43,7 @@ public interface AnnotationAssociationDao {
     public void update( AnnotationAssociation annotationAssociation );
 
     public void update( Collection<AnnotationAssociation> anCollection );
+
+    public Collection<AnnotationAssociation> find( Collection<GeneProduct> gps );
 
 }

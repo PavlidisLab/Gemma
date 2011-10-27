@@ -49,11 +49,11 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoBase#find(ubic.gemma.model.genome.biosequence.BioSequence
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<BlatAssociation> find( BioSequence bioSequence ) {
 
@@ -69,9 +69,9 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDaoBase#find(ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<BlatAssociation> find( Gene gene ) {
 
@@ -146,5 +146,12 @@ public class BlatAssociationDaoImpl extends ubic.gemma.model.genome.sequenceAnal
         // Hibernate.initialize( blatAssociation.getGeneProduct().getGene().getProducts() );
         // Hibernate.initialize( blatAssociation.getBioSequence() );
         // Hibernate.initialize( blatAssociation.getBioSequence().getSequenceDatabaseEntry() );
+    }
+
+    @Override
+    public Collection<? extends BlatAssociation> find( Collection<GeneProduct> gps ) {
+        if ( gps.isEmpty() ) return new HashSet<BlatAssociation>();
+        return this.getHibernateTemplate().findByNamedParam(
+                "select b from BlatAssociationImpl b join b.geneProduct gp where gp in (:gps)", "gps", gps );
     }
 }

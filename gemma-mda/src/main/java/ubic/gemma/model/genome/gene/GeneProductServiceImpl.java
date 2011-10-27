@@ -125,6 +125,10 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
 
     @Override
     public void remove( Collection<GeneProduct> toRemove ) {
+
+        this.getBlatAssociationDao().remove( this.getBlatAssociationDao().find( toRemove ) );
+        this.getAnnotationAssociationDao().remove( this.getAnnotationAssociationDao().find( toRemove ) );
+
         this.getGeneProductDao().remove( toRemove );
     }
 

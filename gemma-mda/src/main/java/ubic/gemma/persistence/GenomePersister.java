@@ -629,7 +629,9 @@ abstract public class GenomePersister extends CommonPersister {
 
         geneService.update( existingGene ); // will orphaned gene products be deleted by cascade?
 
-        if ( !toRemove.isEmpty() ) geneProductService.remove( toRemove );
+        if ( !toRemove.isEmpty() ) { 
+            geneProductService.remove( toRemove );
+        }
 
         return existingGene;
     }

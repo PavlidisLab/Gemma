@@ -51,6 +51,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#create(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
@@ -66,6 +67,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#create(java.util.Collection)
      */
     public Collection<AnnotationAssociation> create( final Collection<AnnotationAssociation> anCollection ) {
@@ -90,10 +92,10 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @seeubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#find(ubic.gemma.model.genome.biosequence.
      * BioSequence)
      */
-    @SuppressWarnings("unchecked")
     public Collection<AnnotationAssociation> find( BioSequence bioSequence ) {
         BusinessKey.checkValidKey( bioSequence );
 
@@ -106,9 +108,9 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#find(ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings("unchecked")
     public Collection<AnnotationAssociation> find( Gene gene ) {
         if ( gene.getProducts().size() == 0 ) {
             throw new IllegalArgumentException( "Gene has no products" );
@@ -139,9 +141,9 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#load(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     public Collection<AnnotationAssociation> load( Collection<Long> ids ) {
         if ( ids.size() == 0 ) {
             return new HashSet<AnnotationAssociation>();
@@ -169,6 +171,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#load(java.lang.Long)
      */
     public AnnotationAssociation load( Long id ) {
@@ -182,6 +185,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#remove(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
@@ -196,6 +200,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#remove(java.util.Collection)
      */
     public void remove( Collection<AnnotationAssociation> anCollection ) {
@@ -208,6 +213,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#thaw(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
@@ -227,6 +233,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#thaw(java.util.Collection)
      */
     public void thaw( final Collection<AnnotationAssociation> anCollection ) {
@@ -249,6 +256,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#update(ubic.gemma.model.genome.sequenceAnalysis
      * .AnnotationAssociation)
@@ -264,6 +272,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao#update(java.util.Collection)
      */
     public void update( final Collection<AnnotationAssociation> anCollection ) {
@@ -292,6 +301,13 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
         association.getGeneProduct().getGene().getProducts().size();
         session.update( association.getBioSequence() );
         association.getBioSequence().getSequenceDatabaseEntry();
+    }
+
+    @Override
+    public Collection<AnnotationAssociation> find( Collection<GeneProduct> gps ) {
+        if ( gps.isEmpty() ) return new HashSet<AnnotationAssociation>();
+        return this.getHibernateTemplate().findByNamedParam(
+                "select b from AnnotationAssociationnImpl b join b.geneProduct gp where gp in (:gps)", "gps", gps );
     }
 
 }

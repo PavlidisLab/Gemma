@@ -21,6 +21,8 @@ package ubic.gemma.model.genome.gene;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationDao;
+import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociationDao;
 
 /**
  * <p>
@@ -34,6 +36,12 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
 
     @Autowired
     private ubic.gemma.model.genome.gene.GeneProductDao geneProductDao;
+    
+    @Autowired
+    private BlatAssociationDao blatAssociationDao;
+    
+    @Autowired
+    private AnnotationAssociationDao annotationAssociationDao;
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductService#countAll()
@@ -103,6 +111,14 @@ public abstract class GeneProductServiceBase implements ubic.gemma.model.genome.
                     "Error performing 'ubic.gemma.model.genome.gene.GeneProductService.findOrCreate(ubic.gemma.model.genome.gene.GeneProduct geneProduct)' --> "
                             + th, th );
         }
+    }
+
+    public AnnotationAssociationDao getAnnotationAssociationDao() {
+        return annotationAssociationDao;
+    }
+
+    public BlatAssociationDao getBlatAssociationDao() {
+        return blatAssociationDao;
     }
 
     /**
