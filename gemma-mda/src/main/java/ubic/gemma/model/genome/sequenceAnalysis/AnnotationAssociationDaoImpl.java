@@ -307,7 +307,7 @@ public class AnnotationAssociationDaoImpl extends HibernateDaoSupport implements
     public Collection<AnnotationAssociation> find( Collection<GeneProduct> gps ) {
         if ( gps.isEmpty() ) return new HashSet<AnnotationAssociation>();
         return this.getHibernateTemplate().findByNamedParam(
-                "select b from AnnotationAssociationnImpl b join b.geneProduct gp where gp in (:gps)", "gps", gps );
+                "select b from AnnotationAssociationImpl b join b.geneProduct gp where gp in (:gps)", "gps", gps );
     }
 
 }
