@@ -106,10 +106,8 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** remove all nodes in the trees found in the Ontology but not in db */
     public void removeUnusedPhenotypes() {
 
-        Collection<TreeCharacteristicValueObject> newChildren = findNewChildren();
-
         // the new childs nodes, all node between root and flag children were removed
-        children = newChildren;
+        children = findNewChildren();
 
         // for the new childs found remove all nodes that were not flag between the childs and the next flagged child if
         // any
