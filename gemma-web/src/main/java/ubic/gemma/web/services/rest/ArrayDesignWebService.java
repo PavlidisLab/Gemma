@@ -85,7 +85,7 @@ public class ArrayDesignWebService {
     @GET
     @Path("/fetchAnnotations/{shortName}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
-    public void fetchAnnotations( @PathParam("shortName") String shortName, @Context HttpServletResponse servletResponse ) {
+    public int fetchAnnotations( @PathParam("shortName") String shortName, @Context HttpServletResponse servletResponse ) {
 
         ArrayDesign arrayDesign = arrayDesignService.findByShortName( shortName );
         if ( arrayDesign == null ) {
@@ -130,6 +130,8 @@ public class ArrayDesignWebService {
             builder.type( MediaType.TEXT_PLAIN );
             throw new WebApplicationException( builder.build() );
         }
+
+        return 1;
 
     }
 

@@ -215,12 +215,14 @@ public class NcbiGeneDomainObjectGenerator {
             geneInfoMap.put( geneInfo.getGeneId(), geneInfo );
         }
         supportedTaxaWithNCBIGenes = new HashSet<Taxon>();
-        for ( Integer taxId : taxaCount.keySet() ) {
+        if ( supportedTaxa != null ) {
+            for ( Integer taxId : taxaCount.keySet() ) {
 
-            if ( taxaCount.get( taxId ) > 0 ) {
-                log.debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
-                Taxon t = supportedTaxa.get( taxId );
-                supportedTaxaWithNCBIGenes.add( t );
+                if ( taxaCount.get( taxId ) > 0 ) {
+                    log.debug( "Taxon " + taxId + ": " + taxaCount.get( taxId ) + " genes" );
+                    Taxon t = supportedTaxa.get( taxId );
+                    supportedTaxaWithNCBIGenes.add( t );
+                }
             }
         }
 
