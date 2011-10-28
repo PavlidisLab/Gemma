@@ -22,8 +22,10 @@ import java.io.File;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.lang.StringUtils;
 
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
@@ -40,8 +42,10 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
     private String GENE2ACCESSION_FILE = "gene2accession.gz";
     private String GENEHISTORY_FILE = "gene_history.gz";
     private String GENE2ENSEMBL_FILE = "gene2ensembl.gz";
-    
+
     private String filePath = null;
+
+    private String taxonCommonName = null;
 
     public NcbiGeneLoaderCLI() {
         super();
@@ -61,18 +65,36 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         Exception err = processCommandLine( "NcbiGeneLoaderCLI", args );
         if ( err != null ) return err;
         loader = new NcbiGeneLoader();
-        loader.setTaxonService((TaxonService) this.getBean("taxonService"));
+        TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
+        loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.getPersisterHelper() );
+
+        Taxon t = null;
+        if ( StringUtils.isNotBlank( taxonCommonName ) ) {
+            t = taxonService.findByCommonName( this.taxonCommonName );
+            if ( t == null ) {
+                throw new IllegalArgumentException( "Unrecognized taxon: " + taxonCommonName );
+            }
+        }
 
         if ( filePath != null ) {
             String geneInfoFile = filePath + File.separatorChar + GENEINFO_FILE;
             String gene2AccFile = filePath + File.separatorChar + GENE2ACCESSION_FILE;
             String geneHistoryFile = filePath + File.separatorChar + GENEHISTORY_FILE;
             String geneEnsemblFile = filePath + File.separatorChar + GENE2ENSEMBL_FILE;
-            
-            loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, true ); // do filtering of taxa
+
+            if ( t != null ) {
+                loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, t );
+            } else {
+                loader.load( geneInfoFile, gene2AccFile, geneHistoryFile, geneEnsemblFile, true ); // do filtering of
+                                                                                                   // taxa
+            }
         } else { /* defaults to download files remotely. */
-            loader.load( true );
+            if ( t != null ) {
+                loader.load( t );
+            } else {
+                loader.load( true );
+            }
         }
 
         return null;
@@ -87,15 +109,19 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.util.AbstractSpringAwareCLI#buildOptions()
      */
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" ).withDescription(
-                "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" ).create( 'f' );
+        Option pathOption = OptionBuilder.hasArg().withArgName( "Input File Path" )
+                .withDescription( "Optional path to the gene_info and gene2accession files" ).withLongOpt( "file" )
+                .create( 'f' );
 
         addOption( pathOption );
+
+        addOption( "taxon", true, "Specific taxon for which to update genes" );
 
         requireLogin();
     }
@@ -105,6 +131,9 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         super.processOptions();
         if ( hasOption( 'f' ) ) {
             filePath = getOptionValue( 'f' );
+        }
+        if ( hasOption( "taxon" ) ) {
+            this.taxonCommonName = getOptionValue( "taxon" );
         }
     }
 

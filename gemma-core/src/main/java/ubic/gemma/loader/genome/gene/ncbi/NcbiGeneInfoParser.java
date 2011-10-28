@@ -68,6 +68,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.LineParser#parseOneLine(java.lang.String)
      */
     @Override
@@ -88,7 +89,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
 
             // Skip taxa that we don't support.
             int taxonId = Integer.parseInt( fields[0] );
-            if ( filter ) {
+            if ( filter && ncbiTaxonIds != null ) {
                 if ( !ncbiTaxonIds.contains( taxonId ) ) {
                     return null;
                 }
@@ -133,6 +134,7 @@ public class NcbiGeneInfoParser extends BasicLineMapParser<String, NCBIGeneInfo>
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.loader.loaderutils.BasicLineMapParser#getKey(java.lang.Object)
      */
     @Override

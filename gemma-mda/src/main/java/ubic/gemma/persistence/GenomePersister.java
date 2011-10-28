@@ -280,7 +280,7 @@ abstract public class GenomePersister extends CommonPersister {
             updatedGpMap.put( existingGp.getNcbiGi(), existingGp );
         }
 
-        Set<String> usedGIs = new HashSet<String>();
+        Map<String, GeneProduct> usedGIs = new HashMap<String, GeneProduct>();
         for ( GeneProduct newGeneProductInfo : newGeneInfo.getProducts() ) {
             if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
                 log.debug( "Updating gene product based on name: " + newGeneProductInfo );
@@ -344,20 +344,37 @@ abstract public class GenomePersister extends CommonPersister {
 
                 }
             }
-            usedGIs.add( newGeneProductInfo.getNcbiGi() );
+
+            if ( newGeneProductInfo.getNcbiGi() != null )
+                usedGIs.put( newGeneProductInfo.getNcbiGi(), newGeneProductInfo );
         }
 
         /*
-         * Check for deletions. If we have a GI that is not in the collection, then we delete it from the system.
+         * Check for deletions or changed GIs. If we have a GI that is not in the collection, then we might delete it
+         * from the system.
          */
         Collection<GeneProduct> toRemove = new HashSet<GeneProduct>();
         if ( !usedGIs.isEmpty() ) {
-            for ( GeneProduct gp : existingGene.getProducts() ) {
-                if ( StringUtils.isNotBlank( gp.getNcbiGi() ) && !usedGIs.contains( gp.getNcbiGi() ) ) {
-                    toRemove.add( gp );
-                    gp.setGene( null ); // we are erasing this association as we assume it is no longer valid.
-                    log.warn( "Removing gene product from system: " + gp + ", it is no longer listed as a product of "
-                            + existingGene );
+            gp: for ( GeneProduct existingGp : existingGene.getProducts() ) {
+                if ( StringUtils.isNotBlank( existingGp.getNcbiGi() ) && !usedGIs.containsKey( existingGp.getNcbiGi() ) ) {
+
+                    /*
+                     * Check to make sure this isn't an updated GI situation (actually common, whenever a sequence is
+                     * updated)
+                     */
+                    for ( GeneProduct ngp : usedGIs.values() ) {
+                        if ( existingGp.getName().equals( ngp.getName() ) ) {
+                            log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi() );
+                            existingGp.setNcbiGi( ngp.getNcbiGi() );
+                            updateGeneProduct( existingGp, ngp );
+                            continue gp;
+                        }
+                    }
+
+                    toRemove.add( existingGp );
+                    existingGp.setGene( null ); // we are erasing this association as we assume it is no longer valid.
+                    log.warn( "Removing gene product from system: " + existingGp
+                            + ", it is no longer listed as a product of " + existingGene );
                 }
             }
             if ( !toRemove.isEmpty() ) {
@@ -369,6 +386,10 @@ abstract public class GenomePersister extends CommonPersister {
 
         if ( !toRemove.isEmpty() ) {
             geneProductService.remove( toRemove );
+        }
+
+        if ( existingGene.getProducts().isEmpty() ) {
+            log.warn( "No products left for: " + existingGene );
         }
 
         return existingGene;
@@ -845,8 +866,8 @@ abstract public class GenomePersister extends CommonPersister {
 
         existingGeneProduct = geneProductService.thaw( existingGeneProduct );
 
-        // Update all the fields. Note that realistically, some of these can't have changed or we wouldn't have even
-        // found the 'existing' one (name GI in particular)
+        // Update all the fields. Note that usually, some of these can't have changed or we wouldn't have even
+        // found the 'existing' one (name GI in particular); however, sometimes we are updating this information
 
         existingGeneProduct.setName( updatedGeneProductInfo.getName() );
         existingGeneProduct.setDescription( updatedGeneProductInfo.getDescription() );

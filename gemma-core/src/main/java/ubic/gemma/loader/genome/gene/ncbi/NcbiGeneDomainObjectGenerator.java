@@ -57,15 +57,21 @@ public class NcbiGeneDomainObjectGenerator {
     AtomicBoolean infoProducerDone = new AtomicBoolean( false );
     private Map<Integer, Taxon> supportedTaxa = null;
     private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
+    private boolean filter = true;
 
     public NcbiGeneDomainObjectGenerator( Collection<Taxon> supportedTaxa ) {
-        this.supportedTaxa = new HashMap<Integer, Taxon>();
-        for ( Taxon t : supportedTaxa ) {
-            if ( t.getNcbiId() == null ) {
-                log.warn( "Can't support NCBI genes for " + t + ", it lacks an NCBI id" );
-                continue;
+
+        if ( supportedTaxa != null ) {
+            this.supportedTaxa = new HashMap<Integer, Taxon>();
+            for ( Taxon t : supportedTaxa ) {
+                if ( t.getNcbiId() == null ) {
+                    log.warn( "Can't support NCBI genes for " + t + ", it lacks an NCBI id" );
+                    continue;
+                }
+                this.supportedTaxa.put( t.getNcbiId(), t );
             }
-            this.supportedTaxa.put( t.getNcbiId(), t );
+        } else {
+            this.filter = false;
         }
     }
 
@@ -82,7 +88,7 @@ public class NcbiGeneDomainObjectGenerator {
         LocalFile geneHistoryFile = fetcher.fetch( GENEHISTORY_FILE ).iterator().next();
         LocalFile geneEnsemblFile = fetcher.fetch( GENEENSEMBL_FILE ).iterator().next();
 
-        return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue, true );
+        return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
     }
 
     /**
@@ -93,7 +99,7 @@ public class NcbiGeneDomainObjectGenerator {
      * @return
      */
     public Collection<NCBIGene2Accession> generateLocal( String geneInfoFilePath, String gene2AccesionFilePath,
-            String geneHistoryFilePath, String geneEnsemblFilePath, BlockingQueue<NcbiGeneData> queue, boolean filter ) {
+            String geneHistoryFilePath, String geneEnsemblFilePath, BlockingQueue<NcbiGeneData> queue ) {
 
         assert gene2AccesionFilePath != null;
 
@@ -123,7 +129,7 @@ public class NcbiGeneDomainObjectGenerator {
                 geneEnsemblFile.setLocalURL( geneEnsemblUrl );
             }
 
-            return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue, filter );
+            return processLocalFiles( geneInfoFile, gene2AccessionFile, geneHistoryFile, geneEnsemblFile, queue );
 
         } catch ( IOException e ) {
             throw new RuntimeException( e );
@@ -149,12 +155,14 @@ public class NcbiGeneDomainObjectGenerator {
      */
     private Collection<NCBIGene2Accession> processLocalFiles( final LocalFile geneInfoFile,
             final LocalFile gene2AccessionFile, LocalFile geneHistoryFile, LocalFile geneEnsemblFile,
-            final BlockingQueue<NcbiGeneData> geneDataQueue, boolean filter ) {
+            final BlockingQueue<NcbiGeneData> geneDataQueue ) {
 
         final NcbiGeneInfoParser infoParser = new NcbiGeneInfoParser();
-        infoParser.setFilter( filter );
+        infoParser.setFilter( this.filter );
 
-        infoParser.setSupportedTaxa( supportedTaxa.keySet() );
+        if ( this.filter ) {
+            infoParser.setSupportedTaxa( supportedTaxa.keySet() );
+        }
 
         final NcbiGeneEnsemblFileParser ensemblParser = new NcbiGeneEnsemblFileParser();
 

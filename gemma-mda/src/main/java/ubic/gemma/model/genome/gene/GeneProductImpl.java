@@ -79,7 +79,12 @@ public class GeneProductImpl extends ubic.gemma.model.genome.gene.GeneProduct {
             buf.append( " " );
         }
 
-        buf.append( this.getName() + " [Gene = " + this.getGene() + "]" );
+        if ( this.getNcbiGi() != null ) {
+
+        }
+
+        buf.append( this.getName() + ( this.getName() == null ? "" : " GI:" + this.getNcbiGi() ) );
+        buf.append( " [Gene = " + this.getGene() + "]" );
 
         return buf.toString();
 
