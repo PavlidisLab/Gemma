@@ -356,6 +356,8 @@ abstract public class GenomePersister extends CommonPersister {
                 if ( StringUtils.isNotBlank( gp.getNcbiGi() ) && !usedGIs.contains( gp.getNcbiGi() ) ) {
                     toRemove.add( gp );
                     gp.setGene( null ); // we are erasing this association as we assume it is no longer valid.
+                    log.warn( "Removing gene product from system: " + gp + ", it is no longer listed as a product of "
+                            + existingGene );
                 }
             }
             if ( !toRemove.isEmpty() ) {
