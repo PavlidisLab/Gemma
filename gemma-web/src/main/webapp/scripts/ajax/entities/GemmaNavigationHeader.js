@@ -43,7 +43,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 	var userLoggedIn = (Ext.getDom('hasUser') && Ext.getDom('hasUser').getValue() === 'true')?true:false;
 
 	var menuDefaults = {
-		style:'color:black;font-size:12px;line-height:20px'
+		cls:'x-menu-item-large'
 	};
 	var searchBtn = new Ext.Button({
 			ref:'searchBtn',
@@ -57,6 +57,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					xtype: 'panel',
 					layout:'hbox',
 					border:false,
+					//style:'width:100%',
 					items: [this.inMenuSearchField, {
 						xtype: 'button',
 						text: 'Go',
