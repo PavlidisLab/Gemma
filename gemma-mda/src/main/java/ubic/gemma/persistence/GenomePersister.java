@@ -42,7 +42,6 @@ import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlastAssociationService;
@@ -99,54 +98,6 @@ abstract public class GenomePersister extends CommonPersister {
 
     public GenomePersister( SessionFactory sessionFactory ) {
         super( sessionFactory );
-    }
-
-    /**
-     * @param existingGene
-     * @param toRemove
-     */
-    public void detatchDefunctGeneProducts( Gene existingGene, Collection<GeneProduct> toRemove ) {
-        for ( GeneProduct geneProduct : toRemove ) {
-            log.info( "Removing association of " + geneProduct + " with " + existingGene + "" );
-            existingGene.getProducts().remove( geneProduct );
-
-            /*
-             * Have to delete any BlatAssociations.
-             */
-            Collection<BlatAssociation> blatAssociationsToRemove = new HashSet<BlatAssociation>();
-            Collection<BlatAssociation> blatAssociations = this.blatAssociationService.find( existingGene );
-            for ( BlatAssociation ba : blatAssociations ) {
-                if ( ba.getGeneProduct().equals( toRemove ) ) {
-                    blatAssociationsToRemove.add( ba );
-                }
-            }
-
-            if ( !blatAssociationsToRemove.isEmpty() ) {
-                // REMOVE
-                for ( BlatAssociation blatAssociation : blatAssociationsToRemove ) {
-                    blatAssociationService.remove( blatAssociation );
-                }
-
-            }
-
-            Collection<AnnotationAssociation> annotationAssociations = this.annotationAssociationService
-                    .find( existingGene );
-            Collection<AnnotationAssociation> annotationAssociationsToRemove = new HashSet<AnnotationAssociation>();
-            for ( AnnotationAssociation ba : annotationAssociations ) {
-                if ( ba.getGeneProduct().equals( toRemove ) ) {
-                    annotationAssociationsToRemove.add( ba );
-                }
-            }
-
-            if ( !annotationAssociationsToRemove.isEmpty() ) {
-                // REMOVE
-                for ( AnnotationAssociation annotationAssociation : annotationAssociationsToRemove ) {
-                    annotationAssociationService.remove( annotationAssociation );
-                }
-
-            }
-
-        }
     }
 
     /*
@@ -255,6 +206,170 @@ abstract public class GenomePersister extends CommonPersister {
      */
     public void setTaxonService( TaxonService taxonService ) {
         this.taxonService = taxonService;
+    }
+
+    /**
+     * @param existingGene
+     * @param newGeneInfo the non-persistent gene we are copying information from
+     * @return
+     */
+    public Gene updateGene( Gene existingGene, Gene newGeneInfo ) {
+        // updated gene products.
+        existingGene = geneService.thaw( existingGene );
+
+        // NCBI id can be null if gene has been loaded from a gene info file
+        Integer existingNcbiId = existingGene.getNcbiGeneId();
+        if ( existingNcbiId != null && !existingNcbiId.equals( newGeneInfo.getNcbiGeneId() ) ) {
+            log.info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
+            String previousId = newGeneInfo.getPreviousNcbiId();
+            if ( previousId != null ) {
+                if ( !previousId.equals( existingGene.getNcbiGeneId().toString() ) ) {
+                    throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
+                            + " has changed and the previous NCBI id on record with NCBI ("
+                            + newGeneInfo.getPreviousNcbiId() + ") doesn't match either." );
+                }
+                existingGene.setPreviousNcbiId( existingGene.getNcbiGeneId().toString() );
+                existingGene.setNcbiGeneId( newGeneInfo.getNcbiGeneId() );
+            }
+        }
+
+        /*
+         * We might want to change this behaviour to clear the value if the updated one has none. For now I just want to
+         * avoid wiping data.
+         */
+        if ( StringUtils.isNotBlank( newGeneInfo.getEnsemblId() ) ) {
+            existingGene.setEnsemblId( newGeneInfo.getEnsemblId() );
+        }
+
+        // We assume the taxon hasn't changed.
+
+        Map<String, DatabaseEntry> updatedacMap = new HashMap<String, DatabaseEntry>();
+        for ( DatabaseEntry de : existingGene.getAccessions() ) {
+            updatedacMap.put( de.getAccession(), de );
+        }
+        for ( DatabaseEntry de : newGeneInfo.getAccessions() ) {
+            if ( !updatedacMap.containsKey( de.getAccession() ) ) {
+                fillInDatabaseEntry( de );
+                existingGene.getAccessions().add( de );
+            }
+        }
+
+        existingGene.setName( newGeneInfo.getName() );
+        existingGene.setDescription( newGeneInfo.getDescription() );
+        existingGene.setOfficialName( newGeneInfo.getOfficialName() );
+        existingGene.setOfficialSymbol( newGeneInfo.getOfficialSymbol() );
+        existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
+        existingGene.setCytogenicLocation( newGeneInfo.getCytogenicLocation() );
+
+        fillChromosomeLocationAssociations( existingGene.getPhysicalLocation() );
+        fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
+
+        existingGene.getAliases().clear();
+        existingGene.getAliases().addAll( newGeneInfo.getAliases() );
+
+        /*
+         * This is the only tricky part - the gene products. We update them if they are already there, and add them if
+         * not. We do not normally delete 'old' ones that the new gene instance does not have, because they might be
+         * from different sources. For example, Ensembl or GoldenPath. -- UNLESS the product has an NCBI GI because we
+         * know those come from NCBI.
+         */
+        Map<String, GeneProduct> updatedGpMap = new HashMap<String, GeneProduct>();
+
+        for ( GeneProduct existingGp : existingGene.getProducts() ) {
+            updatedGpMap.put( existingGp.getName(), existingGp );
+            updatedGpMap.put( existingGp.getNcbiGi(), existingGp );
+        }
+
+        Set<String> usedGIs = new HashSet<String>();
+        for ( GeneProduct newGeneProductInfo : newGeneInfo.getProducts() ) {
+            if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
+                log.debug( "Updating gene product based on name: " + newGeneProductInfo );
+                GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getName() );
+                updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+            } else if ( updatedGpMap.containsKey( newGeneProductInfo.getNcbiGi() ) ) {
+                log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
+                GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getNcbiGi() );
+                updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+            } else {
+                GeneProduct existingGeneProduct = geneProductService.find( newGeneProductInfo );
+                if ( existingGeneProduct == null ) {
+                    // it is, in fact, new, so far as we can tell.
+                    newGeneProductInfo.setGene( existingGene );
+                    fillInGeneProductAssociations( newGeneProductInfo );
+                    log.info( "New product for " + existingGene + ": " + newGeneProductInfo );
+                    existingGene.getProducts().add( newGeneProductInfo );
+                } else {
+                    /*
+                     * This can only happen if this gene product is associated with a different gene. This actually
+                     * seems to happen when a transcript is associated with two genes in NCBI, so the switching is
+                     * actually not useful to us, but we do it anyway to be consistent (and in case it really does
+                     * matter). The rarity of this makes me think it is a mistake in NCBI (in all cases so far, it's a
+                     * genome-duplicated gene, so there may be an arbitrary choice to make ). The problem for us is at
+                     * this point in processing, we don't know if the gene is going to get 'reattached' to its original
+                     * gene.
+                     */
+                    assert existingGeneProduct != null;
+                    existingGeneProduct = geneProductService.thaw( existingGeneProduct );
+                    Gene oldGeneForExistingGeneProduct = existingGeneProduct.getGene();
+                    if ( oldGeneForExistingGeneProduct != null ) {
+                        Gene geneInfo = newGeneProductInfo.getGene(); // transient.
+                        if ( !oldGeneForExistingGeneProduct.equals( geneInfo ) ) {
+                            log.warn( "Switching gene product from one gene to another: "
+                                    + existingGeneProduct
+                                    + " switching to "
+                                    + geneInfo
+                                    + " (often this means an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
+
+                            // / Here we just remove its old association.
+                            oldGeneForExistingGeneProduct = geneService.thaw( oldGeneForExistingGeneProduct );
+                            oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
+                            geneService.update( oldGeneForExistingGeneProduct );
+
+                            if ( oldGeneForExistingGeneProduct.getProducts().isEmpty() ) {
+                                log.warn( "Gene has no products left after removing that gene product (but it might change later): "
+                                        + oldGeneForExistingGeneProduct );
+                            }
+                        }
+
+                        assert !oldGeneForExistingGeneProduct.getProducts().contains( existingGeneProduct );
+                    } else {
+                        log.info( "Attaching orphaned gene product to " + existingGene + " : " + existingGeneProduct );
+                    }
+
+                    existingGeneProduct.setGene( existingGene );
+                    existingGene.getProducts().add( existingGeneProduct );
+                    assert existingGeneProduct.getGene().equals( existingGene );
+
+                    updateGeneProduct( existingGeneProduct, newGeneProductInfo );
+
+                }
+            }
+            usedGIs.add( newGeneProductInfo.getNcbiGi() );
+        }
+
+        /*
+         * Check for deletions. If we have a GI that is not in the collection, then we delete it from the system.
+         */
+        Collection<GeneProduct> toRemove = new HashSet<GeneProduct>();
+        if ( !usedGIs.isEmpty() ) {
+            for ( GeneProduct gp : existingGene.getProducts() ) {
+                if ( StringUtils.isNotBlank( gp.getNcbiGi() ) && !usedGIs.contains( gp.getNcbiGi() ) ) {
+                    toRemove.add( gp );
+                    gp.setGene( null ); // we are erasing this association as we assume it is no longer valid.
+                }
+            }
+            if ( !toRemove.isEmpty() ) {
+                existingGene.getProducts().removeAll( toRemove );
+            }
+        }
+
+        geneService.update( existingGene ); // will orphaned gene products be deleted by cascade?
+
+        if ( !toRemove.isEmpty() ) {
+            geneProductService.remove( toRemove );
+        }
+
+        return existingGene;
     }
 
     /**
@@ -471,169 +586,6 @@ abstract public class GenomePersister extends CommonPersister {
 
         return updateGene( existingGene, gene );
 
-    }
-
-    /**
-     * @param existingGene
-     * @param newGeneInfo the non-persistent gene we are copying information from
-     * @return
-     */
-    public Gene updateGene( Gene existingGene, Gene newGeneInfo ) {
-        // updated gene products.
-        existingGene = geneService.thaw( existingGene );
-
-        // NCBI id can be null if gene has been loaded from a gene info file
-        Integer existingNcbiId = existingGene.getNcbiGeneId();
-        if ( existingNcbiId != null && !existingNcbiId.equals( newGeneInfo.getNcbiGeneId() ) ) {
-            log.info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
-            String previousId = newGeneInfo.getPreviousNcbiId();
-            if ( previousId != null ) {
-                if ( !previousId.equals( existingGene.getNcbiGeneId().toString() ) ) {
-                    throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
-                            + " has changed and the previous NCBI id on record with NCBI ("
-                            + newGeneInfo.getPreviousNcbiId() + ") doesn't match either." );
-                }
-                existingGene.setPreviousNcbiId( existingGene.getNcbiGeneId().toString() );
-                existingGene.setNcbiGeneId( newGeneInfo.getNcbiGeneId() );
-            }
-        }
-
-        /*
-         * We might want to change this behaviour to clear the value if the updated one has none. For now I just want to
-         * avoid wiping data.
-         */
-        if ( StringUtils.isNotBlank( newGeneInfo.getEnsemblId() ) ) {
-            existingGene.setEnsemblId( newGeneInfo.getEnsemblId() );
-        }
-
-        // We assume the taxon hasn't changed.
-
-        Map<String, DatabaseEntry> updatedacMap = new HashMap<String, DatabaseEntry>();
-        for ( DatabaseEntry de : existingGene.getAccessions() ) {
-            updatedacMap.put( de.getAccession(), de );
-        }
-        for ( DatabaseEntry de : newGeneInfo.getAccessions() ) {
-            if ( !updatedacMap.containsKey( de.getAccession() ) ) {
-                fillInDatabaseEntry( de );
-                existingGene.getAccessions().add( de );
-            }
-        }
-
-        existingGene.setName( newGeneInfo.getName() );
-        existingGene.setDescription( newGeneInfo.getDescription() );
-        existingGene.setOfficialName( newGeneInfo.getOfficialName() );
-        existingGene.setOfficialSymbol( newGeneInfo.getOfficialSymbol() );
-        existingGene.setPhysicalLocation( newGeneInfo.getPhysicalLocation() );
-        existingGene.setCytogenicLocation( newGeneInfo.getCytogenicLocation() );
-
-        fillChromosomeLocationAssociations( existingGene.getPhysicalLocation() );
-        fillChromosomeLocationAssociations( existingGene.getCytogenicLocation() );
-
-        existingGene.getAliases().clear();
-        existingGene.getAliases().addAll( newGeneInfo.getAliases() );
-
-        /*
-         * This is the only tricky part - the gene products. We update them if they are already there, and add them if
-         * not. We do not normally delete 'old' ones that the new gene instance does not have, because they might be
-         * from different sources. For example, Ensembl or GoldenPath. -- UNLESS the product has an NCBI GI because we
-         * know those come from NCBI.
-         */
-        Map<String, GeneProduct> updatedGpMap = new HashMap<String, GeneProduct>();
-
-        for ( GeneProduct existingGp : existingGene.getProducts() ) {
-            updatedGpMap.put( existingGp.getName(), existingGp );
-            updatedGpMap.put( existingGp.getNcbiGi(), existingGp );
-        }
-
-        Set<String> gis = new HashSet<String>();
-        for ( GeneProduct newGeneProductInfo : newGeneInfo.getProducts() ) {
-            if ( updatedGpMap.containsKey( newGeneProductInfo.getName() ) ) {
-                log.debug( "Updating gene product based on name: " + newGeneProductInfo );
-                GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getName() );
-                updateGeneProduct( existingGeneProduct, newGeneProductInfo );
-            } else if ( updatedGpMap.containsKey( newGeneProductInfo.getNcbiGi() ) ) {
-                log.debug( "Updating gene product based on GI: " + newGeneProductInfo );
-                GeneProduct existingGeneProduct = updatedGpMap.get( newGeneProductInfo.getNcbiGi() );
-                updateGeneProduct( existingGeneProduct, newGeneProductInfo );
-            } else {
-                GeneProduct existingGeneProduct = geneProductService.find( newGeneProductInfo );
-                if ( existingGeneProduct == null ) {
-                    // it is, in fact, new, so far as we can tell.
-                    newGeneProductInfo.setGene( existingGene );
-                    fillInGeneProductAssociations( newGeneProductInfo );
-                    log.info( "New product for " + existingGene + ": " + newGeneProductInfo );
-                    existingGene.getProducts().add( newGeneProductInfo );
-                } else {
-                    /*
-                     * This can only happen if this gene product is associated with a different gene. This actually
-                     * seems to happen when a transcript is associated with two genes in NCBI, so the switching is
-                     * actually not useful to us, but we do it anyway to be consistent (and in case it really does
-                     * matter). The rarity of this makes me think it is a mistake in NCBI (in all cases so far, it's a
-                     * genome-duplicated gene, so there may be an arbitrary choice to make ). The problem for us is at
-                     * this point in processing, we don't know if the gene is going to get 'reattached' to its original
-                     * gene.
-                     */
-                    assert existingGeneProduct != null;
-                    existingGeneProduct = geneProductService.thaw( existingGeneProduct );
-                    Gene oldGeneForExistingGeneProduct = existingGeneProduct.getGene();
-                    if ( oldGeneForExistingGeneProduct != null ) {
-                        Gene geneInfo = newGeneProductInfo.getGene(); // transient.
-                        if ( !oldGeneForExistingGeneProduct.equals( geneInfo ) ) {
-                            log.warn( "Switching gene product from one gene to another: "
-                                    + existingGeneProduct
-                                    + " switching to "
-                                    + geneInfo
-                                    + " (often this means an mRNA is associated with two genes, which we don't allow, so we switch it arbitrarily)" );
-
-                            // / Here we just remove its old association.
-                            oldGeneForExistingGeneProduct = geneService.thaw( oldGeneForExistingGeneProduct );
-                            oldGeneForExistingGeneProduct.getProducts().remove( existingGeneProduct );
-                            geneService.update( oldGeneForExistingGeneProduct );
-
-                            if ( oldGeneForExistingGeneProduct.getProducts().isEmpty() ) {
-                                log.warn( "Gene has no products left after removing that gene product (but it might change later): "
-                                        + oldGeneForExistingGeneProduct );
-                            }
-                        }
-
-                        assert !oldGeneForExistingGeneProduct.getProducts().contains( existingGeneProduct );
-                    } else {
-                        log.info( "Attaching orphaned gene product to " + existingGene + " : " + existingGeneProduct );
-                    }
-
-                    existingGeneProduct.setGene( existingGene );
-                    existingGene.getProducts().add( existingGeneProduct );
-                    assert existingGeneProduct.getGene().equals( existingGene );
-
-                    updateGeneProduct( existingGeneProduct, newGeneProductInfo );
-
-                }
-            }
-            gis.add( newGeneProductInfo.getNcbiGi() );
-        }
-
-        /*
-         * Check for deletions.
-         */
-        Collection<GeneProduct> toRemove = new HashSet<GeneProduct>();
-        if ( !gis.isEmpty() ) {
-            for ( GeneProduct gp : existingGene.getProducts() ) {
-                if ( StringUtils.isNotBlank( gp.getNcbiGi() ) && !gis.contains( gp.getNcbiGi() ) ) {
-                    toRemove.add( gp );
-                }
-            }
-            if ( !toRemove.isEmpty() ) {
-                detatchDefunctGeneProducts( existingGene, toRemove );
-            }
-        }
-
-        geneService.update( existingGene ); // will orphaned gene products be deleted by cascade?
-
-        if ( !toRemove.isEmpty() ) { 
-            geneProductService.remove( toRemove );
-        }
-
-        return existingGene;
     }
 
     /**
