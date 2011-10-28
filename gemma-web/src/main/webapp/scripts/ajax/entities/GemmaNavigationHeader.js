@@ -41,12 +41,16 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 	});
 	var isAdmin = (Ext.getDom('hasAdmin') && Ext.getDom('hasAdmin').getValue() === 'true')?true:false;
 	var userLoggedIn = (Ext.getDom('hasUser') && Ext.getDom('hasUser').getValue() === 'true')?true:false;
-	
+
+	var menuDefaults = {
+		style:'color:black;font-size:12px;line-height:20px'
+	};
 	var searchBtn = new Ext.Button({
 			ref:'searchBtn',
-			text: 'Search',
+			text: 'Explore',
 			menu: new Ext.menu.Menu({
-			style:'background:white',
+			defaults: menuDefaults,
+			style:'background:white;',
 				items: [	
 				// these items will render as dropdown menu items when the arrow is clicked:
 				{
@@ -63,11 +67,11 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 						flex:0
 					}]
 				},{
-					text: 'Search our Database',
+					text: 'Search',
 					href: "/Gemma/searcher.html",
 					tooltip: "Search our database for genes, experiments, array designs, etc."
 				}, {
-					text: 'Search Analysis Results',
+					text: 'Search Analyses',
 					href: "/Gemma/analysesResultsSearch.html",
 					tooltip: "Search for differential and coexpression patterns"
 				},'-', {
@@ -109,6 +113,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 			text: 'My Gemma',
 			hidden: !userLoggedIn,
 			menu: new Ext.menu.Menu({
+				defaults: menuDefaults,
 				style:'background:white',
 				items: [// these items will render as dropdown menu items when the arrow is clicked:
 				{
@@ -160,6 +165,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 		var aboutBtn = new Ext.Button({
 			text: 'About',
 			menu: new Ext.menu.Menu({
+				defaults: menuDefaults,
 				style:'background:white',
 				items: [
 				{
@@ -208,6 +214,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 		var helpBtn = new Ext.Button({
 			text: 'Help',
 			menu: new Ext.menu.Menu({
+				defaults: menuDefaults,
 				style:'background:white',
 				items: [
 				{
@@ -249,6 +256,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 			text: 'Administration',
 			hidden: !isAdmin,
 			menu: new Ext.menu.Menu({
+				defaults: menuDefaults,
 				style:'background:white',
 				items: [// these items will render as dropdown menu items when the arrow is clicked:
 				{
@@ -318,6 +326,7 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 			text: loggedInAs,
 			hidden: !loggedInAs,
 			menu: new Ext.menu.Menu({
+				defaults: menuDefaults,
 				style:'background:white',
 				items: [
 				{
