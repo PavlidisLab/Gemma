@@ -503,6 +503,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public Collection<GeneEvidencesValueObject> findGenesWithEvidences( String query, Long taxonId ) {
+
+        if ( query == null || query.length() == 0 ) {
+            return null;
+        }
+
+        // make sure it does an inexact search
+        query = query + "%";
+
         Taxon taxon = null;
         if ( taxonId != null ) {
             taxon = taxonService.load( taxonId );
