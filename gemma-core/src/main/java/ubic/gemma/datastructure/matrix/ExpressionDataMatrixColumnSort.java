@@ -214,7 +214,14 @@ public class ExpressionDataMatrixColumnSort {
             ExperimentalFactor simplest = chooseSimplestFactor( start, factorsToTake );
             if ( simplest == null ) {
                 // none of the factors have more than one factor value. One-sided t-tests ...
-                assert factors.size() == 1 : "It's possible to have just one factor value, but only if there is only one factor.";
+
+                /*
+                 * This assertion isn't right -- we now allow this, though we can only have ONE such constant factor.
+                 * See bug 2390.
+                 */
+                // assert factors.size() == 1 :
+                // "It's possible to have just one factor value, but only if there is only one factor.";
+
                 sortedFactors.addAll( factors );
                 return sortedFactors;
             }
