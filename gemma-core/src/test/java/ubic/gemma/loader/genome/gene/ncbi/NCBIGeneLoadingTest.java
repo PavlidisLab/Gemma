@@ -79,7 +79,9 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
 
         // threaded load
         String basePath = ConfigUtils.getString( "gemma.home" );
-        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile, null, false );
+        Taxon ta = taxonService.findByCommonName( "human" );
+
+        loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile, null, ta );
 
         // wait until the loader is done.
         while ( !loader.isLoaderDone() ) {
@@ -132,7 +134,7 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         String geneEnsemblFile = "/gemma-core/src/test/resources/data/loader/genome/gene/gene2ensembl.human.sample";
 
         loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + updatedHistory, basePath
-                + geneEnsemblFile, false );
+                + geneEnsemblFile, ta );
         // wait until the loader is done.
         while ( !loader.isLoaderDone() ) {
             Thread.sleep( 100 );
