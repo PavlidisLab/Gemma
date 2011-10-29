@@ -51,6 +51,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
 
     protected NetDatasourceUtil netDataSourceUtil;
 
+    protected boolean avoidDownload = false;
+
     /**
      * 
      */
@@ -58,6 +60,41 @@ public abstract class FtpFetcher extends AbstractFetcher {
         super();
         setNetDataSourceUtil();
     }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.loader.util.fetcher.Fetcher#fetch(java.lang.String)
+     */
+    public Collection<LocalFile> fetch( String identifier ) {
+
+        String seekFile = formRemoteFilePath( identifier );
+
+        return fetch( identifier, seekFile );
+    }
+
+    /**
+     * @return the netDataSourceUtil
+     */
+    public NetDatasourceUtil getNetDataSourceUtil() {
+        return this.netDataSourceUtil;
+    }
+
+    /**
+     * Set to true to avoid download if possible and simply use existing files if they are available. This skips the
+     * usual checks for the correct file size compared to the remote one. Not all fetchers support setting this to
+     * 'true'.
+     * 
+     * @param avoidDownload
+     */
+    public void setAvoidDownload( boolean avoidDownload ) {
+        this.avoidDownload = avoidDownload;
+    }
+
+    /**
+     * @param netDataSourceUtil the netDataSourceUtil to set
+     */
+    public abstract void setNetDataSourceUtil();
 
     /**
      * @param outputFileName
@@ -70,6 +107,10 @@ public abstract class FtpFetcher extends AbstractFetcher {
                 File existing = new File( outputFileName );
                 if ( existing.exists() && allowUseExisting ) {
                     log.info( "Checking validity of existing local file: " + outputFileName );
+                } else if ( existing.exists() && avoidDownload ) {
+                    log.info( "A local file exists, skipping download." );
+                    ftpClient.disconnect();
+                    return Boolean.TRUE;
                 } else {
                     log.info( "Fetching " + seekFile + " to " + outputFileName );
                 }
@@ -81,11 +122,46 @@ public abstract class FtpFetcher extends AbstractFetcher {
         return future;
     }
 
-    public Collection<LocalFile> fetch( String identifier ) {
+    /**
+     * @param future
+     * @param expectedSize
+     * @param outputFileName
+     * @param seekFileName
+     * @return
+     */
+    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
+            String outputFileName ) {
 
-        String seekFile = formRemoteFilePath( identifier );
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute( future );
+        executor.shutdown();
 
-        return fetch( identifier, seekFile );
+        try {
+
+            File outputFile = new File( outputFileName );
+            boolean ok = waitForDownload( future, expectedSize, outputFile );
+
+            if ( !ok ) {
+                // cancelled, probably.
+                log.info( "Download failed, was it cancelled?" );
+                return null;
+            } else if ( future.get().booleanValue() ) {
+                if ( log.isInfoEnabled() ) log.info( "Done: local file is " + outputFile );
+                LocalFile file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
+                Collection<LocalFile> result = new HashSet<LocalFile>();
+                result.add( file );
+                return result;
+            }
+        } catch ( ExecutionException e ) {
+            throw new RuntimeException( "Couldn't fetch " + seekFileName, e );
+        } catch ( InterruptedException e ) {
+            log.warn( "Interrupted: Couldn't fetch " + seekFileName, e );
+            return null;
+        } catch ( CancellationException e ) {
+            log.info( "Cancelled" );
+            return null;
+        }
+        throw new RuntimeException( "Couldn't fetch file for " + seekFileName );
     }
 
     /**
@@ -100,8 +176,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
             String outputFileName = formLocalFilePath( identifier, newDir );
 
             existingFile = new File( outputFileName );
-            if ( existingFile.canRead() && allowUseExisting ) {
-                log.info( outputFileName + " already exists: checking size match." );
+            if ( this.avoidDownload || ( existingFile.canRead() && allowUseExisting ) ) {
+                // log.info( outputFileName + " already exists." );
             }
 
             if ( ftpClient == null || !ftpClient.isConnected() ) {
@@ -116,6 +192,8 @@ public abstract class FtpFetcher extends AbstractFetcher {
             return result;
         } catch ( UnknownHostException e ) {
             if ( force || !allowUseExisting || existingFile == null ) throw new RuntimeException( e );
+
+            if ( !avoidDownload ) throw new RuntimeException( e );
 
             log.warn( "Could not connect to " + this.getNetDataSourceUtil().getHost() + " to check size of " + seekFile
                     + ", using existing file" );
@@ -164,59 +242,5 @@ public abstract class FtpFetcher extends AbstractFetcher {
      */
     protected long getExpectedSize( final String seekFile ) throws IOException, SocketException {
         return NetUtils.ftpFileSize( ftpClient, seekFile );
-    }
-
-    /**
-     * @param future
-     * @param expectedSize
-     * @param outputFileName
-     * @param seekFileName
-     * @return
-     */
-    protected Collection<LocalFile> doTask( FutureTask<Boolean> future, long expectedSize, String seekFileName,
-            String outputFileName ) {
-
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute( future );
-        executor.shutdown();
-
-        try {
-
-            File outputFile = new File( outputFileName );
-            boolean ok = waitForDownload( future, expectedSize, outputFile );
-
-            if ( !ok ) {
-                // cancelled, probably.
-                log.info( "Download failed, was it cancelled?" );
-                return null;
-            } else if ( future.get().booleanValue() ) {
-                if ( log.isInfoEnabled() ) log.info( "Done: local file is " + outputFile );
-                LocalFile file = fetchedFile( seekFileName, outputFile.getAbsolutePath() );
-                Collection<LocalFile> result = new HashSet<LocalFile>();
-                result.add( file );
-                return result;
-            }
-        } catch ( ExecutionException e ) {
-            throw new RuntimeException( "Couldn't fetch " + seekFileName, e );
-        } catch ( InterruptedException e ) {
-            log.warn( "Interrupted: Couldn't fetch " + seekFileName, e );
-            return null;
-        } catch ( CancellationException e ) {
-            log.info( "Cancelled" );
-            return null;
-        }
-        throw new RuntimeException( "Couldn't fetch file for " + seekFileName );
-    }
-
-    /**
-     * @param netDataSourceUtil the netDataSourceUtil to set
-     */
-    public abstract void setNetDataSourceUtil();
-
-    /**
-     * @return the netDataSourceUtil
-     */
-    public NetDatasourceUtil getNetDataSourceUtil() {
-        return this.netDataSourceUtil;
     }
 }

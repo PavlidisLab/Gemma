@@ -54,6 +54,9 @@ public class NcbiGeneLoader {
     private int loadedGeneCount = 0;
     private TaxonService taxonService;
 
+    // whether to fetch files from ncbi or use existing ones
+    private boolean doDownload = true;
+
     public NcbiGeneLoader() {
         generatorDone = new AtomicBoolean( false );
         converterDone = new AtomicBoolean( false );
@@ -256,6 +259,7 @@ public class NcbiGeneLoader {
         this.loaderDone.set( false );
 
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa );
+        sdog.setDoDownload( doDownload );
         sdog.setProducerDoneFlag( generatorDone );
 
         NcbiGeneConverter converter = new NcbiGeneConverter();
@@ -284,6 +288,11 @@ public class NcbiGeneLoader {
         // update taxon table to indicate that now there are genes loaded for that taxa.
         // all or nothing so that if fails for some taxa then no taxa will be updated.
         this.updateTaxaWithGenesUsable( sdog.getSupportedTaxaWithNCBIGenes() );
+    }
+
+    public void setSkipDownload( boolean skipDownload ) {
+        this.doDownload = !skipDownload;
+
     }
 
 }

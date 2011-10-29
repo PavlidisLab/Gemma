@@ -29,14 +29,13 @@ public interface ExternalDatabaseService {
     /**
      * 
      */
-    public ubic.gemma.model.common.description.ExternalDatabase find( java.lang.String name );
+    public ExternalDatabase find( java.lang.String name );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
-    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
+    @Secured({ "GROUP_USER" })
+    public ExternalDatabase findOrCreate( ExternalDatabase externalDatabase );
 
     /**
      * 
@@ -46,7 +45,7 @@ public interface ExternalDatabaseService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void remove( ubic.gemma.model.common.description.ExternalDatabase externalDatabase );
 
 }

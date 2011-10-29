@@ -47,7 +47,6 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
      * @see
      * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#find(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
-    @SuppressWarnings("unchecked")
     public Contact find( Contact contact ) {
         try {
 
@@ -92,12 +91,17 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
         return create( contact );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<Investigation> getInvestigations( Contact contact ) {
         /*
          * If there are other types of investigations they will have to be added to the results.
          */
         return this.getHibernateTemplate().findByNamedParam(
                 "select e from ExpressionExperimentImpl e join e.investigators i where i=:c ", "c", contact );
+    }
+
+    @Override
+    public Collection<Contact> findByName( String name ) {
+        return this.getHibernateTemplate()
+                .findByNamedParam( "from ContactImpl c where c.name like :d", "d", name + "%" );
     }
 }

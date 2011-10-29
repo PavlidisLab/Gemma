@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.Collection;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -65,6 +67,11 @@ public class ContactServiceImpl extends ubic.gemma.model.common.auditAndSecurity
     @Override
     protected void handleUpdate( ubic.gemma.model.common.auditAndSecurity.Contact contact ) throws java.lang.Exception {
         this.getContactDao().update( contact );
+    }
+
+    @Override
+    public Collection<Contact> findByName( String name ) {
+        return this.getContactDao().findByName( name );
     }
 
 }

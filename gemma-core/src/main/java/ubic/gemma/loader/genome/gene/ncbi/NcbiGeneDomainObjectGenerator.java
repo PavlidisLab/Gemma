@@ -59,6 +59,17 @@ public class NcbiGeneDomainObjectGenerator {
     private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
     private boolean filter = true;
 
+    // whether to fetch files from ncbi or use existing ones
+    private boolean doDownload = true;
+
+    public boolean isDoDownload() {
+        return doDownload;
+    }
+
+    public void setDoDownload( boolean doDownload ) {
+        this.doDownload = doDownload;
+    }
+
     public NcbiGeneDomainObjectGenerator( Collection<Taxon> taxa ) {
 
         if ( taxa != null ) {
@@ -86,6 +97,7 @@ public class NcbiGeneDomainObjectGenerator {
 
         log.info( "Fetching..." );
         NCBIGeneFileFetcher fetcher = new NCBIGeneFileFetcher();
+        fetcher.setDoDownload( this.doDownload );
         LocalFile geneInfoFile = fetcher.fetch( GENEINFO_FILE ).iterator().next();
         LocalFile gene2AccessionFile = fetcher.fetch( GENE2ACCESSION_FILE ).iterator().next();
         LocalFile geneHistoryFile = fetcher.fetch( GENEHISTORY_FILE ).iterator().next();

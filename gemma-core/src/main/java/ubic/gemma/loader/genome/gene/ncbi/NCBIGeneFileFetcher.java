@@ -82,4 +82,8 @@ public class NCBIGeneFileFetcher extends FtpArchiveFetcher {
         this.netDataSourceUtil = new NCBIUtil();
     }
 
+    public void setDoDownload( boolean doDownload ) {
+        this.setAvoidDownload( !doDownload );
+    }
+
 }

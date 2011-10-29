@@ -38,7 +38,9 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated because we get these genes from NCBI
  */
+@Deprecated
 public class MirBaseLoader extends AbstractSpringAwareCLI {
 
     public static void main( String[] args ) {
@@ -65,12 +67,12 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option fileOption = OptionBuilder.hasArg().isRequired().withArgName( "GFF file" ).withDescription(
-                "Path to GFF file" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = OptionBuilder.hasArg().isRequired().withArgName( "GFF file" )
+                .withDescription( "Path to GFF file" ).withLongOpt( "file" ).create( 'f' );
 
         addOption( fileOption );
-        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).isRequired().withDescription(
-                "Taxon common name (e.g., human) for genes to be loaded" ).create( 't' );
+        Option taxonOption = OptionBuilder.hasArg().withArgName( "taxon" ).isRequired()
+                .withDescription( "Taxon common name (e.g., human) for genes to be loaded" ).create( 't' );
 
         addOption( taxonOption );
 

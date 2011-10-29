@@ -47,6 +47,8 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
 
     private String taxonCommonName = null;
 
+    private boolean skipDownload = false;
+
     public NcbiGeneLoaderCLI() {
         super();
     }
@@ -68,6 +70,7 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         TaxonService taxonService = ( TaxonService ) this.getBean( "taxonService" );
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.getPersisterHelper() );
+        loader.setSkipDownload( this.skipDownload );
 
         Taxon t = null;
         if ( StringUtils.isNotBlank( taxonCommonName ) ) {
@@ -123,6 +126,8 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
 
         addOption( "taxon", true, "Specific taxon for which to update genes" );
 
+        addOption( "nodownload", false, "Set to suppress NCBI file download" );
+
         requireLogin();
     }
 
@@ -134,6 +139,9 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         }
         if ( hasOption( "taxon" ) ) {
             this.taxonCommonName = getOptionValue( "taxon" );
+        }
+        if ( hasOption( "nodownload" ) ) {
+            this.skipDownload = true;
         }
     }
 

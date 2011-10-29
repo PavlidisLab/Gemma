@@ -48,4 +48,6 @@ public interface ContactDao extends BaseDao<Contact> {
      */
     public Collection<Investigation> getInvestigations( Contact contact );
 
+    public Collection<Contact> findByName( String name );
+
 }
