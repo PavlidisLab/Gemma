@@ -44,6 +44,9 @@ public class TaxonImpl extends ubic.gemma.model.genome.Taxon {
             if ( this.getNcbiId() != null && that.getNcbiId() != null && !this.getNcbiId().equals( that.getNcbiId() ) )
                 return false;
 
+            if ( this.getSecondaryNcbiId() != null && that.getSecondaryNcbiId() != null
+                    && !this.getSecondaryNcbiId().equals( that.getSecondaryNcbiId() ) ) return false;
+
             if ( this.getScientificName() != null && that.getScientificName() != null
                     && !this.getScientificName().equals( that.getScientificName() ) ) return false;
 

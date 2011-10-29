@@ -59,16 +59,19 @@ public class NcbiGeneDomainObjectGenerator {
     private Collection<Taxon> supportedTaxaWithNCBIGenes = null;
     private boolean filter = true;
 
-    public NcbiGeneDomainObjectGenerator( Collection<Taxon> supportedTaxa ) {
+    public NcbiGeneDomainObjectGenerator( Collection<Taxon> taxa ) {
 
-        if ( supportedTaxa != null ) {
+        if ( taxa != null ) {
             this.supportedTaxa = new HashMap<Integer, Taxon>();
-            for ( Taxon t : supportedTaxa ) {
+            for ( Taxon t : taxa ) {
                 if ( t.getNcbiId() == null ) {
                     log.warn( "Can't support NCBI genes for " + t + ", it lacks an NCBI id" );
                     continue;
                 }
                 this.supportedTaxa.put( t.getNcbiId(), t );
+                if ( t.getSecondaryNcbiId() != null ) {
+                    this.supportedTaxa.put( t.getSecondaryNcbiId(), t );
+                }
             }
         } else {
             this.filter = false;

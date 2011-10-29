@@ -20,6 +20,8 @@
  */
 package ubic.gemma.model.common.description;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -54,7 +56,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
 
         BusinessKey.addRestrictions( queryObject, databaseEntry );
 
-        List results = this.getHibernateTemplate().findByCriteria( queryObject );
+        List<?> results = this.getHibernateTemplate().findByCriteria( queryObject );
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
@@ -69,6 +71,13 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
     }
 
     @Override
+    public Collection<? extends DatabaseEntry> load( Collection<Long> ids ) {
+        if ( ids == null || ids.isEmpty() ) return new HashSet<DatabaseEntry>();
+        final String queryString = "select ad from DatabaseEntryImpl d where ad.id in (:ids) ";
+        return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+    }
+
+    @Override
     protected Integer handleCountAll() throws Exception {
         final String query = "select count(*) from DatabaseEntryImpl";
         try {
@@ -80,7 +89,7 @@ public class DatabaseEntryDaoImpl extends ubic.gemma.model.common.description.Da
         }
     }
 
-    private String debug( List results ) {
+    private String debug( List<?> results ) {
         StringBuilder buf = new StringBuilder();
         buf.append( "Multiple database entries match:\n" );
         for ( Object object : results ) {

@@ -941,6 +941,9 @@ public class BusinessKey {
             queryObject.add( Restrictions.eq( "id", taxon.getId() ) );
         } else if ( taxon.getNcbiId() != null ) {
             queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+            if ( taxon.getSecondaryNcbiId() != null ) {
+                queryObject.add( Restrictions.eq( "secondaryNcbiId", taxon.getSecondaryNcbiId() ) );
+            }
         } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
             queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {

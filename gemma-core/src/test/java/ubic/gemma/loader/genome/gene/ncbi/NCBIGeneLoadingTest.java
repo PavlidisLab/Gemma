@@ -19,6 +19,7 @@
 package ubic.gemma.loader.genome.gene.ncbi;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -80,6 +81,8 @@ public class NCBIGeneLoadingTest extends BaseSpringContextTest {
         // threaded load
         String basePath = ConfigUtils.getString( "gemma.home" );
         Taxon ta = taxonService.findByCommonName( "human" );
+
+        assertNotNull( ta );
 
         loader.load( basePath + geneInfoTestFile, basePath + gene2AccTestFile, basePath + geneHistoryFile, null, ta );
 

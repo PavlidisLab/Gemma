@@ -21,12 +21,11 @@ package ubic.gemma.loader.association;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.QueuingParser;
 import ubic.gemma.loader.util.parser.BasicLineParser;
@@ -41,7 +40,7 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
- * This parses GO annotations from NCBI. See {@ink ftp://ftp.ncbi.nih.gov/gene/DATA/README}.
+ * This parses GO annotations from NCBI. See {@link ftp://ftp.ncbi.nih.gov/gene/DATA/README}.
  * 
  * <pre>
  * tax_id:
@@ -78,10 +77,10 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation> implements QueuingParser {
+public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssociation> implements
+        QueuingParser<Gene2GOAssociation> {
 
     private static final String COMMENT_INDICATOR = "#";
-    protected static final Log log = LogFactory.getLog( NCBIGene2GOAssociationParser.class );
 
     private final int TAX_ID = ConfigUtils.getInt( "gene2go.tax_id" );
 
@@ -103,7 +102,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     /**
      * NCBI Ids of available taxa.
      */
-    private Collection<Integer> taxaNcibi;
+    private Map<Integer, Taxon> taxaNcbiIds;
 
     /**
      * @param taxa to consider (usually we pass in all)
@@ -116,9 +115,12 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         ncbiGeneDb = ExternalDatabase.Factory.newInstance();
         ncbiGeneDb.setName( "Entrez Gene" );
 
-        this.taxaNcibi = new HashSet<Integer>();
+        this.taxaNcbiIds = new HashMap<Integer, Taxon>();
         for ( Taxon taxon : taxa ) {
-            this.taxaNcibi.add( taxon.getNcbiId() );
+            this.taxaNcbiIds.put( taxon.getNcbiId(), taxon );
+            if ( taxon.getSecondaryNcbiId() != null ) {
+                this.taxaNcbiIds.put( taxon.getSecondaryNcbiId(), taxon );
+            }
         }
     }
 
@@ -147,14 +149,14 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
 
         if ( values.length < 8 ) return null;
 
-        Taxon t = Taxon.Factory.newInstance();
+        Integer taxonId = null;
         try {
-            t.setNcbiId( Integer.parseInt( values[TAX_ID] ) );
+            taxonId = Integer.parseInt( values[TAX_ID] );
         } catch ( NumberFormatException e ) {
             throw new RuntimeException( e );
         }
 
-        if ( !taxaNcibi.contains( t.getNcbiId() ) ) {
+        if ( !taxaNcbiIds.containsKey( taxonId ) ) {
             return null;
         }
 
@@ -163,7 +165,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         Gene gene = Gene.Factory.newInstance();
         gene.setNcbiGeneId( Integer.parseInt( values[GENE_ID] ) );
 
-        gene.setTaxon( t );
+        gene.setTaxon( taxaNcbiIds.get( taxonId ) );
         VocabCharacteristic oe = VocabCharacteristic.Factory.newInstance();
         String value = values[GO_ID].replace( ":", "_" );
         oe.setValueUri( GeneOntologyService.BASE_GO_URI + value );
@@ -193,8 +195,7 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         return this.mapFromGene2GO( line );
     }
 
-    @SuppressWarnings("unchecked")
-    public void parse( InputStream inputStream, BlockingQueue aqueue ) throws IOException {
+    public void parse( InputStream inputStream, BlockingQueue<Gene2GOAssociation> aqueue ) throws IOException {
         if ( inputStream == null ) throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aqueue;
         super.parse( inputStream );

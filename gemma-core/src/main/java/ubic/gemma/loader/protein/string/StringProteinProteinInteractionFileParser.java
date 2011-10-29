@@ -203,6 +203,8 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
         Collection<Integer> taxaNcibi = new HashSet<Integer>();
         for ( Taxon taxon : this.taxa ) {
             taxaNcibi.add( taxon.getNcbiId() );
+
+            if ( taxon.getSecondaryNcbiId() != null ) taxaNcibi.add( taxon.getSecondaryNcbiId() );
         }
         return taxaNcibi;
     }

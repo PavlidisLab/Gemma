@@ -34,19 +34,18 @@ public interface DatabaseEntryService {
     /**
      * 
      */
-    public ubic.gemma.model.common.description.DatabaseEntry find(
-            ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
+    public DatabaseEntry find( DatabaseEntry databaseEntry );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void remove( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( ubic.gemma.model.common.description.DatabaseEntry databaseEntry );
 
 }

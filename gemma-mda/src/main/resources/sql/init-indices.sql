@@ -8,6 +8,7 @@ alter table CHROMOSOME_FEATURE add index symbol_tax (OFFICIAL_SYMBOL, TAXON_FK);
 alter table CHROMOSOME_FEATURE add index ncbigeneid (NCBI_GENE_ID);
 alter table CHROMOSOME_FEATURE add index ncbigi (NCBI_GI);
 alter table CHROMOSOME_FEATURE add index previous_ncbiid (PREVIOUS_NCBI_ID);
+alter table CHROMOSOME_FEATURE add index ensemblid (ENSEMBL_ID);
 alter table CHROMOSOME_FEATURE add index name (NAME);
 alter table CHROMOSOME_FEATURE add index class (class);
 alter table CHROMOSOME_FEATURE add index type (TYPE);
@@ -23,3 +24,7 @@ alter table CHARACTERISTIC ADD INDEX categoryUri (CATEGORY_URI);
 alter table GENE_SET ADD INDEX name (NAME);
 alter table DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT ADD INDEX corrpvalbin (CORRECTED_P_VALUE_BIN);
 alter table HIT_LIST_SIZE ADD INDEX direction (DIRECTION);
+alter table TAXON ADD INDEX taxonncbiid (NCBI_ID);
+alter table TAXON ADD INDEX taxonsecondncbiid (SECONDARY_NCBI_ID);
+alter table TAXON ADD INDEX taxoncommonname (COMMON_NAME);
+alter table TAXON ADD INDEX taxonscientificname (SCIENTIFIC_NAME)

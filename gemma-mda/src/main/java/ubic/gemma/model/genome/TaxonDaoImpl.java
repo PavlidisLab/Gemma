@@ -96,8 +96,6 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
                 session.lock( taxon, LockMode.NONE );
                 Hibernate.initialize( taxon.getParentTaxon() );
                 Hibernate.initialize( taxon.getExternalDatabase() );
-                Hibernate.initialize( taxon.getNcbiId() );
-                Hibernate.initialize( taxon.getScientificName() );
                 session.evict( taxon );
                 return null;
             }
@@ -124,7 +122,7 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
      * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(int, java.lang.String)
      */
     @Override
-    @SuppressWarnings( { "unchecked" })
+    @SuppressWarnings({ "unchecked" })
     public Taxon handleFindByAbbreviation( final java.lang.String abbreviation ) {
         final String queryString = "from TaxonImpl t where t.abbreviation=:abbreviation";
         List results = getHibernateTemplate()
