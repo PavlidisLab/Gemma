@@ -279,9 +279,6 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 			name: 'experimentMembersGrid',
 			hideHeaders: true,
 			frame: true,
-			experimentGroupId: e.id,
-			selectedExperimentSetValueObject: e,
-			groupName: e.name,
 			allowSaveToSession: false,
 			allowRemovals: this.editable,
 			allowAdditions: this.editable,
@@ -297,7 +294,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 				});
 		this.experimentMembersGrid.loadMask.show();*/
 		
-		experimentMembersGrid.loadExperiments(e.expressionExperimentIds, function() {
+		experimentMembersGrid.loadExperimentSetValueObject(e, function() {
 					//this.experimentMembersGrid.loadMask.hide();
 				}.createDelegate(this, [], false));
 			
@@ -308,9 +305,9 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 			window.location.reload();
 		});
 				
-		experimentMembersGrid.on('experimentListCreated',function(id){
+		experimentMembersGrid.on('experimentListCreated',function(eesvo){
 			Ext.getBody().mask('Loading new set');
-			window.location = "/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id="+id;
+			window.location = "/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id="+eesvo.id;
 		});	
 		
 		this.add(experimentMembersGrid);

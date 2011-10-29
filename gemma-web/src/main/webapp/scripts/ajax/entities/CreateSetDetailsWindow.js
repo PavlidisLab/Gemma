@@ -11,10 +11,34 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 			title : "Provide or edit group details",
 			shadow : true,
 			modal : true,
+			/**
+			 * set the taxon combo to the corresponding id param and optionally disable the combo
+			 * @param taxonId
+			 * @param disable whether to disable the combo, true by default
+			 */
+			lockInTaxonId: function(taxId, diable){
+				if(taxId && taxId !== null){
+					this.taxCombo.getStore().on('load', function(){
+						this.taxCombo.setTaxonById(taxId);
+						this.taxCombo.disable();
+					}, this);
+					// must run after listener in Gemma.StatefulRemoteCombo
+					this.taxCombo.on('ready', function(){
+						this.taxCombo.disable();
+					}, this);
+				}
+			},
 			initComponent : function() {
 
 				this.addEvents("commit");
 				this.formId = Ext.id();
+				
+				// allow taxon to be set in configs on instantiation
+				this.taxCombo = new Gemma.TaxonCombo({
+								id: 'new-eesetTaxon',
+								name: 'newEesetTaxon',
+								fieldLabel: 'Taxon'
+							});
 				
 				Ext.apply(this, {
 					items: new Ext.FormPanel({
@@ -27,7 +51,7 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 							id: this.id + 'FieldSet',
 							ref: 'fieldSet',
 							height: 240,
-							items: [new Ext.form.TextField({
+							items: [this.taxCombo, new Ext.form.TextField({
 								ref: 'nameField',
 								id: this.id + "Name",
 								fieldLabel: 'Name',
@@ -45,16 +69,13 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 								value: this.description,
 								width: 300
 							//value: this.suggestedDescription
-							})			/*, new Ext.form.Radio({
-			 fieldLabel : 'Private',
-			 name : 'publicPrivate',
-			 checked: true
-			 }), new Ext.form.Radio({
-			 fieldLabel : 'Public',
-			 name : 'publicPrivate',
-			 checked: false
-			 })*/
-							]
+							}), new Ext.form.Checkbox({
+								fieldLabel: 'Public group',
+								name: 'publik',
+								checked: this.publik,
+								value: this.publik,
+								width: 300
+							})]
 						})
 					}),
 					buttons: [{
@@ -68,9 +89,12 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 								return;
 							}
 							var values = this.formPanel.getForm().getValues();
+							var taxon = this.formPanel.getForm().findField('newEesetTaxon').getTaxon();
 							this.fireEvent("commit", {
 								name: values.newSetName,
-								description: values.newSetDescription
+								description: values.newSetDescription,
+								publik: (typeof values.publik !== "undefined" && values.publik === "on"),
+								taxon: taxon
 							});
 							this.hide();
 							return;

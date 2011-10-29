@@ -280,7 +280,6 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 			taxonId : g.taxonId,
 			taxonName : g.taxonName,
 			geneGroupId: g.id,
-			selectedGeneGroup: g,
 			selectedGeneSetValueObject: g,
 			groupName: g.name,
 			allowSaveToSession: false,
@@ -298,7 +297,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 				});
 		geneMembersGrid.loadMask.show();*/
 		
-		geneMembersGrid.loadGenes(g.geneIds, function() {
+		geneMembersGrid.loadGeneSetValueObject(g, function() {
 					//geneMembersGrid.loadMask.hide();
 				}.createDelegate(this, [], false));
 				
@@ -308,9 +307,9 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 			window.location.reload();
 		});
 				
-		geneMembersGrid.on('geneListCreated',function(id){
+		geneMembersGrid.on('geneSetCreated',function(geneSet){
 			Ext.getBody().mask('Loading new set');
-			window.location = "/Gemma/geneSet/showGeneSet.html?id="+id;
+			window.location = "/Gemma/geneSet/showGeneSet.html?id="+geneSet.id;
 		});
 		
 		this.add(geneMembersGrid);

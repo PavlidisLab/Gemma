@@ -82,13 +82,7 @@ public class SessionBoundGeneSetValueObject extends GeneSetValueObject implement
         super(gs);
         this.setModified( false );
     }
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.web.genome.gene.GeneSetValueObject#isSessionBound()
-     */
-    public boolean isSessionBound() {
-        return true;
-    }
+
     /**
      * @param modified the modified to set
      */

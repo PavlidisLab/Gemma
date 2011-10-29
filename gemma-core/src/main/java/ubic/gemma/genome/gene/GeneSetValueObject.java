@@ -95,7 +95,7 @@ public class GeneSetValueObject implements Serializable {
         return this.taxonId;
     }    
 
-    public void setTaxonId( long taxonId ) {
+    public void setTaxonId( Long taxonId ) {
         this.taxonId = taxonId;        
     }
     

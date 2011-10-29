@@ -45,6 +45,7 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 										currentUserHasWritePermission : true,
 										expressionExperimentIds : [],
 										numExperiments : 0,
+										publik: (args.publik)? args.publik : false,
 										taxonName : args.taxon.get('commonName'),
 										taxonId : args.taxon.get('id')
 									});
@@ -362,7 +363,10 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 								allowBlank : false
 							}),
 					renderer: function(value, metadata, record, rowIndex, colIndex, store){
-							return '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+record.data.id+'">'+value+'</a>'
+						if(record.data.id && record.data.id > 0){
+							return '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+record.data.id+'">'+value+'</a>';
+						}
+						return value;
 					}
 				}, {
 					header : "Description",
@@ -402,10 +406,12 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						if (!value) {
 							v = "<img src='/Gemma/images/icons/shield.png' height='16' width='16' ext:qtip='Protected; cannot have members changed, usually applies to automatically generated groups.' />";
 						}
+						var canEdit = (record.get('id') && record.get('id') > 0)?
+										record.get('currentUserHasWritePermission') : false;
+						
 						var sl = Gemma.SecurityManager
 								.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl",
-										record.get('id'), record.get('publik'), record.get('shared'), record
-												.get('currentUserHasWritePermission'));
+										record.get('id'), record.get('publik'), record.get('shared'), canEdit);
 
 						v = v + "&nbsp;" + sl;
 						return v;
@@ -547,6 +553,7 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 					return this.fireEvent("commit", {
 								name : values.newEesetName,
 								description : values.newEesetDescription,
+								publik: (values.publik && values.publik === "on"),
 								taxon : taxon
 							});
 				}
@@ -583,6 +590,11 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 																		fieldLabel : 'Description',
 																		name : 'newEesetDescription',
 																		value : this.description,
+																		width : 300
+																	}), new Ext.form.Checkbox({
+																		fieldLabel : 'Public group',
+																		name : 'publik',
+																		checked: this.publik,
 																		width : 300
 																	})]
 												}),

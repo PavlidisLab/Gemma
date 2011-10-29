@@ -62,6 +62,17 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	setSelectedGeneSetValueObject: function(data){
 		this.selectedGeneSetValueObject = data;
 	},
+	getSelectedGeneSetValueObject: function(){
+		return this.selectedGeneSetValueObject;
+	},
+	loadGeneSetValueObject: function(gsvo, callback, args){
+		// update title
+		this.setTitle("Edit your gene selection, from group: \""+gsvo.name+"\"");
+		// update this.selectedGeneSetValueObject
+		this.setSelectedGeneSetValueObject(gsvo);
+		// update genes in grid
+		this.loadGenes(gsvo.geneIds, callback, args);
+	},
 	/**
 	 * Add to table.
 	 * 
@@ -70,7 +81,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * @param {}
 	 *            callback optional
 	 * @param {}
-	 *            args optional
+	 *            args for callback optional
 	 */
 	loadGenes: function(geneIds, callback, args){
 		if (!geneIds || geneIds.length === 0) {
@@ -105,17 +116,13 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		}.createDelegate(this));
 	},
 
-	addGenes : function(geneSetValObj) { // for adding from combo
-				if (!geneSetValObj) {
+	addGenes : function(searchResultValObj) { // for adding from combo
+				if (!searchResultValObj) {
 					return;
 				}
-				this.selectedGeneSetValueObject = geneSetValObj.resultValueObject;
-
-				var id = geneSetValObj.resultValueObject.id;
 						
 				var geneIdsToAdd = [];
-				// load preview of group if group was selected
-				geneIdsToAdd = geneSetValObj.memberIds;
+				geneIdsToAdd = searchResultValObj.memberIds;
 				
 				if (!geneIdsToAdd || geneIdsToAdd === null || geneIdsToAdd.length === 0) {
 					return;
@@ -130,11 +137,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 							this.getStore().add([record]);
 						}
 					}
-					/* maybe should notify user with text at bottom that 'x experiments have been added'
-					this.experimentPreviewContent.setTitle(
-						'<span style="font-size:1.2em">'+this.experimentCombo.getRawValue()+'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + ids.size() + " experiments)");
-					this.experimentSelectionEditorBtn.setText('<a>' + (ids.size() - limit) + ' more - Edit</a>');
-					*/
 
 				}.createDelegate(this));
 				
@@ -168,7 +170,6 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			scope: this
 		}],*/
 	initComponent : function() {
-		
 		Ext.apply(this, {
 			store : new Ext.data.SimpleStore({
 						fields : [{
@@ -246,11 +247,14 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		// load genes stored in genes var, which can either be an array or comma
 		// separated list of gene ids
 		this.on('render', function(){
-			if (this.genes || this.geneIds) {
-			var gis = ((this.genes)?this.genes:this.geneIds);
-			var genes = gis instanceof Array ? gis : gis.split(",");
-			this.loadGenes(gis);
-		}
+			if(this.selectedGeneSetValueObject){
+				this.loadGeneSetValueObject(this.selectedGeneSetValueObject);
+			}else if (this.genes || this.geneIds) {
+				var gis = ((this.genes)?this.genes:this.geneIds);
+				var genes = gis instanceof Array ? gis : gis.split(",");
+				this.loadGenes(gis);
+			}
+		
 		}, this);
 		
 
@@ -501,10 +505,10 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			tooltip: 'Save your selection as a new set.',
 			scope: this,
 			disabled: !this.showSeparateSaveAs,
-			//hidden: !this.showSeparateSaveAs
+			hidden: !this.showSeparateSaveAs
 		});
 		this.saveButton = new Ext.Button({
-			text: "Save",
+			text: "Save...",
 			handler: this.saveBtnHandler,
 			tooltip: 'Save your selection permanently.',
 			scope: this,
@@ -609,9 +613,11 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 					}
 				}, this);
 
+		if(this.selectedGeneSetValueObject){
+			this.loadGeneSetValueObject(this.selectedGeneSetValueObject);
+		}else if (this.genes) {
 		// load genes stored in genes var, which can either be an array or comma
 		// separated list of gene ids
-		if (this.genes) {
 			var genes = this.genes instanceof Array ? this.genes : this.genes.split(",");
 			this.loadGenes(genes);
 		}
@@ -627,6 +633,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 						}else{
 							this.saveButton.hide().disable();
 						}
+					}else{
+						this.saveButton.setText("Save...");
 					}
 				}.createDelegate(this));
 			}
@@ -665,9 +673,12 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
 		// if name for new group wasn't passed from parent component, make one
 		// up
-		if (!this.groupName || this.groupName === null || this.groupName === '') {
+		if (!this.selectedGeneSetValueObject && (!this.groupName || this.groupName === null || this.groupName === '')) {
 			this.newGroupName = "Gene group created: " + (new Date()).toString();
 		} else {
+			
+			var groupName = (this.selectedGeneSetValueObject && this.selectedGeneSetValueObject.name)? this.selectedGeneSetValueObject.name: this.groupName;
+			
 			// adding time to end of session-bound group titles in case it's not
 			// unique
 			var currentTime = new Date();
@@ -677,7 +688,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 				minutes = "0" + minutes;
 			}
 			this.newGroupName = '(' + hours + ':' + minutes + ')';
-			this.newGroupName += ' Edited \'' + this.groupName + '\' group';
+			this.newGroupName += ' Edited \'' + groupName + '\' group';
 		}
 
 		// if description for new group wasn't passed from parent component,
@@ -874,9 +885,12 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	saveAsHandler: function(){
 		// input window for creation of new groups
 		var detailsWin = new Gemma.CreateSetDetailsWindow();
+		detailsWin.lockInTaxonId(this.taxonId, true);
 		detailsWin.on("commit", function(args){
 			this.newGroupName = args.name;
 			this.newGroupDescription = args.description;
+			this.newGroupPublik = args.publik;
+			this.newGroupTaxon = args.taxon;
 			this.createInDatabase();
 		}, this);
 		detailsWin.on("hide", function(args){
@@ -904,6 +918,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		editedGroup.taxonId = this.taxonId;
 		editedGroup.size = this.getGeneIds().length;
 		editedGroup.modified = true;
+		editedGroup.publik = false;
 		
 
 		GeneSetController.addSessionGroups(
@@ -934,8 +949,9 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		editedGroup.id = null;	
 		editedGroup.name = this.newGroupName;
 		editedGroup.description = this.newGroupDescription;
+		editedGroup.publik = this.newGroupPublik;
 		editedGroup.geneIds = this.getGeneIds();
-		editedGroup.taxonId = this.taxonId;
+		editedGroup.taxonId = (this.newGroupTaxon)? this.newGroupTaxon.id : this.taxonId;
 		editedGroup.size = this.getGeneIds().length;
 			
 			GeneSetController.create([editedGroup], // returns datasets added
@@ -947,7 +963,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 					}
 					else {
 						this.fireEvent('geneListModified', geneSets, geneSets[0].geneIds);
-						this.fireEvent('geneListCreated', geneSets[0].id);
+						this.fireEvent('geneSetCreated', geneSets[0]);
 						this.fireEvent('doneModification');
 					}
 				}.createDelegate(this));
@@ -956,7 +972,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 	},
 	updateDatabase : function() {
-		var groupId = this.selectedGeneSetValueObject.id;
+		var groupId = this.getSelectedGeneSetValueObject().id;
 		var geneIds = this.getGeneIds();
 
 		GeneSetController.updateMembers(groupId, geneIds, function(msg) {

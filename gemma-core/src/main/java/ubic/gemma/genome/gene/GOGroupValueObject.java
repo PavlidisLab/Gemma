@@ -100,16 +100,6 @@ public class GOGroupValueObject extends SessionBoundGeneSetValueObject implement
         this.setSearchTerm( searchTerm );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.genome.gene.GeneSetValueObject#isSessionBound()
-     */
-    @Override
-    public boolean isSessionBound() {
-        return true;
-    }
-
     /**
      * @param searchTerm the searchTerm to set
      */

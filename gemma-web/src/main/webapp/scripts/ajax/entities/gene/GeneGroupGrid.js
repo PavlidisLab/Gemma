@@ -82,6 +82,12 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 						editor : new Ext.form.TextField({
 									allowBlank : false
 								})
+					},  {
+						header : 'Taxon',
+						dataIndex : 'taxonName',
+						width: 0.45,
+						editable : false,
+						sortable : true
 					}, {
 						header : 'Size',
 						sortable : true,
@@ -175,6 +181,10 @@ Gemma.GeneGroupStore = function(config) {
 			}, {
 				name : "shared",
 				type : 'boolean'
+			}, {
+				name : "taxonName"
+			}, {
+				name : "taxonId"
 			}, {
 				name : "currentUserHasWritePermission",
 				type : 'boolean'

@@ -11,13 +11,28 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	getSelectedExperimentOrExperimentSetValueObject:function(){
 		return (this.selectedExperimentOrGroup)? this.selectedExperimentOrGroup.resultValueObject : null;
 	},
+	setSelectedExpressionExperimentSetValueObject: function(eesvo){
+		this.selectedExpressionExperimentSetValueObject = eesvo;
+		this.isExperimentSet = true;
+		this.isExperiment = false;
+	},
+	getSelectedExpressionExperimentSetValueObject: function(){
+		return this.selectedExpressionExperimentSetValueObject;
+	},
 	/**
 	 * Show the selected eeset members
 	 */
 	loadExperimentOrGroup : function(record, query) {
 
 		this.selectedExperimentOrGroup = record.data;
-
+		
+		if(this.selectedExperimentOrGroup.resultValueObject instanceof ExpressionExperimentSetValueObject){
+			this.setSelectedExpressionExperimentSetValueObject(this.selectedExperimentOrGroup.resultValueObject);
+		}else if (this.selectedExperimentOrGroup.resultValueObject instanceof ExpressionExperimentValueObject){
+			delete this.selectedExpressionExperimentSetValueObject;
+			this.isExperiment = true;
+			this.isExperimentSet = false;
+		}
 		var id = record.get("resultValueObject").id;
 		this.queryUsedToGetSessionGroup = (id === null || id === -1)? query : null;
 		
@@ -28,7 +43,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		var taxonId = record.get("taxonId");
 		var taxonName = record.get("taxonName");
 		
-		// for bookmarking
+		// for bookmarking diff ex viz
 		if (id === null || id === -1) {
 			var queryToGetSelected = name;
 			if(resultValueObject instanceof FreeTextExpressionExperimentResultsValueObject && name.indexOf(query)!=-1){
@@ -51,11 +66,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		// load single experiment if experiment was selected
 		else {
 			this.experimentIds = [id];
-			this.searchForm.experimentIds = [id];
 			// reset the experiment preview panel content
 			this.resetExperimentPreview();
 
-			// update the gene preview panel content
+			// update the ee preview panel content
 			this.previewPart.experimentPreviewContent.update({
 						shortName : record.get("name"),
 						name : record.get("description"),
@@ -71,11 +85,26 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	},
 
 	/**
-	 * update the contents of the gene preview box and the this.geneIds value
-	 * using a list of gene Ids
+	 * update the contents of the experiment preview box and the this.experimentIds value
+	 * using an expressionExperimentSetValueObject
 	 * 
-	 * @param geneIds
-	 *            an array of geneIds to use
+	 * @param eesvo an ExpressionExperimentSetValueObject object
+	 * @return success
+	 */
+	loadExperimentSet: function(eesvo){
+		if(eesvo instanceof ExpressionExperimentSetValueObject){
+			this.setSelectedExpressionExperimentSetValueObject(eesvo);
+			this.loadExperiments(eesvo.expressionExperimentIds);
+			return true;
+		}
+		return false;
+	},
+	/**
+	 * update the contents of the experiment preview box and the this.experimentIds value
+	 * using a list of experiment Ids
+	 * 
+	 * @param ids
+	 *            an array of experimentIds to use
 	 */
 	loadExperiments : function(ids) {
 
@@ -88,11 +117,8 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	},
 
 	/**
-	 * update the contents of the epxeriment preview box using the
+	 * update the contents of the experiment preview box using the
 	 * this.experimentIds value
-	 * 
-	 * @param geneIds
-	 *            an array of geneIds to use
 	 */
 	loadExperimentPreview : function() {
 
@@ -100,6 +126,9 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 
 		// store selected ids for searching
 		ids = this.experimentIds;
+		if(!this.experimentIds && this.selectedExpressionExperimentValueObject){
+			ids = this.selectedExpressionExperimentValueObject.expressionExperimentIds;
+		}
 
 		if (!ids || ids === null || ids.length === 0) {
 			this.resetExperimentPreview();
@@ -121,16 +150,10 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 						this.previewPart.experimentPreviewContent.update(ees[j]);
 					}
 					
-					var title = this.selectedExperimentOrGroup.name;
-										
-					// if a gene set page exists for this set, make title a link 
-					if( this.selectedExperimentOrGroup.resultValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject){
-						title = '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+
-									this.selectedExperimentOrGroup.resultValueObject.id+'">'+title+'</a>'
-					}
+					this.updateTitle();
 					
-					this.updateTitle(title,ids.size());
 					this.showExperimentPreview();
+					
 					if (ids.size() <= this.searchForm.PREVIEW_SIZE) {
 						this.previewPart.moreIndicator.update('');
 					}
@@ -160,13 +183,20 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				});
 		this.experimentSelectionEditor.loadMask.show();
 		Ext.apply(this.experimentSelectionEditor, {
-					experimentGroupId : this.experimentGroupId,
-					selectedExperimentSetValueObject : this.selectedExperimentOrGroup.resultValueObject,
-					groupName : this.selectedExperimentOrGroup.name
+					taxonId : this.searchForm.getTaxonId(),
+					taxonName : this.searchForm.getTaxonName()
 				});
-		this.experimentSelectionEditor.loadExperiments(this.selectedExperimentOrGroup.resultValueObject.expressionExperimentIds, function() {
+				
+				
+		if(this.selectedExpressionExperimentSetValueObject){
+			this.experimentSelectionEditor.loadExperimentSetValueObject(this.selectedExpressionExperimentSetValueObject, function() {
 					this.experimentSelectionEditor.loadMask.hide();
 				}.createDelegate(this, [], false));
+		}else if(this.experimentIds){
+			this.experimentSelectionEditor.loadExperiments(this.experimentIds, function() {
+					this.experimentSelectionEditor.loadMask.hide();
+				}.createDelegate(this, [], false));
+		}
 	},
 
 	/**
@@ -213,7 +243,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				});
 		this.experimentCombo.on('select', function(combo, record, index) {
 
-					// if the EE has changed taxon, reset the gene combo
+					// if the EE has changed taxon, reset the experiment combo
 					this.searchForm.taxonChanged(record.get("taxonId"), record.get("taxonName"));
 					
 					this.experimentSelectionEditor.setTaxonId(record.get("taxonId"));
@@ -264,12 +294,11 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (i = 0; i < newValueObjects.length; i++) { // should only
 						// be one
 						if (newValueObjects[i]) {
-							this.loadExperiments(newValueObjects[i].expressionExperimentIds);
+							this.loadExperimentSet(newValueObjects[i]);
 							// update selected record
 							this.selectedExperimentOrGroup.resultValueObject = newValueObjects[i];
-						}
-						if (newValueObjects[i].name) {
-							this.updateTitle(newValueObjects[i].name,newValueObjects[i].size);
+							this.setSelectedExpressionExperimentSetValueObject(newValueObjects[i]);
+							this.updateTitle();
 						}
 					}
 					this.listModified = true;
@@ -303,17 +332,41 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					items : this.experimentSelectionEditor,
 					title : 'Edit Your Experiment Selection'
 				});
+				
+		this.experimentSelectionEditor.on('titlechange', function(panel, newTitle){
+			this.experimentSelectionEditorWindow.setTitle(newTitle);
+		}, this);
 
 		/**
 		 * **** EE PREVIEW
 		 * *************************************************************************
 		 */
 
+		/**
+		 * don't use params if you want to update name based on this.selectedExpressionExperimentValueObject
+		 * @param {Object} name
+		 * @param {Object} size
+		 */
 		this.updateTitle = function(name, size){
+			
+			// if an experiment set page exists for this set, make title a link 
+			if( !name && this.selectedExpressionExperimentSetValueObject instanceof ExpressionExperimentSetValueObject){
+				
+				size = this.selectedExpressionExperimentSetValueObject.expressionExperimentIds.size();
+			
+				if( this.selectedExpressionExperimentSetValueObject instanceof DatabaseBackedExpressionExperimentSetValueObject){
+					
+					name = '<a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+
+							this.selectedExpressionExperimentSetValueObject.id+'">'+this.selectedExpressionExperimentSetValueObject.name+'</a>'
+				}else{
+					name = this.selectedExpressionExperimentSetValueObject.name;
+				}
+			}
+			
 			this.previewPart.experimentPreviewContent.setTitle(
 				'<span style="font-size:1.2em">'+name+
 				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1)?" experiments)":" experiment)"));
-				this.previewPart.experimentPreviewContent.doLayout();
+			this.previewPart.experimentPreviewContent.doLayout();
 		};
 		this.previewPart = new Ext.Panel({
 			border: true,

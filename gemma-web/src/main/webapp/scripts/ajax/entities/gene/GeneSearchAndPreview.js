@@ -9,6 +9,14 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	getSelectedGeneOrGeneSetValueObject:function(){
 		return (this.selectedGeneOrGroup)?this.selectedGeneOrGroup.resultValueObject:null;
 	},
+	setselectedGeneSetValueObject: function(gsvo){
+		this.selectedGeneSetValueObject = gsvo;
+		this.isGeneSet = true;
+		this.isGene = false;
+	},
+	getselectedGeneSetValueObject: function(){
+		return this.selectedGeneSetValueObject;
+	},
 	resetGenePreview : function() {
 		Ext.DomHelper.overwrite(this.previewPart.genePreviewContent.body, {
 					cn : ''
@@ -32,7 +40,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	},
 	launchGeneSelectionEditor : function() {
 
-		if (!this.geneIds || this.geneIds === null || this.geneIds.length === 0) {
+		if (!(this.selectedGeneOrGroup && this.selectedGeneOrGroup.resultValueObject) || !this.geneIds || this.geneIds === null || this.geneIds.length === 0) {
 			return;
 		}
 		this.searchForm.getEl().mask();
@@ -44,32 +52,44 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				});
 		this.geneSelectionEditor.loadMask.show();
 		Ext.apply(this.geneSelectionEditor, {
-					geneGroupId : this.geneGroupId,
-					selectedGeneGroup : this.selectedGeneOrGroup,
-					groupName : this.selectedGeneOrGroup.name,
 					taxonId : this.searchForm.getTaxonId(),
 					taxonName : this.searchForm.getTaxonName()
 				});
-		this.geneSelectionEditor.loadGenes(this.geneIds, function() {
+
+		if(this.selectedGeneSetValueObject){
+			this.geneSelectionEditor.loadGeneSetValueObject(this.selectedGeneSetValueObject, function() {
 					this.geneSelectionEditor.loadMask.hide();
 				}.createDelegate(this, [], false));
+		}else{
+			this.geneSelectionEditor.loadGenes(this.geneIds, function() {
+					this.geneSelectionEditor.loadMask.hide();
+				}.createDelegate(this, [], false));
+		}
+		
+		
 	},
 
 	loadGeneOrGroup : function(record, query) {
 
 		this.selectedGeneOrGroup = record.data;
+		if(this.selectedGeneOrGroup.resultValueObject instanceof GeneSetValueObject){
+			this.setselectedGeneSetValueObject( this.selectedGeneOrGroup.resultValueObject );
+		}else if (this.selectedGeneOrGroup.resultValueObject instanceof GeneValueObject){
+			this.isGene = true;
+			this.isGeneSet = false;
+		}
 
 		var id = record.get("resultValueObject").id;
-		var isGroup = record.get("isGroup");
 		var size = record.get("size");
 		var name = record.get("name");
 		var taxonId = this.searchForm.getTaxonId();
 		
+		// for bookmarking diff ex viz
 		if (id === null) {
 			var queryToGetSelected = "";
-			if (name.match(/^GO_\d+/)) {
+			if (this.isGeneSet && this.selectedGeneSetValueObject instanceof GOGroupValueObject && this.name.match(/^GO_\d+/)) {
 				queryToGetSelected = "taxon:"+taxonId+";GO:"+name;
-			}else if(resultValueObject instanceof FreeTextGeneResultsValueObject && name.indexOf(query)!=-1){
+			}else if(this.isGeneSet && resultValueObject instanceof FreeTextGeneResultsValueObject && name.indexOf(query)!=-1){
 				queryToGetSelected = "taxon:"+taxonId+";query:"+query;
 			}
 			this.queryUsedToGetSessionGroup = queryToGetSelected;
@@ -78,15 +98,13 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		var geneIds = [];
 
 		// load preview of group if group was selected
-		if (isGroup) {
+		if (this.isGeneSet) {
 			
 			geneIds = record.get('memberIds');
 			if (geneIds === null || geneIds.length === 0) {
 				return;
 			}
 			this.loadGenes(geneIds);
-			this.geneGroupId = id;
-			this.searchForm.geneGroupId = id;
 
 		}
 		// load single gene if gene was selected
@@ -94,7 +112,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.selectedGeneOrGroup.memberIds = [id];
 			this.geneIds = [id];
 
-			this.geneGroupId = null;
 			this.searchForm.geneGroupId = null;
 
 			// reset the gene preview panel content
@@ -157,19 +174,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (var i = 0; i < genes.size(); i++) {
 						this.previewPart.genePreviewContent.update(genes[i]);
 					}
-					var title = this.selectedGeneOrGroup.name;
-					
-					// if an experiment set page exists for this set, make title a link 
-					if( this.selectedGeneOrGroup.resultValueObject instanceof DatabaseBackedGeneSetValueObject){
-						title = '<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id='+
-								this.selectedGeneOrGroup.resultValueObject.id+'">'+title+'</a>'
-					}
-
-					var goPattern = /^GO_\d+$/;
-					if(goPattern.test(this.selectedGeneOrGroup.name)){
-						title = this.selectedGeneOrGroup.name +": "+this.selectedGeneOrGroup.description
-					}
-					this.updateTitle(title,ids.size());
+					this.updateTitle();
 				
 					this.showGenePreview();
 
@@ -535,13 +540,12 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneSelectionEditor.on('geneListModified', function(newSets) {
 			var i;
 			for (i = 0; i < newSets.length; i++) { // should only be one
-				if (typeof newSets[i].geneIds !== 'undefined') {
+				if (typeof newSets[i].geneIds !== 'undefined' && typeof newSets[i].name !== 'undefined') {
 					this.loadGenes(newSets[i].geneIds);
 					// update record
 					this.selectedGeneOrGroup.resultValueObject = newSets[i];
-				}
-				if (newSets[i].name) {
-					this.updateTitle(newSets[i].name, newSets[i].size);
+					this.setselectedGeneSetValueObject(newSets[i]);
+					this.updateTitle();
 				}
 			}
 				this.listModified = true;
@@ -572,6 +576,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					items : this.geneSelectionEditor,
 					title : 'Edit Your Gene Selection'
 				});
+		this.geneSelectionEditor.on('titlechange', function(panel, newTitle){
+			this.geneSelectionEditorWindow.setTitle(newTitle);
+		}, this);
 
 		/**
 		 * **** GENE PREVIEW
@@ -624,7 +631,30 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					style: 'margin-left:10px; background-color:transparent', 
 				}, this.geneSelectionEditorBtn]
 		});
+		/**
+		 * don't use params if you want to update name based on this.selectedGeneOrGroup.resultValueObject
+		 * @param {Object} name
+		 * @param {Object} size
+		 */
 		this.updateTitle = function(name, size){
+			
+			// if an experiment set page exists for this set, make title a link 
+			if (!name && this.selectedGeneSetValueObject instanceof GeneSetValueObject) {
+				size = this.selectedGeneSetValueObject.geneIds.size();
+				
+				if (this.selectedGeneSetValueObject instanceof DatabaseBackedGeneSetValueObject) {
+				
+					name = '<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id=' +
+					this.selectedGeneSetValueObject.id +'">' +
+					this.selectedGeneSetValueObject.name +'</a>'
+					
+				} else if (this.selectedGeneSetValueObject instanceof GOGroupValueObject) {
+					name = this.selectedGeneSetValueObject.name + ": " + this.selectedGeneSetValueObject.description;
+				} else {
+					name = this.selectedGeneSetValueObject.name;
+				}
+			}
+			
 			this.previewPart.genePreviewContent.setTitle(
 				'<span style="font-size:1.2em">'+name+
 				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1)?" genes)":" gene)"));
