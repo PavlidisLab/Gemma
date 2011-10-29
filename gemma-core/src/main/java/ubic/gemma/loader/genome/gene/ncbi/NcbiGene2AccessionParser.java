@@ -59,16 +59,22 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
 
     private int count = 0;
 
+    private Integer startingNcbiId = null;
+    private boolean hasStarted = false;
+
     public void parse( InputStream is, BlockingQueue<NcbiGeneData> aQueue ) throws IOException {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         this.queue = aQueue;
+        if ( startingNcbiId == null ) hasStarted = true;
         super.parse( is );
     }
- 
+
     public void parse( File f, BlockingQueue<NcbiGeneData> queue1, Map<String, NCBIGeneInfo> geneInfo1 )
             throws IOException {
         this.queue = queue1;
         this.geneInfo = geneInfo1;
+        if ( startingNcbiId == null ) hasStarted = true;
+
         super.parse( f );
     }
 
@@ -140,8 +146,19 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
                 return null;
             }
 
-            newGene.setTaxId( Integer.parseInt( fields[0] ) );
             newGene.setGeneId( fields[1] );
+
+            if ( !hasStarted ) {
+                assert startingNcbiId != null;
+                if ( startingNcbiId.equals( Integer.parseInt( fields[1] ) ) ) {
+                    log.info( "Found the starting gene " + startingNcbiId );
+                    hasStarted = true;
+                } else {
+                    return null;
+                }
+            }
+
+            newGene.setTaxId( Integer.parseInt( fields[0] ) );
             newGene.setStatus( fields[2].equals( "-" ) ? null : fields[2] );
             newGene.setRnaNucleotideAccession( fields[3].equals( "-" ) ? null : fields[3] );
             newGene.setRnaNucleotideGI( fields[4].equals( "-" ) ? null : fields[4] );
@@ -224,7 +241,9 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
      */
     @Override
     public void parse( InputStream is ) throws IOException {
+        if ( startingNcbiId == null ) hasStarted = true;
         super.parse( is );
+
         // add last gene with an accession
         if ( geneData.getGeneInfo() != null ) {
             try {
@@ -265,6 +284,10 @@ public class NcbiGene2AccessionParser extends BasicLineParser<NCBIGene2Accession
      */
     public int getCount() {
         return count;
+    }
+
+    public void setStartingNbiId( Integer startingNcbiId ) {
+        this.startingNcbiId = startingNcbiId;
     }
 
 }

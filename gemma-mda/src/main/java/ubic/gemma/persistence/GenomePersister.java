@@ -208,6 +208,8 @@ abstract public class GenomePersister extends CommonPersister {
     }
 
     /**
+     * Update a gene.
+     * 
      * @param existingGene
      * @param newGeneInfo the non-persistent gene we are copying information from
      * @return
@@ -354,28 +356,90 @@ abstract public class GenomePersister extends CommonPersister {
          */
         Collection<GeneProduct> toRemove = new HashSet<GeneProduct>();
         if ( !usedGIs.isEmpty() ) {
-            gp: for ( GeneProduct existingGp : existingGene.getProducts() ) {
-                if ( StringUtils.isNotBlank( existingGp.getNcbiGi() ) && !usedGIs.containsKey( existingGp.getNcbiGi() ) ) {
+            for ( GeneProduct existingGp : existingGene.getProducts() ) {
 
-                    /*
-                     * Check to make sure this isn't an updated GI situation (actually common, whenever a sequence is
-                     * updated)
-                     */
-                    for ( GeneProduct ngp : usedGIs.values() ) {
-                        if ( existingGp.getName().equals( ngp.getName() ) ) {
-                            log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi() );
-                            existingGp.setNcbiGi( ngp.getNcbiGi() );
-                            updateGeneProduct( existingGp, ngp );
-                            continue gp;
-                        }
+                if ( StringUtils.isBlank( existingGp.getNcbiGi() ) || usedGIs.containsKey( existingGp.getNcbiGi() ) ) {
+                    continue;
+                }
+
+                /*
+                 * Check to make sure this isn't an updated GI situation (actually common, whenever a sequence is
+                 * updated). That is, this gene product (already in the system) is actually a match for one of the
+                 * imports: it's just that the GI of our version is no longer valid. There are two situations. In the
+                 * simplest case, we just have to update the GI on our record. However, it might be that we _also_ have
+                 * the one with the correct GI. If that happens there are three situations. First, if the other one is
+                 * already associated with this gene, we should proceed with deleting the outdated copy and just keep
+                 * the other one. Second, if the other one is not associated with any gene, we should delete that one
+                 * and update the outdated record. Third, the other one might be associated with a _different_ gene, in
+                 * which case we delete _that gp_ and update the outdated record attached to _this_ gene.
+                 */
+                boolean deleteIt = true;
+                for ( GeneProduct ngp : usedGIs.values() ) {
+                    if ( !existingGp.getName().equals( ngp.getName() ) ) {
+                        // this is the only way we can tell it is the same. Since Genbank Accessions are good
+                        // identifiers when you don't have a GI, this is reasonable.
+                        continue;
                     }
 
+                    /*
+                     * Check if this GI is already associated with some other gene.
+                     */
+                    GeneProduct otherGpUsingThisGi = geneProductService.findByGi( ngp.getNcbiGi() );
+                    if ( otherGpUsingThisGi == null ) {
+                        // this is routine; it happens whenever a sequence is updated by NCBI.
+                        log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi() );
+                        existingGp.setNcbiGi( ngp.getNcbiGi() );
+                        deleteIt = false;
+                        continue;
+                    }
+
+                    // handle less common cases, largely due to database cruft.
+                    otherGpUsingThisGi = geneProductService.thaw( otherGpUsingThisGi );
+
+                    Gene oldGeneForExistingGeneProduct = otherGpUsingThisGi.getGene();
+                    if ( oldGeneForExistingGeneProduct == null ) {
+                        log.warn( "Updating the GI for " + existingGp + " -> GI:" + ngp.getNcbiGi()
+                                + " and deleting orphan GP with same GI: " + otherGpUsingThisGi );
+
+                        existingGp.setNcbiGi( ngp.getNcbiGi() );
+                        // remove the old one, which was an orphan already.
+                        toRemove.add( otherGpUsingThisGi );
+                        deleteIt = false;
+                    } else if ( oldGeneForExistingGeneProduct.equals( existingGene ) ) {
+                        // this is the common case, for crufted database.
+                        log.warn( "Removing outdated gp for which there is already an existing copy: " + existingGp
+                                + " (already have " + otherGpUsingThisGi + ")" );
+                        deleteIt = true;
+                    } else {
+                        /*
+                         * That GI is associated with another gene's products. In effect, switch it to this gene. This
+                         * should not generally happen.
+                         */
+                        log.warn( "Removing gene product: " + otherGpUsingThisGi + " and effectively switching to "
+                                + existingGene + " -- detected during GI update checks " );
+
+                        // Here we just remove its old association.
+                        oldGeneForExistingGeneProduct = geneService.thaw( oldGeneForExistingGeneProduct );
+                        oldGeneForExistingGeneProduct.getProducts().remove( otherGpUsingThisGi );
+                        geneService.update( oldGeneForExistingGeneProduct );
+
+                        // but we keep the one we have here.
+                        existingGp.setNcbiGi( ngp.getNcbiGi() );
+                        deleteIt = false;
+                    }
+
+                }
+
+                if ( deleteIt ) {
                     toRemove.add( existingGp );
-                    existingGp.setGene( null ); // we are erasing this association as we assume it is no longer valid.
+                    existingGp.setGene( null ); // we are erasing this association as we assume it is no longer
+                                                // valid.
                     log.warn( "Removing gene product from system: " + existingGp
                             + ", it is no longer listed as a product of " + existingGene );
                 }
-            }
+            } // over this gene's gene products.
+
+            // finalize any deletions.
             if ( !toRemove.isEmpty() ) {
                 existingGene.getProducts().removeAll( toRemove );
             }

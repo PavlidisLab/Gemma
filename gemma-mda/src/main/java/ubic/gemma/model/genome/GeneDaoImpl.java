@@ -181,7 +181,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public Collection<Gene> findByOfficialNameInexact( String officialName ) {
         final String query = "from GeneImpl g where g.officialName like :officialName order by g.officialName";
-        org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
+        org.hibernate.Query queryObject = this.getSession().createQuery( query );
         queryObject.setParameter( "officialName", officialName );
         queryObject.setMaxResults( MAX_RESULTS );
         return queryObject.list();
@@ -193,10 +193,16 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     @Override
     public java.util.Collection<Gene> findByOfficialSymbolInexact( final java.lang.String officialSymbol ) {
         final String query = "from GeneImpl g where g.officialSymbol like :officialSymbol order by g.officialSymbol";
-        org.hibernate.Query queryObject = this.getSession( false ).createQuery( query );
+        org.hibernate.Query queryObject = this.getSession().createQuery( query );
         queryObject.setParameter( "officialSymbol", officialSymbol );
         queryObject.setMaxResults( MAX_RESULTS );
         return queryObject.list();
+    }
+
+    @Override
+    public Collection<? extends Gene> findByEnsemblId( String id ) {
+        final String query = "from GeneImpl g where g.ensemblId = :id";
+        return this.getHibernateTemplate().findByNamedParam( query, "id", id );
     }
 
     /*

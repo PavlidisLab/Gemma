@@ -586,7 +586,6 @@ public class SearchService implements InitializingBean {
      * @param characteristicUris
      * @param term
      */
-    @SuppressWarnings("unchecked")
     private void addChildTerms( Collection<String> characteristicUris, OntologyTerm term ) {
         String uri = term.getUri();
         /*
@@ -1374,16 +1373,6 @@ public class SearchService implements InitializingBean {
             // case 3: string is long enough, and user did not ask for wildcard.
             geneSet.addAll( geneService.findByOfficialSymbol( exactString ) );
         }
-        /*
-         * This search is slow as it does full table scan. The same search is done by compass. To speed things up this
-         * is commented out. if ( searchString.length() > 2 && geneSet.isEmpty() ) { if ( !inexactString.endsWith( "%" )
-         * ) { // Now, always use a wildcard. inexactString = inexactString + "%"; } geneSet.addAll(
-         * geneService.findByOfficialNameInexact( inexactString ) ); }
-         */
-        /*
-         * TODO The rest we are doing by exact matches only. For aliases it would probably be good to do it like
-         * official symbols. For the other searches I think exact matches are the only thing that makes sense.
-         */
 
         /*
          * If we found a match using official symbol or name, don't bother with this
@@ -1394,6 +1383,7 @@ public class SearchService implements InitializingBean {
             geneSet.addAll( geneProductService.getGenesByNcbiId( exactString ) );
             geneSet.addAll( bioSequenceService.getGenesByAccession( exactString ) );
             geneSet.addAll( bioSequenceService.getGenesByName( exactString ) );
+            geneSet.addAll( geneService.findByEnsemblId( exactString ) );
         }
 
         watch.stop();
@@ -1591,9 +1581,6 @@ public class SearchService implements InitializingBean {
         Collection<SearchResult> results = this.dbHitsToSearchResult( this.experimentSetService.findByName( settings
                 .getQuery() ) );
 
-        /*
-         * TODO remove sets that have only one EE in them...
-         */
         results.addAll( compassSearch( compassExperimentSet, settings ) );
         return results;
     }
@@ -2089,7 +2076,6 @@ public class SearchService implements InitializingBean {
      * @param results
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<? extends Object> retrieveResultEntities( Class entityClass, List<SearchResult> results ) {
         List<Long> ids = getIds( results );
         if ( ExpressionExperiment.class.isAssignableFrom( entityClass ) ) {

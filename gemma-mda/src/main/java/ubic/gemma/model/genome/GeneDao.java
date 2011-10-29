@@ -262,4 +262,6 @@ public interface GeneDao extends BaseDao<Gene> {
 
     Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
 
+    public Collection<? extends Gene> findByEnsemblId( String exactString );
+
 }

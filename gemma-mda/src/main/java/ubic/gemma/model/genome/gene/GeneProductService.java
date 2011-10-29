@@ -100,4 +100,10 @@ public interface GeneProductService {
     @Secured({ "GROUP_ADMIN" })
     public void remove( Collection<GeneProduct> toRemove );
 
+    /**
+     * @param string
+     * @return
+     */
+    public GeneProduct findByGi( String string );
+
 }

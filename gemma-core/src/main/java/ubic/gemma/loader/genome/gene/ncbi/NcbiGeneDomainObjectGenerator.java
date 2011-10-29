@@ -61,6 +61,7 @@ public class NcbiGeneDomainObjectGenerator {
 
     // whether to fetch files from ncbi or use existing ones
     private boolean doDownload = true;
+    private Integer startingNcbiId = null;
 
     public boolean isDoDownload() {
         return doDownload;
@@ -182,6 +183,8 @@ public class NcbiGeneDomainObjectGenerator {
         final NcbiGeneEnsemblFileParser ensemblParser = new NcbiGeneEnsemblFileParser();
 
         final NcbiGene2AccessionParser accParser = new NcbiGene2AccessionParser();
+        accParser.setStartingNbiId( startingNcbiId );
+
         final File gene2accessionFileHandle = gene2AccessionFile.asFile();
 
         final NcbiGeneHistoryParser historyParser = new NcbiGeneHistoryParser();
@@ -250,6 +253,7 @@ public class NcbiGeneDomainObjectGenerator {
             public void run() {
                 try {
                     log.debug( "Parsing gene2accession=" + gene2AccessionFile.asFile().getAbsolutePath() );
+                    accParser.setStartingNbiId( startingNcbiId );
                     accParser.parse( gene2accessionFileHandle, geneDataQueue, geneInfoMap );
                 } catch ( IOException e ) {
                     throw new RuntimeException( e );
@@ -285,6 +289,10 @@ public class NcbiGeneDomainObjectGenerator {
      */
     public Collection<Taxon> getSupportedTaxaWithNCBIGenes() {
         return supportedTaxaWithNCBIGenes;
+    }
+
+    public void setStartingNcbiId( Integer startingNcbiId ) {
+        this.startingNcbiId = startingNcbiId;
     }
 
 }

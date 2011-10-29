@@ -132,4 +132,9 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
         this.getGeneProductDao().remove( toRemove );
     }
 
+    @Override
+    public GeneProduct findByGi( String ncbiGi ) {
+        return this.getGeneProductDao().findByNcbiId( ncbiGi );
+    }
+
 }

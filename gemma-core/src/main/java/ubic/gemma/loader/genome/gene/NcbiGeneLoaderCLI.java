@@ -49,6 +49,8 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
 
     private boolean skipDownload = false;
 
+    private Integer startNcbiid = null;
+
     public NcbiGeneLoaderCLI() {
         super();
     }
@@ -71,6 +73,7 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         loader.setTaxonService( taxonService );
         loader.setPersisterHelper( this.getPersisterHelper() );
         loader.setSkipDownload( this.skipDownload );
+        loader.setStartingNcbiId( startNcbiid );
 
         Taxon t = null;
         if ( StringUtils.isNotBlank( taxonCommonName ) ) {
@@ -128,6 +131,9 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
 
         addOption( "nodownload", false, "Set to suppress NCBI file download" );
 
+        addOption( "restart", true, "Enter the NCBI ID of the gene you want to start on (implies -nodownload, "
+                + "and assumes you have the right -taxon option, if any)" );
+
         requireLogin();
     }
 
@@ -139,6 +145,11 @@ public class NcbiGeneLoaderCLI extends AbstractSpringAwareCLI {
         }
         if ( hasOption( "taxon" ) ) {
             this.taxonCommonName = getOptionValue( "taxon" );
+        }
+        if ( hasOption( "restart" ) ) {
+            this.startNcbiid = Integer.parseInt( getOptionValue( "restart" ) );
+            log.info( "Will attempt to pick up at ncbi gene id=" + startNcbiid );
+            this.skipDownload = true;
         }
         if ( hasOption( "nodownload" ) ) {
             this.skipDownload = true;

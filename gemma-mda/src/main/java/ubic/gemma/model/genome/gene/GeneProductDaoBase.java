@@ -105,22 +105,11 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductDao#find(int, ubic.gemma.model.genome.gene.GeneProduct)
-     */
-
-    @Override
-    public GeneProduct find( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        return this
-                .find( "from ubic.gemma.model.genome.gene.GeneProduct as geneProduct where geneProduct.geneProduct = :geneProduct",
-                        geneProduct );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findByNcbiId(int, java.lang.String)
      */
 
     @Override
-    public java.util.Collection<GeneProduct> findByNcbiId( final String ncbiId ) {
+    public GeneProduct findByNcbiId( final String ncbiId ) {
         return this.findByNcbiId( "from GeneProductImpl g where g.ncbiGi = :ncbiId", ncbiId );
     }
 
@@ -128,7 +117,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findByNcbiId(int, java.lang.String, java.lang.String)
      */
 
-    public java.util.Collection findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
+    public GeneProduct findByNcbiId( final java.lang.String queryString, final java.lang.String ncbiId ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( ncbiId );
@@ -136,7 +125,8 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
         java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
-        return results;
+        if ( results.isEmpty() ) return null;
+        return ( GeneProduct ) results.iterator().next();
     }
 
     /**
@@ -401,7 +391,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
     /**
      * Performs the core logic for {@link #load(java.util.Collection)}
      */
-    protected abstract java.util.Collection<GeneProduct> handleLoad( java.util.Collection ids )
+    protected abstract java.util.Collection<GeneProduct> handleLoad( java.util.Collection<Long> ids )
             throws java.lang.Exception;
 
 }

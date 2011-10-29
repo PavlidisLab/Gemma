@@ -56,6 +56,7 @@ public class NcbiGeneLoader {
 
     // whether to fetch files from ncbi or use existing ones
     private boolean doDownload = true;
+    private Integer startingNcbiId = null;
 
     public NcbiGeneLoader() {
         generatorDone = new AtomicBoolean( false );
@@ -261,7 +262,8 @@ public class NcbiGeneLoader {
         NcbiGeneDomainObjectGenerator sdog = new NcbiGeneDomainObjectGenerator( supportedTaxa );
         sdog.setDoDownload( doDownload );
         sdog.setProducerDoneFlag( generatorDone );
-
+        sdog.setStartingNcbiId( startingNcbiId );
+        
         NcbiGeneConverter converter = new NcbiGeneConverter();
         converter.setSourceDoneFlag( generatorDone );
         converter.setProducerDoneFlag( converterDone );
@@ -290,9 +292,23 @@ public class NcbiGeneLoader {
         this.updateTaxaWithGenesUsable( sdog.getSupportedTaxaWithNCBIGenes() );
     }
 
+    /**
+     * Set to true to avoid downloading the files, if copies already exist (not recommended if you want an update!)
+     * 
+     * @param skipDownload
+     */
     public void setSkipDownload( boolean skipDownload ) {
         this.doDownload = !skipDownload;
 
+    }
+
+    /**
+     * Indicate
+     * 
+     * @param startNcbiid
+     */
+    public void setStartingNcbiId( Integer startNcbiid ) {
+        this.startingNcbiId = startNcbiid;
     }
 
 }

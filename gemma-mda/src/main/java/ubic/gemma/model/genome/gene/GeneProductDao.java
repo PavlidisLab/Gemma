@@ -28,7 +28,7 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface GeneProductDao extends BaseDao<GeneProduct> {
 
-    public java.util.Collection<GeneProduct> findByNcbiId( String ncbiId );
+    public GeneProduct findByNcbiId( String ncbiGi );
 
     /**
      * 
@@ -51,7 +51,7 @@ public interface GeneProductDao extends BaseDao<GeneProduct> {
     public java.util.Collection<Gene> getGenesByName( java.lang.String search );
 
     /**
-     * 
+     * TODO: this really should return a unique gene only.
      */
     public java.util.Collection<Gene> getGenesByNcbiId( java.lang.String search );
 

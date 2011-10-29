@@ -318,4 +318,6 @@ public interface GeneService {
     /* we would need to relax this to allow phenotype associations to be added, but I think we should avoid doing that */
     public void update( Gene gene );
 
+    public Collection<? extends Gene> findByEnsemblId( String exactString );
+
 }

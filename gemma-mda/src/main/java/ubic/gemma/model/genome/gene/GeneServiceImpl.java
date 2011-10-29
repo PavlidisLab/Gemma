@@ -422,4 +422,9 @@ public class GeneServiceImpl extends GeneServiceBase {
         this.getGeneDao().update( gene );
     }
 
+    @Override
+    public Collection<? extends Gene> findByEnsemblId( String exactString ) {
+        return this.getGeneDao().findByEnsemblId( exactString );
+    }
+
 }
