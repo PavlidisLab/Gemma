@@ -109,10 +109,37 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             if ( results != null ) {
                 if ( results.size() > 1 ) {
 
+                    Collection<Gene> toDelete = new HashSet<Gene>();
+                    for ( Gene foundGene : results ) {
+                        try {
+                            if ( gene.getNcbiGeneId().equals( Integer.parseInt( foundGene.getPreviousNcbiId() ) ) ) {
+                                // okay, we have a relic in the system. Delete it, as a temporary measure.
+                                toDelete.add( foundGene );
+                            }
+                        } catch ( NumberFormatException e ) {
+                            // no action
+                        }
+                    }
+
+                    if ( !toDelete.isEmpty() ) this.remove( toDelete );
+
+                    for ( Gene foundGene : results ) {
+                        if ( foundGene.getNcbiGeneId() != null && gene.getNcbiGeneId() != null
+                                && foundGene.getNcbiGeneId().equals( gene.getNcbiGeneId() ) ) {
+                            return foundGene;
+                        }
+                    }
+
+                    // if ( results.size() > 1 ) {
+                    // throw new IllegalStateException( "Sorry, " + gene + "found: \n"
+                    // + StringUtils.join( results, "\n" ) );
+                    // }
+
                     /*
                      * this can happen in semi-rare cases in queries by symbol, where the gene symbol is not unique for
                      * the taxon and the query did not have the gene name to further restrict the query.
                      */
+
                     log.error( "Multiple genes found for " + gene + ":" );
                     debug( results );
 

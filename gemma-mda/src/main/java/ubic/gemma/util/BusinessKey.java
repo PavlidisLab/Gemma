@@ -257,7 +257,9 @@ public class BusinessKey {
              */
             if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
                 /*
-                 * Check to see if the new gene used to use an id that is in the system.
+                 * Check to see if the new gene used to use an id that is in the system. NOTE that this is a problem. If
+                 * this returns two, the one with the _new_ ncbi id should be used, and the old one should probably be
+                 * deleted.
                  */
                 Collection<Integer> ncbiIds = new HashSet<Integer>();
                 ncbiIds.add( gene.getNcbiGeneId() );

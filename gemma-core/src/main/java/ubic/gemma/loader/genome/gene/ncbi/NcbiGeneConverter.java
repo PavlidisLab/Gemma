@@ -321,7 +321,8 @@ public class NcbiGeneConverter implements Converter<Object, Object> {
                         geneQueue.put( convert( data ) );
 
                     } catch ( InterruptedException e ) {
-                        log.info( "Interrupted." );
+                        log.warn( "Interrupted" );
+                        break;
                     }
                 }
                 producerDone.set( true );

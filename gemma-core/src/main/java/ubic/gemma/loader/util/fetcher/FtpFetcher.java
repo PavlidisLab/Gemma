@@ -105,12 +105,12 @@ public abstract class FtpFetcher extends AbstractFetcher {
         FutureTask<Boolean> future = new FutureTask<Boolean>( new Callable<Boolean>() {
             public Boolean call() throws FileNotFoundException, IOException {
                 File existing = new File( outputFileName );
-                if ( existing.exists() && allowUseExisting ) {
-                    log.info( "Checking validity of existing local file: " + outputFileName );
-                } else if ( existing.exists() && avoidDownload ) {
+                if ( existing.exists() && avoidDownload ) {
                     log.info( "A local file exists, skipping download." );
                     ftpClient.disconnect();
                     return Boolean.TRUE;
+                } else if ( existing.exists() && allowUseExisting ) {
+                    log.info( "Checking validity of existing local file: " + outputFileName );
                 } else {
                     log.info( "Fetching " + seekFile + " to " + outputFileName );
                 }
