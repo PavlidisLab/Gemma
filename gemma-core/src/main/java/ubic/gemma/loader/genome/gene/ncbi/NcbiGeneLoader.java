@@ -190,6 +190,7 @@ public class NcbiGeneLoader {
     void doLoad( final BlockingQueue<Gene> geneQueue ) {
         StopWatch timer = new StopWatch();
         timer.start();
+        int skipped = 0;
         while ( !( converterDone.get() && geneQueue.isEmpty() ) ) {
 
             try {
@@ -198,11 +199,19 @@ public class NcbiGeneLoader {
                     continue;
                 }
 
+                if ( gene.getProducts().isEmpty() ) {
+                    // // log.warn( gene + " has no products, skipping" ); // common!!!
+                    // skipped++;
+                }
+
                 persisterHelper.persistOrUpdate( gene );
 
                 if ( ++loadedGeneCount % 1000 == 0 || timer.getTime() > 30 * 1000 ) {
                     log.info( "Processed " + loadedGeneCount + " genes. Queue has " + geneQueue.size()
                             + " items; last gene: " + gene );
+                    if ( skipped > 0 ) {
+                        log.info( skipped + " skipped because they had no gene products." );
+                    }
                     timer.reset();
                     timer.start();
                 }
@@ -263,7 +272,7 @@ public class NcbiGeneLoader {
         sdog.setDoDownload( doDownload );
         sdog.setProducerDoneFlag( generatorDone );
         sdog.setStartingNcbiId( startingNcbiId );
-        
+
         NcbiGeneConverter converter = new NcbiGeneConverter();
         converter.setSourceDoneFlag( generatorDone );
         converter.setProducerDoneFlag( converterDone );
