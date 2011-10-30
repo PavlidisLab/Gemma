@@ -201,7 +201,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return The best overlap with any exons from an mRNA in the selected region.
      * @see getThreePrimeDistances
      */
-    @SuppressWarnings("unchecked")
     private int checkESTs( String chromosome, Long queryStart, Long queryEnd, String starts, String sizes,
             int exonOverlap, String strand ) {
 
@@ -339,7 +338,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @return List of GeneProducts.
      * @throws SQLException
      */
-    @SuppressWarnings("unchecked")
     private Collection<GeneProduct> findGenesByQuery( Long starti, Long endi, final String chromosome, String strand,
             String query ) {
         // Cases:
@@ -464,7 +462,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param source e.g. "Nscan".
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<GeneProduct> findPredictedGenesByQuery( Long starti, Long endi, final String chromosome,
             String strand, String query, final String source ) {
         // Cases:
@@ -642,7 +639,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param params
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<BlatResult> findLocationsByQuery( final String query, final Object[] params ) {
         try {
             return ( Set<BlatResult> ) qr.query( conn, query, params, new ResultSetHandler() {
@@ -713,7 +709,8 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
     public Collection<GeneProduct> findRefGenesByLocation( String chromosome, Long start, Long end, String strand ) {
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );
         /*
-         * Use kgXRef only to get the description - sometimes missing thus the outer join.
+         * Use kgXRef only to get the description - sometimes missing thus the outer join. Note that 
+         * 
          */
         String query = "SELECT r.name, r.geneName, r.txStart, r.txEnd, r.strand, r.exonStarts, r.exonEnds, CONCAT('Refseq gene: ',kgXref.description) "
                 + "FROM refFlat as r left outer join kgXref on r.geneName = kgXref.geneSymbol "
@@ -828,7 +825,6 @@ public class GoldenPathSequenceAnalysis extends GoldenPath {
      * @param regionEnd
      * @return The mRNAs which overlap the query region.
      */
-    @SuppressWarnings("unchecked")
     public Collection<Gene> findRNAs( final String chromosome, Long regionStart, Long regionEnd, String strand ) {
 
         String searchChrom = SequenceManipulation.blatFormatChromosomeName( chromosome );

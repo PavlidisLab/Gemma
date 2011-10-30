@@ -101,7 +101,6 @@ public class ProbeMapper {
          */
         if ( goldenPathDb.getDatabaseName().equals( "hg19" ) ) {
             log.debug( "Disabling  acembly as hg19 doesn't have them" );
-            // config.setUseMiRNA( false ); // okay now
             config.setUseAcembly( false );
         }
 
@@ -177,17 +176,15 @@ public class ProbeMapper {
                     }
 
                     blatAssociationsForSequence.addAll( resultsForOneBlatResult );
-                } else {
+                } else if ( config.isAllowMakeProbeAlignedRegion() ) {
 
-                    if ( config.isAllowMakeProbeAlignedRegion() ) {
+                    // here we have to provide a 'provisional' mapping to a ProbeAlignedRegion.
+                    ProbeAlignedRegion par = makePar( blatResult );
+                    BlatAssociation parAssociation = makeBlatAssociationWithPar( blatResult, par );
+                    blatAssociationsForSequence.add( parAssociation );
+                    if ( log.isDebugEnabled() )
+                        log.debug( "Adding PAR for " + sequence + " with alignment " + blatResult );
 
-                        // here we have to provide a 'provisional' mapping to a ProbeAlignedRegion.
-                        ProbeAlignedRegion par = makePar( blatResult );
-                        BlatAssociation parAssociation = makeBlatAssociationWithPar( blatResult, par );
-                        blatAssociationsForSequence.add( parAssociation );
-                        if ( log.isDebugEnabled() )
-                            log.debug( "Adding PAR for " + sequence + " with alignment " + blatResult );
-                    }
                 }
 
                 // there are rarely this many, but it does happen.
@@ -535,8 +532,8 @@ public class ProbeMapper {
             ba.setGeneProduct( product );
             ba.setBlatResult( blatResult );
             ba.setBioSequence( blatResult.getQuerySequence() );
-            ba.setOverlap( SequenceManipulation.getGeneProductExonOverlap( blatResult.getTargetStarts(), blatResult
-                    .getBlockSizes(), pl.getStrand(), product ) );
+            ba.setOverlap( SequenceManipulation.getGeneProductExonOverlap( blatResult.getTargetStarts(),
+                    blatResult.getBlockSizes(), pl.getStrand(), product ) );
             results.add( ba );
 
         }

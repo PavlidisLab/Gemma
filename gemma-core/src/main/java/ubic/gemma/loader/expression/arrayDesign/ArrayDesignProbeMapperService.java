@@ -53,6 +53,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneProduct;
+import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
@@ -91,6 +92,9 @@ public class ArrayDesignProbeMapperService {
 
     @Autowired
     private GeneService geneService;
+
+    @Autowired
+    private GeneProductService geneProductService;
 
     @Autowired
     private PersisterHelper persisterHelper;
@@ -440,6 +444,22 @@ public class ArrayDesignProbeMapperService {
                 BlatAssociation ba = queue.poll();
                 if ( ba == null ) {
                     continue;
+                }
+
+                if ( ba.getGeneProduct().getId() == null ) {
+                    GeneProduct existing = geneProductService.find( ba.getGeneProduct() );
+
+                    if ( existing == null ) {
+                        /*
+                         * Temporary. We have to be careful not to cruft up the gene table now that I so carefully
+                         * cleaned it.
+                         */
+                        log.warn( "New gene product from GoldenPath is not in Gemma: " + ba.getGeneProduct()
+                                + " skipping association to " + ba.getBioSequence()
+                                + "[TEMPORARY skipping policy in place]" );
+                        continue;
+                    }
+                    ba.setGeneProduct( existing );
                 }
 
                 persisterHelper.persist( ba );
