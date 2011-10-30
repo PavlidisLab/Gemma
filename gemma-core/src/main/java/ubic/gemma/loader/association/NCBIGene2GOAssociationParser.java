@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
@@ -89,6 +91,15 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     private final int GENE_ID = ConfigUtils.getInt( "gene2go.gene_id" );
 
     private final int GO_ID = ConfigUtils.getInt( "gene2go.go_id" );
+
+    private static Set<String> ignoredEvidenceCodes = new HashSet<String>();
+
+    static {
+        // these are 'NOT association' codes which we don't use. See http://www.geneontology.org/GO.evidence.shtml.
+        ignoredEvidenceCodes.add( "IMR" );
+        ignoredEvidenceCodes.add( "IKR" );
+        ignoredEvidenceCodes.add( "IRD" );
+    }
 
     BlockingQueue<Gene2GOAssociation> queue;
 
@@ -179,6 +190,11 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
         String evidenceCode = values[EVIDENCE_CODE];
 
         if ( !( StringUtils.isBlank( evidenceCode ) || evidenceCode.equals( "-" ) ) ) {
+
+            if ( ignoredEvidenceCodes.contains( evidenceCode ) ) {
+                return null;
+            }
+
             g2GOAss.setEvidenceCode( GOEvidenceCode.fromString( evidenceCode ) );
         }
 
