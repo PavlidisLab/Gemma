@@ -556,8 +556,9 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 									},{
 										xtype : 'textarea',
 										ref:'_geneText',
-										fieldLabel : "Paste in gene symbols, one per line, up to " +
-												Gemma.MAX_GENES_PER_QUERY,
+										fieldLabel : "Type or paste in gene symbols, one per line, up to " +
+												Gemma.MAX_GENES_PER_QUERY+". (Note that searches are "+
+												"limited to a smaller number of genes.)",
 										width : 250,
 										height:290
 									}]
