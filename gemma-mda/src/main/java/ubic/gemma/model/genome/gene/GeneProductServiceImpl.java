@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @see ubic.gemma.model.genome.gene.GeneProductService
@@ -107,7 +108,7 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
      */
     @Override
     protected Collection<GeneProduct> handleLoadMultiple( Collection<Long> ids ) throws Exception {
-        return this.getGeneProductDao().load( ids );
+        return ( Collection<GeneProduct> ) this.getGeneProductDao().load( ids );
     }
 
     /**
@@ -135,6 +136,11 @@ public class GeneProductServiceImpl extends ubic.gemma.model.genome.gene.GenePro
     @Override
     public GeneProduct findByGi( String ncbiGi ) {
         return this.getGeneProductDao().findByNcbiId( ncbiGi );
+    }
+
+    @Override
+    public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
+        return this.getGeneProductDao().findByName( name, taxon );
     }
 
 }

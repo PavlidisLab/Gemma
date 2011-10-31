@@ -815,15 +815,15 @@ public class BusinessKey {
         } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) { // NM_XXXXX etc.
             queryObject.add( Restrictions.eq( "name", geneProduct.getName() ) );
 
-            if ( geneProduct.getAccessions() != null && geneProduct.getAccessions().size() > 0 ) {
-                Criteria subCriteria = queryObject.createCriteria( "accessions" );
-                Disjunction disjunction = Restrictions.disjunction();
-                for ( DatabaseEntry databaseEntry : geneProduct.getAccessions() ) {
-                    disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
-                    // FIXME this should include the ExternalDatabase in the criteria.
-                }
-                subCriteria.add( disjunction );
-            }
+//            if ( geneProduct.getAccessions() != null && geneProduct.getAccessions().size() > 0 ) {
+//                Criteria subCriteria = queryObject.createCriteria( "accessions" );
+//                Disjunction disjunction = Restrictions.disjunction();
+//                for ( DatabaseEntry databaseEntry : geneProduct.getAccessions() ) {
+//                    disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
+//                    // FIXME this should include the ExternalDatabase in the criteria.
+//                }
+//                subCriteria.add( disjunction );
+//            }
 
             /*
              * This can cause some problems when golden path and NCBI don't have the same information about the gene

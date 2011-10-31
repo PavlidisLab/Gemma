@@ -48,10 +48,12 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
+import ubic.gemma.model.genome.gene.GeneAlias;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -402,6 +404,89 @@ public class ArrayDesignProbeMapperService {
      * @param generatorDone
      * @param loaderDone
      */
+    void doLoad( final BlockingQueue<BlatAssociation> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone ) {
+        int loadedAssociationCount = 0;
+        while ( !( generatorDone.get() && queue.isEmpty() ) ) {
+
+            try {
+                BlatAssociation ba = queue.poll();
+                if ( ba == null ) {
+                    continue;
+                }
+
+                GeneProduct geneProduct = ba.getGeneProduct();
+                if ( geneProduct.getId() == null ) {
+                    GeneProduct existing = geneProductService.find( geneProduct );
+
+                    if ( existing == null ) {
+
+                        existing = checkForAlias( geneProduct );
+                        if ( existing == null ) {
+                            /*
+                             * Temporary. We have to be careful not to cruft up the gene table now that I so carefully
+                             * cleaned it. But this is a problem if we aren't adding some other association to the gene
+                             * at least. But generally the mRNAs that GP has that NCBI doesn't are "alternative" or
+                             * "additional".
+                             */
+                            log.warn( "New gene product from GoldenPath is not in Gemma: " + geneProduct
+                                    + " skipping association to " + ba.getBioSequence()
+                                    + " [TEMPORARY skipping policy in place]" );
+                            continue;
+                        }
+                    }
+                    ba.setGeneProduct( existing );
+                }
+
+                persisterHelper.persist( ba );
+
+                if ( ++loadedAssociationCount % 1000 == 0 ) {
+                    log.info( "Persisted " + loadedAssociationCount + " blat associations. " + "Current queue has "
+                            + queue.size() + " items." );
+                }
+
+            } catch ( Exception e ) {
+                log.error( e, e );
+                loaderDone.set( true );
+                throw new RuntimeException( e );
+            }
+        }
+        log.info( "Load thread done: loaded " + loadedAssociationCount + " blat associations. " );
+        loaderDone.set( true );
+    }
+
+    /**
+     * @param ba
+     * @param geneProduct
+     */
+    private final GeneProduct checkForAlias( GeneProduct geneProduct ) {
+        Collection<GeneProduct> candidates = geneProductService.findByName( geneProduct.getName(), geneProduct
+                .getGene().getTaxon() );
+
+        if ( candidates.isEmpty() ) return null;
+
+        Gene gene = geneProduct.getGene();
+        for ( GeneProduct existing2 : candidates ) {
+            Collection<GeneAlias> aliases = existing2.getGene().getAliases();
+            for ( GeneAlias geneAlias : aliases ) {
+                if ( geneAlias.getAlias().equalsIgnoreCase( gene.getOfficialSymbol() ) ) {
+                    /*
+                     * So, our gene products match, and the genes match but via an alias. That's pretty solid.
+                     */
+                    log.info( "Associated gene product " + geneProduct
+                            + " has a match in Gemma through an aliased gene: " + existing2 );
+                    return existing2;
+                }
+            }
+
+        }
+        return null;
+    }
+
+    /**
+     * @param queue
+     * @param generatorDone
+     * @param loaderDone
+     */
     private void load( final BlockingQueue<BlatAssociation> queue, final AtomicBoolean generatorDone,
             final AtomicBoolean loaderDone ) {
         final SecurityContext context = SecurityContextHolder.getContext();
@@ -431,56 +516,6 @@ public class ArrayDesignProbeMapperService {
         Gene gene = geneProduct.getGene();
         System.out.println( cs.getName() + '\t' + blatAssociation.getBioSequence().getName() + '\t'
                 + geneProduct.getName() + '\t' + gene.getOfficialSymbol() + "\t" + gene.getClass().getSimpleName() );
-    }
-
-    /**
-     * @param queue
-     * @param generatorDone
-     * @param loaderDone
-     */
-    void doLoad( final BlockingQueue<BlatAssociation> queue, AtomicBoolean generatorDone, AtomicBoolean loaderDone ) {
-        int loadedAssociationCount = 0;
-        while ( !( generatorDone.get() && queue.isEmpty() ) ) {
-
-            try {
-                BlatAssociation ba = queue.poll();
-                if ( ba == null ) {
-                    continue;
-                }
-
-                if ( ba.getGeneProduct().getId() == null ) {
-                    GeneProduct existing = geneProductService.find( ba.getGeneProduct() );
-
-                    if ( existing == null ) {
-                        /*
-                         * Temporary. We have to be careful not to cruft up the gene table now that I so carefully
-                         * cleaned it. But this is a problem if we aren't adding some other association to the gene at
-                         * least. But generally the mRNAs that GP has that NCBI doesn't are "alternative" or
-                         * "additional".
-                         */
-                        log.warn( "New gene product from GoldenPath is not in Gemma: " + ba.getGeneProduct()
-                                + " skipping association to " + ba.getBioSequence()
-                                + " [TEMPORARY skipping policy in place]" );
-                        continue;
-                    }
-                    ba.setGeneProduct( existing );
-                }
-
-                persisterHelper.persist( ba );
-
-                if ( ++loadedAssociationCount % 1000 == 0 ) {
-                    log.info( "Persisted " + loadedAssociationCount + " blat associations. " + "Current queue has "
-                            + queue.size() + " items." );
-                }
-
-            } catch ( Exception e ) {
-                log.error( e, e );
-                loaderDone.set( true );
-                throw new RuntimeException( e );
-            }
-        }
-        log.info( "Load thread done: loaded " + loadedAssociationCount + " blat associations. " );
-        loaderDone.set( true );
     }
 
 }

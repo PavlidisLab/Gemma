@@ -364,7 +364,7 @@ abstract public class GenomePersister extends CommonPersister {
         }
 
         if ( existingGene.getProducts().isEmpty() ) {
-            log.warn( "No products left for: " + existingGene );
+            log.debug( "No products left for: " + existingGene );
         }
 
         return existingGene;

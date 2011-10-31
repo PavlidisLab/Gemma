@@ -23,6 +23,7 @@ import java.util.Collection;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 
 /**
  * @author kelsey
@@ -105,5 +106,7 @@ public interface GeneProductService {
      * @return
      */
     public GeneProduct findByGi( String string );
+
+    public Collection<GeneProduct> findByName( String name, Taxon taxon );
 
 }

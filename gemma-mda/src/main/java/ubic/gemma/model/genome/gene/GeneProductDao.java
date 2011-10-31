@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene;
 import java.util.Collection;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -55,9 +56,8 @@ public interface GeneProductDao extends BaseDao<GeneProduct> {
      */
     public java.util.Collection<Gene> getGenesByNcbiId( java.lang.String search );
 
-    @Override
-    public Collection<GeneProduct> load( Collection<Long> ids );
-
     public GeneProduct thaw( GeneProduct existing );
+
+    public Collection<GeneProduct> findByName( String name, Taxon taxon );
 
 }

@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.util.BusinessKey;
 
 /**
@@ -277,8 +278,8 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                 .getHibernateTemplate()
                 .findByNamedParam(
                         "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "
-                                + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon where gp = :gp",
-                        "gp", existing );
+                                + "left join fetch gp.physicalLocation pl left join fetch gp.accessions left join fetch pl.chromosome ch left join fetch ch.taxon "
+                                + "left join fetch g.aliases  where gp = :gp", "gp", existing );
 
         if ( re.isEmpty() ) return null;
 
@@ -287,4 +288,13 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
         return ( GeneProduct ) re.iterator().next();
     }
 
+    @Override
+    public Collection<GeneProduct> findByName( String name, Taxon taxon ) {
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct gp from GeneProductImpl gp left join fetch gp.gene g left join fetch g.taxon "
+                        + "left join fetch gp.physicalLocation pl left join fetch gp.accessions"
+                        + " left join fetch pl.chromosome ch left join fetch ch.taxon left join fetch g.aliases "
+                        + "where gp.name = :name and g.taxon = :taxon", new String[] { "name", "taxon" },
+                new Object[] { name, taxon } );
+    }
 }
