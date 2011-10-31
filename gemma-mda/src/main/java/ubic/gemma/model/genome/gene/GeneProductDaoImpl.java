@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Projections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -56,7 +57,8 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     @Override
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
-            Criteria queryObject = super.getSession().createCriteria( GeneProduct.class );
+            Criteria queryObject = super.getSession().createCriteria( GeneProduct.class )
+                    .setProjection( Projections.distinct( Projections.property( "id" ) ) );
 
             BusinessKey.checkValidKey( geneProduct );
 
@@ -64,76 +66,80 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
             log.debug( queryObject );
 
-            java.util.List<GeneProduct> results = queryObject.list();
+            // for some reason we sometimes get duplicates
+            List<GeneProduct> results = queryObject.list();
             Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
+            if ( results.size() > 1 ) {
 
-                    /*
-                     * This happens in some cases where NCBI has the same RNA mapped to multiple genes. Example:
-                     * BC016940 maps to OR2A20P and OR2A9P (both are pseudogenes in this case)
-                     */
+                /*
+                 * This happens in some cases where NCBI has the same RNA mapped to multiple genes. Example: BC016940
+                 * maps to OR2A20P and OR2A9P (both are pseudogenes in this case)
+                 */
+                Collections.sort( results, c );
+                Gene gene = geneProduct.getGene();
+                if ( gene != null ) {
+                    GeneProduct keeper = null;
+                    int numFound = 0;
+                    for ( Object object : results ) {
+                        GeneProduct candidateMatch = ( GeneProduct ) object;
 
-                    Gene gene = geneProduct.getGene();
-                    Collections.sort( results, new Comparator<GeneProduct>() {
-                        @Override
-                        public int compare( GeneProduct arg0, GeneProduct arg1 ) {
-                            return arg0.getId().compareTo( arg1.getId() );
-                        }
-                    } );
-                    if ( gene != null ) {
-                        GeneProduct keeper = null;
-                        int numFound = 0;
-                        for ( Object object : results ) {
-                            GeneProduct candidateMatch = ( GeneProduct ) object;
-
-                            if ( candidateMatch.getGene().equals( gene ) ) {
-                                keeper = candidateMatch;
-                                numFound++;
-                            } else if ( candidateMatch.getPhysicalLocation() != null
-                                    && geneProduct.getPhysicalLocation() != null
-                                    && candidateMatch.getPhysicalLocation().nearlyEquals(
-                                            geneProduct.getPhysicalLocation() ) ) {
-                                keeper = candidateMatch;
-                                numFound++;
-                            }
-                        }
-
-                        if ( numFound == 1 ) {
-                            // not so bad, we figured out a match.
-                            log.warn( "Multiple gene products match " + geneProduct
-                                    + ", but only one for the right gene (" + gene + "), returning " + keeper );
-                            return keeper;
-                        }
-
-                        if ( numFound == 0 ) {
-                            log.error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
-                            debug( results );
-                            log.error( "Returning arbitrary match " + results.iterator().next() );
-                            return results.iterator().next();
-                        }
-
-                        if ( numFound > 1 ) {
-                            log.error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
-                                    + " genes" );
-                            debug( results );
-                            log.error( "Returning arbitrary match " + results.iterator().next() );
-                            return results.iterator().next();
+                        if ( candidateMatch.getGene().equals( gene ) ) {
+                            keeper = candidateMatch;
+                            numFound++;
+                        } else if ( candidateMatch.getPhysicalLocation() != null
+                                && geneProduct.getPhysicalLocation() != null
+                                && candidateMatch.getPhysicalLocation()
+                                        .nearlyEquals( geneProduct.getPhysicalLocation() ) ) {
+                            keeper = candidateMatch;
+                            numFound++;
                         }
                     }
 
-                    // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    // "More than one instance of '" + geneProduct + "' was found when executing query" );
+                    if ( numFound == 1 ) {
+                        // not so bad, we figured out a match.
+                        log.warn( "Multiple gene products match " + geneProduct + ", but only one for the right gene ("
+                                + gene + "), returning " + keeper );
+                        return keeper;
+                    }
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
+                    if ( numFound == 0 ) {
+                        log.error( "Multiple gene products match " + geneProduct + ", but none with " + gene );
+                        debug( results );
+                        log.error( "Returning arbitrary match " + results.iterator().next() );
+                        return results.iterator().next();
+                    }
+
+                    if ( numFound > 1 ) {
+                        log.error( "Multiple gene products match " + geneProduct + ", and matches " + numFound
+                                + " genes" );
+                        debug( results );
+                        log.error( "Returning arbitrary match " + results.iterator().next() );
+                        return results.iterator().next();
+                    }
                 }
+
+                // throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                // "More than one instance of '" + geneProduct + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
             log.debug( "Found: " + result );
             return ( GeneProduct ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
         }
+    }
+
+    static Comparator<GeneProduct> c;
+
+    static {
+        c = new Comparator<GeneProduct>() {
+            @Override
+            public int compare( GeneProduct arg0, GeneProduct arg1 ) {
+                return arg0.getId().compareTo( arg1.getId() );
+            }
+        };
     }
 
     /*
@@ -190,7 +196,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByName(java.lang.String)
-     */ 
+     */
     @Override
     protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
         Collection<Gene> genes = null;
@@ -211,7 +217,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleGetGenesByNcbiId(java.lang.String)
-     */ 
+     */
     @Override
     protected Collection<Gene> handleGetGenesByNcbiId( String search ) throws Exception {
         Collection<Gene> genes = null;
@@ -232,9 +238,9 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.genome.gene.GeneProductDaoBase#handleLoad(java.util.Collection)
-     */ 
+     */
     @Override
-    protected Collection<GeneProduct> handleLoad( Collection ids ) throws Exception {
+    protected Collection<GeneProduct> handleLoad( Collection<Long> ids ) throws Exception {
         Collection<GeneProduct> geneProducts = null;
         final String queryString = "select distinct gp from GeneProductImpl gp where gp.id in (:ids)";
         try {
@@ -251,7 +257,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     /**
      * @param results
      */
-    private void debug( List<?> results ) {
+    private void debug( Collection<?> results ) {
 
         StringBuilder buf = new StringBuilder();
         buf.append( "\n" );
