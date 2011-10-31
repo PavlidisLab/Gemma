@@ -284,7 +284,9 @@ public class BusinessKey {
             attachCriteria( queryObject, gene.getTaxon(), "taxon" );
 
             if ( stricter ) {
-                // Need either the official name AND the location to be unambiguous.
+                // Need either the official name AND the location to be unambiguous. But if we are already restricted on
+                // some other characteristic such as the gene, this causes too many false negatives. Typical case: NCBI
+                // vs. GoldenPath.
                 if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
                     queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
                 }
