@@ -49,7 +49,6 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         super.setSessionFactory( sessionFactory );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<? extends AuditTrail> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from  AuditTrailImpl where id in (:ids)", "ids", ids );
     }

@@ -229,10 +229,15 @@ public class ArrayDesignProbeMapperService {
      * @param taxon. We require this to ensure correct association of the sequences with the genes.
      * @param source
      * @param sourceDB describes where the annotations came from. Can be null if you really don't know.
+     * @param ncbiIds true if the values provided are ncbi ids, not gene symbols (ncbi ids are more reliable)
      * @throws IllegalStateException if the input file doesn't match the array design.
      */
-    public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB )
-            throws IOException {
+    public void processArrayDesign( ArrayDesign arrayDesign, Taxon taxon, File source, ExternalDatabase sourceDB,
+            boolean ncbiIds ) throws IOException {
+
+        if ( taxon == null && !ncbiIds ) {
+            throw new IllegalArgumentException( "You must provide a taxon unless passing ncbiIds = true" );
+        }
 
         BufferedReader b = new BufferedReader( new FileReader( source ) );
         String line = null;
@@ -285,7 +290,12 @@ public class ArrayDesignProbeMapperService {
             StringTokenizer st = new StringTokenizer( geneSymbol, "|" );
             while ( st.hasMoreTokens() ) {
                 String geneToken = st.nextToken();
-                geneDetails = geneService.findByOfficialSymbol( geneToken.trim(), taxon );
+                if ( ncbiIds ) {
+                    geneDetails = geneService.findByNCBIId( Integer.parseInt( geneToken.trim() ) );
+
+                } else {
+                    geneDetails = geneService.findByOfficialSymbol( geneToken.trim(), taxon );
+                }
                 if ( geneDetails != null ) {
                     geneListProbe.add( geneDetails );
                 }

@@ -25,6 +25,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
+import ubic.gemma.model.genome.Gene;
 
 /**
  * @author keshav
@@ -56,10 +57,9 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleCreate(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleCreate( Collection bioSequences ) throws Exception {
-        return this.getBioSequenceDao().create( bioSequences );
+    protected Collection<BioSequence> handleCreate( Collection<BioSequence> bioSequences ) throws Exception {
+        return ( Collection<BioSequence> ) this.getBioSequenceDao().create( bioSequences );
     }
 
     /**
@@ -77,12 +77,12 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
     }
 
     @Override
-    protected Map handleFindByGenes( Collection genes ) throws Exception {
+    protected Map<Gene, Collection<BioSequence>> handleFindByGenes( Collection<Gene> genes ) throws Exception {
         return this.getBioSequenceDao().findByGenes( genes );
     }
 
     @Override
-    protected Collection handleFindByName( String name ) throws Exception {
+    protected Collection<BioSequence> handleFindByName( String name ) throws Exception {
         return this.getBioSequenceDao().findByName( name );
     }
 
@@ -99,11 +99,10 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleFindOrCreate(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindOrCreate( Collection bioSequences ) throws Exception {
+    protected Collection<BioSequence> handleFindOrCreate( Collection<BioSequence> bioSequences ) throws Exception {
         Collection<BioSequence> result = new HashSet<BioSequence>();
-        for ( BioSequence bioSequence : ( Collection<BioSequence> ) bioSequences ) {
+        for ( BioSequence bioSequence : bioSequences ) {
             result.add( this.getBioSequenceDao().findOrCreate( bioSequence ) );
         }
         return result;
@@ -115,7 +114,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByAccession(java.lang.String)
      */
     @Override
-    protected Collection handleGetGenesByAccession( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByAccession( String search ) throws Exception {
         return this.getBioSequenceDao().getGenesByAccession( search );
     }
 
@@ -125,7 +124,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleGetGenesByName(java.lang.String)
      */
     @Override
-    protected Collection handleGetGenesByName( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
         return this.getBioSequenceDao().getGenesByName( search );
     }
 
@@ -145,7 +144,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceServiceBase#handleLoadMultiple(java.util.Collection)
      */
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<BioSequence> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         return this.getBioSequenceDao().load( ids );
     }
 
@@ -184,7 +183,7 @@ public class BioSequenceServiceImpl extends ubic.gemma.model.genome.biosequence.
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
      */
     @Override
-    protected void handleUpdate( Collection bioSequences ) throws Exception {
+    protected void handleUpdate( Collection<BioSequence> bioSequences ) throws Exception {
         this.getBioSequenceDao().update( bioSequences );
     }
 

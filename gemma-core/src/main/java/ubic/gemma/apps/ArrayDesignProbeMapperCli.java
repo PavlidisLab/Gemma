@@ -178,6 +178,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
     }
 
     ProbeMapperConfig config;
+    private boolean ncbiIds = false;
 
     /**
      * @return
@@ -396,6 +397,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         addOption( directAnnotation );
 
+        addOption( "ncbi", false,
+                "If set, it is assumed the direct annotation file is NCBI gene ids, not gene symbols (only valid with -import)" );
+
         Option databaseOption = OptionBuilder
                 .withDescription( "Source database name (GEO etc); required if using -import" ).hasArg()
                 .withArgName( "dbname" ).create( "source" );
@@ -454,7 +458,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         if ( !f.canRead() ) {
                             throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
                         }
-                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase );
+                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
                         audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEventImpl() );
                     } catch ( IOException e ) {
                         return e;
@@ -669,6 +673,10 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             this.sourceDatabase = eds.find( sourceDBName );
 
             this.directAnnotationInputFileName = this.getOptionValue( "import" );
+
+            if ( this.hasOption( "ncbi" ) ) {
+                this.ncbiIds = true;
+            }
         }
         if ( this.hasOption( 't' ) ) {
             this.taxonName = this.getOptionValue( 't' );
