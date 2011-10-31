@@ -90,6 +90,8 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
             if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
                 String message = "Parsed " + linesParsed + " lines...";
                 log.info( message );
+                timer.reset();
+                timer.start();
             }
 
         }

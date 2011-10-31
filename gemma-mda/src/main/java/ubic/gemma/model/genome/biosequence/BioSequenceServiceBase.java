@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2007 University of British Columbia
+ * Copyright (c) 2006-2011 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.genome.Gene;
 
 /**
- * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.biosequence.BioSequenceService</code>, provides access to
  * all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.genome.biosequence.BioSequenceService
+ * @version $Id$
  */
 public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.biosequence.BioSequenceService {
 
@@ -134,7 +133,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findOrCreate(java.util.Collection)
      */
-    public java.util.Collection findOrCreate( final java.util.Collection bioSequences ) {
+    public java.util.Collection<BioSequence> findOrCreate( final java.util.Collection<BioSequence> bioSequences ) {
         try {
             return this.handleFindOrCreate( bioSequences );
         } catch ( Throwable th ) {
@@ -161,7 +160,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#getGenesByAccession(java.lang.String)
      */
-    public java.util.Collection getGenesByAccession( final java.lang.String search ) {
+    public java.util.Collection<Gene> getGenesByAccession( final java.lang.String search ) {
         try {
             return this.handleGetGenesByAccession( search );
         } catch ( Throwable th ) {
@@ -174,7 +173,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#getGenesByName(java.lang.String)
      */
-    public java.util.Collection getGenesByName( final java.lang.String search ) {
+    public java.util.Collection<Gene> getGenesByName( final java.lang.String search ) {
         try {
             return this.handleGetGenesByName( search );
         } catch ( Throwable th ) {
@@ -200,7 +199,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<BioSequence> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -259,7 +258,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#update(java.util.Collection)
      */
-    public void update( final java.util.Collection bioSequences ) {
+    public void update( final java.util.Collection<BioSequence> bioSequences ) {
         try {
             this.handleUpdate( bioSequences );
         } catch ( Throwable th ) {
@@ -321,7 +320,8 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #findByGenes(java.util.Collection)}
      */
-    protected abstract java.util.Map handleFindByGenes( java.util.Collection<Gene> genes ) throws java.lang.Exception;
+    protected abstract java.util.Map<Gene, Collection<BioSequence>> handleFindByGenes( java.util.Collection<Gene> genes )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
@@ -344,13 +344,14 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #getGenesByAccession(java.lang.String)}
      */
-    protected abstract java.util.Collection handleGetGenesByAccession( java.lang.String search )
+    protected abstract java.util.Collection<Gene> handleGetGenesByAccession( java.lang.String search )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getGenesByName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleGetGenesByName( java.lang.String search ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene> handleGetGenesByName( java.lang.String search )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #load(long)}
