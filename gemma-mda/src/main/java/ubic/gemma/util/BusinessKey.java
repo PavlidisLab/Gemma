@@ -815,15 +815,15 @@ public class BusinessKey {
         } else if ( StringUtils.isNotBlank( geneProduct.getName() ) ) { // NM_XXXXX etc.
             queryObject.add( Restrictions.eq( "name", geneProduct.getName() ) );
 
-//            if ( geneProduct.getAccessions() != null && geneProduct.getAccessions().size() > 0 ) {
-//                Criteria subCriteria = queryObject.createCriteria( "accessions" );
-//                Disjunction disjunction = Restrictions.disjunction();
-//                for ( DatabaseEntry databaseEntry : geneProduct.getAccessions() ) {
-//                    disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
-//                    // FIXME this should include the ExternalDatabase in the criteria.
-//                }
-//                subCriteria.add( disjunction );
-//            }
+            // if ( geneProduct.getAccessions() != null && geneProduct.getAccessions().size() > 0 ) {
+            // Criteria subCriteria = queryObject.createCriteria( "accessions" );
+            // Disjunction disjunction = Restrictions.disjunction();
+            // for ( DatabaseEntry databaseEntry : geneProduct.getAccessions() ) {
+            // disjunction.add( Restrictions.eq( "accession", databaseEntry.getAccession() ) );
+            // // FIXME this should include the ExternalDatabase in the criteria.
+            // }
+            // subCriteria.add( disjunction );
+            // }
 
             /*
              * This can cause some problems when golden path and NCBI don't have the same information about the gene
@@ -949,10 +949,14 @@ public class BusinessKey {
         if ( taxon.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", taxon.getId() ) );
         } else if ( taxon.getNcbiId() != null ) {
-            queryObject.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+            Disjunction disjunction = Restrictions.disjunction();
+            disjunction.add( Restrictions.eq( "ncbiId", taxon.getNcbiId() ) );
+            disjunction.add( Restrictions.eq( "secondaryNcbiId", taxon.getNcbiId() ) );
             if ( taxon.getSecondaryNcbiId() != null ) {
-                queryObject.add( Restrictions.eq( "secondaryNcbiId", taxon.getSecondaryNcbiId() ) );
+                disjunction.add( Restrictions.eq( "ncbiId", taxon.getSecondaryNcbiId() ) );
             }
+            queryObject.add( disjunction );
+
         } else if ( StringUtils.isNotBlank( taxon.getScientificName() ) ) {
             queryObject.add( Restrictions.eq( "scientificName", taxon.getScientificName() ) );
         } else if ( StringUtils.isNotBlank( taxon.getCommonName() ) ) {

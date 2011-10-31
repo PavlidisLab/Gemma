@@ -20,8 +20,10 @@
  */
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
@@ -66,7 +68,7 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
 
             BusinessKey.addRestrictions( queryObject, taxon );
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -114,19 +116,25 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
             if ( log.isDebugEnabled() ) log.debug( "Found existing taxon: " + taxon );
             return existingTaxon;
         }
-        if ( log.isDebugEnabled() ) log.debug( "Creating new taxon: " + taxon );
+
+        if ( StringUtils.isBlank( taxon.getCommonName() ) || StringUtils.isBlank( taxon.getScientificName() ) ) {
+            throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
+        }
+
+        log.warn( "Creating new taxon: " + taxon );
+
         return create( taxon );
+
     }
 
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(int, java.lang.String)
      */
     @Override
-    @SuppressWarnings({ "unchecked" })
     public Taxon handleFindByAbbreviation( final java.lang.String abbreviation ) {
         final String queryString = "from TaxonImpl t where t.abbreviation=:abbreviation";
-        List results = getHibernateTemplate()
-                .findByNamedParam( queryString, "abbreviation", abbreviation.toLowerCase() );
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "abbreviation",
+                abbreviation.toLowerCase() );
         Taxon result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -137,5 +145,10 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
         }
         return result;
 
+    }
+
+    @Override
+    public Collection<? extends Taxon> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from TaxonImpl t where t.id in (:ids)", "ids", ids );
     }
 }

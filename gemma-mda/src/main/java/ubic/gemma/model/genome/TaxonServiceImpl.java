@@ -79,7 +79,7 @@ public class TaxonServiceImpl extends TaxonServiceBase {
 
     @Override
     protected Collection<Taxon> handleLoadAll() throws Exception {
-        return this.getTaxonDao().loadAll();
+        return ( Collection<Taxon> ) this.getTaxonDao().loadAll();
     }
 
     /**

@@ -48,7 +48,6 @@ import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
@@ -289,12 +288,11 @@ public class ArrayDesignProbeMapperService {
 
             StringTokenizer st = new StringTokenizer( geneSymbol, "|" );
             while ( st.hasMoreTokens() ) {
-                String geneToken = st.nextToken();
+                String geneToken = st.nextToken().trim();
                 if ( ncbiIds ) {
-                    geneDetails = geneService.findByNCBIId( Integer.parseInt( geneToken.trim() ) );
-
+                    geneDetails = geneService.findByNCBIId( Integer.parseInt( geneToken ) );
                 } else {
-                    geneDetails = geneService.findByOfficialSymbol( geneToken.trim(), taxon );
+                    geneDetails = geneService.findByOfficialSymbol( geneToken, taxon );
                 }
                 if ( geneDetails != null ) {
                     geneListProbe.add( geneDetails );

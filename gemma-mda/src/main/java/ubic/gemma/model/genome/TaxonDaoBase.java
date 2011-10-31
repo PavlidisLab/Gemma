@@ -20,6 +20,8 @@ package ubic.gemma.model.genome;
 
 import java.util.Collection;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
@@ -34,7 +36,7 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     /**
      * @see ubic.gemma.model.genome.TaxonDao#create(int, java.util.Collection)
      */
-    public java.util.Collection<Taxon> create( final int transform, final java.util.Collection<Taxon> entities ) {
+    public java.util.Collection<? extends Taxon> create( final java.util.Collection<? extends Taxon> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.create - 'entities' can not be null" );
         }
@@ -42,8 +44,9 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Taxon> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, entityIterator.next() );
+                        for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -54,73 +57,17 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     /**
      * @see ubic.gemma.model.genome.TaxonDao#create(int transform, ubic.gemma.model.genome.Taxon)
      */
-    public Taxon create( final int transform, final ubic.gemma.model.genome.Taxon taxon ) {
+    public Taxon create( final ubic.gemma.model.genome.Taxon taxon ) {
         if ( taxon == null ) {
             throw new IllegalArgumentException( "Taxon.create - 'taxon' can not be null" );
         }
-        this.getHibernateTemplate().save( taxon );
-        return this.transformEntity( transform, taxon );
-    }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#create(java.util.Collection)
-     */
-
-    public java.util.Collection<Taxon> create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#create(ubic.gemma.model.genome.Taxon)
-     */
-    public ubic.gemma.model.genome.Taxon create( ubic.gemma.model.genome.Taxon taxon ) {
-        return this.create( TRANSFORM_NONE, taxon );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#find(int, java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-
-    public Taxon find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.Taxon taxon ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( taxon );
-        argNames.add( "taxon" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.genome.Taxon"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
+        if ( StringUtils.isBlank( taxon.getCommonName() ) || StringUtils.isBlank( taxon.getScientificName() ) ) {
+            throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
         }
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Taxon ) result );
-        return ( Taxon ) result;
-    }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#find(int, ubic.gemma.model.genome.Taxon)
-     */
-    public Taxon find( final int transform, final ubic.gemma.model.genome.Taxon taxon ) {
-        return this.find( transform, "from ubic.gemma.model.genome.Taxon as taxon where taxon.taxon = :taxon", taxon );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#find(java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-    public ubic.gemma.model.genome.Taxon find( final java.lang.String queryString,
-            final ubic.gemma.model.genome.Taxon taxon ) {
-        return this.find( TRANSFORM_NONE, queryString, taxon );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#find(ubic.gemma.model.genome.Taxon)
-     */
-    public ubic.gemma.model.genome.Taxon find( ubic.gemma.model.genome.Taxon taxon ) {
-        return this.find( TRANSFORM_NONE, taxon );
+        this.getHibernateTemplate().save( taxon );
+        return taxon;
     }
 
     /**
@@ -165,7 +112,6 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
             result = results.iterator().next();
         }
 
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Taxon ) result );
         return ( Taxon ) result;
     }
 
@@ -213,7 +159,6 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
             result = results.iterator().next();
         }
 
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Taxon ) result );
         return ( Taxon ) result;
     }
 
@@ -244,88 +189,26 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonDao#findOrCreate(int, java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-
-    public Taxon findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.genome.Taxon taxon ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( taxon );
-        argNames.add( "taxon" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.genome.Taxon"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ubic.gemma.model.genome.Taxon ) result );
-        return ( Taxon ) result;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findOrCreate(int, ubic.gemma.model.genome.Taxon)
-     */
-    public Taxon findOrCreate( final int transform, final ubic.gemma.model.genome.Taxon taxon ) {
-        return this.findOrCreate( transform, "from ubic.gemma.model.genome.Taxon as taxon where taxon.taxon = :taxon",
-                taxon );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findOrCreate(java.lang.String, ubic.gemma.model.genome.Taxon)
-     */
-    public ubic.gemma.model.genome.Taxon findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.genome.Taxon taxon ) {
-        return this.findOrCreate( TRANSFORM_NONE, queryString, taxon );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findOrCreate(ubic.gemma.model.genome.Taxon)
-     */
-    public ubic.gemma.model.genome.Taxon findOrCreate( ubic.gemma.model.genome.Taxon taxon ) {
-        return this.findOrCreate( TRANSFORM_NONE, taxon );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.TaxonDao#load(int, java.lang.Long)
      */
-    public Taxon load( final int transform, final java.lang.Long id ) {
+    public Taxon load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "Taxon.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( ubic.gemma.model.genome.TaxonImpl.class, id );
-        return transformEntity( transform, ( ubic.gemma.model.genome.Taxon ) entity );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#load(java.lang.Long)
-     */
-    public ubic.gemma.model.genome.Taxon load( java.lang.Long id ) {
-        return this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#loadAll()
-     */
-
-    public java.util.Collection<Taxon> loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
+        return ( ubic.gemma.model.genome.Taxon ) entity;
     }
 
     /**
      * @see ubic.gemma.model.genome.TaxonDao#loadAll(int)
      */
 
-    public java.util.Collection<Taxon> loadAll( final int transform ) {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<Taxon> loadAll() {
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.TaxonImpl.class );
-        this.transformEntities( transform, results );
-        return results;
+
+        return ( Collection<Taxon> ) results;
     }
 
     /**
@@ -344,7 +227,7 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     /**
      * @see ubic.gemma.model.genome.TaxonDao#remove(java.util.Collection)
      */
-    public void remove( java.util.Collection<Taxon> entities ) {
+    public void remove( java.util.Collection<? extends Taxon> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.remove - 'entities' can not be null" );
         }
@@ -364,7 +247,7 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     /**
      * @see ubic.gemma.model.genome.TaxonDao#update(java.util.Collection)
      */
-    public void update( final java.util.Collection<Taxon> entities ) {
+    public void update( final java.util.Collection<? extends Taxon> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.update - 'entities' can not be null" );
         }
@@ -372,7 +255,8 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<Taxon> entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
+                        for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
                             update( entityIterator.next() );
                         }
                         return null;
@@ -396,55 +280,10 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     protected abstract Taxon handleFindByAbbreviation( java.lang.String abbreviation ) throws java.lang.Exception;
 
     /**
-     * Transforms a collection of entities using the {@link #transformEntity(int,ubic.gemma.model.genome.Taxon)} method.
-     * This method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ubic.gemma.model.genome.TaxonDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.genome.Taxon)
-     */
-    protected void transformEntities( final int transform, final java.util.Collection<Taxon> entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.genome.TaxonDao</code>, please note that the {@link #TRANSFORM_NONE} constant denotes no
-     * transformation, so the entity itself will be returned. If the integer argument value is unknown
-     * {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ubic.gemma.model.genome.TaxonDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    protected Taxon transformEntity( final int transform, final ubic.gemma.model.genome.Taxon entity ) {
-        Taxon target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
-    }
-    
-    /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.taxon.Taxon)}
      */
-    protected abstract void handleThaw( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
-    
-    
+    protected abstract void handleThaw( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+
     /**
      * @see ubic.gemma.model.genome.TaxonDao.thaw#thaw(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
@@ -453,10 +292,9 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
             this.handleThaw( taxon );
         } catch ( Throwable th ) {
             throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonDao.thaw(ubic.gemma.model.genome.Taxon)' --> "
-                            + th, th );
+                    "Error performing 'ubic.gemma.model.genome.TaxonDao.thaw(ubic.gemma.model.genome.Taxon)' --> " + th,
+                    th );
         }
     }
-    
 
 }
