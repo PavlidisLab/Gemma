@@ -265,43 +265,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			})
 		});
 
-
-		// function to deal with user choice of what to do after editing an
-		// existing group
-		this.editedExistingGroup = function(btn) {
-			if (btn === 'no') { // no is cancel 
-				//this.saveToSession();
-			} else if (btn === 'ok') { // ok is save
-				this.updateDatabase();
-			} else if (btn === 'yes') { // yes is save as
-			
-				// input window for creation of new groups
-				var detailsWin = new Gemma.CreateSetDetailsWindow({
-					title: 'Provide or edit experiment group details'
-				});
-				detailsWin.lockInTaxonId(this.taxonId, true);
-				detailsWin.on("hide", function(args){
-					this.close();
-				});
-				detailsWin.on("commit", function(args){
-					this.newGroupName = args.name;
-					this.newGroupDescription = args.description;
-					this.newGroupPublik = args.publik;
-					this.newGroupTaxon = args.taxon;
-					this.createInDatabase();
-				}, this);
-				
-				detailsWin.name = this.groupName;
-				detailsWin.description = 'Edited search results for: "' + this.groupName + '". Created: ' +
-				(new Date()).toString();
-				
-				detailsWin.show();
-			}
-			else {
-				return;
-			}
-		}.createDelegate(this);
-
 		this.saveAsButton = new Ext.Button({
 			text: "Save As",
 			handler: this.saveAsBtnHandler,
@@ -599,7 +562,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
             disableCaching: true
        });
 	},
-		
 	/**
 	 * When user clicks 'save as', check if they are logged in or not, then in the callback, call saveAsHandler
 	 */

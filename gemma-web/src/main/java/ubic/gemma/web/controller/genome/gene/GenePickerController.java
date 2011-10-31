@@ -113,6 +113,8 @@ public class GenePickerController {
 
     private static Comparator<Taxon> TAXON_COMPARATOR = new Comparator<Taxon>() {
         public int compare( Taxon o1, Taxon o2 ) {
+            if(o1 == null || o1.getScientificName() == null) return -1;
+            if(o2 == null || o2.getScientificName() == null) return 1;
             return ( o1 ).getScientificName().compareTo( ( o2 ).getScientificName() );
         }
     };

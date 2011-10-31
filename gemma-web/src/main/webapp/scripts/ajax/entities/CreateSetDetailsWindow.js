@@ -14,17 +14,13 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 			/**
 			 * set the taxon combo to the corresponding id param and optionally disable the combo
 			 * @param taxonId
-			 * @param disable whether to disable the combo, true by default
+			 * @param leaveEnabled whether to leave the combo enabled, false by default
 			 */
-			lockInTaxonId: function(taxId, diable){
-				if(taxId && taxId !== null){
-					this.taxCombo.getStore().on('load', function(){
-						this.taxCombo.setTaxonById(taxId);
-						this.taxCombo.disable();
-					}, this);
-					// must run after listener in Gemma.StatefulRemoteCombo
+			lockInTaxonId: function(taxId, leaveEnabled){
+				if(taxId && taxId !== null){	
 					this.taxCombo.on('ready', function(){
-						this.taxCombo.disable();
+						this.taxCombo.setTaxonById(taxId);
+						this.taxCombo.setDisabled(leaveEnabled);
 					}, this);
 				}
 			},
@@ -39,6 +35,7 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 								name: 'newEesetTaxon',
 								fieldLabel: 'Taxon'
 							});
+				
 				
 				Ext.apply(this, {
 					items: new Ext.FormPanel({
