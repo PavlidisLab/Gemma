@@ -191,7 +191,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         if ( arrayDesigns.isEmpty() ) return arrayDesigns;
         return this
@@ -214,7 +213,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#find(ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public ArrayDesign find( ArrayDesign arrayDesign ) {
         try {
 
@@ -222,7 +220,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
             Criteria queryObject = super.getSession().createCriteria( ArrayDesign.class );
             BusinessKey.addRestrictions( queryObject, arrayDesign );
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -245,7 +243,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByManufacturer(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     public Collection<ArrayDesign> findByManufacturer( String queryString ) {
         if ( StringUtils.isBlank( queryString ) ) {
             return new HashSet<ArrayDesign>();
@@ -278,7 +275,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @return Map
      */
-    @SuppressWarnings("unchecked")
     private Map<Long, Integer> getExpressionExperimentCountMap() {
         final String queryString = "select ad.id, count(distinct ee) from   "
                 + " ExpressionExperimentImpl ee inner join ee.bioAssays bas inner join bas.arrayDesignUsed ad group by ad";
@@ -304,7 +300,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @return Map
      */
-    @SuppressWarnings("unchecked")
     private Map<Long, Integer> getExpressionExperimentCountMap( Collection<Long> arrayDesignIds ) {
 
         Map<Long, Integer> result = new HashMap<Long, Integer>();
@@ -368,7 +363,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBioSequences(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBioSequences( ArrayDesign arrayDesign )
             throws Exception {
@@ -384,7 +378,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutBlatResults(ubic.gemma
      * .model.expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutBlatResults( ArrayDesign arrayDesign )
             throws Exception {
@@ -410,7 +403,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleCompositeSequenceWithoutGenes(ubic.gemma.model
      * .expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<CompositeSequence> handleCompositeSequenceWithoutGenes( ArrayDesign arrayDesign )
             throws Exception {
@@ -463,24 +455,27 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     @Override
     protected void handleDeleteGeneProductAssociations( ArrayDesign arrayDesign ) {
-        final String queryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
+        final String queryString = "select ba from CompositeSequenceImpl  cs "
                 + "inner join cs.biologicalCharacteristic bs, BioSequence2GeneProductImpl ba "
-                + "where ba.bioSequence = bs and ad=:arrayDesign";
-        getHibernateTemplate().deleteAll(
-                getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign ) );
-        log.info( "Done deleting BlatAssociations for " + arrayDesign );
+                + "where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
+        List<?> blatAssociations = getHibernateTemplate().findByNamedParam( queryString, "arrayDesign", arrayDesign );
+        if ( !blatAssociations.isEmpty() ) {
+            getHibernateTemplate().deleteAll( blatAssociations );
+            log.info( "Done deleting " + blatAssociations.size() + "  BlatAssociations for " + arrayDesign );
+        }
 
-        final String annotationAssociationQueryString = "select ba from ArrayDesignImpl ad inner join ad.compositeSequences as cs "
-                + "inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
-                + "where ba.bioSequence = bs and ad=:arrayDesign";
-        getHibernateTemplate()
-                .deleteAll(
-                        getHibernateTemplate().findByNamedParam( annotationAssociationQueryString, "arrayDesign",
-                                arrayDesign ) );
-        log.info( "Done deleting AnnotationAssociations for " + arrayDesign );
+        final String annotationAssociationQueryString = "select ba from CompositeSequenceImpl cs "
+                + " inner join cs.biologicalCharacteristic bs, AnnotationAssociationImpl ba "
+                + " where ba.bioSequence = bs and cs.arrayDesign=:arrayDesign";
+        List<?> annotAssociations = getHibernateTemplate().findByNamedParam( annotationAssociationQueryString,
+                "arrayDesign", arrayDesign );
+
+        if ( !annotAssociations.isEmpty() ) {
+            getHibernateTemplate().deleteAll( annotAssociations );
+            log.info( "Done deleting " + annotAssociations.size() + " AnnotationAssociations for " + arrayDesign );
+        }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ArrayDesign> handleFindByAlternateName( String queryString ) throws Exception {
         return this.getHibernateTemplate().findByNamedParam(
@@ -492,7 +487,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioAssay> handleGetAllAssociatedBioAssays( Long id ) throws Exception {
         final String queryString = "select b from BioAssayImpl as b inner join b.arrayDesignUsed a where a.id = :id";
@@ -504,9 +498,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetAuditEvents(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetAuditEvents( Collection ids ) throws Exception {
+    protected Map<Long, Collection<AuditEvent>> handleGetAuditEvents( Collection<Long> ids ) throws Exception {
         final String queryString = "select ad.id, auditEvent from ArrayDesignImpl ad"
                 + " join ad.auditTrail as auditTrail join auditTrail.events as auditEvent join fetch auditEvent.performer "
                 + " where ad.id in (:ids) ";
@@ -542,7 +535,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetExpressionExperimentsById(long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleGetExpressionExperiments( ArrayDesign arrayDesign )
             throws Exception {
@@ -557,7 +549,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleGetTaxon(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Taxon> handleGetTaxa( Long id ) throws Exception {
 
@@ -587,7 +578,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return taxon.iterator().next();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Boolean> handleIsMerged( Collection<Long> ids ) throws Exception {
 
@@ -615,7 +605,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eventMap;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Boolean> handleIsMergee( final Collection<Long> ids ) throws Exception {
 
@@ -643,7 +632,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eventMap;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Boolean> handleIsSubsumed( final Collection<Long> ids ) throws Exception {
         Map<Long, Boolean> eventMap = new HashMap<Long, Boolean>();
@@ -669,7 +657,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return eventMap;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Boolean> handleIsSubsumer( Collection<Long> ids ) throws Exception {
 
@@ -718,7 +705,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadCompositeSequences(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<CompositeSequence> handleLoadCompositeSequences( Long id ) throws Exception {
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
@@ -730,7 +716,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadFully(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     @Deprecated
     protected ArrayDesign handleLoadFully( Long id ) throws Exception {
@@ -752,7 +737,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         Session session = getSession();
         session.setCacheMode( CacheMode.IGNORE );
-        List list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
         if ( list.size() == 0 ) return null;
         ArrayDesign arrayDesign = ( ArrayDesign ) list.iterator().next();
         log.info( "Thaw done (" + timer.getTime() / 1000 + " s elapsed)" );
@@ -816,9 +801,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBioSequences(java
      * .util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected long handleNumAllCompositeSequenceWithBioSequences( Collection ids ) throws Exception {
+    protected long handleNumAllCompositeSequenceWithBioSequences( Collection<Long> ids ) throws Exception {
         final String queryString = "select count (distinct cs) from  CompositeSequenceImpl as cs inner join cs.arrayDesign as ar "
                 + " where ar.id in (:ids) and cs.biologicalCharacteristic.sequence is not null";
         return ( Long ) getHibernateTemplate().find( queryString ).iterator().next();
@@ -843,9 +827,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithBlatResults(java.
      * util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected long handleNumAllCompositeSequenceWithBlatResults( Collection ids ) throws Exception {
+    protected long handleNumAllCompositeSequenceWithBlatResults( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
@@ -873,9 +856,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * @seeubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllCompositeSequenceWithGenes(java.util.
      * Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected long handleNumAllCompositeSequenceWithGenes( Collection ids ) throws Exception {
+    protected long handleNumAllCompositeSequenceWithGenes( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
@@ -904,9 +886,8 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleNumAllGenes(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected long handleNumAllGenes( Collection ids ) throws Exception {
+    protected long handleNumAllGenes( Collection<Long> ids ) throws Exception {
         if ( ids == null || ids.size() == 0 ) {
             throw new IllegalArgumentException();
         }
@@ -1207,7 +1188,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<ArrayDesign> findByTaxon( Taxon taxon ) {
         return this.getHibernateTemplate().findByNamedParam(

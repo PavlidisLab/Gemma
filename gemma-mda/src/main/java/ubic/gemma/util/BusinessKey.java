@@ -255,23 +255,23 @@ public class BusinessKey {
             /*
              * These are unambiguous identifiers.
              */
-            if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
-                /*
-                 * Check to see if the new gene used to use an id that is in the system. NOTE that this is a problem. If
-                 * this returns two, the one with the _new_ ncbi id should be used, and the old one should probably be
-                 * deleted.
-                 */
-                Collection<Integer> ncbiIds = new HashSet<Integer>();
-                ncbiIds.add( gene.getNcbiGeneId() );
-                try {
-                    ncbiIds.add( Integer.parseInt( gene.getPreviousNcbiId() ) );
-                } catch ( NumberFormatException e ) {
-                    log.warn( "Previous Ncbi id wasn't parseable to an int: " + gene.getPreviousNcbiId() );
-                }
-                queryObject.add( Restrictions.in( "ncbiGeneId", ncbiIds ) );
-            } else {
-                queryObject.add( Restrictions.eq( "ncbiGeneId", gene.getNcbiGeneId() ) );
-            }
+            // if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
+            // /*
+            // * Check to see if the new gene used to use an id that is in the system. NOTE that this is a problem. If
+            // * this returns two, the one with the _new_ ncbi id should be used, and the old one should probably be
+            // * deleted.
+            // */
+            // Collection<Integer> ncbiIds = new HashSet<Integer>();
+            // ncbiIds.add( gene.getNcbiGeneId() );
+            // try {
+            // ncbiIds.add( Integer.parseInt( gene.getPreviousNcbiId() ) );
+            // } catch ( NumberFormatException e ) {
+            // log.warn( "Previous Ncbi id wasn't parseable to an int: " + gene.getPreviousNcbiId() );
+            // }
+            // queryObject.add( Restrictions.in( "ncbiGeneId", ncbiIds ) );
+            // } else {
+            queryObject.add( Restrictions.eq( "ncbiGeneId", gene.getNcbiGeneId() ) );
+            // }
         } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
             /*
              * Second choice, but not unambiguous even within a taxon unless we know the physical location
@@ -820,11 +820,12 @@ public class BusinessKey {
             }
 
             /*
-             * Can't use gene. This causes some problems when goldenpath and ncbi don't have the same information about
-             * the gene (usually the symbol). Possibly use just the physical location of the gene, not the symbol? Or
-             * check aliases?
+             * This can some problems when golden path and NCBI don't have the same information about the gene
              */
-            // addRestrictions( subCriteria, geneProduct.getGene() );
+            if ( geneProduct.getGene() != null ) {
+                Criteria geneCrits = queryObject.createCriteria( "gene" );
+                addRestrictions( geneCrits, geneProduct.getGene() );
+            }
         }
     }
 

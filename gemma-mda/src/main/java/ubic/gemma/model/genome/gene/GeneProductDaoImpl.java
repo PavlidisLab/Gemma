@@ -27,7 +27,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.Projections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -58,7 +57,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
     public GeneProduct find( GeneProduct geneProduct ) {
         try {
             Criteria queryObject = super.getSession().createCriteria( GeneProduct.class )
-                    .setProjection( Projections.distinct( Projections.property( "id" ) ) );
+                    .setResultTransformer( Criteria.DISTINCT_ROOT_ENTITY );
 
             BusinessKey.checkValidKey( geneProduct );
 
@@ -84,7 +83,8 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                         GeneProduct candidateMatch = ( GeneProduct ) object;
 
                         Gene candidateGene = candidateMatch.getGene();
-                        if ( candidateGene.getOfficialSymbol().equals( gene.getOfficialSymbol() ) ) {
+                        if ( candidateGene.getOfficialSymbol().equals( gene.getOfficialSymbol() )
+                                && candidateGene.getTaxon().equals( gene.getTaxon() ) ) {
                             keeper = candidateMatch;
                             numFound++;
                         } else if ( candidateMatch.getPhysicalLocation() != null
@@ -126,7 +126,9 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
             } else if ( results.size() == 1 ) {
                 result = results.iterator().next();
             }
+            if ( result == null ) return null;
             log.debug( "Found: " + result );
+            assert result instanceof GeneProduct : "Expected GeneProduct, got a " + result.getClass().getName();
             return ( GeneProduct ) result;
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );

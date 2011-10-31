@@ -50,7 +50,8 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.gene.GeneProductDao#create(int, java.util.Collection)
      */
     @Override
-    public java.util.Collection create( final java.util.Collection entities ) {
+    public java.util.Collection<? extends GeneProduct> create(
+            final java.util.Collection<? extends GeneProduct> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneProduct.create - 'entities' can not be null" );
         }
@@ -59,8 +60,9 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( ( ubic.gemma.model.genome.gene.GeneProduct ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends GeneProduct> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            create( entityIterator.next() );
                         }
                         return null;
                     }
@@ -91,8 +93,8 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( geneProduct );
         argNames.add( "geneProduct" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<GeneProduct> results = new java.util.LinkedHashSet<GeneProduct>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -122,7 +124,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( ncbiId );
         argNames.add( "ncbiId" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        java.util.List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
 
         if ( results.isEmpty() ) return null;
@@ -130,36 +132,11 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductDao#findByPhysicalLocation(int, java.lang.String,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    public java.util.Collection findByPhysicalLocation( final java.lang.String queryString,
-            final ubic.gemma.model.genome.PhysicalLocation location ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( location );
-        argNames.add( "location" );
-        java.util.List results = this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        return results;
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductDao#findByPhysicalLocation(int,
-     *      ubic.gemma.model.genome.PhysicalLocation)
-     */
-    public java.util.Collection findByPhysicalLocation( final ubic.gemma.model.genome.PhysicalLocation location ) {
-        return this.findByPhysicalLocation(
-                "from ubic.gemma.model.genome.gene.GeneProduct as geneProduct where geneProduct.location = :location",
-                location );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.genome.gene.GeneProduct)
      */
 
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
+    public GeneProduct findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -175,38 +152,18 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
         } else if ( results.size() == 1 ) {
             result = results.iterator().next();
         }
-        return result;
+        return ( GeneProduct ) result;
     }
 
     /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(int, ubic.gemma.model.genome.gene.GeneProduct)
      */
 
-    public Object findOrCreate( final int transform, final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
+    public GeneProduct findOrCreate( final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
         return this
                 .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.genome.gene.GeneProduct as geneProduct where geneProduct.geneProduct = :geneProduct",
+                        "from ubic.gemma.model.genome.gene.GeneProductImpl as geneProduct where geneProduct.geneProduct = :geneProduct",
                         geneProduct );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.genome.gene.GeneProduct)
-     */
-
-    public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        return ( ubic.gemma.model.genome.gene.GeneProduct ) this
-                .findOrCreate( TRANSFORM_NONE, queryString, geneProduct );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.gene.GeneProductDao#findOrCreate(ubic.gemma.model.genome.gene.GeneProduct)
-     */
-    @Override
-    public ubic.gemma.model.genome.gene.GeneProduct findOrCreate( ubic.gemma.model.genome.gene.GeneProduct geneProduct ) {
-        return ( ubic.gemma.model.genome.gene.GeneProduct ) this.findOrCreate( TRANSFORM_NONE, geneProduct );
     }
 
     /**
@@ -281,19 +238,10 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
     }
 
     /**
-     * @see ubic.gemma.model.genome.gene.GeneProductDao#loadAll()
-     */
-
-    @Override
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.gene.GeneProductDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll( final int transform ) {
+    public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.gene.GeneProductImpl.class );
 
@@ -343,7 +291,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      */
 
     @Override
-    public void update( final java.util.Collection entities ) {
+    public void update( final java.util.Collection<? extends GeneProduct> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneProduct.update - 'entities' can not be null" );
         }
@@ -352,8 +300,9 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
                     @Override
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            update( ( ubic.gemma.model.genome.gene.GeneProduct ) entityIterator.next() );
+                        for ( java.util.Iterator<? extends GeneProduct> entityIterator = entities.iterator(); entityIterator
+                                .hasNext(); ) {
+                            update( entityIterator.next() );
                         }
                         return null;
                     }

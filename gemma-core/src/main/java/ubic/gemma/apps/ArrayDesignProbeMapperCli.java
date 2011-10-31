@@ -426,7 +426,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         if ( err != null ) return err;
 
-        configure();
+        if ( directAnnotationInputFileName == null ) configure();
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
