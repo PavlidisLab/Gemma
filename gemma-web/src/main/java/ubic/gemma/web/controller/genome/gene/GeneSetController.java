@@ -629,7 +629,6 @@ public class GeneSetController {
 
         // If no gene Ids just create group and return.
         GeneSet gset = geneSetService.create( newGeneSet );
-        this.securityService.makePrivate( gset );
 
         Collection<Long> geneIds = geneSetVo.getGeneIds();
 
@@ -644,6 +643,14 @@ public class GeneSetController {
 
             geneSetService.update( gset );
         }
+        
+        // make groups private by default
+        if(geneSetVo.isPublik()){
+            securityService.makePublic( gset );  
+        }else{
+           securityService.makePrivate( gset ); 
+        }
+        
         return geneSetService.load( gset.getId() );
     }
 

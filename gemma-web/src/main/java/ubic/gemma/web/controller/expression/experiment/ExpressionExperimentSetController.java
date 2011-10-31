@@ -576,6 +576,15 @@ public class ExpressionExperimentSetController extends BaseController {
         }
 
         ExpressionExperimentSet newEESet = ( ExpressionExperimentSet ) persisterHelper.persist( newSet );
+        
+        // make groups private by default
+        if(obj.isPublik()){
+            securityService.makePublic( newEESet );  
+        }else{
+           securityService.makePrivate( newEESet ); 
+        }
+        
+        
         return this.makeEESetValueObject( newEESet );
     }
 
