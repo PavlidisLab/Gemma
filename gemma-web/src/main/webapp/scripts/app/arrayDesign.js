@@ -18,23 +18,52 @@ Ext.onReady(function() {
 		});
 
 function handleFailure(data, e) {
-	Ext.DomHelper.overwrite("messages", {
-				tag : 'img',
-				src : '/Gemma/images/icons/warning.png'
-			});
-	Ext.DomHelper.append("messages", {
-				tag : 'span',
-				html : "&nbsp;There was an error:<br/>" + data + e
-			});
+	reportFeedback("error", data, e);
 }
 
 function reset(data) {
 	uploadButton.enable();
 }
 
+// array designs grid page doesn't have a 'messages' div
+function reportFeedback(type, text, e){
+	var messagesDiv = (Ext.get("messages") !== null);
+	if(type === "error"){
+		if(messagesDiv){
+			Ext.DomHelper.overwrite("messages", {
+				tag : 'img',
+				src : '/Gemma/images/icons/warning.png'
+			});
+			Ext.DomHelper.append("messages", {
+				tag : 'span',
+				html : "&nbsp;There was an error:<br/>" + text + e
+			});
+		}else{
+			Ext.Msg.show({
+			   title:'Error',
+			   msg: "There was an error:<br/>" + text + e,
+			   buttons: Ext.Msg.OK,
+			   icon: Ext.MessageBox.WARNING
+			});
+		}
+		
+	}else if(type === "loading"){
+		if (messagesDiv) {
+			Ext.DomHelper.overwrite("messages", {
+				tag : 'img',
+				src : '/Gemma/images/default/tree/loading.gif'
+			});
+		}
+	}else if(type === "success"){
+		if (messagesDiv) {
+			Ext.DomHelper.overwrite("messages", "");
+		}
+	}
+}
+
 function handleReportLoadSuccess(data) {
 	try {
-		Ext.DomHelper.overwrite("messages", "");
+		reportFeedback("success");
 		var arrayDesignSummaryDiv = "arraySummary_" + data.id;
 		if (Ext.get(arrayDesignSummaryDiv) !== null) {
 			Ext.DomHelper.overwrite(arrayDesignSummaryDiv, data.html);
@@ -61,14 +90,16 @@ function handleDoneUpdateReport(id) {
 }
 
 function handleNewAlternateName(data) {
-	Ext.DomHelper.overwrite("messages", "");
-	Ext.DomHelper.overwrite("alternate-names", data);
+	reportFeedback("success");
+	if(Ext.get("alternate-names") !== null){
+		Ext.DomHelper.overwrite("alternate-names", data);
+	}
 }
 
 function handleReportUpdateSuccess(taskId) {
 	try {
 
-		Ext.DomHelper.overwrite("messages", "");
+		reportFeedback("success");
 		var p = new progressbar({
 					taskId : taskId
 				});
@@ -155,10 +186,7 @@ function addAlternateName(id, newName) {
 				errorHandler : errorHandler
 			});
 
-	Ext.DomHelper.overwrite("messages", {
-				tag : 'img',
-				src : '/Gemma/images/default/tree/loading.gif'
-			});
+	reportFeedback("loading");
 
 	ArrayDesignController.addAlternateName.apply(this, callParams);
 

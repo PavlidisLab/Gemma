@@ -20,8 +20,5 @@
 <input type="hidden" id="reloadOnLogout" value="false">
 <input type="hidden" id="reloadOnLogin" value="true"/>
 
-<h1>
-	Platforms
-</h1>
 <title>Platforms</title>
 
