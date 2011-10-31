@@ -18,13 +18,10 @@
 */
 
 // setup namespace if not already defined
-if(!org) {
-    var org = {};
-    if(!org.systemsbiology)
-        org.systemsbiology = {};
-    if(!org.systemsbiology.visualization)
-        org.systemsbiology.visualization = {};
-}
+if(!org) var org = {};
+if(!org.systemsbiology) org.systemsbiology = {};
+if(!org.systemsbiology.visualization) org.systemsbiology.visualization = {};
+
 
 //---------------------------------------------------------------------------------------------------------------------
 //- ColorRange Class
@@ -43,7 +40,7 @@ org.systemsbiology.visualization.DiscreteColorRange = Class.create({
 	NO_PASS_THROUGHBLACK_MINCOLORS: 2,
 	MINRGB: 0,
 	MAXRGB: 255,
- BLACK_RGBA: {r:0, g:0, b:0, a:1},
+    BLACK_RGBA: {r:255, g:255, b:255, a:1}, 
 
  // --------------------------------
  // Private Attributes
