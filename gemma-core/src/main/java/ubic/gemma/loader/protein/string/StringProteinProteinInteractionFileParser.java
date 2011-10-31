@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.protein.StringProteinInteractionEvidenceCodeEnum;
 import ubic.gemma.loader.protein.string.model.StringProteinProteinInteraction;
@@ -62,8 +60,6 @@ public class StringProteinProteinInteractionFileParser extends BasicLineParser<S
 
     /** Taxon of interest in the string file */
     private Collection<Taxon> taxa = new ArrayList<Taxon>();
-
-    private static Log log = LogFactory.getLog( StringProteinProteinInteractionFileParser.class.getName() );
 
     /**
      * Parse a string file line into an array representing the components, on successful validation create a

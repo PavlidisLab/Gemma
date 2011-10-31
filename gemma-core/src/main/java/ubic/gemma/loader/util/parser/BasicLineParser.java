@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -69,6 +70,8 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
 
         String line = null;
 
+        StopWatch timer = new StopWatch();
+        timer.start();
         while ( ( line = br.readLine() ) != null ) {
 
             if ( line.startsWith( COMMENTMARK ) ) {
@@ -84,7 +87,7 @@ public abstract class BasicLineParser<T> implements LineParser<T> {
                 nullLines++;
             }
 
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
                 String message = "Parsed " + linesParsed + " lines...";
                 log.info( message );
             }

@@ -26,6 +26,7 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -77,6 +78,9 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
 
+        StopWatch timer = new StopWatch();
+        timer.start();
+
         int nullLines = 0;
         String line = null;
         int linesParsed = 0;
@@ -98,9 +102,11 @@ public abstract class BasicLineMapParser<K, T> implements LineParser<T> {
             }
             put( key, newItem );
 
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
                 String message = "Parsed " + linesParsed + " lines, last had key " + key;
                 log.info( message );
+                timer.reset();
+                timer.start();
             }
 
         }

@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -49,7 +47,6 @@ import ubic.gemma.model.genome.Taxon;
  */
 @Deprecated
 public class ArrayDesignParser extends BasicLineParser<ArrayDesign> {
-    protected static final Log log = LogFactory.getLog( ArrayDesignParser.class );
 
     private Collection<ArrayDesign> results = new HashSet<ArrayDesign>();
 

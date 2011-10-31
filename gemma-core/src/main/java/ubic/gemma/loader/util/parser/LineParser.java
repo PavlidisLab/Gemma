@@ -29,6 +29,8 @@ public interface LineParser<T> extends Parser<T> {
 
     public static final int MIN_PARSED_LINES_FOR_UPDATE = 100;
 
+    public static final int PARSE_ALERT_TIME_FREQUENCY_MS = 2000;
+
     /**
      * Handle the parsing of a single line from the input.
      * 

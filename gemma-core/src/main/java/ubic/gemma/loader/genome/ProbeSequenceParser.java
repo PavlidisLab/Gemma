@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -108,7 +109,8 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         int nullLines = 0;
         String line = null;
         int linesParsed = 0;
@@ -116,7 +118,7 @@ public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence>
 
             BioSequence newItem = parseOneLine( line );
 
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
                 String message = "Parsed " + linesParsed + " lines ";
                 log.info( message );
             }

@@ -42,7 +42,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  * @see ubic.gemma.loader.genome.goldenpath.GoldenPathDumper
  */
-public class GoldenPathBioSequenceParser extends BasicLineParser<BioSequence> implements QueuingParser {
+public class GoldenPathBioSequenceParser extends BasicLineParser<BioSequence> implements QueuingParser<BioSequence> {
 
     private BlockingQueue<BioSequence> results = new ArrayBlockingQueue<BioSequence>( 10000 );
 
@@ -73,8 +73,7 @@ public class GoldenPathBioSequenceParser extends BasicLineParser<BioSequence> im
         genbank.setType( DatabaseType.SEQUENCE );
     }
 
-    @SuppressWarnings("unchecked")
-    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
+    public void parse( InputStream inputStream, BlockingQueue<BioSequence> queue ) throws IOException {
         this.results = queue;
         parse( inputStream );
     }

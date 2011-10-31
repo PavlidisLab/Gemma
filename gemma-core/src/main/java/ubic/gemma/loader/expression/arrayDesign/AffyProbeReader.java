@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 
 import ubic.gemma.analysis.sequence.SequenceManipulation;
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
@@ -110,7 +111,8 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
     public void parse( InputStream is ) throws IOException {
         if ( is == null ) throw new IllegalArgumentException( "InputStream was null" );
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         int nullLines = 0;
         String line = null;
         int linesParsed = 0;
@@ -121,7 +123,7 @@ public class AffyProbeReader extends BasicLineMapParser<CompositeSequence, Colle
             }
             parseOneLine( line );
 
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
                 String message = "Parsed " + linesParsed + " lines...  ";
                 log.info( message );
             }

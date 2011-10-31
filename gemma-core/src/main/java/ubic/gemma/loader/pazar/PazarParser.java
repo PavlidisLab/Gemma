@@ -18,8 +18,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.pazar.model.PazarRecord;
 import ubic.gemma.loader.util.parser.BasicLineParser;
@@ -31,8 +29,6 @@ import ubic.gemma.loader.util.parser.BasicLineParser;
  * @version $Id$
  */
 public class PazarParser extends BasicLineParser<PazarRecord> {
-
-    private static Log log = LogFactory.getLog( PazarParser.class.getName() );
 
     Collection<PazarRecord> results = new HashSet<PazarRecord>();
 

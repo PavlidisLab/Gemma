@@ -22,8 +22,6 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import ubic.gemma.loader.util.parser.BasicLineParser;
 import ubic.gemma.model.genome.Chromosome;
@@ -46,7 +44,6 @@ import ubic.gemma.util.SequenceBinUtils;
  * @version $Id$
  */
 public class GffParser extends BasicLineParser<Gene> {
-    private static Log log = LogFactory.getLog( GffParser.class.getName() );
     Collection<Gene> results = new HashSet<Gene>();
 
     Taxon taxon;
@@ -136,8 +133,7 @@ public class GffParser extends BasicLineParser<Gene> {
         location.setNucleotide( start );
         location.setNucleotideLength( length );
         location.setBin( SequenceBinUtils.binFromRange( location.getNucleotide().intValue(), location.getNucleotide()
-                .intValue()
-                + location.getNucleotideLength().intValue() ) );
+                .intValue() + location.getNucleotideLength().intValue() ) );
         location.setStrand( strand );
 
         geneProduct.setPhysicalLocation( location );

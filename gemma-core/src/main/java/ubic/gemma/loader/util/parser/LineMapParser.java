@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.apache.commons.lang.time.StopWatch;
+
 /**
  * The difference between this class and BasicLineMapParser is more flexibility in how keys are provided. The
  * parseOneLine method that is implemented must handle adding the data to the Map.
@@ -63,7 +65,8 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
         linesParsed = 0;
         int nullLines = 0;
         BufferedReader br = new BufferedReader( new InputStreamReader( is ) );
-
+        StopWatch timer = new StopWatch();
+        timer.start();
         String line = null;
 
         while ( ( line = br.readLine() ) != null ) {
@@ -80,7 +83,7 @@ public abstract class LineMapParser<K, T> extends BasicLineMapParser<K, T> {
                 nullLines++;
             }
 
-            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 ) {
+            if ( ++linesParsed % PARSE_ALERT_FREQUENCY == 0 && timer.getTime() > PARSE_ALERT_TIME_FREQUENCY_MS ) {
                 String message = "Parsed " + linesParsed + " lines...";
                 log.info( message );
             }

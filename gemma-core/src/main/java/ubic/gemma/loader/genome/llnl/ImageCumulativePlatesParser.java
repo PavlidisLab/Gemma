@@ -43,8 +43,10 @@ import ubic.gemma.model.genome.biosequence.SequenceType;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated as we don't import sequences this way any more.
  */
-public class ImageCumulativePlatesParser extends BasicLineParser<BioSequence> implements QueuingParser {
+@Deprecated
+public class ImageCumulativePlatesParser extends BasicLineParser<BioSequence> implements QueuingParser<BioSequence> {
 
     BlockingQueue<BioSequence> results = new ArrayBlockingQueue<BioSequence>( 10000 );
     private ExternalDatabase genbank;
@@ -130,8 +132,7 @@ public class ImageCumulativePlatesParser extends BasicLineParser<BioSequence> im
      * 
      * @see ubic.gemma.loader.util.QueuingParser#parse(java.io.InputStream, java.util.concurrent.BlockingQueue)
      */
-    @SuppressWarnings("unchecked")
-    public void parse( InputStream inputStream, BlockingQueue queue ) throws IOException {
+    public void parse( InputStream inputStream, BlockingQueue<BioSequence> queue ) throws IOException {
         this.results = queue;
         seen.clear();
         parse( inputStream );
