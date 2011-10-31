@@ -143,7 +143,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     viewConfig: {
         forceFit: true
     },
-    myPageSize: 50,
+    myPageSize: 20,
     title: 'Expression Experiments',
     
     columns: [    /*{ // for testing
@@ -396,12 +396,13 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         this.nowSubset = function(){
             subsetText.show();
             showAllButton.show();
-        };
+        }; 
         var mybbar = new Ext.PagingToolbar({
             store: pageStore, // grid and PagingToolbar using same
             // store
             displayInfo: true,
-            pageSize: myPageSize
+            pageSize: myPageSize,
+        	plugins: [new Ext.ux.PageSizePlugin()]
         });
         Ext.apply(this, {
             store: pageStore,
