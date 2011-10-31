@@ -422,11 +422,11 @@ public class ArrayDesignController extends AbstractTaskService {
 
         if ( SecurityService.isUserAdmin() ) {
             arrayDesignReportService.fillEventInformation( valueObjects );
-            arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
         } else {
             auditableUtil.removeTroubledArrayDesigns( valueObjects );
         }
 
+        arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
         arrayDesignReportService.fillInValueObjects( valueObjects );
 
         return valueObjects;

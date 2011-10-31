@@ -159,7 +159,9 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     myPageSize: 50,
     title: 'Array Designs',
 	totalCount: 0,
-    
+    showOrphans : false,
+	showMergees : true,
+	showTroubled : true,
     
 	loadArrayDesigns: function( adIds ){
 		if (!this.loadMask) {
@@ -173,6 +175,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 				this.getStore().loadData(arrayDesigns);
 				this.setTitle(arrayDesigns.length + ((arrayDesigns.length === 1) ? " Array Design" : " Array Designs"));
 				this.totalCount = arrayDesigns.length;
+				this.getStore().applyMultiFilters();
 			}.createDelegate(this));
 	},
     initComponent: function(){
@@ -180,8 +183,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.showAll = !(document.URL.indexOf("?") > -1 && (document.URL.indexOf("id=") > -1));
 		this.idSubset = null;
 		var filterById = false;
-		this.showOrphans = false;
-		this.showMergees = false;
+
 		if (!this.showAll) {
 			var subsetDetails = document.URL.substr(document.URL.indexOf("?") + 1);
 			var param = Ext.urlDecode(subsetDetails);
@@ -195,11 +197,8 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 		}
 		
-		var pageStore = new Gemma.ArrayDesignsStore({		//lastOptions: {params: {start: 0, limit: myPageSize}}
-		});
-
 		Ext.apply(this, {
-			store: pageStore
+			store: new Gemma.ArrayDesignsStore()
 		});
 		
 		// Create RowActions Plugin
@@ -311,7 +310,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 						
 						if (record.get('troubled')) {
 							var te = record.get('troubleEvent');
-							if (te) {
+							if (te && (te.detail || te.note || te.performer)) {
 								var date = (record.get('troubleEventDate')) ? new Date(record.get('troubleEventDate')).format("Y-m-d") : '';
 								var detail = (te && te.detail) ? '(' + te.detail + ')' : '';
 								var user = (te && te.performer) ? ' by ' + te.performer + ': ' : '';
@@ -328,7 +327,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 						}
 						if (record.get('isMergee')) {
 							statusString += '<img title="mergee: this design was merged with others to create a new design"' +
-							' src="/Gemma/images/icons/merging_component.png"/>&nbsp;';
+							' src="/Gemma/images/icons/arrow_merge.png"/>&nbsp;';
 						}
 						if (record.get('isSubsumed')) {
 							statusString += '<img title="subsumed: all the sequences in this design are covered by another"' +
@@ -413,6 +412,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 			fn: function(record){
 				return !record.get('troubled');
 			}
+			
 		});
 		
 		var textFilterFun = function(query){
@@ -471,64 +471,43 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 						
 					},
 					scope: this
-				},'-',{
-					ref:'orphansToggle',
-					text: 'Hide Orphans',
-					tooltip: "Click to show/hide array designs that aren't used by any experiments in Gemma",
-					handler: function(){
-						if(this.getTopToolbar().orphansToggle.getText() === "Show Orphans"){
+				},'->','-',{
+						ref: 'orphansToggle',
+						checked: !this.showOrphans,
+						xtype: 'checkbox',
+						style:'margin-top:0px',
+						tooltip: "Click to show/hide array designs that aren't used by any experiments in Gemma",
+						handler: function(checkbox, isChecked){
+							if (!isChecked) {
 							
-							this.getTopToolbar().orphansToggle.setText("Hide Orphans");
-							this.showOrphans = true;
-							this.getStore().deactivateMultiFilter('orphanFilter');
-							this.getStore().applyMultiFilters();
+								this.showOrphans = true;
+								this.getStore().deactivateMultiFilter('orphanFilter');
+								this.getStore().applyMultiFilters();
+								
+							} else {
 							
-						}else{
+								this.showOrphans = false;
+								this.getStore().activateMultiFilter('orphanFilter');
+								this.getStore().applyMultiFilters();
+							}
 							
-							this.getTopToolbar().orphansToggle.setText("Show Orphans");
-							this.showOrphans = false;
-							this.getStore().activateMultiFilter('orphanFilter');
-							this.getStore().applyMultiFilters();
-						}
-						
-					},
-					scope:this
-				},{
-					ref:'mergeesToggle',
-					text: 'Hide Mergees',
-					tooltip: "Click to show/hide array designs that have been merged with others to create a new design",
-					handler: function(){
-						if(this.getTopToolbar().mergeesToggle.getText() === "Show Mergees"){
-							
-							this.getTopToolbar().mergeesToggle.setText("Hide Mergees");
-							this.showMergees = true;
-							this.getStore().deactivateMultiFilter('mergeeFilter');
-							this.getStore().applyMultiFilters();
-							
-						}else{
-							this.getTopToolbar().mergeesToggle.setText("Show Mergees");
-							this.showMergees = false;
-							this.getStore().activateMultiFilter('mergeeFilter');
-							this.getStore().applyMultiFilters();
-						}
-						
-					},
-					scope:this
-				},{
+						},
+						scope: this
+					},'Hide Orphans','-',{
 					ref:'troubledToggle',
+					checked: !this.showTroubled,
 					hidden: true,
-					text: 'Hide Troubled',
+					style:'margin-top:0px',
+					xtype:'checkbox',
 					tooltip: "Click to show/hide array designs that are troubled",
-					handler: function(){
-						if(this.getTopToolbar().troubledToggle.getText() === "Show Troubled"){
+					handler: function(checkbox, isChecked){
+						if(!isChecked){
 							
-							this.getTopToolbar().troubledToggle.setText("Hide Troubled");
 							this.showTroubled = true;
 							this.getStore().deactivateMultiFilter('troubledFilter');
 							this.getStore().applyMultiFilters();
 							
 						}else{
-							this.getTopToolbar().troubledToggle.setText("Show Troubled");
 							this.showTroubled = false;
 							this.getStore().activateMultiFilter('troubledFilter');
 							this.getStore().applyMultiFilters();
@@ -536,7 +515,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 						
 					},
 					scope:this
-				},'->',{
+				},{ref:'troubledToggleText', html:'Hide Troubled', hidden:true},'-',{
 					ref:'ArrayDesignsSummaryWindowBtn',
 					text: 'Array Designs Summary',
 					cls: 'x-toolbar-standardbutton',
@@ -558,32 +537,24 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 		this.on('render', function(){
 			this.loadArrayDesigns( this.idSubset );
-			
 		}, this);
 		
 		this.getStore().on('datachanged',function(store){
 			this.setTitle(this.getStore().getCount()+" of "+this.totalCount+" Array Designs");
 		},this);
-		
+										
 		// if the user is an admin, show the status column
 		var isAdmin = (Ext.getDom('hasAdmin')) ? Ext.getDom('hasAdmin').getValue() : false;
 		this.adjustForIsAdmin(isAdmin);
 		
 		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
+			
 			this.adjustForIsAdmin(isAdmin);
-			// when user logs in, reload the grid in case they can see more experiments now
-			// ex: troubled ADs are admin only
-			//this.getStore().reload(this.getStore().lastOptions);
 			
 		}, this);
 		Gemma.Application.currentUser.on("logOut", function(){
 		
-			// update the column model to hide the admin column
 			this.adjustForIsAdmin(false);
-			
-			// when user logs out, reload the grid in case they can see fewer experiments now
-			// ex: troubled ADs are admin only
-			//this.getStore().reload(this.getStore().lastOptions);
 			
 		}, this);
 		
@@ -618,6 +589,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 		 
 		this.getTopToolbar().troubledToggle.setVisible(isAdmin);
+		this.getTopToolbar().troubledToggleText.setVisible(isAdmin);
 		this.getTopToolbar().ArrayDesignsSummaryWindowBtn.setVisible(isAdmin);
     }
 });
