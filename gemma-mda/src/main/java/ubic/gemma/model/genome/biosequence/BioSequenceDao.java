@@ -33,70 +33,9 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
     public java.lang.Integer countAll();
 
     /**
-     * <p>
-     * Does the same thing as {@link #find(boolean, BioSequence)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #find(int, BioSequence bioSequence)}.
-     * </p>
-     */
-    public BioSequence find( int transform, String queryString, BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(BioSequence)} with an additional flag called <code>transform</code>. If this
-     * flag is set to <code>TRANSFORM_NONE</code> then finder results will <strong>NOT</strong> be transformed during
-     * retrieval. If this flag is any of the other constants defined here then finder results <strong>WILL BE</strong>
-     * passed through an operation which can optionally transform the entities (into value objects for example). By
-     * default, transformation does not occur.
-     * </p>
-     */
-    public BioSequence find( int transform, BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(BioSequence)} with an additional argument called <code>queryString</code>.
-     * This <code>queryString</code> argument allows you to override the query string defined in
-     * {@link #find(BioSequence)} .
-     * </p>
-     */
-    public BioSequence find( String queryString, BioSequence bioSequence );
-
-    /**
      * 
      */
     public BioSequence find( BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByAccession(boolean, ubic.gemma.model.common.description.DatabaseEntry)} with
-     * an additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByAccession(int,
-     * ubic.gemma.model.common.description.DatabaseEntry accession)}.
-     * </p>
-     */
-    public BioSequence findByAccession( int transform, String queryString,
-            ubic.gemma.model.common.description.DatabaseEntry accession );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)} with an
-     * additional flag called <code>transform</code>. If this flag is set to <code>TRANSFORM_NONE</code> then finder
-     * results will <strong>NOT</strong> be transformed during retrieval. If this flag is any of the other constants
-     * defined here then finder results <strong>WILL BE</strong> passed through an operation which can optionally
-     * transform the entities (into value objects for example). By default, transformation does not occur.
-     * </p>
-     */
-    public BioSequence findByAccession( int transform, ubic.gemma.model.common.description.DatabaseEntry accession );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)} with an
-     * additional argument called <code>queryString</code>. This <code>queryString</code> argument allows you to
-     * override the query string defined in {@link #findByAccession(ubic.gemma.model.common.description.DatabaseEntry)}
-     * .
-     * </p>
-     */
-    public BioSequence findByAccession( String queryString, ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
      * 
@@ -115,35 +54,6 @@ public interface BioSequenceDao extends BaseDao<BioSequence> {
      * 
      */
     public java.util.Collection<BioSequence> findByName( java.lang.String name );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(boolean, BioSequence)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findOrCreate(int, BioSequence bioSequence)}.
-     * </p>
-     */
-    public BioSequence findOrCreate( int transform, String queryString, BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(BioSequence)} with an additional flag called <code>transform</code>.
-     * If this flag is set to <code>TRANSFORM_NONE</code> then finder results will <strong>NOT</strong> be transformed
-     * during retrieval. If this flag is any of the other constants defined here then finder results <strong>WILL
-     * BE</strong> passed through an operation which can optionally transform the entities (into value objects for
-     * example). By default, transformation does not occur.
-     * </p>
-     */
-    public BioSequence findOrCreate( int transform, BioSequence bioSequence );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findOrCreate(BioSequence)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findOrCreate(BioSequence)}.
-     * </p>
-     */
-    public BioSequence findOrCreate( String queryString, BioSequence bioSequence );
 
     /**
      * 

@@ -71,7 +71,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
             /*
              * this initially matches on name and taxon only.
              */
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -110,7 +110,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase#findByAccession (ubic.gemma.model.common.description.
      * DatabaseEntry)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public BioSequence findByAccession( DatabaseEntry databaseEntry ) {
         BusinessKey.checkValidKey( databaseEntry );
@@ -207,7 +206,6 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
         return results;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioSequence> handleFindByName( String name ) throws Exception {
         if ( name == null ) return null;
@@ -220,9 +218,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * 
      * @seeubic.gemma.model.genome.biosequence.BioSequenceDaoBase# handleGetGenesByAccession(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetGenesByAccession( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByAccession( String search ) throws Exception {
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp"
                 + " inner join bs2gp.bioSequence bs "
                 + "inner join bs.sequenceDatabaseEntry de where gp=bs2gp.geneProduct " + " and de.accession = :search ";
@@ -234,9 +231,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleGetGenesByName (java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetGenesByName( String search ) throws Exception {
+    protected Collection<Gene> handleGetGenesByName( String search ) throws Exception {
         Collection<Gene> genes = null;
         final String queryString = "select distinct gene from GeneImpl as gene inner join gene.products gp,  BioSequence2GeneProductImpl as bs2gp where gp=bs2gp.geneProduct "
                 + " and bs2gp.bioSequence.name like :search ";
@@ -256,9 +252,8 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
      * 
      * @see ubic.gemma.model.genome.biosequence.BioSequenceDaoBase#handleLoad(java .util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection<BioSequence> handleLoad( Collection<Long> ids ) throws Exception {
         final String queryString = "select distinct bs from BioSequenceImpl bs where bs.id in (:ids)";
         return getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
     }
@@ -305,7 +300,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
     /**
      * @param results
      */
-    private void debug( BioSequence query, List<BioSequence> results ) {
+    private void debug( BioSequence query, List<?> results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nMultiple BioSequences found matching query:\n" );
 
@@ -357,7 +352,10 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * @param batch
+     * @return
+     */
     private Collection<? extends BioSequence> doThawBatch( Collection<BioSequence> batch ) {
         return this
                 .getHibernateTemplate()

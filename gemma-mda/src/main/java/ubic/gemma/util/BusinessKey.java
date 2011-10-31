@@ -823,7 +823,7 @@ public class BusinessKey {
             }
 
             /*
-             * This can some problems when golden path and NCBI don't have the same information about the gene
+             * This can cause some problems when golden path and NCBI don't have the same information about the gene
              */
             if ( geneProduct.getGene() != null ) {
                 Criteria geneCrits = queryObject.createCriteria( "gene" );

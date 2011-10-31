@@ -22,6 +22,8 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.genome.Gene;
+
 /**
  * <p>
  * Spring Service base class for <code>ubic.gemma.model.genome.biosequence.BioSequenceService</code>, provides access to
@@ -51,7 +53,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#create(java.util.Collection)
      */
-    public java.util.Collection create( final java.util.Collection bioSequences ) {
+    public java.util.Collection<BioSequence> create( final java.util.Collection<BioSequence> bioSequences ) {
         try {
             return this.handleCreate( bioSequences );
         } catch ( Throwable th ) {
@@ -106,7 +108,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByGenes(java.util.Collection)
      */
-    public java.util.Map findByGenes( final java.util.Collection genes ) {
+    public java.util.Map<Gene, Collection<BioSequence>> findByGenes( final java.util.Collection<Gene> genes ) {
         try {
             return this.handleFindByGenes( genes );
         } catch ( Throwable th ) {
@@ -119,7 +121,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * @see ubic.gemma.model.genome.biosequence.BioSequenceService#findByName(java.lang.String)
      */
-    public java.util.Collection findByName( final java.lang.String name ) {
+    public java.util.Collection<BioSequence> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
         } catch ( Throwable th ) {
@@ -295,7 +297,7 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #create(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleCreate( java.util.Collection bioSequences )
+    protected abstract java.util.Collection<BioSequence> handleCreate( java.util.Collection<BioSequence> bioSequences )
             throws java.lang.Exception;
 
     /**
@@ -319,18 +321,19 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #findByGenes(java.util.Collection)}
      */
-    protected abstract java.util.Map handleFindByGenes( java.util.Collection genes ) throws java.lang.Exception;
+    protected abstract java.util.Map handleFindByGenes( java.util.Collection<Gene> genes ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
+    protected abstract java.util.Collection<BioSequence> handleFindByName( java.lang.String name )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findOrCreate(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleFindOrCreate( java.util.Collection bioSequences )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<BioSequence> handleFindOrCreate(
+            java.util.Collection<BioSequence> bioSequences ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.biosequence.BioSequence)}
@@ -357,7 +360,8 @@ public abstract class BioSequenceServiceBase implements ubic.gemma.model.genome.
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<BioSequence> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.genome.biosequence.BioSequence)}

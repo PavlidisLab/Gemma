@@ -86,7 +86,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<GeneSet> findByGene( Gene gene ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select gs from GeneSetImpl gs inner join gs.members m inner join m.gene g where g = :g", "g", gene );
@@ -98,7 +97,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<GeneSet> findByName( String name ) {
         if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
         return this.getHibernateTemplate().findByNamedParam(
@@ -110,7 +108,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * 
      * @see ubic.gemma.model.genome.gene.GeneSetDao#findByName(java.lang.String, ubic.gemma.model.genome.Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneSet> findByName( String name, Taxon taxon ) {
         if ( StringUtils.isBlank( name ) ) return new HashSet<GeneSet>();
@@ -129,7 +126,6 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
      * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<? extends GeneSet> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from GeneSetImpl where id in (:ids)", "ids", ids );
     }
@@ -169,8 +165,7 @@ public class GeneSetDaoImpl extends HibernateDaoSupport implements GeneSetDao {
     public Collection<GeneSet> loadAll( Taxon tax ) {
         if ( tax == null ) return ( Collection<GeneSet> ) this.loadAll();
         return this.getHibernateTemplate().findByNamedParam(
-                "select distinct gs from GeneSetImpl gs join gs.members m join m.gene g where g.taxon = :t", "t",
-                tax );
+                "select distinct gs from GeneSetImpl gs join gs.members m join m.gene g where g.taxon = :t", "t", tax );
     }
 
     /*
