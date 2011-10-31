@@ -235,32 +235,6 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
     }
 
     /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#thaw(ubic.gemma.model.common.Auditable)
-     */
-    public void thaw( final ubic.gemma.model.common.Auditable auditable ) {
-        try {
-            this.handleThaw( auditable );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.thaw(ubic.gemma.model.common.Auditable auditable)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailService#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    public void thaw( final ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail ) {
-        try {
-            this.handleThaw( auditTrail );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceException(
-                    "Error performing 'ubic.gemma.model.common.auditAndSecurity.AuditTrailService.thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * Gets the reference to <code>auditEvent</code>'s DAO.
      */
     protected ubic.gemma.model.common.auditAndSecurity.AuditEventDao getAuditEventDao() {
@@ -357,16 +331,5 @@ public abstract class AuditTrailServiceBase implements ubic.gemma.model.common.a
      */
     protected abstract ubic.gemma.model.common.auditAndSecurity.AuditEvent handleGetLastValidationEvent(
             ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.Auditable)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.common.auditAndSecurity.AuditTrail auditTrail )
-            throws java.lang.Exception;
 
 }

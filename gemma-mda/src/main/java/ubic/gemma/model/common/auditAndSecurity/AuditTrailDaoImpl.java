@@ -28,7 +28,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Repository;
@@ -106,60 +105,6 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         } );
 
         return auditEvent;
-    }
-
-    /**
-     * 
-     */
-    @Override
-    protected void handleThaw( final Auditable auditable ) {
-        if ( auditable == null ) return;
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( auditable );
-                if ( auditable.getAuditTrail() == null ) return null;
-                if ( auditable.getAuditTrail().getEvents() == null ) return null;
-                thaw( auditable.getAuditTrail() );
-                session.evict( auditable );
-                return null;
-            }
-        } );
-
-    }
-
-    /**
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditTrailDao#thaw(ubic.gemma.model.common.auditAndSecurity.AuditTrail)
-     */
-    @Override
-    protected void handleThaw( final AuditTrail auditTrail ) {
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<AuditTrail>() {
-            public AuditTrail doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( auditTrail, LockMode.NONE );
-                Hibernate.initialize( auditTrail );
-                if ( auditTrail.getEvents() == null ) return null;
-                for ( AuditEvent ae : auditTrail.getEvents() ) {
-                    if ( ae == null ) {
-                        continue; // legacy of using ordered collection; should cease to be a problem.
-                    }
-                    Hibernate.initialize( ae );
-                    if ( ae.getPerformer() != null ) {
-                        User performer = ( User ) session.get( UserImpl.class, ae.getPerformer().getId() );
-                        Hibernate.initialize( performer );
-                        session.evict( performer );
-                    } else {
-                        /*
-                         * This can happen if was the result of an anonymous user's actions.
-                         */
-                        log.debug( "No performer for audit event: id=" + ae.getId() + " - anonymous?" );
-                    }
-                }
-                session.evict( auditTrail );
-                return null;
-            }
-        } );
-
     }
 
     /**

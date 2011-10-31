@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
@@ -179,8 +180,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
             assertNotNull( prod.getStatus() );
             assertNotNull( prod.getStatus().getId() );
 
-            this.auditTrailService.thaw( prod );
-            Collection<AuditEvent> events = prod.getAuditTrail().getEvents();
+            Collection<AuditEvent> events = this.auditTrailService.getEvents( prod );
             assertEquals( 1, events.size() );
             for ( AuditEvent e : events ) {
                 assertNotNull( e.getId() );
@@ -202,26 +202,30 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         }
         User user = userService.findByUserName( USERNAME );
 
-        auditTrailService.thaw( user );
+        List<AuditEvent> events = auditTrailService.getEvents( user );
 
-        assertEquals( "Should have a 'create'", 1, user.getAuditTrail().getEvents().size() );
+        assertEquals( "Should have a 'create'", 1, events.size() );
 
-        assertNotNull( user.getAuditTrail() );
-        assertNotNull( user.getAuditTrail().getCreationEvent().getId() );
+        assertNotNull( events.get( 0 ).getId() );
 
         user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
         userService.update( user );
 
-        int sizeAfterFirstUpdate = user.getAuditTrail().getEvents().size();
+        events = auditTrailService.getEvents( user );
 
-        assertEquals( "Should have a 'create' and an 'update'", 2, user.getAuditTrail().getEvents().size() );
+        int sizeAfterFirstUpdate = events.size();
+
+        assertEquals( "Should have a 'create' and an 'update'", 2, events.size() );
 
         assertTrue( sizeAfterFirstUpdate > 1 );
 
-        assertEquals( AuditAction.UPDATE, user.getAuditTrail().getLast().getAction() );
+        assertEquals( AuditAction.UPDATE, events.get( events.size() - 1 ).getAction() );
         // third time.
         user.setFax( RandomStringUtils.randomNumeric( 10 ) ); // change something.
         userService.update( user );
+
+        events = auditTrailService.getEvents( user );
+
         // assertEquals( 3, user.getAuditTrail().getEvents().size() );
         assertTrue( sizeAfterFirstUpdate < user.getAuditTrail().getEvents().size() );
 

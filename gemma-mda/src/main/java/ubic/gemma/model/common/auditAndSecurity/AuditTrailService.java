@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.common.auditAndSecurity;
 
+import java.util.List;
+
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -92,32 +94,23 @@ public interface AuditTrailService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public AuditTrail create( AuditTrail auditTrail );
 
     /**
      * Return the last 'trouble' event (if any), if it was after the last 'ok' or 'validated' event (if any). Return
      * null otherwise (indicating there is no trouble).
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public AuditEvent getLastTroubleEvent( Auditable auditable );
 
     /**
      * Return the last validation event (if any).
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
     public AuditEvent getLastValidationEvent( Auditable auditable );
 
-    /**
-     * 
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public void thaw( Auditable auditable );
-
-    /**
-     * Thaws the given audit trail to prevent lazy load errors
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY" })
-    public void thaw( AuditTrail auditTrail );
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY" })
+    public List<AuditEvent> getEvents( Auditable auditable );
 
 }

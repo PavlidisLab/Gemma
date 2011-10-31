@@ -95,10 +95,12 @@ public class NCBIGene2GOAssociationParser extends BasicLineParser<Gene2GOAssocia
     private static Set<String> ignoredEvidenceCodes = new HashSet<String>();
 
     static {
-        // these are 'NOT association' codes which we don't use. See http://www.geneontology.org/GO.evidence.shtml.
+        // these are 'NOT association' codes, or (ND) one that means "nothing known", which we don't use. See
+        // http://www.geneontology.org/GO.evidence.shtml.
         ignoredEvidenceCodes.add( "IMR" );
         ignoredEvidenceCodes.add( "IKR" );
         ignoredEvidenceCodes.add( "IRD" );
+        ignoredEvidenceCodes.add( "ND" );
     }
 
     BlockingQueue<Gene2GOAssociation> queue;

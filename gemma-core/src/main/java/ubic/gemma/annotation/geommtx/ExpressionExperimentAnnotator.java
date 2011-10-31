@@ -499,8 +499,7 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
     private boolean needToRun( ExpressionExperiment auditable, boolean force ) {
         if ( force ) return true;
 
-        this.auditTrailService.thaw( auditable );
-        List<AuditEvent> events = ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
+        List<AuditEvent> events = this.auditTrailService.getEvents( auditable );
 
         for ( AuditEvent event : events ) {
             if ( event == null ) continue; // legacy of ordered-list, should not happen any more

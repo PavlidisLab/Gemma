@@ -66,8 +66,9 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     @Override
     @SuppressWarnings("static-access")
     protected void buildOptions() {
-        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
-                "Array design name (or short name); or comma-delimited list" ).withLongOpt( "array" ).create( 'a' );
+        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" )
+                .withDescription( "Array design name (or short name); or comma-delimited list" ).withLongOpt( "array" )
+                .create( 'a' );
 
         addOption( arrayDesignOption );
 
@@ -128,16 +129,12 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
         if ( skipIfLastRunLaterThan == null ) return true;
         if ( autoSeek == false ) return true;
 
-        auditTrailService.thaw( arrayDesign );
-
         ArrayDesign subsumingArrayDesign = arrayDesign.getSubsumingArrayDesign();
 
         if ( subsumingArrayDesign != null ) {
             boolean needToRunSubsumer = needToRun( skipIfLastRunLaterThan, subsumingArrayDesign, eventClass );
             if ( !needToRunSubsumer ) {
-                log
-                        .info( "Subsumer  " + subsumingArrayDesign + " was run more recently than "
-                                + skipIfLastRunLaterThan );
+                log.info( "Subsumer  " + subsumingArrayDesign + " was run more recently than " + skipIfLastRunLaterThan );
                 return false;
             }
         }
@@ -230,9 +227,8 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
     private List<AuditEvent> getEvents( ArrayDesign arrayDesign, Class<? extends ArrayDesignAnalysisEvent> eventClass ) {
         List<AuditEvent> events = new ArrayList<AuditEvent>();
 
-        for ( AuditEvent event : arrayDesign.getAuditTrail().getEvents() ) {
-            if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
-                                           // any more
+        for ( AuditEvent event : this.auditTrailService.getEvents( arrayDesign ) ) {
+            if ( event == null ) continue;
             if ( eventClass == null
                     || ( event.getEventType() != null && eventClass.isAssignableFrom( event.getEventType().getClass() ) ) ) {
                 events.add( event );

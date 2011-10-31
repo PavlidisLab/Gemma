@@ -43,7 +43,6 @@ import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMappingEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignRepeatAnalysisEvent;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignSequenceAnalysisEvent;
@@ -73,9 +72,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
     @Autowired
     private AuditEventService auditEventService;
-
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     /**
      * Batch of classes we can get events for all at once.
@@ -474,10 +470,6 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         this.arrayDesignService = arrayDesignService;
     }
 
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
     /**
      * FIXME this could be refactored and used elsewhere. This is similar to code in the AuditableService/Dao.
      * 
@@ -490,12 +482,12 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
 
         if ( ad == null ) return "";
 
-        auditTrailService.thaw( ad );
+        List<AuditEvent> events2 = auditEventService.getEvents( ad );
 
         String analysisEventString = "";
         List<AuditEvent> events = new ArrayList<AuditEvent>();
 
-        for ( AuditEvent event : ad.getAuditTrail().getEvents() ) {
+        for ( AuditEvent event : events2 ) {
             if ( event == null ) continue; // legacy of ordered-list which could end up with gaps; should not be needed
                                            // any more
             if ( event.getEventType() != null && eventType.isAssignableFrom( event.getEventType().getClass() ) ) {

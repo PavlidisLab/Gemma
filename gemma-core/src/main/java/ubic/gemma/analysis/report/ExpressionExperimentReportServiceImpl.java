@@ -59,7 +59,6 @@ import ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AutomatedAnnotationEvent;
@@ -93,8 +92,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
     private static final double CUT_OFF = 0.05;
     @Autowired
     private AuditEventService auditEventService;
-    @Autowired
-    private AuditTrailService auditTrailService;
 
     @Autowired
     private CacheManager cacheManager;
@@ -598,13 +595,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
         this.auditEventService = auditEventService;
     }
 
-    /**
-     * @param auditTrailService the auditTrailService to set
-     */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
-    }
-
     public void setDifferentialExpressionAnalysisService(
             DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
         this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
@@ -857,8 +847,6 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
 
         Date timestamp = new Date( System.currentTimeMillis() );
         eeVo.setDateCached( timestamp );
-
-        auditTrailService.thaw( tempEe.getAuditTrail() );
         eeVo.setDateCreated( tempEe.getStatus().getCreateDate() );
         eeVo.setDateLastUpdated( tempEe.getStatus().getLastUpdateDate() );
 

@@ -322,18 +322,24 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         requireLogin(); // actually only needed if using the db to save results (usual case)
 
-        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
-                "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD ).withLongOpt(
-                "identityThreshold" ).create( 'i' ) );
+        addOption( OptionBuilder
+                .hasArg()
+                .withArgName( "value" )
+                .withDescription(
+                        "Sequence identity threshold, default = " + ProbeMapperConfig.DEFAULT_IDENTITY_THRESHOLD )
+                .withLongOpt( "identityThreshold" ).create( 'i' ) );
 
-        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
-                "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD ).withLongOpt(
-                "scoreThreshold" ).create( 's' ) );
+        addOption( OptionBuilder.hasArg().withArgName( "value" )
+                .withDescription( "Blat score threshold, default = " + ProbeMapperConfig.DEFAULT_SCORE_THRESHOLD )
+                .withLongOpt( "scoreThreshold" ).create( 's' ) );
 
-        addOption( OptionBuilder.hasArg().withArgName( "value" ).withDescription(
-                "Minimum fraction of probe overlap with exons, default = "
-                        + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION ).withLongOpt( "overlapThreshold" )
-                .create( 'o' ) );
+        addOption( OptionBuilder
+                .hasArg()
+                .withArgName( "value" )
+                .withDescription(
+                        "Minimum fraction of probe overlap with exons, default = "
+                                + ProbeMapperConfig.DEFAULT_MINIMUM_EXON_OVERLAP_FRACTION )
+                .withLongOpt( "overlapThreshold" ).create( 'o' ) );
 
         addOption( OptionBuilder.withDescription(
                 "Assign non-gene mappings to a ProbeAlignedRegion including creation of new ones (default="
@@ -383,15 +389,16 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         addOption( force );
 
-        Option directAnnotation = OptionBuilder.withDescription(
-                "Import annotations from a file rather than our own analysis. You must provide the taxon option" )
+        Option directAnnotation = OptionBuilder
+                .withDescription(
+                        "Import annotations from a file rather than our own analysis. You must provide the taxon option" )
                 .hasArg().withArgName( "file" ).create( "import" );
 
         addOption( directAnnotation );
 
-        Option databaseOption = OptionBuilder.withDescription(
-                "Source database name (GEO etc); required if using -import" ).hasArg().withArgName( "dbname" ).create(
-                "source" );
+        Option databaseOption = OptionBuilder
+                .withDescription( "Source database name (GEO etc); required if using -import" ).hasArg()
+                .withArgName( "dbname" ).create( "source" );
         addOption( databaseOption );
 
         Option noDatabaseOption = OptionBuilder.withDescription(
@@ -399,9 +406,9 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         addOption( noDatabaseOption );
 
-        Option probesToDoOption = OptionBuilder.withDescription(
-                "Comma-delimited list of probe names to process (for testing); implies -nodb" ).hasArg().withArgName(
-                "probes" ).create( "probes" );
+        Option probesToDoOption = OptionBuilder
+                .withDescription( "Comma-delimited list of probe names to process (for testing); implies -nodb" )
+                .hasArg().withArgName( "probes" ).create( "probes" );
 
         addOption( probesToDoOption );
 
@@ -544,8 +551,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         log.debug( "Re-Checking status of " + arrayDesign );
 
-        this.auditTrailService.thaw( arrayDesign );
-        List<AuditEvent> allEvents = ( List<AuditEvent> ) arrayDesign.getAuditTrail().getEvents();
+        List<AuditEvent> allEvents = this.auditTrailService.getEvents( arrayDesign );
         AuditEvent lastSequenceAnalysis = null;
         AuditEvent lastRepeatMask = null;
         AuditEvent lastSequenceUpdate = null;

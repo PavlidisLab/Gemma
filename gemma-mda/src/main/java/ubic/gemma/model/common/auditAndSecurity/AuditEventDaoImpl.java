@@ -713,19 +713,4 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
 
     }
 
-    // not implemented yet.
-    // @Override
-    // public <T extends Auditable> Collection<T> getHavingEvent( Class<T> clazz, Class<? extends AuditEventType> type,
-    // int limit ) {
-    // // TODO Auto-generated method stub
-    // return null;
-    // }
-    //
-    // @Override
-    // public <T extends Auditable> Collection<T> getLackingEvent( Class<T> clazz, Class<? extends AuditEventType> type,
-    // int limit ) {
-    // // TODO Auto-generated method stub
-    // return null;
-    // }
-
 }

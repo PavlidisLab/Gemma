@@ -162,30 +162,6 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
     }
 
     /**
-     * @see AuditTrailDao#thaw(ubic.gemma.model.common.Auditable)
-     */
-    public void thaw( final ubic.gemma.model.common.Auditable auditable ) {
-        try {
-            this.handleThaw( auditable );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'AuditTrailDao.thaw(ubic.gemma.model.common.Auditable auditable)' --> " + th, th );
-        }
-    }
-
-    /**
-     * @see AuditTrailDao#thaw(AuditTrail)
-     */
-    public void thaw( final AuditTrail auditTrail ) {
-        try {
-            this.handleThaw( auditTrail );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException( "Error performing 'AuditTrailDao.thaw(AuditTrail auditTrail)' --> "
-                    + th, th );
-        }
-    }
-
-    /**
      * @see AuditTrailDao#update(Collection)
      */
     public void update( final Collection<? extends AuditTrail> entities ) {
@@ -220,16 +196,6 @@ public abstract class AuditTrailDaoBase extends org.springframework.orm.hibernat
      */
     protected abstract AuditEvent handleAddEvent( ubic.gemma.model.common.Auditable auditable, AuditEvent auditEvent )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #thaw(ubic.gemma.model.common.Auditable)}
-     */
-    protected abstract void handleThaw( ubic.gemma.model.common.Auditable auditable ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #thaw(AuditTrail)}
-     */
-    protected abstract void handleThaw( AuditTrail auditTrail ) throws java.lang.Exception;
 
     /**
      * Transforms a collection of entities using the {@link #transformEntity(int,AuditTrail)} method. This method does

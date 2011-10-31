@@ -1,0 +1,84 @@
+/*
+ * The Gemma project
+ * 
+ * Copyright (c) 2011 University of British Columbia
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
+package ubic.gemma.apps;
+
+import ubic.gemma.model.common.auditAndSecurity.Contact;
+import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.description.DatabaseType;
+import ubic.gemma.model.common.description.ExternalDatabase;
+import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.util.AbstractSpringAwareCLI;
+
+/**
+ * TODO Document Me
+ * 
+ * @author paul
+ * @version $Id$
+ */
+public class ExternalDatabaseAdderCli extends AbstractSpringAwareCLI {
+
+    /**
+     * @param args
+     */
+    public static void main( String[] args ) {
+        ExternalDatabaseAdderCli p = new ExternalDatabaseAdderCli();
+        try {
+            Exception ex = p.doWork( args );
+            if ( ex != null ) {
+                ex.printStackTrace();
+            }
+        } catch ( Exception e ) {
+            throw new RuntimeException( e );
+        }
+
+    }
+
+    @Override
+    protected void buildOptions() {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    protected Exception doWork( String[] args ) {
+        try {
+            Exception err = processCommandLine( "One-off External database adder", args );
+            if ( err != null ) return err;
+
+            ContactService contactService = ( ContactService ) this.getBean( "contactService" );
+            Contact c = contactService.findByName( "Affymetrix" ).iterator().next();
+            ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();
+
+            toAdd.setDatabaseSupplier( c );
+            toAdd.setDescription( "The NetAffx Analysis Center enables researchers to correlate their "
+                    + "GeneChip array results with array design and annotation information." );
+            toAdd.setName( "NetAFFX" );
+            toAdd.setType( DatabaseType.SEQUENCE );
+            toAdd.setWebUri( "http://www.affymetrix.com/analysis/index.affx" );
+
+            ExternalDatabaseService eds = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
+
+            eds.findOrCreate( toAdd );
+        } catch ( Exception e ) {
+            return e;
+        }
+        return null;
+    }
+
+}

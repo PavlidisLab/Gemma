@@ -20,6 +20,7 @@ package ubic.gemma.model.common.auditAndSecurity;
 
 import java.lang.reflect.Method;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -190,21 +191,7 @@ public class AuditTrailServiceImpl extends ubic.gemma.model.common.auditAndSecur
     }
 
     @Override
-    protected void handleThaw( Auditable auditable ) throws Exception {
-        this.getAuditTrailDao().thaw( auditable );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.common.auditAndSecurity.AuditTrailServiceBase#handleThaw(ubic.gemma.model.common.auditAndSecurity
-     * .AuditTrail)
-     */
-    @Override
-    protected void handleThaw( AuditTrail auditTrail ) throws Exception {
-        this.getAuditTrailDao().thaw( auditTrail );
-
+    public List<AuditEvent> getEvents( Auditable ad ) {
+        return getAuditEventDao().getEvents( ad );
     }
 }

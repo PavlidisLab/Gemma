@@ -452,7 +452,7 @@ public class ArrayDesignProbeMapperService {
                     if ( existing == null ) {
                         /*
                          * Temporary. We have to be careful not to cruft up the gene table now that I so carefully
-                         * cleaned it.
+                         * cleaned it. But this is a problem if we aren't adding some other association to the gene at least.
                          */
                         log.warn( "New gene product from GoldenPath is not in Gemma: " + ba.getGeneProduct()
                                 + " skipping association to " + ba.getBioSequence()

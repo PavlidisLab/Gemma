@@ -35,6 +35,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
@@ -53,6 +54,8 @@ import ubic.gemma.security.authentication.ManualAuthenticationService;
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     protected AuditTrailService auditTrailService;
+    
+    protected AuditEventService auditEventService;
 
     protected BeanFactory ctx = null;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
@@ -137,8 +140,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected boolean needToRun( Auditable auditable, Class<? extends AuditEventType> eventClass ) {
         boolean needToRun = true;
         Date skipIfLastRunLaterThan = getLimitingDate();
-        this.auditTrailService.thaw( auditable );
-        List<AuditEvent> events = ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
+        List<AuditEvent> events = this.auditEventService.getEvents( auditable );
 
         boolean okToRun = true; // assume okay unless indicated otherwise
 
@@ -234,7 +236,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
         createSpringContext();
         authenticate();
         this.auditTrailService = ( AuditTrailService ) this.getBean( "auditTrailService" );
-
+        this.auditEventService = ( AuditEventService ) this.getBean( "auditEventService" );
     }
 
     /** check username and password. */

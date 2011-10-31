@@ -31,14 +31,4 @@ public interface AuditTrailDao extends BaseDao<AuditTrail> {
      */
     public AuditEvent addEvent( Auditable auditable, AuditEvent auditEvent );
 
-    /**
-     * 
-     */
-    public void thaw( Auditable auditable );
-
-    /**
-     * thaws the given audit trail
-     */
-    public void thaw( AuditTrail auditTrail );
-
 }
