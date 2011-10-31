@@ -415,6 +415,7 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     public Collection<OntologyTerm> getAllParents( OntologyTerm entry, boolean includePartOf ) {
+        if ( entry == null ) return new HashSet<OntologyTerm>();
         return getAncestors( entry, includePartOf );
     }
 
@@ -776,6 +777,10 @@ public class GeneOntologyService implements InitializingBean {
      */
     private synchronized Collection<OntologyTerm> getAncestors( OntologyTerm entry, boolean includePartOf ) {
 
+        if ( entry == null ) {
+            return new HashSet<OntologyTerm>();
+        }
+
         Collection<OntologyTerm> ancestors = parentsCache.get( entry.getUri() );
         if ( ancestors == null ) {
             ancestors = new HashSet<OntologyTerm>();
@@ -912,7 +917,7 @@ public class GeneOntologyService implements InitializingBean {
                     log.info( "Done loading GO" );
                     loadTime.stop();
                 } catch ( Throwable e ) {
-                    if(log!=null)log.error( e, e );// log call can break hot deploy
+                    if ( log != null ) log.error( e, e );// log call can break hot deploy
                     ready.set( false );
                     running.set( false );
                 }
