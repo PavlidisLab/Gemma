@@ -206,24 +206,11 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
 
-        this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
-            public Object doInHibernate( Session session ) throws HibernateException {
-                session.lock( auditable, LockMode.NONE );
-                Hibernate.initialize( auditable );
-                Hibernate.initialize( auditable.getAuditTrail() );
-                Hibernate.initialize( auditable.getAuditTrail().getEvents() );
-                for ( AuditEvent ae : auditable.getAuditTrail().getEvents() ) {
-                    // legacy of ordered-list which could end up with gaps; should not be needed any more
-                    if ( ae == null ) continue;
-                    Hibernate.initialize( ae );
-                    Hibernate.initialize( ae.getPerformer() );
-                    // thaw( ae );
-                }
-                return null;
-            }
-        } );
+        Hibernate.initialize( auditable );
+        Long id = auditable.getAuditTrail().getId();
+        return this.getHibernateTemplate().findByNamedParam(
+                "select e from AuditTrailImpl t join t.events e where t.id = :id order by e.date ", "id", id );
 
-        return ( List<AuditEvent> ) auditable.getAuditTrail().getEvents();
     }
 
     /**
