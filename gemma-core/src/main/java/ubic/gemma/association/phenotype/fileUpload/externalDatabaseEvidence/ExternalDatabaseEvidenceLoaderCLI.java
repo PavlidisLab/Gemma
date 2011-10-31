@@ -92,7 +92,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    /** There are 6 Steps in the process of creating the evidences */
+    /** There are 6 Steps in the process of creating the evidence */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "PhenotypeAssociationLoader", args );
@@ -117,9 +117,9 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
             // called as the final step to create the object in the database
             if ( this.createInDatabase ) {
-                System.out.println( "STEP 5 : Create the evidences in the database" );
-                createEvidencesInDatabase( linesFromFile );
-                System.out.println( "Evidences inserted in the database" );
+                System.out.println( "STEP 5 : Create evidence in the database" );
+                createEvidenceInDatabase( linesFromFile );
+                System.out.println( "Evidence inserted in the database" );
             }
 
         } catch ( Exception e ) {
@@ -364,7 +364,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
      * 
      * @throws Exception
      */
-    private void createEvidencesInDatabase( Collection<DatabaseEvidenceLineInfo> linesFromFile ) throws Exception {
+    private void createEvidenceInDatabase( Collection<DatabaseEvidenceLineInfo> linesFromFile ) throws Exception {
 
         int evidenceNumber = 1;
 

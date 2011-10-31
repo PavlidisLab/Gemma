@@ -173,8 +173,8 @@ public class GeneController extends BaseController {
     }
 
     /** used to show gene info in the phenotype tab */
-    public Collection<EvidenceValueObject> loadGeneEvidences( Long geneId ) {
-        return phenotypeAssociationManagerService.findEvidencesByGeneId( geneId );
+    public Collection<EvidenceValueObject> loadGeneEvidence( Long geneId ) {
+        return phenotypeAssociationManagerService.findEvidenceByGeneId( geneId );
     }
 
     public GeneDetailsValueObject loadGenePhenotypes( Long geneId ) {

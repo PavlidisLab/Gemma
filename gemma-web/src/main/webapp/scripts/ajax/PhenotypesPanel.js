@@ -79,7 +79,7 @@ var geneStore = new Ext.data.Store({
 		messageProperty: 'message', // optional
 		totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
 		idProperty: 'id', // same as default
-		fields: [ 'id', 'officialSymbol', 'officialName', 'taxonCommonName', 'evidences' ]
+		fields: [ 'id', 'officialSymbol', 'officialName', 'taxonCommonName', 'evidence' ]
     })
 });
 geneStore.setDefaultSort('officialSymbol', 'asc');
@@ -130,7 +130,7 @@ var geneGrid = new Ext.grid.GridPanel({
 					}				
 
 					// Make the selected phenotypes bold and red.
-					evidenceGrid.loadData(geneGridSelection.json.evidences, selectedPhenotypes, 'font-weight: bold; color: red;');
+					evidenceGrid.loadData(geneGridSelection.json.evidence, selectedPhenotypes, 'font-weight: bold; color: red;');
 					evidenceGrid.setTitle("Evidence for " + geneGridSelection.get('officialSymbol'));					
 				} else {
 					evidenceGrid.removeAll(false);

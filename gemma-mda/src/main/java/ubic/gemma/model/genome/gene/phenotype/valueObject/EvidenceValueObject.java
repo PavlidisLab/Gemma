@@ -33,7 +33,7 @@ import ubic.gemma.model.association.phenotype.UrlEvidence;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
-/** Parent class of all evidences value objects */
+/** Parent class of all evidence value objects */
 public abstract class EvidenceValueObject {
 
     private Long databaseId = null;
@@ -57,7 +57,7 @@ public abstract class EvidenceValueObject {
     public static Collection<EvidenceValueObject> convert2ValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
-        Collection<EvidenceValueObject> returnEvidences = new HashSet<EvidenceValueObject>();
+        Collection<EvidenceValueObject> returnEvidence = new HashSet<EvidenceValueObject>();
 
         if ( phenotypeAssociations != null && phenotypeAssociations.size() > 0 ) {
 
@@ -67,33 +67,33 @@ public abstract class EvidenceValueObject {
 
                 if ( phe instanceof UrlEvidence ) {
                     evidence = new UrlEvidenceValueObject( ( UrlEvidence ) phe );
-                    returnEvidences.add( evidence );
+                    returnEvidence.add( evidence );
                 } else if ( phe instanceof ExperimentalEvidence ) {
                     evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
-                    returnEvidences.add( evidence );
+                    returnEvidence.add( evidence );
                 } else if ( phe instanceof GenericEvidence ) {
                     evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
-                    returnEvidences.add( evidence );
+                    returnEvidence.add( evidence );
                 } else if ( phe instanceof LiteratureEvidence ) {
                     evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
-                    returnEvidences.add( evidence );
+                    returnEvidence.add( evidence );
                 } else if ( phe instanceof ExternalDatabaseEvidence ) {
                     evidence = new ExternalDatabaseEvidenceValueObject( ( ExternalDatabaseEvidence ) phe );
-                    returnEvidences.add( evidence );
+                    returnEvidence.add( evidence );
                     // TODO
                 } else if ( phe instanceof DifferentialExpressionEvidence ) {
                     // TODO
                 }
             }
         }
-        return returnEvidences;
+        return returnEvidence;
     }
 
     public EvidenceValueObject() {
 
     }
 
-    /** set fields common to all evidences. Entity to Value Object */
+    /** set fields common to all evidence. Entity to Value Object */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
 
         this.className = this.getClass().getSimpleName();

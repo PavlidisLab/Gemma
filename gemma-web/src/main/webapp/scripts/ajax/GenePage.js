@@ -119,7 +119,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			new Ext.data.DWRProxy({
 		        apiActionToHandlerMap: {
 	    	        read: {
-	        	        dwrFunction: GeneController.loadGeneEvidences,
+	        	        dwrFunction: GeneController.loadGeneEvidence,
 	            	    getDwrArgsFunction: function(request){
 	            	    	return [ geneId ];
 		                }

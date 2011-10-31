@@ -24,7 +24,7 @@ public class DatabaseEvidenceLineInfo {
 
     private String[] phenotype = null;
 
-    // What will populate the Evidences
+    // What will populate the Evidence
     private Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
     public DatabaseEvidenceLineInfo( String line ) {

@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
 import ubic.gemma.genome.gene.GeneDetailsValueObject;
 import ubic.gemma.genome.gene.service.GeneCoreService;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 
 /**
  * RESTful web services for gene 
@@ -62,9 +62,9 @@ public class GeneWebService {
     }
 
     @GET
-    @Path("/find-genes-with-evidences")
+    @Path("/find-genes-with-evidence")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Collection<GeneEvidencesValueObject> findGenesWithEvidences(@QueryParam("geneSymbol") String geneSymbol) {
-		return phenotypeAssociationManagerService.findGenesWithEvidences(geneSymbol, null);
+	public Collection<GeneEvidenceValueObject> findGenesWithEvidence(@QueryParam("geneSymbol") String geneSymbol) {
+		return phenotypeAssociationManagerService.findGenesWithEvidence(geneSymbol, null);
     }
 }

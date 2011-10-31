@@ -613,8 +613,8 @@ GeneController.findGOTerms = function(p0, callback) {
 GeneController.loadGeneDetails = function(p0, callback) {
 	dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneDetails', p0, callback);
 }
-GeneController.loadGeneEvidences = function(p0, callback) {
-	dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneEvidences', p0, callback);
+GeneController.loadGeneEvidence = function(p0, callback) {
+	dwr.engine._execute(GeneController._path, 'GeneController', 'loadGeneEvidence', p0, callback);
 }
 GeneController.loadAllenBrainImages = function(p0, callback) {
 	dwr.engine._execute(GeneController._path, 'GeneController', 'loadAllenBrainImages', p0, callback);

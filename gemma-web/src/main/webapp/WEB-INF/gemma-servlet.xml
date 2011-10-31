@@ -548,7 +548,7 @@ gemma.max.fileupload.size.bytes=
 								<value>findGOTerms</value>
 								<value>getProducts</value>
 								<value>loadGeneDetails</value>
-								<value>loadGeneEvidences</value>
+								<value>loadGeneEvidence</value>
 								<value>loadAllenBrainImages</value>
 							</list>
 						</property>

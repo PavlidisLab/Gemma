@@ -18,7 +18,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidencesValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 
 /**
@@ -36,23 +36,23 @@ public interface PhenotypeAssociationManagerService {
      * @param evidence The evidence
      * @return The Gene updated with the new evidence and phenotypes
      */
-    public GeneEvidencesValueObject create( String geneNCBI, EvidenceValueObject evidence );
+    public GeneEvidenceValueObject create( String geneNCBI, EvidenceValueObject evidence );
 
     /**
-     * Return all evidences for a specific gene NCBI
+     * Return all evidence for a specific gene NCBI
      * 
      * @param geneNCBI The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidencesByGeneNCBI( String geneNCBI );
+    public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( String geneNCBI );
 
     /**
-     * Return all evidences for a specific gene id
+     * Return all evidence for a specific gene id
      * 
      * @param geneId The Evidence id
      * @return The Gene we are interested in
      */
-    public Collection<EvidenceValueObject> findEvidencesByGeneId( Long geneId );
+    public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
 
     /**
      * Given an array of phenotypes returns the genes that have all those phenotypes
@@ -60,7 +60,7 @@ public interface PhenotypeAssociationManagerService {
      * @param 1 to many phenotypes
      * @return A collection of the genes found
      */
-    public Collection<GeneEvidencesValueObject> findCandidateGenes( String... phenotypesValues );
+    public Collection<GeneEvidenceValueObject> findCandidateGenes( String... phenotypesValues );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype
@@ -109,12 +109,12 @@ public interface PhenotypeAssociationManagerService {
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree();
 
     /**
-     * Does a Gene search (by name or symbol) for a query and return only Genes with evidences
+     * Does a Gene search (by name or symbol) for a query and return only Genes with evidence
      * 
      * @param query
      * @param taxonId, can be null to not constrain by taxon
-     * @return Collection<GeneEvidencesValueObject> list of Genes
+     * @return Collection<GeneEvidenceValueObject> list of Genes
      */
-    public Collection<GeneEvidencesValueObject> findGenesWithEvidences( String query, Long taxonId );
+    public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
 
 }

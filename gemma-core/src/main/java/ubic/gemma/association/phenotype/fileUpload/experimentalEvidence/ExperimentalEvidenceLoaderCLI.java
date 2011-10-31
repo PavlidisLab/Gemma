@@ -44,7 +44,7 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
- * take a tsv file for the CGMS and creates experimental evidences objects
+ * take a tsv file for the CGMS and creates experimental evidence objects
  * 
  * @version $Id$
  * @author nicolas
@@ -77,7 +77,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         args[2] = "-p";
         args[3] = "administrator";
         args[4] = "-f";
-        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/experimentalEvidence/testARTEMIS.tsv";
+        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/experimentalEvidence/Willie.tsv";
         args[6] = "-create";
 
         ExperimentalEvidenceLoaderCLI p = new ExperimentalEvidenceLoaderCLI();
@@ -116,7 +116,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    /** There are 6 Steps in the process of creating the evidences */
+    /** There are 6 Steps in the process of creating evidence */
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "PhenotypeAssociationLoader", args );
@@ -143,9 +143,9 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
             // called as the final step to create the object in the database
             if ( this.createInDatabase ) {
-                System.out.println( "STEP 6 : Create the evidences in the database" );
-                createEvidencesInDatabase( linesFromFile );
-                System.out.println( "Evidences inserted in the database" );
+                System.out.println( "STEP 6 : Create evidence in the database" );
+                createEvidenceInDatabase( linesFromFile );
+                System.out.println( "Evidence inserted in the database" );
             }
 
         } catch ( Exception e ) {
@@ -315,7 +315,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         String search = lineInfo.getPhenotype()[index];
 
         // search disease
-        Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( search );
+        Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( "\""+search+  "\"");
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -325,7 +325,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         }
 
         // search hp
-        ontologyTerms = this.humanPhenotypeOntologyService.findTerm( search );
+        ontologyTerms = this.humanPhenotypeOntologyService.findTerm( "\""+search+  "\"");
 
         ot = findExactTerm( ontologyTerms, search );
 
@@ -335,7 +335,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         }
 
         // search mamalian
-        ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( search );
+        ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( "\""+search+  "\"");
 
         ot = findExactTerm( ontologyTerms, search );
 
@@ -355,7 +355,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         String search = lineInfo.getExperimentDesign()[index];
 
         // search disease
-        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( search );
+        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( "\""+search+  "\"");
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -374,7 +374,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         String search = lineInfo.getExperimentOBI()[index];
 
         // search disease
-        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( search );
+        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( "\""+search+  "\"");
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -392,7 +392,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
         String search = lineInfo.getDevelopmentStage()[index];
 
-        Collection<OntologyTerm> ontologyTerms = this.nifstdOntologyService.findTerm( search );
+        Collection<OntologyTerm> ontologyTerms = this.nifstdOntologyService.findTerm( "\""+search+  "\"");
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -410,7 +410,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
         String search = lineInfo.getOrganismPart()[index];
 
-        Collection<OntologyTerm> ontologyTerms = this.fmaOntologyService.findTerm( search );
+        Collection<OntologyTerm> ontologyTerms = this.fmaOntologyService.findTerm( "\""+search+  "\"");
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -568,7 +568,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
             i++;
 
-            Gene gene = this.geneService.findByNCBIId( Integer.parseInt( lineInfo.getGeneID() ) );
+            Gene gene = this.geneService.findByNCBIId(Integer.parseInt( lineInfo.getGeneID()) );
 
             if ( gene == null ) {
                 System.err.println( "Gene not found in Gemma: " + lineInfo.getGeneID() + " Description: "
@@ -588,7 +588,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
      * 
      * @throws Exception
      */
-    private void createEvidencesInDatabase( Collection<ExpEvidenceLineInfo> linesFromFile ) throws Exception {
+    private void createEvidenceInDatabase( Collection<ExpEvidenceLineInfo> linesFromFile ) throws Exception {
 
         int evidenceNumber = 1;
 

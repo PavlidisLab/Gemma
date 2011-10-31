@@ -29,7 +29,7 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  * @author kelsey
  * @version $Id$
  */
-public class GeneEvidencesValueObject extends GeneValueObject {
+public class GeneEvidenceValueObject extends GeneValueObject {
 
     /**
      * 
@@ -39,48 +39,48 @@ public class GeneEvidencesValueObject extends GeneValueObject {
      * 
      */
     /** Added field for the Candidate Gene Management System */
-    private Collection<EvidenceValueObject> evidences;
+    private Collection<EvidenceValueObject> evidence;
 
-    public static Collection<GeneEvidencesValueObject> convert2GeneEvidencesValueObjects( Collection<Gene> genes ) {
-        Collection<GeneEvidencesValueObject> converted = new HashSet<GeneEvidencesValueObject>();
+    public static Collection<GeneEvidenceValueObject> convert2GeneEvidenceValueObjects( Collection<Gene> genes ) {
+        Collection<GeneEvidenceValueObject> converted = new HashSet<GeneEvidenceValueObject>();
         if ( genes == null ) return converted;
 
         for ( Gene g : genes ) {
             if ( g != null ) {
 
-                Collection<EvidenceValueObject> evidencesFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
+                Collection<EvidenceValueObject> evidenceFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
                         .getPhenotypeAssociations() );
 
-                converted.add( new GeneEvidencesValueObject( g.getId(), g.getName(), getAliasStrings( g ), g
+                converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), getAliasStrings( g ), g
                         .getNcbiGeneId().toString(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(),
                         null, g.getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(),
-                        evidencesFromPhenotype ) );
+                        evidenceFromPhenotype ) );
             }
         }
 
         return converted;
     }
 
-    public GeneEvidencesValueObject( Gene gene ) {
+    public GeneEvidenceValueObject( Gene gene ) {
         super( gene );
-        this.evidences = EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
+        this.evidence = EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
 
-    public GeneEvidencesValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
+    public GeneEvidenceValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
             java.lang.String ncbiId, java.lang.String officialSymbol, java.lang.String officialName,
             java.lang.String description, Double score, Long taxonId, String taxonScientificName,
-            String taxonCommonName, Collection<EvidenceValueObject> evidences ) {
+            String taxonCommonName, Collection<EvidenceValueObject> evidence ) {
         super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,
                 taxonScientificName, taxonCommonName );
-        this.evidences = evidences;
+        this.evidence = evidence;
     }
 
-    public Collection<EvidenceValueObject> getEvidences() {
-        return evidences;
+    public Collection<EvidenceValueObject> getEvidence() {
+        return evidence;
     }
 
-    public void setEvidences( Collection<EvidenceValueObject> evidences ) {
-        this.evidences = evidences;
+    public void setEvidence( Collection<EvidenceValueObject> evidence ) {
+        this.evidence = evidence;
     }
 
 }

@@ -121,7 +121,7 @@ public class PhenotypeAssoManagerServiceHelper {
         // create the entity to populate
         ExternalDatabaseEvidence externalDatabaseEvidence = ExternalDatabaseEvidence.Factory.newInstance();
 
-        // populate common field to all evidences
+        // populate common field to all evidence
         populatePhenotypeAssociation( externalDatabaseEvidence, evidenceValueObject );
 
         // populate specific fields for this evidence
@@ -155,7 +155,7 @@ public class PhenotypeAssoManagerServiceHelper {
         // create the entity to populate
         UrlEvidence urlEvidence = UrlEvidence.Factory.newInstance();
 
-        // populate common field to all evidences
+        // populate common field to all evidence
         populatePhenotypeAssociation( urlEvidence, evidenceValueObject );
 
         // populate specific fields for this evidence
@@ -173,7 +173,7 @@ public class PhenotypeAssoManagerServiceHelper {
         // create the entity to populate
         GenericEvidence genericEvidence = GenericEvidence.Factory.newInstance();
 
-        // populate common field to all evidences
+        // populate common field to evidence
         populatePhenotypeAssociation( genericEvidence, evidenceValueObject );
 
         return genericEvidence;
@@ -188,7 +188,7 @@ public class PhenotypeAssoManagerServiceHelper {
         // create the entity to populate
         LiteratureEvidence literatureEvidence = LiteratureEvidence.Factory.newInstance();
 
-        // populate common field to all evidences
+        // populate common field to evidence
         populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
 
         // populate specific fields for this evidence
@@ -207,7 +207,7 @@ public class PhenotypeAssoManagerServiceHelper {
         // create the entity to populate
         ExperimentalEvidence experimentalEvidence = ExperimentalEvidence.Factory.newInstance();
 
-        // populate common field to all evidences
+        // populate common field to evidence
         populatePhenotypeAssociation( experimentalEvidence, evidenceValueObject );
 
         // we only need to create the experiment if its not already in the database
@@ -304,7 +304,7 @@ public class PhenotypeAssoManagerServiceHelper {
     }
 
     /**
-     * Sets the fields that are the same for any evidences.
+     * Sets the fields that are the same for any evidence.
      * 
      * @param phe The phenotype association (parent class of an evidence) we are interested in populating
      * @param evidenceValueObject the value object representing a phenotype

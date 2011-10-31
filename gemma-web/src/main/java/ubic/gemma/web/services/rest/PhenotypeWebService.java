@@ -64,9 +64,9 @@ public class PhenotypeWebService {
     }
 
     @GET
-    @Path("/find-evidences")
+    @Path("/find-evidence")
 	@Produces(MediaType.APPLICATION_JSON)
-    public Collection<EvidenceValueObject> findEvidences(@QueryParam("geneId") Long geneId) {
-    	return phenotypeAssociationManagerService.findEvidencesByGeneId(geneId);
+    public Collection<EvidenceValueObject> findEvidence(@QueryParam("geneId") Long geneId) {
+    	return phenotypeAssociationManagerService.findEvidenceByGeneId(geneId);
     }
 }
