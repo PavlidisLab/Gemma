@@ -1128,11 +1128,6 @@ public class ExpressionExperimentController extends AbstractTaskService {
         int origStart = batch.getStart();
         List<ExpressionExperiment> records = loadAllOrdered( batch );
 
-        /*
-         * if(batch.getStart().equals( 0 )){ batch.setLimit( batch.getLimit()*2 ); records = getBatch( batch );
-         * List<ExpressionExperiment> allRecords = loadAllOrdered( batch ); }else{ records = loadAllOrdered( batch ); }
-         */
-
         int start = origStart;
         int stop = Math.min( origStart + limit, records.size() );
 
@@ -1142,8 +1137,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         /*
-         * can't just do countAll because this will count experiments the user may not have access to Integer count =
-         * expressionExperimentService.countAll();
+         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not have access to
          */
         int count = records.size();
 

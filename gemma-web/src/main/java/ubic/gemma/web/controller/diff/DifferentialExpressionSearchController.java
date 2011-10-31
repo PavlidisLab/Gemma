@@ -1005,31 +1005,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
         return mavo;
     }
 
-    /**
-     * @param datasetGroupReferences
-     * @return
-     */
-    /*
-     * private List<Collection<BioAssaySet>> getExperiments( Collection<Reference> datasetGroupReferences ) { // We get
-     * ids from the UI. First step is to load associated genes and experiments. List<Collection<BioAssaySet>>
-     * experiments = new ArrayList<Collection<BioAssaySet>>(); for ( Reference ref : datasetGroupReferences ) { if ( ref
-     * != null ) { // if a single experiment was selected if ( !ref.isGroup() && ref.isDatabaseBacked() ) {
-     * ExpressionExperiment dataset = expressionExperimentService.load( ref.getId() ); if ( dataset == null ) { throw
-     * new EntityNotFoundException( "Could not access experiment with id=" + ref.getId() ); } Collection<BioAssaySet>
-     * bioAssaySetsInsideGroup = new java.util.HashSet<BioAssaySet>(); bioAssaySetsInsideGroup.add( dataset );
-     * experiments.add( bioAssaySetsInsideGroup ); } // if a group of experiments was selected else { // if the ids
-     * being passed in are session ids, use a different method to load them if ( ref.isSessionBound() ) {
-     * Collection<ExpressionExperimentValueObject> eevos = sessionListManager .getExperimentsInSetByReference( ref );
-     * Collection<Long> ids = EntityUtils.getIds( eevos ); experiments.add( loadExperimentsByIds( ids ) );
-     * 
-     * } else if ( ref.isDatabaseBacked() ) { ExpressionExperimentSet datasetGroup =
-     * expressionExperimentSetService.load( ref.getId() ); if(datasetGroup != null){ Collection<Long> ids =
-     * EntityUtils.getIds( datasetGroup.getExperiments() ); experiments.add( loadExperimentsByIds( ids ) ); }else{
-     * log.warn( "failed to load a dataset group with id: "+ref.getId() ); }
-     * 
-     * } } } } return experiments; }
-     */
-
     /*
      * Helper method to get factor values. TODO: Fix FactoValue class to return correct factor value in the first place.
      */
