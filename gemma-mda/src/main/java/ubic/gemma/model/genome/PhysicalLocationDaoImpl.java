@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.SessionFactory;
@@ -56,5 +58,14 @@ public class PhysicalLocationDaoImpl extends ubic.gemma.model.genome.PhysicalLoc
         } );
 
     }
+
+    
+    @Override
+    public Collection<? extends PhysicalLocation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate()
+                .findByNamedParam( "from PhysicalLocationImpl where id in (:ids)", "ids", ids );
+    }
+
+   
 
 }

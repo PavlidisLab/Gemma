@@ -218,20 +218,21 @@ abstract public class GenomePersister extends CommonPersister {
         // updated gene products.
         existingGene = geneService.thaw( existingGene );
 
-        // NCBI id can be null if gene has been loaded from a gene info file
+        // NCBI id can be null if gene has been loaded from a gene info file.
         Integer existingNcbiId = existingGene.getNcbiGeneId();
         if ( existingNcbiId != null && !existingNcbiId.equals( newGeneInfo.getNcbiGeneId() ) ) {
             log.info( "NCBI ID Change for " + existingGene + ", new id =" + newGeneInfo.getNcbiGeneId() );
-            String previousId = newGeneInfo.getPreviousNcbiId();
-            if ( previousId != null ) {
-                if ( !previousId.equals( existingGene.getNcbiGeneId().toString() ) ) {
-                    throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
-                            + " has changed and the previous NCBI id on record with NCBI ("
-                            + newGeneInfo.getPreviousNcbiId() + ") doesn't match either." );
-                }
-                existingGene.setPreviousNcbiId( existingGene.getNcbiGeneId().toString() );
-                existingGene.setNcbiGeneId( newGeneInfo.getNcbiGeneId() );
+
+            String previousId = newGeneInfo.getPreviousNcbiId(); // this _should_ be recorded!
+            if ( previousId != null && !previousId.equals( existingGene.getNcbiGeneId().toString() ) ) {
+                throw new IllegalStateException( "The NCBI ID for " + newGeneInfo
+                        + " has changed and the previous NCBI id on record with NCBI ("
+                        + newGeneInfo.getPreviousNcbiId() + ") doesn't match." );
             }
+
+            // swap
+            existingGene.setPreviousNcbiId( existingGene.getNcbiGeneId().toString() );
+            existingGene.setNcbiGeneId( newGeneInfo.getNcbiGeneId() );
         }
 
         /*

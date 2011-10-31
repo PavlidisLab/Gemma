@@ -63,6 +63,9 @@ import ubic.gemma.model.genome.gene.GeneProduct;
 /**
  * Methods to test business-key-related issues on objects. The 'checkValidKey' methods can be used to check whether an
  * object has the required business key values filled in. An exception is thrown if they don't.
+ * <p>
+ * This class contains some important code that determines our rules for how entities are detected as being the same as
+ * another (in queries from the database; this is on top of basic 'equals', but should be compatible).
  * 
  * @author pavlidis
  * @version $Id$
@@ -255,23 +258,23 @@ public class BusinessKey {
             /*
              * These are unambiguous identifiers.
              */
-            // if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
-            // /*
-            // * Check to see if the new gene used to use an id that is in the system. NOTE that this is a problem. If
-            // * this returns two, the one with the _new_ ncbi id should be used, and the old one should probably be
-            // * deleted.
-            // */
-            // Collection<Integer> ncbiIds = new HashSet<Integer>();
-            // ncbiIds.add( gene.getNcbiGeneId() );
-            // try {
-            // ncbiIds.add( Integer.parseInt( gene.getPreviousNcbiId() ) );
-            // } catch ( NumberFormatException e ) {
-            // log.warn( "Previous Ncbi id wasn't parseable to an int: " + gene.getPreviousNcbiId() );
-            // }
-            // queryObject.add( Restrictions.in( "ncbiGeneId", ncbiIds ) );
-            // } else {
-            queryObject.add( Restrictions.eq( "ncbiGeneId", gene.getNcbiGeneId() ) );
-            // }
+            if ( StringUtils.isNotBlank( gene.getPreviousNcbiId() ) ) {
+                /*
+                 * Check to see if the new gene used to use an id that is in the system. This is needed to deal with the
+                 * case where NCBI changes a gene id (which is common, from gene_history).
+                 */
+                Collection<Integer> ncbiIds = new HashSet<Integer>();
+                ncbiIds.add( gene.getNcbiGeneId() );
+                try {
+                    ncbiIds.add( Integer.parseInt( gene.getPreviousNcbiId() ) );
+                } catch ( NumberFormatException e ) {
+                    log.warn( "Previous Ncbi id wasn't parseable to an int: " + gene.getPreviousNcbiId() );
+                }
+                queryObject.add( Restrictions.in( "ncbiGeneId", ncbiIds ) );
+            } else {
+                queryObject.add( Restrictions.eq( "ncbiGeneId", gene.getNcbiGeneId() ) );
+            }
+
         } else if ( StringUtils.isNotBlank( gene.getOfficialSymbol() ) ) {
             /*
              * Second choice, but not unambiguous even within a taxon unless we know the physical location

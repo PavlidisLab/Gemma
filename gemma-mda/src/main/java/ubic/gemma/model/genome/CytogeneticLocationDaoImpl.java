@@ -22,6 +22,8 @@
 //
 package ubic.gemma.model.genome;
 
+import java.util.Collection;
+
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -36,4 +38,11 @@ public class CytogeneticLocationDaoImpl extends ubic.gemma.model.genome.Cytogene
     public CytogeneticLocationDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
+
+    @Override
+    public Collection<? extends CytogeneticLocation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from CytogeneticLocationImpl where id in (:ids)", "ids",
+                ids );
+    }
+
 }

@@ -18,6 +18,8 @@
  */
 package ubic.gemma.model.genome.gene;
 
+import java.util.Collection;
+
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.genome.Gene;
@@ -142,8 +144,8 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( geneProduct );
         argNames.add( "geneProduct" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<GeneProduct> results = new java.util.LinkedHashSet<GeneProduct>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -186,7 +188,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.gene.GeneProductDao#getGenesByName(java.lang.String)
      */
     @Override
-    public java.util.Collection getGenesByName( final java.lang.String search ) {
+    public java.util.Collection<Gene> getGenesByName( final java.lang.String search ) {
         try {
             return this.handleGetGenesByName( search );
         } catch ( Throwable th ) {
@@ -241,11 +243,12 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      * @see ubic.gemma.model.genome.gene.GeneProductDao#loadAll(int)
      */
 
-    public java.util.Collection loadAll() {
-        final java.util.Collection results = this.getHibernateTemplate().loadAll(
+    @SuppressWarnings("unchecked")
+    public java.util.Collection<? extends GeneProduct> loadAll() {
+        final java.util.Collection<?> results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.gene.GeneProductImpl.class );
 
-        return results;
+        return ( Collection<? extends GeneProduct> ) results;
     }
 
     /**
@@ -268,7 +271,7 @@ public abstract class GeneProductDaoBase extends HibernateDaoSupport implements
      */
 
     @Override
-    public void remove( java.util.Collection entities ) {
+    public void remove( java.util.Collection<? extends GeneProduct> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "GeneProduct.remove - 'entities' can not be null" );
         }

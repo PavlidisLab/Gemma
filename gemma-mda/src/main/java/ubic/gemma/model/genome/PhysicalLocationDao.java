@@ -18,10 +18,12 @@
  */
 package ubic.gemma.model.genome;
 
+import ubic.gemma.persistence.BaseDao;
+
 /**
  * @see ubic.gemma.model.genome.PhysicalLocation
  */
-public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeLocationDao {
+public interface PhysicalLocationDao extends BaseDao<PhysicalLocation> {
     /**
      * <p>
      * Does the same thing as {@link #create(ubic.gemma.model.genome.PhysicalLocation)} with an additional flag called
@@ -56,7 +58,7 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
     /**
      * Creates an instance of ubic.gemma.model.genome.PhysicalLocation and adds it to the persistent store.
      */
-    public ubic.gemma.model.genome.ChromosomeLocation create( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
+    public ubic.gemma.model.genome.PhysicalLocation create( ubic.gemma.model.genome.PhysicalLocation physicalLocation );
 
     /**
      * <p>
@@ -75,7 +77,7 @@ public interface PhysicalLocationDao extends ubic.gemma.model.genome.ChromosomeL
     /**
      * Loads an instance of ubic.gemma.model.genome.PhysicalLocation from the persistent store.
      */
-    public ubic.gemma.model.genome.ChromosomeLocation load( java.lang.Long id );
+    public ubic.gemma.model.genome.PhysicalLocation load( java.lang.Long id );
 
     /**
      * Loads all entities of type {@link ubic.gemma.model.genome.PhysicalLocation}.

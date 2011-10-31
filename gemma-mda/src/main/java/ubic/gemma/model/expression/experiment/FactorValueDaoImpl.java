@@ -56,7 +56,6 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
      * ubic.gemma.model.expression.experiment.FactorValueDaoBase#find(ubic.gemma.model.expression.experiment.FactorValue
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
     public FactorValue find( FactorValue factorValue ) {
         try {
@@ -66,7 +65,7 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
             BusinessKey.createQueryObject( queryObject, factorValue );
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -85,7 +84,6 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<FactorValue> findByValue( String valuePrefix ) {
         return this.getHibernateTemplate().find( "from FactorValueImpl where value like ?", valuePrefix + "%" );
     }
@@ -120,18 +118,17 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
 
         this.getHibernateTemplate().executeWithNativeSession(
                 new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    @SuppressWarnings("unchecked")
                     public Object doInHibernate( Session session ) throws HibernateException {
 
                         log.debug( "Deleting: " + toDelete );
-                        session.buildLockRequest(LockOptions.NONE).lock(toDelete); 
-                        
+                        session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
+
                         final String queryString = "from BioMaterialImpl as bm inner join bm.factorValues AS fv "
                                 + "WHERE fv = :fv";
 
                         Query query = session.createQuery( queryString );
                         query.setEntity( "fv", toDelete );
-                        session.refresh( toDelete );  // for multiple deletes
+                        session.refresh( toDelete ); // for multiple deletes
                         for ( Object[] row : ( List<Object[]> ) query.list() ) {
 
                             BioMaterial bm = ( BioMaterial ) row[0];
@@ -147,23 +144,22 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
                 } );
 
         /*
-         * This rigamarole is to avoid the dreaded "would be reattached" error.
-         * Also, enables multiple deletes to be run in the same transaction
+         * This rigamarole is to avoid the dreaded "would be reattached" error. Also, enables multiple deletes to be run
+         * in the same transaction
          */
         this.getHibernateTemplate().flush();
-        this.getHibernateTemplate().refresh(factorValue); // for multiple deletes
+        this.getHibernateTemplate().refresh( factorValue ); // for multiple deletes
         this.getHibernateTemplate().evict( factorValue );
         this.getHibernateTemplate().evict( factorValue.getExperimentalFactor() );
 
         this.getHibernateTemplate().delete( factorValue );
-        this.getHibernateTemplate().flush();  // for multiple deletes
+        this.getHibernateTemplate().flush(); // for multiple deletes
     }
 
     /**
      * @param results
      */
-    @SuppressWarnings("unchecked")
-    private void debug( List results ) {
+    private void debug( List<?> results ) {
         StringBuilder sb = new StringBuilder();
         sb.append( "\nFactorValues found:\n" );
         for ( Object object : results ) {
