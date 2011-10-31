@@ -456,7 +456,7 @@ public class ArrayDesignProbeMapperService {
                          */
                         log.warn( "New gene product from GoldenPath is not in Gemma: " + ba.getGeneProduct()
                                 + " skipping association to " + ba.getBioSequence()
-                                + "[TEMPORARY skipping policy in place]" );
+                                + " [TEMPORARY skipping policy in place]" );
                         continue;
                     }
                     ba.setGeneProduct( existing );

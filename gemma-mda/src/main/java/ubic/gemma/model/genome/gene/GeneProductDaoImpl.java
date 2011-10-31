@@ -72,10 +72,10 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
             if ( results.size() > 1 ) {
 
                 /*
-                 * This happens in some cases where NCBI has the same RNA mapped to multiple genes. Example: BC016940
-                 * maps to OR2A20P and OR2A9P (both are pseudogenes in this case)
+                 * At this point we can trust that the genes are from the same taxon. This kind of confusion should
+                 * reduce with cruft-reduction.
                  */
-                Collections.sort( results, c );
+                Collections.sort( results, c ); // we tend to want to keep the one with the lowest ID
                 Gene gene = geneProduct.getGene();
                 if ( gene != null ) {
                     GeneProduct keeper = null;
@@ -83,7 +83,8 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                     for ( Object object : results ) {
                         GeneProduct candidateMatch = ( GeneProduct ) object;
 
-                        if ( candidateMatch.getGene().equals( gene ) ) {
+                        Gene candidateGene = candidateMatch.getGene();
+                        if ( candidateGene.getOfficialSymbol().equals( gene.getOfficialSymbol() ) ) {
                             keeper = candidateMatch;
                             numFound++;
                         } else if ( candidateMatch.getPhysicalLocation() != null
@@ -99,6 +100,7 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
                         // not so bad, we figured out a match.
                         log.warn( "Multiple gene products match " + geneProduct + ", but only one for the right gene ("
                                 + gene + "), returning " + keeper );
+                        debug( results );
                         return keeper;
                     }
 
