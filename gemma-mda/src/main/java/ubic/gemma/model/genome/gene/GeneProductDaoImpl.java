@@ -65,7 +65,6 @@ public class GeneProductDaoImpl extends ubic.gemma.model.genome.gene.GeneProduct
 
             log.debug( queryObject );
 
-            // for some reason we sometimes get duplicates
             List<GeneProduct> results = queryObject.list();
             Object result = null;
             if ( results.size() > 1 ) {

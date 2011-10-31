@@ -251,7 +251,7 @@ public class BusinessKey {
      * @param innerQuery
      * @param gene
      */
-    public static void addRestrictions( Criteria queryObject, Gene gene ) {
+    public static void addRestrictions( Criteria queryObject, Gene gene, boolean stricter ) {
         if ( gene.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene.getId() ) );
         } else if ( gene.getNcbiGeneId() != null ) {
@@ -283,15 +283,16 @@ public class BusinessKey {
 
             attachCriteria( queryObject, gene.getTaxon(), "taxon" );
 
-            // Need either the official name AND the location to be unambiguous.
-            if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
-                queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
-            }
+            if ( stricter ) {
+                // Need either the official name AND the location to be unambiguous.
+                if ( StringUtils.isNotBlank( gene.getOfficialName() ) ) {
+                    queryObject.add( Restrictions.eq( "officialName", gene.getOfficialName() ) );
+                }
 
-            if ( gene.getPhysicalLocation() != null ) {
-                attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
+                if ( gene.getPhysicalLocation() != null ) {
+                    attachCriteria( queryObject, gene.getPhysicalLocation(), "physicalLocation" );
+                }
             }
-
         } else {
             throw new IllegalArgumentException( "No valid key " + gene );
         }
@@ -448,7 +449,7 @@ public class BusinessKey {
      */
     public static void attachCriteria( Criteria queryObject, Gene gene, String propertyName ) {
         Criteria innerQuery = queryObject.createCriteria( propertyName );
-        addRestrictions( innerQuery, gene );
+        addRestrictions( innerQuery, gene, true );
     }
 
     /**
@@ -795,7 +796,7 @@ public class BusinessKey {
         if ( gene.getId() != null ) {
             queryObject.add( Restrictions.eq( "id", gene.getId() ) );
         } else {
-            addRestrictions( queryObject, gene );
+            addRestrictions( queryObject, gene, true );
         }
 
     }
@@ -827,7 +828,7 @@ public class BusinessKey {
              */
             if ( geneProduct.getGene() != null ) {
                 Criteria geneCrits = queryObject.createCriteria( "gene" );
-                addRestrictions( geneCrits, geneProduct.getGene() );
+                addRestrictions( geneCrits, geneProduct.getGene(), false );
             }
         }
     }
