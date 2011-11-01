@@ -37,9 +37,6 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		
 		var geneId = this.geneId;
 		
-		if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
-			this.editable = true;
-		}
 		var isAdmin = (Ext.get("hasAdmin"))?(Ext.get("hasAdmin").getValue() === 'true')?true:false:false;
 		
 		Gemma.GenePage.superclass.initComponent.call(this);

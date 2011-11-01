@@ -39,9 +39,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
     initComponent: function(){
     
         var eeId = this.eeId;
-        if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
-            this.editable = true;
-        }
+
         var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
         
         Gemma.ExpressionExperimentPage.superclass.initComponent.call(this);
@@ -57,6 +55,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
             
                 this.experimentDetails = experimentDetails;
                 this.editable = experimentDetails.canCurrentUserEditExperiment;
+                this.ownedByCurrentUser = experimentDetails.doesCurrentUserOwnExperiment;
                 
                 this.loadMask.hide();
                 // DETAILS TAB
@@ -64,6 +63,7 @@ Gemma.ExpressionExperimentPage = Ext.extend(Ext.TabPanel, {
                     title: 'Details',
                     experimentDetails: experimentDetails,
                     editable: this.editable,
+					owned: this.ownedByCurrentUser,
                     admin: this.admin
                 }));
                 

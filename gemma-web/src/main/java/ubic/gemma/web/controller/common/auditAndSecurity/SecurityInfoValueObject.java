@@ -49,6 +49,8 @@ public class SecurityInfoValueObject {
     
     private Boolean currentUserCanwrite = false;
 
+    private Boolean currentUserOwns = false;
+
     private String entityClazz;
 
     private String entityDescription;
@@ -249,6 +251,14 @@ public class SecurityInfoValueObject {
 
     public void setShared( boolean isShared ) {
         this.isShared = isShared;
+    }
+
+    public void setCurrentUserOwns( Boolean currentUserOwns ) {
+        this.currentUserOwns = currentUserOwns;
+    }
+
+    public Boolean getCurrentUserOwns() {
+        return currentUserOwns;
     }
 
 }

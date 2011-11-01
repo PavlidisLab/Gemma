@@ -41,7 +41,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 				"title='Protected; cannot have members changed, usually applies to automatically generated groups.' />&nbsp;"
 		}
 		var sl = Gemma.SecurityManager.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl", 
-					e.id, e.publik, e.shared, e.currentUserHasWritePermission);
+					e.id, e.publik, e.shared, e.currentUserIsOwner);
 					
 		statusString += sl;
 		return statusString;
@@ -59,7 +59,6 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 		
         var e = this.experimentSet;
         
-        // if no permissions hasWritePermission is not set.
         if ( e.currentUserHasWritePermission && e.modifiable) {
             this.editable = true;
         }

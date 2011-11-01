@@ -937,6 +937,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setArrayDesigns( arrayDesignService.loadValueObjects( adids ) );
 
         finalResult.setCurrentUserHasWritePermission( securityService.isEditable( ee ) );
+        finalResult.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( ee ) );
 
         Collection<ExpressionExperimentValueObject> finalResultc = new HashSet<ExpressionExperimentValueObject>();
         finalResultc.add( finalResult );
@@ -987,6 +988,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setExpressionExperimentSets( eesvos );
 
         finalResult.setCanCurrentUserEditExperiment( canCurrentUserEditExperiment( id ) );
+        finalResult.setDoesCurrentUserOwnExperiment( doesCurrentUserOwnExperiment( id ) );
 
         return finalResult;
 
@@ -2075,12 +2077,20 @@ public class ExpressionExperimentController extends AbstractTaskService {
             }
         } else if ( SecurityService.isUserLoggedIn() ) {
             Map<Long, Boolean> canEdit = new HashMap<Long, Boolean>();
+            Map<Long, Boolean> owns = new HashMap<Long, Boolean>();
             for ( ExpressionExperiment ee : securedEEs ) {
                 canEdit.put( ee.getId(), securityService.isEditable( ee ) );
+                owns.put( ee.getId(), securityService.isOwnedByCurrentUser( ee ) );
+                
             }
             for ( ExpressionExperimentValueObject vo : valueObjs ) {
-                if ( !canEdit.containsKey( vo.getId() ) ) continue;
-                vo.setCurrentUserHasWritePermission( canEdit.get( vo.getId() ) );
+                if ( canEdit.containsKey( vo.getId() ) ){
+                    vo.setCurrentUserHasWritePermission( canEdit.get( vo.getId() ) );
+                }
+                if( owns.containsKey( vo.getId() )){
+                    vo.setCurrentUserIsOwner( owns.get( vo.getId() ) );
+                }
+                
             }
         }
 
@@ -2374,6 +2384,22 @@ public class ExpressionExperimentController extends AbstractTaskService {
             return false;
         }
         return userCanEditGroup;
+    }
+
+    /**
+     * AJAX returns a JSON string encoding whether the current user owns the experiment and whether they can edit it
+     * 
+     * @param
+     * @return
+     */
+    public boolean doesCurrentUserOwnExperiment( Long eeId ) {
+        boolean userOwnsGroup = false;
+        try {
+            userOwnsGroup = securityService.isOwnedByCurrentUser( expressionExperimentService.load( eeId ) );
+        } catch ( org.springframework.security.access.AccessDeniedException ade ) {
+            return false;
+        }
+        return userOwnsGroup ;
     }
 
 }

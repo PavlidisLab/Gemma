@@ -49,17 +49,23 @@ Gemma.GeneSetPage = Ext.extend(Ext.TabPanel, {
 					Gemma.GeneSetPage.superclass.initComponent.call(this);
 					return;
 				}
+            }if (param.goid) {
+                var goids = param.goid.split(',');
+				if(goids.length === 1){
+					this.geneSetGOId = ids[0];
+				}else{
+					this.invalidIdHandler("GO Id was: "+param.goid);
+					Gemma.GeneSetPage.superclass.initComponent.call(this);
+					return;
+				}
             } else{
-				this.invalidIdHandler("Missing \"id\" parameter.");
+				this.invalidIdHandler("Missing \"id\" or \"GO id\" parameter.");
 				Gemma.GeneSetPage.superclass.initComponent.call(this);
 				return;
         	}
 		}
 	
-        
-        if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
-            this.editable = true;
-        }
+
         var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
         
         Gemma.GeneSetPage.superclass.initComponent.call(this);

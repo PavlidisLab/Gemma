@@ -82,6 +82,8 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private Boolean currentUserHasWritePermission = false;
 
+    private Boolean currentUserIsOwner = false;
+
     private Date dateArrayDesignLastUpdated;
 
     private Date dateCached;
@@ -987,6 +989,14 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
     @Override
     public int compareTo( ExpressionExperimentValueObject arg0 ) {
         return this.getId().compareTo( arg0.getId() );
+    }
+
+    public void setCurrentUserIsOwner( Boolean currentUserIsOwner ) {
+        this.currentUserIsOwner = currentUserIsOwner;
+    }
+
+    public Boolean getCurrentUserIsOwner() {
+        return currentUserIsOwner;
     }
 
 }

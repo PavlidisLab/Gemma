@@ -8,9 +8,12 @@ Ext.namespace('Gemma');
 Gemma.SecurityManager = {};
 
 Gemma.SecurityManager.adminGroupName = "Administrators";
+Gemma.SecurityManager.usersGroupName = "Users";
 
 /**
  * Show the manager for the given entity.
+ * 
+ * The only user who can edit security permissions with this widget is the owner of the entity
  * 
  * @param {}
  *            clazz full qualified class name of Gemma entity impl, e.g.
@@ -36,143 +39,172 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 	 */
 	var showSecurityForm = function(securityInfo) {
 
+		var widgetWidth = 500;
 		var isPublic = securityInfo.publiclyReadable;
 		var isShared = securityInfo.shared;
-		var canEdit = securityInfo.currentUserCanwrite;
+		var canEdit = securityInfo.currentUserOwns;
 
 		var readers = securityInfo.groupsThatCanRead;
 		var writers = securityInfo.groupsThatCanWrite;
 		var availableGroups = securityInfo.availableGroups;
 		var clazz = securityInfo.entityClazz;
 
-		var canManage = securityInfo.currentUserCanwrite;
+		var readerChecks = [];
+		var writerChecks = [];
 
-		// FIXME:
-		// Server returns null if the currently logged user belongs to no
-		// custom groups which is bad (for following reasons) and technikally
-		// incorrect.
-		// All users belong to the user group anyway but can't edit it.
-		// Adding an array=null to a Component bombs. Adding a null check
-		// doesn't
-		// help because the panel has a 'field set' already declared, which at
-		// runtime has to have at least one checkbox in it.
-		// A way out of this is to apply the combo boxes and the field set at
-		// the same time if they are necessary.
-		// My kungfu no enough strong ;p
-
-		readerChecks = [new Ext.form.Checkbox({
-					checked : true,
-					boxLabel : 'Users',
-					id : 'user' + "-read-chk",
-					disabled : true
-				})];
-		writerChecks = [new Ext.form.Checkbox({
-					checked : true,
-					boxLabel : 'Users',
-					id : 'user' + "-write-chk",
-					disabled : true
-				})];
+		if(availableGroups.length === 0){
+			readerChecks = [{
+				xtype: 'panel',
+				border:false,
+				html: 'You cannot share this entity because you do not belong to any user groups.'+
+					'<br>Would you like to <a href="/Gemma/manageGroups.html">create one</a>? '
+			}];
+			writerChecks = [{
+				xtype: 'panel',
+				border:false,
+				html: 'You cannot share this entity because you do not belong to any user groups.'+
+					' <br>Would you like to <a href="/Gemma/manageGroups.html">create one</a>? '
+			}];
+		}
 
 		for (var i = 0, len = availableGroups.length; i < len; i++) {
 			var groupName = availableGroups[i];
+			var boxLabel = groupName + (
+				(groupName === Gemma.SecurityManager.usersGroupName)? 
+					' (This group includes all registered Gemma users)':
+				(groupName === Gemma.SecurityManager.adminGroupName)? 
+				' (Admin users can always see all entities)':'');
+				
 			readerChecks.push(new Ext.form.Checkbox({
 						checked : readers.indexOf(groupName) >= 0,
-						boxLabel : groupName,
+						boxLabel : boxLabel,
 						id : groupName + "-read-chk",
 						disabled : groupName === Gemma.SecurityManager.adminGroupName
 					}));
 			writerChecks.push(new Ext.form.Checkbox({
 						checked : writers.indexOf(groupName) >= 0,
-						boxLabel : groupName,
+						boxLabel : boxLabel,
 						id : groupName + "-write-chk",
 						disabled : groupName === Gemma.SecurityManager.adminGroupName
 					}));
 		}
 
+		var publicReadingFieldSet = new Ext.ux.RadioFieldset({
+            radioToggle:true,
+			radioName: 'readingRadio',
+			radioId: 'public-radio',
+            title: 'Public',
+            defaultType: 'checkbox',
+            collapsed: !isPublic,
+			checked: isPublic,
+            layout: 'anchor',
+            defaults: {
+                anchor: '100%'
+            },
+            items : [{
+				xtype: 'panel',
+				border:false,
+				width: widgetWidth-50,
+				bodyStyle:'background-color:#F7F9D0;padding:5px;border:1px solid #FF7575',
+				html: 'Please note: setting the read permissions to "public" means that all ' +
+				'users of Gemma (registered and anonymous) will be able to view this entity and use it in analyses.'
+			}]
+        });		
+		var privateReadingFieldSet = new Ext.ux.RadioFieldset({
+            radioToggle:true,
+			radioName: 'readingRadio',
+			radioId: 'private-radio',
+            title: 'Private',
+            defaultType: 'checkbox',
+            collapsed: isPublic,
+			checked: !isPublic,
+            layout: 'anchor',
+            defaults: {
+                anchor: '100%'
+            },
+            items : readerChecks
+        });
+
+		publicReadingFieldSet.on('expand', function(){
+			privateReadingFieldSet.collapse();
+		},this);
+		privateReadingFieldSet.on('expand', function(){
+			publicReadingFieldSet.collapse();
+		},this);
+		
+		var readerFieldSet = {
+			width: widgetWidth,
+            xtype:'fieldset',
+            title: 'Reading Permissions',
+            collapsed: false,
+            layout: 'anchor',
+            defaults: {
+                anchor: '100%'
+            },
+            items : [publicReadingFieldSet,privateReadingFieldSet]
+        };	
+	
+		var privateWritingFieldSet = new Ext.ux.RadioFieldset({
+            radioToggle:true,
+			radioName: 'writingRadio',
+            title: 'Private',
+            defaultType: 'checkbox',
+            collapsed: false,
+			checked: true,
+            layout: 'anchor',
+            defaults: {
+                anchor: '100%'
+            },
+            items : writerChecks
+        });
+		
+		var writerFieldSet = {
+			width: widgetWidth,
+            xtype:'fieldset',
+            title: 'Writing Permissions',
+            collapsed: false,
+			style:'margin-top:40px',
+            layout: 'anchor',
+            defaults: {
+                anchor: '100%'
+            },
+            items : [privateWritingFieldSet,
+			{
+				tag: 'div',
+				html: 'Note that any group given write access will also have read access.',
+				border:false
+			}]
+        };	
+		
 		/*
 		 * show panel...
 		 */
 		var sp = new Ext.Window({
 					title : "Security for: " + Ext.util.Format.ellipsis(securityInfo.entityName, 70, true),
-					height : 300,
-					width : 500,
 					minimizable : false,
 					maximizable : false,
 					modal : true,
-					bodyStyle : 'padding:5px 5px 0',
+					bodyStyle : 'padding:5px 5px 0;background-color:white',
 					stateful : false,
-
+					autoScroll:true,
+					shadow: false, // doesn't resize with window
 					initComponent : function() {
 						Ext.Window.superclass.initComponent.call(this);
-
-						/*
-						 * Add checkboxes as needed...
-						 */
-
-						if (readerChecks.size() != 0) {
-							Ext.apply(Ext.getCmp('reader-checks'), {
-										items : readerChecks
-									});
-						}
-						if (writerChecks.size() != 0) {
-							Ext.apply(Ext.getCmp('writer-checks'), {
-										items : writerChecks
-									});
-						}
-						this.doLayout();
-
 					},
-
-					items : [{
-								xtype : 'form',
-								layout : 'column',
-								autoHeight : true,
-								autoWidth : true,
-								defaults : {
-									layout : 'form',
-									border : false,
-									bodyStyle : 'padding:4px'
-								},
-								items : [{
-											xtype : 'fieldset',
-											autoHeight : true,
-											autoWidth : true,
-											items : [{
-														xtype : 'checkbox',
-														boxLabel : "Public",
-														id : 'public-checkbox',
-														checked : isPublic,
-														disabled : !canManage
-													}, {
-														xtype : 'checkboxgroup',
-														width : 300,
-														itemCls : 'x-check-group-alt',
-														fieldLabel : "Readers",
-														id : 'reader-checks',
-														disabled : !canManage,
-														columns : 1
-													}, {
-														xtype : 'checkboxgroup',
-														width : 300,
-														itemCls : 'x-check-group-alt',
-														fieldLabel : 'Writers',
-														id : 'writer-checks',
-														disabled : !canManage,
-														columns : 1
-													}]
-										}]
-							}],
+					// this set up method will not work if >1 of these windows per page
+					// for now that can't happen so this is ok
+					items : [readerFieldSet,writerFieldSet],
 					buttons : [{
 						text : "Save changes",
-						disabled : !canManage,
+						disabled : !canEdit,
 						handler : function(b, e) {
 
 							var loadMask = new Ext.LoadMask(sp.getEl(), {
 										msg : "Saving changes..."
 									});
-							loadMask.show();
+							//loadMask.show();
 
-							securityInfo.publiclyReadable = Ext.getCmp('public-checkbox').getValue();
+							securityInfo.publiclyReadable = Ext.get('public-radio').dom.checked;
 
 							var updatedGroupsThatCanRead = [];
 							var updatedGroupsThatCanWrite = [];
@@ -187,6 +219,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 									updatedGroupsThatCanWrite.push(groupName);
 									shared = true;
 								}
+								// if you can write, then you need to be able to read
 								if (Ext.getCmp(groupName + "-read-chk").getValue() ||
 										Ext.getCmp(groupName + "-write-chk").getValue()) {
 									updatedGroupsThatCanRead.push(groupName);
@@ -196,26 +229,26 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 
 							securityInfo.groupsThatCanWrite = updatedGroupsThatCanWrite;
 							securityInfo.groupsThatCanRead = updatedGroupsThatCanRead;
-
+							
+				console.log(securityInfo);
 							SecurityController.updatePermission(securityInfo, {
 										callback : function(updatedInfo) {
 											sp.destroy();
 
-											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClass,
-													updatedInfo.entityId, updatedInfo.publiclyReadable, shared,
-													updatedInfo.currentUserCanwrite);
+											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClazz,
+													updatedInfo.entityId, updatedInfo.publiclyReadable, updatedInfo.shared,
+													updatedInfo.currentUserOwns);
 										},
 										errorHandler : function() {
 											sp.destroy();
 											alert("There was an error saving the settings.");
 
-											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClass,
+											Gemma.SecurityManager.updateSecurityLink(elid, updatedInfo.entityClazz,
 													updatedInfo.entityId, updatedInfo.publiclyReadable,
-													updatedInfo.shared, updatedInfo.currentUserCanwrite);
+													updatedInfo.shared, updatedInfo.currentUserOwns);
 
 										}
 									});
-
 						}
 					}, {
 						text : 'Cancel',

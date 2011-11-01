@@ -170,11 +170,9 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
             'title="This experiment seems to mix array designs with different technology types."/>';
         }
         
-        if (this.editable) {
-            result = result +
+        result = result +
             Gemma.SecurityManager.getSecurityLink('ubic.gemma.model.expression.experiment.ExpressionExperimentImpl', 
-				ee.id, ee.isPublic, ee.isShared, this.editable);
-        }
+				ee.id, ee.isPublic, ee.isShared, this.owned);
         
         return result || "No flags";
         
@@ -334,11 +332,7 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     
     	this.panelId = this.getId();
         Gemma.ExpressionExperimentDetails.superclass.initComponent.call(this);
-        
-        // if no permissions hasWritePermission is not set.
-        if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
-            this.editable = true;
-        }
+
 		//  this.editable && this.admin may also have been set in component configs 
 		
 		var panelId = this.getId();

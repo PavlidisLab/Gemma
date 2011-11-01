@@ -615,6 +615,7 @@ public class ExpressionExperimentSetController extends BaseController {
         vo.setDescription( set.getDescription() == null ? "" : set.getDescription() );
 
         vo.setCurrentUserHasWritePermission( securityService.isEditable( set ) );
+        vo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( set ) );
         vo.setPublik( securityService.isPublic( set ) );
         vo.setShared( securityService.isShared( set ) );
         

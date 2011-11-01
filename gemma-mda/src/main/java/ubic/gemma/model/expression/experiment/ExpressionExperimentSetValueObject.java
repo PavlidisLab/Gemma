@@ -36,6 +36,8 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
         
     private boolean currentUserHasWritePermission = false;
 
+    private boolean currentUserIsOwner = false;
+
     private boolean publik;
 
     private boolean shared;
@@ -205,6 +207,20 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
 
     public void setTaxonName( String taxonName ) {
         this.taxonName = taxonName;
+    }
+
+    /**
+     * @param currentUserIsOwner the currentUserIsOwner to set
+     */
+    public void setCurrentUserIsOwner( boolean currentUserIsOwner ) {
+        this.currentUserIsOwner = currentUserIsOwner;
+    }
+
+    /**
+     * @return the currentUserIsOwner
+     */
+    public boolean isCurrentUserIsOwner() {
+        return currentUserIsOwner;
     }
     
 }

@@ -63,6 +63,8 @@ public class ExpressionExperimentDetailsValueObject extends
     private String lastArrayDesignUpdateDate;
     
     private boolean canCurrentUserEditExperiment;
+
+    private boolean doesCurrentUserOwnExperiment;
     
     private Collection<ExpressionExperimentSetValueObject> expressionExperimentSets;
 
@@ -235,6 +237,20 @@ public class ExpressionExperimentDetailsValueObject extends
      */
     public Collection<ExpressionExperimentSetValueObject> getExpressionExperimentSets() {
         return expressionExperimentSets;
+    }
+
+    /**
+     * @param doesCurrentUserOwnExperiment the doesCurrentUserOwnExperiment to set
+     */
+    public void setDoesCurrentUserOwnExperiment( boolean doesCurrentUserOwnExperiment ) {
+        this.doesCurrentUserOwnExperiment = doesCurrentUserOwnExperiment;
+    }
+
+    /**
+     * @return the doesCurrentUserOwnExperiment
+     */
+    public boolean isDoesCurrentUserOwnExperiment() {
+        return doesCurrentUserOwnExperiment;
     }
 
 }

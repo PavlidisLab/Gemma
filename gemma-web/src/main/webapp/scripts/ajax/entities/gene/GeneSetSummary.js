@@ -41,7 +41,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 				"title='Protected; cannot have members changed, usually applies to automatically generated groups.' />&nbsp;"
 		}
 		var sl = Gemma.SecurityManager.getSecurityLink("ubic.gemma.model.genome.gene.GeneSetImpl", 
-					g.id, g.publik, g.shared, g.currentUserHasWritePermission);
+					g.id, g.publik, g.shared, g.currentUserIsOwner);
 					
 		statusString += sl;
 		return statusString;
@@ -58,7 +58,6 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
         	
         var g = this.geneSet;
 		
-        // if no permissions hasWritePermission is not set.
         if (g.currentUserHasWritePermission) {
             this.editable = true;
         }

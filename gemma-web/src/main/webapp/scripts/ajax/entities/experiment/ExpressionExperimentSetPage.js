@@ -55,11 +55,7 @@ Gemma.ExpressionExperimentSetPage = Ext.extend(Ext.TabPanel, {
 				return;
         	}
 		}
-	
-        
-        if ((Ext.get("hasWritePermission")) && Ext.get("hasWritePermission").getValue() == 'true') {
-            this.editable = true;
-        }
+
         var isAdmin = Ext.get("hasAdmin").getValue() == 'true';
         
         Gemma.ExpressionExperimentSetPage.superclass.initComponent.call(this);

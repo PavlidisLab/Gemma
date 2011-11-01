@@ -38,6 +38,7 @@ public class GeneSetValueObject implements Serializable {
     private static final long serialVersionUID = 6212231006289412683L;
 
     private boolean currentUserHasWritePermission = false;
+    private boolean currentUserIsOwner = false;
     private String description;
     private Collection<Long> geneIds = new HashSet<Long>();
     private Long id;
@@ -207,5 +208,19 @@ public class GeneSetValueObject implements Serializable {
             return true;
         }
        return false;
+    }
+
+    /**
+     * @param currentUserIsOwner the currentUserIsOwner to set
+     */
+    public void setCurrentUserIsOwner( boolean currentUserIsOwner ) {
+        this.currentUserIsOwner = currentUserIsOwner;
+    }
+
+    /**
+     * @return the currentUserIsOwner
+     */
+    public boolean isCurrentUserIsOwner() {
+        return currentUserIsOwner;
     }
 }

@@ -662,6 +662,7 @@ public class GeneSetController {
         DatabaseBackedGeneSetValueObject gsvo = new DatabaseBackedGeneSetValueObject( gs );
 
         gsvo.setCurrentUserHasWritePermission( securityService.isEditable( gs ) );
+        gsvo.setCurrentUserIsOwner( securityService.isOwnedByCurrentUser( gs ) );
         gsvo.setPublik( securityService.isPublic( gs ) );
         gsvo.setShared( securityService.isShared( gs ) );
 

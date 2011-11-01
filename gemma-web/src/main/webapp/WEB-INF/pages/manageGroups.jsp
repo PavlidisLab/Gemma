@@ -5,6 +5,8 @@
 	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 	<jwr:script src='/scripts/app/manageGroups.js' useRandomParam='false' />
 </head>
+<input type="hidden" id="reloadOnLogout" value="true">
+<input type="hidden" id="reloadOnLogin" value="true"/>
 <body>
 	<h2>
 		Manage groups

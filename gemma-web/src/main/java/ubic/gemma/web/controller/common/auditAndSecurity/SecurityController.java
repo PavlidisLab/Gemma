@@ -599,7 +599,7 @@ public class SecurityController {
                     continue;
                 }
                 // when it is writable it should be readable
-                securityService.makeReadableByGroup( s, currentGroupName );
+                securityService.makeReadableByGroup( s, writer );
                 securityService.makeWriteableByGroup( s, writer );
             }
         }
@@ -751,6 +751,7 @@ public class SecurityController {
         result.setGroupsThatCanWrite( securityService.getGroupsEditableBy( s ) );
         result.setShared( isShared );
         result.setOwner( new SidValueObject( securityService.getOwner( s ) ) );
+        result.setCurrentUserOwns( securityService.isOwnedByCurrentUser( s ) );
         result.setCurrentUserCanwrite( canWrite );
 
         if ( Describable.class.isAssignableFrom( s.getClass() ) ) {
