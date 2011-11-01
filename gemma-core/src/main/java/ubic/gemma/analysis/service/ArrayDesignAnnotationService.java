@@ -28,7 +28,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -323,33 +322,6 @@ public class ArrayDesignAnnotationService {
     @Autowired
     private GeneOntologyService goService;
 
-    Transformer officialSymbolExtractor = new Transformer() {
-        public Object transform( Object input ) {
-            return ( ( Gene ) input ).getOfficialSymbol();
-        }
-    };
-
-    Transformer descriptionExtractor = new Transformer() {
-        public Object transform( Object input ) {
-            Gene gene = ( Gene ) input;
-            return gene.getOfficialName();
-        }
-    };
-
-    Transformer ncbiIdExtractor = new Transformer() {
-        public Object transform( Object input ) {
-            Gene gene = ( Gene ) input;
-            return gene.getNcbiGeneId();
-        }
-    };
-
-    Transformer idExtractor = new Transformer() {
-        public Object transform( Object input ) {
-            Gene gene = ( Gene ) input;
-            return gene.getId();
-        }
-    };
-
     Transformer goTermExtractor = new Transformer() {
         public Object transform( Object input ) {
             return GeneOntologyService.asRegularGoId( ( ( OntologyTerm ) input ) );
@@ -383,9 +355,6 @@ public class ArrayDesignAnnotationService {
             boolean knownGenesOnly ) throws IOException {
 
         int compositeSequencesProcessed = 0;
-
-        TransformIterator geneSymbolTransformer = new TransformIterator( null, officialSymbolExtractor );
-        TransformIterator geneDescriptionTransformer = new TransformIterator( null, descriptionExtractor );
 
         for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
 
@@ -424,62 +393,28 @@ public class ArrayDesignAnnotationService {
 
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
-                Collection<Gene> retained = new HashSet<Gene>();
-
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
                 if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
                     continue;
                 }
 
-                if ( log.isDebugEnabled() )
-                    log.debug( "Adding gene: " + g.getOfficialSymbol() + " of type: " + g.getClass() );
-
-                retained.add( g );
-
-                if ( retained.size() == 0 ) continue;
-
-                List<Gene> retainedGenes = new ArrayList<Gene>( retained );
-
-                if ( retainedGenes.size() == 1 ) {
-                    Gene r = retainedGenes.get( 0 );
-                    genes.add( r.getOfficialSymbol() );
-                    geneDescriptions.add( r.getOfficialName() );
-                    geneIds.add( r.getId().toString() );
-                    ncbiIds.add( r.getNcbiGeneId().toString() );
-                    goTerms.addAll( getGoTerms( r, ty ) );
-                } else {
-
-                    for ( Gene gene : retainedGenes ) {
-                        goTerms.addAll( getGoTerms( gene, ty ) );
-                    }
-
-                    geneSymbolTransformer.setIterator( retained.iterator() );
-                    geneDescriptionTransformer.setIterator( retained.iterator() );
-
-                    // This will break if gene symbols contain ",".
-                    genes.add( StringUtils.join( geneSymbolTransformer, "," ) );
-
-                    // This breaks if the descriptions contain "$".
-                    geneDescriptions.add( StringUtils.join( geneDescriptionTransformer, "$" ) );
-
-                    geneIds.add( StringUtils.join( new TransformIterator( retained.iterator(), idExtractor ), "," ) );
-                    ncbiIds.add( StringUtils.join( new TransformIterator( retained.iterator(), ncbiIdExtractor ), "," ) );
-
+                genes.add( g.getOfficialSymbol() );
+                geneDescriptions.add( g.getOfficialName() );
+                geneIds.add( g.getId().toString() );
+                Integer ncbiGeneId = g.getNcbiGeneId();
+                if ( ncbiGeneId != null ) {
+                    ncbiIds.add( ncbiGeneId.toString() );
                 }
+                goTerms.addAll( getGoTerms( g, ty ) );
+
             }
 
-            if ( genes.size() == 1 ) {
-                writeAnnotationLine( writer, cs.getName(), ( String ) genes.toArray()[0],
-                        ( String ) geneDescriptions.toArray()[0], goTerms, ( String ) geneIds.toArray()[0],
-                        ( String ) ncbiIds.toArray()[0] );
-            } else {
-                String geneString = StringUtils.join( genes, "|" );
-                String geneDescriptionString = StringUtils.join( geneDescriptions, "|" );
-                String geneIdsString = StringUtils.join( geneIds, "|" );
-                String ncbiIdsString = StringUtils.join( ncbiIds, "|" );
-                writeAnnotationLine( writer, cs.getName(), geneString, geneDescriptionString, goTerms, geneIdsString,
-                        ncbiIdsString );
-            }
+            String geneString = StringUtils.join( genes, "|" );
+            String geneDescriptionString = StringUtils.join( geneDescriptions, "|" );
+            String geneIdsString = StringUtils.join( geneIds, "|" );
+            String ncbiIdsString = StringUtils.join( ncbiIds, "|" );
+            writeAnnotationLine( writer, cs.getName(), geneString, geneDescriptionString, goTerms, geneIdsString,
+                    ncbiIdsString );
 
         }
         writer.close();
