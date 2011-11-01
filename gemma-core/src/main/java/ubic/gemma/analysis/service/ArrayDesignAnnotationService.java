@@ -536,7 +536,7 @@ public class ArrayDesignAnnotationService {
 
         Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>(
                 gene2GOAssociationService.findByGene( gene ) );
-
+        
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
         if ( ontos.size() == 0 ) return results;
 

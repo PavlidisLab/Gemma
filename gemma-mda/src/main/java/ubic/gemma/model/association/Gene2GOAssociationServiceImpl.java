@@ -21,8 +21,11 @@ package ubic.gemma.model.association;
 
 import java.util.Collection;
 
+import net.sf.ehcache.Element;
+
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 
@@ -52,30 +55,41 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
 
     /*
      * (non-Javadoc)
+     * 
      * @see Gene2GOAssociationServiceBase#handleFindAssociationByGene(ubic.gemma.model.genome .Gene)
      */
     @Override
-    protected Collection handleFindAssociationByGene( Gene gene ) throws java.lang.Exception {
+    protected Collection<Gene2GOAssociation> handleFindAssociationByGene( Gene gene ) throws java.lang.Exception {
         return this.getGene2GOAssociationDao().findAssociationByGene( gene );
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see Gene2GOAssociationServiceBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindByGene( Gene gene ) throws Exception {
-        return this.getGene2GOAssociationDao().findByGene( gene );
+    protected Collection<VocabCharacteristic> handleFindByGene( Gene gene ) throws Exception {
+
+        Element element = this.gene2goCache.get( gene );
+
+        if ( element != null ) return ( Collection<VocabCharacteristic> ) element.getValue();
+
+        Collection<VocabCharacteristic> re = this.getGene2GOAssociationDao().findByGene( gene );
+
+        this.gene2goCache.put( new Element( gene, re ) );
+
+        return re;
 
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see Gene2GOAssociationServiceBase#handleFindByGOTerm(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
+    protected Collection<Gene> handleFindByGOTerm( String goID, Taxon taxon ) throws Exception {
         return this.getGene2GOAssociationDao().findByGoTerm( goID, taxon );
     }
 
@@ -89,6 +103,7 @@ public class Gene2GOAssociationServiceImpl extends ubic.gemma.model.association.
 
     /*
      * (non-Javadoc)
+     * 
      * @see Gene2GOAssociationServiceBase#handleRemoveAll()
      */
     @Override

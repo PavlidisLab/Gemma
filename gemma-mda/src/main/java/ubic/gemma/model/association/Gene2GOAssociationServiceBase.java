@@ -18,7 +18,19 @@
  */
 package ubic.gemma.model.association;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.config.CacheConfiguration;
+import net.sf.ehcache.config.NonstopConfiguration;
+import net.sf.ehcache.config.TerracottaConfiguration;
+import net.sf.ehcache.store.MemoryStoreEvictionPolicy;
+
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import ubic.gemma.model.common.description.VocabCharacteristic;
+import ubic.gemma.model.genome.Gene;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * <p>
@@ -28,13 +40,57 @@ import org.springframework.beans.factory.annotation.Autowired;
  * 
  * @see ubic.gemma.model.association.Gene2GOAssociationService
  */
-public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.association.Gene2GOAssociationService {
+public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.association.Gene2GOAssociationService,
+        InitializingBean {
+    protected Cache gene2goCache;
+
+    private static final String G2G_CACHE_NAME = "Gene2GoServiceCache";
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+
+        boolean terracottaEnabled = ConfigUtils.getBoolean( "gemma.cache.clustered", false );
+        int maxElements = 50000;
+        boolean eternal = false;
+        boolean terracottaCoherentReads = false;
+        boolean clearOnFlush = false;
+        int timeToLive = 500;
+        int timeToIdle = 1000;
+        if ( terracottaEnabled ) {
+            CacheConfiguration config = new CacheConfiguration( G2G_CACHE_NAME, maxElements );
+            config.setStatistics( false );
+            config.setMemoryStoreEvictionPolicy( MemoryStoreEvictionPolicy.LRU.toString() );
+            config.setOverflowToDisk( false );
+            config.setEternal( eternal );
+            config.setTimeToIdleSeconds( timeToIdle );
+            config.setMaxElementsOnDisk( 0 );
+            config.addTerracotta( new TerracottaConfiguration() );
+            config.getTerracottaConfiguration().setCoherentReads( terracottaCoherentReads );
+            config.clearOnFlush( clearOnFlush );
+
+            config.setTimeToLiveSeconds( timeToLive );
+            config.getTerracottaConfiguration().setClustered( terracottaEnabled );
+            config.getTerracottaConfiguration().setValueMode( "SERIALIZATION" );
+            config.getTerracottaConfiguration().addNonstop( new NonstopConfiguration() );
+            this.gene2goCache = new Cache( config );
+
+        } else {
+            this.gene2goCache = new Cache( G2G_CACHE_NAME, maxElements, false, eternal, timeToLive, timeToIdle );
+        }
+
+        cacheManager.addCache( gene2goCache );
+        this.gene2goCache = cacheManager.getCache( G2G_CACHE_NAME );
+
+    }
 
     @Autowired
     private ubic.gemma.model.association.Gene2GOAssociationDao gene2GOAssociationDao;
 
     @Autowired
     private ubic.gemma.model.common.description.VocabCharacteristicDao vocabCharacteristicDao;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#create(ubic.gemma.model.association.Gene2GOAssociation)
@@ -67,7 +123,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findAssociationByGene(ubic.gemma.model.genome.Gene)
      */
-    public java.util.Collection findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<Gene2GOAssociation> findAssociationByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindAssociationByGene( gene );
         } catch ( Throwable th ) {
@@ -80,7 +136,7 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGene(ubic.gemma.model.genome.Gene)
      */
-    public java.util.Collection findByGene( final ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<VocabCharacteristic> findByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindByGene( gene );
         } catch ( Throwable th ) {
@@ -94,7 +150,8 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
      * @see ubic.gemma.model.association.Gene2GOAssociationService#findByGOTerm(java.lang.String,
      *      ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection findByGOTerm( final java.lang.String goID, final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection<Gene> findByGOTerm( final java.lang.String goID,
+            final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByGOTerm( goID, taxon );
         } catch ( Throwable th ) {
@@ -116,6 +173,10 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
                     "Error performing 'ubic.gemma.model.association.Gene2GOAssociationService.findOrCreate(ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation)' --> "
                             + th, th );
         }
+    }
+
+    public CacheManager getCacheManager() {
+        return cacheManager;
     }
 
     /**
@@ -175,19 +236,19 @@ public abstract class Gene2GOAssociationServiceBase implements ubic.gemma.model.
     /**
      * Performs the core logic for {@link #findAssociationByGene(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract java.util.Collection handleFindAssociationByGene( ubic.gemma.model.genome.Gene gene )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<Gene2GOAssociation> handleFindAssociationByGene(
+            ubic.gemma.model.genome.Gene gene ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract java.util.Collection handleFindByGene( ubic.gemma.model.genome.Gene gene )
+    protected abstract java.util.Collection<VocabCharacteristic> handleFindByGene( ubic.gemma.model.genome.Gene gene )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByGOTerm(java.lang.String, ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection handleFindByGOTerm( java.lang.String goID,
+    protected abstract java.util.Collection<Gene> handleFindByGOTerm( java.lang.String goID,
             ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     /**

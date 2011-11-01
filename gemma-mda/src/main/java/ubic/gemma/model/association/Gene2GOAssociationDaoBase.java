@@ -19,11 +19,9 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
-
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 
 /**
@@ -35,7 +33,7 @@ import ubic.gemma.model.genome.Gene;
  * @see ubic.gemma.model.association.Gene2GOAssociation
  */
 public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.association.Gene2GOAssociationDao  {
+        ubic.gemma.model.association.Gene2GOAssociationDao {
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int, java.util.Collection)
@@ -57,10 +55,10 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
                 } );
         return entities;
     }
-    
-    
-    public Collection<? extends Gene2GOAssociation > load( Collection<Long> ids ) {
-        return this.getHibernateTemplate().findByNamedParam( "from Gene2GOAssociationImpl where id in (:ids)", "ids", ids );
+
+    public Collection<? extends Gene2GOAssociation> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from Gene2GOAssociationImpl where id in (:ids)", "ids",
+                ids );
     }
 
     /**
@@ -79,7 +77,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(int, java.lang.String,
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
-    
+
     public Gene2GOAssociation find( final java.lang.String queryString,
             final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -105,11 +103,10 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#find(int,
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
-    
+
     public Gene2GOAssociation find( final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         return this
-                .find(
-                        "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
+                .find( "from ubic.gemma.model.association.Gene2GOAssociation as gene2GOAssociation where gene2GOAssociation.gene2GOAssociation = :gene2GOAssociation",
                         gene2GOAssociation );
     }
 
@@ -129,7 +126,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findByGene(ubic.gemma.model.genome.Gene)
      */
-    public java.util.Collection<Gene2GOAssociation> findByGene( final ubic.gemma.model.genome.Gene gene ) {
+    public java.util.Collection<VocabCharacteristic> findByGene( final ubic.gemma.model.genome.Gene gene ) {
         try {
             return this.handleFindByGene( gene );
         } catch ( Throwable th ) {
@@ -173,7 +170,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(int, java.lang.String,
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
-    
+
     public Object findOrCreate( final java.lang.String queryString,
             final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
@@ -199,7 +196,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#findOrCreate(int,
      *      ubic.gemma.model.association.Gene2GOAssociation)
      */
-    
+
     public Gene2GOAssociation findOrCreate( final ubic.gemma.model.association.Gene2GOAssociation gene2GOAssociation ) {
         return ( Gene2GOAssociation ) this
                 .findOrCreate(
@@ -313,7 +310,7 @@ public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport impl
     /**
      * Performs the core logic for {@link #findByGene(ubic.gemma.model.genome.Gene)}
      */
-    protected abstract java.util.Collection handleFindByGene( ubic.gemma.model.genome.Gene gene )
+    protected abstract java.util.Collection<VocabCharacteristic> handleFindByGene( ubic.gemma.model.genome.Gene gene )
             throws java.lang.Exception;
 
     /**

@@ -468,7 +468,7 @@ public class GeneOntologyService implements InitializingBean {
     }
 
     /**
-     * Get all GO terms for a gene, including parents of terms via is-a relationships; and optinally also parents via
+     * Get all GO terms for a gene, including parents of terms via is-a relationships; and optionally also parents via
      * part-of relationships.
      * 
      * @param gene

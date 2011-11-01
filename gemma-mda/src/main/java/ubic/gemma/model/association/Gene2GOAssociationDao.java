@@ -20,6 +20,7 @@ package ubic.gemma.model.association;
 
 import java.util.Collection;
 
+import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.persistence.BaseDao;
@@ -42,7 +43,7 @@ public interface Gene2GOAssociationDao extends BaseDao<Gene2GOAssociation> {
     /**
      * 
      */
-    public Collection<Gene2GOAssociation> findByGene( Gene gene );
+    public Collection<VocabCharacteristic> findByGene( Gene gene );
 
     /**
      * <p>

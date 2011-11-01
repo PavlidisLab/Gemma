@@ -28,7 +28,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.association.Gene2GOAssociationService;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -43,9 +42,6 @@ public class NCBIGene2GOAssociationParserTest extends BaseSpringContextTest {
 
     @Autowired
     Gene2GOAssociationService gene2GOAssociationService;
-
-    @Autowired
-    TaxonService taxonService;
 
     /**
      * Configure parser and loader. Provide "tomcat-esque" functionality by injecting the parser and loader with their

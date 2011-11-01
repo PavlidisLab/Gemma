@@ -19,13 +19,15 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.SessionFactory;
+import org.hibernate.classic.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -42,16 +44,7 @@ import ubic.gemma.util.BusinessKey;
 @Repository
 public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene2GOAssociationDaoBase {
 
-    /**
-     * FIXME make this a cache that expires
-     */
-    private Map<Gene, Collection<Gene2GOAssociation>> gene2goCache;
-
-    @Override
-    protected void initDao() throws Exception {
-        super.initDao();
-        this.gene2goCache = new HashMap<Gene, Collection<Gene2GOAssociation>>();
-    }
+    private static Log log = LogFactory.getLog( Gene2GOAssociationDaoImpl.class );
 
     @Autowired
     public Gene2GOAssociationDaoImpl( SessionFactory sessionFactory ) {
@@ -115,12 +108,9 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene2GOAssociation> handleFindAssociationByGene( Gene gene ) throws Exception {
-        if ( gene2goCache.containsKey( gene ) ) {
-            return gene2goCache.get( gene );
-        }
+
         final String queryString = "from Gene2GOAssociationImpl where gene = :gene";
         List<?> g2go = this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
-        gene2goCache.put( gene, ( Collection<Gene2GOAssociation> ) g2go );
         return ( Collection<Gene2GOAssociation> ) g2go;
     }
 
@@ -130,15 +120,23 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
-    protected Collection handleFindByGene( Gene gene ) throws Exception {
+    protected Collection<VocabCharacteristic> handleFindByGene( Gene gene ) throws Exception {
+
         final String queryString = "select distinct geneAss.ontologyEntry from Gene2GOAssociationImpl as geneAss  where geneAss.gene = :gene";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
+
+        List<?> vo = this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
+
+        @SuppressWarnings("unchecked")
+        Collection<VocabCharacteristic> result = ( Collection<VocabCharacteristic> ) vo;
+
+        return result;
     }
 
     @Override
     protected Collection<Gene> handleFindByGoTerm( String goId, Taxon taxon ) throws Exception {
 
-        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon";
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  "
+                + "where geneAss.ontologyEntry.value = :goID and geneAss.gene.taxon = :taxon";
 
         // need to turn the collection of goTerms into a collection of GOId's
 
@@ -167,7 +165,8 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         Collection<String> goIDs = new HashSet<String>();
         if ( goTerms.size() == 0 ) return goIDs;
 
-        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss  where geneAss.ontologyEntry.valueUri in (:goIDs) and geneAss.gene.taxon = :taxon";
+        final String queryString = "select distinct geneAss.gene from Gene2GOAssociationImpl as geneAss"
+                + "  where geneAss.ontologyEntry.valueUri in (:goIDs) and geneAss.gene.taxon = :taxon";
 
         // need to turn the collection of goTerms into a collection of GOId's
         for ( Object obj : goTerms ) {
@@ -180,9 +179,29 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
     @Override
     protected void handleRemoveAll() throws Exception {
-        // FIXME this does not delete the associated vocabCharacteristics.
-        final String queryString = "delete from Gene2GOAssociationImpl go ";
-        this.getHibernateTemplate().bulkUpdate( queryString );
+        // this does not delete the associated vocabCharacteristics, though it is fast.
+        // "No joins, either implicit or explicit, can be specified in a bulk HQL query"
+        // http://docs.jboss.org/hibernate/core/3.3/reference/en/html/batch.html#batch-direct
+        // final String queryString = "delete from Gene2GOAssociationImpl go ";
+        // this.getHibernateTemplate().bulkUpdate( queryString );
+
+        int total = 0;
+        Session sess = this.getSessionFactory().getCurrentSession();
+
+        // this should do the deletion, right? -- Confirmed. (PP)
+        while ( true ) {
+            Query q = sess.createQuery( "from Gene2GOAssociationImpl" );
+            q.setMaxResults( 10000 );
+            List<?> list = q.list();
+            if ( list.isEmpty() ) break;
+
+            total += list.size();
+
+            this.getHibernateTemplate().deleteAll( list );
+        }
+
+        log.info( "Deleted: " + total );
+
     }
 
 }
