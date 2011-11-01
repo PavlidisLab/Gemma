@@ -64,7 +64,8 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         // TODO make hsql query
         String queryString = "select count( distinct GENE_FK) from PHENOTYPE_ASSOCIATION where id in( SELECT PHENOTYPE_ASSOCIATION_FK FROM CHARACTERISTIC where value='"
-                + phenotypeValue + "')";
+            + phenotypeValue.replaceAll( "'", "\\\\'" ) + "')";
+        
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
