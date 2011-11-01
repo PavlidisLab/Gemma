@@ -51,10 +51,15 @@ public class GeneEvidenceValueObject extends GeneValueObject {
                 Collection<EvidenceValueObject> evidenceFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
                         .getPhenotypeAssociations() );
 
-                converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), getAliasStrings( g ), g
-                        .getNcbiGeneId().toString(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(),
-                        null, g.getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(),
-                        evidenceFromPhenotype ) );
+                String geneNCBI = null;
+
+                if ( g.getNcbiGeneId() != null ) {
+                    geneNCBI = g.getNcbiGeneId().toString();
+                }
+
+                converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), getAliasStrings( g ), geneNCBI, g
+                        .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
+                        .getTaxon().getScientificName(), g.getTaxon().getCommonName(), evidenceFromPhenotype ) );
             }
         }
 

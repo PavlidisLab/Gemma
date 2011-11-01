@@ -42,10 +42,17 @@ public class GeneValueObject implements java.io.Serializable {
         if ( genes == null ) return converted;
 
         for ( Gene g : genes ) {
+
+            String geneNCBI = null;
+
+            if ( g.getNcbiGeneId() != null ) {
+                geneNCBI = g.getNcbiGeneId().toString();
+            }
+
             if ( g == null ) continue;
-            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiGeneId()
-                    .toString(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon()
-                    .getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName() ) );
+            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), geneNCBI, g
+                    .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
+                    .getTaxon().getScientificName(), g.getTaxon().getCommonName() ) );
         }
 
         return converted;
