@@ -19,7 +19,10 @@
 package ubic.gemma.model.association;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Criteria;
 import org.hibernate.SessionFactory;
@@ -39,6 +42,17 @@ import ubic.gemma.util.BusinessKey;
 @Repository
 public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene2GOAssociationDaoBase {
 
+    /**
+     * FIXME make this a cache that expires
+     */
+    private Map<Gene, Collection<Gene2GOAssociation>> gene2goCache;
+
+    @Override
+    protected void initDao() throws Exception {
+        super.initDao();
+        this.gene2goCache = new HashMap<Gene, Collection<Gene2GOAssociation>>();
+    }
+
     @Autowired
     public Gene2GOAssociationDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -46,9 +60,9 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#find(ubic.gemma.model.association.Gene2GOAssociation)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Gene2GOAssociation find( Gene2GOAssociation gene2GOAssociation ) {
         try {
@@ -57,7 +71,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
             Criteria queryObject = super.getSession().createCriteria( Gene2GOAssociation.class );
             BusinessKey.addRestrictions( queryObject, gene2GOAssociation );
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -77,6 +91,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.Gene2GOAssociationDaoBase#findOrCreate(ubic.gemma.model.association.Gene2GOAssociation
      * )
@@ -93,18 +108,25 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindAssociationByGene(ubic.gemma.model.genome.Gene)
      */
     @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene2GOAssociation> handleFindAssociationByGene( Gene gene ) throws Exception {
+        if ( gene2goCache.containsKey( gene ) ) {
+            return gene2goCache.get( gene );
+        }
         final String queryString = "from Gene2GOAssociationImpl where gene = :gene";
-        return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
+        List<?> g2go = this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
+        gene2goCache.put( gene, ( Collection<Gene2GOAssociation> ) g2go );
+        return ( Collection<Gene2GOAssociation> ) g2go;
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGene(ubic.gemma.model.genome.Gene)
      */
     @Override
@@ -113,7 +135,6 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         return this.getHibernateTemplate().findByNamedParam( queryString, "gene", gene );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleFindByGoTerm( String goId, Taxon taxon ) throws Exception {
 
@@ -138,9 +159,9 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.association.Gene2GOAssociationDaoBase#handleFindByGOTerm(ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection handleFindByGOTerm( Collection goTerms, Taxon taxon ) throws Exception {
         Collection<String> goIDs = new HashSet<String>();
@@ -163,4 +184,5 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         final String queryString = "delete from Gene2GOAssociationImpl go ";
         this.getHibernateTemplate().bulkUpdate( queryString );
     }
+
 }

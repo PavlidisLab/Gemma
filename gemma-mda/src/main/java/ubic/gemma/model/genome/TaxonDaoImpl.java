@@ -117,7 +117,7 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
             return existingTaxon;
         }
 
-        if ( StringUtils.isBlank( taxon.getCommonName() ) || StringUtils.isBlank( taxon.getScientificName() ) ) {
+        if ( StringUtils.isBlank( taxon.getCommonName() ) && StringUtils.isBlank( taxon.getScientificName() ) ) {
             throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
         }
 

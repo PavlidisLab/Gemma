@@ -366,6 +366,8 @@ public class ArrayDesignAnnotationService {
      * location are delimited by ",". Both can happen simultaneously.
      * <li>Gene name, delimited as for the symbol except '$' is used instead of ','.
      * <li>GO terms, delimited by '|'; multiple genes are not handled specially (for compatibility with ermineJ)
+     * <li>Gemma's gene ids, delimited by '|'
+     * <li>NCBI gene ids, delimited by '|'
      * </ol>
      * 
      * @param writer
@@ -382,13 +384,35 @@ public class ArrayDesignAnnotationService {
 
         int compositeSequencesProcessed = 0;
 
+        TransformIterator geneSymbolTransformer = new TransformIterator( null, officialSymbolExtractor );
+        TransformIterator geneDescriptionTransformer = new TransformIterator( null, descriptionExtractor );
+
         for ( CompositeSequence cs : genesWithSpecificity.keySet() ) {
 
-            // Collection<Gene> genes = compositeSequenceService.getGenes( sequence );
             Collection<BioSequence2GeneProduct> geneclusters = genesWithSpecificity.get( cs );
+
+            if ( ++compositeSequencesProcessed % 2000 == 0 && log.isInfoEnabled() ) {
+                log.info( "Processed " + compositeSequencesProcessed + "/" + genesWithSpecificity.size()
+                        + " compositeSequences " );
+            }
 
             if ( geneclusters.isEmpty() ) {
                 writeAnnotationLine( writer, cs.getName(), "", "", null, "", "" );
+                continue;
+            }
+
+            if ( geneclusters.size() == 1 ) {
+                // common case, do it quickly.
+                BioSequence2GeneProduct b2g = geneclusters.iterator().next();
+                Gene g = b2g.getGeneProduct().getGene();
+                if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
+                    continue;
+                }
+                Collection<OntologyTerm> goTerms = getGoTerms( g, ty );
+                String gemmaId = g.getId() == null ? "" : g.getId().toString();
+                String ncbiId = g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString();
+                writeAnnotationLine( writer, cs.getName(), g.getOfficialSymbol(), g.getOfficialName(), goTerms,
+                        gemmaId, ncbiId );
                 continue;
             }
 
@@ -401,8 +425,6 @@ public class ArrayDesignAnnotationService {
             for ( BioSequence2GeneProduct bioSequence2GeneProduct : geneclusters ) {
 
                 Collection<Gene> retained = new HashSet<Gene>();
-
-                Collection<OntologyTerm> clusterGoTerms = new HashSet<OntologyTerm>();
 
                 Gene g = bioSequence2GeneProduct.getGeneProduct().getGene();
                 if ( knownGenesOnly && ( g instanceof PredictedGene || g instanceof ProbeAlignedRegion ) ) {
@@ -417,34 +439,46 @@ public class ArrayDesignAnnotationService {
                 if ( retained.size() == 0 ) continue;
 
                 List<Gene> retainedGenes = new ArrayList<Gene>( retained );
-                for ( Gene gene : retainedGenes ) {
-                    clusterGoTerms.addAll( getGoTerms( gene, ty ) );
+
+                if ( retainedGenes.size() == 1 ) {
+                    Gene r = retainedGenes.get( 0 );
+                    genes.add( r.getOfficialSymbol() );
+                    geneDescriptions.add( r.getOfficialName() );
+                    geneIds.add( r.getId().toString() );
+                    ncbiIds.add( r.getNcbiGeneId().toString() );
+                    goTerms.addAll( getGoTerms( r, ty ) );
+                } else {
+
+                    for ( Gene gene : retainedGenes ) {
+                        goTerms.addAll( getGoTerms( gene, ty ) );
+                    }
+
+                    geneSymbolTransformer.setIterator( retained.iterator() );
+                    geneDescriptionTransformer.setIterator( retained.iterator() );
+
+                    // This will break if gene symbols contain ",".
+                    genes.add( StringUtils.join( geneSymbolTransformer, "," ) );
+
+                    // This breaks if the descriptions contain "$".
+                    geneDescriptions.add( StringUtils.join( geneDescriptionTransformer, "$" ) );
+
+                    geneIds.add( StringUtils.join( new TransformIterator( retained.iterator(), idExtractor ), "," ) );
+                    ncbiIds.add( StringUtils.join( new TransformIterator( retained.iterator(), ncbiIdExtractor ), "," ) );
+
                 }
-
-                // This will break if gene symbols contain ",".
-                genes.add( StringUtils.join( new TransformIterator( retained.iterator(), officialSymbolExtractor ), "," ) );
-
-                // This breaks if the descriptions contain "$".
-                geneDescriptions.add( StringUtils.join( new TransformIterator( retained.iterator(),
-                        descriptionExtractor ), "$" ) );
-
-                geneIds.add( StringUtils.join( new TransformIterator( retained.iterator(), idExtractor ), "," ) );
-
-                ncbiIds.add( StringUtils.join( new TransformIterator( retained.iterator(), ncbiIdExtractor ), "," ) );
-
-                goTerms.addAll( clusterGoTerms );
             }
 
-            String geneString = StringUtils.join( genes, "|" );
-            String geneDescriptionString = StringUtils.join( geneDescriptions, "|" );
-            String geneIdsString = StringUtils.join( geneIds, "|" );
-            String ncbiIdsString = StringUtils.join( ncbiIds, "|" );
-            writeAnnotationLine( writer, cs.getName(), geneString, geneDescriptionString, goTerms, geneIdsString,
-                    ncbiIdsString );
-
-            if ( ++compositeSequencesProcessed % 2000 == 0 && log.isInfoEnabled() ) {
-                log.info( "Processed " + compositeSequencesProcessed + "/" + genesWithSpecificity.size()
-                        + " compositeSequences " );
+            if ( genes.size() == 1 ) {
+                writeAnnotationLine( writer, cs.getName(), ( String ) genes.toArray()[0],
+                        ( String ) geneDescriptions.toArray()[0], goTerms, ( String ) geneIds.toArray()[0],
+                        ( String ) ncbiIds.toArray()[0] );
+            } else {
+                String geneString = StringUtils.join( genes, "|" );
+                String geneDescriptionString = StringUtils.join( geneDescriptions, "|" );
+                String geneIdsString = StringUtils.join( geneIds, "|" );
+                String ncbiIdsString = StringUtils.join( ncbiIds, "|" );
+                writeAnnotationLine( writer, cs.getName(), geneString, geneDescriptionString, goTerms, geneIdsString,
+                        ncbiIdsString );
             }
 
         }

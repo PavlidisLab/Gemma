@@ -62,7 +62,7 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
             throw new IllegalArgumentException( "Taxon.create - 'taxon' can not be null" );
         }
 
-        if ( StringUtils.isBlank( taxon.getCommonName() ) || StringUtils.isBlank( taxon.getScientificName() ) ) {
+        if ( StringUtils.isBlank( taxon.getCommonName() ) && StringUtils.isBlank( taxon.getScientificName() ) ) {
             throw new IllegalArgumentException( "Cannot create a taxon without names: " + taxon );
         }
 

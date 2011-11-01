@@ -20,6 +20,8 @@ package ubic.gemma.model.association;
 
 import java.util.Collection;
 
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.genome.Gene;
@@ -33,7 +35,7 @@ import ubic.gemma.model.genome.Gene;
  * @see ubic.gemma.model.association.Gene2GOAssociation
  */
 public abstract class Gene2GOAssociationDaoBase extends HibernateDaoSupport implements
-        ubic.gemma.model.association.Gene2GOAssociationDao {
+        ubic.gemma.model.association.Gene2GOAssociationDao  {
 
     /**
      * @see ubic.gemma.model.association.Gene2GOAssociationDao#create(int, java.util.Collection)
