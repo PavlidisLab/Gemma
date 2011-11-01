@@ -8,6 +8,7 @@ Ext.namespace('Gemma');
  */
 Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
+			sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
 			loadMask : true,
 
 			record : Ext.data.Record.create([{
@@ -240,19 +241,21 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 							}, this.getTopToolbar());
 
 					this.getSelectionModel().on("selectionchange", function(model) {
-								var selected = model.getSelections();
-								if (selected.length > 0) {
-									this.deleteButton.enable();
-								} else {
-									this.deleteButton.disable();
+						if (model) {
+							var selected = model.getSelections();
+							if (selected.length > 0) {
+								this.deleteButton.enable();
+							} else {
+								this.deleteButton.disable();
+							}
+							this.revertButton.disable();
+							for (var i = 0; i < selected.length; ++i) {
+								if (selected[i].dirty) {
+									this.revertButton.enable();
+									break;
 								}
-								this.revertButton.disable();
-								for (var i = 0; i < selected.length; ++i) {
-									if (selected[i].dirty) {
-										this.revertButton.enable();
-										break;
-									}
-								}
+							}
+						}
 							}, this.getTopToolbar());
 				} // if editable.
 			},
