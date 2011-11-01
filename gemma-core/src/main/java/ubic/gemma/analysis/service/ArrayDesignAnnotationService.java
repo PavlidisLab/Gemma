@@ -566,8 +566,8 @@ public class ArrayDesignAnnotationService {
         buf.append( "# If you use this file for your research, please cite the Gemma web site.\n" );
         buf.append( "# Gemma link for this platform: http://www.chibi.ubc.ca/Gemma/arrays/showArrayDesign.html?id="
                 + arrayDesign.getId() + "\n" );
-        buf.append( "# " + arrayDesign.getShortName() + "  " + arrayDesign.getName() );
-        buf.append( "# " + arrayDesign.getPrimaryTaxon().getScientificName() );
+        buf.append( "# " + arrayDesign.getShortName() + "  " + arrayDesign.getName() + "\n" );
+        buf.append( "# " + arrayDesign.getPrimaryTaxon().getScientificName() + "\n" );
         writer.write( buf.toString() );
         writer.write( "ProbeName\tGeneSymbols\tGeneNames\tGOTerms\tGemmaIDs\tNCBIids\n" );
 
