@@ -90,8 +90,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
 
     protected ExpressionExperimentSet expressionExperimentSet;
 
-    protected AuditEventService auditEventService;
-
     protected void addForceOption() {
         this.addForceOption( null );
     }
@@ -259,22 +257,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
                 log.info( "Filtering for experiments lacking a " + this.autoSeekEventType.getSimpleName() + " event" );
                 auditEventService.retainLackingEvent( this.expressionExperiments, this.autoSeekEventType );
             }
-
-            if ( expressionExperiments.size() > 1 )
-                log.info( "Thawing " + expressionExperiments.size() + " experiments ..." );
-            int count = 0;
-            for ( BioAssaySet ee : expressionExperiments ) {
-                if ( ee instanceof ExpressionExperiment ) {
-                    ee = eeService.thawLite( ( ExpressionExperiment ) ee );
-                    if ( ++count % 25 == 0 ) {
-                        log.info( "Thawed: " + count );
-                    }
-                } else {
-                    throw new UnsupportedOperationException( "Can't handle non-EE BioAssaySets yet" );
-                }
-            }
-
-            if ( expressionExperiments.size() > 1 ) log.info( "Done thawing" );
 
             removeTroubledEes( expressionExperiments );
         }
@@ -460,7 +442,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             log.warn( "No experiments to remove troubled from" );
             return;
         }
-        // Map<Long, BioAssaySet> idMap = EntityUtils.getIdMap( ees );
         final Collection<Long> untroubled = eeService.getUntroubled( EntityUtils.getIds( ees ) );
 
         BioAssaySet theOnlyOne = null;
@@ -468,13 +449,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             theOnlyOne = ees.iterator().next();
         }
         int size = ees.size();
-        // final Map<Long, AuditEvent> trouble = eeService.getLastTroubleEvent( CollectionUtils.collect( ees,
-        // new Transformer() {
-        // @Override
-        // public Object transform( Object input ) {
-        // return ( ( ExpressionExperiment ) input ).getId();
-        // }
-        // } ) );
+
         CollectionUtils.filter( ees, new Predicate() {
             @Override
             public boolean evaluate( Object object ) {
