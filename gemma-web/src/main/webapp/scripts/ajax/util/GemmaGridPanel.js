@@ -8,7 +8,7 @@ Ext.namespace('Gemma');
  * @version $Id$
  */
 Gemma.GemmaGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
-
+  			sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
 			stripeRows : true,
 			stateful : false,
 			viewConfig : {
