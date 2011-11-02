@@ -518,6 +518,11 @@ public class ExpressionDataFileService {
         writer.close();
     }
 
+    /**
+     * @param results
+     * @param geneAnnotations
+     * @param buf
+     */
     public void analysisResultSetsToString( Collection<ExpressionAnalysisResultSet> results,
             Map<Long, String[]> geneAnnotations, StringBuilder buf ) {
         Map<Long, StringBuilder> probe2String = new HashMap<Long, StringBuilder>();
@@ -613,8 +618,12 @@ public class ExpressionDataFileService {
                     probe2String.put( csid, probeBuffer );
                 }
 
-                probeBuffer.append( "\t" + String.format( DECIMAL_FORMAT, dear.getCorrectedPvalue() ) + "\t"
-                        + String.format( DECIMAL_FORMAT, dear.getPvalue() ) );
+                Double correctedPvalue = dear.getCorrectedPvalue();
+                Double pvalue = dear.getPvalue();
+
+                String formattedCP = correctedPvalue == null ? "" : String.format( DECIMAL_FORMAT, correctedPvalue );
+                String formattedP = correctedPvalue == null ? "" : String.format( DECIMAL_FORMAT, pvalue );
+                probeBuffer.append( "\t" + formattedCP + "\t" + formattedP );
             } else {
                 log.warn( "probe details missing.  Unable to retrieve probe level information. Skipping  "
                         + dear.getClass() + " with id: " + dear.getId() );
