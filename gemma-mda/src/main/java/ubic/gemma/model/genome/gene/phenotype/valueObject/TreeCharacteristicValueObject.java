@@ -37,23 +37,24 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     public Collection<TreeCharacteristicValueObject> getChildren() {
-        return children;
+        return this.children;
     }
 
     public int getDeep() {
-        return deep;
+        return this.deep;
     }
 
     public void setDeep( int deep ) {
         this.deep = deep;
     }
 
+    @Override
     public String toString() {
         return toString( 0 );
     }
 
     public boolean isDbPhenotype() {
-        return dbPhenotype;
+        return this.dbPhenotype;
     }
 
     public void setDbPhenotype( boolean dbPhenotype ) {
@@ -72,9 +73,9 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
         output = output + getValue() + "\n";
 
-        level++;
-        for ( TreeCharacteristicValueObject treeVO : children ) {
-            output = output + treeVO.toString( level );
+        int currentLevel = level + 1;
+        for ( TreeCharacteristicValueObject treeVO : this.children ) {
+            output = output + treeVO.toString( currentLevel );
 
         }
 
@@ -98,20 +99,20 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
                 return 1;
             }
 
-        } else {
-            return super.compareTo( c );
         }
+        return super.compareTo( c );
+
     }
 
     /** remove all nodes in the trees found in the Ontology but not in db */
     public void removeUnusedPhenotypes() {
 
         // the new childs nodes, all node between root and flag children were removed
-        children = findNewChildren();
+        this.children = findNewChildren();
 
         // for the new childs found remove all nodes that were not flag between the childs and the next flagged child if
         // any
-        for ( TreeCharacteristicValueObject tc : children ) {
+        for ( TreeCharacteristicValueObject tc : this.children ) {
             tc.removeUnusedPhenotypes();
         }
     }
@@ -121,7 +122,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
         Collection<TreeCharacteristicValueObject> newChildren = new HashSet<TreeCharacteristicValueObject>();
 
-        for ( TreeCharacteristicValueObject t : children ) {
+        for ( TreeCharacteristicValueObject t : this.children ) {
             if ( t.isDbPhenotype() ) {
                 newChildren.add( t );
             } else {

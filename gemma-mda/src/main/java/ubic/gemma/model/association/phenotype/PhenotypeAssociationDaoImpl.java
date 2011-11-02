@@ -60,12 +60,12 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     @Override
     public Long countGenesWithPhenotype( String phenotypeValue ) {
 
-        Long value = null;
+        long value = 0;
 
         // TODO make hsql query
         String queryString = "select count( distinct GENE_FK) from PHENOTYPE_ASSOCIATION where id in( SELECT PHENOTYPE_ASSOCIATION_FK FROM CHARACTERISTIC where value='"
-            + phenotypeValue.replaceAll( "'", "\\\\'" ) + "')";
-        
+                + phenotypeValue.replaceAll( "'", "\\\\'" ) + "')";
+
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
         ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
@@ -73,7 +73,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
             value = ( ( BigInteger ) results.get( 0 ) ).longValue();
         }
 
-        return value;
+        return new Long( value );
     }
 
     /**

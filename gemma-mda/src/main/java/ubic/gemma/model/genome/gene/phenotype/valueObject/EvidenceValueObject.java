@@ -41,10 +41,10 @@ public abstract class EvidenceValueObject {
     private String description = "";
     private CharacteristicValueObject associationType = null;
     private String evidenceCode = null;
-    private Boolean isNegativeEvidence = false;
+    private Boolean isNegativeEvidence = new Boolean( false );
     private String className = "";
     /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
-    private Double relevance = 0D;
+    private Double relevance = new Double( 0 );
 
     private Set<CharacteristicValueObject> phenotypes = null;
 
@@ -89,10 +89,6 @@ public abstract class EvidenceValueObject {
         return returnEvidence;
     }
 
-    public EvidenceValueObject() {
-
-    }
-
     /** set fields common to all evidence. Entity to Value Object */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {
 
@@ -133,35 +129,35 @@ public abstract class EvidenceValueObject {
     }
 
     public Long getDatabaseId() {
-        return databaseId;
+        return this.databaseId;
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     public CharacteristicValueObject getAssociationType() {
-        return associationType;
+        return this.associationType;
     }
 
     public String getEvidenceCode() {
-        return evidenceCode;
+        return this.evidenceCode;
     }
 
     public Boolean getIsNegativeEvidence() {
-        return isNegativeEvidence;
+        return this.isNegativeEvidence;
     }
 
     public Collection<CharacteristicValueObject> getPhenotypes() {
-        return phenotypes;
+        return this.phenotypes;
     }
 
     public String getClassName() {
-        return className;
+        return this.className;
     }
 
     public Double getRelevance() {
-        return relevance;
+        return this.relevance;
     }
 
     public void setRelevance( Double relevance ) {
@@ -192,11 +188,11 @@ public abstract class EvidenceValueObject {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( associationType == null ) ? 0 : associationType.hashCode() );
-        result = prime * result + ( ( description == null ) ? 0 : description.hashCode() );
-        result = prime * result + ( ( evidenceCode == null ) ? 0 : evidenceCode.hashCode() );
-        result = prime * result + ( ( isNegativeEvidence == null ) ? 0 : isNegativeEvidence.hashCode() );
-        result = prime * result + ( ( phenotypes == null ) ? 0 : phenotypes.hashCode() );
+        result = prime * result + ( ( this.associationType == null ) ? 0 : this.associationType.hashCode() );
+        result = prime * result + ( ( this.description == null ) ? 0 : this.description.hashCode() );
+        result = prime * result + ( ( this.evidenceCode == null ) ? 0 : this.evidenceCode.hashCode() );
+        result = prime * result + ( ( this.isNegativeEvidence == null ) ? 0 : this.isNegativeEvidence.hashCode() );
+        result = prime * result + ( ( this.phenotypes == null ) ? 0 : this.phenotypes.hashCode() );
         return result;
     }
 
@@ -206,21 +202,21 @@ public abstract class EvidenceValueObject {
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         EvidenceValueObject other = ( EvidenceValueObject ) obj;
-        if ( associationType == null ) {
+        if ( this.associationType == null ) {
             if ( other.associationType != null ) return false;
-        } else if ( !associationType.equals( other.associationType ) ) return false;
-        if ( description == null ) {
+        } else if ( !this.associationType.equals( other.associationType ) ) return false;
+        if ( this.description == null ) {
             if ( other.description != null ) return false;
-        } else if ( !description.equals( other.description ) ) return false;
-        if ( evidenceCode == null ) {
+        } else if ( !this.description.equals( other.description ) ) return false;
+        if ( this.evidenceCode == null ) {
             if ( other.evidenceCode != null ) return false;
-        } else if ( !evidenceCode.equals( other.evidenceCode ) ) return false;
-        if ( isNegativeEvidence == null ) {
+        } else if ( !this.evidenceCode.equals( other.evidenceCode ) ) return false;
+        if ( this.isNegativeEvidence == null ) {
             if ( other.isNegativeEvidence != null ) return false;
-        } else if ( !isNegativeEvidence.equals( other.isNegativeEvidence ) ) return false;
-        if ( phenotypes == null ) {
+        } else if ( !this.isNegativeEvidence.equals( other.isNegativeEvidence ) ) return false;
+        if ( this.phenotypes == null ) {
             if ( other.phenotypes != null ) return false;
-        } else if ( !phenotypes.equals( other.phenotypes ) ) return false;
+        } else if ( !this.phenotypes.equals( other.phenotypes ) ) return false;
         return true;
     }
 

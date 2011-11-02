@@ -18,7 +18,7 @@ public class LitEvidenceLineInfo {
     private String evidenceCode = "";
     private String comment = "";
     private String associationType = null;
-    private Boolean isEdivenceNegative = false;
+    private boolean isEdivenceNegative = false;
     private String[] phenotype = null;
 
     // What will populate the Evidence
@@ -53,7 +53,7 @@ public class LitEvidenceLineInfo {
     }
 
     public String getGeneName() {
-        return geneName;
+        return this.geneName;
     }
 
     public void setGeneName( String geneName ) {
@@ -61,7 +61,7 @@ public class LitEvidenceLineInfo {
     }
 
     public String getGeneID() {
-        return geneID;
+        return this.geneID;
     }
 
     public void setGeneID( String geneID ) {
@@ -69,7 +69,7 @@ public class LitEvidenceLineInfo {
     }
 
     public String getPrimaryReferencePubmed() {
-        return primaryReferencePubmed;
+        return this.primaryReferencePubmed;
     }
 
     public void setPrimaryReferencePubmed( String primaryReferencePubmed ) {
@@ -77,7 +77,7 @@ public class LitEvidenceLineInfo {
     }
 
     public String getEvidenceCode() {
-        return evidenceCode;
+        return this.evidenceCode;
     }
 
     public void setEvidenceCode( String evidenceCode ) {
@@ -85,7 +85,7 @@ public class LitEvidenceLineInfo {
     }
 
     public String getComment() {
-        return comment;
+        return this.comment;
     }
 
     public void setComment( String comment ) {
@@ -93,23 +93,23 @@ public class LitEvidenceLineInfo {
     }
 
     public String getAssociationType() {
-        return associationType;
+        return this.associationType;
     }
 
     public void setAssociationType( String associationType ) {
         this.associationType = associationType;
     }
 
-    public Boolean getIsEdivenceNegative() {
-        return isEdivenceNegative;
+    public boolean getIsEdivenceNegative() {
+        return this.isEdivenceNegative;
     }
 
-    public void setIsEdivenceNegative( Boolean isEdivenceNegative ) {
+    public void setIsEdivenceNegative( boolean isEdivenceNegative ) {
         this.isEdivenceNegative = isEdivenceNegative;
     }
 
     public String[] getPhenotype() {
-        return phenotype;
+        return this.phenotype;
     }
 
     public void setPhenotype( String[] phenotype ) {
@@ -117,15 +117,15 @@ public class LitEvidenceLineInfo {
     }
 
     public Set<CharacteristicValueObject> getPhenotypes() {
-        return phenotypes;
+        return this.phenotypes;
     }
 
     public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
-    public void addPhenotype( CharacteristicValueObject phenotype ) {
-        phenotypes.add( phenotype );
+    public void addPhenotype( CharacteristicValueObject phenotypeToAdd ) {
+        this.phenotypes.add( phenotypeToAdd );
     }
 
 }

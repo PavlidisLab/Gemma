@@ -52,9 +52,6 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         this.experimentCharacteristics = experimentCharacteristics;
     }
 
-    public ExperimentalEvidenceValueObject() {
-    }
-
     /** Entity to Value Object */
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {
         super( experimentalEvidence );
@@ -82,30 +79,31 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     }
 
     public Set<CharacteristicValueObject> getExperimentCharacteristics() {
-        return experimentCharacteristics;
+        return this.experimentCharacteristics;
     }
 
     public Collection<CitationValueObject> getRelevantPublicationsValueObjects() {
-        return relevantPublicationsCitationValueObjects;
+        return this.relevantPublicationsCitationValueObjects;
     }
 
     public CitationValueObject getPrimaryPublicationCitationValueObject() {
-        return primaryPublicationCitationValueObject;
+        return this.primaryPublicationCitationValueObject;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ( ( experimentCharacteristics == null ) ? 0 : experimentCharacteristics.hashCode() );
+        result = prime * result
+                + ( ( this.experimentCharacteristics == null ) ? 0 : this.experimentCharacteristics.hashCode() );
         result = prime
                 * result
-                + ( ( primaryPublicationCitationValueObject == null ) ? 0 : primaryPublicationCitationValueObject
-                        .hashCode() );
+                + ( ( this.primaryPublicationCitationValueObject == null ) ? 0
+                        : this.primaryPublicationCitationValueObject.hashCode() );
         result = prime
                 * result
-                + ( ( relevantPublicationsCitationValueObjects == null ) ? 0 : relevantPublicationsCitationValueObjects
-                        .hashCode() );
+                + ( ( this.relevantPublicationsCitationValueObjects == null ) ? 0
+                        : this.relevantPublicationsCitationValueObjects.hashCode() );
         return result;
     }
 
@@ -115,17 +113,17 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         if ( !super.equals( obj ) ) return false;
         if ( getClass() != obj.getClass() ) return false;
         ExperimentalEvidenceValueObject other = ( ExperimentalEvidenceValueObject ) obj;
-        if ( experimentCharacteristics == null ) {
+        if ( this.experimentCharacteristics == null ) {
             if ( other.experimentCharacteristics != null ) return false;
-        } else if ( !experimentCharacteristics.equals( other.experimentCharacteristics ) ) return false;
-        if ( primaryPublicationCitationValueObject == null ) {
+        } else if ( !this.experimentCharacteristics.equals( other.experimentCharacteristics ) ) return false;
+        if ( this.primaryPublicationCitationValueObject == null ) {
             if ( other.primaryPublicationCitationValueObject != null ) return false;
-        } else if ( !primaryPublicationCitationValueObject.equals( other.primaryPublicationCitationValueObject ) )
+        } else if ( !this.primaryPublicationCitationValueObject.equals( other.primaryPublicationCitationValueObject ) )
             return false;
-        if ( relevantPublicationsCitationValueObjects == null ) {
+        if ( this.relevantPublicationsCitationValueObjects == null ) {
             if ( other.relevantPublicationsCitationValueObjects != null ) return false;
-        } else if ( !relevantPublicationsCitationValueObjects.equals( other.relevantPublicationsCitationValueObjects ) )
-            return false;
+        } else if ( !this.relevantPublicationsCitationValueObjects
+                .equals( other.relevantPublicationsCitationValueObjects ) ) return false;
         return true;
     }
 

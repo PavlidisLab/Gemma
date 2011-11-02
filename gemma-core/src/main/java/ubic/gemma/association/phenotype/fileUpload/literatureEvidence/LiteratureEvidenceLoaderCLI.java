@@ -29,7 +29,7 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
     // input file path
     private String inputFile = "";
     // flag to decided if the data is ready to be imported
-    private Boolean createInDatabase = false;
+    private boolean createInDatabase = false;
 
     private OntologyService ontologyService = null;
     private PhenotypeAssociationManagerService phenotypeAssociationService = null;
@@ -51,7 +51,7 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         args[2] = "-p";
         args[3] = "administrator";
         args[4] = "-f";
-        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/Willie.tsv";
+        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/literatureEvidence/ArtemisLite.tsv";
         args[6] = "-create";
 
         LiteratureEvidenceLoaderCLI p = new LiteratureEvidenceLoaderCLI();
@@ -75,18 +75,18 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         addOption( fileOption );
 
         @SuppressWarnings("static-access")
-        Option createInDatabase = OptionBuilder.withDescription( "Create in database" ).create( "create" );
-        addOption( createInDatabase );
+        Option createInDatabaseOption = OptionBuilder.withDescription( "Create in database" ).create( "create" );
+        addOption( createInDatabaseOption );
 
     }
 
     @Override
     protected void processOptions() {
         super.processOptions();
-        inputFile = getOptionValue( 'f' );
+        this.inputFile = getOptionValue( 'f' );
 
         if ( hasOption( "create" ) ) {
-            createInDatabase = true;
+            this.createInDatabase = true;
         }
     }
 
@@ -102,12 +102,12 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
             loadServices();
 
             System.out.println( "STEP 2 : Extract the data from the file" );
-            Collection<LitEvidenceLineInfo> linesFromFile = file2Objects( inputFile );
+            Collection<LitEvidenceLineInfo> linesFromFile = file2Objects();
 
             System.out.println( "STEP 3 : Convert file to Ontology terms" );
             convertOntologiesTerms( linesFromFile );
 
-            System.out.println( "All phenotypes not found: \n" + allPhenotypesNotFound );
+            System.out.println( "All phenotypes not found: \n" + this.allPhenotypesNotFound );
 
             // check if all Gene ID can be found in Gemma
             System.out.println( "STEP 4 : Verify is all Gene ID exist in Gemma" );
@@ -137,9 +137,9 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
         this.ontologyService = ( OntologyService ) this.getBean( "ontologyService" );
 
-        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
+        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
+        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
 
         while ( this.diseaseOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
@@ -158,11 +158,11 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
     }
 
     /** Take the file and transform it into an object structure for each line */
-    private Collection<LitEvidenceLineInfo> file2Objects( String inputFile ) throws IOException {
+    private Collection<LitEvidenceLineInfo> file2Objects() throws IOException {
 
         Collection<LitEvidenceLineInfo> LitEvidenceLineInfos = new ArrayList<LitEvidenceLineInfo>();
 
-        BufferedReader br = new BufferedReader( new FileReader( inputFile ) );
+        BufferedReader br = new BufferedReader( new FileReader( this.inputFile ) );
 
         String line;
         int lineNumber = 0;
@@ -299,7 +299,7 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
         // all phenotypes must be find
         System.err.println( "phenotype not found in disease, hp and mp Ontology : " + search );
-        allPhenotypesNotFound = allPhenotypesNotFound + search + "\n";
+        this.allPhenotypesNotFound = this.allPhenotypesNotFound + search + "\n";
         return null;
     }
 
@@ -342,7 +342,7 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
             i++;
             Gene gene = null;
             try {
-                gene = this.geneService.findByNCBIId( Integer.parseInt( lineInfo.getGeneID() ) );
+                gene = this.geneService.findByNCBIId( new Integer( lineInfo.getGeneID() ) );
             } catch ( NumberFormatException e ) {
                 // ok.
             }
@@ -384,7 +384,7 @@ public class LiteratureEvidenceLoaderCLI extends AbstractSpringAwareCLI {
             Set<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
 
             EvidenceValueObject evidence = new LiteratureEvidenceValueObject( description, associationType,
-                    phenoAss.getIsEdivenceNegative(), evidenceCode, phenotypes, primaryPublicationPubmed );
+                    new Boolean( phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed );
 
             String geneId = phenoAss.getGeneID();
 

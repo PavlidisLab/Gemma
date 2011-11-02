@@ -41,40 +41,47 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     /**
      * Using an phenotypeAssociation id removes the evidence
      */
+    @Override
     public void remove( PhenotypeAssociation pa ) {
         pa.getGene().getPhenotypeAssociations().remove( pa );
-        phenotypeAssociationDao.remove( pa );
+        this.phenotypeAssociationDao.remove( pa );
     }
 
     /** find Genes link to a phenotype */
+    @Override
     public Collection<Gene> findPhenotypeAssociations( String phenotypeValue ) {
-        return phenotypeAssociationDao.findByPhenotype( phenotypeValue );
+        return this.phenotypeAssociationDao.findByPhenotype( phenotypeValue );
     }
 
     /** find all phenotypes */
+    @Override
     @SuppressWarnings("unchecked")
     public Collection<PhenotypeAssociation> loadAll() {
-        return ( Collection<PhenotypeAssociation> ) phenotypeAssociationDao.loadAll();
+        return ( Collection<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
     }
 
     /** create a GenericExperiment */
+    @Override
     public GenericExperiment create( GenericExperiment genericExperiment ) {
-        return genericExperimentDao.create( genericExperiment );
+        return this.genericExperimentDao.create( genericExperiment );
     }
 
     /** find GenericExperiments by PubMed ID */
+    @Override
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
-        return genericExperimentDao.findByPubmedID( pubmed );
+        return this.genericExperimentDao.findByPubmedID( pubmed );
     }
 
     /** load an evidence given an ID */
+    @Override
     public PhenotypeAssociation load( Long id ) {
-        return phenotypeAssociationDao.load( id );
+        return this.phenotypeAssociationDao.load( id );
     }
 
     /** update an evidence */
+    @Override
     public void update( PhenotypeAssociation evidence ) {
-        phenotypeAssociationDao.update( evidence );
+        this.phenotypeAssociationDao.update( evidence );
     }
 
     @Override

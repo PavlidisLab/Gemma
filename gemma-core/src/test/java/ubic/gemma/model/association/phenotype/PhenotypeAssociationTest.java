@@ -66,27 +66,29 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void setup() {
 
         // Gene NCBI used
-        geneNCBI = RandomStringUtils.randomNumeric( 6 );
+        this.geneNCBI = RandomStringUtils.randomNumeric( 6 );
         // Phenotype
-        phenotypeValue = RandomStringUtils.randomAlphabetic( 6 );
-        phenotypeCategory = RandomStringUtils.randomAlphabetic( 6 );
+        this.phenotypeValue = RandomStringUtils.randomAlphabetic( 6 );
+        this.phenotypeCategory = RandomStringUtils.randomAlphabetic( 6 );
 
         // Evidence
-        CharacteristicValueObject phenotype = new CharacteristicValueObject( phenotypeValue, phenotypeCategory );
-        phenotypes = new HashSet<CharacteristicValueObject>();
-        phenotypes.add( phenotype );
+        CharacteristicValueObject phenotype = new CharacteristicValueObject( this.phenotypeValue,
+                this.phenotypeCategory );
+        this.phenotypes = new HashSet<CharacteristicValueObject>();
+        this.phenotypes.add( phenotype );
 
-        evidence = new UrlEvidenceValueObject( "test_description", null, false, "IC", phenotypes, "www.test.com" );
+        this.evidence = new UrlEvidenceValueObject( "test_description", null, new Boolean( false ), "IC",
+                this.phenotypes, "www.test.com" );
 
         // Make sure a Gene exist in the database with the NCBI id
-        this.gene = makeGene( geneNCBI );
+        this.gene = makeGene( this.geneNCBI );
     }
 
     @After
     public void tearDown() {
-        if ( gene != null ) {
-            gene.getPhenotypeAssociations().clear();
-            geneService.remove( gene );
+        if ( this.gene != null ) {
+            this.gene.getPhenotypeAssociations().clear();
+            this.geneService.remove( this.gene );
         }
     }
 
@@ -96,7 +98,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 1 - call the service to add the phenotype association and save the results to the database
         // ********************************************************************************************
-        GeneEvidenceValueObject geneValue = phenoAssoService.create( geneNCBI, evidence );
+        GeneEvidenceValueObject geneValue = this.phenoAssoService.create( this.geneNCBI, this.evidence );
 
         assertNotNull( geneValue );
         assertNotNull( geneValue.getEvidence() );
@@ -105,8 +107,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 2 - call the service to find all gene for a given phenotype
         // ********************************************************************************************
-        Collection<GeneEvidenceValueObject> geneInfoValueObjects = phenoAssoService
-                .findCandidateGenes( phenotypeValue );
+        Collection<GeneEvidenceValueObject> geneInfoValueObjects = this.phenoAssoService
+                .findCandidateGenes( this.phenotypeValue );
 
         assertNotNull( geneInfoValueObjects );
         assertTrue( !geneInfoValueObjects.isEmpty() );
@@ -114,16 +116,16 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 3 - call the service to find all evidence and phenotypes for a gene
         // ********************************************************************************************
-        Collection<EvidenceValueObject> evidence = phenoAssoService.findEvidenceByGeneNCBI( geneNCBI );
-        assertNotNull( evidence );
+        Collection<EvidenceValueObject> evidenceFound = this.phenoAssoService.findEvidenceByGeneNCBI( this.geneNCBI );
+        assertNotNull( evidenceFound );
 
         // ********************************************************************************************
         // 4 - Delete the Association
         // ********************************************************************************************
-        for ( EvidenceValueObject evidenceValueObject : evidence ) {
-            phenoAssoService.remove( evidenceValueObject.getDatabaseId() );
+        for ( EvidenceValueObject evidenceValueObject : evidenceFound ) {
+            this.phenoAssoService.remove( evidenceValueObject.getDatabaseId() );
         }
-        assertEquals( 0, phenoAssoService.findCandidateGenes( phenotypeValue ).size() );
+        assertEquals( 0, this.phenoAssoService.findCandidateGenes( this.phenotypeValue ).size() );
 
     }
 
@@ -135,30 +137,30 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         urlEvidence.setDescription( "testDescription" );
         urlEvidence.setName( "testname" );
         urlEvidence.setUrl( "www.test.com" );
-        UrlEvidence entityReturn = urlDao.create( urlEvidence );
+        UrlEvidence entityReturn = this.urlDao.create( urlEvidence );
         assertNotNull( entityReturn.getId() );
 
         // update
         urlEvidence.setUrl( "www.testupdate.com" );
-        urlDao.update( urlEvidence );
+        this.urlDao.update( urlEvidence );
 
         // load
-        UrlEvidence urlEvidenceLoad = urlDao.load( entityReturn.getId() );
+        UrlEvidence urlEvidenceLoad = this.urlDao.load( entityReturn.getId() );
         assertNotNull( urlEvidenceLoad );
         assertTrue( urlEvidenceLoad.getUrl().equals( "www.testupdate.com" ) );
 
         // remove
-        urlDao.remove( entityReturn.getId() );
-        assertNull( urlDao.load( entityReturn.getId() ) );
+        this.urlDao.remove( entityReturn.getId() );
+        assertNull( this.urlDao.load( entityReturn.getId() ) );
     }
 
     // not a junit test, used to check values // not used
     public void testFindPhenotypeAssociations() {
 
         // call to the service
-        Collection<EvidenceValueObject> evidence = phenoAssoService.findEvidenceByGeneNCBI( "2" );
+        Collection<EvidenceValueObject> evidenceFound = this.phenoAssoService.findEvidenceByGeneNCBI( "2" );
 
-        for ( EvidenceValueObject evidenceVO : evidence ) {
+        for ( EvidenceValueObject evidenceVO : evidenceFound ) {
 
             System.out.println( "Found evidence: " + evidenceVO.getDatabaseId() + "   " + evidenceVO.getDescription() );
             System.out.println( "With phenotypes: " );
@@ -175,7 +177,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     // not a junit test, used to check values
     public void testFindCandidateGenes() {
 
-        Collection<GeneEvidenceValueObject> geneInfoValueObjects = phenoAssoService.findCandidateGenes( "CANCER" );
+        Collection<GeneEvidenceValueObject> geneInfoValueObjects = this.phenoAssoService.findCandidateGenes( "CANCER" );
 
         for ( GeneEvidenceValueObject geneInfoValueObject : geneInfoValueObjects ) {
 
@@ -185,12 +187,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
             System.out.println();
             System.out.println();
 
-            for ( EvidenceValueObject evidence : geneInfoValueObject.getEvidence() ) {
+            for ( EvidenceValueObject evidenceFound : geneInfoValueObject.getEvidence() ) {
 
-                System.out.println( "Found evidence: " + evidence.getDatabaseId() + "   " + evidence.getDescription() );
+                System.out.println( "Found evidence: " + evidenceFound.getDatabaseId() + "   "
+                        + evidenceFound.getDescription() );
                 System.out.println( "With phenotypes: " );
 
-                for ( CharacteristicValueObject phenotype : evidence.getPhenotypes() ) {
+                for ( CharacteristicValueObject phenotype : evidenceFound.getPhenotypes() ) {
                     System.out.println( "Value :" + phenotype.getValue() );
 
                 }
@@ -203,20 +206,20 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private Gene makeGene( String ncbiId ) {
 
         Taxon rat = Taxon.Factory.newInstance();
-        rat.setIsGenesUsable( true );
-        rat.setNcbiId( 10116 );
+        rat.setIsGenesUsable( new Boolean( true ) );
+        rat.setNcbiId( new Integer( 10116 ) );
         rat.setScientificName( "Rattus norvegicus" );
-        rat.setIsSpecies( true );
-        persisterHelper.persist( rat );
+        rat.setIsSpecies( new Boolean( true ) );
+        this.persisterHelper.persist( rat );
 
         Gene g = Gene.Factory.newInstance();
         g.setName( "RAT1" );
         g.setOfficialName( "RAT1" );
         g.setOfficialSymbol( "RAT1" );
-        g.setNcbiGeneId( Integer.parseInt( ncbiId ) );
+        g.setNcbiGeneId( new Integer( ncbiId ) );
         g.setTaxon( rat );
         g.getProducts().add( super.getTestPersistentGeneProduct( g ) );
-        g = ( Gene ) persisterHelper.persist( g );
+        g = ( Gene ) this.persisterHelper.persist( g );
         return g;
     }
 

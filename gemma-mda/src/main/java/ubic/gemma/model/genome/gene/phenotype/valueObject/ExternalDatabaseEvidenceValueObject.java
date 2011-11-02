@@ -45,7 +45,7 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
     }
 
     public DatabaseEntryValueObject getDatabaseEntryValueObject() {
-        return databaseEntryValueObject;
+        return this.databaseEntryValueObject;
     }
 
     public void setDatabaseEntryValueObject( DatabaseEntryValueObject databaseEntryValueObject ) {
@@ -53,7 +53,7 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
     }
 
     public String getExternalUrl() {
-        return externalUrl;
+        return this.externalUrl;
     }
 
     public void setExternalUrl( String externalUrl ) {

@@ -31,13 +31,8 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
  */
 public class GeneEvidenceValueObject extends GeneValueObject {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = -3484291071757959936L;
-    /**
-     * 
-     */
+
     /** Added field for the Candidate Gene Management System */
     private Collection<EvidenceValueObject> evidence;
 
@@ -81,7 +76,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     }
 
     public Collection<EvidenceValueObject> getEvidence() {
-        return evidence;
+        return this.evidence;
     }
 
     public void setEvidence( Collection<EvidenceValueObject> evidence ) {

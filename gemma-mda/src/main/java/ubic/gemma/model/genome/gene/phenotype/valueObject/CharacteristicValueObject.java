@@ -28,11 +28,11 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String value = "";
     private String valueUri = "";
 
-    private long occurence = 0;
+    private Long occurence = null;
 
     private String ontologyUsed = null;
 
-    private Boolean alreadyPresentOnGene = false;
+    private boolean alreadyPresentOnGene = false;
 
     public CharacteristicValueObject( String value, String category ) {
         this.category = category;
@@ -48,7 +48,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     }
 
     public String getCategoryUri() {
-        return categoryUri;
+        return this.categoryUri;
     }
 
     public void setCategoryUri( String categoryUri ) {
@@ -56,15 +56,15 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     }
 
     public String getValueUri() {
-        return valueUri;
+        return this.valueUri;
     }
 
-    public void Uri( String valueUri ) {
+    public void setValueUri( String valueUri ) {
         this.valueUri = valueUri;
     }
 
     public String getCategory() {
-        return category;
+        return this.category;
     }
 
     public void setCategory( String category ) {
@@ -72,18 +72,18 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     }
 
     public String getValue() {
-        return value;
+        return this.value;
     }
 
     public void setValue( String value ) {
         this.value = value.toLowerCase();
     }
 
-    public long getOccurence() {
-        return occurence;
+    public Long getOccurence() {
+        return this.occurence;
     }
 
-    public void setOccurence( long occurence ) {
+    public void setOccurence( Long occurence ) {
         this.occurence = occurence;
     }
 
@@ -91,10 +91,10 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( category == null ) ? 0 : category.hashCode() );
-        result = prime * result + ( ( categoryUri == null ) ? 0 : categoryUri.hashCode() );
-        result = prime * result + ( ( value == null ) ? 0 : value.hashCode() );
-        result = prime * result + ( ( valueUri == null ) ? 0 : valueUri.hashCode() );
+        result = prime * result + ( ( this.category == null ) ? 0 : this.category.hashCode() );
+        result = prime * result + ( ( this.categoryUri == null ) ? 0 : this.categoryUri.hashCode() );
+        result = prime * result + ( ( this.value == null ) ? 0 : this.value.hashCode() );
+        result = prime * result + ( ( this.valueUri == null ) ? 0 : this.valueUri.hashCode() );
         return result;
     }
 
@@ -104,9 +104,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         CharacteristicValueObject other = ( CharacteristicValueObject ) obj;
-        if ( valueUri == null ) {
+        if ( this.valueUri == null ) {
             if ( other.valueUri != null ) return false;
-        } else if ( !valueUri.equals( other.valueUri ) ) return false;
+        } else if ( !this.valueUri.equals( other.valueUri ) ) return false;
         return true;
     }
 
@@ -120,18 +120,18 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     }
 
     public String getOntologyUsed() {
-        return ontologyUsed;
+        return this.ontologyUsed;
     }
 
     public void setOntologyUsed( String ontologyUsed ) {
         this.ontologyUsed = ontologyUsed;
     }
 
-    public Boolean getAlreadyPresentOnGene() {
-        return alreadyPresentOnGene;
+    public boolean getAlreadyPresentOnGene() {
+        return this.alreadyPresentOnGene;
     }
 
-    public void setAlreadyPresentOnGene( Boolean alreadyPresentOnGene ) {
+    public void setAlreadyPresentOnGene( boolean alreadyPresentOnGene ) {
         this.alreadyPresentOnGene = alreadyPresentOnGene;
     }
 

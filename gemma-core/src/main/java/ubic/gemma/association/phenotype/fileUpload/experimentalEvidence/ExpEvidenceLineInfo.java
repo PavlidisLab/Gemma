@@ -51,7 +51,7 @@ public class ExpEvidenceLineInfo {
     private String evidenceCode = "";
     private String comment = "";
     private String associationType = null;
-    private Boolean isEdivenceNegative = false;
+    private boolean isEdivenceNegative = false;
 
     // All characteristics taken from file
     private String[] developmentStage = null;
@@ -102,7 +102,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String getGeneID() {
-        return geneID;
+        return this.geneID;
     }
 
     public void setGeneID( String geneID ) {
@@ -110,7 +110,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String getPrimaryReferencePubmed() {
-        return primaryReferencePubmed;
+        return this.primaryReferencePubmed;
     }
 
     public void setPrimaryReferencePubmed( String primaryReferencePubmed ) {
@@ -118,7 +118,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String getReviewReferencePubmed() {
-        return reviewReferencePubmed;
+        return this.reviewReferencePubmed;
     }
 
     public void setReviewReferencePubmed( String reviewReferencePubmed ) {
@@ -126,7 +126,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String getEvidenceCode() {
-        return evidenceCode;
+        return this.evidenceCode;
     }
 
     public void setEvidenceCode( String evidenceCode ) {
@@ -134,7 +134,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String getComment() {
-        return comment;
+        return this.comment;
     }
 
     public void setComment( String comment ) {
@@ -142,7 +142,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String[] getPhenotype() {
-        return phenotype;
+        return this.phenotype;
     }
 
     public void setPhenotype( String[] phenotype ) {
@@ -150,7 +150,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String getAssociationType() {
-        return associationType;
+        return this.associationType;
     }
 
     public void setAssociationType( String associationType ) {
@@ -158,7 +158,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String[] getDevelopmentStage() {
-        return developmentStage;
+        return this.developmentStage;
     }
 
     public void setDevelopmentStage( String[] developmentStage ) {
@@ -166,7 +166,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String[] getBioSource() {
-        return bioSource;
+        return this.bioSource;
     }
 
     public void setBioSource( String[] bioSource ) {
@@ -174,7 +174,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String[] getOrganismPart() {
-        return organismPart;
+        return this.organismPart;
     }
 
     public void setOrganismPart( String[] organismPart ) {
@@ -182,7 +182,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String[] getExperimentDesign() {
-        return experimentDesign;
+        return this.experimentDesign;
     }
 
     public void setExperimentDesign( String[] experimentDesign ) {
@@ -190,7 +190,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String[] getTreatment() {
-        return treatment;
+        return this.treatment;
     }
 
     public void setTreatment( String[] treatment ) {
@@ -198,7 +198,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public String[] getExperimentOBI() {
-        return experimentOBI;
+        return this.experimentOBI;
     }
 
     public void setExperimentOBI( String[] experimentOBI ) {
@@ -206,7 +206,7 @@ public class ExpEvidenceLineInfo {
     }
 
     public Set<CharacteristicValueObject> getExperimentCharacteristics() {
-        return experimentCharacteristics;
+        return this.experimentCharacteristics;
     }
 
     public void setExperimentCharacteristics( Set<CharacteristicValueObject> experimentCharacteristics ) {
@@ -214,34 +214,34 @@ public class ExpEvidenceLineInfo {
     }
 
     public void addExperimentCharacteristic( CharacteristicValueObject experimentCharacteristic ) {
-        experimentCharacteristics.add( experimentCharacteristic );
+        this.experimentCharacteristics.add( experimentCharacteristic );
     }
 
     public Set<CharacteristicValueObject> getPhenotypes() {
-        return phenotypes;
+        return this.phenotypes;
     }
 
     public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
-    public void addPhenotype( CharacteristicValueObject phenotype ) {
-        phenotypes.add( phenotype );
+    public void addPhenotype( CharacteristicValueObject phenotypeToAdd ) {
+        this.phenotypes.add( phenotypeToAdd );
     }
 
     public String getGeneName() {
-        return geneName;
+        return this.geneName;
     }
 
     public void setGeneName( String geneName ) {
         this.geneName = geneName;
     }
 
-    public Boolean getIsEdivenceNegative() {
-        return isEdivenceNegative;
+    public boolean getIsEdivenceNegative() {
+        return this.isEdivenceNegative;
     }
 
-    public void setIsEdivenceNegative( Boolean isEdivenceNegative ) {
+    public void setIsEdivenceNegative( boolean isEdivenceNegative ) {
         this.isEdivenceNegative = isEdivenceNegative;
     }
 

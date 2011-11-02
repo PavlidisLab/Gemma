@@ -33,8 +33,8 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
             Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes, String pubmedID ) {
         super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
 
-        citationValueObject = new CitationValueObject();
-        citationValueObject.setPubmedAccession( pubmedID );
+        this.citationValueObject = new CitationValueObject();
+        this.citationValueObject.setPubmedAccession( pubmedID );
     }
 
     /** Entity to Value Object */
@@ -46,14 +46,14 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
     }
 
     public CitationValueObject getCitationValueObject() {
-        return citationValueObject;
+        return this.citationValueObject;
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ( ( citationValueObject == null ) ? 0 : citationValueObject.hashCode() );
+        result = prime * result + ( ( this.citationValueObject == null ) ? 0 : this.citationValueObject.hashCode() );
         return result;
     }
 
@@ -63,9 +63,9 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
         if ( !super.equals( obj ) ) return false;
         if ( getClass() != obj.getClass() ) return false;
         LiteratureEvidenceValueObject other = ( LiteratureEvidenceValueObject ) obj;
-        if ( citationValueObject == null ) {
+        if ( this.citationValueObject == null ) {
             if ( other.citationValueObject != null ) return false;
-        } else if ( !citationValueObject.equals( other.citationValueObject ) ) return false;
+        } else if ( !this.citationValueObject.equals( other.citationValueObject ) ) return false;
         return true;
     }
 

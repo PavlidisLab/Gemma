@@ -128,7 +128,7 @@ public class PhenotypeAssoManagerServiceHelper {
         DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getDatabaseEntryValueObject();
 
         // find the correct database
-        ExternalDatabase externalDatabase = externalDatabaseService.find( databaseEntryValueObject
+        ExternalDatabase externalDatabase = this.externalDatabaseService.find( databaseEntryValueObject
                 .getExternalDatabase().getName() );
 
         if ( externalDatabase == null ) {
@@ -139,7 +139,7 @@ public class PhenotypeAssoManagerServiceHelper {
         DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( externalDatabase );
         databaseEntry.setAccession( databaseEntryValueObject.getAccession() );
 
-        databaseEntryDao.create( databaseEntry );
+        this.databaseEntryDao.create( databaseEntry );
 
         externalDatabaseEvidence.setEvidenceSource( databaseEntry );
 
@@ -211,7 +211,7 @@ public class PhenotypeAssoManagerServiceHelper {
         populatePhenotypeAssociation( experimentalEvidence, evidenceValueObject );
 
         // we only need to create the experiment if its not already in the database
-        Collection<GenericExperiment> genericExperimentWithPubmed = phenotypeAssociationService
+        Collection<GenericExperiment> genericExperimentWithPubmed = this.phenotypeAssociationService
                 .findByPubmedID( evidenceValueObject.getPrimaryPublicationCitationValueObject().getPubmedAccession() );
 
         GenericExperiment genericExperiment = null;
@@ -296,7 +296,7 @@ public class PhenotypeAssoManagerServiceHelper {
             }
 
             genericExperiment.getCharacteristics().addAll( characteristics );
-            phenotypeAssociationService.create( genericExperiment );
+            this.phenotypeAssociationService.create( genericExperiment );
         }
 
         experimentalEvidence.setExperiment( genericExperiment );
@@ -372,7 +372,7 @@ public class PhenotypeAssoManagerServiceHelper {
     private BibliographicReference findOrCreateBibliographicReference( String pubMedId ) {
 
         // check if already in the database
-        BibliographicReference bibRef = bibliographicReferenceService.findByExternalId( pubMedId );
+        BibliographicReference bibRef = this.bibliographicReferenceService.findByExternalId( pubMedId );
 
         if ( bibRef == null ) {
 
@@ -385,7 +385,7 @@ public class PhenotypeAssoManagerServiceHelper {
             }
 
             // this will create or find the BibliographicReference
-            persisterHelper.persist( bibRef );
+            this.persisterHelper.persist( bibRef );
 
         }
 

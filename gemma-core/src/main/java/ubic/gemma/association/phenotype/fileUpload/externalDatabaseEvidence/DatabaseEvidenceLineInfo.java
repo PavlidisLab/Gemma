@@ -17,7 +17,7 @@ public class DatabaseEvidenceLineInfo {
     private String evidenceCode = "";
     private String comment = "";
     private String associationType = null;
-    private Boolean isEdivenceNegative = false;
+    private boolean isEdivenceNegative = false;
 
     private String externalDatabaseName = "";
     private String databaseID = "";
@@ -58,7 +58,7 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public String getGeneName() {
-        return geneName;
+        return this.geneName;
     }
 
     public void setGeneName( String geneName ) {
@@ -66,7 +66,7 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public String getGeneID() {
-        return geneID;
+        return this.geneID;
     }
 
     public void setGeneID( String geneID ) {
@@ -74,7 +74,7 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public String getEvidenceCode() {
-        return evidenceCode;
+        return this.evidenceCode;
     }
 
     public void setEvidenceCode( String evidenceCode ) {
@@ -82,7 +82,7 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public String getComment() {
-        return comment;
+        return this.comment;
     }
 
     public void setComment( String comment ) {
@@ -90,23 +90,23 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public String getAssociationType() {
-        return associationType;
+        return this.associationType;
     }
 
     public void setAssociationType( String associationType ) {
         this.associationType = associationType;
     }
 
-    public Boolean getIsEdivenceNegative() {
-        return isEdivenceNegative;
+    public boolean getIsEdivenceNegative() {
+        return this.isEdivenceNegative;
     }
 
-    public void setIsEdivenceNegative( Boolean isEdivenceNegative ) {
+    public void setIsEdivenceNegative( boolean isEdivenceNegative ) {
         this.isEdivenceNegative = isEdivenceNegative;
     }
 
     public String getExternalDatabaseName() {
-        return externalDatabaseName;
+        return this.externalDatabaseName;
     }
 
     public void setExternalDatabaseName( String externalDatabaseName ) {
@@ -114,7 +114,7 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public String getDatabaseID() {
-        return databaseID;
+        return this.databaseID;
     }
 
     public void setDatabaseID( String databaseID ) {
@@ -122,7 +122,7 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public String[] getPhenotype() {
-        return phenotype;
+        return this.phenotype;
     }
 
     public void setPhenotype( String[] phenotype ) {
@@ -130,15 +130,15 @@ public class DatabaseEvidenceLineInfo {
     }
 
     public Set<CharacteristicValueObject> getPhenotypes() {
-        return phenotypes;
+        return this.phenotypes;
     }
 
     public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
     }
 
-    public void addPhenotype( CharacteristicValueObject phenotype ) {
-        phenotypes.add( phenotype );
+    public void addPhenotype( CharacteristicValueObject phenotypeToAdd ) {
+        this.phenotypes.add( phenotypeToAdd );
     }
 
 }

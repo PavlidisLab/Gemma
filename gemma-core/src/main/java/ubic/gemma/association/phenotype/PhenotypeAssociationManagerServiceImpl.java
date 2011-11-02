@@ -85,7 +85,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public GeneEvidenceValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
         // find the gene we wish to add the evidence and phenotype
-        Gene gene = this.geneService.findByNCBIId( Integer.parseInt( geneNCBI ) );
+        Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
 
         // convert all evidence for this gene to valueObject
         Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
@@ -104,7 +104,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         pheAsso.setGene( gene ); // Important.
 
-        pheAsso = associationService.create( pheAsso );
+        pheAsso = this.associationService.create( pheAsso );
 
         // add the entity to the gene
         gene.getPhenotypeAssociations().add( pheAsso );
@@ -122,7 +122,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<EvidenceValueObject> findEvidenceByGeneNCBI( String geneNCBI ) {
 
-        Gene gene = geneService.findByNCBIId( Integer.parseInt( geneNCBI ) );
+        Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
 
         if ( gene == null ) {
             return null;
@@ -139,7 +139,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId ) {
 
-        Gene gene = geneService.load( geneId );
+        Gene gene = this.geneService.load( ( geneId.longValue() ) );
 
         if ( gene == null ) {
             return null;
@@ -232,7 +232,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                 if ( evidenceHasPhenotype ) {
                     // score between 0 and 1
-                    evidence.setRelevance( 1.0 );
+                    evidence.setRelevance( new Double( 1.0 ) );
                 }
             }
         }
@@ -332,15 +332,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         String[] tokens = searchQuery.split( " " );
 
-        searchQuery = "";
+        String newSearchQuery = "";
 
         for ( int i = 0; i < tokens.length; i++ ) {
 
-            searchQuery = searchQuery + tokens[i] + "* ";
+            newSearchQuery = newSearchQuery + tokens[i] + "* ";
 
             // last one
             if ( i != tokens.length - 1 ) {
-                searchQuery = searchQuery + "AND ";
+                newSearchQuery = newSearchQuery + "AND ";
             }
         }
 
@@ -350,16 +350,17 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // search disease ontology
         phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
+                this.diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
 
         // search mp ontology
         phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                mammalianPhenotypeOntologyService.findTerm( searchQuery ),
+                this.mammalianPhenotypeOntologyService.findTerm( searchQuery ),
                 PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
 
         // search hp ontology
         phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                humanPhenotypeOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
+                this.humanPhenotypeOntologyService.findTerm( searchQuery ),
+                PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
 
         // This list will contain exact match found in the Ontology search result
         Collection<CharacteristicValueObject> phenotypesFound1 = new ArrayList<CharacteristicValueObject>();
@@ -392,13 +393,13 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
 
                 // if also already present on that gene
-                if ( geneProvided && phenotypesOnGene.contains( cha ) ) {
+                if ( phenotypesOnGene != null && phenotypesOnGene.contains( cha ) ) {
                     cha.setAlreadyPresentOnGene( true );
                 }
                 phenotypesFound1.add( cha );
             }
             // Case 2, phenotpye already present on Gene
-            else if ( geneProvided && phenotypesOnGene.contains( cha ) ) {
+            else if ( phenotypesOnGene != null && phenotypesOnGene.contains( cha ) ) {
                 cha.setAlreadyPresentOnGene( true );
                 phenotypesFound2.add( cha );
             }
@@ -430,6 +431,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */
+    @Override
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
         // represents each phenotype and childs found in the Ontology, TreeSet used to order trees by deep
@@ -509,14 +511,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // make sure it does an inexact search
-        query = query + "%";
+        String newQuery = query + "%";
 
         Taxon taxon = null;
         if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
+            taxon = this.taxonService.load( taxonId );
         }
-        SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
+        SearchSettings settings = SearchSettings.geneSearch( newQuery, taxon );
+        List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<Gene>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {
@@ -545,9 +547,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     /** Use specific Ontologies from ontologyService */
     private void useDiseaseMpHPOntologies() {
-        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
+        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
+        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
     }
 
     private OntologyTerm findPhenotypeInOntology( String valueURI ) {

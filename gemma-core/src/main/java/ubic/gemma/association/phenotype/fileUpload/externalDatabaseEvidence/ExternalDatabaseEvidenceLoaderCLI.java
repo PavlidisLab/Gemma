@@ -31,7 +31,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
     // input file path
     private String inputFile = "";
     // flag to decided if the data is ready to be imported
-    private Boolean createInDatabase = false;
+    private boolean createInDatabase = false;
 
     private OntologyService ontologyService = null;
     private PhenotypeAssociationManagerService phenotypeAssociationService = null;
@@ -77,18 +77,18 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         addOption( fileOption );
 
         @SuppressWarnings("static-access")
-        Option createInDatabase = OptionBuilder.withDescription( "Create in database" ).create( "create" );
-        addOption( createInDatabase );
+        Option createInDatabaseOption = OptionBuilder.withDescription( "Create in database" ).create( "create" );
+        addOption( createInDatabaseOption );
 
     }
 
     @Override
     protected void processOptions() {
         super.processOptions();
-        inputFile = getOptionValue( 'f' );
+        this.inputFile = getOptionValue( 'f' );
 
         if ( hasOption( "create" ) ) {
-            createInDatabase = true;
+            this.createInDatabase = true;
         }
     }
 
@@ -104,12 +104,12 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
             loadServices();
 
             System.out.println( "STEP 2 : Extract the data from the file" );
-            Collection<DatabaseEvidenceLineInfo> linesFromFile = file2Objects( inputFile );
+            Collection<DatabaseEvidenceLineInfo> linesFromFile = file2Objects();
 
             System.out.println( "STEP 3 : Convert file to Ontology terms" );
             convertOntologiesTerms( linesFromFile );
 
-            System.out.println( "All phenotypes not found: \n" + allPhenotypesNotFound );
+            System.out.println( "All phenotypes not found: \n" + this.allPhenotypesNotFound );
 
             // check if all Gene ID can be found in Gemma
             System.out.println( "STEP 4 : Verify is all Gene ID exist in Gemma" );
@@ -139,9 +139,9 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
         this.ontologyService = ( OntologyService ) this.getBean( "ontologyService" );
 
-        this.diseaseOntologyService = ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = ontologyService.getHumanPhenotypeOntologyService();
+        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
+        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
+        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
 
         while ( this.diseaseOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
@@ -160,11 +160,11 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
     }
 
     /** Take the file and transform it into an object structure for each line */
-    private Collection<DatabaseEvidenceLineInfo> file2Objects( String inputFile ) throws IOException {
+    private Collection<DatabaseEvidenceLineInfo> file2Objects() throws IOException {
 
         Collection<DatabaseEvidenceLineInfo> DatabaseEvidenceLineInfos = new ArrayList<DatabaseEvidenceLineInfo>();
 
-        BufferedReader br = new BufferedReader( new FileReader( inputFile ) );
+        BufferedReader br = new BufferedReader( new FileReader( this.inputFile ) );
 
         String line;
         int lineNumber = 0;
@@ -301,7 +301,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
         // all phenotypes must be find
         System.err.println( "phenotype not found in disease, hp and mp Ontology : " + search );
-        allPhenotypesNotFound = allPhenotypesNotFound + search + "\n";
+        this.allPhenotypesNotFound = this.allPhenotypesNotFound + search + "\n";
         return null;
     }
 
@@ -344,7 +344,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
             i++;
 
-            Gene gene = this.geneService.findByNCBIId( Integer.parseInt( lineInfo.getGeneID() ) );
+            Gene gene = this.geneService.findByNCBIId( new Integer( lineInfo.getGeneID() ) );
 
             if ( gene == null ) {
                 System.err.println( "Gene not found in Gemma: " + lineInfo.getGeneID() + " Description: "
@@ -387,7 +387,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends AbstractSpringAwareCLI {
             databaseEntryValueObject.setExternalDatabase( externalDatabase );
 
             EvidenceValueObject evidence = new ExternalDatabaseEvidenceValueObject( description, associationType,
-                    phenoAss.getIsEdivenceNegative(), evidenceCode, phenotypes, databaseEntryValueObject );
+                    new Boolean( phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes, databaseEntryValueObject );
 
             String geneId = phenoAss.getGeneID();
 
