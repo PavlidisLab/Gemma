@@ -27,9 +27,6 @@
 		<property name="officialSymbol">
 			<meta-data>official symbol</meta-data>
 		</property>
-		<property name="ncbiId">
-			<meta-data>ncbi id</meta-data>
-		</property>
 		<component name="taxon" ref-alias="taxon" />
 		<component name="citations" ref-alias="bibliographicReference" />
 		<component name="products" ref-alias="geneProduct" />
