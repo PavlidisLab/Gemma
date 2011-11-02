@@ -8,7 +8,6 @@ Ext.namespace('Gemma');
  */
 Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
-			sm: new Ext.grid.RowSelectionModel({singleSelect:true}),
 			loadMask : true,
 
 			record : Ext.data.Record.create([{
