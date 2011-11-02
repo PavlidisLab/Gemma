@@ -89,16 +89,15 @@ public class PubMedSearchTest extends TestCase {
         return;
     }
 
-    /*
-     * Test method for 'ubic.gemma.loader.entrez.pubmed.PubMedSearch.searchAndRetriveByHTTP(Collection<String>)'
-     */
-    public void testSearchAndRetrieveIdByHTTP() throws Exception {
+  
+
+    public void testSearchAndRetrieveIdByHTTPBookshelf() throws Exception {
         try {
             PubMedSearch pms = new PubMedSearch();
             Collection<String> searchTerms = new HashSet<String>();
-            searchTerms.add( "17084362" );
+            searchTerms.add( "20301615" );
             Collection<BibliographicReference> actualResult = pms.searchAndRetrieveIdByHTTP( searchTerms );
-            assertEquals( 1, actualResult.size() ); // at least, this was the result on 8/10/2006.
+            assertEquals( 1, actualResult.size() );
         } catch ( java.net.UnknownHostException e ) {
             log.warn( "Test skipped due to unknown host exception" );
             return;

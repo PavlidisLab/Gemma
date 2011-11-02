@@ -54,6 +54,31 @@ public class PubMedXMLFetcherTest extends TestCase {
         }
     }
 
+    /**
+     * 20301615 is a NCBI bookshelf article, not a paper
+     * 
+     * @throws Exception
+     */
+    public final void testRetrieveByHTTPBookshelf() throws Exception {
+        try {
+            BibliographicReference br = pmf.retrieveByHTTP( 20301615 );
+
+            assertNotNull( br );
+
+            assertEquals( "Miles, Judith H; McCathren, Rebecca B; Stichter, Janine; Shinawi, Marwan",
+                    br.getAuthorList() );
+
+            assertEquals( "GeneReviews", br.getPublication() );
+            assertEquals( "Autism Spectrum Disorders", br.getTitle() );
+
+            SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
+            assertEquals( "1993", f.format( br.getPublicationDate() ) );
+        } catch ( RuntimeException e ) {
+            checkCause( e );
+            return;
+        }
+    }
+
     public final void testRetrieveByHTTPNotFound() throws Exception {
         try {
             BibliographicReference br = pmf.retrieveByHTTP( 1517311444 );

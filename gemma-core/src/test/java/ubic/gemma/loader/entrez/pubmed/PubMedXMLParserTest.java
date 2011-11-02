@@ -21,6 +21,7 @@ package ubic.gemma.loader.entrez.pubmed;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;
@@ -70,6 +71,48 @@ public class PubMedXMLParserTest extends TestCase {
         }
     }
 
+    /**
+     * Test uses 20301315
+     * 
+     * @throws Exception
+     */
+    public void testParseBookArticle() throws Exception {
+        try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-bookarticle.xml" );
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertNotNull( br );
+
+            assertEquals( "Pagon, Roberta A; Bird, Thomas D; Dolan, Cynthia R; Stephens, Karen", br.getEditor() );
+
+            assertEquals( "Kuhlenbäumer, Gregor; Timmerman, Vincent", br.getAuthorList() );
+
+            assertEquals( "GeneReviews", br.getPublication() );
+            assertEquals( "Giant Axonal Neuropathy", br.getTitle() );
+
+            SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
+            Date publicationDate = br.getPublicationDate();
+            assertNotNull( publicationDate );
+            assertEquals( "1993", f.format( publicationDate ) );
+
+            assertTrue( br.getAbstractText().startsWith(
+                    "Giant axonal neuropathy (GAN) is characterized by a severe early-onset" ) );
+            assertTrue( br.getAbstractText().endsWith(
+                    "offering custom prenatal testing if the disease-causing mutations in a family are known." ) );
+
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
+        }
+    }
+
     public void testParseMesh() throws Exception {
         try {
             testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-mesh-test.xml" );
@@ -103,8 +146,8 @@ public class PubMedXMLParserTest extends TestCase {
      */
     public void testParseMulti() throws Exception {
         try {
-            testStream = new GZIPInputStream( PubMedXMLParserTest.class
-                    .getResourceAsStream( "/data/loader/medline.multi.xml.gz" ) );
+            testStream = new GZIPInputStream(
+                    PubMedXMLParserTest.class.getResourceAsStream( "/data/loader/medline.multi.xml.gz" ) );
             Collection<BibliographicReference> brl = testParser.parse( testStream );
             assertEquals( 147, brl.size() );
             int expectedNumberofKeywords = 258;

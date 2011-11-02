@@ -31,6 +31,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -66,6 +67,50 @@ public class PubMedXMLParser {
     DocumentBuilder builder;
 
     DateFormat df = DateFormat.getDateInstance( DateFormat.MEDIUM );
+
+    private final String[] formats = new String[] { "MMM dd, yyyy", "yyyy" };
+
+    /**
+     * @param bibRef
+     * @param item
+     * @throws IOException
+     */
+    public void extractBookPublicationYear( BibliographicReference bibRef, Node item ) throws IOException {
+        NodeList c = item.getChildNodes();
+        for ( int i = 0; i < c.getLength(); i++ ) {
+            Node a = c.item( i );
+            if ( !( a instanceof Element ) ) {
+                continue;
+            }
+            if ( a.getNodeName().equals( "Year" ) ) {
+                try {
+                    bibRef.setPublicationDate( DateUtils.parseDate( XMLUtils.getTextValue( ( Element ) a ), formats ) );
+                } catch ( ParseException e ) {
+                    log.warn( "Could not extract date of publication from : " + XMLUtils.getTextValue( ( Element ) a ) );
+                }
+            }
+        }
+    }
+
+    /**
+     * @param bibRef
+     * @param item
+     * @throws IOException
+     */
+    public void extractPublisher( BibliographicReference bibRef, Node item ) throws IOException {
+        NodeList c = item.getChildNodes();
+        for ( int i = 0; i < c.getLength(); i++ ) {
+            Node a = c.item( i );
+            if ( !( a instanceof Element ) ) {
+                continue;
+            }
+            if ( a.getNodeName().equals( "PublisherName" ) ) {
+                bibRef.setPublisher( XMLUtils.getTextValue( ( Element ) a ) );
+            } else if ( a.getNodeName().equals( "PublisherLocation" ) ) {
+                bibRef.setPublisher( bibRef.getPublisher() + " [ " + XMLUtils.getTextValue( ( Element ) a ) + "]" );
+            }
+        }
+    }
 
     /**
      * @param is
@@ -146,10 +191,19 @@ public class PubMedXMLParser {
         if ( document.getElementsByTagName( ERROR_TAG ).getLength() > 0 ) {
             return null;
         }
-        Collection<BibliographicReference> result = new HashSet<BibliographicReference>();
 
         NodeList articles = document.getElementsByTagName( "MedlineCitation" );
 
+        if ( articles.getLength() == 0 ) {
+            // mebbe it is a book?
+            articles = document.getElementsByTagName( "BookDocument" );
+            if ( articles.getLength() > 0 ) {
+                return parseBookArticles( articles );
+            }
+            return new HashSet<BibliographicReference>();
+        }
+
+        Collection<BibliographicReference> result = new HashSet<BibliographicReference>();
         log.debug( articles.getLength() + " articles found in document" );
 
         int i = 0;
@@ -174,154 +228,6 @@ public class PubMedXMLParser {
         log.info( "Processed " + i + " articles" );
 
         return result;
-    }
-
-    private NodeList processJournalInfo( BibliographicReference bibRef, Node journal ) throws IOException {
-        NodeList journalNodes = journal.getChildNodes();
-        for ( int j = 0; j < journalNodes.getLength(); j++ ) {
-            Node item = journalNodes.item( j );
-            if ( !( item instanceof Element ) ) {
-                continue;
-            }
-            String name = item.getNodeName();
-            if ( name.equals( "JournalIssue" ) ) {
-                NodeList journalIssueNodes = item.getChildNodes();
-                for ( int k = 0; k < journalIssueNodes.getLength(); k++ ) {
-                    Node jitem = journalIssueNodes.item( k );
-                    if ( !( jitem instanceof Element ) ) {
-                        continue;
-                    }
-                    String jname = jitem.getNodeName();
-                    if ( jname.equals( "Volume" ) ) {
-                        bibRef.setVolume( XMLUtils.getTextValue( ( Element ) jitem ) );
-                    } else if ( jname.equals( "Issue" ) ) {
-                        bibRef.setIssue( XMLUtils.getTextValue( ( Element ) jitem ) );
-                    } else if ( jname.equals( "PubDate" ) ) {
-                        bibRef.setPublicationDate( extractPublicationDate( jitem ) );
-                    }
-                }
-            }
-        }
-        return journalNodes;
-    }
-
-    private Node processRecord( BibliographicReference bibRef, Node record ) throws IOException {
-        Node article = null;
-
-        NodeList recordNodes = record.getChildNodes();
-        for ( int p = 0; p < recordNodes.getLength(); p++ ) {
-            Node item = recordNodes.item( p );
-            if ( !( item instanceof Element ) ) {
-                continue;
-            }
-            String name = item.getNodeName();
-            if ( name.equals( "Article" ) ) {
-                article = item;
-            } else if ( name.equals( "ChemicalList" ) ) {
-                bibRef.setChemicals( extractChemicals( item ) );
-            } else if ( name.equals( "MeshHeadingList" ) ) {
-                processMESH( item, bibRef );
-            } else if ( name.equals( "KeywordList" ) ) {
-                bibRef.setKeywords( extractKeywords( item ) );
-            } else if ( name.equals( "MedlineJournalInfo" ) ) {
-                NodeList jNodes = item.getChildNodes();
-                for ( int q = 0; q < jNodes.getLength(); q++ ) {
-                    Node jitem = jNodes.item( q );
-                    if ( !( jitem instanceof Element ) ) {
-                        continue;
-                    }
-                    if ( jitem.getNodeName().equals( "MedlineTA" ) ) {
-                        bibRef.setPublication( XMLUtils.getTextValue( ( Element ) jitem ) );
-                    }
-                }
-            } else if ( name.equals( "PMID" ) ) {
-                processAccession( bibRef, item );
-            }
-        }
-        return article;
-    }
-
-    private Node processArticle( BibliographicReference bibRef, Node article ) throws IOException {
-        NodeList childNodes = article.getChildNodes();
-        Node journal = null;
-        for ( int j = 0; j < childNodes.getLength(); j++ ) {
-            Node item = childNodes.item( j );
-            if ( !( item instanceof Element ) ) {
-                continue;
-            }
-            String name = item.getNodeName();
-            if ( name.equals( "ArticleTitle" ) ) {
-                bibRef.setTitle( XMLUtils.getTextValue( ( Element ) item ) );
-            } else if ( name.equals( "Journal" ) ) {
-                journal = item;
-            } else if ( name.equals( "AuthorList" ) ) {
-                bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
-            } else if ( name.equals( "Pagination" ) ) {
-                bibRef.setPages( XMLUtils.extractOneChild( item, "MedlinePgn" ) );
-            } else if ( name.equals( "Abstract" ) ) {
-                bibRef.setAbstractText( XMLUtils.extractOneChild( item, "AbstractText" ) );
-            } else if ( name.equals( "PublicationTypeList" ) ) {
-                bibRef.setPublicationTypes( extractPublicationTypes( item ) );
-            }
-        }
-        return journal;
-    }
-
-    private void processAccession( BibliographicReference bibRef, Node record ) throws IOException {
-        String accession = XMLUtils.getTextValue( ( Element ) record );
-        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
-        dbEntry.setAccession( accession );
-        ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
-        exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
-        dbEntry.setExternalDatabase( exDb );
-        bibRef.setPubAccession( dbEntry );
-    }
-
-    /**
-     * @param article
-     * @return
-     * @throws TransformerException
-     * @throws IOException
-     */
-    private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) throws IOException {
-        Collection<PublicationType> publicationTypes = new HashSet<PublicationType>();
-        NodeList childNodes = pubtypeList.getChildNodes();
-        for ( int i = 0; i < childNodes.getLength(); i++ ) {
-            Node item = childNodes.item( i );
-            if ( !( item instanceof Element ) ) {
-                continue;
-            }
-            String type = XMLUtils.getTextValue( ( Element ) item );
-            PublicationType pt = PublicationType.Factory.newInstance();
-            pt.setType( type );
-            publicationTypes.add( pt );
-        }
-        return publicationTypes;
-    }
-
-    /**
-     * @param keywordNode
-     * @return
-     * @throws TransformerException
-     * @throws IOException
-     */
-    private Collection<Keyword> extractKeywords( Node keywordNode ) throws IOException {
-        Collection<Keyword> keywords = new HashSet<Keyword>();
-        NodeList childNodes = keywordNode.getChildNodes();
-        for ( int i = 0; i < childNodes.getLength(); i++ ) {
-            Node item = childNodes.item( i );
-            if ( !( item instanceof Element ) ) {
-                continue;
-            }
-            Element el = ( Element ) item;
-            String keyword = XMLUtils.getTextValue( el );
-            Boolean isMajor = isMajorHeading( item );
-            Keyword kw = Keyword.Factory.newInstance();
-            kw.setTerm( keyword );
-            kw.setIsMajorTopic( isMajor );
-            keywords.add( kw );
-        }
-        return keywords;
     }
 
     /**
@@ -358,109 +264,6 @@ public class PubMedXMLParser {
         }
 
         return compounds;
-    }
-
-    /**
-     * @param meshHeadings
-     * @param bibRef
-     * @throws TransformerException
-     * @throws IOException
-     */
-    private void processMESH( Node meshHeadings, BibliographicReference bibRef ) throws IOException {
-        NodeList childNodes = meshHeadings.getChildNodes();
-
-        for ( int i = 0; i < childNodes.getLength(); i++ ) {
-            Node meshNode = childNodes.item( i );
-            NodeList termNodes = meshNode.getChildNodes();
-            MedicalSubjectHeading vc = MedicalSubjectHeading.Factory.newInstance();
-
-            if ( termNodes.getLength() == 0 ) continue;
-
-            // these might just be a single Descriptor or a Descriptor with Qualifiers.
-            for ( int j = 0; j < termNodes.getLength(); j++ ) {
-
-                Node item = termNodes.item( j );
-                if ( !( item instanceof Element ) ) {
-                    continue;
-                }
-                Element descriptor = ( Element ) item;
-                if ( descriptor.getNodeName().equals( "DescriptorName" ) ) {
-                    String d = XMLUtils.getTextValue( descriptor );
-                    boolean dmajorB = isMajorHeading( descriptor );
-                    vc.setTerm( d );
-                    vc.setIsMajorTopic( dmajorB );
-                } else {
-                    MedicalSubjectHeading qual = MedicalSubjectHeading.Factory.newInstance();
-                    String q = XMLUtils.getTextValue( descriptor );
-                    boolean qmajorB = isMajorHeading( descriptor );
-                    qual.setIsMajorTopic( qmajorB );
-                    qual.setTerm( q );
-                    vc.getQualifiers().add( qual );
-                }
-
-            }
-
-            // OntologyTerm term = MeshService.find( d );
-            // if ( term == null ) {
-            // log.warn( "No MESH term found for: " + d );
-            // continue;
-            // }
-            // VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
-
-            bibRef.getMeshTerms().add( vc );
-        }
-    }
-
-    // /**
-    // * @param meshNode
-    // * @param term
-    // * @param vc
-    // * @throws TransformerException
-    // * @throws IOException
-    // */
-    // private void processQualifiers( Node meshNode, MedicalSubjectHeading vc ) throws TransformerException,
-    // IOException {
-    // NodeIterator qualifierIt = org.apache.xpath.XPathAPI.selectNodeIterator( meshNode, "//QualifierName" );
-    //
-    // Node qualifier = null;
-    // while ( ( qualifier = qualifierIt.nextNode() ) != null ) {
-    // String q = XMLUtils.getTextValue( ( Element ) qualifier );
-    //
-    // boolean qmajorB = isMajorHeading( qualifier );
-    //
-    // MedicalSubjectHeading qual = MedicalSubjectHeading.Factory.newInstance();
-    // qual.setIsMajorTopic( qmajorB );
-    // qual.setTerm( q );
-    //
-    // // OntologyTerm qualTerm = MeshService.find( q );
-    // //
-    // // if ( qualTerm == null ) {
-    // // log.warn( "No MESH term found for: " + q );
-    // // continue;
-    // // }
-    // //
-    // // CharacteristicStatement cs = MeshService.getQualifierStatement( term, qualTerm, qmajorB );
-    // // VocabCharacteristicBuilder.addStatement( vc, cs );
-    // vc.getQualifiers().add( qual );
-    // }
-    // }
-
-    private boolean isMajorHeading( Node descriptor ) {
-        Attr dmajorTopic = ( Attr ) descriptor.getAttributes().getNamedItem( "MajorTopicYN" );
-        return dmajorTopic.getValue().equals( "Y" );
-    }
-
-    /**
-     * Get the date this was put in pubmed.
-     * 
-     * @param dateNode
-     * @return
-     * @throws IOException
-     */
-    private Date extractPublicationDate( Node dateNode ) throws IOException {
-        Date d = extractJournalIssueDate( dateNode );
-        // if ( d == null ) d = extractPubmedPubdate( dateNode );
-        return d;
     }
 
     /**
@@ -536,71 +339,312 @@ public class PubMedXMLParser {
         }
     }
 
-    private final String[] formats = new String[] { "MMM dd, yyyy" };
+    /**
+     * @param keywordNode
+     * @return
+     * @throws TransformerException
+     * @throws IOException
+     */
+    private Collection<Keyword> extractKeywords( Node keywordNode ) throws IOException {
+        Collection<Keyword> keywords = new HashSet<Keyword>();
+        NodeList childNodes = keywordNode.getChildNodes();
+        for ( int i = 0; i < childNodes.getLength(); i++ ) {
+            Node item = childNodes.item( i );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            Element el = ( Element ) item;
+            String keyword = XMLUtils.getTextValue( el );
+            Boolean isMajor = isMajorHeading( item );
+            Keyword kw = Keyword.Factory.newInstance();
+            kw.setTerm( keyword );
+            kw.setIsMajorTopic( isMajor );
+            keywords.add( kw );
+        }
+        return keywords;
+    }
 
-    // /**
-    // * This is a fallback that should not get used.
-    // *
-    // * @param article
-    // * @return
-    // * @throws TransformerException
-    // * @throws IOException
-    // * @deprecated
-    // */
-    // private Date extractPubmedPubdate( Node dateNode ) IOException {
-    // NodeList dateList = org.apache.xpath.XPathAPI.selectNodeList( article, "/descendant::"
-    // + PUBMED_PUB_DATE_ELEMENT );
-    // int year = 0;
-    // int month = 0;
-    // int day = 0;
-    // int hour = 0;
-    // int minute = 0;
-    //
-    // boolean found = false;
-    // for ( int i = 0; i < dateList.getLength(); i++ ) {
-    // Node item = dateList.item( i );
-    //
-    // if ( item instanceof Element ) {
-    // Element ele = ( Element ) item;
-    // if ( ele.hasAttribute( PUB_STATUS_ELEMENT ) && ele.getAttribute( PUB_STATUS_ELEMENT ).equals( "pubmed" ) ) {
-    //
-    // NodeList dateNodes = ele.getChildNodes();
-    //
-    // for ( int j = 0; j < dateNodes.getLength(); j++ ) {
-    // Node dateitem = dateNodes.item( j );
-    //
-    // if ( dateitem instanceof Element ) {
-    // Element elem = ( Element ) dateitem;
-    //
-    // int num = Integer.parseInt( XMLUtils.getTextValue( elem ) );
-    //
-    // if ( elem.getTagName().equals( "Year" ) ) {
-    // year = num;
-    // } else if ( elem.getTagName().equals( "Month" ) ) {
-    // month = num - 1; // pubmed dates appear to be numbered from 1.
-    // } else if ( elem.getTagName().equals( "Day" ) ) {
-    // day = num;
-    // } else if ( elem.getTagName().equals( "Hour" ) ) {
-    // hour = num;
-    // } else if ( elem.getTagName().equals( "Minute" ) ) {
-    // minute = num;
-    // } else {
-    // assert false : "What are we doing here!";
-    // }
-    // }
-    // }
-    //
-    // found = true;
-    //
-    // }
-    // }
-    // }
-    //
-    // if ( !found ) return null;
-    // Calendar c = Calendar.getInstance();
-    // c.set( year, month, day, hour, minute );
-    // Date d = c.getTime();
-    // return d;
-    // }
+    /**
+     * Get the date this was put in pubmed.
+     * 
+     * @param dateNode
+     * @return
+     * @throws IOException
+     */
+    private Date extractPublicationDate( Node dateNode ) throws IOException {
+        Date d = extractJournalIssueDate( dateNode );
+        // if ( d == null ) d = extractPubmedPubdate( dateNode );
+        return d;
+    }
+
+    /**
+     * @param article
+     * @return
+     * @throws TransformerException
+     * @throws IOException
+     */
+    private Collection<PublicationType> extractPublicationTypes( Node pubtypeList ) throws IOException {
+        Collection<PublicationType> publicationTypes = new HashSet<PublicationType>();
+        NodeList childNodes = pubtypeList.getChildNodes();
+        for ( int i = 0; i < childNodes.getLength(); i++ ) {
+            Node item = childNodes.item( i );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String type = XMLUtils.getTextValue( ( Element ) item );
+            PublicationType pt = PublicationType.Factory.newInstance();
+            pt.setType( type );
+            publicationTypes.add( pt );
+        }
+        return publicationTypes;
+    }
+
+    private boolean isMajorHeading( Node descriptor ) {
+        Attr dmajorTopic = ( Attr ) descriptor.getAttributes().getNamedItem( "MajorTopicYN" );
+        return dmajorTopic.getValue().equals( "Y" );
+    }
+
+    /**
+     * @param articles
+     * @return
+     */
+    private Collection<BibliographicReference> parseBookArticles( NodeList articles ) throws IOException {
+        Collection<BibliographicReference> result = new HashSet<BibliographicReference>();
+        int i = 0;
+        for ( ; i < articles.getLength(); i++ ) {
+            BibliographicReference bibRef = BibliographicReference.Factory.newInstance();
+            Node record = articles.item( i );
+
+            processBookRecord( bibRef, record );
+
+            result.add( bibRef );
+
+            if ( i > 0 && i % 1000 == 0 ) {
+                log.info( "Processed " + i + " books" );
+            }
+        }
+        log.info( "Processed " + i + " books" );
+        return result;
+    }
+
+    private void processAccession( BibliographicReference bibRef, Node record ) throws IOException {
+        String accession = XMLUtils.getTextValue( ( Element ) record );
+        DatabaseEntry dbEntry = DatabaseEntry.Factory.newInstance();
+        dbEntry.setAccession( accession );
+        ExternalDatabase exDb = ExternalDatabase.Factory.newInstance();
+        exDb.setName( PUB_MED_EXTERNAL_DB_NAME );
+        dbEntry.setExternalDatabase( exDb );
+        bibRef.setPubAccession( dbEntry );
+    }
+
+    private Node processArticle( BibliographicReference bibRef, Node article ) throws IOException {
+        NodeList childNodes = article.getChildNodes();
+        Node journal = null;
+        for ( int j = 0; j < childNodes.getLength(); j++ ) {
+            Node item = childNodes.item( j );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String name = item.getNodeName();
+            if ( name.equals( "ArticleTitle" ) ) {
+                bibRef.setTitle( XMLUtils.getTextValue( ( Element ) item ) );
+            } else if ( name.equals( "Journal" ) ) {
+                journal = item;
+            } else if ( name.equals( "AuthorList" ) ) {
+                bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
+            } else if ( name.equals( "Pagination" ) ) {
+                bibRef.setPages( XMLUtils.extractOneChild( item, "MedlinePgn" ) );
+            } else if ( name.equals( "Abstract" ) ) {
+                bibRef.setAbstractText( XMLUtils.extractOneChild( item, "AbstractText" ) );
+            } else if ( name.equals( "PublicationTypeList" ) ) {
+                bibRef.setPublicationTypes( extractPublicationTypes( item ) );
+            }
+        }
+        return journal;
+    }
+
+    private void processBookInfo( BibliographicReference bibRef, Node article ) throws IOException {
+        NodeList childNodes = article.getChildNodes();
+
+        for ( int j = 0; j < childNodes.getLength(); j++ ) {
+            Node item = childNodes.item( j );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String name = item.getNodeName();
+            if ( name.equals( "Publisher" ) ) {
+                extractPublisher( bibRef, item );
+            } else if ( name.equals( "PubDate" ) ) {
+                extractBookPublicationYear( bibRef, item );
+            } else if ( name.equals( "AuthorList" ) ) {
+                bibRef.setEditor( extractAuthorList( item.getChildNodes() ) );
+            } else if ( name.equals( "BookTitle" ) ) {
+                bibRef.setPublication( XMLUtils.getTextValue( ( Element ) item ) );
+            }
+        }
+    }
+
+    /**
+     * Fill in information about the book: Publisher, Editor(s), Publication year
+     * 
+     * @param bibRef
+     * @param record
+     * @return
+     * @throws IOException
+     */
+    private void processBookRecord( BibliographicReference bibRef, Node record ) throws IOException {
+
+        NodeList recordNodes = record.getChildNodes();
+        for ( int p = 0; p < recordNodes.getLength(); p++ ) {
+            Node item = recordNodes.item( p );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+
+            String name = item.getNodeName();
+            if ( name.equals( "ArticleTitle" ) ) {
+                // this is the title of the chapter.
+                bibRef.setTitle( StringUtils.strip( XMLUtils.getTextValue( ( Element ) item ) ) );
+            } else if ( name.equals( "Book" ) ) {
+                processBookInfo( bibRef, item );
+            } else if ( name.equals( "AuthorList" ) ) {
+                bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
+            } else if ( name.equals( "Abstract" ) ) {
+                bibRef.setAbstractText( "" );
+                NodeList abstractTextSections = item.getChildNodes();
+                for ( int q = 0; q < abstractTextSections.getLength(); q++ ) {
+                    Node jitem = abstractTextSections.item( q );
+                    if ( !( jitem instanceof Element ) ) {
+                        continue;
+                    }
+                    if ( jitem.getNodeName().equals( "AbstractText" ) ) {
+                        bibRef.setAbstractText( bibRef.getAbstractText()
+                                + ( XMLUtils.getTextValue( ( Element ) jitem ) ) + " " );
+                    }
+
+                    bibRef.setAbstractText( bibRef.getAbstractText().trim() );
+                }
+            } else if ( name.equals( "PMID" ) ) {
+                processAccession( bibRef, item );
+            }
+        }
+
+    }
+
+    private NodeList processJournalInfo( BibliographicReference bibRef, Node journal ) throws IOException {
+        NodeList journalNodes = journal.getChildNodes();
+        for ( int j = 0; j < journalNodes.getLength(); j++ ) {
+            Node item = journalNodes.item( j );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String name = item.getNodeName();
+            if ( name.equals( "JournalIssue" ) ) {
+                NodeList journalIssueNodes = item.getChildNodes();
+                for ( int k = 0; k < journalIssueNodes.getLength(); k++ ) {
+                    Node jitem = journalIssueNodes.item( k );
+                    if ( !( jitem instanceof Element ) ) {
+                        continue;
+                    }
+                    String jname = jitem.getNodeName();
+                    if ( jname.equals( "Volume" ) ) {
+                        bibRef.setVolume( XMLUtils.getTextValue( ( Element ) jitem ) );
+                    } else if ( jname.equals( "Issue" ) ) {
+                        bibRef.setIssue( XMLUtils.getTextValue( ( Element ) jitem ) );
+                    } else if ( jname.equals( "PubDate" ) ) {
+                        bibRef.setPublicationDate( extractPublicationDate( jitem ) );
+                    }
+                }
+            }
+        }
+        return journalNodes;
+    }
+
+    /**
+     * @param meshHeadings
+     * @param bibRef
+     * @throws TransformerException
+     * @throws IOException
+     */
+    private void processMESH( Node meshHeadings, BibliographicReference bibRef ) throws IOException {
+        NodeList childNodes = meshHeadings.getChildNodes();
+
+        for ( int i = 0; i < childNodes.getLength(); i++ ) {
+            Node meshNode = childNodes.item( i );
+            NodeList termNodes = meshNode.getChildNodes();
+            MedicalSubjectHeading vc = MedicalSubjectHeading.Factory.newInstance();
+
+            if ( termNodes.getLength() == 0 ) continue;
+
+            // these might just be a single Descriptor or a Descriptor with Qualifiers.
+            for ( int j = 0; j < termNodes.getLength(); j++ ) {
+
+                Node item = termNodes.item( j );
+                if ( !( item instanceof Element ) ) {
+                    continue;
+                }
+                Element descriptor = ( Element ) item;
+                if ( descriptor.getNodeName().equals( "DescriptorName" ) ) {
+                    String d = XMLUtils.getTextValue( descriptor );
+                    boolean dmajorB = isMajorHeading( descriptor );
+                    vc.setTerm( d );
+                    vc.setIsMajorTopic( dmajorB );
+                } else {
+                    MedicalSubjectHeading qual = MedicalSubjectHeading.Factory.newInstance();
+                    String q = XMLUtils.getTextValue( descriptor );
+                    boolean qmajorB = isMajorHeading( descriptor );
+                    qual.setIsMajorTopic( qmajorB );
+                    qual.setTerm( q );
+                    vc.getQualifiers().add( qual );
+                }
+
+            }
+
+            // OntologyTerm term = MeshService.find( d );
+            // if ( term == null ) {
+            // log.warn( "No MESH term found for: " + d );
+            // continue;
+            // }
+            // VocabCharacteristic vc = MeshService.getCharacteristic( term, dmajorB );
+
+            bibRef.getMeshTerms().add( vc );
+        }
+    }
+
+    private Node processRecord( BibliographicReference bibRef, Node record ) throws IOException {
+        Node article = null;
+
+        NodeList recordNodes = record.getChildNodes();
+        for ( int p = 0; p < recordNodes.getLength(); p++ ) {
+            Node item = recordNodes.item( p );
+            if ( !( item instanceof Element ) ) {
+                continue;
+            }
+            String name = item.getNodeName();
+            if ( name.equals( "Article" ) ) {
+                article = item;
+            } else if ( name.equals( "ChemicalList" ) ) {
+                bibRef.setChemicals( extractChemicals( item ) );
+            } else if ( name.equals( "MeshHeadingList" ) ) {
+                processMESH( item, bibRef );
+            } else if ( name.equals( "KeywordList" ) ) {
+                bibRef.setKeywords( extractKeywords( item ) );
+            } else if ( name.equals( "MedlineJournalInfo" ) ) {
+                NodeList jNodes = item.getChildNodes();
+                for ( int q = 0; q < jNodes.getLength(); q++ ) {
+                    Node jitem = jNodes.item( q );
+                    if ( !( jitem instanceof Element ) ) {
+                        continue;
+                    }
+                    if ( jitem.getNodeName().equals( "MedlineTA" ) ) {
+                        bibRef.setPublication( XMLUtils.getTextValue( ( Element ) jitem ) );
+                    }
+                }
+            } else if ( name.equals( "PMID" ) ) {
+                processAccession( bibRef, item );
+            }
+        }
+        return article;
+    }
 
 }

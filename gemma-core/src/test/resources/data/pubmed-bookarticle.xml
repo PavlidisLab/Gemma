@@ -1,0 +1,176 @@
+<?xml version="1.0"?>
+<!DOCTYPE PubmedArticleSet PUBLIC "-//NLM//DTD PubMedArticle, 1st January 2011//EN" "http://www.ncbi.nlm.nih.gov/entrez/query/DTD/pubmed_110101.dtd">
+<PubmedArticleSet>
+	<PubmedBookArticle>
+		<BookDocument>
+			<PMID Version="1">20301315</PMID>
+			<ArticleIdList>
+				<ArticleId IdType="bookaccession">NBK1136</ArticleId>
+			</ArticleIdList>
+			<Book>
+				<Publisher>
+					<PublisherName>University of Washington, Seattle</PublisherName>
+					<PublisherLocation>Seattle (WA)</PublisherLocation>
+				</Publisher>
+				<BookTitle book="gene">GeneReviews</BookTitle>
+				<PubDate>
+					<Year>1993</Year>
+				</PubDate>
+				<BeginningDate>
+					<Year>1993</Year>
+				</BeginningDate>
+				<AuthorList Type="editors">
+					<Author>
+						<LastName>Pagon</LastName>
+						<ForeName>Roberta A</ForeName>
+						<Initials>RA</Initials>
+					</Author>
+					<Author>
+						<LastName>Bird</LastName>
+						<ForeName>Thomas D</ForeName>
+						<Initials>TD</Initials>
+					</Author>
+					<Author>
+						<LastName>Dolan</LastName>
+						<ForeName>Cynthia R</ForeName>
+						<Initials>CR</Initials>
+					</Author>
+					<Author>
+						<LastName>Stephens</LastName>
+						<ForeName>Karen</ForeName>
+						<Initials>K</Initials>
+					</Author>
+				</AuthorList>
+				<Medium>Internet</Medium>
+			</Book>
+			<ArticleTitle book="gene" part="gan">Giant Axonal Neuropathy </ArticleTitle>
+			<Language>eng</Language>
+			<AuthorList Type="authors">
+				<Author>
+					<LastName>Kuhlenbäumer</LastName>
+					<ForeName>Gregor</ForeName>
+					<Initials>G</Initials>
+				</Author>
+				<Author>
+					<LastName>Timmerman</LastName>
+					<ForeName>Vincent</ForeName>
+					<Initials>V</Initials>
+				</Author>
+			</AuthorList>
+			<Abstract>
+
+				<AbstractText Label="DISEASE CHARACTERISTICS">Giant axonal neuropathy (GAN) is characterized by a severe early-onset peripheral motor and sensory neuropathy, central nervous system involvement (intellectual disability, seizures, cerebellar signs, and pyramidal tract signs), and characteristic tightly curled hair. Most individuals become wheelchair dependent in the second decade of life and eventually bedridden with severe polyneuropathy, ataxia, and dementia. Death usually occurs in the third decade. </AbstractText>
+
+				<AbstractText Label="DIAGNOSIS/TESTING">The diagnosis of GAN is established by clinical findings including nerve conduction velocity (NCV), brain MRI, and peripheral nerve biopsy. The pathologic hallmark is so-called giant axons caused by the accumulation of neurofilaments. GAN is caused by mutations in GAN, encoding the protein gigaxonin. GAN is the only gene in which mutation is currently known to be associated with GAN; however, evidence exists for genetic heterogeneity. Molecular genetic testing of GAN is available.</AbstractText>
+
+				<AbstractText Label="MANAGEMENT">Treatment of manifestations: A team including (pediatric) neurologists, orthopedic surgeons, physiotherapists, psychologists, and speech and occupational therapists is recommended; goals are to optimize intellectual and physical development through speech therapy to improve communication, occupational therapy to maximize independence in activities of daily living, physiotherapy to preserve mobility as long as possible, and early intervention and special education; orthopedic surgery as needed for foot deformities; ophthalmologic treatment as needed for diplopia. Prevention of secondary complications: For wheelchair-bound or bedridden individuals, prophylaxis and frequent examination for decubitus ulcers. Surveillance: At least yearly reassessment of intellectual abilities, peripheral neuropathy, ataxia, spasticity, and cranial nerve dysfunction. </AbstractText>
+
+				<AbstractText Label="GENETIC COUNSELING">GAN is inherited in an autosomal recessive manner. At conception, each sib of an affected individual has a 25% chance of being affected, a 50% chance of being an asymptomatic carrier, and a 25% chance of being unaffected and not a carrier. Once an at-risk individual is known to be unaffected, the chance of his/her being a carrier is 2/3. Individuals with GAN usually do not reproduce. Prenatal testing may be available through laboratories offering custom prenatal testing if the disease-causing mutations in a family are known.</AbstractText>
+
+				<CopyrightInformation>Copyright © 1993-2011, University of
+					Washington, Seattle. All rights reserved.</CopyrightInformation>
+
+			</Abstract>
+
+			<Sections>
+
+				<Section>
+					<SectionTitle book="gene" part="gan" sec="gan.Summary">Summary</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan" sec="gan.Diagnosis">Diagnosis</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan"
+						sec="gan.Clinical_Description">Clinical Description</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan"
+						sec="gan.Differential_Diagnosis">Differential Diagnosis</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan" sec="gan.Management">Management</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan"
+						sec="gan.Genetic_Counseling">Genetic Counseling</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan"
+						sec="gan.Molecular_Genetics">Molecular Genetics</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan" sec="gan.Resources">Resources</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan" sec="gan.References">References</SectionTitle>
+				</Section>
+
+				<Section>
+					<SectionTitle book="gene" part="gan" sec="gan.Chapter_Notes">Chapter Notes</SectionTitle>
+				</Section>
+
+			</Sections>
+
+			<ContributionDate>
+				<Year>2003</Year>
+				<Month>01</Month>
+				<Day>09</Day>
+			</ContributionDate>
+
+			<DateRevised>
+				<Year>2009</Year>
+				<Month>08</Month>
+				<Day>11</Day>
+			</DateRevised>
+
+		</BookDocument>
+
+		<PubmedBookData>
+
+			<History>
+
+				<PubMedPubDate PubStatus="pubmed">
+					<Year>2010</Year>
+					<Month>3</Month>
+					<Day>20</Day>
+					<Hour>6</Hour>
+					<Minute>0</Minute>
+				</PubMedPubDate>
+
+				<PubMedPubDate PubStatus="medline">
+					<Year>2010</Year>
+					<Month>3</Month>
+					<Day>20</Day>
+					<Hour>6</Hour>
+					<Minute>0</Minute>
+				</PubMedPubDate>
+
+				<PubMedPubDate PubStatus="entrez">
+					<Year>2010</Year>
+					<Month>3</Month>
+					<Day>20</Day>
+					<Hour>6</Hour>
+					<Minute>0</Minute>
+				</PubMedPubDate>
+
+			</History>
+
+			<PublicationStatus>ppublish</PublicationStatus>
+
+			<ArticleIdList>
+				<ArticleId IdType="pubmed">20301315</ArticleId>
+			</ArticleIdList>
+
+		</PubmedBookData>
+	</PubmedBookArticle>
+</PubmedArticleSet>
+
