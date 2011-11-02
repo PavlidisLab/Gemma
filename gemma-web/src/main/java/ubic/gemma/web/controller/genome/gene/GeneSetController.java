@@ -95,6 +95,9 @@ public class GeneSetController {
             if ( StringUtils.isBlank( geneSetVo.getName() ) ) {
                 throw new IllegalArgumentException( "Gene group name cannot be blank" );
             }
+            if ( geneSetVo.getGeneIds() == null || geneSetVo.getGeneIds().isEmpty() ) {
+                throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
+            }
 
             GeneSet gset = create( geneSetVo );
             results.add( new DatabaseBackedGeneSetValueObject( gset ) );
@@ -515,36 +518,38 @@ public class GeneSetController {
 
             Collection<Long> geneIds = geneSetVo.getGeneIds();
 
-            if ( !geneIds.isEmpty() ) {
-                Collection<Gene> genes = geneService.loadMultiple( geneIds );
+            if ( geneIds.isEmpty() ) {
+                throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
 
-                if ( genes.isEmpty() ) {
-                    throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
-                            + " provided)" );
+            }
+            Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+            if ( genes.isEmpty() ) {
+                throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
+                        + " provided)" );
+            }
+            if ( genes.size() < geneIds.size() ) {
+                throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
+                        + " out of " + geneIds.size() + " provided)" );
+            }
+
+            assert genes.size() == geneIds.size();
+
+            for ( Gene g : genes ) {
+
+                GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+                // Gene not in list create memember and add it.
+                if ( gsm == null ) {
+                    GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                    gmember.setGene( g );
+                    gmember.setScore( DEFAULT_SCORE );
+                    gset.getMembers().add( gmember );
+                    updatedGenelist.add( gmember );
+                } else {
+                    updatedGenelist.add( gsm );
                 }
-                if ( genes.size() < geneIds.size() ) {
-                    throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
-                            + " out of " + geneIds.size() + " provided)" );
-                }
 
-                assert genes.size() == geneIds.size();
-
-                for ( Gene g : genes ) {
-
-                    GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
-
-                    // Gene not in list create memember and add it.
-                    if ( gsm == null ) {
-                        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-                        gmember.setGene( g );
-                        gmember.setScore( DEFAULT_SCORE );
-                        gset.getMembers().add( gmember );
-                        updatedGenelist.add( gmember );
-                    } else {
-                        updatedGenelist.add( gsm );
-                    }
-
-                }
             }
 
             gset.getMembers().clear();
@@ -568,52 +573,54 @@ public class GeneSetController {
      * @param groupId id of the gene set being updated
      * @param geneIds
      */
-    public String updateMembers( Long groupId, Collection<Long> geneIds) {
+    public String updateMembers( Long groupId, Collection<Long> geneIds ) {
+
+        String msg = null;
+
+        GeneSet gset = geneSetService.load( groupId );
+        if ( gset == null ) {
+            throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+        }
+        Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+
+        if ( geneIds.isEmpty() ) {
+            throw new IllegalArgumentException( "No gene ids provided. Cannot save an empty set." );
+        }
         
-            String msg = null;
-            
-            GeneSet gset = geneSetService.load( groupId );
-            if ( gset == null ) {
-                throw new IllegalArgumentException( "No gene set with id=" + groupId + " could be loaded" );
+        Collection<Gene> genes = geneService.loadMultiple( geneIds );
+
+        if ( genes.isEmpty() ) {
+            throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
+                    + " provided)" );
+        }
+        if ( genes.size() < geneIds.size() ) {
+            throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
+                    + " out of " + geneIds.size() + " provided)" );
+        }
+
+        assert genes.size() == geneIds.size();
+
+        for ( Gene g : genes ) {
+
+            GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
+
+            // Gene not in list create memember and add it.
+            if ( gsm == null ) {
+                GeneSetMember gmember = GeneSetMember.Factory.newInstance();
+                gmember.setGene( g );
+                gmember.setScore( DEFAULT_SCORE );
+                gset.getMembers().add( gmember );
+                updatedGenelist.add( gmember );
+            } else {
+                updatedGenelist.add( gsm );
             }
-            Collection<GeneSetMember> updatedGenelist = new HashSet<GeneSetMember>();
+        }
 
-            if ( !geneIds.isEmpty() ) {
-                Collection<Gene> genes = geneService.loadMultiple( geneIds );
+        gset.getMembers().clear();
+        gset.getMembers().addAll( updatedGenelist );
 
-                if ( genes.isEmpty() ) {
-                    throw new IllegalArgumentException( "None of the gene ids were valid (out of " + geneIds.size()
-                            + " provided)" );
-                }
-                if ( genes.size() < geneIds.size() ) {
-                    throw new IllegalArgumentException( "Some of the gene ids were invalid: only found " + genes.size()
-                            + " out of " + geneIds.size() + " provided)" );
-                }
+        geneSetService.update( gset );
 
-                assert genes.size() == geneIds.size();
-
-                for ( Gene g : genes ) {
-
-                    GeneSetMember gsm = GeneSetImpl.containsGene( g, gset );
-
-                    // Gene not in list create memember and add it.
-                    if ( gsm == null ) {
-                        GeneSetMember gmember = GeneSetMember.Factory.newInstance();
-                        gmember.setGene( g );
-                        gmember.setScore( DEFAULT_SCORE );
-                        gset.getMembers().add( gmember );
-                        updatedGenelist.add( gmember );
-                    } else {
-                        updatedGenelist.add( gsm );
-                    }
-                }
-            }
-
-            gset.getMembers().clear();
-            gset.getMembers().addAll( updatedGenelist );
-
-            geneSetService.update( gset );
-            
         return msg;
 
     }

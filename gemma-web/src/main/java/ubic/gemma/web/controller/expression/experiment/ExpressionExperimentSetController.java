@@ -87,6 +87,10 @@ public class ExpressionExperimentSetController extends BaseController {
             Collection<ExpressionExperimentSetValueObject> entities ) {
         Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
         for ( ExpressionExperimentSetValueObject ees : entities ) {
+
+            if ( ees.getExpressionExperimentIds() == null || ees.getExpressionExperimentIds() .isEmpty() ) {
+                throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
+            }
             result.add( this.create( ees ) );
         }
         return result;
@@ -397,6 +401,10 @@ public class ExpressionExperimentSetController extends BaseController {
     public Collection<DatabaseBackedExpressionExperimentSetValueObject> update(
             Collection<DatabaseBackedExpressionExperimentSetValueObject> entities ) {
         for ( DatabaseBackedExpressionExperimentSetValueObject ees : entities ) {
+
+            if ( ees.getExpressionExperimentIds() == null || ees.getExpressionExperimentIds() .isEmpty() ) {
+                throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
+            }
             update( ees );
         }
         return entities;
@@ -419,38 +427,40 @@ public class ExpressionExperimentSetController extends BaseController {
         }
         Collection<ExpressionExperiment> updatedExperimentlist = new HashSet<ExpressionExperiment>();
 
-        if ( !eeIds.isEmpty() ) {
-            Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
+        if ( eeIds.isEmpty() ) {
+            throw new IllegalArgumentException( "No expression experiment ids provided. Cannot save an empty set." );
 
-            if ( experiments.isEmpty() ) {
-                throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
-                        + " provided)" );
-            }
-            if ( experiments.size() < eeIds.size() ) {
-                throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found "
-                        + experiments.size() + " out of " + eeIds.size() + " provided)" );
-            }
+        }
+        Collection<ExpressionExperiment> experiments = expressionExperimentService.loadMultiple( eeIds );
 
-            assert experiments.size() == eeIds.size();
-            boolean exists = false;
-            for ( ExpressionExperiment experiment : experiments ) {
+        if ( experiments.isEmpty() ) {
+            throw new IllegalArgumentException( "None of the experiment ids were valid (out of " + eeIds.size()
+                    + " provided)" );
+        }
+        if ( experiments.size() < eeIds.size() ) {
+            throw new IllegalArgumentException( "Some of the experiment ids were invalid: only found "
+                    + experiments.size() + " out of " + eeIds.size() + " provided)" );
+        }
 
-                for ( BioAssaySet bas : eeSet.getExperiments() ) {
-                    if ( bas.getId().equals( experiment.getId() ) ) {
-                        exists = true;
-                        break;
-                    }
+        assert experiments.size() == eeIds.size();
+        boolean exists = false;
+        for ( ExpressionExperiment experiment : experiments ) {
+
+            for ( BioAssaySet bas : eeSet.getExperiments() ) {
+                if ( bas.getId().equals( experiment.getId() ) ) {
+                    exists = true;
+                    break;
                 }
-
-                if ( !exists ) {
-                    eeSet.getExperiments().add( experiment );
-                    updatedExperimentlist.add( experiment );
-                } else {
-                    updatedExperimentlist.add( experiment );
-                }
-
-                exists = false;
             }
+
+            if ( !exists ) {
+                eeSet.getExperiments().add( experiment );
+                updatedExperimentlist.add( experiment );
+            } else {
+                updatedExperimentlist.add( experiment );
+            }
+
+            exists = false;
         }
 
         eeSet.getExperiments().clear();

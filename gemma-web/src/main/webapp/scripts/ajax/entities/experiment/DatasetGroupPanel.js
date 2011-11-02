@@ -275,11 +275,23 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			 * Handler.
 			 */
 			commit : function() {
-				/*
-				 * FIXME: check if groups have >0 experiments added to them.
-				 * 
-				 */
 				this.ownerCt.loadMask.show();
+				var recordsToSave = this.ownerCt.getStore().getModifiedRecords();
+				var i, rec;
+				for(i = 0; recordsToSave.length > i; i++){
+					rec = recordsToSave[i];
+					if(!rec.get("expressionExperimentIds") || rec.get("expressionExperimentIds").length === 0){
+						Ext.Msg.show({
+						   title:'Cannot save set "'+rec.get("name")+'"',
+						   msg: 'You cannot save an empty set. No changes have been saved.<br>'+
+						   		' Add experiments to set "'+rec.get("name")+'" or delete it.',
+						   buttons: Ext.Msg.OK,
+						   icon: Ext.MessageBox.WARNING
+						});
+						this.ownerCt.loadMask.hide();
+						return;
+					}
+				}
 				this.ownerCt.getStore().save();
 			},
 
@@ -578,7 +590,8 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 																		id : 'new-eesetTaxon',
 																		isDisplayTaxonWithDatasets : true,
 																		name : 'newEesetTaxon',
-																		fieldLabel : 'Taxon'
+																		fieldLabel : 'Taxon',
+																		required:true
 																	}), new Ext.form.TextField({
 																		fieldLabel : 'Name',
 																		allowBlank : false,

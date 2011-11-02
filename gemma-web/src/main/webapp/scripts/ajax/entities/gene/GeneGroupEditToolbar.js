@@ -59,7 +59,8 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 										taxonName : args.taxon.commonName,
 										// id : -1, // maybe not important.
 										currentUserHasWritePermission : true,
-										geneIds : []
+										geneIds : [],
+										size: 0
 									});
 
 							newRec.markDirty();
@@ -319,6 +320,22 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			 */
 			commit : function() {
 				this.ownerCt.loadMask.show();
+				var recordsToSave = this.ownerCt.getStore().getModifiedRecords();
+				var i, rec;
+				for(i = 0; recordsToSave.length > i; i++){
+					rec = recordsToSave[i];
+					if(!rec.get("geneIds") || rec.get("geneIds").length === 0){
+						Ext.Msg.show({
+						   title:'Cannot save '+rec.get("name"),
+						   msg: 'You cannot save an empty set. No changes have been saved.'+
+						   		' Add genes to set "'+rec.get("name")+'" or delete it.',
+						   buttons: Ext.Msg.OK,
+						   icon: Ext.MessageBox.WARNING
+						});
+						this.ownerCt.loadMask.hide();
+						return;
+					}
+				}
 				this.ownerCt.getStore().save();
 			},
 

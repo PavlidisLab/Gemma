@@ -7,7 +7,7 @@ Ext.namespace('Gemma');
  * Define selectedExpressionExperimentValueObject in config or with setSelectedExpressionExperimentValueObject(eesvo) to display an experiment set.
  * Use loadExperimentSet(eesvo) to display an experiment set after initialisation. 
  */
-Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
+Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 	/*
 	 * Do not set header : true here - it breaks it.
@@ -152,7 +152,6 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	initComponent : function() {
-
 		
 		var extraButtons = [];
 		if(this.allowRemovals){
@@ -478,8 +477,16 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	 * When user clicks done, just save to session
 	 */
 	done : function() {
-
+				
+		// check if user is trying to save an empty set
+		if(this.getStore().getRange() && this.getStore().getRange().length === 0){
+			Ext.Msg.alert('Cannot use empty set', 'You are trying to use an empty set. '+
+				'Please add some experiments and try again.');
+			return;
+		}
+		
 		this.createDetails();
+
 		this.saveToSession();
 	},
 		
@@ -615,11 +622,18 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		
 	},
 	loggedInSaveHandler : function () {
+				
+		// check if user is trying to save an empty set
+		if(this.getStore().getRange() && this.getStore().getRange().length === 0){
+			Ext.Msg.alert('Cannot save empty set', 'You are trying to save an empty set. '+
+				'Please add some experiments and try again.');
+			return;
+		}
 		
 		// get name and description set up
 		this.createDetails();
-		
-		// check if user is editing a non-existant or session-bound group
+
+		// check if user is editing a non-existent or session-bound group
 		
 		// check if group is db-backed and whether current user has editing priveleges
 		if(this.getSelectedExperimentSet() ){

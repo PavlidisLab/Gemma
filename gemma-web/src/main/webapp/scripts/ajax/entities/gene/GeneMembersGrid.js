@@ -390,7 +390,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	// end of config options
 
 	initComponent : function() {
-		
+
 		var extraButtons = [];
 		if(this.allowRemovals){
 			var removeSelectedBtn = new Ext.Button({
@@ -702,7 +702,13 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 	 * When user clicks done, just save to session
 	 */
 	done : function() {
-		
+						
+		// check if user is trying to save an empty set
+		if(this.getStore().getRange() && this.getStore().getRange().length === 0){
+			Ext.Msg.alert('Cannot use empty set', 'You are trying to use an empty set. '+
+				'Please add some genes and try again.');
+			return;
+		}
 		this.createDetails();
 		this.createInSession();
 	},
@@ -835,6 +841,13 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
 	},
 	loggedInSaveHandler : function () {
+				
+		// check if user is trying to save an empty set
+		if(this.getStore().getRange() && this.getStore().getRange().length === 0){
+			Ext.Msg.alert('Cannot save empty set', 'You are trying to save an empty set. '+
+				'Please add some genes and try again.');
+			return;
+		}
 		
 		// get name and description set up
 		this.createDetails();

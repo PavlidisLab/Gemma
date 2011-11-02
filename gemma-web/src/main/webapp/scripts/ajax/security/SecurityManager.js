@@ -183,6 +183,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 					title : "Security for: " + Ext.util.Format.ellipsis(securityInfo.entityName, 70, true),
 					minimizable : false,
 					maximizable : false,
+					width:widgetWidth + 30, // needed for chrome
 					modal : true,
 					bodyStyle : 'padding:5px 5px 0;background-color:white',
 					stateful : false,
@@ -230,7 +231,6 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 							securityInfo.groupsThatCanWrite = updatedGroupsThatCanWrite;
 							securityInfo.groupsThatCanRead = updatedGroupsThatCanRead;
 							
-				console.log(securityInfo);
 							SecurityController.updatePermission(securityInfo, {
 										callback : function(updatedInfo) {
 											sp.destroy();
