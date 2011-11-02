@@ -85,7 +85,7 @@ public class PubMedXMLParserTest extends TestCase {
 
             assertEquals( "Pagon, Roberta A; Bird, Thomas D; Dolan, Cynthia R; Stephens, Karen", br.getEditor() );
 
-            assertEquals( "Kuhlenbäumer, Gregor; Timmerman, Vincent", br.getAuthorList() );
+            assertEquals( "Kuhlenbaumer, Gregor; Timmerman, Vincent", br.getAuthorList() );
 
             assertEquals( "GeneReviews", br.getPublication() );
             assertEquals( "Giant Axonal Neuropathy", br.getTitle() );
