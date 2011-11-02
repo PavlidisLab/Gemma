@@ -18,11 +18,15 @@
  */
 package ubic.gemma.apps;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionBuilder;
@@ -72,11 +76,70 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
         addOption( arrayDesignOption );
 
+        Option eeFileListOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Array Design list file" )
+                .withDescription( "File with list of short names or IDs of designs (one per line; use instead of '-e')" )
+                .withLongOpt( "eeListfile" ).create( 'f' );
+        addOption( eeFileListOption );
+
         addDateOption();
 
         addAutoOption();
 
     }
+
+    /**
+     * Load expression experiments based on a list of short names or IDs in a file.
+     * 
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private Set<ArrayDesign> readListFile( String fileName ) throws IOException {
+        Set<ArrayDesign> ees = new HashSet<ArrayDesign>();
+        for ( String eeName : readListFileToStrings( fileName ) ) {
+            ArrayDesign ee = arrayDesignService.findByShortName( eeName );
+            if ( ee == null ) {
+
+                try {
+                    Long id = Long.parseLong( eeName );
+                    ee = arrayDesignService.load( id );
+                    if ( ee == null ) {
+                        log.error( "No ArrayDesign " + eeName + " found" );
+                        continue;
+                    }
+                } catch ( NumberFormatException e ) {
+                    log.error( "No ArrayDesign " + eeName + " found" );
+                    continue;
+
+                }
+
+            }
+            ees.add( ee );
+        }
+        return ees;
+    }
+
+    /**
+     * @param fileName
+     * @return
+     * @throws IOException
+     */
+    private Collection<String> readListFileToStrings( String fileName ) throws IOException {
+        Collection<String> eeNames = new HashSet<String>();
+        BufferedReader in = new BufferedReader( new FileReader( fileName ) );
+        while ( in.ready() ) {
+            String eeName = in.readLine().trim();
+            if ( eeName.startsWith( "#" ) ) {
+                continue;
+            }
+            eeNames.add( eeName );
+        }
+        return eeNames;
+    }
+
+    protected boolean allowSubsumedOrMerged = false;
 
     /**
      * @param arrayDesign
@@ -163,6 +226,14 @@ public abstract class ArrayDesignSequenceManipulatingCli extends AbstractSpringA
 
         if ( this.hasOption( 'a' ) ) {
             arraysFromCliList();
+        } else if ( hasOption( 'f' ) ) {
+            String experimentListFile = getOptionValue( 'f' );
+            log.info( "Reading arrayDesigns list from " + experimentListFile );
+            try {
+                this.arrayDesignsToProcess = readListFile( experimentListFile );
+            } catch ( IOException e ) {
+                throw new RuntimeException( e );
+            }
         }
 
         if ( hasOption( "mdate" ) ) {

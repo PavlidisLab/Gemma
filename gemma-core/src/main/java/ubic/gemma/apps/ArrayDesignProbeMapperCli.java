@@ -277,7 +277,7 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
             return;
         }
 
-        if ( isSubsumedOrMerged( design ) ) {
+        if ( !allowSubsumedOrMerged && isSubsumedOrMerged( design ) ) {
             log.warn( design + " is subsumed or merged into another design, it will not be run." );
             // not really an error, but nice to get notification.
             errorObjects.add( design + ": " + "Skipped because it is subsumed by or merged into another design." );
@@ -434,6 +434,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
 
         final Date skipIfLastRunLaterThan = getLimitingDate();
 
+        allowSubsumedOrMerged = true;
+
         if ( this.taxon != null && this.directAnnotationInputFileName == null && this.arrayDesignsToProcess.isEmpty() ) {
             log.warn( "*** Running mapping for all " + taxon.getCommonName() + " Array designs *** " );
         }
@@ -458,7 +460,8 @@ public class ArrayDesignProbeMapperCli extends ArrayDesignSequenceManipulatingCl
                         if ( !f.canRead() ) {
                             throw new IOException( "Cannot read from " + this.directAnnotationInputFileName );
                         }
-                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase, this.ncbiIds );
+                        arrayDesignProbeMapperService.processArrayDesign( arrayDesign, taxon, f, this.sourceDatabase,
+                                this.ncbiIds );
                         audit( arrayDesign, "Imported from " + f, new AnnotationBasedGeneMappingEventImpl() );
                     } catch ( IOException e ) {
                         return e;
