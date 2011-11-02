@@ -35,8 +35,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
 
@@ -371,15 +369,15 @@ public class GeneServiceImpl extends GeneServiceBase {
         return ( Collection<Gene> ) this.getGeneDao().load( ids );
     }
 
-    @Override
-    protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
-        return this.getGeneDao().loadPredictedGenes( taxon );
-    }
-
-    @Override
-    protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-        return this.getGeneDao().loadProbeAlignedRegions( taxon );
-    }
+    // @Override
+    // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
+    // return this.getGeneDao().loadPredictedGenes( taxon );
+    // }
+    //
+    // @Override
+    // protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
+    // return this.getGeneDao().loadProbeAlignedRegions( taxon );
+    // }
 
     /*
      * (non-Javadoc)

@@ -16,8 +16,8 @@ public class MultipleCoexpressionCollectionValueObject {
     // private Map<Gene, CoexpressionCollectionValueObject> queries;
     private Collection<Gene> queryGenes;
     private MultipleCoexpressionTypeValueObject geneCoexpressionData;
-    private MultipleCoexpressionTypeValueObject predictedCoexpressionData;
-    private MultipleCoexpressionTypeValueObject alignedCoexpressionData;
+//    private MultipleCoexpressionTypeValueObject predictedCoexpressionData;
+//    private MultipleCoexpressionTypeValueObject alignedCoexpressionData;
     private double elapsedWallSeconds;
 
     public MultipleCoexpressionCollectionValueObject() {
@@ -25,8 +25,8 @@ public class MultipleCoexpressionCollectionValueObject {
         // queries = Collections.synchronizedMap( new HashMap<Gene, CoexpressionCollectionValueObject>() );
         queryGenes = Collections.synchronizedCollection( new ArrayList<Gene>() );
         geneCoexpressionData = new MultipleCoexpressionTypeValueObject();
-        predictedCoexpressionData = new MultipleCoexpressionTypeValueObject();
-        alignedCoexpressionData = new MultipleCoexpressionTypeValueObject();
+//        predictedCoexpressionData = new MultipleCoexpressionTypeValueObject();
+//        alignedCoexpressionData = new MultipleCoexpressionTypeValueObject();
     }
 
     public void addCoexpressionCollection( CoexpressionCollectionValueObject coexpressionCollection ) {
@@ -35,10 +35,10 @@ public class MultipleCoexpressionCollectionValueObject {
             queryGenes.add( coexpressionCollection.getQueryGene() );
             geneCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
                     coexpressionCollection.getKnownGeneCoexpression() );
-            predictedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
-                    coexpressionCollection.getPredictedGeneCoexpression() );
-            alignedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
-                    coexpressionCollection.getProbeAlignedRegionCoexpression() );
+//            predictedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
+//                    coexpressionCollection.getPredictedGeneCoexpression() );
+//            alignedCoexpressionData.addCoexpressionCollection( coexpressionCollection.getQueryGene(),
+//                    coexpressionCollection.getProbeAlignedRegionCoexpression() );
         }
     }
 
@@ -49,19 +49,19 @@ public class MultipleCoexpressionCollectionValueObject {
         return this.geneCoexpressionData.getCommonCoexpressedGenes( minimumCommonQueryGenes );
     }
 
-    /**
-     * @return those coexpressed predicted genes that are common to multiple query genes
-     */
-    public Collection<CommonCoexpressionValueObject> getCommonCoexpressedPredictedGenes() {
-        return this.predictedCoexpressionData.getCommonCoexpressedGenes( minimumCommonQueryGenes );
-    }
-
-    /**
-     * @return those coexpressed probe-aligned regions that are common to multiple query genes
-     */
-    public Collection<CommonCoexpressionValueObject> getCommonCoexpressedProbeAlignedRegions() {
-        return this.alignedCoexpressionData.getCommonCoexpressedGenes( minimumCommonQueryGenes );
-    }
+//    /**
+//     * @return those coexpressed predicted genes that are common to multiple query genes
+//     */
+//    public Collection<CommonCoexpressionValueObject> getCommonCoexpressedPredictedGenes() {
+//        return this.predictedCoexpressionData.getCommonCoexpressedGenes( minimumCommonQueryGenes );
+//    }
+//
+//    /**
+//     * @return those coexpressed probe-aligned regions that are common to multiple query genes
+//     */
+//    public Collection<CommonCoexpressionValueObject> getCommonCoexpressedProbeAlignedRegions() {
+//        return this.alignedCoexpressionData.getCommonCoexpressedGenes( minimumCommonQueryGenes );
+//    }
 
     /**
      * This gives the amount of time we had to wait for the queries (which can be less than the time per query because
@@ -93,13 +93,13 @@ public class MultipleCoexpressionCollectionValueObject {
     public int getNumGenes() {
         return this.geneCoexpressionData.getNumberOfGenes();
     }
-
-    /**
-     * @return the numPredictedGenes
-     */
-    public int getNumPredictedGenes() {
-        return this.predictedCoexpressionData.getNumberOfGenes();
-    }
+//
+//    /**
+//     * @return the numPredictedGenes
+//     */
+//    public int getNumPredictedGenes() {
+//        return this.predictedCoexpressionData.getNumberOfGenes();
+//    }
 
     // /**
     // * @return the CoexpressionCollectionValueObjects for all query genes
@@ -107,27 +107,27 @@ public class MultipleCoexpressionCollectionValueObject {
     // public Collection<CoexpressionCollectionValueObject> getQueryResults() {
     // return queries.values();
     // }
-
-    /**
-     * @return the numProbeAlignedRegions
-     */
-    public int getNumProbeAlignedRegions() {
-        return this.alignedCoexpressionData.getNumberOfGenes();
-    }
-
-    /**
-     * @return the MultipleCoexpressionTypeValueObject for predicted Genes
-     */
-    public MultipleCoexpressionTypeValueObject getPredictedCoexpressionType() {
-        return this.predictedCoexpressionData;
-    }
-
-    /**
-     * @return the MultipleCoexpressonTypeValueObject for probe aligned regions
-     */
-    public MultipleCoexpressionTypeValueObject getProbeAlignedCoexpressionType() {
-        return this.alignedCoexpressionData;
-    }
+//
+//    /**
+//     * @return the numProbeAlignedRegions
+//     */
+//    public int getNumProbeAlignedRegions() {
+//        return this.alignedCoexpressionData.getNumberOfGenes();
+//    }
+//
+//    /**
+//     * @return the MultipleCoexpressionTypeValueObject for predicted Genes
+//     */
+//    public MultipleCoexpressionTypeValueObject getPredictedCoexpressionType() {
+//        return this.predictedCoexpressionData;
+//    }
+//
+//    /**
+//     * @return the MultipleCoexpressonTypeValueObject for probe aligned regions
+//     */
+//    public MultipleCoexpressionTypeValueObject getProbeAlignedCoexpressionType() {
+//        return this.alignedCoexpressionData;
+//    }
 
     /**
      * @param gene the Gene of interest
@@ -136,24 +136,24 @@ public class MultipleCoexpressionCollectionValueObject {
     public CommonCoexpressionValueObject getQueriesForGene( Gene gene ) {
         return this.geneCoexpressionData.getQueriesForGene( gene );
     }
+//
+//    /**
+//     * @param gene the Gene of interest
+//     * @return a subset of the predicted gene CommonCoexpressionValueObjects that exhibit coexpression with the
+//     *         specified Gene
+//     */
+//    public CommonCoexpressionValueObject getQueriesForPredictedGene( Gene gene ) {
+//        return this.predictedCoexpressionData.getQueriesForGene( gene );
+//    }
 
-    /**
-     * @param gene the Gene of interest
-     * @return a subset of the predicted gene CommonCoexpressionValueObjects that exhibit coexpression with the
-     *         specified Gene
-     */
-    public CommonCoexpressionValueObject getQueriesForPredictedGene( Gene gene ) {
-        return this.predictedCoexpressionData.getQueriesForGene( gene );
-    }
-
-    /**
-     * @param gene the Gene of interest
-     * @return a subset of the probe-aligned region CommonCoexpressionValueObjects that exhibit coexpression with the
-     *         specified Gene
-     */
-    public CommonCoexpressionValueObject getQueriesForProbeAlignedRegion( Gene gene ) {
-        return this.alignedCoexpressionData.getQueriesForGene( gene );
-    }
+//    /**
+//     * @param gene the Gene of interest
+//     * @return a subset of the probe-aligned region CommonCoexpressionValueObjects that exhibit coexpression with the
+//     *         specified Gene
+//     */
+//    public CommonCoexpressionValueObject getQueriesForProbeAlignedRegion( Gene gene ) {
+//        return this.alignedCoexpressionData.getQueriesForGene( gene );
+//    }
 
     /**
      * @return the query genes

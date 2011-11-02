@@ -29,8 +29,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PhysicalLocation;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.RelativeLocationData;
 import ubic.gemma.model.genome.Taxon;
 
@@ -153,7 +151,7 @@ public interface GeneService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Gene, CoexpressionCollectionValueObject> getCoexpressedGenes( Collection<Gene> genes,
-            Collection<? extends BioAssaySet> ees, Integer stringency,  boolean interGenesOnly );
+            Collection<? extends BioAssaySet> ees, Integer stringency, boolean interGenesOnly );
 
     /**
      * Function to get coexpressed genes given a gene and a collection of expressionExperiments. Returns the value
@@ -259,15 +257,15 @@ public interface GeneService {
      */
     public Collection<Gene> loadMultiple( Collection<Long> ids );
 
-    /**
-     * Returns a collection of Predicted Genes for the specified taxon
-     */
-    public Collection<PredictedGene> loadPredictedGenes( Taxon taxon );
-
-    /**
-     * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
-     */
-    public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( Taxon taxon );
+    // /**
+    // * Returns a collection of Predicted Genes for the specified taxon
+    // */
+    // public Collection<PredictedGene> loadPredictedGenes( Taxon taxon );
+    //
+    // /**
+    // * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
+    // */
+    // public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( Taxon taxon );
 
     /**
      * Load with objects already thawed.

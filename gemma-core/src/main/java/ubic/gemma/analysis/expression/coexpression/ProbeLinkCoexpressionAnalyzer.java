@@ -212,11 +212,11 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
         coexps.filter( limit, stringency );
 
-        coexps = coexpressions.getPredictedGeneCoexpression();
-        coexps.filter( limit, stringency );
-
-        coexps = coexpressions.getProbeAlignedRegionCoexpression();
-        coexps.filter( limit, stringency );
+//        coexps = coexpressions.getPredictedGeneCoexpression();
+//        coexps.filter( limit, stringency );
+//
+//        coexps = coexpressions.getProbeAlignedRegionCoexpression();
+//        coexps.filter( limit, stringency );
     }
 
     /**
@@ -229,11 +229,11 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
         fillInEEInfo( coexpressions, eeIds, coexps );
 
-        coexps = coexpressions.getPredictedGeneCoexpression();
-        fillInEEInfo( coexpressions, eeIds, coexps );
-
-        coexps = coexpressions.getProbeAlignedRegionCoexpression();
-        fillInEEInfo( coexpressions, eeIds, coexps );
+//        coexps = coexpressions.getPredictedGeneCoexpression();
+//        fillInEEInfo( coexpressions, eeIds, coexps );
+//
+//        coexps = coexpressions.getProbeAlignedRegionCoexpression();
+//        fillInEEInfo( coexpressions, eeIds, coexps );
 
     }
 
@@ -278,11 +278,11 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressedGenesDetails coexp = coexpressions.getKnownGeneCoexpression();
         fillInGeneInfo( stringency, coexpressions, coexp );
 
-        coexp = coexpressions.getPredictedGeneCoexpression();
-        fillInGeneInfo( stringency, coexpressions, coexp );
-
-        coexp = coexpressions.getProbeAlignedRegionCoexpression();
-        fillInGeneInfo( stringency, coexpressions, coexp );
+//        coexp = coexpressions.getPredictedGeneCoexpression();
+//        fillInGeneInfo( stringency, coexpressions, coexp );
+//
+//        coexp = coexpressions.getProbeAlignedRegionCoexpression();
+//        fillInGeneInfo( stringency, coexpressions, coexp );
 
     }
 

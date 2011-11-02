@@ -463,31 +463,32 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
         }
     }
 
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#loadPredictedGenes(ubic.gemma.model.genome.Taxon)
-     */
-    public java.util.Collection<PredictedGene> loadPredictedGenes( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleLoadPredictedGenes( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.loadPredictedGenes(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.GeneDao#loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
-     */
-    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            return this.handleLoadProbeAlignedRegions( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.GeneDao.loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon taxon)' --> "
-                            + th, th );
-        }
-    }
+    // /**
+    // * @see ubic.gemma.model.genome.GeneDao#loadPredictedGenes(ubic.gemma.model.genome.Taxon)
+    // */
+    // public java.util.Collection<PredictedGene> loadPredictedGenes( final ubic.gemma.model.genome.Taxon taxon ) {
+    // try {
+    // return this.handleLoadPredictedGenes( taxon );
+    // } catch ( Throwable th ) {
+    // throw new java.lang.RuntimeException(
+    // "Error performing 'ubic.gemma.model.genome.GeneDao.loadPredictedGenes(ubic.gemma.model.genome.Taxon taxon)' --> "
+    // + th, th );
+    // }
+    // }
+    //
+    // /**
+    // * @see ubic.gemma.model.genome.GeneDao#loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
+    // */
+    // public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( final ubic.gemma.model.genome.Taxon
+    // taxon ) {
+    // try {
+    // return this.handleLoadProbeAlignedRegions( taxon );
+    // } catch ( Throwable th ) {
+    // throw new java.lang.RuntimeException(
+    // "Error performing 'ubic.gemma.model.genome.GeneDao.loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon taxon)' --> "
+    // + th, th );
+    // }
+    // }
 
     /**
      * @see ubic.gemma.model.genome.GeneDao#remove(java.lang.Long)
@@ -663,18 +664,18 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     protected abstract java.util.Collection<Gene> handleLoadMultiple( java.util.Collection<Long> ids )
             throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #loadPredictedGenes(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection<PredictedGene> handleLoadPredictedGenes( ubic.gemma.model.genome.Taxon taxon )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)}
-     */
-    protected abstract java.util.Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions(
-            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+//
+//    /**
+//     * Performs the core logic for {@link #loadPredictedGenes(ubic.gemma.model.genome.Taxon)}
+//     */
+//    protected abstract java.util.Collection<PredictedGene> handleLoadPredictedGenes( ubic.gemma.model.genome.Taxon taxon )
+//            throws java.lang.Exception;
+//
+//    /**
+//     * Performs the core logic for {@link #loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)}
+//     */
+//    protected abstract java.util.Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions(
+//            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.Gene)}

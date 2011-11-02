@@ -222,15 +222,15 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
 
-    /**
-     * Returns a collection of predicted genes for the specified taxon.
-     */
-    public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
-
-    /**
-     * Returns a collection of probe aligned regions for the specified taxon
-     */
-    public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
+    // /**
+    // * Returns a collection of predicted genes for the specified taxon.
+    // */
+    // public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
+    //
+    // /**
+    // * Returns a collection of probe aligned regions for the specified taxon
+    // */
+    // public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
 
     /**
      * @param ids

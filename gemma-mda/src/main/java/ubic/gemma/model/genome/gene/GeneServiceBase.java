@@ -29,8 +29,6 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneDao;
-import ubic.gemma.model.genome.PredictedGene;
-import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
 
 /**
@@ -340,31 +338,31 @@ public abstract class GeneServiceBase implements GeneService {
         }
     }
 
-    /**
-     * @see GeneService#loadPredictedGenes(Taxon)
-     */
-    @Override
-    public Collection<PredictedGene> loadPredictedGenes( final Taxon taxon ) {
-        try {
-            return this.handleLoadPredictedGenes( taxon );
-        } catch ( Throwable th ) {
-            throw new GeneServiceException( "Error performing 'GeneService.loadPredictedGenes(Taxon taxon)' --> " + th,
-                    th );
-        }
-    }
-
-    /**
-     * @see GeneService#loadProbeAlignedRegions(Taxon)
-     */
-    @Override
-    public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( final Taxon taxon ) {
-        try {
-            return this.handleLoadProbeAlignedRegions( taxon );
-        } catch ( Throwable th ) {
-            throw new GeneServiceException( "Error performing 'GeneService.loadProbeAlignedRegions(Taxon taxon)' --> "
-                    + th, th );
-        }
-    }
+    // /**
+    // * @see GeneService#loadPredictedGenes(Taxon)
+    // */
+    // @Override
+    // public Collection<PredictedGene> loadPredictedGenes( final Taxon taxon ) {
+    // try {
+    // return this.handleLoadPredictedGenes( taxon );
+    // } catch ( Throwable th ) {
+    // throw new GeneServiceException( "Error performing 'GeneService.loadPredictedGenes(Taxon taxon)' --> " + th,
+    // th );
+    // }
+    // }
+    //
+    // /**
+    // * @see GeneService#loadProbeAlignedRegions(Taxon)
+    // */
+    // @Override
+    // public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( final Taxon taxon ) {
+    // try {
+    // return this.handleLoadProbeAlignedRegions( taxon );
+    // } catch ( Throwable th ) {
+    // throw new GeneServiceException( "Error performing 'GeneService.loadProbeAlignedRegions(Taxon taxon)' --> "
+    // + th, th );
+    // }
+    // }
 
     /**
      * @see GeneService#remove(String)
@@ -560,15 +558,15 @@ public abstract class GeneServiceBase implements GeneService {
      */
     protected abstract Collection<Gene> handleLoadMultiple( Collection<Long> ids ) throws Exception;
 
-    /**
-     * Performs the core logic for {@link #loadPredictedGenes(Taxon)}
-     */
-    protected abstract Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception;
-
-    /**
-     * Performs the core logic for {@link #loadProbeAlignedRegions(Taxon)}
-     */
-    protected abstract Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception;
+    // /**
+    // * Performs the core logic for {@link #loadPredictedGenes(Taxon)}
+    // */
+    // protected abstract Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception;
+    //
+    // /**
+    // * Performs the core logic for {@link #loadProbeAlignedRegions(Taxon)}
+    // */
+    // protected abstract Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception;
 
     /**
      */

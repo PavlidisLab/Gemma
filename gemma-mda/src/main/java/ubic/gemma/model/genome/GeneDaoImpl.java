@@ -41,7 +41,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.type.DoubleType;
 import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -918,32 +917,32 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return genes;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
-     */
-    @Override
-    protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
-        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-                + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
+//    /*
+//     * (non-Javadoc)
+//     * 
+//     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
+//     */
+//    @Override
+//    protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
+//        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
+//                + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
+//
+//        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+//
+//    }
 
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
-     */
-    @Override
-    protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-                + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
-
-        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-    }
+//    /*
+//     * (non-Javadoc)
+//     * 
+//     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
+//     */
+//    @Override
+//    protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
+//        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
+//                + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
+//
+//        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+//    }
 
     /*
      * (non-Javadoc)
@@ -1003,12 +1002,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @return
      */
     private ExpressionExperimentValueObject addExpressionExperimentToCoexpressions(
-            CoexpressionCollectionValueObject coexpressions, Long eeID, String geneType ) {
-        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( geneType, eeID );
+            CoexpressionCollectionValueObject coexpressions, Long eeID ) {
+        ExpressionExperimentValueObject eeVo = coexpressions.getExpressionExperiment( eeID );
         if ( eeVo == null ) {
             eeVo = new ExpressionExperimentValueObject();
             eeVo.setId( eeID );
-            coexpressions.addExpressionExperiment( geneType, eeVo ); // unorganized.
+            coexpressions.addExpressionExperiment( eeVo ); // unorganized.
         }
         return eeVo;
     }
@@ -1027,7 +1026,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
      * @param coexpressedProbe
      */
     private void addResult( CoexpressionCollectionValueObject coexpressions, Long eeID, Gene queryGene,
-            Long queryProbe, Double pvalue, Double score, Long coexpressedGene, String geneType, Long coexpressedProbe ) {
+            Long queryProbe, Double pvalue, Double score, Long coexpressedGene, Long coexpressedProbe ) {
         CoexpressionValueObject coExVO;
 
         // add the gene (if not already seen)
@@ -1037,14 +1036,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             coExVO = new CoexpressionValueObject();
             coExVO.setQueryGene( queryGene );
             coExVO.setGeneId( coexpressedGene );
-            coExVO.setGeneType( geneType );
             coexpressions.add( coExVO );
         }
 
         // log.info( "EE=" + eeID + " in Probe=" + queryProbe + " out Probe=" + coexpressedProbe + " gene="
         // + coexpressedGene + " score=" + String.format( "%.3f", score ) );
         // add the expression experiment.
-        ExpressionExperimentValueObject eeVo = addExpressionExperimentToCoexpressions( coexpressions, eeID, geneType );
+        ExpressionExperimentValueObject eeVo = addExpressionExperimentToCoexpressions( coexpressions, eeID );
 
         // add the ee here so we know it is associated with this specific gene.
         coExVO.addSupportingExperiment( eeVo );
@@ -1222,8 +1220,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
          * 3 score
          * 4 csin
          * 5 csout
-         * 6 genetype
-         * 7 queryGene id
+         * 6 queryGene id
          * </pre>
          */
         String query = "SELECT gcOut.GENE as id, coexp.EXPRESSION_EXPERIMENT_FK as exper, coexp.PVALUE as pvalue, coexp.SCORE as score, "
@@ -1371,7 +1368,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 }
                 addResult( coexpressions, eeid, cachedCVO.getQueryGene(), cachedCVO.getQueryProbe(),
                         cachedCVO.getPvalue(), cachedCVO.getScore(), cachedCVO.getCoexpressedGene(),
-                        cachedCVO.getGeneType(), cachedCVO.getCoexpressedProbe() );
+                        cachedCVO.getCoexpressedProbe() );
 
                 assert coexpressions.contains( cachedCVO.getCoexpressedGene() );
             }
@@ -1406,23 +1403,23 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         knownGeneCoexpression.postProcess();
     }
 
-    /**
-     * @param coexpressions
-     */
-    private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
-        if ( coexpressions.getNumPredictedGenes() == 0 ) return;
-        CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedGeneCoexpression();
-        predictedCoexpressionType.postProcess();
-    }
+    // /**
+    // * @param coexpressions
+    // */
+    // private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
+    // if ( coexpressions.getNumPredictedGenes() == 0 ) return;
+    // CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedGeneCoexpression();
+    // predictedCoexpressionType.postProcess();
+    // }
 
     /**
-     * @param coexpressions
+     * // * @param coexpressions //
      */
-    private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
-        if ( coexpressions.getNumProbeAlignedRegions() == 0 ) return;
-        CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedRegionCoexpression();
-        probeAlignedCoexpressionType.postProcess();
-    }
+    // private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
+    // if ( coexpressions.getNumProbeAlignedRegions() == 0 ) return;
+    // CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedRegionCoexpression();
+    // probeAlignedCoexpressionType.postProcess();
+    // }
 
     /**
      * Fill in specificity information.
@@ -1505,10 +1502,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Double score = resultSet.getDouble( 3 );
         Long queryProbe = resultSet.getLong( 4 );
         Long coexpressedProbe = resultSet.getLong( 5 );
-        String geneType = resultSet.getString( 6 );
-
-        addResult( coexpressions, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, geneType,
-                coexpressedProbe );
+        addResult( coexpressions, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, coexpressedProbe );
 
         /*
          * Cache the result.
@@ -1517,7 +1511,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
             coExVOForCache.setQueryGene( queryGene );
             coExVOForCache.setCoexpressedGene( coexpressedGene );
-            coExVOForCache.setGeneType( geneType );
             coExVOForCache.setExpressionExperiment( eeID );
             coExVOForCache.setScore( score );
             coExVOForCache.setPvalue( pvalue );
@@ -1544,8 +1537,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         Double score = resultSet.getDouble( 3 );
         Long queryProbe = resultSet.getLong( 4 );
         Long coexpressedProbe = resultSet.getLong( 5 );
-        String geneType = resultSet.getString( 6 );
-        Long queryGeneId = resultSet.getLong( 7 );
+        // String geneType = resultSet.getString( 6 );
+        Long queryGeneId = resultSet.getLong( 6 );
 
         if ( queryGeneId.equals( coexpressedGene ) ) {
             return;
@@ -1555,7 +1548,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         assert queryGene != null : queryGeneId + " did not match given queries";
         CoexpressionCollectionValueObject ccvo = coexpressions.get( queryGene );
         assert ccvo != null;
-        addResult( ccvo, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, geneType, coexpressedProbe );
+        addResult( ccvo, eeID, queryGene, queryProbe, pvalue, score, coexpressedGene, coexpressedProbe );
 
         /*
          * Cache the result.
@@ -1564,7 +1557,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             CoexpressionCacheValueObject coExVOForCache = new CoexpressionCacheValueObject();
             coExVOForCache.setQueryGene( queryGene );
             coExVOForCache.setCoexpressedGene( coexpressedGene );
-            coExVOForCache.setGeneType( geneType );
+            // coExVOForCache.setGeneType( geneType );
             coExVOForCache.setExpressionExperiment( eeID );
             coExVOForCache.setScore( score );
             coExVOForCache.setPvalue( pvalue );
@@ -1645,7 +1638,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
-        queryObject.addScalar( "geneType", new StringType() );
         queryObject.addScalar( "queryGeneId", new LongType() );
 
         Collection<Long> ids = new HashSet<Long>();
@@ -1676,7 +1668,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.addScalar( "score", new DoubleType() );
         queryObject.addScalar( "csIdIn", new LongType() );
         queryObject.addScalar( "csIdOut", new LongType() );
-        queryObject.addScalar( "geneType", new StringType() );
+        // queryObject.addScalar( "geneType", new StringType() );
         queryObject.setLong( "id", id );
 
         return queryObject;

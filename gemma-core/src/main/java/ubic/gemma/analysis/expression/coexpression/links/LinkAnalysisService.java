@@ -100,12 +100,10 @@ public class LinkAnalysisService {
 
         Method m;
         private Object[] arg;
-        @SuppressWarnings("unchecked")
-        private Class clazz;
+        private Class<?> clazz;
         private BioAssaySet ebas;
 
-        @SuppressWarnings("unchecked")
-        Creator( Class clazz, BioAssaySet experiment ) {
+        Creator( Class<?> clazz, BioAssaySet experiment ) {
             this.ebas = experiment;
             this.clazz = clazz;
             this.arg = new Object[] {};
@@ -201,8 +199,8 @@ public class LinkAnalysisService {
      */
     public LinkAnalysis process( Taxon t, Collection<ProcessedExpressionDataVector> dataVectors,
             FilterConfig filterConfig, LinkAnalysisConfig linkAnalysisConfig ) {
-        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix( linkAnalysisConfig
-                .getArrayName(), filterConfig, dataVectors );
+        ExpressionDataDoubleMatrix datamatrix = expressionDataMatrixService.getFilteredMatrix(
+                linkAnalysisConfig.getArrayName(), filterConfig, dataVectors );
 
         if ( datamatrix.rows() == 0 ) {
             log.info( "No rows left after filtering" );
@@ -451,8 +449,8 @@ public class LinkAnalysisService {
         } else if ( e instanceof InsufficientProbesException ) {
             audit( expressionExperiment, e.getMessage(), TooSmallDatasetLinkAnalysisEvent.Factory.newInstance() );
         } else {
-            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ), FailedLinkAnalysisEvent.Factory
-                    .newInstance() );
+            audit( expressionExperiment, ExceptionUtils.getFullStackTrace( e ),
+                    FailedLinkAnalysisEvent.Factory.newInstance() );
         }
     }
 
