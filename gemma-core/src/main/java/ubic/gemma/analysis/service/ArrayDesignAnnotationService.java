@@ -265,8 +265,11 @@ public class ArrayDesignAnnotationService {
         }
 
         Map<String, Long> probeNameToId = new HashMap<String, Long>();
+
+        int FIELDS_PER_GENE = 5; // used to be 3, now is 5;
+
         for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
-            results.put( cs.getId(), new String[3] );
+            results.put( cs.getId(), new String[FIELDS_PER_GENE] );
             if ( probeNameToId.containsKey( cs.getName() ) ) {
                 log.warn( "Duplicate probe name: " + cs.getName() );
             }
@@ -536,7 +539,7 @@ public class ArrayDesignAnnotationService {
 
         Collection<VocabCharacteristic> ontos = new HashSet<VocabCharacteristic>(
                 gene2GOAssociationService.findByGene( gene ) );
-        
+
         Collection<OntologyTerm> results = new HashSet<OntologyTerm>();
         if ( ontos.size() == 0 ) return results;
 
