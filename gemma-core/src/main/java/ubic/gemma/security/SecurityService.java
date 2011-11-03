@@ -59,6 +59,7 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.tuckey.web.filters.urlrewrite.utils.StringUtils;
 
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.UserGroup;
@@ -248,7 +249,7 @@ public class SecurityService {
      * @param securables
      * @return
      */
-    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public java.util.Map<Securable, Boolean> arePrivate( Collection<? extends Securable> securables ) {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
         Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
@@ -270,7 +271,7 @@ public class SecurityService {
         return result;
     }
 
-    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Securable, Boolean> areShared( Collection<? extends Securable> securables ) {
         Map<Securable, Boolean> result = new HashMap<Securable, Boolean>();
         Map<ObjectIdentity, Securable> objectIdentities = getObjectIdentities( securables );
@@ -306,7 +307,7 @@ public class SecurityService {
      * @param securables
      * @return the subset that are public, if any
      */
-    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<Securable> choosePublic( Collection<? extends Securable> securables ) {
         Collection<Securable> result = new HashSet<Securable>();
 
@@ -385,7 +386,7 @@ public class SecurityService {
      * @param s
      * @return list of userNames who can edit the given securable.
      */
-    @Secured( { "ACL_SECURABLE_READ" })
+    @Secured({ "ACL_SECURABLE_READ" })
     public Collection<String> editableBy( Securable s ) {
 
         Collection<String> allUsers = userManager.findAllUsers();
@@ -456,7 +457,7 @@ public class SecurityService {
      * @param s
      * @return
      */
-    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Securable, Collection<String>> getGroupsEditableBy( Collection<? extends Securable> securables ) {
         Collection<String> groupNames = getGroupsUserCanView();
         Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
@@ -485,7 +486,7 @@ public class SecurityService {
      * @param s
      * @return
      */
-    @Secured( { "ACL_SECURABLE_READ" })
+    @Secured({ "ACL_SECURABLE_READ" })
     public Collection<String> getGroupsEditableBy( Securable s ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
@@ -504,7 +505,7 @@ public class SecurityService {
      * @param s
      * @return
      */
-    @Secured( { "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Securable, Collection<String>> getGroupsReadableBy( Collection<? extends Securable> securables ) {
 
         Map<Securable, Collection<String>> result = new HashMap<Securable, Collection<String>>();
@@ -536,7 +537,7 @@ public class SecurityService {
      * @param s
      * @return
      */
-    @Secured( { "ACL_SECURABLE_READ" })
+    @Secured({ "ACL_SECURABLE_READ" })
     public Collection<String> getGroupsReadableBy( Securable s ) {
         Collection<String> groupNames = getGroupsUserCanView();
 
@@ -807,7 +808,7 @@ public class SecurityService {
      * @param userName
      * @return true if the given user can read the securable, false otherwise. (READ or ADMINISTRATION required)
      */
-    @Secured( { "ACL_SECURABLE_READ" })
+    @Secured({ "ACL_SECURABLE_READ" })
     public boolean isViewableByUser( Securable s, String userName ) {
         List<Permission> requiredPermissions = new ArrayList<Permission>();
         requiredPermissions.add( BasePermission.READ );
@@ -955,6 +956,11 @@ public class SecurityService {
     @Secured("ACL_SECURABLE_EDIT")
     @Transactional
     public void makeReadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+
+        if ( StringUtils.isBlank( groupName ) ) {
+            throw new IllegalArgumentException( "'group' cannot be null" );
+        }
+
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
         if ( !groups.contains( groupName ) && !isUserAdmin() ) {
@@ -979,6 +985,11 @@ public class SecurityService {
     @Secured("ACL_SECURABLE_EDIT")
     @Transactional
     public void makeUnreadableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+
+        if ( StringUtils.isBlank( groupName ) ) {
+            throw new IllegalArgumentException( "'group' cannot be null" );
+        }
+
         removeGrantedAuthority( s, BasePermission.READ, getGroupAuthorityNameFromGroupName( groupName ) );
         removeGrantedAuthority( s, BasePermission.WRITE, getGroupAuthorityNameFromGroupName( groupName ) );
     }
@@ -993,6 +1004,11 @@ public class SecurityService {
     @Secured("ACL_SECURABLE_EDIT")
     @Transactional
     public void makeUnwriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+
+        if ( StringUtils.isBlank( groupName ) ) {
+            throw new IllegalArgumentException( "'group' cannot be null" );
+        }
+
         removeGrantedAuthority( s, BasePermission.WRITE, getGroupAuthorityNameFromGroupName( groupName ) );
     }
 
@@ -1006,6 +1022,11 @@ public class SecurityService {
     @PreAuthorize("hasPermission(#s, write)")
     @Transactional
     public void makeWriteableByGroup( Securable s, String groupName ) throws AccessDeniedException {
+
+        if ( StringUtils.isBlank( groupName ) ) {
+            throw new IllegalArgumentException( "'group' cannot be null" );
+        }
+
         Collection<String> groups = checkForGroupAccessByCurrentuser( groupName );
 
         if ( !groups.contains( groupName ) && !isUserAdmin() ) {
@@ -1171,6 +1192,9 @@ public class SecurityService {
         return authority;
     }
 
+    /**
+     * @return
+     */
     private Collection<String> getGroupsUserCanView() {
         Collection<String> groupNames;
         try {
@@ -1260,8 +1284,8 @@ public class SecurityService {
 
         // Obtain the SIDs applicable to the principal
         UserDetails user = userManager.loadUserByUsername( userName );
-        Authentication authentication = new UsernamePasswordAuthenticationToken( userName, user.getPassword(), user
-                .getAuthorities() );
+        Authentication authentication = new UsernamePasswordAuthenticationToken( userName, user.getPassword(),
+                user.getAuthorities() );
         List<Sid> sids = sidRetrievalStrategy.getSids( authentication );
 
         Acl acl = null;
