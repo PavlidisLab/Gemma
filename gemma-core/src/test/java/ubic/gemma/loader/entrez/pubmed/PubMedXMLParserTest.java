@@ -71,6 +71,46 @@ public class PubMedXMLParserTest extends TestCase {
         }
     }
 
+    public void testParseBook() throws Exception {
+        try {
+            testStream = PubMedXMLParserTest.class.getResourceAsStream( "/data/pubmed-fullbook.xml" );
+            Collection<BibliographicReference> brl = testParser.parse( testStream );
+            BibliographicReference br = brl.iterator().next();
+            assertNotNull( br );
+            assertEquals( "21796826", br.getPubAccession().getAccession() );
+            assertEquals( "Field, Marilyn J; Boat, Thomas F", br.getEditor() );
+
+            assertEquals(
+                    "Institute of Medicine (US) Committee on Accelerating Rare Diseases Research and Orphan Product Development",
+                    br.getAuthorList() );
+
+            assertEquals( "Rare Diseases and Orphan Products: Accelerating Research and Development",
+                    br.getPublication() );
+
+            assertEquals( "Rare Diseases and Orphan Products: Accelerating Research and Development", br.getTitle() );
+
+            SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
+            Date publicationDate = br.getPublicationDate();
+            assertNotNull( publicationDate );
+            assertEquals( "2010", f.format( publicationDate ) );
+
+            assertTrue( br.getAbstractText().startsWith(
+                    "This Institute of Medicine (IOM) study grew out of discussions" ) );
+            assertTrue( br.getAbstractText().endsWith( "interested general public." ) );
+
+        } catch ( RuntimeException e ) {
+            if ( e.getCause() instanceof java.net.ConnectException ) {
+                log.warn( "Test skipped due to connection exception" );
+                return;
+            } else if ( e.getCause() instanceof java.net.UnknownHostException ) {
+                log.warn( "Test skipped due to unknown host exception" );
+                return;
+            } else {
+                throw ( e );
+            }
+        }
+    }
+
     /**
      * Test uses 20301315
      * 
@@ -93,7 +133,7 @@ public class PubMedXMLParserTest extends TestCase {
             SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
             Date publicationDate = br.getPublicationDate();
             assertNotNull( publicationDate );
-            assertEquals( "1993", f.format( publicationDate ) );
+            assertEquals( "2003", f.format( publicationDate ) );
 
             assertTrue( br.getAbstractText().startsWith(
                     "Giant axonal neuropathy (GAN) is characterized by a severe early-onset" ) );

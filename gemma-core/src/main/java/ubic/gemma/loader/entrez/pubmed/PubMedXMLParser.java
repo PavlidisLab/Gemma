@@ -160,16 +160,20 @@ public class PubMedXMLParser {
                 if ( m instanceof Element ) {
 
                     Element f = ( Element ) m;
-                    if ( f.getNodeName().equals( "LastName" ) ) {
+                    String nodeName = f.getNodeName();
+                    if ( nodeName.equals( "LastName" ) ) {
                         al.append( XMLUtils.getTextValue( f ) );
                         al.append( ", " );
-                    } else if ( f.getNodeName().equals( "ForeName" ) ) {
+                    } else if ( nodeName.equals( "ForeName" ) ) {
                         al.append( XMLUtils.getTextValue( f ) );
 
                         al.append( "; " );
 
-                    } else if ( f.getNodeName().equals( "Initials" ) ) {
+                    } else if ( nodeName.equals( "Initials" ) ) {
                         // noop ;
+                    } else if ( nodeName.equals( "CollectiveName" ) ) {
+                        al.append( XMLUtils.getTextValue( f ) );
+                        al.append( "; " );
                     }
                 }
             }
@@ -474,11 +478,18 @@ public class PubMedXMLParser {
             String name = item.getNodeName();
             if ( name.equals( "Publisher" ) ) {
                 extractPublisher( bibRef, item );
-            } else if ( name.equals( "PubDate" ) ) {
+            } else if ( name.equals( "PubDate" ) && bibRef.getPublicationDate() == null ) {
                 extractBookPublicationYear( bibRef, item );
             } else if ( name.equals( "AuthorList" ) ) {
-                bibRef.setEditor( extractAuthorList( item.getChildNodes() ) );
+                if ( ( ( Element ) item ).hasAttribute( "Type" ) ) {
+                    if ( ( ( Element ) item ).getAttribute( "Type" ).equals( "editors" ) ) {
+                        bibRef.setEditor( extractAuthorList( item.getChildNodes() ) );
+                    } else {
+                        bibRef.setAuthorList( extractAuthorList( item.getChildNodes() ) );
+                    }
+                }
             } else if ( name.equals( "BookTitle" ) ) {
+                if ( bibRef.getTitle() == null ) bibRef.setTitle( XMLUtils.getTextValue( ( Element ) item ) );
                 bibRef.setPublication( XMLUtils.getTextValue( ( Element ) item ) );
             }
         }
@@ -526,11 +537,23 @@ public class PubMedXMLParser {
                 }
             } else if ( name.equals( "PMID" ) ) {
                 processAccession( bibRef, item );
+            } else if ( name.equals( "ContributionDate" ) ) {
+                /*
+                 * Unusual, but happens for books that are updated with new sections. We use this instead of the
+                 * publication date.
+                 */
+                extractBookPublicationYear( bibRef, item );
             }
         }
 
     }
 
+    /**
+     * @param bibRef
+     * @param journal
+     * @return
+     * @throws IOException
+     */
     private NodeList processJournalInfo( BibliographicReference bibRef, Node journal ) throws IOException {
         NodeList journalNodes = journal.getChildNodes();
         for ( int j = 0; j < journalNodes.getLength(); j++ ) {
