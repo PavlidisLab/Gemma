@@ -196,12 +196,21 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      		cls : 'x-btn-text-icon',
 			      		tooltip:'Save your selection as a list of genes.',		      		
 			      		handler : function() {
-			      		  var geneSetGrid = new Gemma.GeneMembersSaveGrid ({genes: this.visualizationPanel.getSelectedGenes()});
+			      		  var geneSetGrid = new Gemma.GeneMembersSaveGrid({
+						  	genes: this.visualizationPanel.getSelectedGenes(),
+						  	frame: false
+						  });
+						  this.getEl().mask();
 			      		  var popup = new Ext.Window ({ closable : false,
 														layout : 'fit',
 														width : 450,
 														height : 500,
-														items : geneSetGrid });			      		  
+														items : geneSetGrid });	
+														
+							geneSetGrid.on('doneModification', function() {
+										this.getEl().unmask();
+										popup.hide();
+									}, this);
 			      		  popup.show();
 			      	  	},
 			      	  	scope: this		      	  
