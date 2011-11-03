@@ -120,10 +120,12 @@ public class HomologeneService {
 
         Collection<Gene> genes = new HashSet<Gene>();
 
-        Long groupId;
+        Long groupId = null;
 
+        Integer ncbiGeneId = gene.getNcbiGeneId();
+        if ( ncbiGeneId == null ) return genes;
         try {
-            groupId = this.getHomologeneGroup( gene.getNcbiGeneId().longValue() );
+            groupId = this.getHomologeneGroup( ncbiGeneId.longValue() );
         } catch ( NumberFormatException e ) {
             return genes;
         }
