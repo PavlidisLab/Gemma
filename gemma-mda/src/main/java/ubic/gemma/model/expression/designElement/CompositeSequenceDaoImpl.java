@@ -414,10 +414,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenesWithSpecificity(java.util.Collection
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<CompositeSequence, Collection<BioSequence2GeneProduct>> handleGetGenesWithSpecificity(
-            Collection compositeSequences ) throws Exception {
+            Collection<CompositeSequence> compositeSequences ) throws Exception {
 
         log.info( "Getting cs -> alignment specificity map for " + compositeSequences.size() + " composite sequences" );
         Collection<CompositeSequence> batch = new HashSet<CompositeSequence>();
@@ -426,7 +425,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         StopWatch timer = new StopWatch();
         timer.start();
         int total = 0;
-        for ( CompositeSequence cs : ( Collection<CompositeSequence> ) compositeSequences ) {
+        for ( CompositeSequence cs : compositeSequences ) {
             batch.add( cs );
             if ( batch.size() == PROBE_TO_GENE_MAP_BATCH_SIZE ) {
                 batchGetGenesWithSpecificity( batch, results );
@@ -715,7 +714,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @param batch of composite sequences to process
      * @param results - adding to this
      */
-    @SuppressWarnings("unchecked")
     private void batchGetGenesWithSpecificity( Collection<CompositeSequence> batch,
             Map<CompositeSequence, Collection<BioSequence2GeneProduct>> results ) {
 
@@ -726,7 +724,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         final String queryString = "select cs,bas from CompositeSequenceImpl cs, BioSequence2GeneProductImpl bas inner join cs.biologicalCharacteristic bs "
                 + "inner join fetch bas.geneProduct gp inner join fetch gp.gene gene "
                 + "where bas.bioSequence=bs and cs in (:cs)";
-        List qr = this.getHibernateTemplate().findByNamedParam( queryString, "cs", batch );
+        List<?> qr = this.getHibernateTemplate().findByNamedParam( queryString, "cs", batch );
 
         for ( Object o : qr ) {
             Object[] oa = ( Object[] ) o;

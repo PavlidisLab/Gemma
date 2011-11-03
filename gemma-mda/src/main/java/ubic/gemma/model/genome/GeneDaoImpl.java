@@ -1403,24 +1403,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         knownGeneCoexpression.postProcess();
     }
 
-    // /**
-    // * @param coexpressions
-    // */
-    // private void postProcessPredictedGenes( CoexpressionCollectionValueObject coexpressions ) {
-    // if ( coexpressions.getNumPredictedGenes() == 0 ) return;
-    // CoexpressedGenesDetails predictedCoexpressionType = coexpressions.getPredictedGeneCoexpression();
-    // predictedCoexpressionType.postProcess();
-    // }
-
-    /**
-     * // * @param coexpressions //
-     */
-    // private void postProcessProbeAlignedRegions( CoexpressionCollectionValueObject coexpressions ) {
-    // if ( coexpressions.getNumProbeAlignedRegions() == 0 ) return;
-    // CoexpressedGenesDetails probeAlignedCoexpressionType = coexpressions.getProbeAlignedRegionCoexpression();
-    // probeAlignedCoexpressionType.postProcess();
-    // }
-
     /**
      * Fill in specificity information.
      * 

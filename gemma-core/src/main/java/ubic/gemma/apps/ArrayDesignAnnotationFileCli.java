@@ -236,12 +236,31 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
          * FIXME: first Check if file exists.
          */
 
+        if ( arrayDesign.getStatus().getTroubled() ) {
+            log.warn( "Troubled: " + arrayDesign );
+            return false;
+        }
+
         ArrayDesign thawed = unlazifyArrayDesign( arrayDesign );
 
         Collection<CompositeSequence> compositeSequences = thawed.getCompositeSequences();
 
         Map<CompositeSequence, Collection<BioSequence2GeneProduct>> genesWithSpecificity = compositeSequenceService
                 .getGenesWithSpecificity( compositeSequences );
+
+        boolean hasAtLeastOneGene = false;
+        for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
+            if ( genesWithSpecificity.get( c ).isEmpty() ) {
+                continue;
+            }
+            hasAtLeastOneGene = true;
+            break;
+        }
+
+        if ( !hasAtLeastOneGene ) {
+            log.warn( "No genes: " + arrayDesign );
+            return false;
+        }
 
         log.info( "Preparing file" );
         return processCompositeSequences( thawed, fileBaseName, outputType, genesWithSpecificity );
@@ -262,6 +281,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
         this.includePredictedGenes = false;
 
         for ( ArrayDesign ad : allADs ) {
+
+            if ( ad.getStatus().getTroubled() ) {
+                log.warn( "Troubled: " + ad + " (skipping)" );
+                continue;
+            }
+
             Taxon taxon = null;
             if ( this.taxonName != null ) {
                 TaxonService taxonService = ( TaxonService ) getBean( "taxonService" );
@@ -279,21 +304,6 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
             if ( taxon != null && !adTaxa.contains( taxon ) ) {
                 continue;
             }
-
-            /*
-             * Change in policy due to bug 2176 -- always generate the files.
-             */
-            // if ( ad.getSubsumingArrayDesign() != null ) {
-            // log.info( "Skipping  " + ad.getName() + "  because it is subsumed by "
-            // + ad.getSubsumingArrayDesign().getName() );
-            // continue;
-            // }
-            //
-            // if ( ad.getMergedInto() != null ) {
-            // log.info( "Skipping  " + ad.getName() + "  because it was merged into " + ad.getMergedInto().getName() );
-            // continue;
-            // }
-
             processOneAD( ad );
 
         }
@@ -524,7 +534,12 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
     }
 
-    private void processOneAD( ArrayDesign inputAd ) throws IOException {
+    /**
+     * @param inputAd
+     * @return
+     * @throws IOException
+     */
+    private boolean processOneAD( ArrayDesign inputAd ) throws IOException {
         ArrayDesign ad = unlazifyArrayDesign( inputAd );
 
         log.info( "Processing AD: " + ad.getName() );
@@ -541,7 +556,7 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         if ( !overWrite && sf.exists() && bf.exists() && af.exists() ) {
             log.info( "Files exist already, will not overwrite (use --overwrite option to override)" );
-            return;
+            return false;
         }
 
         Collection<CompositeSequence> compositeSequences = ad.getCompositeSequences();
@@ -554,23 +569,42 @@ public class ArrayDesignAnnotationFileCli extends ArrayDesignSequenceManipulatin
 
         log.info( "Done getting probe specificity" );
 
+        boolean hasAtLeastOneGene = false;
+        for ( CompositeSequence c : genesWithSpecificity.keySet() ) {
+            if ( genesWithSpecificity.get( c ).isEmpty() ) {
+                continue;
+            }
+            hasAtLeastOneGene = true;
+            break;
+        }
+
+        if ( !hasAtLeastOneGene ) {
+            log.warn( "No genes: " + ad + ", skipping" );
+            return false;
+        }
+
+        boolean didAnything = false;
         if ( overWrite || !sf.exists() ) {
             processCompositeSequences( ad, shortFileBaseName, OutputType.SHORT, genesWithSpecificity );
+            didAnything = true;
         } else {
             log.info( sf + " exists, will not overwrite" );
         }
 
         if ( overWrite || !bf.exists() ) {
             processCompositeSequences( ad, biocFileBaseName, OutputType.BIOPROCESS, genesWithSpecificity );
+            didAnything = true;
         } else {
             log.info( bf + " exists, will not overwrite" );
         }
 
         if ( overWrite || !af.exists() ) {
             processCompositeSequences( ad, allparFileBaseName, OutputType.LONG, genesWithSpecificity );
+            didAnything = true;
         } else {
             log.info( af + " exists, will not overwrite" );
         }
+        return didAnything;
     }
 
     /**
