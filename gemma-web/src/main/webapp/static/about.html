@@ -1,172 +1,132 @@
 <html>
-    <head>
-        <title>About Gemma</title>
-    </head>
-    <body>
-        <div style="width: 900px">
-             <h1>About Gemma</h1>
-			 <br>
-			<table><tr><td>
-			<span style="width: 750px; font:11pt arial,sans-serif;">
-                Gemma is an open-source database and software system for the meta-analysis of gene expression data. Gemma contains
-                data from hundreds of<a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html"> public microarray data sets</a>, referencing 
-                hundreds of <a href="/Gemma/bibRef/showAllEeBibRefs.html">published papers</a>.
-            </span>
-			</td><td>
-				<a href="http://www.neuinfo.org/"><img src="http://neuinfo.org/images/registered_with_nif_button.jpg" alt="Registered with NIF" style="border:none;"/></a>
-				
-			</td></tr></table>
-            
-            <br>
-            <span>Copyright &copy; 2007-2011 &nbsp;<a href="/Gemma/static/termsAndConditions.html">Terms and conditions</a></span>
-            <br>
-            <p class="indent20">
-                <table style="padding:5px;text-align:center;background-color:#F0F8F8;border:1px gainsboro solid">
-                    <tr>
-                        <td colspan="2" style="text-align:left">
-                            Funded by:
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding-left:10px;padding-right:10px;width:130px;vertical-align:bottom;border-right:1px solid #C0C0C0">
-                                        <a target="_blank" href="http://www.nih.gov/"><img src="/Gemma/images/logo/NIH_logo_120px.png"/></a>
-                        </td>
-                        <td>
-                            <table>
-                                <tr>
-                                    <td style="padding-left:10px;vertical-align:bottom">
-                                        <a target="_blank" href="http://www.innovation.ca/"><img src="/Gemma/images/logo/CFI.logo2_147x69.png"/></a>
-                                    </td>
-                                    <td style="padding-left:10px;vertical-align:bottom">
-                                        <a target="_blank" href="http://www.msfhr.org/"><img src="/Gemma/images/logo/MSFHR_135x70.png" /></a>
-                                    </td>
-                                    <td style="padding-left:10px;vertical-align:bottom">
-                                        <a target="_blank" href="http://www.cihr-irsc.gc.ca/"><img src="/Gemma/images/logo/cihr_logo_113x70.png" /></a>
-                                    </td>
-                                    <td style="padding-left:10px;vertical-align:bottom">
-                                        <a target="_blank" href="http://www.genomebc.ca/"><img src="/Gemma/images/logo/genomeBC_137x52-b.gif" /></a>
-                                    </td>
-									<td style="padding-left:10px;vertical-align:bottom;width:130px;">
-	                                    <a target="_blank" href="http://www.neurodevnet.ca/"><img src="/Gemma/images/logo/neurodevnet-logo_93x75.png" /></a>
-	                                </td>
-									<td style="padding-left:10px;vertical-align:bottom;">
-	                                    <a target="_blank" href="http://www.nserc-crsng.gc.ca/"><img src="/Gemma/images/logo/nserc_120x55.png" /></a>
-	                                </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </p>
-            <br>
-            <br>
-            <br>
-            <ul class="plainList">
-                <li>
-                    <h4><a href="#goals">Goals</a></h4>
-                </li>
-                <li>
-                    <h4><a href="#functionality">Functionality</a></h4>
-                </li>
-                <li>
-                    <h4><a href="/Gemma/static/credits.html">Credits</a></h4>
-                </li>
-                <li>
-                    <h4><a href="/Gemma/contactUs.html">Contact Us</a></h4>
-                </li>
-                <li>
-                    <h4><a href="/Gemma/static/help.html">Help</a></h4>
-                </li>
-            </ul>
-            <br>
-            <br>
-            <br>
-            <a name="goals"></a>
-            <h2>Gemma's Goals</h2>
-            <p class="emphasized">
-                The goals of Gemma are to:
-            </p>
-            <ul class="plainList">
-                <li>
-                    Aggregate public gene expression studies for the purposes of reanalysis. Our current focus is on human, mouse and
-                    rat nervous system data, but Gemma supports data from any species.
-                </li>
-                <li>
-                    Perform analyses on the expression data and store the results for rapid and easy access.
-                </li>
-                <li>
-                    Reanalyze probe sequences to allow consistent cross-platform comparisons.
-                </li>
-                <li>
-                    To serve as a framework for the development and evaluation of novel algorithms for expression analysis and
-                    meta-analysis.
-                </li>
-                <li>
-                    Support a range of analytical approaches including but not limited to coexpression and differential expression.
-                </li>
-                <li>
-                Support a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide arrays, one
-                channel and ratiometric cDNA arrays, and (planned) SAGE or other sequence-based techniques.
-                <li>
-                    Provide consistent annotation/descriptions of data sets to enhance usability of the data.
-                </li>
-                <li>
-                    Provide external sites with processed data, web services, software and other means of including Gemma tools and
-                    data in other systems.
-                </li>
-                <li>
-                    Allow users to upload expression data for inclusion in Gemma, either "privately" for their own analyses or to be
-                    made public.
-                </li>
-                <li>
-                    Provide a software system that can be installed and used by others.
-                </li>
-            </ul>
-            <p class="emphasized">
-                To these ends, Gemma consists of:
-            </p>
-            <ul class="plainList">
-                <li>
-                    A database and software framework for storing and accessing expression data with a focus on<em>analysis</em>. The software is released under the Apache 2.0 license, which is liberal enough to allow
-                    commercialization, modification, and reuse by anybody.
-                </li>
-                <li>
-                    A set of administrative and curation tools for loading, tracking, processing, annotating, analysis and quality
-                    control of expression data.
-                </li>
-                <li>
-                    A sequence analysis pipeline for probe sequences.
-                </li>
-                <li>
-                    Implementations of algorithms for analysis of expression data, in some cases using integration with "R"
-                </li>
-            </ul>
-            <br>
-            <br>
-            <a name="functionality"></a>
-            <h2>Main Functionality</h2>
-            <p>
-                For users of the web site, Gemma has two main functions, which are supported by various searching and browsing
-                functionality.
-            </p>
-            <h3>Coexpression meta-analysis</h3>
-            <p>
-                The entry point for coexpression analyis is<a href="/Gemma/searchCoexpression.html">here</a>. The methods used for this "recurring coexpression" analysis
-                are essentially as described in<a href="http://www.ncbi.nlm.nih.gov/pubmed/15173114">Lee et al, 2004</a>. Briefly, each data set is preprocessed
-                and analyzed to identify pairs of genes that are strongly coexpressed. The on-line analysis searches these results
-                for pairs of genes that are coexpressed in multiple data sets, starting from a gene you choose.
-            </p>
-            <h3>Differential expression analysis access</h3>
-            <p>
-                We are performing differential expression analysis on most of the data sets in Gemma. Currently these results are
-                available from a<a href="/Gemma/diff/diffExpressionSearch.html">search form</a>
-                or integrated into the<a href="/Gemma/searchCoexpression.html" coexpression analysis> results</a>.
-            </p>
-            <p>
-                Data sets are considered for differential expression analysis if they have a factorial design with up to two levels,
-                and appropriate replication and block-completeness to allow an anlysis to proceed. Data sets are analyzed using
-                t-tests, one-way ANOVA, or two-way ANOVA with or without interaction, as appropriate to the design.
-            </p>
-        </div>
-    </body>
+<head>
+<title>About Gemma</title>
+</head>
+<body>
+	<div style="width: 900px">
+		<h1>About Gemma</h1>
+		<br>
+		<table>
+			<tr>
+				<td><span style="width: 750px; font: 11pt arial, sans-serif;"> Gemma is an open-source database and
+						software system for the meta-analysis of gene expression data. Gemma contains data from hundreds of<a
+						href="/Gemma/expressionExperiment/showAllExpressionExperiments.html"> public microarray data sets</a>, referencing
+						hundreds of <a href="/Gemma/bibRef/showAllEeBibRefs.html">published papers</a>.
+				</span></td>
+				<td><a href="http://www.neuinfo.org/"><img src="http://neuinfo.org/images/registered_with_nif_button.jpg"
+						alt="Registered with NIF" style="border: none;" /></a></td>
+			</tr>
+		</table>
+
+		<br> <span>Copyright &copy; 2007-2011 &nbsp;<a href="/Gemma/static/termsAndConditions.html">Terms and
+				conditions</a></span> <br>
+		<p class="indent20">
+		<table style="padding: 5px; text-align: center; background-color: #F0F8F8; border: 1px gainsboro solid">
+			<tr>
+				<td colspan="2" style="text-align: left">Funded by:</td>
+			</tr>
+			<tr>
+				<td
+					style="padding-left: 10px; padding-right: 10px; width: 130px; vertical-align: bottom; border-right: 1px solid #C0C0C0">
+					<a target="_blank" href="http://www.nih.gov/"><img src="/Gemma/images/logo/NIH_logo_120px.png" /></a>
+				</td>
+				<td>
+					<table>
+						<tr>
+							<td style="padding-left: 10px; vertical-align: bottom"><a target="_blank" href="http://www.innovation.ca/"><img
+									src="/Gemma/images/logo/CFI.logo2_147x69.png" /></a></td>
+							<td style="padding-left: 10px; vertical-align: bottom"><a target="_blank" href="http://www.msfhr.org/"><img
+									src="/Gemma/images/logo/MSFHR_135x70.png" /></a></td>
+							<td style="padding-left: 10px; vertical-align: bottom"><a target="_blank" href="http://www.cihr-irsc.gc.ca/"><img
+									src="/Gemma/images/logo/cihr_logo_113x70.png" /></a></td>
+							<td style="padding-left: 10px; vertical-align: bottom"><a target="_blank" href="http://www.genomebc.ca/"><img
+									src="/Gemma/images/logo/genomeBC_137x52-b.gif" /></a></td>
+							<td style="padding-left: 10px; vertical-align: bottom; width: 130px;"><a target="_blank"
+								href="http://www.neurodevnet.ca/"><img src="/Gemma/images/logo/neurodevnet-logo_93x75.png" /></a></td>
+							<td style="padding-left: 10px; vertical-align: bottom;"><a target="_blank"
+								href="http://www.nserc-crsng.gc.ca/"><img src="/Gemma/images/logo/nserc_120x55.png" /></a></td>
+						</tr>
+					</table>
+				</td>
+			</tr>
+		</table>
+		</p>
+		<br> <br> <br>
+		<ul class="plainList">
+			<li>
+				<h4>
+					<a href="#goals">Goals</a>
+				</h4>
+			</li>
+			<li>
+				<h4>
+					<a href="#functionality">Functionality</a>
+				</h4>
+			</li>
+			<li>
+				<h4>
+					<a href="/Gemma/static/credits.html">Credits</a>
+				</h4>
+			</li>
+			<li>
+				<h4>
+					<a href="/Gemma/contactUs.html">Contact Us</a>
+				</h4>
+			</li>
+			<li>
+				<h4>
+					<a href="/Gemma/static/help.html">Help</a>
+				</h4>
+			</li>
+		</ul>
+		<br> <br> <br> <a name="goals"></a>
+		<h2>Gemma's Goals</h2>
+		<p class="emphasized">The goals of Gemma are to:</p>
+		<ul class="plainList">
+			<li>Aggregate public gene expression studies for the purposes of reanalysis. Our current focus is on human,
+				mouse and rat nervous system data, but Gemma supports data from any species.</li>
+			<li>Perform analyses on the expression data and store the results for rapid and easy access.</li>
+			<li>Reanalyze probe sequences to allow consistent cross-platform comparisons.</li>
+			<li>To serve as a framework for the development and evaluation of novel algorithms for expression analysis and
+				meta-analysis.</li>
+			<li>Support a range of analytical approaches including but not limited to coexpression and differential
+				expression.</li>
+			<li>Support a variety of expression technologies, including Affymetrix, Illumina and other oligonucleotide
+				arrays, one channel and ratiometric cDNA arrays, and sequence-based techniques.
+			<li>Provide consistent annotation/descriptions of data sets to enhance usability of the data.</li>
+			<li>Provide external sites with processed data, web services, software and other means of including Gemma tools
+				and data in other systems.</li>
+			<li>Allow users to upload expression data for inclusion in Gemma, either "privately" for their own analyses or
+				to be made public.</li>
+			<li>Provide a software system that can be installed and used by others.</li>
+		</ul>
+		<p class="emphasized">To these ends, Gemma consists of:</p>
+		<ul class="plainList">
+			<li>A database and software framework for storing and accessing expression data with a focus on<em>analysis</em>.
+				The software is released under the Apache 2.0 license, which is liberal enough to allow commercialization,
+				modification, and reuse by anybody.
+			</li>
+			<li>A set of administrative and curation tools for loading, tracking, processing, annotating, analysis and
+				quality control of expression data.</li>
+			<li>A sequence analysis pipeline for probe sequences.</li>
+			<li>Implementations of algorithms for analysis of expression data.</li>
+		</ul>
+		<br> <br> <a name="functionality"></a>
+		<h2>Main analyses</h2>
+		<p>Gemma provides two basic types of analysis of each data set: coexpression and differential expression. The
+			emphasis is on being able to search and compare results across data sets.</p>
+		<h3>Coexpression</h3>
+		<p>
+			The methods used for this "recurring coexpression" analysis are essentially as described in<a
+				href="http://www.ncbi.nlm.nih.gov/pubmed/15173114">Lee et al, 2004</a>. Briefly, each data set is preprocessed and
+			analyzed to identify pairs of genes that are strongly coexpressed. The on-line analysis searches these results for
+			pairs of genes that are coexpressed in multiple data sets, starting from a gene you choose.
+		</p>
+		<h3>Differential expression</h3>
+
+		<p>Data sets are considered for differential expression analysis if they have a factorial design with up to two
+			levels, and appropriate replication and block-completeness to allow an anlysis to proceed. Data sets are analyzed
+			using t-tests, one-way ANOVA, or two-way ANOVA with or without interaction, as appropriate to the design.</p>
+	</div>
+</body>
 </html>
