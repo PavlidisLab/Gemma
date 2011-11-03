@@ -279,7 +279,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 		
 		
-		if (!this.getTopToolbar().getComponent('stringencySpinner').hasListener('spin')) {
+		if (this.getTopToolbar() && !this.getTopToolbar().getComponent('stringencySpinner').hasListener('spin')) {
 
             this.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
 
@@ -330,8 +330,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	cytoscapeUpdate : function(stringency, numQueryGenes, data){ 
 		
 		//TODO update toolbar stringency
-		this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
-		
+		if (this.getTopToolbar()) {
+			this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
+		}
 		this.loadData(false, numQueryGenes, data, null);
 		
 		
