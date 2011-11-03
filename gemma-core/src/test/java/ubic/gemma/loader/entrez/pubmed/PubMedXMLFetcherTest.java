@@ -72,7 +72,7 @@ public class PubMedXMLFetcherTest extends TestCase {
             assertEquals( "Autism Spectrum Disorders", br.getTitle() );
 
             SimpleDateFormat f = new SimpleDateFormat( "yyyy" );
-            assertEquals( "1993", f.format( br.getPublicationDate() ) );
+            assertEquals( "2003", f.format( br.getPublicationDate() ) );
         } catch ( RuntimeException e ) {
             checkCause( e );
             return;
