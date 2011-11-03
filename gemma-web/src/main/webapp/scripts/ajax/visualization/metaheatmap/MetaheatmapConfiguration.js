@@ -1,82 +1,89 @@
-Ext.namespace('Gemma');
+Ext.namespace('Gemma.Metaheatmap');
 
-Gemma.MetaVisualizationConfig = {};
+Gemma.Metaheatmap.Config = {};
 
 // Sizes
-Gemma.MetaVisualizationConfig.cellWidth = 14;
-Gemma.MetaVisualizationConfig.cellHeight = 10;
-Gemma.MetaVisualizationConfig.groupSeparatorHeight = 4;
-Gemma.MetaVisualizationConfig.columnSeparatorWidth = 1;
-Gemma.MetaVisualizationConfig.groupSeparatorWidth = 4;
-Gemma.MetaVisualizationConfig.geneLabelFontSize = 9;
-Gemma.MetaVisualizationConfig.columnLabelFontSize = 9;
+Gemma.Metaheatmap.Config.cellWidth = 14;
+Gemma.Metaheatmap.Config.cellHeight = 10;
+Gemma.Metaheatmap.Config.groupSeparatorHeight = 4;
+Gemma.Metaheatmap.Config.columnSeparatorWidth = 1;
+Gemma.Metaheatmap.Config.groupSeparatorWidth = 4;
+Gemma.Metaheatmap.Config.geneLabelFontSize = 9;
+Gemma.Metaheatmap.Config.columnLabelFontSize = 9;
 
-Gemma.MetaVisualizationConfig.labelAngle = 315.0;
-Gemma.MetaVisualizationConfig.labelBaseYCoor = 196;
-Gemma.MetaVisualizationConfig.columnLabelHeight = 210;
+Gemma.Metaheatmap.Config.ControlPanel = {};
+Gemma.Metaheatmap.Config.ControlPanel.width = 200;
 
-Gemma.MetaVisualizationConfig.minAppHeight = 600;
-Gemma.MetaVisualizationConfig.minAppWidth = 600;
-Gemma.MetaVisualizationConfig.windowPadding = 50;
-Gemma.MetaVisualizationConfig.toolPanelWidth = 300;
+Gemma.Metaheatmap.Config.labelAngle = 315.0;
+Gemma.Metaheatmap.Config.labelBaseYCoor = 196;
+Gemma.Metaheatmap.Config.columnLabelHeight = 210;
 
-Gemma.MetaVisualizationConfig.labelExtraSpace = Math.floor(Gemma.MetaVisualizationConfig.labelBaseYCoor / Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180));
+Gemma.Metaheatmap.Config.minAppHeight = 600;
+Gemma.Metaheatmap.Config.minAppWidth = 600;
+Gemma.Metaheatmap.Config.windowPadding = 50;
+Gemma.Metaheatmap.Config.toolPanelWidth = 300;
+
+Gemma.Metaheatmap.Config.labelExtraSpace = Math.floor(Gemma.Metaheatmap.Config.labelBaseYCoor / Math.tan((360 - Gemma.Metaheatmap.Config.labelAngle) * Math.PI / 180));
 
 // Colors
-Gemma.MetaVisualizationConfig.cellHighlightColor = 'red';
-Gemma.MetaVisualizationConfig.defaultLabelColor = 'black';
-Gemma.MetaVisualizationConfig.geneLabelHighlightColor = 'red';
-Gemma.MetaVisualizationConfig.rowHighlightColor = 'pink';
-Gemma.MetaVisualizationConfig.rowCellSelectColor = 'pink';
-Gemma.MetaVisualizationConfig.columnHighlightColor = 'pink';
-Gemma.MetaVisualizationConfig.analysisLabelHighlightColor = 'rgb(255,140,0)';
-Gemma.MetaVisualizationConfig.baselineFactorValueColor = 'rgb(128, 0, 0)';
-Gemma.MetaVisualizationConfig.factorValueDefaultColor = 'rgb(0,0,200)';
-Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor1 = 'rgba(10,100,10, 0.1)';
-Gemma.MetaVisualizationConfig.analysisLabelBackgroundColor2 = 'rgba(10,100,10, 0.05)';
+Gemma.Metaheatmap.Config.cellHighlightColor = 'red';
+Gemma.Metaheatmap.Config.defaultLabelColor = 'black';
+Gemma.Metaheatmap.Config.geneLabelHighlightColor = 'red';
+Gemma.Metaheatmap.Config.rowHighlightColor = 'pink';
+Gemma.Metaheatmap.Config.rowCellSelectColor = 'pink';
+Gemma.Metaheatmap.Config.columnHighlightColor = 'pink';
+Gemma.Metaheatmap.Config.analysisLabelHighlightColor = 'rgb(255,140,0)';
+Gemma.Metaheatmap.Config.baselineFactorValueColor = 'rgb(128, 0, 0)';
+Gemma.Metaheatmap.Config.factorValueDefaultColor = 'rgb(0,0,200)';
+Gemma.Metaheatmap.Config.analysisLabelBackgroundColor1 = 'rgba(10,100,10, 0.1)';
+Gemma.Metaheatmap.Config.analysisLabelBackgroundColor2 = 'rgba(10,100,10, 0.05)';
+Gemma.Metaheatmap.Config.columnExpandButtonColor = 'rgba(10,100,10, 0.8)';
+Gemma.Metaheatmap.Config.columnExpandButtonHighlightColor = '';
 
-Gemma.MetaVisualizationConfig.miniPieColor = 'rgb(95,158,160)';
-Gemma.MetaVisualizationConfig.miniPieColorInvalid = 'rgb(192,192,192)';
 
-Gemma.MetaVisualizationConfig.basicColourRange = new org.systemsbiology.visualization.DiscreteColorRange(20, {
-			min : -1,
-			max : 1
+
+Gemma.Metaheatmap.Config.miniPieColor = 'rgb(95,158,160)';
+Gemma.Metaheatmap.Config.miniPieColorInvalid = 'rgb(192,192,192)';
+
+Gemma.Metaheatmap.Config.basicColourRange = new org.systemsbiology.visualization.DiscreteColorRange (20, {
+			min : 0,
+			max : 10
 		}, {
 			maxColor : {
-				r : 255,
-				g : 69,
-				b : 0,
+				r : 197,
+				g : 27,
+				b : 138,
 				a : 1
 			},
 			minColor : {
 				r : 255,
-				g : 255,
-				b : 0,
-				a : 1
-			},
-			emptyDataColor : {
-				r : 100,
-				g : 100,
-				b : 100,
-				a : 0.8
-			},
-			passThroughBlack : true
-		});
-
-Gemma.MetaVisualizationConfig.contrastsColourRange = new org.systemsbiology.visualization.DiscreteColorRange(20, {
-			min : -3,
-			max : 3
-		}, {
-			maxColor : {
-				r : 0,
 				g : 255,
 				b : 255,
 				a : 1
 			},
-			minColor : {
+			emptyDataColor : {
+				r : 100,
+				g : 100,
+				b : 100,
+				a : 0.8
+			},
+			passThroughBlack : false
+		});
+
+Gemma.Metaheatmap.Config.contrastsColourRange = new org.systemsbiology.visualization.DiscreteColorRange (20, {
+			min : -3,
+			max : 3
+		}, {
+			maxColor : {
 				r : 255,
-				g : 255,
+				g : 215,
 				b : 0,
+				a : 1
+			},
+			minColor : {
+				r : 70,
+				g : 130,
+				b : 180,
 				a : 1
 			},
 			emptyDataColor : {
@@ -87,3 +94,26 @@ Gemma.MetaVisualizationConfig.contrastsColourRange = new org.systemsbiology.visu
 			},
 			passThroughBlack : true
 		});
+
+
+Gemma.Metaheatmap.Config.ColourLegendSettings = {
+	discreteColorRangeObject  : Gemma.Metaheatmap.Config.basicColourRange,
+	discreteColorRangeObject2 : Gemma.Metaheatmap.Config.contrastsColourRange,
+	cellHeight	 : 14,
+	cellWidth	 : 14,
+	colorValues  : [[null, "No Data"], [0, "1~0.5"], [0.1, "0.5~0.25"], [0.2, "0.1"], [0.3, "0.05"],
+	                [0.4, "0.01"], [0.6, "0.001"], [0.8, "0.0001"], [0.9, "0.00001"], [1, "< 0.00001"]],
+	colorValues2 : [[null, "No Data"], [3, "Up"], [-3, "Down"]],
+	vertical	 : true,
+	canvasId	 : 'canvas1',
+	canvasId2	 : 'canvas12',
+	legendTitle	 : 'q-value',
+	legendTitle2 : 'direction',
+	textWidthMax : 80,
+	textOffset	 : 1,
+	fontSize	 : 12,
+	constrain: true
+};
+
+
+
