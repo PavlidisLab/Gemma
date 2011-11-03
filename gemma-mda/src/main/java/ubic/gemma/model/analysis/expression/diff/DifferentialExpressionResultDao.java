@@ -97,7 +97,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
     
     public List<Double> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit );
 
-    public List<Long> findProbeAnalysisResultIdsInResultSet( Long geneId, Long resultSetId, Integer limit );
+    public Map<Long, Long> findProbeAnalysisResultIdsInResultSet(  Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed );
     
     public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold );
     
@@ -114,6 +114,8 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
             ProbeAnalysisResult differentialExpressionAnalysisResult );
 
     public ProbeAnalysisResult load (Long id); 
+    
+    public Map<Long, DifferentialExpressionAnalysisResult> loadMultiple( Collection<Long> ids );
     
     public void thaw( final ProbeAnalysisResult result );
 

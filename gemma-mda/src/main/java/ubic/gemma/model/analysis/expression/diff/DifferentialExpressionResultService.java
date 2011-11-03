@@ -108,7 +108,7 @@ public interface DifferentialExpressionResultService {
      * @param limit
      * @return
      */
-    public List<Long> findProbeAnalysisResultIdsInResultSet( Long geneId, Long resultSetId, Integer limit );
+    public Map<Long,Long> findProbeAnalysisResultIdsInResultSet(  Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed );
     
     /**
      * Given a list of result sets finds the diff expression results that met the given threshold

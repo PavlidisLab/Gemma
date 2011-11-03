@@ -18,6 +18,7 @@
  */
 package ubic.gemma.model.analysis.expression.diff;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -35,7 +37,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.DoubleType;
-import org.hibernate.type.LongType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.stereotype.Repository;
@@ -93,13 +94,21 @@ public class DifferentialExpressionResultDaoImpl extends
             + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
             + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
             + " order by dear.CORRECTED_P_VALUE_BIN DESC";
-
-    private static final String fetchProbeAnalysisResultByResultSetAndGeneQuery = "select dear.ID "
-            + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par "
-            + " where g2s.CS = par.PROBE_FK and par.ID = dear.ID and  "
-            + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and g2s.GENE = :gene_id "
-            + " order by dear.CORRECTED_P_VALUE_BIN DESC";
-
+    
+//    private static final String fetchBatchProbeAnalysisResultsByResultSetsAndGeneQuery = "SELECT SQL_NO_CACHE dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_P_VALUE_BIN, dear.ID"
+//        + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s , PROBE_ANALYSIS_RESULT par" //FORCE KEY(GENE)
+//        + " where par.ID = dear.ID and g2s.CS = par.PROBE_FK and " 
+//        + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK IN (:rs_ids) and "
+//        + " g2s.AD in (:ad_ids) and "
+//        + " g2s.GENE IN (:gene_ids) GROUP BY dear.EXPRESSION_ANALYSIS_RESULT_SET_FK, dear.CORRECTED_P_VALUE_BIN ORDER BY dear.CORRECTED_P_VALUE_BIN DESC";
+    
+    private static final String fetchBatchProbeAnalysisResultsByResultSetsAndGeneQuery = "SELECT g2s.GENE, dear.CORRECTED_P_VALUE_BIN, dear.ID"
+                + " from DIFFERENTIAL_EXPRESSION_ANALYSIS_RESULT dear, GENE2CS g2s FORCE KEY(GENE), PROBE_ANALYSIS_RESULT par"
+                + " where par.ID = dear.ID and g2s.CS = par.PROBE_FK and " 
+                + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and "
+                + " g2s.AD in (:ad_ids) and "
+                + " g2s.GENE IN (:gene_ids) GROUP BY g2s.GENE, dear.CORRECTED_P_VALUE_BIN ORDER BY dear.CORRECTED_P_VALUE_BIN DESC";
+            
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
@@ -472,37 +481,49 @@ public class DifferentialExpressionResultDaoImpl extends
         }
         return results;
     }
-
-    public List<Long> findProbeAnalysisResultIdsInResultSet( Long geneId, Long resultSetId, Integer limit ) {
+    
+    public Map<Long, Long> findProbeAnalysisResultIdsInResultSet( Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
 
-        List<Long> results = null;
+        Map<Long, Long> results = new HashMap<Long,Long>();
 
+        Session session = super.getSession();
         try {
-            Session session = super.getSession();
-            org.hibernate.SQLQuery queryObject = session
-                    .createSQLQuery( fetchProbeAnalysisResultByResultSetAndGeneQuery );
+            org.hibernate.SQLQuery queryObject = session.createSQLQuery( fetchBatchProbeAnalysisResultsByResultSetsAndGeneQuery );
 
-            queryObject.setLong( "gene_id", geneId );
             queryObject.setLong( "rs_id", resultSetId );
+            queryObject.setParameterList( "gene_ids", geneIds );
+            queryObject.setParameterList( "ad_ids", adUsed );
+            
+            List queryResult = queryObject.list();
 
-            if ( limit != null ) {
-                queryObject.setMaxResults( limit );
+            log.warn("Got " +queryResult.size() +" results");
+
+            if ( queryResult == null || queryResult.isEmpty() ) return results;
+
+            // Get probe result with the best pValue.
+            for ( Object o : queryResult ) {
+                Object[] row = ( Object[] ) o;
+                BigInteger geneId = ( BigInteger ) row[0];
+                Integer p_value_bin = ( Integer ) row[1];
+                BigInteger probe_analysis_id = ( BigInteger ) row[2];
+                if (results.get( geneId.longValue() ) == null) {
+                    results.put( geneId.longValue(), probe_analysis_id.longValue() );
+                }
             }
-
-            queryObject.addScalar( "ID", new LongType() );
-            results = queryObject.list();
 
         } catch ( org.hibernate.HibernateException ex ) {
             throw super.convertHibernateAccessException( ex );
+        } finally {
+            super.releaseSession( session );            
         }
 
         timer.stop();
         if ( log.isDebugEnabled() )
-            log.debug( "Fetching ProbeResultIds from resultSet " + resultSetId + " for gene " + geneId + " took : "
-                    + timer.getTime() + " ms" );
+            log.debug( "Fetching ProbeResultIds for geneIds " + StringUtils.join( geneIds, ",") + " and result set " + resultSetId
+                    + " took : " + timer.getTime() + " ms" );
 
         return results;
     }
@@ -644,4 +665,39 @@ public class DifferentialExpressionResultDaoImpl extends
         } );
     }
 
+    public Map<Long, DifferentialExpressionAnalysisResult> loadMultiple( Collection<Long> ids ) {        
+        final String queryString = "select dea from DifferentialExpressionAnalysisResultImpl dea where dea.id in (:ids)";
+
+        Map<Long, DifferentialExpressionAnalysisResult> probeResults = new HashMap<Long,DifferentialExpressionAnalysisResult>();
+
+        if ( ids.size() == 0 ) {
+            return probeResults;
+        }
+
+        int BATCH_SIZE = 100;
+
+        Collection<Long> batch = new HashSet<Long>();
+
+        for ( Long probeResultId : ids ) {
+            batch.add( probeResultId );
+            if ( batch.size() == BATCH_SIZE ) {
+                Collection<DifferentialExpressionAnalysisResult> batchResults = getHibernateTemplate().findByNamedParam( queryString, "ids", batch );
+                for (DifferentialExpressionAnalysisResult par : batchResults) {                    
+                    probeResults.put(par.getId(), par);                    
+                }
+                batch.clear();
+            }
+        }
+
+        if ( batch.size() > 0 ) {
+            Collection<DifferentialExpressionAnalysisResult> batchResults = getHibernateTemplate().findByNamedParam( queryString, "ids", batch );
+            for (DifferentialExpressionAnalysisResult par : batchResults) {                    
+                probeResults.put(par.getId(), par);                    
+            }
+        }
+
+        return probeResults;
+    }
+    
+    
 }
