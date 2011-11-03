@@ -37,8 +37,6 @@ import java.util.TreeSet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -184,6 +182,33 @@ public class ArrayDesignController extends AbstractTaskService {
 
         arrayDesignService.update( ad );
         return formatAlternateNames( ad );
+    }
+
+    /**
+     * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
+     * level? Is there security for ArrayDesigns? ids can be null
+     * 
+     * @param batch
+     * @return
+     */
+    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Collection<Long> ids,
+            boolean showMerged, boolean showOrphans ) {
+
+        Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
+
+        if ( !SecurityService.isUserAdmin() ) {
+            auditableUtil.removeTroubledArrayDesigns( valueObjects );
+        }
+        int count = valueObjects.size();
+
+        arrayDesignReportService.fillInValueObjects( valueObjects );
+        arrayDesignReportService.fillEventInformation( valueObjects );
+        arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
+
+        JsonReaderResponse<ArrayDesignValueObject> returnVal = new JsonReaderResponse<ArrayDesignValueObject>(
+                new ArrayList<ArrayDesignValueObject>( valueObjects ), count );
+
+        return returnVal;
     }
 
     /**
@@ -409,6 +434,78 @@ public class ArrayDesignController extends AbstractTaskService {
     }
 
     /**
+     * Exposed for AJAX calls.
+     * 
+     * @param ed
+     * @return
+     */
+    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
+        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
+        return this.getDesignSummaries( arrayDesign );
+    }
+
+    /**
+     * @param arrayDesign
+     * @return
+     */
+    public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
+        Collection<Object[]> rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
+        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
+                .getSummaryMapValueObjects( rawSummaries );
+        return summaries;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ed
+     * @return the HTML to display.
+     */
+    public Map<String, String> getReportHtml( EntityDelegator ed ) {
+        assert ed.getId() != null;
+        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
+        Map<String, String> result = new HashMap<String, String>();
+
+        result.put( "id", ed.getId().toString() );
+        if ( summary == null )
+            result.put( "html", "Not available" );
+        else
+            result.put( "html", ArrayDesignHtmlUtil.getSummaryHtml( summary ) );
+        return result;
+    }
+
+    /**
+     * AJAX
+     * 
+     * @param ArrayDesignValueObject
+     * @return
+     */
+    public String getSummaryForArrayDesign( Long id ) {
+
+        Collection<Long> ids = new ArrayList<Long>();
+        ids.add( id );
+        Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjects( ids );
+        arrayDesignReportService.fillInValueObjects( advos );
+
+        if ( !advos.isEmpty() && advos.toArray()[0] != null ) {
+            ArrayDesignValueObject advo = ( ArrayDesignValueObject ) advos.toArray()[0];
+            StringBuilder buf = new StringBuilder();
+
+            buf.append( "<div style=\"float:left\" >" );
+
+            if ( advo.getNumProbeAlignments() != null ) {
+                buf.append( ArrayDesignHtmlUtil.getSummaryHtml( advo ) );
+            } else {
+                buf.append( "[Not avail.]" );
+            }
+
+            buf.append( "</div>" );
+            return buf.toString();
+        }
+        return "[Not avail.]";
+    }
+
+    /**
      * AJAX
      * 
      * @param arrayDesignIds
@@ -448,79 +545,6 @@ public class ArrayDesignController extends AbstractTaskService {
     /**
      * AJAX
      * 
-     * @param ArrayDesignValueObject
-     * @return
-     */
-    public String getSummaryForArrayDesign( Long id ) {
-
-        Collection<Long> ids = new ArrayList<Long>();
-        ids.add( id );
-        Collection<ArrayDesignValueObject> advos = arrayDesignService.loadValueObjects( ids );
-        arrayDesignReportService.fillInValueObjects( advos );
-
-        if ( !advos.isEmpty() && advos.toArray()[0] != null ) {
-            ArrayDesignValueObject advo = ( ArrayDesignValueObject ) advos.toArray()[0];
-            StringBuilder buf = new StringBuilder();
-
-            buf.append( "<div style=\"float:left\" >" );
-
-            if ( advo.getNumProbeAlignments() != null ) {
-                buf.append( ArrayDesignHtmlUtil.getSummaryHtml( advo ) );
-            } else {
-                buf.append( "[Not avail.]" );
-            }
-
-            buf.append( "</div>" );
-            return buf.toString();
-        }
-        return "[Not avail.]";
-    }
-
-    /**
-     * Exposed for AJAX calls.
-     * 
-     * @param ed
-     * @return
-     */
-    public Collection<CompositeSequenceMapValueObject> getCsSummaries( EntityDelegator ed ) {
-        ArrayDesign arrayDesign = arrayDesignService.load( ed.getId() );
-        return this.getDesignSummaries( arrayDesign );
-    }
-
-    /**
-     * @param arrayDesign
-     * @return
-     */
-    @SuppressWarnings("unchecked")
-    public Collection<CompositeSequenceMapValueObject> getDesignSummaries( ArrayDesign arrayDesign ) {
-        Collection rawSummaries = compositeSequenceService.getRawSummary( arrayDesign, NUM_PROBES_TO_SHOW );
-        Collection<CompositeSequenceMapValueObject> summaries = arrayDesignMapResultService
-                .getSummaryMapValueObjects( rawSummaries );
-        return summaries;
-    }
-
-    /**
-     * AJAX
-     * 
-     * @param ed
-     * @return the HTML to display.
-     */
-    public Map<String, String> getReportHtml( EntityDelegator ed ) {
-        assert ed.getId() != null;
-        ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject( ed.getId() );
-        Map<String, String> result = new HashMap<String, String>();
-
-        result.put( "id", ed.getId().toString() );
-        if ( summary == null )
-            result.put( "html", "Not available" );
-        else
-            result.put( "html", ArrayDesignHtmlUtil.getSummaryHtml( summary ) );
-        return result;
-    }
-
-    /**
-     * AJAX
-     * 
      * @return the taskid
      */
     public String remove( EntityDelegator ed ) {
@@ -550,42 +574,7 @@ public class ArrayDesignController extends AbstractTaskService {
      */
     @RequestMapping("/showAllArrayDesigns.html")
     public ModelAndView showAllArrayDesigns( HttpServletRequest request, HttpServletResponse response ) {
-
-        /*
-         * StopWatch overallWatch = new StopWatch(); overallWatch.start();
-         * 
-         * String sId = request.getParameter( "id" ); String sShowMerge = request.getParameter( "showMerg" ); String
-         * sShowOrph = request.getParameter( "showOrph" );
-         * 
-         * boolean showMergees = Boolean.parseBoolean( sShowMerge ); boolean showOrphans = Boolean.parseBoolean(
-         * sShowOrph );
-         * 
-         * ArrayDesignValueObject summary = arrayDesignReportService.getSummaryObject();
-         * 
-         * Collection<Long> ids = new ArrayList<Long>(); if ( sId != null ) { String[] idList = StringUtils.split( sId,
-         * ',' ); for ( int i = 0; i < idList.length; i++ ) { try { ids.add( new Long( idList[i] ) ); } catch (
-         * NumberFormatException e ) { // just keep going } } if ( ids.isEmpty() ) { throw new IllegalArgumentException(
-         * "No valid ids in " + sId ); } }
-         * 
-         * Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMergees, showOrphans );
-         * 
-         * // flag or remove troubled - these are not usable. If we're admin, show them anyway. if (
-         * SecurityService.isUserAdmin() ) { auditableUtil.flagTroubledArrayDesigns( valueObjects ); } else {
-         * auditableUtil.removeTroubledArrayDesigns( valueObjects ); }
-         * 
-         * arrayDesignReportService.fillInValueObjects( valueObjects ); arrayDesignReportService.fillEventInformation(
-         * valueObjects ); arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
-         * 
-         * int numArrayDesigns = valueObjects.size(); ModelAndView mav = new ModelAndView( "arrayDesigns" );
-         * mav.addObject( "showMergees", showMergees ); mav.addObject( "showOrphans", showOrphans ); mav.addObject(
-         * "arrayDesigns", valueObjects ); mav.addObject( "numArrayDesigns", numArrayDesigns ); mav.addObject(
-         * "summary", summary );
-         * 
-         * // log.info( "ArrayDesign.showall took: " + overallWatch.getTime() + "ms for " + numArrayDesigns );
-         */
-        ModelAndView mav = new ModelAndView( "arrayDesigns" );
-
-        return mav;
+        return new ModelAndView( "arrayDesigns" );
     }
 
     /**
@@ -855,14 +844,7 @@ public class ArrayDesignController extends AbstractTaskService {
      */
     private void getAnnotationFileLinks( ArrayDesign arrayDesign, ModelAndView mav ) {
 
-        ArrayDesign merger = arrayDesign.getMergedInto();
-        ArrayDesign annotationFileDesign;
-        if ( merger != null )
-            annotationFileDesign = merger;
-        else
-            annotationFileDesign = arrayDesign;
-
-        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( annotationFileDesign.getShortName() );
+        String mungedShortName = ArrayDesignAnnotationService.mungeFileName( arrayDesign.getShortName() );
         File fnp = new File( ArrayDesignAnnotationService.ANNOT_DATA_DIR + mungedShortName
                 + ArrayDesignAnnotationService.NO_PARENTS_FILE_SUFFIX
                 + ArrayDesignAnnotationService.ANNOTATION_FILE_SUFFIX );
@@ -877,63 +859,17 @@ public class ArrayDesignController extends AbstractTaskService {
 
         // context here is Gemma/arrays
         if ( fnp.exists() ) {
-            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+            mav.addObject( "noParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
                     + "&fileType=noParents" );
         }
         if ( fap.exists() ) {
-            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+            mav.addObject( "allParentsAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
                     + "&fileType=allParents" );
         }
         if ( fbp.exists() ) {
-            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + annotationFileDesign.getId()
+            mav.addObject( "bioProcessAnnotationLink", "downloadAnnotationFile.html?id=" + arrayDesign.getId()
                     + "&fileType=bioProcess" );
         }
 
-    }
-
-    /**
-     * @param valueObjects
-     */
-    private void removeTroubledArrayDesigns( Collection<ArrayDesignValueObject> valueObjects ) {
-
-        if ( valueObjects == null || valueObjects.size() == 0 ) {
-            log.warn( "No ads to remove troubled from" );
-            return;
-        }
-
-        CollectionUtils.filter( valueObjects, new Predicate() {
-            public boolean evaluate( Object vo ) {
-                boolean hasTrouble = ( ( ArrayDesignValueObject ) vo ).getTroubled();
-                return !hasTrouble;
-            }
-        } );
-    }
-
-    /**
-     * AJAX call for remote paging store security isn't incorporated in db query, so paging needs to occur at higher
-     * level? Is there security for ArrayDesigns? ids can be null
-     * 
-     * @param batch
-     * @return
-     */
-
-    public JsonReaderResponse<ArrayDesignValueObject> browse( ListBatchCommand batch, Collection<Long> ids,
-            boolean showMerged, boolean showOrphans ) {
-
-        Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
-
-        if ( !SecurityService.isUserAdmin() ) {
-            auditableUtil.removeTroubledArrayDesigns( valueObjects );
-        }
-        int count = valueObjects.size();
-
-        arrayDesignReportService.fillInValueObjects( valueObjects );
-        arrayDesignReportService.fillEventInformation( valueObjects );
-        arrayDesignReportService.fillInSubsumptionInfo( valueObjects );
-
-        JsonReaderResponse<ArrayDesignValueObject> returnVal = new JsonReaderResponse<ArrayDesignValueObject>(
-                new ArrayList<ArrayDesignValueObject>( valueObjects ), count );
-
-        return returnVal;
     }
 }

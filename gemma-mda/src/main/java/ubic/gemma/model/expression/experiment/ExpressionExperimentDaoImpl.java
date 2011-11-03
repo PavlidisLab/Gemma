@@ -1603,12 +1603,10 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( ee.getId() == null ) throw new IllegalArgumentException( "Id cannot be null, cannot be thawed: " + ee );
 
         /*
-         * Big query to eagerly fetch as much as we can. Trying to do everything fails miserably, so we still need a
-         * hybrid approach. But returning the thawed object, as opposed to thawing the one passed in, solves problems.
+         * Trying to do everything fails miserably, so we still need a hybrid approach. But returning the thawed object,
+         * as opposed to thawing the one passed in, solves problems.
          */
         String thawQuery = "select distinct e from ExpressionExperimentImpl e "
-                + " left join fetch e.quantitationTypes left join fetch e.characteristics "
-                + " left join fetch e.investigators" + " left join fetch e.auditTrail at left join fetch at.events "
                 + " left join fetch e.accession acc left join fetch acc.externalDatabase " + "where e.id=:eeid";
 
         List<?> res = this.getHibernateTemplate().findByNamedParam( thawQuery, "eeid", ee.getId() );
@@ -1617,7 +1615,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             throw new IllegalArgumentException( "No experiment with id=" + ee.getId() + " could be loaded." );
         }
         ExpressionExperiment result = ( ExpressionExperiment ) res.iterator().next();
-
+        Hibernate.initialize( result.getQuantitationTypes() );
+        Hibernate.initialize( result.getCharacteristics() );
         Hibernate.initialize( result.getRawDataFile() );
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getBioAssays() );
@@ -1719,15 +1718,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setHasBothIntensities( hasBothIntensities && !mayBeOneChannel );
             v.setHasEitherIntensity( hasIntensityA || hasIntensityB );
         }
-    }
-
-    private String getOrderClause( String orderField, String tableName ) {
-        if ( orderField.equals( "name" ) || orderField.equals( "shortName" ) || orderField.equals( "id" ) ) {
-            return " order by " + tableName + "." + orderField + " ";
-        } else if ( orderField.equals( "taxon" ) ) {
-
-        }
-        return "";
     }
 
     /**

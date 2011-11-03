@@ -222,7 +222,7 @@ public class ArrayDesignMapResultService {
             Object geneId = row[10];
 
             String geneName = ( String ) row[11];
-            String geneAccession = ( String ) row[12];
+            Integer geneAccession = ( Integer ) row[12]; // NCBI
 
             String arrayDesignShortName = ( String ) row[13];
             BigInteger arrayDesignId = ( BigInteger ) row[14];

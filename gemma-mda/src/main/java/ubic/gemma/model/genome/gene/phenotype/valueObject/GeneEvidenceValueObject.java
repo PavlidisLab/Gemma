@@ -46,15 +46,10 @@ public class GeneEvidenceValueObject extends GeneValueObject {
                 Collection<EvidenceValueObject> evidenceFromPhenotype = EvidenceValueObject.convert2ValueObjects( g
                         .getPhenotypeAssociations() );
 
-                String geneNCBI = null;
-
-                if ( g.getNcbiGeneId() != null ) {
-                    geneNCBI = g.getNcbiGeneId().toString();
-                }
-
-                converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), getAliasStrings( g ), geneNCBI, g
-                        .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
-                        .getTaxon().getScientificName(), g.getTaxon().getCommonName(), evidenceFromPhenotype ) );
+                converted.add( new GeneEvidenceValueObject( g.getId(), g.getName(), getAliasStrings( g ), g
+                        .getNcbiGeneId(), g.getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g
+                        .getTaxon().getId(), g.getTaxon().getScientificName(), g.getTaxon().getCommonName(),
+                        evidenceFromPhenotype ) );
             }
         }
 
@@ -67,7 +62,7 @@ public class GeneEvidenceValueObject extends GeneValueObject {
     }
 
     public GeneEvidenceValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
-            java.lang.String ncbiId, java.lang.String officialSymbol, java.lang.String officialName,
+            Integer ncbiId, java.lang.String officialSymbol, java.lang.String officialName,
             java.lang.String description, Double score, Long taxonId, String taxonScientificName,
             String taxonCommonName, Collection<EvidenceValueObject> evidence ) {
         super( id, name, aliases, ncbiId, officialSymbol, officialName, description, score, taxonId,

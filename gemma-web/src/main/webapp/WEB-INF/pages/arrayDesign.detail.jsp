@@ -4,16 +4,16 @@
 
 <head>
 
-	<title><jsp:getProperty name="arrayDesign" property="shortName" /> - <jsp:getProperty name="arrayDesign"
-			property="name" /></title>
+<title><jsp:getProperty name="arrayDesign" property="shortName" /> - <jsp:getProperty name="arrayDesign"
+		property="name" /></title>
 
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/arrayDesign.js' />
+<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
+<jwr:script src='/scripts/app/arrayDesign.js' />
 
 
-	<security:authorize access="hasRole('GROUP_ADMIN')">
-		<script type="text/javascript">
+<security:authorize access="hasRole('GROUP_ADMIN')">
+	<script type="text/javascript">
 	Ext.namespace('Gemma');
 	Ext.onReady( function() {
 		var id = dwr.util.getValue("auditableId");
@@ -31,7 +31,7 @@
 		});
 	});
 </script>
-	</security:authorize>
+</security:authorize>
 
 </head>
 
@@ -60,86 +60,37 @@
 <table class='datasummaryarea'>
 
 	<c:if test="${(not empty summary)}">
-		<caption>
-			Sequence analysis details
-		</caption>
+		<caption>Sequence analysis details</caption>
 		<tr>
 			<td>
 
 				<div id="arraySummary_${arrayDesign.id}">
 					<table class='datasummary'>
 						<tr>
-							<td colspan="2" align="center">
-							</td>
+							<td colspan="2" align="center"></td>
 						</tr>
 						<tr>
-							<td>
-								Probes
-							</td>
-							<td align="right">
-								${numCompositeSequences}
-							</td>
+							<td>Probes</td>
+							<td align="right">${numCompositeSequences}</td>
 						</tr>
 						<tr>
-							<td>
-								With seq.
-							</td>
-							<td align="right">
-								${summary.numProbeSequences}
-							</td>
+							<td>With seq.</td>
+							<td align="right">${summary.numProbeSequences}</td>
 						</tr>
 						<tr>
-							<td>
-								With align
-							</td>
-							<td align="right">
-								${summary.numProbeAlignments}
-							</td>
+							<td>With align</td>
+							<td align="right">${summary.numProbeAlignments}</td>
 						</tr>
 						<tr>
-							<td>
-								Mapped to known genes
-							</td>
-							<td align="right">
-								${summary.numProbesToKnownGenes}
-							</td>
-						</tr>
-						<%-- <<tr>
-							<td>
-								&nbsp;&nbsp;Known
-							</td>
-							<td align="right">
-								${summary.numProbesToKnownGenes }
-							</td>
-						</tr>
-						tr>
-							<td>
-								&nbsp;&nbsp;Predicted
-							</td>
-							<td align="right">
-								${summary.numProbesToPredictedGenes}
-							</td>
+							<td>Mapped to known genes</td>
+							<td align="right">${summary.numProbesToKnownGenes}</td>
 						</tr>
 						<tr>
-							<td>
-								&nbsp;&nbsp;Unknown
-							</td>
-							<td align="right">
-								${summary.numProbesToProbeAlignedRegions}
-							</td>
-						</tr>--%>
-						<tr>
-							<td>
-								Unique genes
-							</td>
-							<td align="right">
-								${summary.numGenes}
-							</td>
+							<td>Unique genes</td>
+							<td align="right">${summary.numGenes}</td>
 						</tr>
 						<tr>
-							<td colspan="2" align='center' class='small'>
-								(as of ${summary.dateCached})
-							</td>
+							<td colspan="2" align='center' class='small'>(as of ${summary.dateCached})</td>
 						</tr>
 					</table>
 				</div>
@@ -151,18 +102,15 @@
 		var text = '<Gemma:help helpFile="sequenceAnalysisHelp.html"/>';
 		function doit(event) {showWideHelpTip(event,text); }
 		</script>
-			<td colspan="2">
-				<a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img src="/Gemma/images/help.png" />
-				</a>
-			</td>
+			<td colspan="2"><a class="helpLink" name="?" href="" onclick="doit(event);return false;"> <img
+					src="/Gemma/images/help.png" />
+			</a></td>
 		</tr>
 	</c:if>
 	<tr>
-		<td colspan="2">
-			<security:authorize access="hasRole('GROUP_ADMIN')">
+		<td colspan="2"><security:authorize access="hasRole('GROUP_ADMIN')">
 				<input type="button" value="Refresh report" onClick="updateArrayDesignReport(${arrayDesign.id })" />
-			</security:authorize>
-		</td>
+			</security:authorize></td>
 	</tr>
 
 </table>
@@ -172,179 +120,111 @@
 <table style="width: 70%">
 
 	<tr>
-		<td style="width: 25%" class="label">
-			Short name
-		</td>
-		<td>
-			<jsp:getProperty name="arrayDesign" property="shortName" />
-		</td>
+		<td style="width: 25%" class="label">Short name</td>
+		<td><jsp:getProperty name="arrayDesign" property="shortName" /></td>
 	</tr>
 
 	<tr>
-		<td style="width: 25%" class="label">
-			Alternate names
-		</td>
-		<td>
-			<span id="alternate-names">${alternateNames}</span>
-			<security:authorize access="hasRole('GROUP_ADMIN')">&nbsp;
+		<td style="width: 25%" class="label">Alternate names</td>
+		<td><span id="alternate-names">${alternateNames}</span> <security:authorize access="hasRole('GROUP_ADMIN')">&nbsp;
 			<a href="#" title="Add a new alternate name for this design" onClick="getAlternateName(${arrayDesign.id })"><img
-						src="/Gemma/images/icons/add.png" /> </a>
-			</security:authorize>
-		</td>
-	</tr>
-
-	<%--<tr>
-		<td class="label">
-			Provider
-		</td>
-		<td>
-			<c:choose>
-				<c:when test="${(not empty arrayDesign.designProvider)}">${arrayDesign.designProvider.name}</c:when>
-				<c:otherwise>(Not Listed)</c:otherwise>
-			</c:choose>
-		</td>
-	</tr> --%>
-
-	<tr>
-		<td class="label">
-			Species
-		</td>
-		<td>
-			<c:out value="${taxon}" />
-		</td>
+					src="/Gemma/images/icons/add.png" /> </a>
+			</security:authorize></td>
 	</tr>
 	<tr>
-		<td class="label">
-			Number of probes
-		</td>
-		<td>
-			<c:out value="${numCompositeSequences}" />
-			&nbsp;
-			<a title="Show details of probes"
-				href="/Gemma/arrays/showCompositeSequenceSummary.html?id=<jsp:getProperty name="arrayDesign" property="id" />"><img
-					src="/Gemma/images/magnifier.png" /> </a>
-
-		</td>
+		<td class="label">Species</td>
+		<td><c:out value="${taxon}" /></td>
 	</tr>
 	<tr>
-		<td class="label">
-			External accessions&nbsp;
-			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'References to this design in other databases'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+		<td class="label">Number of probes</td>
+		<td><c:out value="${numCompositeSequences}" /> &nbsp; <a title="Show details of probes"
+			href="/Gemma/arrays/showCompositeSequenceSummary.html?id=<jsp:getProperty name="arrayDesign" property="id" />"><img
+				src="/Gemma/images/magnifier.png" /> </a></td>
+	</tr>
+	<tr>
+		<td class="label">External accessions&nbsp; <a class="helpLink" href="?"
+			onclick="showHelpTip(event, 'References to this design in other databases'); return false"><img
+				src="/Gemma/images/help.png" /> </a>
 		</td>
-		<td>
-
-			<c:if test="${(not empty arrayDesign.externalReferences)}">
+		<td><c:if test="${(not empty arrayDesign.externalReferences)}">
 				<c:forEach var="accession" items="${ arrayDesign.externalReferences }">
 					<Gemma:databaseEntry databaseEntry="${accession}" />
 					<br />
 				</c:forEach>
-			</c:if>
+			</c:if></td>
+	</tr>
+	<tr>
+		<td class="label">Experiments using this array</td>
+		<td>${numExpressionExperiments} <a title="Show details of datasets"
+			href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=${expressionExperimentIds}"> <img
+				src="/Gemma/images/magnifier.png" />
+		</a>
 		</td>
 	</tr>
 	<tr>
-		<td class="label">
-			Experiments using this array
+		<td class="label">Type&nbsp; <a class="helpLink" href="?"
+			onclick="showHelpTip(event, 'Our best guess about what type of data is produced using this array'); return false"><img
+				src="/Gemma/images/help.png" /> </a>
 		</td>
-		<td>
-			${numExpressionExperiments}
-			<a title="Show details of datasets"
-				href="/Gemma/expressionExperiment/showAllExpressionExperiments.html?id=${expressionExperimentIds}"> <img
-					src="/Gemma/images/magnifier.png" /> </a>
-		</td>
-	</tr>
-	<tr>
-		<td class="label">
-			Type&nbsp;
-			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Our best guess about what type of data is produced using this array'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
-		</td>
-		<td>
-			${technologyType}
-		</td>
+		<td>${technologyType}</td>
 	</tr>
 
 	<tr>
-		<td style="width: 25%" class="label">
-			Description
-			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'The description is usually provided by the original data source e.g. GEO.'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+		<td style="width: 25%" class="label">Description <a class="helpLink" href="?"
+			onclick="showHelpTip(event, 'The description is usually provided by the original data source e.g. GEO.'); return false"><img
+				src="/Gemma/images/help.png" /> </a>
 		</td>
-		<td>
-			<c:choose>
+		<td><c:choose>
 
 				<c:when test="${(not empty arrayDesign.description)}">
-					<div class="clob">
-						${arrayDesign.description}
-					</div>
+					<div class="clob">${arrayDesign.description}</div>
 				</c:when>
 				<c:otherwise>(none provided)</c:otherwise>
-			</c:choose>
-		</td>
+			</c:choose></td>
 	</tr>
 	<c:if test="${(not empty subsumees)}">
 		<tr>
-			<td class="label">
-				Subsumes
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'Array designs that this one \'covers\' -- it contains all the same sequences.'); return false"><img
-						src="/Gemma/images/help.png" /> </a>
+			<td class="label">Subsumes <a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Array designs that this one \'covers\' -- it contains all the same sequences.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
 			</td>
-			<td>
-				<Gemma:arrayDesignGrouping subsumees="${subsumees }" />
-			</td>
+			<td><Gemma:arrayDesignGrouping subsumees="${subsumees }" /></td>
 		</tr>
 	</c:if>
 	<c:if test="${(not empty subsumer)}">
 		<tr>
-			<td class="label">
-				Subsumed by
-				<a class="helpLink" href="?" onclick="showHelpTip(event, 'Array design that \'covers\' this one. '); return false"><img
-						src="/Gemma/images/help.png" /> </a>
+			<td class="label">Subsumed by <a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Array design that \'covers\' this one. '); return false"><img
+					src="/Gemma/images/help.png" /> </a>
 			</td>
-			<td>
-				<Gemma:arrayDesignGrouping subsumer="${subsumer }" />
-			</td>
+			<td><Gemma:arrayDesignGrouping subsumer="${subsumer }" /></td>
 		</tr>
 	</c:if>
 	<c:if test="${(not empty mergees)}">
 		<tr>
-			<td class="label">
-				Merger of
-				<a class="helpLink" href="?"
-					onclick="showHelpTip(event, 'Array designs that were merged to create this one.'); return false"><img
-						src="/Gemma/images/help.png" /> </a>
+			<td class="label">Merger of <a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Array designs that were merged to create this one.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
 			</td>
-			<td>
-				<Gemma:arrayDesignGrouping subsumees="${mergees }" />
-			</td>
+			<td><Gemma:arrayDesignGrouping subsumees="${mergees }" /></td>
 		</tr>
 	</c:if>
 	<c:if test="${(not empty merger)}">
 		<tr>
-			<td class="label">
-				Merged into
-				<a class="helpLink" href="?" onclick="showHelpTip(event, 'Array design this one is merged into.'); return false"><img
-						src="/Gemma/images/help.png" /> </a>
+			<td class="label">Merged into <a class="helpLink" href="?"
+				onclick="showHelpTip(event, 'Array design this one is merged into.'); return false"><img
+					src="/Gemma/images/help.png" /> </a>
 			</td>
-			<td>
-				<Gemma:arrayDesignGrouping subsumer="${merger }" />
-			</td>
+			<td><Gemma:arrayDesignGrouping subsumer="${merger }" /></td>
 		</tr>
 	</c:if>
 
 	<tr>
-		<td class="label">
-			Annotation file(s)
-			<a class="helpLink" href="?"
-				onclick="showHelpTip(event, 'Text-based (tab-delimited) annotation files for this array, if available. The files include GO terms as directly annotated (brief), including all parent terms (All parents) or biological process terms only.'); return false"><img
-					src="/Gemma/images/help.png" /> </a>
+		<td class="label">Annotation file(s) <a class="helpLink" href="?"
+			onclick="showHelpTip(event, 'Text-based (tab-delimited) annotation files for this array, if available. The files include GO terms as directly annotated (brief), including all parent terms (All parents) or biological process terms only.'); return false"><img
+				src="/Gemma/images/help.png" /> </a>
 		</td>
-		<td>
-			<c:choose>
+		<td><c:choose>
 				<c:when
 					test="${(empty noParentsAnnotationLink) && (empty allParentsAnnotationLink) && (empty bioProcessAnnotationLink)}">
 					Unavailable&nbsp;&nbsp;
@@ -354,7 +234,6 @@
 						<c:when test="${empty noParentsAnnotationLink}">
 							Unavailable
 						</c:when>
-
 						<c:otherwise>
 							<a class="annotationLink" href="<c:url value="${noParentsAnnotationLink}" />">Brief</a>
 						</c:otherwise>
@@ -379,9 +258,7 @@
 					</c:choose>
 				</c:otherwise>
 
-			</c:choose>
-			<c:if test="${(not empty merger)}">&nbsp;&nbsp(Note: Files are for merged design ${merger.shortName})</c:if>
-		</td>
+			</c:choose></td>
 	</tr>
 </table>
 
@@ -392,37 +269,3 @@
 	<input type="hidden" name="auditableClass" id="auditableClass" value="${arrayDesign.class.name}" />
 </security:authorize>
 
-
-<div style="padding-top: 20px;">
-	<table>
-		<tr>
-			<td colspan="2">
-				<hr />
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<div align="left">
-					<input type="button" onclick="location.href='showAllArrayDesigns.html'" value="Show all array designs">
-				</div>
-			</td>
-			<security:authorize access="hasRole('GROUP_ADMIN')">
-				<td colspan="2">
-					<div align="left">
-						<input type="button" onclick="location.href='/Gemma/arrayDesign/editArrayDesign.html?id=${id}'" value="Edit">
-					</div>
-				</td>
-			</security:authorize>
-		</tr>
-	</table>
-</div>
-
-<div style="padding-top: 20px;">
-	<form name="ArrayDesignFilter" action="filterArrayDesigns.html" method="POST">
-		<h4>
-			Enter search criteria for finding another array design here
-		</h4>
-		<input type="text" name="filter" size="66" />
-		<input type="submit" value="Find" />
-	</form>
-</div>

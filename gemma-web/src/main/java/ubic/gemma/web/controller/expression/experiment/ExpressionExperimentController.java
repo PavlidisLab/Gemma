@@ -918,7 +918,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         finalResult.setHasMultipleTechnologyTypes( techTypes.size() > 1 );
 
         // Set the parent taxon
-        Taxon taxon = taxonService.load( initialResult.getTaxonId() );
+        Long taxonId = initialResult.getTaxonId();
+        assert taxonId != null;
+        Taxon taxon = taxonService.load( taxonId );
         taxonService.thaw( taxon );
 
         if ( taxon.getParentTaxon() != null ) {
@@ -1139,7 +1141,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
 
         /*
-         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not have access to
+         * can't just do expressionExperimentService.countAll() because this will count experiments the user may not
+         * have access to
          */
         int count = records.size();
 
@@ -2081,16 +2084,16 @@ public class ExpressionExperimentController extends AbstractTaskService {
             for ( ExpressionExperiment ee : securedEEs ) {
                 canEdit.put( ee.getId(), securityService.isEditable( ee ) );
                 owns.put( ee.getId(), securityService.isOwnedByCurrentUser( ee ) );
-                
+
             }
             for ( ExpressionExperimentValueObject vo : valueObjs ) {
-                if ( canEdit.containsKey( vo.getId() ) ){
+                if ( canEdit.containsKey( vo.getId() ) ) {
                     vo.setCurrentUserHasWritePermission( canEdit.get( vo.getId() ) );
                 }
-                if( owns.containsKey( vo.getId() )){
+                if ( owns.containsKey( vo.getId() ) ) {
                     vo.setCurrentUserIsOwner( owns.get( vo.getId() ) );
                 }
-                
+
             }
         }
 
@@ -2399,7 +2402,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         } catch ( org.springframework.security.access.AccessDeniedException ade ) {
             return false;
         }
-        return userOwnsGroup ;
+        return userOwnsGroup;
     }
 
 }

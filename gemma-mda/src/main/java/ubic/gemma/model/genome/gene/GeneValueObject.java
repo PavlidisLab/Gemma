@@ -42,15 +42,7 @@ public class GeneValueObject implements java.io.Serializable {
         if ( genes == null ) return converted;
 
         for ( Gene g : genes ) {
-
-            String geneNCBI = null;
-
-            if ( g.getNcbiGeneId() != null ) {
-                geneNCBI = g.getNcbiGeneId().toString();
-            }
-
-            if ( g == null ) continue;
-            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), geneNCBI, g
+            converted.add( new GeneValueObject( g.getId(), g.getName(), getAliasStrings( g ), g.getNcbiGeneId(), g
                     .getOfficialSymbol(), g.getOfficialName(), g.getDescription(), null, g.getTaxon().getId(), g
                     .getTaxon().getScientificName(), g.getTaxon().getCommonName() ) );
         }
@@ -85,7 +77,7 @@ public class GeneValueObject implements java.io.Serializable {
 
     private Collection<java.lang.String> aliases;
 
-    private java.lang.String ncbiId;
+    private Integer ncbiId;
 
     private java.lang.String officialName;
 
@@ -104,7 +96,7 @@ public class GeneValueObject implements java.io.Serializable {
 
     public GeneValueObject( Gene gene ) {
         this.id = gene.getId();
-        this.ncbiId = gene.getNcbiGeneId().toString();
+        this.ncbiId = gene.getNcbiGeneId();
         this.officialName = gene.getOfficialName();
         this.officialSymbol = gene.getOfficialSymbol();
         this.taxonScientificName = gene.getTaxon().getScientificName();
@@ -123,9 +115,9 @@ public class GeneValueObject implements java.io.Serializable {
     public GeneValueObject( GeneSetMember otherBean ) {
 
         this( otherBean.getGene().getId(), otherBean.getGene().getName(), getAliasStrings( otherBean.getGene() ),
-                otherBean.getGene().getNcbiGeneId().toString(), otherBean.getGene().getOfficialSymbol(), otherBean
-                        .getGene().getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(),
-                otherBean.getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName(), otherBean
+                otherBean.getGene().getNcbiGeneId(), otherBean.getGene().getOfficialSymbol(), otherBean.getGene()
+                        .getOfficialName(), otherBean.getGene().getDescription(), otherBean.getScore(), otherBean
+                        .getGene().getTaxon().getId(), otherBean.getGene().getTaxon().getScientificName(), otherBean
                         .getGene().getTaxon().getCommonName() );
     }
 
@@ -141,9 +133,9 @@ public class GeneValueObject implements java.io.Serializable {
                 otherBean.getTaxonId(), otherBean.getTaxonScientificName(), otherBean.getTaxonCommonName() );
     }
 
-    public GeneValueObject( java.lang.Long id, java.lang.String name, Collection<java.lang.String> aliases,
-            java.lang.String ncbiId, java.lang.String officialSymbol, java.lang.String officialName,
-            java.lang.String description, Double score, Long taxonId, String taxonScientificName, String taxonCommonName ) {
+    public GeneValueObject( Long id, String name, Collection<java.lang.String> aliases, Integer ncbiId,
+            java.lang.String officialSymbol, java.lang.String officialName, java.lang.String description, Double score,
+            Long taxonId, String taxonScientificName, String taxonCommonName ) {
         this.id = id;
         this.name = name;
         this.ncbiId = ncbiId;
@@ -228,7 +220,7 @@ public class GeneValueObject implements java.io.Serializable {
     /**
      * 
      */
-    public java.lang.String getNcbiId() {
+    public Integer getNcbiId() {
         return this.ncbiId;
     }
 
@@ -277,7 +269,7 @@ public class GeneValueObject implements java.io.Serializable {
         this.name = name;
     }
 
-    public void setNcbiId( java.lang.String ncbiId ) {
+    public void setNcbiId( Integer ncbiId ) {
         this.ncbiId = ncbiId;
     }
 

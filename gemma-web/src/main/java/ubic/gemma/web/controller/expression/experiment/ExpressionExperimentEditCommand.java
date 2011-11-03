@@ -32,9 +32,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentImpl;
  */
 public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
 
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
     private List<QuantitationType> quantitationTypes;
     private ExpressionExperiment expressionExperiment;
@@ -54,7 +51,7 @@ public class ExpressionExperimentEditCommand extends ExpressionExperimentImpl {
         this.setPrimaryPublication( ee.getPrimaryPublication() );
         this.setShortName( ee.getShortName() );
         this.setSource( ee.getSource() );
-        this.setInvestigators( ee.getInvestigators() );
+        // this.setInvestigators( ee.getInvestigators() );
         this.setId( ee.getId() );
         this.setAccession( ee.getAccession() );
         this.setOwner( ee.getOwner() );

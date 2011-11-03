@@ -86,16 +86,15 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String)
      */
-    public Taxon findByCommonName( final int transform, final java.lang.String commonName ) {
-        return this.findByCommonName( transform, "from TaxonImpl t where t.commonName=:commonName", commonName );
+    public Taxon findByCommonName( final java.lang.String commonName ) {
+        return this.findByCommonName( "from TaxonImpl t where t.commonName=:commonName", commonName );
     }
 
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String, java.lang.String)
      */
 
-    public Taxon findByCommonName( final int transform, final java.lang.String queryString,
-            final java.lang.String commonName ) {
+    public Taxon findByCommonName( final java.lang.String queryString, final java.lang.String commonName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( commonName );
@@ -116,34 +115,17 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByCommonName( java.lang.String commonName ) {
-        return this.findByCommonName( TRANSFORM_NONE, commonName );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String, java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByCommonName( final java.lang.String queryString,
-            final java.lang.String commonName ) {
-        return this.findByCommonName( TRANSFORM_NONE, queryString, commonName );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(int, java.lang.String)
      */
-    public Taxon findByScientificName( final int transform, final java.lang.String scientificName ) {
-        return this.findByScientificName( transform, "from TaxonImpl t where t.scientificName=:scientificName ",
-                scientificName );
+    public Taxon findByScientificName( final java.lang.String scientificName ) {
+        return this.findByScientificName( "from TaxonImpl t where t.scientificName=:scientificName ", scientificName );
     }
 
     /**
      * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(int, java.lang.String, java.lang.String)
      */
 
-    public Taxon findByScientificName( final int transform, final java.lang.String queryString,
-            final java.lang.String scientificName ) {
+    public Taxon findByScientificName( final java.lang.String queryString, final java.lang.String scientificName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( scientificName );
@@ -163,26 +145,11 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByScientificName( java.lang.String scientificName ) {
-        return this.findByScientificName( TRANSFORM_NONE, scientificName );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByScientificName(java.lang.String, java.lang.String)
-     */
-    public ubic.gemma.model.genome.Taxon findByScientificName( final java.lang.String queryString,
-            final java.lang.String scientificName ) {
-        return this.findByScientificName( TRANSFORM_NONE, queryString, scientificName );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.TaxonDao#findChildTaxaByParent(ubic.gemma.model.genome.Taxon)
      */
 
     public Collection<Taxon> findChildTaxaByParent( Taxon parentTaxon ) {
-        String queryString = "from ubic.gemma.model.genome.Taxon as taxon where taxon.parentTaxon = :parentTaxon";
+        String queryString = "from ubic.gemma.model.genome.TaxonImpl as taxon where taxon.parentTaxon = :parentTaxon";
         Collection<Taxon> childTaxa = this.getHibernateTemplate().findByNamedParam( queryString, "parentTaxon",
                 parentTaxon );
         return childTaxa;
@@ -245,6 +212,19 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
     }
 
     /**
+     * @see ubic.gemma.model.genome.TaxonDao.thaw#thaw(ubic.gemma.model.expression.bioAssay.BioAssay)
+     */
+    public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
+        try {
+            this.handleThaw( taxon );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.TaxonDao.thaw(ubic.gemma.model.genome.Taxon)' --> " + th,
+                    th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.genome.TaxonDao#update(java.util.Collection)
      */
     public void update( final java.util.Collection<? extends Taxon> entities ) {
@@ -283,18 +263,5 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
      * Performs the core logic for {@link #thaw(ubic.gemma.model.expression.taxon.Taxon)}
      */
     protected abstract void handleThaw( ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
-
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao.thaw#thaw(ubic.gemma.model.expression.bioAssay.BioAssay)
-     */
-    public void thaw( final ubic.gemma.model.genome.Taxon taxon ) {
-        try {
-            this.handleThaw( taxon );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.genome.TaxonDao.thaw(ubic.gemma.model.genome.Taxon)' --> " + th,
-                    th );
-        }
-    }
 
 }
