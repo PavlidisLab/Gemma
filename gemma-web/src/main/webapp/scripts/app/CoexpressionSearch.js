@@ -160,7 +160,7 @@ Ext.onReady(function() {
 		Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.knownGeneDatasets, eeMap);
 		knownGeneDatasetGrid.loadData(result.knownGeneDatasets);
 		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
-				result.knownGeneDatasets);
+				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
 
 		if (admin) {
 			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.predictedGeneDatasets, eeMap);

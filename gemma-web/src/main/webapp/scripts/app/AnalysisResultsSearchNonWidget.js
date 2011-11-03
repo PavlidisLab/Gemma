@@ -71,20 +71,21 @@ Ext.onReady(function() {
 	this.resultsPanel = new Ext.TabPanel({
 		id:'analysis-results-search-form-results-panel',
 		renderTo : 'analysis-results-search-form-results',
-		height: 600,
+		height: 610,
 		defaults: {
 			autoScroll: true,
 			width: 850
 		},
 		deferredRender: true,
 		hidden:true
-		//layout:'fit', //only works with one component per container
+				
+		//layout:'fit' //only works with one component per container
 		//border:false,
 		//autoHeight:true,
 		
 		//bodyStyle:'text-align:left;',
 		//style:'text-align:left'
-		//hideMode:'visibility'
+		
 	});
 		
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
@@ -185,19 +186,24 @@ Ext.onReady(function() {
 				title : "Coexpressed genes",
 				colspan : 2,
 				user : user,
-				tabPanelViewFlag : true
+				tabPanelViewFlag : true,
+				layoutOnTabChange:true,
+				hideMode:'offsets'
 				//hidden:true
 			});
 		}
 		
+		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
-					title : "cytoscape",
+					title : "Cytoscape",
 					queryGenes : result.queryGenes,
 					knownGeneResults : result.knownGeneResults,
 					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
 					coexGridRef: knownGeneGrid,
 					searchPanelRef: searchPanel,
 					width:850
+					,hideMode:'visibility'
+					
 				});
 		
 		
@@ -275,7 +281,7 @@ Ext.onReady(function() {
 		//resultsPanel.add(knownGeneDatasetGrid);		
 		resultsPanel.show();
 		resultsPanel.doLayout();
-		cytoscapePanel.show();
+		//cytoscapePanel.show();
 
 		//reset coex summary panel
 		//Ext.DomHelper.overwrite('summarypanel', "");
@@ -326,8 +332,9 @@ Ext.onReady(function() {
 		Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.knownGeneDatasets, eeMap);
 		knownGeneDatasetGrid.loadData(result.knownGeneDatasets);
 		*/
+		knownGeneGrid.cytoscapeRef=cytoscapePanel;
 		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
-				result.knownGeneDatasets);
+				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
 			
 		knownGeneGrid.show();
 				

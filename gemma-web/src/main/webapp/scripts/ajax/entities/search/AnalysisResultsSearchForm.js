@@ -446,7 +446,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 	
 	restrictCoexSearch : function(csc) {
-		
+		/*
 		if (csc.geneIds.length>10){
 			//make it 'my genes only'
 			csc.queryGenesOnly = true;
@@ -461,7 +461,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			}
 		
 		}
-		
+		*/
 		
 	},
 

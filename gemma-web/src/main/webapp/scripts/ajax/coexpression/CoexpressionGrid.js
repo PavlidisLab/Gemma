@@ -38,6 +38,12 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	lite : false,
 	
 	noSmallGemma:false,
+	
+	knownGeneResults:[],
+	
+	currentQueryGeneIds:[],
+	
+	currentResultsStringency:2,
 
 	viewConfig : {
 		forceFit : true
@@ -211,6 +217,36 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			Ext.apply(this, {
 						tbar : new Ext.Toolbar({
 									items : [{
+						                	xtype: 'tbtext',
+						                	text: 'Stringency:'
+
+						            	},
+
+						            	{
+						            		xtype: 'tbspacer'
+						            	}, {
+						                	xtype: 'spinnerfield',
+						                	itemId: 'stringencySpinner',
+						                	decimalPrecision: 1,
+						                	incrementValue: 1,
+						                	accelerate: false,
+						                	//ref: 'stringencyfield',
+						                	allowBlank: false,
+						                	allowDecimals: false,
+						                	allowNegative: false,
+						                	minValue: Gemma.MIN_STRINGENCY,
+						                	maxValue: 999,
+						                	fieldLabel: 'Stringency ',
+						                	value: 2,
+						                	width: 60,
+						                	fieldTip: "The minimum number of datasets that must show coexpression for a result to appear"
+
+						            		},
+									         {
+									        	 xtype: 'tbspacer'
+									         },
+									         
+									         {
 												hidden : !this.user,
 												pressed : true,
 												enableToggle : true,
@@ -241,6 +277,36 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		Gemma.CoexpressionGrid.superclass.initComponent.call(this);
 
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
+		
+		
+		if (!this.getTopToolbar().getComponent('stringencySpinner').hasListener('spin')) {
+
+            this.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
+
+                var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+
+                if (spinner.getValue() >= this.currentResultsStringency) {
+
+                    var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
+                    
+                    this.loadData(false, 2,trimmed.trimmedKnownGeneResults, null);
+                    
+                    //update cytoscape                 
+                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
+                    	
+                    	this.cytoscapeRef.coexGridUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+                    	
+                    }
+                    
+
+                } 
+
+            }, this);
+
+
+        }
+		
+		
 	},
 
 	getSupportingDatasetRecords : function(record, grid) {
@@ -260,6 +326,16 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 		return supporting;
 	},
+	
+	cytoscapeUpdate : function(stringency, numQueryGenes, data){ 
+		
+		//TODO update toolbar stringency
+		this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
+		
+		this.loadData(false, numQueryGenes, data, null);
+		
+		
+	},
 
 	/**
 	 * 
@@ -272,7 +348,16 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * @param {}
 	 *            datasets
 	 */
-	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets) {
+	loadData : function(isCannedAnalysis, numQueryGenes, data, datasets, knownGeneResults, currentQueryGeneIds) {
+		
+		
+		if (knownGeneResults){
+			this.knownGeneResults = knownGeneResults;
+		}
+		if (currentQueryGeneIds){
+			this.currentQueryGeneIds = currentQueryGeneIds;
+		}
+		
 		var queryIndex = this.getColumnModel().getIndexById('query');
 		if (numQueryGenes > 1) {
 			this.getColumnModel().setHidden(queryIndex, false);
