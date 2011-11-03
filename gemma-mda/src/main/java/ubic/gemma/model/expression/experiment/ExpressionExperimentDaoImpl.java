@@ -260,7 +260,10 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
-        return CommonQueries.getArrayDesignsUsed( expressionExperiment, this.getSession() );
+        Session session = super.getSession();
+        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( expressionExperiment, session );
+        super.releaseSession( session );
+        return ADs;
     }
 
     @Override
@@ -363,6 +366,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( timer.getTime() > 1000 ) {
             log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
         }
+        this.releaseSession( session );        
+
         return ees;
     }
 
