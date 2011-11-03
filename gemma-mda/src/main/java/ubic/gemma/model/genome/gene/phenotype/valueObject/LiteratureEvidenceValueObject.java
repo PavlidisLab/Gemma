@@ -44,6 +44,10 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
         this.citationValueObject = BibliographicReferenceValueObject.constructCitation( literatureEvidence
                 .getCitation() );
     }
+    
+    public LiteratureEvidenceValueObject() {
+        super();
+    }
 
     public CitationValueObject getCitationValueObject() {
         return this.citationValueObject;

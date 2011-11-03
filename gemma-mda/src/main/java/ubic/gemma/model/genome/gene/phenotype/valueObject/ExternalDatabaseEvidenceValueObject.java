@@ -43,6 +43,10 @@ public class ExternalDatabaseEvidenceValueObject extends EvidenceValueObject {
         this.externalUrl = externalDatabaseEvidence.getEvidenceSource().getExternalDatabase().getWebUri()
                 + externalDatabaseEvidence.getEvidenceSource().getAccession();
     }
+    
+    public ExternalDatabaseEvidenceValueObject() {
+        super();
+    }
 
     public DatabaseEntryValueObject getDatabaseEntryValueObject() {
         return this.databaseEntryValueObject;

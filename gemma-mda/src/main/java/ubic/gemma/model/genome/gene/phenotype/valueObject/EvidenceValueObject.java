@@ -88,6 +88,10 @@ public abstract class EvidenceValueObject {
         }
         return returnEvidence;
     }
+    
+    public EvidenceValueObject() {
+
+    }
 
     /** set fields common to all evidence. Entity to Value Object */
     protected EvidenceValueObject( PhenotypeAssociation phenotypeAssociation ) {

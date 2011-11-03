@@ -51,6 +51,10 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
         this.experimentCharacteristics = experimentCharacteristics;
     }
+    
+    public ExperimentalEvidenceValueObject() {
+        super();
+    }
 
     /** Entity to Value Object */
     public ExperimentalEvidenceValueObject( ExperimentalEvidence experimentalEvidence ) {

@@ -43,5 +43,7 @@ public class DiffExpressionEvidenceValueObject extends EvidenceValueObject {
         this.differentialExpressionAnalysisResult = differentialExpressionEvidence
                 .getDifferentialExpressionAnalysisResult();
     }
+    
+    
 
 }

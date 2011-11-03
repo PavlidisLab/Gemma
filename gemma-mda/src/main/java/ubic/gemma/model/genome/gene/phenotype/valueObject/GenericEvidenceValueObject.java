@@ -34,4 +34,8 @@ public class GenericEvidenceValueObject extends EvidenceValueObject {
         super( genericEvidence );
     }
 
+    public GenericEvidenceValueObject() {
+        super();
+    }
+
 }
