@@ -83,6 +83,8 @@ public class CoexpressedGenesDetails {
 
     private final int supportThreshold;
 
+    private boolean warned = false;
+
     /**
      * @param queryGene
      * @param supportThreshold
@@ -761,7 +763,6 @@ public class CoexpressedGenesDetails {
         }
 
         boolean isSpecific = false;
-        boolean warned = false;
         for ( ProbePair probePair : rawLinks ) {
 
             Long queryProbeId = probePair.getQueryProbeId();
@@ -771,8 +772,8 @@ public class CoexpressedGenesDetails {
                  * There could be probes for which no gene mapping exists any more.
                  */
                 if ( !warned ) {
-                    log.warn( "No genes for query probe=" + queryProbeId + " in ee=" + eeID
-                            + " (Any additional warnings for this link will be at DEBUG level only)" );
+                    log.warn( "No genes for query probe=" + queryProbeId + " in ee=" + eeID + " [" + this.queryGene
+                            + "] " + " (Any additional warnings for this query gene will be at DEBUG level only)" );
                 } else if ( log.isDebugEnabled() ) {
                     log.debug( "No genes for query probe=" + queryProbeId + " in ee=" + eeID );
                 }

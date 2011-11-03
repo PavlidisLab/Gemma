@@ -744,7 +744,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         }
 
         overallWatch.stop();
-        if ( overallWatch.getTime() > 1000 ) {
+        if ( overallWatch.getTime() > 2000 ) {
             log.info( "Raw query: " + overallWatch.getTime() + "ms" );
         }
 
@@ -917,32 +917,32 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return genes;
     }
 
-//    /*
-//     * (non-Javadoc)
-//     * 
-//     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
-//     */
-//    @Override
-//    protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
-//        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-//                + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
-//
-//        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-//
-//    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadPredictedGenes(ubic.gemma .model.genome.Taxon)
+    // */
+    // @Override
+    // protected Collection<PredictedGene> handleLoadPredictedGenes( Taxon taxon ) throws Exception {
+    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
+    // + " and gene.class = " + CoexpressionCollectionValueObject.PREDICTED_GENE_IMPL;
+    //
+    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    //
+    // }
 
-//    /*
-//     * (non-Javadoc)
-//     * 
-//     * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
-//     */
-//    @Override
-//    protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
-//        final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
-//                + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
-//
-//        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
-//    }
+    // /*
+    // * (non-Javadoc)
+    // *
+    // * @see ubic.gemma.model.genome.GeneDaoBase#handleLoadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)
+    // */
+    // @Override
+    // protected Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions( Taxon taxon ) throws Exception {
+    // final String queryString = "select gene from GeneImpl as gene fetch all properties where gene.taxon = :taxon"
+    // + " and gene.class = " + CoexpressionCollectionValueObject.PROBE_ALIGNED_REGION_IMPL;
+    //
+    // return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
+    // }
 
     /*
      * (non-Javadoc)

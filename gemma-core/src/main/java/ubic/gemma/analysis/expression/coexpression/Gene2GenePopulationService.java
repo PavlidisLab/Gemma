@@ -520,7 +520,8 @@ public class Gene2GenePopulationService {
         Map<Long, Integer> eeIdOrder = ProbeLinkCoexpressionAnalyzer.getOrderingMap( expressionExperiments );
 
         log.info( "Starting gene link analysis '" + analysisName + " on " + toUseGenes.size() + " genes in "
-                + expressionExperiments.size() + " experiments with a stringency of " + stringency );
+                + expressionExperiments.size() + " experiments with a stringency of " + stringency
+                + "; store links both ways = " + SINGLE_QUERY_FOR_LINKS );
 
         try {
             for ( Gene queryGene : toUseGenes ) {
@@ -538,7 +539,7 @@ public class Gene2GenePopulationService {
                             coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
                     totalLinks += created.size();
                     timer.stop();
-                    if ( timer.getTime() > 1000 ) {
+                    if ( timer.getTime() > 2000 ) {
                         log.info( "Persist links: " + timer.getTime() + "ms" );
                     }
                 } else {
@@ -567,6 +568,8 @@ public class Gene2GenePopulationService {
                 }
             } // end loop over genes
 
+            completeNodeDegreeComputations( analysis != null );
+
             if ( analysis != null ) {
                 // All done...
                 analysis.setDescription( analysis.getDescription() + "; " + totalLinks + " gene pairs stored." );
@@ -575,8 +578,6 @@ public class Gene2GenePopulationService {
 
                 securityService.makePublic( analysis );
             }
-
-            completeNodeDegreeComputations( analysis != null );
 
             log.info( totalLinks + " gene pairs processed." );
 
