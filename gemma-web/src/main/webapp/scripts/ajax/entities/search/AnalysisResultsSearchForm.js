@@ -118,7 +118,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			maxText = Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY + " genes";
 		}
 		
-		if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY || experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
+		if( ( this.coexToggle.pressed && geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY ) ||
+			( this.diffExToggle.pressed && (geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY
+				|| experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY)) ){
 			this.getEl().mask();
 			var warningWindow = new Ext.Window({
 				width:450,
@@ -955,7 +957,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if(selectedVOs[i] instanceof ExpressionExperimentValueObject){
 				var ee = selectedVOs[i];
 				// maybe this should be a call to the backend?
-				var singleExperimentSet = new SessionBoundExperimentSetValueObject();
+				var singleExperimentSet = new SessionBoundExpressionExperimentSetValueObject();
 				singleExperimentSet.id = null;
 				singleExperimentSet.expressionExperimentIds = [ee.id];
 				singleExperimentSet.name = ee.shortName;
