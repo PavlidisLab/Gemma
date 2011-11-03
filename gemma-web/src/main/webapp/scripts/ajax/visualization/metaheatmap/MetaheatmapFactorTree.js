@@ -1,236 +1,79 @@
 /**
- * *
- * 
  * @author AZ
  * @version $Id$
  */
-Ext.namespace('Gemma');
-Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
+Ext.namespace('Gemma.Metaheatmap');
 
 /**
- * Constructor for a tree that builds its nodes from a parameter object the
- * parameter object must be an array of objects with two fields: text(mandatory)
- * and children (optional) For example: [{text:'parent1', children:
- * [{text:'child1', children: []}] },{ text: 'parent2', children:[] }, ...]
  * 
- * used like this: this.tree = new Gemma.FactorSelectTree(treeData);
  * 
- * @param nodes
- *            objects to build the treeNodes from
- * @class Gemma.DifferentialExpressionAnalysesSummaryTree
- * @extends Ext.tree.TreePanel
+ * 
+ * 
+ * 
+ * 
  * 
  */
-Gemma.SelectTree = Ext.extend(Ext.tree.TreePanel, {
-
-			// renderTo:'tree-div',
-			animate : true,
-			id : 'selectTree',
+Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
+	initComponent : function() {
+		Ext.apply (this, {
+			
+			lines 		: true,
 			rootVisible : false,
-			enableDD : false,
+			sortedTree  : this.sortedTree,
 			cls : 'x-tree-noicon',
-			lines : false,
-			// containerScroll:true,
-			// panel
-			autoScroll : false,
-			// ddScroll:true,
-			border : false,
-			layout : 'fit',
-			root : {
-				text : 'root'
-			},
-
-			constructor : function(nodes) {
-				Ext.apply(this, {
-							nodeParams : nodes
-						});
-				Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.constructor.call(this);
-			},
-
-			initComponent : function() {
-				Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent.call(this);
-				this.build();
-				var sorter = new Ext.tree.TreeSorter(this, {});
-			},
-			build : function() {
+			//collapsed : true,
+			
+			initializeFromSortedTree : function () {				
 				var root = new Ext.tree.TreeNode({
-							expanded : true,
-							id : 'selectTreeRoot',
-							text : 'root'
-						});
-				this.setRootNode(root);
-				this.buildNodes(root, this.nodeParams);
-			},
-			buildNodes : function(parent, nodeParams) {
-				var node;
-				var nodeParam;
-				var hasChildren;
-				var i;
-				for (i = 0; i < nodeParams.length; i++) {
+					expanded : true,
+					text : 'Filter Experiments by Factor',
+					cls : '',
+				});
 
-					nodeParam = nodeParams[i];
+				this.setRootNode (root);
 
-					if (nodeParam.children && nodeParam.children !== null && nodeParam.children.length !== 0) {
-						hasChildren = true;
-						node = new Ext.tree.TreeNode({
-									expanded : false,
-									singleClickExpand : true,
-									text : nodeParam.text,
-									checked : true,
-									leaf : false
-								});
-					} else {
-						hasChildren = false;
-						node = new Ext.tree.TreeNode({
-									expanded : false,
-									singleClickExpand : true,
-									text : nodeParam.text,
-									checked : true,
-									leaf : true
-								});
+				var categoryNodes = this.sortedTree.root.children;
+				for (var i = 0; i < categoryNodes.length; i++) {
+					var sftCategoryNode = categoryNodes[i];
+
+					var ftCategoryNode = new Ext.tree.TreeNode({
+						expanded : true,
+						singleClickExpand : false,
+						//	id : parent.text + nodeParam.text.toLowerCase(),
+						text : sftCategoryNode.groupName,
+						checked : true,
+						iconCls : '',
+						cls : ''
+					});				
+
+					var factorNodes = sftCategoryNode.children;
+					for (var j = 0; j < factorNodes.length; j++ ) {
+						var sftFactorNode = factorNodes[j];
+
+						var ftFactorNode = new Ext.tree.TreeNode({
+							expanded : false,
+							singleClickExpand : false,
+							//	id : parent.text + nodeParam.text.toLowerCase(),
+							text : sftFactorNode.groupName,
+							checked : true,
+							cls : '',
+							iconCls : ''
+						});				
+						ftCategoryNode.appendChild (ftFactorNode);						
 					}
-
-					if (hasChildren) {
-						this.buildNodes(node, nodeParam.children);
-					}
-					parent.appendChild(node);
+					
+					root.appendChild (ftCategoryNode);
 				}
 			}
 		});
+		
+		Gemma.Metaheatmap.FactorTree.superclass.initComponent.call (this);
+	},
+	onRender : function() {
+		Gemma.Metaheatmap.FactorTree.superclass.onRender.apply (this, arguments);
+		this.initializeFromSortedTree();
+	}
 
-/**
- * Constructor for a tree that builds its nodes from a parameter object the
- * parameter object must be an array of objects with two fields: text and
- * children For example: [{ text:'parent1', children: [{ text:'child1',
- * children: [] }] },{ text: 'parent2', children:[] }, ...]
- * 
- * This is like Gemma.SelectTree, but no two nodes will have the same name and
- * if two node definitions passed in have the same text value, one node will be
- * created with the aggregate of children
- * 
- * @param nodes
- *            objects to build the treeNodes from
- * @class Gemma.DifferentialExpressionAnalysesSummaryTree
- * @extends Ext.tree.TreePanel
- */
-Gemma.FactorSelectTree = Ext.extend(Gemma.SelectTree, {
+});
 
-			lines : true,
-			rootVisible : true,
-
-			initComponent : function() {
-				Gemma.DifferentialExpressionAnalysesSummaryTree.superclass.initComponent.call(this);
-				this.build();
-				var sorter = new Ext.tree.TreeSorter(this, {
-							sortType : function(node) {
-								if(typeof node === "string"){
-									return node.toLowerCase().replace(" ", "");	
-								}
-								return node.text.toLowerCase().replace(" ", "");// so
-								// that
-								// "deseaseState"
-								// and
-								// "Disease
-								// State"
-								// are
-								// always
-								// adjacent
-							}
-						});
-			},
-
-			build : function() {
-				var root = new Ext.tree.TreeNode({
-							expanded : true,
-							id : 'selectTreeRoot',
-							text : ''
-						});
-				this.setRootNode(root);
-				this.buildNodes(root, this.nodeParams, true);
-				root.setText('Filter Experiments by Factor'); // title it
-				// after so
-				// title of tree
-				// isn't in node
-				// ids
-			},
-			/**
-			 * return nodes
-			 */
-			buildNodes : function(parent, nodeParams, haveCheck) {
-				var node;
-				var nodeParam;
-				var hasChildren = false;
-				var i;
-				for (i = 0; i < nodeParams.length; i++) {
-					nodeParam = nodeParams[i];
-					if (nodeParam.children && nodeParam.children !== null && nodeParam.children.length !== 0) {
-						hasChildren = true;
-					}
-					if( nodeParam.text === null ){
-						if(hasChildren){
-							nodeParam.text = "unavailable";
-						}else{
-							return;
-						}
-					}
-					// if node already exists in tree with same text, get that
-					// node and have the children assigned to that node
-					// will this confuse recursion? if multi-leveled?
-					node = this.getNodeById(parent.text + nodeParam.text.toLowerCase());
-
-					if (!typeof node !== 'undefined' && node && node !== null) { // if
-						// node
-						// exists
-						// in
-						// tree
-						// already
-
-					} else { // if node doen't exist in tree already
-						if (haveCheck) {
-							node = new Ext.tree.TreeNode({
-										expanded : false,
-										singleClickExpand : false,
-										id : parent.text + nodeParam.text.toLowerCase(), // so
-										// that
-										// multiple
-										// nodes
-										// with
-										// same
-										// text
-										// aren't
-										// created
-										text : nodeParam.text,
-										checked : true
-									});
-						} else {
-							node = new Ext.tree.TreeNode({
-										expanded : false,
-										singleClickExpand : false,
-										id : parent.text + nodeParam.text.toLowerCase(), // so
-										// that
-										// multiple
-										// nodes
-										// with
-										// same
-										// text
-										// aren't
-										// created
-										text : nodeParam.text
-									});
-						}
-					}
-
-					if (hasChildren) {
-						this.buildNodes(node, nodeParam.children, false);
-					}
-					var testNode = this.getNodeById(parent.text + nodeParam.text.toLowerCase());
-					if (typeof testNode === 'undefined') {// don't need to
-						// re-add it if it's
-						// already there
-						parent.appendChild(node);
-					}
-				}
-			}
-		});
-
-Ext.reg('factorSelectTree', Gemma.FactorSelectTree);
+Ext.reg('Metaheatmap.FactorTree', Gemma.Metaheatmap.FactorTree);

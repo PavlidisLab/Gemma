@@ -158,16 +158,14 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		}else{
 			this.experimentSessionGroupQueries = this.initExperimentSessionGroupQueries;
 		}
-		
-//		DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId,
-//				this.datasetReferences, this.geneReferences, this.initGeneSessionGroupQueries,
-//				this.initExperimentSessionGroupQueries, function(data) {
-		
-		DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationSearch(this.taxonId,
-				this.experimentGroupValueObjects, this.geneGroupValueObjects, this.initGeneSessionGroupQueries,
-				this.initExperimentSessionGroupQueries, function(data) {
 
-					//progressWindow.hide();
+		DifferentialExpressionSearchController.geneConditionSearch ( this.taxonId,		
+																	 this.experimentGroupValueObjects,
+																	 this.geneGroupValueObjects,
+																	 this.initGeneSessionGroupQueries,
+																	 this.initExperimentSessionGroupQueries,
+																	 function (data) {
+					
 					if(waitMsg){
 						waitMsg.hide();
 					}
@@ -175,57 +173,50 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					// to trigger loadmask on search form to hide
 					this.fireEvent('visualizationLoaded');
 					
-					data.taxonId = this.taxonId;
+					//data.taxonId = this.taxonId;
 					
-					var experimentCount = 0;
-					var lastDatasetId = null;
-
-					var i;
-					var j;
-					for (i = 0; i < data.resultSetValueObjects.length; i++) {
-						for (j = 0; j < data.resultSetValueObjects[i].length; j++) {
-
-							// get the number of experiments, they should be
-							// grouped by datasetId
-							if (data.resultSetValueObjects[i][j].datasetId != lastDatasetId) {
-								experimentCount++;
-							}
-							lastDatasetId = data.resultSetValueObjects[i][j].datasetId;
-						}
-					}					
+//					var experimentCount = 0;
+//					var lastDatasetId = null;
+//
+//					var i;
+//					var j;
+//					for (i = 0; i < data.resultSetValueObjects.length; i++) {
+//						for (j = 0; j < data.resultSetValueObjects[i].length; j++) {
+//
+//							// get the number of experiments, they should be
+//							// grouped by datasetId
+//							if (data.resultSetValueObjects[i][j].datasetId != lastDatasetId) {
+//								experimentCount++;
+//							}
+//							lastDatasetId = data.resultSetValueObjects[i][j].datasetId;
+//						}
+//					}					
 
 					// if no experiments were returned, don't show visualizer
-					if (experimentCount === 0) {
+					if (data.conditions.length === 0) {
 						//Ext.Msg.alert('<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.');
 						Ext.DomHelper.overwrite('meta-heatmap-div', {
 							html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
 						});
 					} else {
-						var title = '<b>Differential Expression Visualisation</b>' +
-							' (Data available for ' +
-							experimentCount +
-							(((typeof this.param !== 'undefined') ? 
-								(' of ' + this.param.datasetCount + ' experiments)') : " experiments)"));
-							/*+" Threshold: " + this.pvalue)//we don't use this yet*/
-						_metaVizApp = new Gemma.MetaHeatmapApp({
-									_selectionController: this, // temp hack so we can re-run search from vizApp
-									tbarTitle : title,
+						var title = '<b>Differential Expression Visualisation</b>';
+						_metaVizApp = new Gemma.Metaheatmap.Application({
+									//_selectionController: this, // temp hack so we can re-run search from vizApp
+									toolbarTitle : title,
 									visualizationData : data,
-									initGeneSort: (this.initGeneSort)? this.initGeneSort:null,
-									initExperimentSort: (this.initExperimentSort)? this.initExperimentSort:null,
-									initFactorFilter: (this.initFactorFilter)? this.initFactorFilter:null,
+									//initGeneSort: (this.initGeneSort)? this.initGeneSort:null,
+									//initExperimentSort: (this.initExperimentSort)? this.initExperimentSort:null,
+									//initFactorFilter: (this.initFactorFilter)? this.initFactorFilter:null,
 									applyTo : 'meta-heatmap-div',
 									//threshold : threshold, //we don't use this yet // should be renamed to p value threshold or something like that
-									geneSessionGroupQueries :this.geneSessionGroupQueries,
-									experimentSessionGroupQueries :this.experimentSessionGroupQueries,
-									loadedFromURL: this.loadedFromURL
+									//geneSessionGroupQueries :this.geneSessionGroupQueries,
+									//experimentSessionGroupQueries :this.experimentSessionGroupQueries,
+									//loadedFromURL: this.loadedFromURL
 								});
+						
 						_metaVizApp.doLayout();
 						_metaVizApp.refreshVisualization();
-						//this.add(_metaVizApp);
-						//this.doLayout();
 					}
-
 				}.createDelegate(this));
 	},
 		/**
