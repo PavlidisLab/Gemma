@@ -1,5 +1,34 @@
 Ext.namespace('Gemma');
 
+Gemma.CytoscapeSettings = {
+		
+		backgroundColor: "#FFF7FB",
+		
+		//node stuff
+		labelFontName: 'Monospace',
+        labelFontColor: "#252525",
+        labelFontColorFade: "#BDBDBD",
+        labelGlowStrength: 100,
+        labelFontWeight: "bold",
+        
+        labelYOffset: -20,
+
+        labelHorizontalAnchor: "center",
+        
+        nodeColor: "#969696",
+        nodeColorFade:"#FFF7FB",
+        nodeSize: 25,
+        
+        nodeQueryColorTrue: "#E41A1C",
+        nodeQueryColorFalse: "#6BAED6",
+        	
+        //edge stuff
+        supportColorBoth: "#CCCCCC",
+        supportColorPositive: "#E66101",
+        supportColorNegative: "#5E3C99"
+		
+};
+
 Gemma.CytoscapePanel = Ext.extend(
 Ext.Panel, {
 
@@ -85,7 +114,8 @@ Ext.Panel, {
 
     visual_style_regular: {
         global: {
-            backgroundColor: "#FFF7FB"
+        	
+            backgroundColor: Gemma.CytoscapeSettings.backgroundColor
         },
         nodes: {
             tooltipText: "Official Name:${officialName}<br/>Node Degree:${nodeDegree}<br/>NCBI Id:${ncbiId}<br/>",
@@ -106,29 +136,33 @@ Ext.Panel, {
             },
 
             size: {
-                defaultValue: 15
+                defaultValue: Gemma.CytoscapeSettings.nodeSize
 
             },
-
-            labelFontColor: "#252525",
             
-            labelYOffset: 10,
+            labelFontName: Gemma.CytoscapeSettings.labelFontName,
+            labelFontColor: Gemma.CytoscapeSettings.labelFontColor,
+            labelGlowStrength: Gemma.CytoscapeSettings.labelGlowStrength,
+            labelFontWeight: Gemma.CytoscapeSettings.labelFontWeight,
+            
+            labelYOffset: Gemma.CytoscapeSettings.labelYOffset,
 
-            labelHorizontalAnchor: "center",
+            labelHorizontalAnchor: Gemma.CytoscapeSettings.labelHorizontalAnchor,
             borderColor: {
                 discreteMapper: {
                     attrName: "queryflag",
                     entries: [{
                         attrValue: true,
-                        value: "#E41A1C"
+                        value: Gemma.CytoscapeSettings.nodeQueryColorTrue
                     }, {
                         attrValue: false,
-                        value: "#6BAED6"
+                        value: Gemma.CytoscapeSettings.nodeQueryColorFalse
                     }]
                 }
 
             },
-            color: "#5E38F5"
+            
+            color: Gemma.CytoscapeSettings.nodeColor
         },
         edges: {
             tooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
@@ -143,19 +177,20 @@ Ext.Panel, {
             },
 
             color: {
+            	       
 
 
                 discreteMapper: {
                     attrName: "supportsign",
                     entries: [{
                         attrValue: "both",
-                        value: "#FDDBC7"
+                        value: Gemma.CytoscapeSettings.supportColorBoth
                     }, {
                         attrValue: "positive",
-                        value: "#E41A1C"
+                        value: Gemma.CytoscapeSettings.supportColorPositive
                     }, {
                         attrValue: "negative",
-                        value: "#4D4D4D"
+                        value: Gemma.CytoscapeSettings.supportColorNegative
                     }]
                 }
             }
@@ -163,7 +198,7 @@ Ext.Panel, {
     },
     visual_style_node_degree: {
         global: {
-            backgroundColor: "#FFF7FB"
+            backgroundColor: Gemma.CytoscapeSettings.backgroundColor
         },
         nodes: {
             tooltipText: "Official Name:${officialName}<br/>Node Degree:${nodeDegree}<br/>NCBI Id:${ncbiId}<br/>",
@@ -184,31 +219,39 @@ Ext.Panel, {
             },
 
             size: {
-                defaultValue: 30
+                defaultValue: Gemma.CytoscapeSettings.nodeSize
 
             },
 
             labelFontColor: {
                 continuousMapper: {
                     attrName: "nodeDegreeBin",
-                    minValue: "#252525",
-                    maxValue: "#BDBDBD",
+                    minValue: Gemma.CytoscapeSettings.labelFontColor,
+                    maxValue: Gemma.CytoscapeSettings.labelFontColorFade,
                     maxAttrValue: 11
 
                 }
 
             },
+            
+            labelFontName: Gemma.CytoscapeSettings.labelFontName,
+            
+            labelGlowStrength: Gemma.CytoscapeSettings.labelGlowStrength,
+            labelFontWeight: Gemma.CytoscapeSettings.labelFontWeight,
+            
+            labelYOffset: Gemma.CytoscapeSettings.labelYOffset,
 
-            labelHorizontalAnchor: "center",
+            labelHorizontalAnchor: Gemma.CytoscapeSettings.labelHorizontalAnchor,
+            
             borderColor: {
                 discreteMapper: {
                     attrName: "queryflag",
                     entries: [{
                         attrValue: true,
-                        value: "#E41A1C"
+                        value: Gemma.CytoscapeSettings.nodeQueryColorTrue
                     }, {
                         attrValue: false,
-                        value: "#FFF7FB"
+                        value: Gemma.CytoscapeSettings.nodeQueryColorFalse
                     }]
                 }
 
@@ -217,9 +260,9 @@ Ext.Panel, {
 
                 continuousMapper: {
                     attrName: "nodeDegreeBin",
-                    minValue: "#3333FF",
+                    minValue: Gemma.CytoscapeSettings.nodeColor,
                     //"#43A2CA",
-                    maxValue: "#FFF7FB",
+                    maxValue: Gemma.CytoscapeSettings.nodeColorFade,
                     //minAttrValue: 1 //,
                     maxAttrValue: 11
                 }
@@ -252,13 +295,13 @@ Ext.Panel, {
                     attrName: "supportsign",
                     entries: [{
                         attrValue: "both",
-                        value: "#4575B4"
+                        value: Gemma.CytoscapeSettings.supportColorBoth
                     }, {
                         attrValue: "positive",
-                        value: "#762A83"
+                        value: Gemma.CytoscapeSettings.supportColorPositive
                     }, {
                         attrValue: "negative",
-                        value: "#1B7837"
+                        value: Gemma.CytoscapeSettings.supportColorNegative
                     }]
                 }
             }
