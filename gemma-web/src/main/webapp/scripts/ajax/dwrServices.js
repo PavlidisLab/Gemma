@@ -271,9 +271,9 @@ DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizati
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
 			'differentialExpressionAnalysisVisualizationSearch', p0, p1, p2, p3, p4, callback);
 }
-DifferentialExpressionSearchController.differentialExpressionAnalysisVisualizationLoadContrastsInfo = function(p0, p1, callback) {
+DifferentialExpressionSearchController.geneConditionSearch = function(p0, p1, p2, p3, p4, callback) {
 	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
-			'differentialExpressionAnalysisVisualizationLoadContrastsInfo', p0, p1, callback);
+			'geneConditionSearch', p0, p1, p2, p3, p4, callback);
 }
 
 // ====================================================================================
