@@ -74,9 +74,9 @@ Ext.Panel, {
 
     options: {
         // where you have the Cytoscape Web SWF
-        swfPath: "/Gemma/scripts/cytoscape/swf/CytoscapeWeb",
+        swfPath: "/Gemma/scripts/cytoscapev8/swf/CytoscapeWeb",
         // where you have the Flash installer SWF
-        flashInstallerPath: "/Gemma/scripts/cytoscape/swf/playerProductInstall"
+        flashInstallerPath: "/Gemma/scripts/cytoscapev8/swf/playerProductInstall"
     },
 
     nodeDegreeVisualStyleFlag: true,
@@ -106,11 +106,13 @@ Ext.Panel, {
             },
 
             size: {
-                defaultValue: 30
+                defaultValue: 15
 
             },
 
             labelFontColor: "#252525",
+            
+            labelYOffset: 10,
 
             labelHorizontalAnchor: "center",
             borderColor: {
