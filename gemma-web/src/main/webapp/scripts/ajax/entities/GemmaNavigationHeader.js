@@ -24,17 +24,16 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 	this.inMenuSearchField = new Ext.form.TextField({
 		flex: 1,
 		enableKeyEvents: true,
+		emptyText: 'Search',
 		listeners: {
 			specialkey: function(formField, e){
 				// e.HOME, e.END, e.PAGE_UP, e.PAGE_DOWN,
 				// e.TAB, e.ESC, arrow keys: e.LEFT, e.RIGHT, e.UP, e.DOWN
 				if (e.getKey() === e.ENTER) {
 					this.doSearchQuery(this.lastQuery);
+				} else if (e.getKey() === e.ESC) {
+					formField.setValue('');
 				}
-				else 
-					if (e.getKey() === e.ESC) {
-						formField.setValue('');
-					}
 			},
 			scope: this
 		}
@@ -68,10 +67,6 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 						flex:0
 					}]
 				},{
-					text: 'Search',
-					href: "/Gemma/searcher.html",
-					tooltip: "Search our database for genes, experiments, array designs, etc."
-				}, {
 					text: 'Search Analyses',
 					href: "/Gemma/analysesResultsSearch.html",
 					tooltip: "Search for differential and coexpression patterns"
