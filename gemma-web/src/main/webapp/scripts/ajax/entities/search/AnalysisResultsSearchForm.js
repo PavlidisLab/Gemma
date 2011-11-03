@@ -131,8 +131,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				html: "You are using " + stateText + " for your search. " +
 					"Searching for more than " + maxText +
 					" can take some time to load and can slow down your interactions with the search results. " +
-					"You may also encounter error messages unless you are using the "+
-					"<a target='_blank' href='http://www.google.com/chrome/'>Chrome</a> browser. <br><br>" +
 					"We suggest you cancel this search and refine your selections or let us trim your query.",
 				//icon: Ext.Msg.WARNING,
 				buttons: [{
