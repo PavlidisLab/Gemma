@@ -54,15 +54,16 @@ public class GeneCoreServiceImpl implements GeneCoreService {
      * @param geneId The gene id
      * @return GeneDetailsValueObject a representation of that gene
      */
-    public GeneDetailsValueObject loadGeneDetails( Long geneId ) {
+    @Override
+    public GeneDetailsValueObject loadGeneDetails( long geneId ) {
 
-        Gene gene = geneService.load( geneId );
+        Gene gene = this.geneService.load( geneId );
         // need to thaw for aliases (at least)
-        gene = geneService.thaw( gene );
+        gene = this.geneService.thaw( gene );
 
         Collection<Long> ids = new HashSet<Long>();
         ids.add( gene.getId() );
-        Collection<GeneValueObject> initialResults = geneService.loadValueObjects( ids );
+        Collection<GeneValueObject> initialResults = this.geneService.loadValueObjects( ids );
 
         if ( initialResults.size() == 0 ) {
             return null;
@@ -78,15 +79,15 @@ public class GeneCoreServiceImpl implements GeneCoreService {
         }
         details.setAliases( aliasStrs );
 
-        Long compositeSequenceCount = geneService.getCompositeSequenceCountById( geneId );
+        Long compositeSequenceCount = this.geneService.getCompositeSequenceCountById( geneId );
         details.setCompositeSequenceCount( compositeSequenceCount );
 
-        Collection<GeneSet> genesets = geneSetSearch.findByGene( gene );
+        Collection<GeneSet> genesets = this.geneSetSearch.findByGene( gene );
         Collection<GeneSetValueObject> gsvos = new ArrayList<GeneSetValueObject>();
         gsvos.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( genesets, false ) );
         details.setGeneSets( gsvos );
 
-        Collection<Gene> geneHomologues = homologeneService.getHomologues( gene );
+        Collection<Gene> geneHomologues = this.homologeneService.getHomologues( gene );
         Collection<GeneValueObject> homologues = GeneValueObject.convert2ValueObjects( geneHomologues );
         details.setHomologues( homologues );
 
@@ -101,14 +102,15 @@ public class GeneCoreServiceImpl implements GeneCoreService {
      * @param taxonId, can be null to not constrain by taxon
      * @return Collection of Gene entity objects
      */
+    @Override
     public Collection<GeneValueObject> searchGenes( String query, Long taxonId ) {
 
         Taxon taxon = null;
         if ( taxonId != null ) {
-            taxon = taxonService.load( taxonId );
+            taxon = this.taxonService.load( taxonId );
         }
         SearchSettings settings = SearchSettings.geneSearch( query, taxon );
-        List<SearchResult> geneSearchResults = searchService.search( settings ).get( Gene.class );
+        List<SearchResult> geneSearchResults = this.searchService.search( settings ).get( Gene.class );
 
         Collection<Gene> genes = new HashSet<Gene>();
         if ( geneSearchResults == null || geneSearchResults.isEmpty() ) {

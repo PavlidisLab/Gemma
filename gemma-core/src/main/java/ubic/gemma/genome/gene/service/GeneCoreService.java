@@ -17,7 +17,7 @@ public interface GeneCoreService {
      * @param geneId The gene id
      * @return GeneDetailsValueObject a representation of that gene
      */
-    public GeneDetailsValueObject loadGeneDetails( Long geneId );
+    public GeneDetailsValueObject loadGeneDetails( long geneId );
     
 
     /**
