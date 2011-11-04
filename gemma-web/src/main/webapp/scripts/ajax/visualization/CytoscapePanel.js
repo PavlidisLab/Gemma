@@ -77,7 +77,7 @@ Ext.Panel, {
             type: 'string'
         }, {
             name: 'ncbiId',
-            type: 'string'
+            type: 'number'
 
         }
 
