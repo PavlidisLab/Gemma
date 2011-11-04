@@ -32,6 +32,7 @@ import java.util.Set;
 
 import net.sf.ehcache.Element;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SessionFactory;
@@ -185,10 +186,17 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         /*
          * Filter
          */
+        Collection<Integer> seen = new HashSet<Integer>();
         Collections.sort( rawResults, new SupportComparator() );
         for ( Gene2GeneCoexpression g2g : rawResults ) {
 
             if ( g2g.getNumDataSets() < stringency ) continue;
+
+            int hash = hash( g2g );
+            if ( seen.contains( hash ) ) {
+                continue;
+            }
+            seen.add( hash );
 
             Gene firstGene = g2g.getFirstGene();
             Gene secondGene = g2g.getSecondGene();
@@ -319,13 +327,23 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             List<Gene2GeneCoexpression> lr = new ArrayList<Gene2GeneCoexpression>( r );
             Collections.sort( lr, new SupportComparator() );
 
+            Collection<Integer> seen = new HashSet<Integer>();
+
             for ( Gene2GeneCoexpression g2g : r ) {
+
+                int hash = hash( g2g );
+                if ( seen.contains( hash ) ) {
+                    continue;
+                }
+
                 /*
                  * all the genes are guaranteed to be in the query list. But we want them listed both ways so we count
                  * them up right later.
                  */
                 result.get( g2g.getFirstGene() ).add( g2g );
                 result.get( g2g.getSecondGene() ).add( g2g );
+
+                seen.add( hash );
             }
 
             /*
@@ -336,6 +354,15 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
 
         return result;
 
+    }
+
+    public int hash( Gene2GeneCoexpression g2g ) {
+        int g1 = g2g.getFirstGene().hashCode();
+        int g2 = g2g.getSecondGene().hashCode();
+        if ( g1 < g2 ) {
+            return new HashCodeBuilder().append( g1 ).append( g2 ).toHashCode();
+        }
+        return new HashCodeBuilder().append( g2 ).append( g1 ).toHashCode();
     }
 
     /**
