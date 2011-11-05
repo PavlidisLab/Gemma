@@ -83,7 +83,6 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
 
     ExpressionExperiment ee = null;
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testComputeDevRankForExpressionExperimentB() throws Exception {
 
@@ -115,7 +114,6 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testReorder() throws Exception {
 

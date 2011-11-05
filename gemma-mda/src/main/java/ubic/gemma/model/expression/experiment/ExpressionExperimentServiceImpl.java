@@ -676,7 +676,7 @@ public class ExpressionExperimentServiceImpl extends
      * .gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    protected Map<Long, Integer> handleGetQuantitationTypeCountById( Long Id ) throws Exception {
+    protected Map<QuantitationType, Integer> handleGetQuantitationTypeCountById( Long Id ) throws Exception {
         return this.getExpressionExperimentDao().getQuantitationTypeCountById( Id );
     }
 

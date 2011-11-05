@@ -538,7 +538,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadGSE8294() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -554,7 +553,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         assertEquals( 66, e.getRawExpressionDataVectors().size() );
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testParseGSE18707() throws Exception {
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
@@ -655,22 +653,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
         fail( "No IMAGE clones!" );
     }
 
-    // We are more relaxed about number format errors; invalid values are put in as Missing (NaN)
-    // public void testConvertDataMixed() {
-    // List<String> testList = new ArrayList<String>();
-    // testList.add( "1" ); // should trigger use of integers
-    // testList.add( "2929202e-4" ); // uh-oh
-    // testList.add( "-394949.44422" );
-    // QuantitationType qt = QuantitationType.Factory.newInstance();
-    // qt.setRepresentation( PrimitiveType.INT );
-    // try {
-    // gc.convertData( testList, qt );
-    // fail( "Should have gotten an exception" );
-    // } catch ( RuntimeException e ) {
-    //
-    // }
-    // }
-
     /**
      * Method to test that an array design can have multiple taxa stored against it and that if abbreviations used as
      * probe names mapped to the scientific names correctly if the abbreviation is stored in DB.
@@ -734,7 +716,6 @@ public class GeoConverterTest extends BaseSpringContextTest {
     /**
      * Ensure that if platform has one taxon then taxon is still set correctly
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testSingleTaxonOnArrayWithNoOrganismColumn() throws Exception {
 
@@ -749,7 +730,7 @@ public class GeoConverterTest extends BaseSpringContextTest {
         ArrayDesign ad = ( ArrayDesign ) result;
 
         assertNotNull( ad );
-        Set listPossibleTaxonValues = new HashSet();
+        Set<Taxon> listPossibleTaxonValues = new HashSet<Taxon>();
         BioSequence bs = null;
         for ( CompositeSequence cs : ad.getCompositeSequences() ) {
             bs = cs.getBiologicalCharacteristic();

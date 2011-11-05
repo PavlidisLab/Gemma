@@ -75,8 +75,7 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
             }
         }
     }
-
-    @SuppressWarnings("unchecked")
+ 
     @Test
     public void testFetchAndLoadSuperSeries() throws Exception {
         String path = getTestFileBasePath();
@@ -98,8 +97,7 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
      * 
      * @throws Exception
      */
-    @Test
-    @SuppressWarnings("unchecked")
+    @Test 
     public void testFetchAndLoadSuperSeriesB() throws Exception {
 
         String path = getTestFileBasePath();

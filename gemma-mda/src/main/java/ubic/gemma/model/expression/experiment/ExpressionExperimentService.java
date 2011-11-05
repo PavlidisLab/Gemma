@@ -352,7 +352,7 @@ public interface ExpressionExperimentService {
     /**
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type
      */
-    public Map<QuantitationType, Long> getQuantitationTypeCountById( java.lang.Long Id );
+    public Map<QuantitationType, Integer> getQuantitationTypeCountById( java.lang.Long Id );
 
     /**
      * Return all the quantitation types used by the given expression experiment

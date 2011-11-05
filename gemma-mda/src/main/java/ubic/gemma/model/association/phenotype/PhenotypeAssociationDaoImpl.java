@@ -40,8 +40,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
-    /** find Genes link to a phenotype */
-    @SuppressWarnings("unchecked")
+    /** find Genes link to a phenotype */ 
     @Override
     public Collection<Gene> findByPhenotype( String phenotypeValue ) {
 

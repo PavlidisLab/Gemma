@@ -97,13 +97,11 @@ public class ProbeCoexpressionAnalysisServiceImpl extends
     protected Collection handleLoadAll() throws java.lang.Exception {
         return this.getProbeCoexpressionAnalysisDao().loadAll();
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public Collection<ProbeCoexpressionAnalysis> loadMyAnalyses() {
         return loadAll();
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public Collection<ProbeCoexpressionAnalysis> loadMySharedAnalyses() {
         return loadAll();
     }

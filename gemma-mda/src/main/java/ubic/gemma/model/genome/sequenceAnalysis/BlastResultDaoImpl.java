@@ -33,17 +33,4 @@ public class BlastResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis
         super.setSessionFactory( sessionFactory );
     }
 
-    @Override
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate ) {
-        if ( toFindOrCreate.getQuerySequence() == null )
-            throw new IllegalArgumentException( "BlastResult must have a querrySequence associated with it." );
-
-        BlastResult result = this.find( toFindOrCreate );
-        if ( result != null ) return result;
-
-        logger.debug( "Creating new BlatResult: " + toFindOrCreate.toString() );
-        result = create( toFindOrCreate );
-        return result;
-    }
 }

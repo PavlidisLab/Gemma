@@ -31,7 +31,6 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisD
 import ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysisDao;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
-import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -40,10 +39,8 @@ import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 
 /**
- * <p>
  * Spring Service base class for <code>ExpressionExperimentService</code>, provides access to all services and entities
  * referenced by this service.
- * </p>
  * 
  * @see ExpressionExperimentService
  */
@@ -585,7 +582,7 @@ public abstract class ExpressionExperimentServiceBase implements ExpressionExper
     /**
      * @see ExpressionExperimentService#getQuantitationTypeCountById(java.lang.Long)
      */
-    public Map getQuantitationTypeCountById( final java.lang.Long Id ) {
+    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final java.lang.Long Id ) {
         try {
             return this.handleGetQuantitationTypeCountById( Id );
         } catch ( Throwable th ) {

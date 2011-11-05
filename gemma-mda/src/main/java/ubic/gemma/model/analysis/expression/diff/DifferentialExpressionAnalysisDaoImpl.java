@@ -107,7 +107,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return count.intValue();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<DifferentialExpressionAnalysis> findByFactor( ExperimentalFactor ef ) {
         return this
@@ -117,14 +116,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                         "ef", ef );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<DifferentialExpressionAnalysis> findByName( String name ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select a from DifferentialExpressionAnalysisImpl as a where a.name = :name", "name", name );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> getAnalyses( Investigation investigation ) {
         Collection<DifferentialExpressionAnalysis> results = new HashSet<DifferentialExpressionAnalysis>();
         final String query = "select distinct a from DifferentialExpressionAnalysisImpl a where a.experimentAnalyzed=:expressionExperiment ";
@@ -133,13 +130,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         /*
          * Deal with the analyses of subsets.
          */
-        results
-                .addAll( this
-                        .getHibernateTemplate()
-                        .findByNamedParam(
-                                "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a join eess.sourceExperiment see "
-                                        + " join a.experimentAnalyzed ee where see=:expressionExperiment and eess=ee",
-                                "expressionExperiment", investigation ) );
+        results.addAll( this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select distinct a from ExpressionExperimentSubSetImpl eess, DifferentialExpressionAnalysisImpl a join eess.sourceExperiment see "
+                                + " join a.experimentAnalyzed ee where see=:expressionExperiment and eess=ee",
+                        "expressionExperiment", investigation ) );
 
         return results;
 
@@ -213,7 +209,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFind(ubic.gemma.model.genome
      * .Gene, ubic.gemma.model.analysis.expression.ExpressionAnalysisResultSet, double)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFind( Gene gene, ExpressionAnalysisResultSet resultSet,
             double threshold ) throws Exception {
@@ -247,7 +242,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindByInvestigationIds(
      * java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, DifferentialExpressionAnalysis> handleFindByInvestigationIds( Collection<Long> investigationIds )
             throws Exception {
@@ -290,7 +284,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.experimentAnalyzed as ee "
@@ -305,7 +298,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<DifferentialExpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select distinct doa from DifferentialExpressionAnalysisImpl as doa inner join doa.experimentAnalyzed as ee "
@@ -321,7 +313,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleFindExperimentsWithAnalyses
      * (ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioAssaySet> handleFindExperimentsWithAnalyses( Gene gene ) throws Exception {
 
@@ -353,30 +344,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         final String speciesConstraint = " and t.ID = :taxon";
         final String parentTaxonConstraint = " and t.PARENT_TAXON_FK = :taxon";
 
-        // final String revisedQueryString = "select distinct e from ProbeAnalysisResultImpl, "
-        // + "ExpressionAnalysisResultSetImpl "
-        // + "par join par.analysis a join a.experimentAnalyzed  e join e.bioAssays ba"
-        // + " join ba.samplesUsed sa  join par.results r where "
-        // +
-        // "r.probe in (:probes) and a.class='DifferentialExpressionAnalysisImpl'  and sa.sourceTaxon = :taxon and e.class='ExpressionExperimentImpl'";
-        //
-        // /*
-        // * The constraint on taxon is required because of the potential for experiments to use samples for the "wrong"
-        // * taxon for the array. In other words we really need to check the samples used in the experiment, not just
-        // the
-        // * array design.
-        // */
-        // final String queryString = "select distinct e from DifferentialExpressionAnalysisImpl a"
-        // + " join a.experimentAnalyzed e join e.bioAssays ba"
-        // + " join ba.samplesUsed sa join ba.arrayDesignUsed ad"
-        // + " join ad.compositeSequences cs where cs in (:probes) and sa.sourceTaxon = :taxon";
-        //
-        // // if parent taxon make sure get children
-        // final String queryStringParentTaxon = "select distinct e from DifferentialExpressionAnalysisImpl a"
-        // + " join a.experimentAnalyzed e join e.bioAssays ba"
-        // + " join ba.samplesUsed sa join ba.arrayDesignUsed ad" + " join ad.compositeSequences cs"
-        // + " join sa.sourceTaxon childtaxon where cs in (:probes) and childtaxon.parentTaxon = :taxon";
-
         Taxon taxon = gene.getTaxon();
         String taxonConstraint = taxon.getIsSpecies() ? speciesConstraint : parentTaxonConstraint;
 
@@ -388,16 +355,12 @@ public class DifferentialExpressionAnalysisDaoImpl extends
             batch.add( probe );
 
             if ( batch.size() == batchSize ) {
-                // result.addAll( this.getHibernateTemplate().findByNamedParam( queryToUse,
-                // new String[] { "probes", "taxon" }, new Object[] { batch, taxon } ) );
                 fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
                 batch.clear();
             }
         }
 
         if ( !batch.isEmpty() ) {
-            // result.addAll( this.getHibernateTemplate().findByNamedParam( queryToUse,
-            // new String[] { "probes", "taxon" }, new Object[] { batch, taxon } ) );
             fetchExperimentsTestingGeneNativeQuery( batch, result, queryToUse, taxon );
         }
 
@@ -408,7 +371,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private void fetchExperimentsTestingGeneNativeQuery( Collection<CompositeSequence> probes,
             Collection<BioAssaySet> result, final String nativeQuery, Taxon taxon ) {
 
@@ -422,9 +384,9 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         for ( Object o : list ) {
             ids.add( ( ( BigInteger ) o ).longValue() );
         }
-        if (!ids.isEmpty()) {
+        if ( !ids.isEmpty() ) {
             result.addAll( this.getHibernateTemplate().findByNamedParam(
-                "from ExpressionExperimentImpl e where e.id in (:ids)", "ids", ids ) );
+                    "from ExpressionExperimentImpl e where e.id in (:ids)", "ids", ids ) );
         }
     }
 
@@ -435,7 +397,6 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      * ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDaoBase#handleGetResultSets(ubic.gemma
      * .model.expression.experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionAnalysisResultSet> handleGetResultSets( ExpressionExperiment expressionExperiment )
             throws Exception {

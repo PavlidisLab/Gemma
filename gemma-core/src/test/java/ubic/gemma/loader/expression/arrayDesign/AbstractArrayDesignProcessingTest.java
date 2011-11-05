@@ -53,8 +53,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
      * (non-Javadoc)
      * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUp()
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Before
     public void setupArrayDesign() throws Exception {
         ad = arrayDesignService.findByShortName( ACCESSION );

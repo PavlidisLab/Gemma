@@ -143,12 +143,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 .next() ).intValue();
     }
 
-    @Override
-    public ExpressionExperiment expressionExperimentValueObjectToEntity(
-            ExpressionExperimentValueObject expressionExperimentValueObject ) {
-        return this.load( expressionExperimentValueObject.getId() );
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -156,7 +150,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#find(ubic.gemma.model.expression.experiment
      * .ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public ExpressionExperiment find( ExpressionExperiment expressionExperiment ) {
 
@@ -170,7 +163,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             crit.add( Restrictions.eq( "name", expressionExperiment.getName() ) );
         }
 
-        List results = this.getHibernateTemplate().findByCriteria( crit );
+        List<?> results = this.getHibernateTemplate().findByCriteria( crit );
         Object result = null;
         if ( results != null ) {
             if ( results.size() > 1 ) {
@@ -192,7 +185,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * description.DatabaseEntry)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperiment> findByAccession( DatabaseEntry accession ) {
 
         DetachedCriteria crit = DetachedCriteria.forClass( ExpressionExperiment.class );
@@ -366,7 +358,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( timer.getTime() > 1000 ) {
             log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
         }
-        this.releaseSession( session );        
+        this.releaseSession( session );
 
         return ees;
     }
@@ -652,7 +644,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByBibliographicReference(java.lang
      * .Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleFindByBibliographicReference( Long bibRefID ) throws Exception {
         final String queryString = "select distinct ee FROM ExpressionExperimentImpl as ee left join ee.otherRelevantPublications as eeO"
@@ -743,13 +734,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected ExpressionExperiment handleFindByFactorValue( FactorValue fv ) {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee inner join ee.experimentalDesign ed "
                 + "inner join ed.experimentalFactors ef inner join ef.factorValues fv where fv = :fv ";
 
-        List results = getHibernateTemplate().findByNamedParam( queryString, "fv", fv );
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "fv", fv );
 
         if ( results.size() == 0 ) {
             log.info( "There is no expression experiment that has factorValue = " + fv );
@@ -758,9 +748,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return ( ExpressionExperiment ) results.iterator().next();
     }
 
-    @SuppressWarnings("unchecked")
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByFactorValues(java.util.Collection)
+     */
     @Override
-    protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection fvs ) {
+    protected Collection<ExpressionExperiment> handleFindByFactorValues( Collection<FactorValue> fvs ) {
 
         if ( fvs.isEmpty() ) return new HashSet<ExpressionExperiment>();
 
@@ -774,8 +769,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         }
 
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee where ee.experimentalDesign in (:eds) ";
-        Collection results = new HashSet();
-        Collection<ExperimentalDesign> batch = new HashSet();
+        Collection<ExpressionExperiment> results = new HashSet<ExpressionExperiment>();
+        Collection<ExperimentalDesign> batch = new HashSet<ExperimentalDesign>();
         for ( ExperimentalDesign o : eds ) {
             batch.add( o );
             if ( batch.size() == BATCH_SIZE ) {
@@ -837,7 +832,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleFindByParentTaxon(ubic.gemma.model.genome
      * . Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleFindByParentTaxon( Taxon taxon ) throws Exception {
         final String queryString = "select distinct ee from ExpressionExperimentImpl as ee "
@@ -846,12 +840,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         return getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected ExpressionExperiment handleFindByQuantitationType( QuantitationType quantitationType ) throws Exception {
         final String queryString = "select ee from ExpressionExperimentImpl as ee "
                 + "inner join ee.quantitationTypes qt where qt = :qt ";
-        List results = getHibernateTemplate().findByNamedParam( queryString, "qt", quantitationType );
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "qt", quantitationType );
         if ( results.size() == 1 ) {
             return ( ExpressionExperiment ) results.iterator().next();
         } else if ( results.size() == 0 ) {
@@ -899,18 +892,17 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetAnnotationCounts(java.util.Collection
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map<Long, Integer> handleGetAnnotationCounts( Collection ids ) throws Exception {
+    protected Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids ) throws Exception {
         Map<Long, Integer> results = new HashMap<Long, Integer>();
-        for ( Long id : ( Collection<Long> ) ids ) {
+        for ( Long id : ids ) {
             results.put( id, 0 );
         }
         if ( ids.size() == 0 ) {
             return results;
         }
         String queryString = "select e.id,count(c.id) from ExpressionExperimentImpl e inner join e.characteristics c where e.id in (:ids) group by e.id";
-        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        List<?> res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
         for ( Object r : res ) {
             Object[] ro = ( Object[] ) r;
@@ -971,13 +963,12 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetLastLinkAnalysis(java.util.Collection
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Map handleGetAuditEvents( Collection ids ) throws Exception {
+    protected Map handleGetAuditEvents( Collection<Long> ids ) throws Exception {
         final String queryString = "select ee.id, auditEvent from ExpressionExperimentImpl ee inner join ee.auditTrail as auditTrail inner join auditTrail.events as auditEvent "
                 + " where ee.id in (:ids) ";
 
-        List result = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
         Map<Long, Collection<AuditEvent>> eventMap = new HashMap<Long, Collection<AuditEvent>>();
 
@@ -1014,12 +1005,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#getQuantitationTypeCountById(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Integer handleGetBioAssayCountById( long Id ) {
         final String queryString = "select count(ba) from ExpressionExperimentImpl ee "
                 + "inner join ee.bioAssays dedv where ee.id = :ee";
-        List list = getHibernateTemplate().findByNamedParam( queryString, "ee", Id );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "ee", Id );
         if ( list.size() == 0 ) {
             log.warn( "No vectors for experiment with id " + Id );
             return 0;
@@ -1077,8 +1067,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors( Collection quantitationTypes )
-            throws Exception {
+    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
+            Collection<QuantitationType> quantitationTypes ) throws Exception {
 
         if ( quantitationTypes.isEmpty() ) {
             throw new IllegalArgumentException( "Must provide at least one quantitation type" );
@@ -1089,7 +1079,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.quantitationType in (:qts) ";
 
-        List results = getHibernateTemplate().findByNamedParam( queryString, "qts", quantitationTypes );
+        List<?> results = getHibernateTemplate().findByNamedParam( queryString, "qts", quantitationTypes );
 
         if ( results.isEmpty() ) {
             queryString = "select dev from ProcessedExpressionDataVectorImpl dev"
@@ -1099,7 +1089,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             results.addAll( getHibernateTemplate().findByNamedParam( queryString, "qts", quantitationTypes ) );
         }
 
-        return results;
+        return ( Collection<DesignElementDataVector> ) results;
     }
 
     /*
@@ -1109,11 +1099,10 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetDesignElementDataVectors(java.util
      * .Collection, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetDesignElementDataVectors( Collection<CompositeSequence> designElements,
-            QuantitationType quantitationType ) throws Exception {
-        if ( designElements == null || designElements.size() == 0 ) return new HashSet();
+    protected Collection<DesignElementDataVector> handleGetDesignElementDataVectors(
+            Collection<CompositeSequence> designElements, QuantitationType quantitationType ) throws Exception {
+        if ( designElements == null || designElements.size() == 0 ) return new HashSet<DesignElementDataVector>();
 
         assert quantitationType.getId() != null;
 
@@ -1171,7 +1160,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected QuantitationType handleGetMaskedPreferredQuantitationType( ExpressionExperiment ee ) throws Exception {
         String queryString = "select q from ExpressionExperimentImpl e inner join e.quantitationTypes q where e = :ee and q.isMaskedPreferred = true";
         List<?> k = this.getHibernateTemplate().findByNamedParam( queryString, "ee", ee );
@@ -1189,7 +1177,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPerTaxonCount()
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Taxon, Long> handleGetPerTaxonCount() throws Exception {
 
@@ -1235,7 +1222,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPopulatedFactorCounts(java.util.
      * Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Integer> handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception {
         Map<Long, Integer> results = new HashMap<Long, Integer>();
@@ -1249,7 +1235,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
 
         String queryString = "select e.id,count(distinct ef.id) from ExpressionExperimentImpl e inner join e.bioAssays ba"
                 + " inner join ba.samplesUsed bm inner join bm.factorValues fv inner join fv.experimentalFactor ef where e.id in (:ids) group by e.id";
-        List res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
+        List<?> res = this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
 
         for ( Object r : res ) {
             Object[] ro = ( Object[] ) r;
@@ -1266,7 +1252,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * @seeubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetPopulatedFactorCounts(java.util.
      * Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, Integer> handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws Exception {
         Map<Long, Integer> results = new HashMap<Long, Integer>();
@@ -1285,7 +1270,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         String[] names = { "ids", "category", "name" };
         Object[] values = { ids, ExperimentalFactorService.BATCH_FACTOR_CATEGORY_NAME,
                 ExperimentalFactorService.BATCH_FACTOR_NAME };
-        List res = this.getHibernateTemplate().findByNamedParam( queryString, names, values );
+        List<?> res = this.getHibernateTemplate().findByNamedParam( queryString, names, values );
 
         for ( Object r : res ) {
             Object[] ro = ( Object[] ) r;
@@ -1304,12 +1289,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * (ubic.gemma.model.expression.experiment.ExpressionExperiment)
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Integer handleGetProcessedExpressionVectorCount( ExpressionExperiment expressionExperiment )
             throws Exception {
         final String queryString = "select count(v) from ProcessedExpressionDataVectorImpl v  where v.expressionExperiment = :ee ";
 
-        List result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+        List<?> result = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
         return ( ( Long ) result.iterator().next() ).intValue();
     }
 
@@ -1322,18 +1306,18 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Map<QuantitationType, Long> handleGetQuantitationTypeCountById( Long Id ) {
+    protected Map<QuantitationType, Integer> handleGetQuantitationTypeCountById( Long Id ) {
 
         final String queryString = "select quantType,count(*) as count "
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
                 + "inner join ee.rawExpressionDataVectors as vectors "
                 + "inner join vectors.quantitationType as quantType " + "where ee.id = :id GROUP BY quantType.name";
 
-        List list = getHibernateTemplate().findByNamedParam( queryString, "id", Id );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", Id );
 
-        Map<QuantitationType, Long> qtCounts = new HashMap<QuantitationType, Long>();
+        Map<QuantitationType, Integer> qtCounts = new HashMap<QuantitationType, Integer>();
         for ( Object[] tuple : ( List<Object[]> ) list ) {
-            qtCounts.put( ( QuantitationType ) tuple[0], ( Long ) tuple[1] );
+            qtCounts.put( ( QuantitationType ) tuple[0], ( ( Long ) tuple[1] ).intValue() );
         }
 
         return qtCounts;
@@ -1346,12 +1330,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "from ubic.gemma.model.expression.experiment.ExpressionExperimentImpl ee "
                 + "inner join ee.quantitationTypes as quantType fetch all properties where ee  = :ee ";
 
-        List qtypes = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
-        return qtypes;
+        List<?> qtypes = getHibernateTemplate().findByNamedParam( queryString, "ee", expressionExperiment );
+        return ( Collection<QuantitationType> ) qtypes;
 
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<QuantitationType> handleGetQuantitationTypes( ExpressionExperiment expressionExperiment,
             ArrayDesign arrayDesign ) {
@@ -1375,7 +1358,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSampleRemovalEvents(java.util.Collection
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
             Collection<ExpressionExperiment> expressionExperiments ) {
@@ -1384,7 +1366,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "inner join fetch ev.performer where ee in (:ees) and et.class = 'SampleRemovalEvent'";
 
         Map<ExpressionExperiment, Collection<AuditEvent>> result = new HashMap<ExpressionExperiment, Collection<AuditEvent>>();
-        List r = this.getHibernateTemplate().findByNamedParam( queryString, "ees", expressionExperiments );
+        List<?> r = this.getHibernateTemplate().findByNamedParam( queryString, "ees", expressionExperiments );
         for ( Object o : r ) {
             Object[] ol = ( Object[] ) o;
             ExpressionExperiment e = ( ExpressionExperiment ) ol[0];
@@ -1412,9 +1394,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "inner join dev.quantitationType as qt where qt.id = :qtid";
         int oldmax = getHibernateTemplate().getMaxResults();
         getHibernateTemplate().setMaxResults( limit );
-        List list = getHibernateTemplate().findByNamedParam( queryString, "qtid", quantitationType.getId() );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "qtid", quantitationType.getId() );
         getHibernateTemplate().setMaxResults( oldmax );
-        return list;
+        return ( Collection<DesignElementDataVector> ) list;
     }
 
     /*
@@ -1424,7 +1406,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetSubSets(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperimentSubSet> handleGetSubSets( ExpressionExperiment expressionExperiment )
             throws Exception {
@@ -1437,12 +1418,11 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleGetTaxon(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Taxon handleGetTaxon( Long id ) throws Exception {
         final String queryString = "select SU.sourceTaxon from ExpressionExperimentImpl as EE "
                 + "inner join EE.bioAssays as BA " + "inner join BA.samplesUsed as SU where EE.id = :id";
-        List list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
         if ( list.size() > 0 ) return ( Taxon ) list.iterator().next();
         return null;
     }
@@ -1452,7 +1432,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      * 
      * @see ubic.gemma.model.expression.experiment.ExpressionExperimentDaoBase#handleLoad(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<ExpressionExperiment> handleLoad( Collection<Long> ids ) throws Exception {
         StopWatch timer = new StopWatch();

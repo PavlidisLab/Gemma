@@ -48,34 +48,6 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
     }
 
     /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind ) {
-        try {
-            return this.handleFind( resultToFind );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
-            final ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate ) {
-        try {
-            return this.handleFindOrCreate( resultToFindOrCreate );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.genome.sequenceAnalysis.BlastResultServiceException(
-                    "Error performing 'ubic.gemma.model.genome.sequenceAnalysis.BlastResultService.findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResultService#remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)
      */
     public void remove( final ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) {
@@ -107,18 +79,6 @@ public abstract class BlastResultServiceBase implements ubic.gemma.model.genome.
      */
     protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleCreate(
             ubic.gemma.model.genome.sequenceAnalysis.BlastResult blastResult ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #find(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
-     */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFind(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFind ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}
-     */
-    protected abstract ubic.gemma.model.genome.sequenceAnalysis.BlastResult handleFindOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult resultToFindOrCreate ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.genome.sequenceAnalysis.BlastResult)}

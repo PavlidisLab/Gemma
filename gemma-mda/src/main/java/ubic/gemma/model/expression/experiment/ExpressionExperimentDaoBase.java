@@ -29,6 +29,7 @@ import java.util.Set;
 
 import org.springframework.orm.hibernate3.HibernateCallback;
 
+import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
@@ -48,28 +49,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         ExpressionExperimentDao {
 
     /**
-     * This anonymous transformer is designed to transform entities or report query results (which result in an array of
-     * objects) to {@link ExpressionExperimentValueObject} using the Jakarta Commons-Collections Transformation API.
-     */
-    private org.apache.commons.collections.Transformer EXPRESSIONEXPERIMENTVALUEOBJECT_TRANSFORMER = new org.apache.commons.collections.Transformer() {
-        public Object transform( Object input ) {
-            Object result = null;
-            if ( input instanceof ExpressionExperiment ) {
-                result = toExpressionExperimentValueObject( ( ExpressionExperiment ) input );
-            } else if ( input instanceof Object[] ) {
-                result = toExpressionExperimentValueObject( ( Object[] ) input );
-            }
-            return result;
-        }
-    };
-
-    private final org.apache.commons.collections.Transformer ExpressionExperimentValueObjectToEntityTransformer = new org.apache.commons.collections.Transformer() {
-        public Object transform( Object input ) {
-            return expressionExperimentValueObjectToEntity( ( ExpressionExperimentValueObject ) input );
-        }
-    };
-
-    /**
      * @see ExpressionExperimentDao#countAll()
      */
     public Integer countAll() {
@@ -83,8 +62,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#create(int, Collection)
      */
-    public Collection<? extends ExpressionExperiment> create( final int transform,
-            final Collection<? extends ExpressionExperiment> entities ) {
+    public Collection<? extends ExpressionExperiment> create( final Collection<? extends ExpressionExperiment> entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'entities' can not be null" );
         }
@@ -92,7 +70,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
                 for ( Iterator<? extends ExpressionExperiment> entityIterator = entities.iterator(); entityIterator
                         .hasNext(); ) {
-                    create( transform, entityIterator.next() );
+                    create( entityIterator.next() );
                 }
                 return null;
             }
@@ -103,27 +81,12 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#create(int transform, ExpressionExperiment)
      */
-    public Object create( final int transform, final ExpressionExperiment expressionExperiment ) {
+    public ExpressionExperiment create( final ExpressionExperiment expressionExperiment ) {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.create - 'expressionExperiment' can not be null" );
         }
         this.getHibernateTemplate().save( expressionExperiment );
-        return this.transformEntity( transform, expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#create(Collection)
-     */
-
-    public Collection<? extends ExpressionExperiment> create( final Collection<? extends ExpressionExperiment> entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#create(ExpressionExperiment)
-     */
-    public ExpressionExperiment create( ExpressionExperiment expressionExperiment ) {
-        return ( ExpressionExperiment ) this.create( TRANSFORM_NONE, expressionExperiment );
+        return expressionExperiment;
     }
 
     /**
@@ -141,108 +104,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         if ( copyIfNull || source.getName() != null ) {
             target.setName( source.getName() );
         }
-    }
-
-    /**
-     * @see ExpressionExperimentDao#expressionExperimentValueObjectToEntityCollection(Collection)
-     */
-    public final void expressionExperimentValueObjectToEntityCollection( Collection<ExpressionExperiment> instances ) {
-        if ( instances != null ) {
-            for ( final Iterator<? extends Object> iterator = instances.iterator(); iterator.hasNext(); ) {
-                // - remove an objects that are null or not of the correct instance
-                if ( !( iterator.next() instanceof ExpressionExperimentValueObject ) ) {
-                    iterator.remove();
-                }
-            }
-            org.apache.commons.collections.CollectionUtils.transform( instances,
-                    ExpressionExperimentValueObjectToEntityTransformer );
-        }
-    }
-
-    /**
-     * @see ExpressionExperimentDao#find(int, String, ExpressionExperiment)
-     */
-
-    public ExpressionExperiment find( final int transform, final String queryString,
-            final ExpressionExperiment expressionExperiment ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
-        args.add( expressionExperiment );
-        argNames.add( "expressionExperiment" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        ExpressionExperiment result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ExpressionExperiment" + "' was found when executing query --> '"
-                            + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = ( ExpressionExperiment ) results.iterator().next();
-        }
-
-        result = ( ExpressionExperiment ) transformEntity( transform, result );
-        return result;
-    }
-
-    /**
-     * @see ExpressionExperimentDao#find(int, ExpressionExperiment)
-     */
-    public ExpressionExperiment find( final int transform, final ExpressionExperiment expressionExperiment ) {
-        return this
-                .find( transform,
-                        "from ExpressionExperiment as expressionExperiment where expressionExperiment.expressionExperiment = :expressionExperiment",
-                        expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#find(String, ExpressionExperiment)
-     */
-    public ExpressionExperiment find( final String queryString, final ExpressionExperiment expressionExperiment ) {
-        return this.find( TRANSFORM_NONE, queryString, expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#find(ExpressionExperiment)
-     */
-    public ExpressionExperiment find( ExpressionExperiment expressionExperiment ) {
-        return this.find( TRANSFORM_NONE, expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByAccession(int, String, ubic.gemma.model.common.description.DatabaseEntry)
-     */
-
-    public Collection<ExpressionExperiment> findByAccession( final int transform, final String queryString,
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
-        args.add( accession );
-        argNames.add( "accession" );
-        return new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByAccession(int, ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    public Collection<ExpressionExperiment> findByAccession( final int transform,
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        return this.findByAccession( transform, "from ExpressionExperiment where accession=:accession", accession );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByAccession(String, ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    public Collection<ExpressionExperiment> findByAccession( final String queryString,
-            final ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        return this.findByAccession( TRANSFORM_NONE, queryString, accession );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByAccession(ubic.gemma.model.common.description.DatabaseEntry)
-     */
-    public Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession ) {
-        return this.findByAccession( TRANSFORM_NONE, accession );
     }
 
     /**
@@ -341,43 +202,27 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#findByInvestigator(int, String, Contact)
      */
 
-    public Collection findByInvestigator( final int transform, final String queryString, final Contact investigator ) {
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperiment> findByInvestigator( final String queryString, final Contact investigator ) {
         List<String> argNames = new ArrayList<String>();
         List<Object> args = new ArrayList<Object>();
         args.add( investigator );
         argNames.add( "investigator" );
-        List results = this.getHibernateTemplate().findByNamedParam( queryString,
+        List<?> results = this.getHibernateTemplate().findByNamedParam( queryString,
                 argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
-        return results;
+
+        return ( Collection<ExpressionExperiment> ) results;
     }
 
     /**
      * @see ExpressionExperimentDao#findByInvestigator(int, Contact)
      */
 
-    public Collection findByInvestigator( final int transform, final Contact investigator ) {
+    public Collection<ExpressionExperiment> findByInvestigator( final Contact investigator ) {
         return this
                 .findByInvestigator(
-                        transform,
                         "from InvestigationImpl i inner join Contact c on c in elements(i.investigators) or c == i.owner where c == :investigator",
                         investigator );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByInvestigator(String, Contact)
-     */
-
-    public Collection findByInvestigator( final String queryString, final Contact investigator ) {
-        return this.findByInvestigator( TRANSFORM_NONE, queryString, investigator );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByInvestigator(Contact)
-     */
-
-    public Collection<ExpressionExperiment> findByInvestigator( Contact investigator ) {
-        return this.findByInvestigator( TRANSFORM_NONE, investigator );
     }
 
     /**
@@ -396,8 +241,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
         List<Object> args = new ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Set<ExpressionExperiment> results = new LinkedHashSet<ExpressionExperiment>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ExpressionExperiment result = null;
 
         if ( results.size() > 1 ) {
@@ -405,7 +250,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
                     "More than one instance of 'ExpressionExperiment" + "' was found when executing query --> '"
                             + queryString + "'" );
         } else if ( results.size() == 1 ) {
-            result = ( ExpressionExperiment ) results.iterator().next();
+            result = results.iterator().next();
         }
 
         return result;
@@ -439,22 +284,21 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#findByShortName(int, String)
      */
-    public ExpressionExperiment findByShortName( final int transform, final String shortName ) {
-        return this.findByShortName( transform, "from ExpressionExperimentImpl a where a.shortName=:shortName",
-                shortName );
+    public ExpressionExperiment findByShortName( final String shortName ) {
+        return this.findByShortName( "from ExpressionExperimentImpl a where a.shortName=:shortName", shortName );
     }
 
     /**
      * @see ExpressionExperimentDao#findByShortName(int, String, String)
      */
 
-    public ExpressionExperiment findByShortName( final int transform, final String queryString, final String shortName ) {
+    public ExpressionExperiment findByShortName( final String queryString, final String shortName ) {
         List<String> argNames = new ArrayList<String>();
         List<Object> args = new ArrayList<Object>();
         args.add( shortName );
         argNames.add( "shortName" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        Set<ExpressionExperiment> results = new LinkedHashSet<ExpressionExperiment>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ExpressionExperiment result = null;
 
         if ( results.size() > 1 ) {
@@ -462,25 +306,10 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
                     "More than one instance of 'ExpressionExperiment" + "' was found when executing query --> '"
                             + queryString + "'" );
         } else if ( results.size() == 1 ) {
-            result = ( ExpressionExperiment ) results.iterator().next();
+            result = results.iterator().next();
         }
 
-        result = ( ExpressionExperiment ) transformEntity( transform, result );
         return result;
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByShortName(String)
-     */
-    public ExpressionExperiment findByShortName( String shortName ) {
-        return this.findByShortName( TRANSFORM_NONE, shortName );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findByShortName(String, String)
-     */
-    public ExpressionExperiment findByShortName( final String queryString, final String shortName ) {
-        return this.findByShortName( TRANSFORM_NONE, queryString, shortName );
     }
 
     /**
@@ -497,59 +326,9 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#findOrCreate(int, String, ExpressionExperiment)
-     */
-
-    public ExpressionExperiment findOrCreate( final int transform, final String queryString,
-            final ExpressionExperiment expressionExperiment ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
-        args.add( expressionExperiment );
-        argNames.add( "expressionExperiment" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        ExpressionExperiment result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ExpressionExperiment" + "' was found when executing query --> '"
-                            + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = ( ExpressionExperiment ) results.iterator().next();
-        }
-
-        result = ( ExpressionExperiment ) transformEntity( transform, result );
-        return result;
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findOrCreate(int, ExpressionExperiment)
-     */
-    public ExpressionExperiment findOrCreate( final int transform, final ExpressionExperiment expressionExperiment ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ExpressionExperiment as expressionExperiment where expressionExperiment.expressionExperiment = :expressionExperiment",
-                        expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findOrCreate(String, ExpressionExperiment)
-     */
-    public ExpressionExperiment findOrCreate( final String queryString, final ExpressionExperiment expressionExperiment ) {
-        return this.findOrCreate( TRANSFORM_NONE, queryString, expressionExperiment );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#findOrCreate(ExpressionExperiment)
-     */
-    public ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment ) {
-        return this.findOrCreate( TRANSFORM_NONE, expressionExperiment );
-    }
-
-    /**
      * @see ExpressionExperimentDao#getAnnotationCounts(Collection)
      */
-    public Map getAnnotationCounts( final Collection<Long> ids ) {
+    public Map<Long, Integer> getAnnotationCounts( final Collection<Long> ids ) {
         try {
             return this.handleGetAnnotationCounts( ids );
         } catch ( Throwable th ) {
@@ -562,7 +341,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#getArrayDesignAuditEvents(Collection)
      */
     @Deprecated
-    public Map getArrayDesignAuditEvents( final Collection<Long> ids ) {
+    public Map<Long, Map<Long, Collection<AuditEvent>>> getArrayDesignAuditEvents( final Collection<Long> ids ) {
         try {
             return this.handleGetArrayDesignAuditEvents( ids );
         } catch ( Throwable th ) {
@@ -575,7 +354,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getAuditEvents(Collection)
      */
-    public Map getAuditEvents( final Collection<Long> ids ) {
+    public Map<Long, Collection<AuditEvent>> getAuditEvents( final Collection<Long> ids ) {
         try {
             return this.handleGetAuditEvents( ids );
         } catch ( Throwable th ) {
@@ -706,7 +485,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getPopulatedFactorCounts(Collection)
      */
-    public Map getPopulatedFactorCounts( final Collection<Long> ids ) {
+    public Map<Long, Integer> getPopulatedFactorCounts( final Collection<Long> ids ) {
         try {
             return this.handleGetPopulatedFactorCounts( ids );
         } catch ( Throwable th ) {
@@ -718,7 +497,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getPopulatedFactorCountsExcludeBatch(Collection)
      */
-    public Map getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
+    public Map<Long, Integer> getPopulatedFactorCountsExcludeBatch( final Collection<Long> ids ) {
         try {
             return this.handleGetPopulatedFactorCountsExcludeBatch( ids );
         } catch ( Throwable th ) {
@@ -744,7 +523,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * @see ExpressionExperimentDao#getQuantitationTypeCountById(Long)
      */
-    public Map getQuantitationTypeCountById( final Long Id ) {
+    public Map<QuantitationType, Integer> getQuantitationTypeCountById( final Long Id ) {
         try {
             return this.handleGetQuantitationTypeCountById( Id );
         } catch ( Throwable th ) {
@@ -782,41 +561,11 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#getRecipient(int, Long)
-     */
-    public Object getRecipient( final int transform, final Long id ) {
-        return this.getRecipient( transform,
-                "from ExpressionExperiment as expressionExperiment where expressionExperiment.id = :id", id );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#getRecipient(int, String, Long)
-     */
-
-    public Object getRecipient( final int transform, final String queryString, final Long id ) {
-        List<String> argNames = new ArrayList<String>();
-        List<Object> args = new ArrayList<Object>();
-        args.add( id );
-        argNames.add( "id" );
-        Set results = new LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'String" + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ExpressionExperiment ) result );
-        return result;
-    }
-
-    /**
      * @see ExpressionExperimentDao#getSampleRemovalEvents(Collection)
      */
-    public Map getSampleRemovalEvents( final Collection<ExpressionExperiment> expressionExperiments ) {
+    public Map<ExpressionExperiment, Collection<AuditEvent>> getSampleRemovalEvents(
+            final Collection<ExpressionExperiment> expressionExperiments ) {
+
         try {
             return this.handleGetSampleRemovalEvents( expressionExperiments );
         } catch ( Throwable th ) {
@@ -870,20 +619,12 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      * @see ExpressionExperimentDao#load(int, Long)
      */
 
-    public ExpressionExperiment load( final int transform, final Long id ) {
+    public ExpressionExperiment load( final Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "ExpressionExperiment.load - 'id' can not be null" );
         }
         final Object entity = this.getHibernateTemplate().get( ExpressionExperimentImpl.class, id );
-        return ( ExpressionExperiment ) transformEntity( transform, ( ExpressionExperiment ) entity );
-    }
-
-    /**
-     * @see ExpressionExperimentDao#load(Long)
-     */
-
-    public ExpressionExperiment load( Long id ) {
-        return this.load( TRANSFORM_NONE, id );
+        return ( ExpressionExperiment ) entity;
     }
 
     /**
@@ -898,21 +639,13 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#loadAll()
-     */
-
-    public Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
      * @see ExpressionExperimentDao#loadAll(int)
      */
 
-    public Collection<ExpressionExperiment> loadAll( final int transform ) {
-        final Collection results = this.getHibernateTemplate().loadAll( ExpressionExperimentImpl.class );
-        this.transformEntities( transform, results );
-        return results;
+    @SuppressWarnings("unchecked")
+    public Collection<ExpressionExperiment> loadAll() {
+        final Collection<?> results = this.getHibernateTemplate().loadAll( ExpressionExperimentImpl.class );
+        return ( Collection<ExpressionExperiment> ) results;
     }
 
     /**
@@ -1011,16 +744,6 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     }
 
     /**
-     * @see ExpressionExperimentDao#toExpressionExperimentValueObjectCollection(Collection)
-     */
-    public final void toExpressionExperimentValueObjectCollection( Collection<ExpressionExperiment> entities ) {
-        if ( entities != null ) {
-            org.apache.commons.collections.CollectionUtils.transform( entities,
-                    EXPRESSIONEXPERIMENTVALUEOBJECT_TRANSFORMER );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.common.SecurableDao#update(Collection)
      */
     public void update( final Collection<? extends ExpressionExperiment> entities ) {
@@ -1112,17 +835,18 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getAnnotationCounts(Collection)}
      */
-    protected abstract Map handleGetAnnotationCounts( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Integer> handleGetAnnotationCounts( Collection<Long> ids ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getArrayDesignAuditEvents(Collection)}
      */
-    protected abstract Map handleGetArrayDesignAuditEvents( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Map<Long, Collection<AuditEvent>>> handleGetArrayDesignAuditEvents(
+            Collection<Long> ids ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getAuditEvents(Collection)}
      */
-    protected abstract Map handleGetAuditEvents( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Collection<AuditEvent>> handleGetAuditEvents( Collection<Long> ids ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getBioAssayCountById(long)}
@@ -1178,12 +902,13 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getPopulatedFactorCounts(Collection)}
      */
-    protected abstract Map handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Integer> handleGetPopulatedFactorCounts( Collection<Long> ids ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getPopulatedFactorCountsExcludeBatch(Collection)}
      */
-    protected abstract Map handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids ) throws Exception;
+    protected abstract Map<Long, Integer> handleGetPopulatedFactorCountsExcludeBatch( Collection<Long> ids )
+            throws Exception;
 
     /**
      * Performs the core logic for {@link #getProcessedExpressionVectorCount(ExpressionExperiment)}
@@ -1194,7 +919,7 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getQuantitationTypeCountById(Long)}
      */
-    protected abstract Map handleGetQuantitationTypeCountById( Long Id ) throws Exception;
+    protected abstract Map<QuantitationType, Integer> handleGetQuantitationTypeCountById( Long Id ) throws Exception;
 
     /**
      * Performs the core logic for {@link #getQuantitationTypes(ExpressionExperiment)}
@@ -1213,8 +938,8 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
     /**
      * Performs the core logic for {@link #getSampleRemovalEvents(Collection)}
      */
-    protected abstract Map handleGetSampleRemovalEvents( Collection<ExpressionExperiment> expressionExperiments )
-            throws Exception;
+    protected abstract Map<ExpressionExperiment, Collection<AuditEvent>> handleGetSampleRemovalEvents(
+            Collection<ExpressionExperiment> expressionExperiments ) throws Exception;
 
     /**
      * Performs the core logic for
@@ -1251,82 +976,5 @@ public abstract class ExpressionExperimentDaoBase extends BioAssaySetDaoImpl<Exp
      */
     protected abstract ExpressionExperiment handleThaw( ExpressionExperiment expressionExperiment, boolean thawVectors )
             throws Exception;
-
-    /**
-     * Default implementation for transforming the results of a report query into a value object. This implementation
-     * exists for convenience reasons only. It needs only be overridden in the {@link ExpressionExperimentDaoImpl} class
-     * if you intend to use reporting queries.
-     * 
-     * @see ExpressionExperimentDao#toExpressionExperimentValueObject(ExpressionExperiment)
-     */
-    protected ExpressionExperimentValueObject toExpressionExperimentValueObject( Object[] row ) {
-        ExpressionExperimentValueObject target = null;
-        if ( row != null ) {
-            final int numberOfObjects = row.length;
-            for ( int ctr = 0; ctr < numberOfObjects; ctr++ ) {
-                final Object object = row[ctr];
-                if ( object instanceof ExpressionExperiment ) {
-                    target = this.toExpressionExperimentValueObject( ( ExpressionExperiment ) object );
-                    break;
-                }
-            }
-        }
-        return target;
-    }
-
-    /**
-     * Transforms a collection of entities using the {@link #transformEntity(int,ExpressionExperiment)} method. This
-     * method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in <code>ExpressionExperimentDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ExpressionExperiment)
-     */
-    protected void transformEntities( final int transform, final Collection<ExpressionExperiment> entities ) {
-        switch ( transform ) {
-            case ExpressionExperimentDao.TRANSFORM_EXPRESSIONEXPERIMENTVALUEOBJECT:
-                toExpressionExperimentValueObjectCollection( entities );
-                break;
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in <code>ExpressionExperimentDao</code>,
-     * please note that the {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be
-     * returned.
-     * <p/>
-     * This method will return instances of these types:
-     * <ul>
-     * <li>{@link ExpressionExperiment} - {@link #TRANSFORM_NONE}</li>
-     * <li>{@link ExpressionExperimentValueObject} - {@link TRANSFORM_EXPRESSIONEXPERIMENTVALUEOBJECT}</li>
-     * </ul>
-     * If the integer argument value is unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in {@link ExpressionExperimentDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,Collection)
-     */
-    protected Object transformEntity( final int transform, final ExpressionExperiment entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case ExpressionExperimentDao.TRANSFORM_EXPRESSIONEXPERIMENTVALUEOBJECT:
-                    target = toExpressionExperimentValueObject( entity );
-                    break;
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return target;
-    }
 
 }

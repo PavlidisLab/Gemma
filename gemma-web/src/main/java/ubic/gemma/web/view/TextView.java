@@ -38,8 +38,7 @@ public class TextView extends AbstractView {
      * Name of parameter used to retrieve the text from the model.
      */
     public static final String TEXT_PARAM = "text";
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     protected void renderMergedOutputModel( Map model, HttpServletRequest request, HttpServletResponse response )
             throws Exception {

@@ -707,8 +707,7 @@ public class SearchService implements InitializingBean {
 
     /**
      * @param settings
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     private Collection<SearchResult> characteristicExpressionExperimentSearch( final SearchSettings settings ) {
         Collection<SearchResult> results = new HashSet<SearchResult>();
 

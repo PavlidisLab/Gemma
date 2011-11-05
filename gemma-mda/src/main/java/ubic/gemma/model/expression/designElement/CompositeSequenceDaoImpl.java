@@ -111,7 +111,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#find(ubic.gemma.model.expression.designElement
      * .CompositeSequence)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public CompositeSequence find( CompositeSequence compositeSequence ) {
 
@@ -152,7 +151,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByGene(ubic.gemma.model.genome.Gene)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene ) {
         final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProductImpl ba, GeneProductImpl gp, GeneImpl gene  "
@@ -166,7 +164,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByGene(ubic.gemma.model.genome.Gene,
      * ubic.gemma.model.expression.arrayDesign.ArrayDesign)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<CompositeSequence> findByGene( Gene gene, ArrayDesign arrayDesign ) {
         final String queryString = "select distinct cs from CompositeSequenceImpl cs, BioSequenceImpl bs, BioSequence2GeneProductImpl ba, GeneProductImpl gp, GeneImpl gene  "
@@ -182,7 +179,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection findByName( String name ) {
+    public Collection<CompositeSequence>  findByName( String name ) {
         final String queryString = "select distinct cs from CompositeSequenceImpl" + " cs where cs.name = :id";
         return this.getHibernateTemplate().findByNamedParam( queryString, "id", name );
     }
@@ -226,10 +223,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequence(ubic.gemma.model.genome
      * .biosequence.BioSequence)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
-    protected Collection handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+    protected Collection<CompositeSequence>  handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs where cs.biologicalCharacteristic = :id";
@@ -249,10 +245,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
-    protected Collection handleFindByBioSequenceName( String name ) throws Exception {
+    protected Collection<CompositeSequence>  handleFindByBioSequenceName( String name ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
@@ -267,7 +262,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         return compositeSequences;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<CompositeSequence, Collection<Gene>> handleGetGenes( Collection<CompositeSequence> compositeSequences )
             throws Exception {
@@ -398,7 +392,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleGetGenes(ubic.gemma.model.expression
      * .designElement.CompositeSequence)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene> handleGetGenes( CompositeSequence compositeSequence ) throws Exception {
         final String queryString = "select distinct gene from CompositeSequenceImpl cs, BioSequenceImpl bs, BlatAssociationImpl ba, GeneProductImpl gp, GeneImpl gene  "
@@ -496,10 +489,10 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      */
     @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetRawSummary( Collection compositeSequences, Integer limit ) throws Exception {
+    protected Collection handleGetRawSummary( Collection<CompositeSequence>  compositeSequences, Integer limit ) throws Exception {
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
 
-        Collection compositeSequencesForQuery = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence>  compositeSequencesForQuery = new HashSet<CompositeSequence>();
 
         /*
          * Note that running this without a limit is dangerous. If the sequence is an unmasked repeat, then we can get
@@ -507,7 +500,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
          */
         if ( limit != null && limit != 0 ) {
             int j = 0;
-            for ( Object object : compositeSequences ) {
+            for ( CompositeSequence object : compositeSequences ) {
                 if ( j > limit ) break;
                 compositeSequencesForQuery.add( object );
                 ++j;
@@ -550,7 +543,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Object[]> handleGetRawSummary( CompositeSequence compositeSequence, Integer numResults )
             throws Exception {
@@ -582,7 +574,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleLoad(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<CompositeSequence> handleLoad( Collection<Long> ids ) throws Exception {
 

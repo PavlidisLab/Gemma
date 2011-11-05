@@ -107,7 +107,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadGSE13657() throws Exception {
         String path = ConfigUtils.getString( "gemma.home" );
@@ -135,7 +134,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadGSE9048() throws Exception {
         String path = ConfigUtils.getString( "gemma.home" );
@@ -209,7 +207,6 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadGSE5949() throws Exception {
         String path = ConfigUtils.getString( "gemma.home" );
@@ -223,7 +220,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             return;
         }
         ee = eeService.thawLite( ee );
-        Collection qts = eeService.getQuantitationTypes( ee );
+        Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 3, qts.size() );
 
     }
@@ -281,7 +278,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     /**
      * @param matrix
      */
-    @SuppressWarnings( { "unchecked", "unused" })
+    @SuppressWarnings({ "unchecked", "unused" })
     private void printMatrix( DoubleMatrix matrix ) {
         StringBuilder buf = new StringBuilder();
         buf.append( "probe" );
@@ -345,9 +342,9 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     }
 
     //
-//    @Test
-//    public void test() throws Exception {
-//        fetchASeries( "GSE29014" );
-//    }
+    // @Test
+    // public void test() throws Exception {
+    // fetchASeries( "GSE29014" );
+    // }
 
 }

@@ -96,11 +96,12 @@ public class GeneExpressionProfile {
             this.profile = vector.getData();
         }
 
-        int i = 0;
         // Also test to make sure all the data isn't NAN
         for ( Double d : this.profile ) {
-            if ( !d.equals( Double.NaN ) ) this.allMissing = false;
-            i++;
+            if ( !d.equals( Double.NaN ) ) {
+                this.allMissing = false;
+                break;
+            }
         }
 
     }

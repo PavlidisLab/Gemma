@@ -70,8 +70,7 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
      * 
      * @see ubic.gemma.model.association.TfGeneAssociationDao#findByTargetGene(ubic.gemma.model.genome.Gene) Example
      * that exercises this for pazar: /Gemma/searchCoexpression.html?g=546099,570546&s=3&t=2&q&an=All mouse
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
     public Collection<? extends TfGeneAssociation> findByTargetGene( Gene gene ) {
         return this
@@ -80,8 +79,7 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
                         "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.secondGene = :g",
                         "g", gene );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     public Collection<? extends TfGeneAssociation> findByTf( Gene tf ) {
         return this
@@ -90,8 +88,7 @@ public class TfGeneAssociationDaoImpl extends HibernateDaoSupport implements TfG
                         "from PazarAssociationImpl p inner join fetch p.secondGene inner join fetch p.firstGene where p.firstGene = :g",
                         "g", tf );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     @Override
     public Collection<? extends TfGeneAssociation> load( Collection<Long> ids ) {
         return this

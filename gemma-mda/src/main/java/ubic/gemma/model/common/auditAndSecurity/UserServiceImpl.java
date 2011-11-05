@@ -62,8 +62,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
     public Collection<UserGroup> findGroupsForUser( User user ) {
         return this.getUserGroupDao().findGroupsForUser( user );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public Collection<UserGroup> listAvailableGroups() {
         return ( Collection<UserGroup> ) this.getUserGroupDao().loadAll();
     }
@@ -146,8 +145,7 @@ public class UserServiceImpl extends ubic.gemma.model.common.auditAndSecurity.Us
 
     /**
      * @see ubic.gemma.model.common.auditAndSecurity.UserService#getUsers(ubic.gemma.model.common.auditAndSecurity.User)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
     protected java.util.Collection<User> handleLoadAll() throws java.lang.Exception {
         return ( Collection<User> ) this.getUserDao().loadAll();

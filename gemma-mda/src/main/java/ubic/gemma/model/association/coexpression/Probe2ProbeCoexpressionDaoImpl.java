@@ -49,14 +49,12 @@ import org.springframework.stereotype.Repository;
 import ubic.basecode.util.BatchIterator;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionProbe;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.CommonQueries;
 import ubic.gemma.util.NativeQueryUtils;
-import ubic.gemma.util.TaxonUtility;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression
@@ -141,7 +139,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * assumes all the links in the collection are of the same class!F
      * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
-     */ 
+     */
     @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
@@ -221,7 +219,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleCountLinks(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Integer handleCountLinks( ExpressionExperiment expressionExperiment ) throws Exception {
 
@@ -278,7 +275,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleDeleteLinks(ubic.gemma.model.
      * expression.experiment.ExpressionExperiment)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected void handleDeleteLinks( final ExpressionExperiment ee ) throws Exception {
 
@@ -487,7 +483,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetGenesTestedBy(ubic.gemma.model
      * .expression.experiment.ExpressionExperiment, boolean)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Long> handleGetGenesTestedBy( BioAssaySet ee, boolean filterNonSpecific ) throws Exception {
 
@@ -544,27 +539,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
                     + " (" + i++ + "/" + ees.size() + ")" );
             processRawLinksForExperiment( ( ExpressionExperiment ) ee, taxon, filterNonSpecific );
         }
-    }
-
-    /**
-     * @param toBuild Map of genes to collections of vectors.
-     * @param list
-     */
-    private void buildMap( Map<Gene, Collection<DesignElementDataVector>> toBuild, ScrollableResults list ) {
-
-        while ( list.next() ) {
-            Gene g = ( Gene ) list.get( 0 );
-            DesignElementDataVector dedv = ( DesignElementDataVector ) list.get( 1 );
-
-            if ( toBuild.containsKey( g ) )
-                toBuild.get( g ).add( dedv );
-            else {
-                Collection<DesignElementDataVector> dedvs = new HashSet<DesignElementDataVector>();
-                dedvs.add( dedv );
-                toBuild.put( g, dedvs );
-            }
-        }
-
     }
 
     /**
@@ -641,7 +615,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * @param csIds
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Map<Long, Collection<Long>> getCs2GenesMap( final Collection<Long> csIds ) {
 
         final Map<Long, Collection<Long>> cs2genes = new HashMap<Long, Collection<Long>>();
@@ -801,24 +774,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         session.clear();
 
         return links;
-    }
-
-    /**
-     * @param givenG
-     * @return
-     */
-    private String getP2PClassName( ubic.gemma.model.genome.Gene givenG ) {
-        String p2pClassName;
-        if ( TaxonUtility.isHuman( givenG.getTaxon() ) )
-            p2pClassName = "HumanProbeCoExpressionImpl";
-        else if ( TaxonUtility.isMouse( givenG.getTaxon() ) )
-            p2pClassName = "MouseProbeCoExpressionImpl";
-        else if ( TaxonUtility.isRat( givenG.getTaxon() ) )
-            p2pClassName = "RatProbeCoExpressionImpl";
-        else
-            // must be other
-            p2pClassName = "OtherProbeCoExpressionImpl";
-        return p2pClassName;
     }
 
     /**

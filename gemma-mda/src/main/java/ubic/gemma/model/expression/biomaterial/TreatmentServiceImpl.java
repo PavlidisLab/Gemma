@@ -30,8 +30,7 @@ public class TreatmentServiceImpl extends ubic.gemma.model.expression.biomateria
     /**
      * @see ubic.gemma.model.expression.biomaterial.TreatmentService#getTreatments()
      */
-    @Override
-    @SuppressWarnings("unchecked")
+    @Override 
     protected java.util.List handleGetTreatments() throws java.lang.Exception {
         List<Treatment> result = new ArrayList<Treatment>();
         result.addAll( this.getTreatmentDao().loadAll() );

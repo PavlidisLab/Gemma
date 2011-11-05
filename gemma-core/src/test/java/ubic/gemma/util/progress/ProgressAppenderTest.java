@@ -19,9 +19,7 @@
 package ubic.gemma.util.progress;
 
 import java.util.Enumeration;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+ 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
@@ -52,14 +50,11 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
     Logger log4jLogger;
 
-    // important for this test!
-    private static Log log = LogFactory.getLog( ProgressAppenderTest.class.getName() );
-
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUpInTransaction()
      */
-    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
 
@@ -78,7 +73,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
         if ( progressAppender == null ) {
             log.warn( "There is no progress appender configured; adding one for test" );
-            log4jLogger.addAppender( new ProgressAppender("randomtaskidF") );
+            log4jLogger.addAppender( new ProgressAppender( "randomtaskidF" ) );
         }
 
         oldLevel = log4jLogger.getLevel();
@@ -90,6 +85,7 @@ public class ProgressAppenderTest extends BaseSpringContextTest {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onTearDownInTransaction()
      */
     @After

@@ -77,6 +77,7 @@ public class StartupListener extends ContextLoaderListener {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.springframework.web.context.ContextLoaderListener#contextInitialized(javax.servlet.ServletContextEvent)
      */
     @Override
@@ -109,7 +110,7 @@ public class StartupListener extends ContextLoaderListener {
         servletContext.setAttribute( Constants.CONFIG, config );
 
         if ( ConfigUtils.isGridEnabled() ) copyWorkerJars( servletContext );
- 
+
         initializeHomologene( ctx );
 
         configureScheduler( ctx );
@@ -158,7 +159,6 @@ public class StartupListener extends ContextLoaderListener {
      * Copy the JAR files required by the JavaSpaces workers to the defined shared location. This includes all jars in
      * the WEB-INF/lib directory.
      */
-    @SuppressWarnings("unchecked")
     private void copyWorkerJars( ServletContext servletContext ) {
 
         String appName = "gemma";
@@ -302,7 +302,6 @@ public class StartupListener extends ContextLoaderListener {
      * @param context
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> initializeConfiguration( ServletContext context ) {
         // Check if the config
         // object already exists
@@ -322,8 +321,6 @@ public class StartupListener extends ContextLoaderListener {
         ho.init( false );
 
     }
-
-    
 
     /**
      * Load the style theme for the site.

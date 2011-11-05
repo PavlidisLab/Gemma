@@ -83,8 +83,7 @@ public class UserGroupDaoImpl extends ubic.gemma.model.common.auditAndSecurity.U
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserGroupDao#findGroupsForUser(ubic.gemma.model.common.auditAndSecurity
      * .User)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public Collection<UserGroup> findGroupsForUser( User user ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ug from UserGroupImpl ug inner join ug.groupMembers memb where memb = :user", "user", user );

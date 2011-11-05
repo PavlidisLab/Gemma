@@ -418,7 +418,6 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
      * @param request
      * @return Collection<QuantitationType>
      */
-    @SuppressWarnings("unchecked")
     private Collection<QuantitationType> getContinuousQuantitationTypes( HttpServletRequest request ) {
         Long id = null;
         try {
@@ -428,9 +427,9 @@ public class ExpressionExperimentVisualizationFormController extends BaseFormCon
         }
         ExpressionExperiment expressionExperiment = this.expressionExperimentService.load( id );
         Collection<QuantitationType> types = expressionExperimentService.getQuantitationTypes( expressionExperiment );
-        Iterator iter = types.iterator();
+        Iterator<QuantitationType> iter = types.iterator();
         while ( iter.hasNext() ) {
-            QuantitationType type = ( QuantitationType ) iter.next();
+            QuantitationType type = iter.next();
             if ( !type.getGeneralType().equals( GeneralType.QUANTITATIVE ) ) {
                 iter.remove();
             }

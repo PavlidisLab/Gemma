@@ -51,7 +51,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#find(ubic.gemma.model.expression.arrayDesign
      * .ArrayDesign, ubic.gemma.model.common.quantitationtype.QuantitationType)
      */
-    @SuppressWarnings("unchecked")
     public Collection<RawExpressionDataVector> find( ArrayDesign arrayDesign, QuantitationType quantitationType ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  inner join fetch dev.bioAssayDimension bd "
                 + " inner join fetch dev.designElement de inner join fetch dev.quantitationType where dev.designElement in (:desEls) "
@@ -84,7 +83,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<RawExpressionDataVector> find( Collection<QuantitationType> quantitationTypes ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev  where  "
                 + "  dev.quantitationType in ( :quantitationTypes) ";
@@ -97,7 +95,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<RawExpressionDataVector> find( QuantitationType quantitationType ) {
         final String queryString = "select dev from RawExpressionDataVectorImpl dev   where  "
                 + "  dev.quantitationType = :quantitationType ";
@@ -117,17 +114,16 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
      * ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorDao#find(ubic.gemma.model.expression.bioAssayData
      * .DesignElementDataVector)
      */
-    @SuppressWarnings("unchecked")
     public RawExpressionDataVector find( RawExpressionDataVector designElementDataVector ) {
 
         BusinessKey.checkKey( designElementDataVector );
 
         DetachedCriteria crit = DetachedCriteria.forClass( RawExpressionDataVector.class );
 
-        crit.createCriteria( "designElement" ).add(
-                Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) ).createCriteria(
-                "arrayDesign" ).add(
-                Restrictions.eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
+        crit.createCriteria( "designElement" )
+                .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getName() ) )
+                .createCriteria( "arrayDesign" )
+                .add( Restrictions.eq( "name", designElementDataVector.getDesignElement().getArrayDesign().getName() ) );
 
         crit.createCriteria( "quantitationType" ).add(
                 Restrictions.eq( "name", designElementDataVector.getQuantitationType().getName() ) );
@@ -243,7 +239,6 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
         }
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<? extends DesignElementDataVector> find( BioAssayDimension bioAssayDimension ) {
         Collection<? extends DesignElementDataVector> results = new HashSet<DesignElementDataVector>();
 

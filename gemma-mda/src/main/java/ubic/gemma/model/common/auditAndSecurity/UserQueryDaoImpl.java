@@ -47,6 +47,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#create(ubic.gemma.model.common.auditAndSecurity.UserQuery)
      */
@@ -57,10 +58,10 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findByUser(ubic.gemma.model.common.auditAndSecurity.User)
      */
-    @SuppressWarnings("unchecked")
     public Collection<UserQuery> findByUser( User user ) {
         final String query = "select q from UserImpl u inner join u.userQueries q where u = :u";
         return this.getHibernateTemplate().findByNamedParam( query, "u", user );
@@ -68,6 +69,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#findMostRecentForUser(ubic.gemma.model.common.auditAndSecurity
      * .User)
@@ -93,6 +95,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#load(java.lang.Long)
      */
     public UserQuery load( Long id ) {
@@ -104,6 +107,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserQueryDao#loadAll()
      */
     public Collection<? extends UserQuery> loadAll() {
@@ -112,6 +116,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#remove(ubic.gemma.model.common.auditAndSecurity.UserQuery)
      */
@@ -125,6 +130,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeAllForUser(ubic.gemma.model.common.auditAndSecurity
      * .User)
@@ -138,6 +144,7 @@ public class UserQueryDaoImpl extends HibernateDaoSupport implements UserQueryDa
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserQueryDao#removeOldForUser(ubic.gemma.model.common.auditAndSecurity
      * .User, java.sql.Date)

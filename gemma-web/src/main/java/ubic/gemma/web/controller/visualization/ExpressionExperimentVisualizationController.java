@@ -48,7 +48,6 @@ import ubic.gemma.web.view.TextView;
 @Controller
 @Deprecated
 public class ExpressionExperimentVisualizationController extends BaseController {
-    private Log log = LogFactory.getLog( ExpressionExperimentVisualizationController.class );
 
     private static final String DEFAULT_CONTENT_TYPE = "image/png";
 

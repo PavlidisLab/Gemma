@@ -24,16 +24,5 @@ import ubic.gemma.persistence.BaseDao;
  * @see ubic.gemma.model.genome.sequenceAnalysis.BlastResult
  */
 public interface BlastResultDao extends BaseDao<BlastResult> {
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult find(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFind );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlastResult findOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlastResult toFindOrCreate );
 
 }

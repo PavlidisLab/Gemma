@@ -37,8 +37,7 @@ public class UnitDaoImpl extends ubic.gemma.model.common.measurement.UnitDaoBase
     public UnitDaoImpl( SessionFactory sessionFactory ) {
         super.setSessionFactory( sessionFactory );
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public Unit find( Unit unit ) {
         try {
 

@@ -39,40 +39,11 @@ import ubic.gemma.persistence.BrowsingDao;
  */
 public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperiment>,
         BrowsingDao<ExpressionExperiment> {
-    /**
-     * This constant is used as a transformation flag; entities can be converted automatically into value objects or
-     * other types, different methods in a class implementing this interface support this feature: look for an
-     * <code>int</code> parameter called <code>transform</code>.
-     * <p/>
-     * This specific flag denotes entities must be transformed into objects of type
-     * {@link ExpressionExperimentValueObject}.
-     */
-    public final static int TRANSFORM_EXPRESSIONEXPERIMENTVALUEOBJECT = 1;
 
     /**
      * 
      */
     public Integer countAll();
-
-    /**
-     * Converts an instance of type {@link ExpressionExperimentValueObject} to this DAO's entity.
-     */
-    public ExpressionExperiment expressionExperimentValueObjectToEntity(
-            ExpressionExperimentValueObject expressionExperimentValueObject );
-
-    /**
-     * Copies the fields of {@link ExpressionExperimentValueObject} to the specified entity.
-     * 
-     * @param copyIfNull If FALSE, the value object's field will not be copied to the entity if the value is NULL. If
-     *        TRUE, it will be copied regardless of its value.
-     */
-    public void expressionExperimentValueObjectToEntity( ExpressionExperimentValueObject sourceVO,
-            ExpressionExperiment targetEntity, boolean copyIfNull );
-
-    /**
-     * Converts a Collection of instances of type {@link ExpressionExperimentValueObject} to this DAO's entity.
-     */
-    public void expressionExperimentValueObjectToEntityCollection( Collection<ExpressionExperiment> instances );
 
     /**
      * 
@@ -85,9 +56,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ExpressionExperiment> findByAccession( ubic.gemma.model.common.description.DatabaseEntry accession );
 
     /**
-     * <p>
      * Finds all the EE's that reference the given bibliographicReference id
-     * </p>
      */
     public Collection<ExpressionExperiment> findByBibliographicReference( Long bibRefID );
 
@@ -102,10 +71,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public Collection<ExpressionExperiment> findByBioMaterials( Collection<BioMaterial> bioMaterials );
 
     /**
-     * <p>
      * Returns a collection of expression experiments that detected the given gene at a level greater than the given
      * rank (percentile)
-     * </p>
      */
     public Collection<ExpressionExperiment> findByExpressedGene( ubic.gemma.model.genome.Gene gene, Double rank );
 
@@ -154,9 +121,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
     public ExpressionExperiment findOrCreate( ExpressionExperiment expressionExperiment );
 
     /**
-     * <p>
      * Get the map of ids to number of terms associated with each expression experiment.
-     * </p>
      */
     public Map<Long, Integer> getAnnotationCounts( Collection<Long> ids );
 
@@ -265,7 +230,7 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * Function to get a count of an expressionExperiment's designelementdatavectors, grouped by quantitation type.
      * </p>
      */
-    public Map<Long, Integer> getQuantitationTypeCountById( Long Id );
+    public Map<QuantitationType, Integer> getQuantitationTypeCountById( Long Id );
 
     /**
      * 
@@ -322,24 +287,6 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
      * </p>
      */
     public ExpressionExperiment thawBioAssays( ExpressionExperiment expressionExperiment );
-
-    /**
-     * Converts this DAO's entity to an object of type {@link ExpressionExperimentValueObject}.
-     */
-    public ExpressionExperimentValueObject toExpressionExperimentValueObject( ExpressionExperiment entity );
-
-    /**
-     * Copies the fields of the specified entity to the target value object. This method is similar to
-     * toExpressionExperimentValueObject(), but it does not handle any attributes in the target value object that are
-     * "read-only" (as those do not have setter methods exposed).
-     */
-    public void toExpressionExperimentValueObject( ExpressionExperiment sourceEntity,
-            ExpressionExperimentValueObject targetVO );
-
-    /**
-     * Converts this DAO's entity to a Collection of instances of type {@link ExpressionExperimentValueObject}.
-     */
-    public void toExpressionExperimentValueObjectCollection( Collection<ExpressionExperiment> entities );
 
     /**
      * Return up to Math.abs(limit) experiments that were most recently updated (limit >0) or least recently updated

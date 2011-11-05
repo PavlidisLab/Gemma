@@ -56,7 +56,7 @@ import ubic.gemma.security.SecurityService;
  * Exposes GeneServices methods over ajax
  * 
  * @author kelsey
- * @version $Id
+ * @version $Id$
  */
 @Controller
 @RequestMapping("/geneSet")

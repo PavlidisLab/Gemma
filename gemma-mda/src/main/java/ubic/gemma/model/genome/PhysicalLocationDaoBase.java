@@ -21,10 +21,8 @@ package ubic.gemma.model.genome;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.PhysicalLocation</code>.
- * </p>
  * 
  * @see ubic.gemma.model.genome.PhysicalLocation
  */
@@ -34,7 +32,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#create(int, java.util.Collection)
      */
-    public java.util.Collection create( final int transform, final java.util.Collection entities ) {
+    public java.util.Collection create( final java.util.Collection entities ) {
         if ( entities == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.create - 'entities' can not be null" );
         }
@@ -43,7 +41,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.genome.PhysicalLocation ) entityIterator.next() );
+                            create( ( ubic.gemma.model.genome.PhysicalLocation ) entityIterator.next() );
                         }
                         return null;
                     }
@@ -54,7 +52,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#create(int transform, ubic.gemma.model.genome.PhysicalLocation)
      */
-    public Object create( final int transform, final ubic.gemma.model.genome.PhysicalLocation physicalLocation ) {
+    public PhysicalLocation create( final ubic.gemma.model.genome.PhysicalLocation physicalLocation ) {
         if ( physicalLocation == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.create - 'physicalLocation' can not be null" );
         }
@@ -63,25 +61,9 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     }
 
     /**
-     * @see ubic.gemma.model.genome.PhysicalLocationDao#create(java.util.Collection)
-     */
-
-    public java.util.Collection create( final java.util.Collection entities ) {
-        return create( TRANSFORM_NONE, entities );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalLocationDao#create(ubic.gemma.model.genome.PhysicalLocation)
-     */
-    public ubic.gemma.model.genome.PhysicalLocation create( ubic.gemma.model.genome.PhysicalLocation physicalLocation ) {
-        return ( ubic.gemma.model.genome.PhysicalLocation ) this.create( TRANSFORM_NONE, physicalLocation );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#load(int, java.lang.Long)
      */
-    @Override
-    public Object load( final int transform, final java.lang.Long id ) {
+    public PhysicalLocation load( final java.lang.Long id ) {
         if ( id == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.load - 'id' can not be null" );
         }
@@ -90,26 +72,9 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
     }
 
     /**
-     * @see ubic.gemma.model.genome.PhysicalLocationDao#load(java.lang.Long)
-     */
-    @Override
-    public ubic.gemma.model.genome.PhysicalLocation load( java.lang.Long id ) {
-        return ( ubic.gemma.model.genome.PhysicalLocation ) this.load( TRANSFORM_NONE, id );
-    }
-
-    /**
-     * @see ubic.gemma.model.genome.PhysicalLocationDao#loadAll()
-     */
-    @Override
-    public java.util.Collection loadAll() {
-        return this.loadAll( TRANSFORM_NONE );
-    }
-
-    /**
      * @see ubic.gemma.model.genome.PhysicalLocationDao#loadAll(int)
      */
-    @Override
-    public java.util.Collection loadAll( final int transform ) {
+    public java.util.Collection loadAll() {
         final java.util.Collection results = this.getHibernateTemplate().loadAll(
                 ubic.gemma.model.genome.PhysicalLocationImpl.class );
         return results;

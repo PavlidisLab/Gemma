@@ -52,7 +52,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * @seeubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#find(ubic.gemma.model.expression.experiment.
      * BioAssaySet)
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select ees from ExpressionExperimentSetImpl ees inner join ees.experiments e where e = :ee", "ee",
@@ -64,7 +63,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#getExperimentsInSet(java.lang.Long)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         return this.getHibernateTemplate().findByNamedParam(
@@ -76,7 +74,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllMultiExperimentSets()
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
         return this.getHibernateTemplate().find(
                 "select ees from ExpressionExperimentSetImpl ees where size(ees.experiments) > 1" );
@@ -87,7 +84,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadAllExperimentSetsWithTaxon()
      */
-    @SuppressWarnings("unchecked")
     public Collection<ExpressionExperimentSet> loadAllExperimentSetsWithTaxon() {
         return this.getHibernateTemplate().find(
                 "select ees from ExpressionExperimentSetImpl ees where ees.taxon is not null" );
@@ -110,9 +106,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
                 Hibernate.initialize( expressionExperimentSet );
                 Hibernate.initialize( expressionExperimentSet.getTaxon() );
                 Hibernate.initialize( expressionExperimentSet.getExperiments() );
-                // for ( BioAssaySet ee : expressionExperimentSet.getExperiments() ) {
-                // Hibernate.initialize( ee );
-                // }
                 return null;
             }
         } );
@@ -125,7 +118,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDaoBase#handleFindByName(java.lang.String)
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Collection<ExpressionExperimentSet> handleFindByName( String name ) throws Exception {
         return this.getHibernateTemplate().findByNamedParam( "from ExpressionExperimentSetImpl where name=:query",
                 "query", name );
@@ -139,7 +131,6 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
      * .expression.ExpressionExperimentSet)
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Collection<ExpressionAnalysis> handleGetAnalyses( ExpressionExperimentSet expressionExperimentSet )
             throws Exception {
         return this

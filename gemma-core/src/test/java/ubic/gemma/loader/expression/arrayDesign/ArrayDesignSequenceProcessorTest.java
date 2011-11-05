@@ -38,7 +38,7 @@ import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
-import ubic.gemma.model.expression.designElement.CompositeSequence; 
+import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
@@ -120,8 +120,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
                     continue;
                 }
             } else {
-                assertTrue( de.getName() + " biological sequence not found", de
-                        .getBiologicalCharacteristic() != null );
+                assertTrue( de.getName() + " biological sequence not found", de.getBiologicalCharacteristic() != null );
             }
 
         }
@@ -130,31 +129,6 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
 
     }
 
-    // @SuppressWarnings("unchecked")
-    // @Test
-    // public void testBig() throws Exception {
-    // // first load the GPL88 - small
-    // AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
-    // geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
-    // final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL88", true, true,
-    // false, false, true );
-    // result = ads.iterator().next();
-    //
-    // 
-    //
-    // arrayDesignService.thawLite( result );
-    //
-    // // now do the sequences.
-    // ZipInputStream z = new ZipInputStream( this.getClass().getResourceAsStream(
-    // "/data/loader/expression/arrayDesign/RN-U34_probe_tab.zip" ) );
-    //
-    // z.getNextEntry();
-    // // tests validation of taxon
-    // Collection<BioSequence> res = app.processArrayDesign( result, z, SequenceType.AFFY_PROBE );
-    // assertEquals( 1322, res.size() );
-    // }
-
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadWithIdentifiers() throws Exception {
         String fastacmdExe = ConfigUtils.getString( SimpleFastaCmd.FASTA_CMD_ENV_VAR );
@@ -193,7 +167,6 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testFetchAndLoadWithSequences() throws Exception {
 

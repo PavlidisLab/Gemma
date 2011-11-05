@@ -63,8 +63,7 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * (non-Javadoc)
      * 
      * @see ubic.gemma.model.common.auditAndSecurity.UserDaoBase#find(ubic.gemma.model.common.auditAndSecurity.user)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public User find( User user ) {
         try {
 
@@ -100,16 +99,14 @@ public class UserDaoImpl extends ubic.gemma.model.common.auditAndSecurity.UserDa
      * @see
      * ubic.gemma.model.common.auditAndSecurity.UserDao#loadGroupAuthorities(ubic.gemma.model.common.auditAndSecurity
      * .User)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     public Collection<GroupAuthority> loadGroupAuthorities( User u ) {
 
         return this.getHibernateTemplate().findByNamedParam(
                 "select gr.authorities from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", u );
 
     }
-
-    @SuppressWarnings("unchecked")
+ 
     public Collection<UserGroup> loadGroups( User user ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select gr from UserGroupImpl gr inner join gr.groupMembers m where m = :user ", "user", user );
