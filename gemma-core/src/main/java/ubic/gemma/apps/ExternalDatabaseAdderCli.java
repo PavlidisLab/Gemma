@@ -79,8 +79,8 @@ public class ExternalDatabaseAdderCli extends AbstractSpringAwareCLI {
             c.setURL( "http://www.hopkinsmedicine.org/igm/" );
             c = contactService.findOrCreate( c );
             toAdd.setDatabaseSupplier( c );
-            toAdd.setDescription( "Online Mendelian Inheritance in Man® is a comprehensive, authoritative, and timely compendium of human genes and genetic phenotypes. "
-                    + "OMIM® and Online Mendelian Inheritance in Man® are registered trademarks of the Johns Hopkins University." );
+            toAdd.setDescription( "Online Mendelian Inheritance in Man is a comprehensive, authoritative, and timely compendium of human genes and genetic phenotypes. "
+                    + "OMIM and Online Mendelian Inheritance in Man are registered trademarks of the Johns Hopkins University." );
             toAdd.setName( "OMIM" );
             toAdd.setType( DatabaseType.OTHER );
             toAdd.setWebUri( "http://omim.org/" );
