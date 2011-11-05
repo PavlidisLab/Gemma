@@ -40,6 +40,8 @@ import ubic.gemma.model.genome.Taxon;
  * this scenario only 1 taxon can be processed. If the bioMartFileName is null then all eligible taxa files are
  * downloaded from biomart. Eligible taxa are those that are in gemma and that have usable genes and that are species.
  * Once files have been downloaded or located then those files are parsed into BioMartEnsembleNcbi value objects
+ * <p>
+ * Note that Gemma now includes Ensembl ids imported for NCBI genes, using the gene2ensembl file provided by NCBI.
  * 
  * @author ldonnison
  * @version $Id$

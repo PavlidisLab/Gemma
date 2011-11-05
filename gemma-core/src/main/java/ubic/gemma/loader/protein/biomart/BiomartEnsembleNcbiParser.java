@@ -126,7 +126,7 @@ public class BiomartEnsembleNcbiParser extends LineMapParser<String, Ensembl2Ncb
         }
 
         String ensemblGeneID = fields[0].trim();
-        bioMartEnsembleNcbi.setNcbiTaxonId( taxon.getNcbiId() ); // for yeast in biomart, is this 4932 or 559292?
+        bioMartEnsembleNcbi.setNcbiTaxonId( taxon.getNcbiId() ); // FIXME for yeast in biomart, is this 4932 or 559292?
         bioMartEnsembleNcbi.setEnsemblGeneId( ensemblGeneID );
         bioMartEnsembleNcbi.setEnsemblTranscriptId( fields[1] );
         bioMartEnsembleNcbi.setEnsemblPeptideId( ensemblProteinId );

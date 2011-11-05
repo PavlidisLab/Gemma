@@ -181,11 +181,15 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
         if ( e2n == null || e2n.getEntrezgenes().isEmpty() ) {
             return genes;
         }
+
+        String ensemblGeneId = e2n.getEnsemblGeneId();
+
         Collection<String> entreGeneids = ( e2n.getEntrezgenes() );
         for ( String entrezGeneid : entreGeneids ) {
             if ( !entrezGeneid.isEmpty() ) {
                 Gene gene = Gene.Factory.newInstance();
                 gene.setNcbiGeneId( Integer.parseInt( entrezGeneid ) );
+                gene.setEnsemblId( ensemblGeneId );
                 genes.add( gene );
                 if ( log.isDebugEnabled() ) log.debug( "Entry found for entrezGeneid " + entrezGeneid );
             }

@@ -26,6 +26,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.context.SecurityContext;
@@ -182,7 +183,7 @@ public class StringProteinInteractionLoader {
      * @param stringProteinFileNameLocal The name of the string file on the local system
      * @param stringProteinFileNameRemote The name of the string file on the remote system (just in case the string name
      *        proves to be too variable)
-     * @param stringBiomartFile The name of the local biomart file
+     * @param stringBiomartFile The name of the local biomart file FIXME this is actual the ensemble mapping?
      * @param taxa taxa to load data for. List of taxon to process
      */
     private void validateLoadParameters( File stringProteinFileNameLocal, String stringProteinFileNameRemote,
@@ -192,15 +193,15 @@ public class StringProteinInteractionLoader {
             throw new RuntimeException( "No taxon found to process please provide some" );
         }
 
-        if ( stringProteinFileNameLocal != null && !stringProteinFileNameLocal.canWrite() ) {
+        if ( stringProteinFileNameLocal == null || !stringProteinFileNameLocal.canRead() ) {
             throw new RuntimeException( "Provided local string file is not readable: " + stringProteinFileNameLocal );
         }
 
-        if ( stringBiomartFile != null && !stringBiomartFile.canWrite() ) {
+        if ( stringBiomartFile == null || !stringBiomartFile.canRead() ) {
             throw new RuntimeException( "Provided biomart file is not readable: " + stringBiomartFile );
         }
 
-        if ( stringProteinFileNameRemote != null && stringProteinFileNameRemote.isEmpty() ) {
+        if ( StringUtils.isBlank( stringProteinFileNameRemote ) ) {
             throw new RuntimeException( "Provided remote string file is invalid (blank) " );
         }
     }

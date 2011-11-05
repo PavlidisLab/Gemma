@@ -47,6 +47,8 @@ import ubic.gemma.util.ConfigUtils;
  * hgnc ids. To construct the query we pass the taxon and the attributes we wish to query for. Note the formating of
  * taxon for biomart consists of latin name without the point e.g. hsapiens For more information visit the site:
  * {@link http://www.biomart.org/martservice.html}
+ * <p>
+ * Note that Gemma now includes Ensembl ids imported for NCBI genes, using the gene2ensembl file provided by NCBI.
  * 
  * @author ldonnison
  * @version $Id$
@@ -126,8 +128,7 @@ public class BiomartEnsemblNcbiFetcher {
     protected String getXmlQueryAsStringForProteinQuery( String biomartTaxonName ) {
         StringBuilder xmlQuery = new StringBuilder( "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" );
         xmlQuery.append( "<!DOCTYPE Query>" );
-        xmlQuery
-                .append( "<Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" >" );
+        xmlQuery.append( "<Query  virtualSchemaName = \"default\" formatter = \"TSV\" header = \"0\" uniqueRows = \"0\" count = \"\" datasetConfigVersion = \"0.6\" >" );
         xmlQuery.append( "<Dataset name = \"" + biomartTaxonName + "_gene_ensembl\" interface = \"default\" >" );
         for ( String attributes : attributesToRetrieveFromBioMartForProteinQuery( biomartTaxonName ) ) {
             if ( attributes != null && !( attributes.isEmpty() ) ) {
@@ -213,13 +214,7 @@ public class BiomartEnsemblNcbiFetcher {
         while ( ( line = reader.readLine() ) != null ) {
             if ( line.contains( "ERROR" ) && line.contains( "Exception" ) ) {
                 throw new IOException( "Error from BioMart: " + line );
-                // Query ERROR: caught BioMart::Exception::Database: Could not connect to mysql database
-                // ensembl_mart_61: DBI
-                // connect('database=ensembl_mart_61;host=dcc-qa-db.oicr.on.ca;port=3306','bm_web',...) failed:
-                // Can't connect to MySQL server on 'dcc-qa-db.oicr.on.ca' (113) at
-                // /srv/biomart_server/biomart.org/biomart-perl/lib/BioMart/Configuration/DBLocation.pm line 98
             }
-
             writer.append( line + "\n" );
         }
         writer.close();
