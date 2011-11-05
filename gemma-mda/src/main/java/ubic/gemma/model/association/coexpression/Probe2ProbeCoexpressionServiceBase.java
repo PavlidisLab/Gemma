@@ -37,7 +37,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
         ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService {
 
     @Autowired
-    private ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
+    private Probe2ProbeCoexpressionDao probe2ProbeCoexpressionDao;
 
     @Autowired
     private AuditEventDao auditEventDao;
@@ -190,35 +190,6 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
     }
 
     /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getVectorsForLinks(java.util.Collection,
-     *      java.util.Collection)
-     */
-    public java.util.Map getVectorsForLinks( final java.util.Collection genes, final java.util.Collection ees ) {
-        try {
-            return this.handleGetVectorsForLinks( genes, ees );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService.getVectorsForLinks(java.util.Collection genes, java.util.Collection ees)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getVectorsForLinks(ubic.gemma.model.genome.Gene,
-     *      java.util.Collection)
-     */
-    public java.util.Collection getVectorsForLinks( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection ees ) {
-        try {
-            return this.handleGetVectorsForLinks( gene, ees );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionServiceException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService.getVectorsForLinks(ubic.gemma.model.genome.Gene gene, java.util.Collection ees)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#prepareForShuffling(java.util.Collection,
      *      java.lang.String, boolean)
      */
@@ -305,18 +276,6 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
     protected abstract java.util.Collection handleGetProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
             boolean useWorkingTable ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getVectorsForLinks(java.util.Collection, java.util.Collection)}
-     */
-    protected abstract java.util.Map handleGetVectorsForLinks( java.util.Collection genes, java.util.Collection ees )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #getVectorsForLinks(ubic.gemma.model.genome.Gene, java.util.Collection)}
-     */
-    protected abstract java.util.Collection handleGetVectorsForLinks( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection ees ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #prepareForShuffling(java.util.Collection, java.lang.String, boolean)}

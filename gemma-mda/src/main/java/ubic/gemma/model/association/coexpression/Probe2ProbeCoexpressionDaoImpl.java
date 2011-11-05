@@ -141,8 +141,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
      * assumes all the links in the collection are of the same class!F
      * 
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression#remove(java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
     public void remove( java.util.Collection entities ) {
         if ( entities == null ) {
@@ -525,104 +524,6 @@ public class Probe2ProbeCoexpressionDaoImpl extends
         String tableName = getTableName( taxon, cleaned );
         Collection<ProbeLink> links = getLinks( expressionExperiment, tableName );
         return links;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(java.util.
-     * Collection, java.util.Collection)
-     */
-    @Override
-    protected Map<Gene, Collection<DesignElementDataVector>> handleGetVectorsForLinks( Collection<Gene> genes,
-            Collection<ExpressionExperiment> ees ) throws Exception {
-
-        Gene testG = genes.iterator().next(); // todo: check to make sure that all the given genes are of the
-        // same taxon throw exception
-
-        String p2pClassName = getP2PClassName( testG );
-
-        final String queryStringFirstVector = "select distinct gene,p2pc.secondVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                + p2pClassName
-                + " as p2pc "
-                + " where gene.products=bs2gp.geneProduct "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors=p2pc.firstVector "
-                + " and p2pc.firstVector.expressionExperiment in (:collectionOfEE)"
-                + " and gene in (:collectionOfGenes)";
-
-        final String queryStringSecondVector = "select distinct gene, p2pc.firstVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                + p2pClassName
-                + " as p2pc "
-                + " where gene.products=bs2gp.geneProduct"
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors=p2pc.secondVector "
-                + " and p2pc.secondVector.expressionExperiment in (:collectionOfEE)"
-                + " and gene in (:collectionOfGenes)";
-
-        Map<Gene, Collection<DesignElementDataVector>> results = new HashMap<Gene, Collection<DesignElementDataVector>>();
-
-        try {
-
-            org.hibernate.Query queryObject = super.getSession().createQuery( queryStringFirstVector );
-            queryObject.setParameterList( "collectionOfEE", ees );
-            queryObject.setParameterList( "collectionOfGenes", genes );
-            ScrollableResults list1 = queryObject.scroll();
-            buildMap( results, list1 );
-
-            // do query joining coexpressed genes through the secondVector to the firstVector
-            queryObject = super.getSession().createQuery( queryStringSecondVector );
-            queryObject.setParameterList( "collectionOfEE", ees );
-            queryObject.setParameterList( "collectionOfGenes", genes );
-            ScrollableResults list2 = queryObject.scroll();
-            buildMap( results, list2 );
-
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
-        }
-        return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDaoBase#handleGetVectorsForLinks(ubic.gemma.
-     * model.genome.Gene, java.util.Collection)
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    protected java.util.Collection<DesignElementDataVector> handleGetVectorsForLinks( Gene gene,
-            java.util.Collection ees ) {
-
-        String p2pClassName = getP2PClassName( gene );
-
-        final String queryStringFirstVector =
-        // source tables
-        "select distinct p2pc.secondVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                + p2pClassName
-                + " as p2pc "
-                + " where gene.products=bs2gp.geneProduct "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors=p2pc.firstVector "
-                + " and p2pc.firstVector.expressionExperiment in (:collectionOfEE) and gene  = :gene";
-
-        final String queryStringSecondVector = "select distinct p2pc.firstVector from GeneImpl as gene, BioSequence2GeneProductImpl as bs2gp, CompositeSequenceImpl as compositeSequence,"
-                + p2pClassName
-                + " as p2pc "
-                + " where gene.products=bs2gp.geneProduct "
-                + " and compositeSequence.biologicalCharacteristic=bs2gp.bioSequence "
-                + " and compositeSequence.designElementDataVectors =p2pc.secondVector  "
-                + " and p2pc.secondVector.expressionExperiment  in (:collectionOfEE)  and gene = :gene";
-
-        Collection<DesignElementDataVector> dedvs = new HashSet<DesignElementDataVector>();
-
-        dedvs.addAll( this.getHibernateTemplate().findByNamedParam( queryStringFirstVector,
-                new String[] { "collectionOfEE", "gene" }, new Object[] { ees, gene } ) );
-        dedvs.addAll( this.getHibernateTemplate().findByNamedParam( queryStringSecondVector,
-                new String[] { "collectionOfEE", "gene" }, new Object[] { ees, gene } ) );
-
-        return dedvs;
     }
 
     /*

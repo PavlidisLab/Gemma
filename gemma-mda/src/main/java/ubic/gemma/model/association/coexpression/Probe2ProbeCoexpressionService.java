@@ -48,20 +48,20 @@ public interface Probe2ProbeCoexpressionService {
     /**
      * Adds a collection of probe2probeCoexpression objects at one time to the DB, in the order given.
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public Collection<? extends Probe2ProbeCoexpression> create(
             Collection<? extends Probe2ProbeCoexpression> p2pExpressions );
 
     /**
      * @param deletes
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void delete( Collection<? extends Probe2ProbeCoexpression> deletes );
 
     /**
      * @param toDelete
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void delete( ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression toDelete );
 
     /**
@@ -69,7 +69,7 @@ public interface Probe2ProbeCoexpressionService {
      * 
      * @param ee
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void deleteLinks( ubic.gemma.model.expression.experiment.ExpressionExperiment ee );
 
     /***
@@ -84,7 +84,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param filterNonSpecific
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ", "ACL_SECURABLE_COLLECTION_READ" })
     public Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene gene,
             Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
@@ -101,9 +101,9 @@ public interface Probe2ProbeCoexpressionService {
      * @param filterNonSpecific
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene geneA,
-            Collection<Long> genesB, Collection<BioAssaySet> expressionExperiments, boolean filterNonSpecific );
+            Collection<Long> genesB, Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific );
 
     /**
      * @param geneIds
@@ -111,9 +111,9 @@ public interface Probe2ProbeCoexpressionService {
      * @param filterNonSpecific
      * @return Map of gene ids to BioAssaySets among those provided in which the gene was tested for coexpression.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
     public Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn( Collection<Long> geneIds,
-            Collection<BioAssaySet> experiments, boolean filterNonSpecific );
+            Collection<? extends BioAssaySet> experiments, boolean filterNonSpecific );
 
     /**
      * Retrieve all genes that were included in the link analysis for the experiment.
@@ -122,7 +122,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param filterNonSpecific
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<Long> getGenesTestedBy( ubic.gemma.model.expression.experiment.BioAssaySet expressionExperiment,
             boolean filterNonSpecific );
 
@@ -133,7 +133,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param taxon
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ProbeLink> getProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon );
 
@@ -145,7 +145,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param useWorkingTable
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ProbeLink> getProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
             boolean useWorkingTable );
@@ -159,24 +159,8 @@ public interface Probe2ProbeCoexpressionService {
      * @param limit
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit );
-
-    /**
-     * Returns a map of Genes to a Collection of DesignElementDataVectors for genes coexpressed with the gene (and
-     * including the gene).
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Map<Gene, Collection<DesignElementDataVector>> getVectorsForLinks( Collection<Gene> genes,
-            Collection<ExpressionExperiment> ees );
-
-    /**
-     * Given a Gene, a collection of EE's returns a collection of all the designElementDataVectors that were coexpressed
-     * under the said given conditions.
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_COLLECTION_READ" })
-    public Collection<DesignElementDataVector> getVectorsForLinks( ubic.gemma.model.genome.Gene gene,
-            Collection<ExpressionExperiment> ees );
 
     /**
      * Create a working table containing links by removing redundant and (optionally) non-specific probes from
@@ -187,7 +171,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param taxon
      * @param filterNonSpecific
      */
-    @Secured( { "GROUP_ADMIN", "ACL_SECURABLE_COLLECTION_READ" })
+    @Secured({ "GROUP_ADMIN", "ACL_SECURABLE_COLLECTION_READ" })
     public void prepareForShuffling( Collection<BioAssaySet> ees, java.lang.String taxon, boolean filterNonSpecific );
 
     /**
@@ -199,7 +183,7 @@ public interface Probe2ProbeCoexpressionService {
      * @param taxon (to save another query) common name
      * @return the probes, among the query and coexpressed probes given, which appear in coexpression links.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<Long> getCoexpressedProbes( Collection<Long> queryProbeIds, Collection<Long> coexpressedProbeIds,
             ExpressionExperiment ee, String taxon );
 

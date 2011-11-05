@@ -122,16 +122,8 @@ public class Probe2ProbeCoexpressionServiceImpl extends
         // cleaned: a temporary table is created.s
         return this.getProbe2ProbeCoexpressionDao().getProbeCoExpression( expressionExperiment, taxon, cleaned );
     }
-
-    @Override
-    protected Map handleGetVectorsForLinks( Collection genes, Collection ees ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().getVectorsForLinks( genes, ees );
-    }
-
-    @Override
-    protected Collection handleGetVectorsForLinks( Gene gene, Collection ees ) throws Exception {
-        return this.getProbe2ProbeCoexpressionDao().getVectorsForLinks( gene, ees );
-    }
+ 
+ 
 
     @Override
     protected void handlePrepareForShuffling( Collection ees, String taxon, boolean filterNonSpecific )

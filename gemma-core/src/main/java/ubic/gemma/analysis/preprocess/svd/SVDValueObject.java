@@ -102,7 +102,6 @@ public class SVDValueObject implements Serializable {
     /**
      * @param pca
      */
-    @SuppressWarnings("unchecked")
     public SVDValueObject( PrincipalComponentAnalysis pca ) {
         this.id = pca.getExperimentAnalyzed().getId();
 

@@ -243,7 +243,6 @@ public class TwoChannelMissingValues {
      *         biomaterial dimension represented in the inputs.
      * @see computeMissingValues( ExpressionExperiment expExp, double signalToNoiseThreshold )
      */
-    @SuppressWarnings("unchecked")
     protected Collection<RawExpressionDataVector> computeMissingValues( ExpressionExperiment source,
             ExpressionDataDoubleMatrix preferred, ExpressionDataDoubleMatrix signalChannelA,
             ExpressionDataDoubleMatrix signalChannelB, ExpressionDataDoubleMatrix bkgChannelA,
@@ -450,8 +449,7 @@ public class TwoChannelMissingValues {
             ExpressionDataDoubleMatrix bkgChannelB, double signalToNoiseThreshold ) {
         // not exhaustive...
         if ( preferred == null || ( signalChannelA == null && signalChannelB == null ) ) {
-            log
-                    .warn( "Must have at least preferred and one intensity data matrix, missing value computation should not proceed" );
+            log.warn( "Must have at least preferred and one intensity data matrix, missing value computation should not proceed" );
             return false;
         }
 

@@ -18,8 +18,6 @@
  */
 package ubic.gemma.analysis.preprocess.normalize;
 
-import java.io.IOException;
-
 import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;

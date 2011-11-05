@@ -159,35 +159,6 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     }
 
     /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getVectorsForLinks(Collection,
-     *      Collection)
-     */
-    public Map getVectorsForLinks( final Collection genes, final Collection ees ) {
-        try {
-            return this.handleGetVectorsForLinks( genes, ees );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.getVectorsForLinks(Collection genes, Collection ees)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#getVectorsForLinks(ubic.gemma.model.genome.Gene,
-     *      Collection)
-     */
-    public Collection getVectorsForLinks( final ubic.gemma.model.genome.Gene gene,
-            final Collection<ExpressionExperiment> ees ) {
-        try {
-            return this.handleGetVectorsForLinks( gene, ees );
-        } catch ( Throwable th ) {
-            throw new RuntimeException(
-                    "Error performing 'ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao.getVectorsForLinks(ubic.gemma.model.genome.Gene gene, Collection ees)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionDao#load(int, Long)
      */
     public Probe2ProbeCoexpression load( final Long id ) {
@@ -333,18 +304,6 @@ public abstract class Probe2ProbeCoexpressionDaoBase extends HibernateDaoSupport
     protected abstract Collection handleGetProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, String taxonCommonName,
             boolean useWorkingTable ) throws Exception;
-
-    /**
-     * Performs the core logic for {@link #getVectorsForLinks(Collection, Collection)}
-     */
-    protected abstract Map handleGetVectorsForLinks( Collection<Gene> genes, Collection<ExpressionExperiment> ees )
-            throws Exception;
-
-    /**
-     * Performs the core logic for {@link #getVectorsForLinks(ubic.gemma.model.genome.Gene, Collection)}
-     */
-    protected abstract Collection handleGetVectorsForLinks( ubic.gemma.model.genome.Gene gene,
-            Collection<ExpressionExperiment> ees ) throws Exception;
 
     /**
      * Performs the core logic for {@link #prepareForShuffling(Collection, String, boolean)}

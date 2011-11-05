@@ -1256,14 +1256,13 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param dmatrix
      * @param designMatrix
      */
-    @SuppressWarnings("unchecked")
     protected void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
             ObjectMatrix<String, String, Object> designMatrix ) {
         MatrixWriter<Double> mw = new MatrixWriter<Double>();
         try {
             mw.write( new FileWriter( File.createTempFile( "data.", ".txt" ) ), dmatrix, null, true, false );
-            ubic.basecode.io.writer.MatrixWriter dem = new ubic.basecode.io.writer.MatrixWriter( new FileWriter(
-                    File.createTempFile( "design.", ".txt" ) ) );
+            ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<String, String>(
+                    new FileWriter( File.createTempFile( "design.", ".txt" ) ) );
             dem.writeMatrix( designMatrix, true );
 
         } catch ( IOException e ) {

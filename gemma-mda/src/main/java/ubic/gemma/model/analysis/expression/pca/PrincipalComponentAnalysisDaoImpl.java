@@ -91,8 +91,7 @@ public class PrincipalComponentAnalysisDaoImpl extends HibernateDaoSupport imple
      * @see
      * ubic.gemma.model.analysis.expression.PrincipalComponentAnalysisDao#getTopLoadedProbes(ubic.gemma.model.expression
      * .experiment.ExpressionExperiment, int, int)
-     */
-    @SuppressWarnings("unchecked")
+     */ 
     @Override
     public List<ProbeLoading> getTopLoadedProbes( ExpressionExperiment ee, int component, int count ) {
         if ( ee == null || ee.getId() == null ) return new ArrayList<ProbeLoading>();

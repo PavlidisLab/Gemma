@@ -362,7 +362,6 @@ public class ProcessedExpressionDataVectorCreateService {
      * @return The vectors after updating them, or just the original vectors if ranks could not be computed. (The
      *         vectors may be thawed in the process)
      */
-    @SuppressWarnings("unchecked")
     private Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         processedDataService.thaw( processedVectors );
@@ -375,7 +374,7 @@ public class ProcessedExpressionDataVectorCreateService {
             /*
              * Get vectors needed to compute intensities.
              */
-            Collection quantitationTypes = eeService.getQuantitationTypes( ee );
+            Collection<QuantitationType> quantitationTypes = eeService.getQuantitationTypes( ee );
             Collection<QuantitationType> usefulQuantitationTypes = ExpressionDataMatrixBuilder
                     .getUsefulQuantitationTypes( quantitationTypes );
 

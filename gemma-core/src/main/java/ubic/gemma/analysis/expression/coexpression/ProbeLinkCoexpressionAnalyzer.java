@@ -212,11 +212,11 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
         coexps.filter( limit, stringency );
 
-//        coexps = coexpressions.getPredictedGeneCoexpression();
-//        coexps.filter( limit, stringency );
-//
-//        coexps = coexpressions.getProbeAlignedRegionCoexpression();
-//        coexps.filter( limit, stringency );
+        // coexps = coexpressions.getPredictedGeneCoexpression();
+        // coexps.filter( limit, stringency );
+        //
+        // coexps = coexpressions.getProbeAlignedRegionCoexpression();
+        // coexps.filter( limit, stringency );
     }
 
     /**
@@ -229,11 +229,11 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressedGenesDetails coexps = coexpressions.getKnownGeneCoexpression();
         fillInEEInfo( coexpressions, eeIds, coexps );
 
-//        coexps = coexpressions.getPredictedGeneCoexpression();
-//        fillInEEInfo( coexpressions, eeIds, coexps );
-//
-//        coexps = coexpressions.getProbeAlignedRegionCoexpression();
-//        fillInEEInfo( coexpressions, eeIds, coexps );
+        // coexps = coexpressions.getPredictedGeneCoexpression();
+        // fillInEEInfo( coexpressions, eeIds, coexps );
+        //
+        // coexps = coexpressions.getProbeAlignedRegionCoexpression();
+        // fillInEEInfo( coexpressions, eeIds, coexps );
 
     }
 
@@ -278,11 +278,11 @@ public class ProbeLinkCoexpressionAnalyzer {
         CoexpressedGenesDetails coexp = coexpressions.getKnownGeneCoexpression();
         fillInGeneInfo( stringency, coexpressions, coexp );
 
-//        coexp = coexpressions.getPredictedGeneCoexpression();
-//        fillInGeneInfo( stringency, coexpressions, coexp );
-//
-//        coexp = coexpressions.getProbeAlignedRegionCoexpression();
-//        fillInGeneInfo( stringency, coexpressions, coexp );
+        // coexp = coexpressions.getPredictedGeneCoexpression();
+        // fillInGeneInfo( stringency, coexpressions, coexp );
+        //
+        // coexp = coexpressions.getProbeAlignedRegionCoexpression();
+        // fillInGeneInfo( stringency, coexpressions, coexp );
 
     }
 
@@ -332,9 +332,9 @@ public class ProbeLinkCoexpressionAnalyzer {
      *        analyzing a single CoexpressionCollectionValueObject, but faster (and more memory-intensive) if many are
      *        going to be looked at (as in the case of a bulk Gene2Gene analysis).
      */
-    @SuppressWarnings("unchecked")
     private void computeEesTestedIn( Collection<? extends BioAssaySet> ees,
-            CoexpressionCollectionValueObject coexpressions, Collection eesQueryTestedIn, int stringency, int limit ) {
+            CoexpressionCollectionValueObject coexpressions, Collection<? extends BioAssaySet> eesQueryTestedIn,
+            int stringency, int limit ) {
 
         List<CoexpressionValueObject> coexpressionData = coexpressions.getKnownGeneCoexpressionData( stringency );
 
@@ -593,7 +593,7 @@ public class ProbeLinkCoexpressionAnalyzer {
      * @see ProbeLinkCoexpressionAnalyzer.computeEesTestedInBatch for the version used when requests are going to be
      *      done for many genes, so cache is built first time.
      */
-    private void computeEesTestedIn( Collection<BioAssaySet> eesQueryTestedIn,
+    private void computeEesTestedIn( Collection<? extends BioAssaySet> eesQueryTestedIn,
             List<CoexpressionValueObject> coexpressionData ) {
         Collection<Long> coexGeneIds = new HashSet<Long>();
 

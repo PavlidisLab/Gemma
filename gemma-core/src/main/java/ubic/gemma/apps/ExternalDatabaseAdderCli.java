@@ -62,15 +62,28 @@ public class ExternalDatabaseAdderCli extends AbstractSpringAwareCLI {
             if ( err != null ) return err;
 
             ContactService contactService = ( ContactService ) this.getBean( "contactService" );
-            Contact c = contactService.findByName( "Affymetrix" ).iterator().next();
+
             ExternalDatabase toAdd = ExternalDatabase.Factory.newInstance();
 
+            // Contact c = contactService.findByName( "Affymetrix" ).iterator().next();
+            // toAdd.setDatabaseSupplier( c );
+            // toAdd.setDescription( "The NetAffx Analysis Center enables researchers to correlate their "
+            // + "GeneChip array results with array design and annotation information." );
+            // toAdd.setName( "NetAFFX" );
+            // toAdd.setType( DatabaseType.SEQUENCE );
+            // toAdd.setWebUri( "http://www.affymetrix.com/analysis/index.affx" );
+
+            Contact c = Contact.Factory.newInstance();
+            c.setName( "McKusick-Nathans Institute of Genetic Medicine" );
+            c.setAddress( "Johns Hopkins University" );
+            c.setURL( "http://www.hopkinsmedicine.org/igm/" );
+            c = contactService.findOrCreate( c );
             toAdd.setDatabaseSupplier( c );
-            toAdd.setDescription( "The NetAffx Analysis Center enables researchers to correlate their "
-                    + "GeneChip array results with array design and annotation information." );
-            toAdd.setName( "NetAFFX" );
-            toAdd.setType( DatabaseType.SEQUENCE );
-            toAdd.setWebUri( "http://www.affymetrix.com/analysis/index.affx" );
+            toAdd.setDescription( "Online Mendelian Inheritance in Man® is a comprehensive, authoritative, and timely compendium of human genes and genetic phenotypes. "
+                    + "OMIM® and Online Mendelian Inheritance in Man® are registered trademarks of the Johns Hopkins University." );
+            toAdd.setName( "OMIM" );
+            toAdd.setType( DatabaseType.OTHER );
+            toAdd.setWebUri( "http://omim.org/" );
 
             ExternalDatabaseService eds = ( ExternalDatabaseService ) this.getBean( "externalDatabaseService" );
 

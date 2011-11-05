@@ -428,7 +428,7 @@ public class Blat {
      */
     public void startServer( BlattableGenome genome, int port ) throws IOException {
         try {
-            new Socket( host, port );
+            Socket socket = new Socket( host, port );
             log.info( "There is already a server on port " + port );
             this.doShutdown = false;
         } catch ( UnknownHostException e ) {

@@ -20,10 +20,8 @@ package ubic.gemma.model.association.coexpression;
 
 import java.util.Collection;
 
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpression
@@ -109,21 +107,6 @@ public interface Probe2ProbeCoexpressionDao {
      * @return
      */
     public Collection<ProbeLink> getTopCoexpressedLinks( ExpressionExperiment ee, double threshold, Integer limit );
-
-    /**
-     * <p>
-     * Given a collection of Genes, a collection of EE's return a Map of Genes to a collection of
-     * DesignElementDataVectors that are coexpressed
-     * </p>
-     */
-    public java.util.Map<Gene, DesignElementDataVector> getVectorsForLinks( java.util.Collection<Gene> genes,
-            java.util.Collection<ExpressionExperiment> ees );
-
-    /**
-     * 
-     */
-    public java.util.Collection<DesignElementDataVector> getVectorsForLinks( ubic.gemma.model.genome.Gene gene,
-            java.util.Collection<ExpressionExperiment> ees );
 
     /**
      * <p>

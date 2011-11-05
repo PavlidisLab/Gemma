@@ -147,10 +147,10 @@ public class ExpressionDataMatrixService {
         return dataVectors;
     }
 
-    @SuppressWarnings("unchecked")
-    public DenseDoubleMatrix getRankMatrix( Collection<Gene> genes, Collection<ExpressionExperiment> ees,
-            ProcessedExpressionDataVectorDao.RankMethod method ) {
-        DenseDoubleMatrix<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix( genes.size(), ees.size() );
+    public DenseDoubleMatrix<Gene, ExpressionExperiment> getRankMatrix( Collection<Gene> genes,
+            Collection<ExpressionExperiment> ees, ProcessedExpressionDataVectorDao.RankMethod method ) {
+        DenseDoubleMatrix<Gene, ExpressionExperiment> matrix = new DenseDoubleMatrix<Gene, ExpressionExperiment>(
+                genes.size(), ees.size() );
 
         Map<ExpressionExperiment, Map<Gene, Collection<Double>>> ranks = processedExpressionDataVectorService.getRanks(
                 ees, genes, method );
