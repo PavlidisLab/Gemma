@@ -24,10 +24,6 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
-import org.hibernate.HibernateException;
-import org.hibernate.LockOptions;
-import org.hibernate.Query;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -113,47 +109,33 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
      * )
      */
     @Override
-    public void remove( FactorValue factorValue ) {
-        final FactorValue toDelete = factorValue;
+    public void remove( final FactorValue factorValue ) {
+        if ( factorValue == null ) return;
 
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( Session session ) throws HibernateException {
+        Collection<BioMaterial> bms = this.getHibernateTemplate().findByNamedParam(
+                "select distinct bm from BioMaterialImpl as bm inner join bm.factorValues fv where fv = :fv", "fv",
+                factorValue );
 
-                        log.debug( "Deleting: " + toDelete );
-                        session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
+        for ( BioMaterial bioMaterial : bms ) {
+            bioMaterial.getFactorValues().remove( factorValue );
+            this.getHibernateTemplate().update( bioMaterial );
+        }
 
-                        final String queryString = "from BioMaterialImpl as bm inner join bm.factorValues AS fv "
-                                + "WHERE fv = :fv";
+        List<?> efs = this.getHibernateTemplate().findByNamedParam(
+                "select ef from ExperimentalFactorImpl ef inner join ef.factorValues fv where fv = :fv", "fv",
+                factorValue );
 
-                        Query query = session.createQuery( queryString );
-                        query.setEntity( "fv", toDelete );
-                        session.refresh( toDelete ); // for multiple deletes
-                        for ( Object[] row : ( List<Object[]> ) query.list() ) {
+        ExperimentalFactor ef = ( ExperimentalFactor ) efs.iterator().next();
+        ef.getFactorValues().remove( factorValue );
+        this.getHibernateTemplate().update( ef );
 
-                            BioMaterial bm = ( BioMaterial ) row[0];
-                            bm.getFactorValues().remove( toDelete );
-                            session.update( bm );
-                        }
-
-                        ExperimentalFactor experimentalFactor = toDelete.getExperimentalFactor();
-                        experimentalFactor.getFactorValues().remove( toDelete );
-                        session.update( experimentalFactor );
-                        return null;
-                    }
-                } );
-
-        /*
-         * This rigamarole is to avoid the dreaded "would be reattached" error. Also, enables multiple deletes to be run
-         * in the same transaction
-         */
+        // we have to do this to avoid the 'already in session' error. Annoying.
         this.getHibernateTemplate().flush();
-        this.getHibernateTemplate().refresh( factorValue ); // for multiple deletes
-        this.getHibernateTemplate().evict( factorValue );
-        this.getHibernateTemplate().evict( factorValue.getExperimentalFactor() );
+        this.getHibernateTemplate().clear();
 
+        // finally delete it.
         this.getHibernateTemplate().delete( factorValue );
-        this.getHibernateTemplate().flush(); // for multiple deletes
+
     }
 
     /**
@@ -167,4 +149,23 @@ public class FactorValueDaoImpl extends ubic.gemma.model.expression.experiment.F
         }
         log.error( sb.toString() );
     }
+
+    @Override
+    public void remove( Collection<? extends FactorValue> entities ) {
+        for ( FactorValue factorValue : entities ) {
+            this.remove( factorValue );
+        }
+
+    }
+
+    @Override
+    public void remove( Long id ) {
+        this.remove( this.load( id ) );
+    }
+
+    @Override
+    public Collection<? extends FactorValue> load( Collection<Long> ids ) {
+        return this.getHibernateTemplate().findByNamedParam( "from FactorValueImpl f where f.id in (:ids)", "ids", ids );
+    }
+
 }

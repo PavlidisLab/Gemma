@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
 public class FactorValueServiceImpl extends ubic.gemma.model.expression.experiment.FactorValueServiceBase {
 
     public Collection<FactorValue> create( Collection<FactorValue> fvs ) {
-        return this.getFactorValueDao().create( fvs );
+        return ( Collection<FactorValue> ) this.getFactorValueDao().create( fvs );
     }
 
     public Collection<FactorValue> findByValue( String valuePrefix ) {

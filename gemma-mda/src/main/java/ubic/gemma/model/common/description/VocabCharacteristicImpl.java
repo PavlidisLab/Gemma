@@ -30,7 +30,7 @@ public class VocabCharacteristicImpl extends ubic.gemma.model.common.description
      * The serial version UID of this class. Needed for serialization.
      */
     private static final long serialVersionUID = 8530426256054538222L;
-
+    
     @Override
     public boolean equals( Object object ) {
         if ( !super.equals( object ) ) return false;

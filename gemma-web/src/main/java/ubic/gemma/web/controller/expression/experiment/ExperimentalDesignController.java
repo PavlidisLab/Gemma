@@ -91,7 +91,7 @@ public class ExperimentalDesignController extends BaseController {
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
-    
+
     @Autowired
     private FactorValueDeletion factorValueDeletion = null;
 
@@ -317,9 +317,8 @@ public class ExperimentalDesignController extends BaseController {
      */
     public void deleteFactorValues( EntityDelegator e, Collection<Long> fvIds ) {
 
-        
         if ( e == null || e.getId() == null ) return;
-            factorValueDeletion.deleteFactorValues(fvIds);
+        factorValueDeletion.deleteFactorValues( fvIds );
     }
 
     /**
@@ -438,12 +437,12 @@ public class ExperimentalDesignController extends BaseController {
     public void setCharacteristicService( CharacteristicService characteristicService ) {
         this.characteristicService = characteristicService;
     }
-    
+
     public void setExperimentalDesignImporter( ExperimentalDesignImporter experimentalDesignImporter ) {
         this.experimentalDesignImporter = experimentalDesignImporter;
     }
 
-    public void setFactorValueDeletion( FactorValueDeletion factorValueDeletion) {
+    public void setFactorValueDeletion( FactorValueDeletion factorValueDeletion ) {
         this.factorValueDeletion = factorValueDeletion;
     }
 
@@ -582,7 +581,7 @@ public class ExperimentalDesignController extends BaseController {
                 vc = VocabCharacteristic.Factory.newInstance();
             }
 
-            String originalCategoryUri = vc.getCategoryUri();
+            // String originalCategoryUri = vc.getCategoryUri();
 
             vc.setCategory( efvo.getCategory() );
             vc.setCategoryUri( efvo.getCategoryUri() );

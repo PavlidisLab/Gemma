@@ -83,14 +83,14 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.expression.experiment.FactorValueServiceException(
                     "Error performing 'ubic.gemma.model.expression.experiment.FactorValueService.load(java.lang.Long id)' "
-                            +"id = "+id+"; --> "+ th, th );
+                            + "id = " + id + "; --> " + th, th );
         }
     }
 
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<FactorValue> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -110,7 +110,7 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
     /**
      * @see ubic.gemma.model.expression.experiment.FactorValueService#update(java.util.Collection)
      */
-    public void update( final java.util.Collection factorValues ) {
+    public void update( final java.util.Collection<FactorValue> factorValues ) {
         try {
             this.handleUpdate( factorValues );
         } catch ( Throwable th ) {
@@ -167,12 +167,12 @@ public abstract class FactorValueServiceBase implements ubic.gemma.model.express
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<FactorValue> handleLoadAll() throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(java.util.Collection)}
      */
-    protected abstract void handleUpdate( java.util.Collection factorValues ) throws java.lang.Exception;
+    protected abstract void handleUpdate( java.util.Collection<FactorValue> factorValues ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #update(ubic.gemma.model.expression.experiment.FactorValue)}

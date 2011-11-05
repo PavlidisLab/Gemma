@@ -42,7 +42,6 @@ import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -53,12 +52,9 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.model.expression.experiment.FactorValueService;
 
 /**
- * Handles deletions of a factor values. 
- * 
- * This process includes:
- * 1. Determining if there are any biomaterials that use the factor value 
- * 2. If so, delete any differential expression analysis results that use this factor
- * 3. delete the factor value
+ * Handles deletions of a factor values. This process includes: 1. Determining if there are any biomaterials that use
+ * the factor value 2. If so, delete any differential expression analysis results that use this factor 3. delete the
+ * factor value
  * 
  * @author tvrossum
  * @version $Id$
@@ -71,24 +67,25 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
-    
+
     @Autowired
     private ExperimentalFactorService experimentalFactorService = null;
-    
+
     @Autowired
     private FactorValueService factorValueService = null;
 
-    @Autowired
-    private ubic.gemma.model.expression.experiment.FactorValueDao factorValueDao;
-    
-    /* (non-Javadoc)
-     * @see ubic.gemma.expression.experiment.FactorValueDeletion#deleteFactorValue(ubic.gemma.model.expression.experiment.FactorValue)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.expression.experiment.FactorValueDeletion#deleteFactorValue(ubic.gemma.model.expression.experiment
+     * .FactorValue)
      */
     @Override
     public void deleteFactorValues( Collection<Long> fvIds ) {
-        
+
         Collection<FactorValue> fvsToDelete = new ArrayList<FactorValue>();
-        
+
         for ( Long fvId : fvIds ) {
 
             FactorValue fv = factorValueService.load( fvId );
@@ -100,31 +97,31 @@ public class FactorValueDeletionImpl implements FactorValueDeletion {
             if ( fv.getExperimentalFactor() == null ) {
                 throw new IllegalStateException( "No experimental factor for factor value " + fv.getId() );
             }
+
             /*
-         * Determine if there are any biomaterials that use the factor value in question.
-         */
-        if ( !bioMaterialService.findByFactorValue( fv ).isEmpty() ) {
-            /*
-             * If so, check to see if there are any diff results that use this factor. FIXME This might have to run
-             * in a background thread
+             * Determine if there are any biomaterials that use the factor value in question.
              */
-            ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
-            Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
-                    .findByFactor( ef );
-            for ( DifferentialExpressionAnalysis a : analyses ) {
-                differentialExpressionAnalysisService.delete( a );
+            if ( !bioMaterialService.findByFactorValue( fv ).isEmpty() ) {
+                /*
+                 * If so, check to see if there are any diff results that use this factor. FIXME This might have to run
+                 * in a background thread
+                 */
+                ExperimentalFactor ef = experimentalFactorService.load( fv.getExperimentalFactor().getId() );
+                Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalysisService
+                        .findByFactor( ef );
+                for ( DifferentialExpressionAnalysis a : analyses ) {
+                    differentialExpressionAnalysisService.delete( a );
+                }
             }
+
+            fvsToDelete.add( fv );
+
         }
 
-        fvsToDelete.add(fv);
-
-        }
-        
-        for(FactorValue fv : fvsToDelete){
+        for ( FactorValue fv : fvsToDelete ) {
             factorValueService.delete( fv );
         }
-        
-        
+
     }
 
 }
