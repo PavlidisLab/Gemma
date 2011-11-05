@@ -34,7 +34,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
@@ -1013,7 +1013,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( arrayDesign, LockMode.READ );
+                session.buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
                 int count = 0;
                 for ( CompositeSequence cs : arrayDesign.getCompositeSequences() ) {
                     cs.setBiologicalCharacteristic( null );
@@ -1162,7 +1162,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
-                session.lock( arrayDesign, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( arrayDesign );
                 Hibernate.initialize( arrayDesign.getMergees() );
                 Hibernate.initialize( arrayDesign.getSubsumedArrayDesigns() );
                 arrayDesign.getMergees().clear();

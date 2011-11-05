@@ -27,7 +27,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -126,7 +126,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         Collection<BioAssayDimension> dims = new HashSet<BioAssayDimension>();
         Collection<CompositeSequence> cs = new HashSet<CompositeSequence>();
         for ( DesignElementDataVector vector : ( Collection<DesignElementDataVector> ) designElementDataVectors ) {
-            session.lock( vector, LockMode.NONE );
+            session.buildLockRequest( LockOptions.NONE ).lock( vector );
             Hibernate.initialize( vector );
             Hibernate.initialize( vector.getQuantitationType() );
             dims.add( vector.getBioAssayDimension() );
@@ -206,7 +206,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         for ( CompositeSequence de : cs ) {
             BioSequence seq = de.getBiologicalCharacteristic();
             if ( seq == null ) continue;
-            session.lock( seq, LockMode.NONE );
+            session.buildLockRequest( LockOptions.NONE ).lock( seq );
             // Note that these steps are not done in arrayDesign.thawLite; we're assuming this information is
             // needed if you are thawing dedvs. That might not be true in all cases.
             Hibernate.initialize( seq );
@@ -246,7 +246,7 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
         // thaw the design element.
         BioSequence seq = designElementDataVector.getDesignElement().getBiologicalCharacteristic();
         if ( seq != null ) {
-            session.lock( seq, LockMode.NONE );
+            session.buildLockRequest( LockOptions.NONE ).lock( seq );
             Hibernate.initialize( seq );
         }
 

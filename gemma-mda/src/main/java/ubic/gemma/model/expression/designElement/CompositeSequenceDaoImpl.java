@@ -32,10 +32,11 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.SessionFactoryUtils;
@@ -116,33 +117,28 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
 
         if ( compositeSequence.getName() == null ) return null;
 
-        try {
+        Criteria queryObject = super.getSession().createCriteria( CompositeSequence.class );
 
-            Criteria queryObject = super.getSession().createCriteria( CompositeSequence.class );
+        queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
 
-            queryObject.add( Restrictions.eq( "name", compositeSequence.getName() ) );
+        // TODO make this use the full arraydesign
+        // business key.
+        queryObject.createCriteria( "arrayDesign" ).add(
+                Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
 
-            // TODO make this use the full arraydesign
-            // business key.
-            queryObject.createCriteria( "arrayDesign" ).add(
-                    Restrictions.eq( "name", compositeSequence.getArrayDesign().getName() ) );
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + CompositeSequence.class.getName()
+                                + "' was found when executing query" );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + CompositeSequence.class.getName()
-                                    + "' was found when executing query" );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( CompositeSequence ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( CompositeSequence ) result;
 
     }
 
@@ -178,7 +174,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByName(java.lang.String)
      */
     @Override
-    public Collection<CompositeSequence>  findByName( String name ) {
+    public Collection<CompositeSequence> findByName( String name ) {
         final String queryString = "select distinct cs from CompositeSequenceImpl" + " cs where cs.name = :id";
         return this.getHibernateTemplate().findByNamedParam( queryString, "id", name );
     }
@@ -222,9 +218,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequence(ubic.gemma.model.genome
      * .biosequence.BioSequence)
-     */ 
+     */
     @Override
-    protected Collection<CompositeSequence>  handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
+    protected Collection<CompositeSequence> handleFindByBioSequence( BioSequence bioSequence ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs where cs.biologicalCharacteristic = :id";
@@ -244,9 +240,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see
      * ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#handleFindByBioSequenceName(java.lang.String)
-     */ 
+     */
     @Override
-    protected Collection<CompositeSequence>  handleFindByBioSequenceName( String name ) throws Exception {
+    protected Collection<CompositeSequence> handleFindByBioSequenceName( String name ) throws Exception {
         Collection<CompositeSequence> compositeSequences = null;
         final String queryString = "select distinct cs from CompositeSequenceImpl"
                 + " cs inner join cs.biologicalCharacteristic b where b.name = :name";
@@ -473,9 +469,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         // just a chunk.
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar = :ar";
         this.getHibernateTemplate().setMaxResults( numResults );
-        List cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
+        List<?> cs = this.getHibernateTemplate().findByNamedParam( queryString, "ar", arrayDesign );
         this.getHibernateTemplate().setMaxResults( 0 );
-        return getRawSummary( cs, 0 );
+        return getRawSummary( ( Collection<CompositeSequence> ) cs, 0 );
 
     }
 
@@ -486,12 +482,12 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase
      */
-    @SuppressWarnings("unchecked")
     @Override
-    protected Collection handleGetRawSummary( Collection<CompositeSequence>  compositeSequences, Integer limit ) throws Exception {
+    protected Collection<Object[]> handleGetRawSummary( Collection<CompositeSequence> compositeSequences, Integer limit )
+            throws Exception {
         if ( compositeSequences == null || compositeSequences.size() == 0 ) return null;
 
-        Collection<CompositeSequence>  compositeSequencesForQuery = new HashSet<CompositeSequence>();
+        Collection<CompositeSequence> compositeSequencesForQuery = new HashSet<CompositeSequence>();
 
         /*
          * Note that running this without a limit is dangerous. If the sequence is an unmasked repeat, then we can get
@@ -528,7 +524,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
                 .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
-        queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this for CLOB or Hibernate is unhappy
+        queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
         queryObject.setMaxResults( MAX_CS_RECORDS );
         return queryObject.list();
     }
@@ -563,7 +559,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 .addScalar( "ssrid" ).addScalar( "gpId" ).addScalar( "gpName" ).addScalar( "gpNcbi" )
                 .addScalar( "geneid" ).addScalar( "type" ).addScalar( "gId" ).addScalar( "gSymbol" )
                 .addScalar( "gNcbi" ).addScalar( "adShortName" ).addScalar( "adId" );
-        queryObject.addScalar( "deDesc", Hibernate.TEXT ); // must do this for CLOB or Hibernate is unhappy
+        queryObject.addScalar( "deDesc", StandardBasicTypes.TEXT ); // must do this for CLOB or Hibernate is unhappy
         queryObject.setMaxResults( limit );
         return queryObject.list();
     }
@@ -612,7 +608,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                 int numToDo = compositeSequences.size();
                 for ( CompositeSequence cs : compositeSequences ) {
 
-                    session.lock( cs, LockMode.NONE );
+                    session.buildLockRequest( LockOptions.NONE ).lock( cs );
                     Hibernate.initialize( cs.getArrayDesign() );
                     cs.getArrayDesign().getName();
 
@@ -621,7 +617,7 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
                         continue;
                     }
 
-                    session.lock( bs, LockMode.NONE );
+                    session.buildLockRequest( LockOptions.NONE ).lock( bs );
                     Hibernate.initialize( bs );
                     bs.getTaxon();
 

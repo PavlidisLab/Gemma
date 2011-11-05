@@ -28,7 +28,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
@@ -379,7 +379,7 @@ public class AuditAdvice extends HibernateDaoSupport {
                 Session session = getSessionFactory().getCurrentSession();
 
                 if ( !CrudUtils.methodIsDelete( methodName ) ) {
-                    session.lock( a, LockMode.NONE );
+                    session.buildLockRequest( LockOptions.NONE ).lock( a );
                 }
 
                 Hibernate.initialize( a );
@@ -451,7 +451,7 @@ public class AuditAdvice extends HibernateDaoSupport {
 
                     Auditable auditable = ( Auditable ) associatedObject;
                     try {
-                        this.getSession().lock( auditable, LockMode.NONE );
+                        this.getSession().buildLockRequest( LockOptions.NONE ).lock( auditable );
                         Hibernate.initialize( auditable );
 
                         AuditTrail at = this.addAuditTrailIfNeeded( auditable );

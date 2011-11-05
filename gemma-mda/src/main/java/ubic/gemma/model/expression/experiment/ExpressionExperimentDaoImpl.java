@@ -33,7 +33,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -490,7 +490,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         session.flush();
         session.clear();
 
-        session.lock( toDelete, LockMode.NONE );
+        session.buildLockRequest( LockOptions.NONE ).lock( toDelete );
 
         Hibernate.initialize( toDelete.getAuditTrail() );
 
@@ -594,7 +594,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             bioMaterialsToDelete.addAll( biomaterials );
             for ( BioMaterial bm : biomaterials ) {
                 // see bug 855
-                session.lock( bm, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( bm );
                 Hibernate.initialize( bm );
                 // this can easily end up with an unattached object.
                 Hibernate.initialize( bm.getBioAssaysUsedIn() );

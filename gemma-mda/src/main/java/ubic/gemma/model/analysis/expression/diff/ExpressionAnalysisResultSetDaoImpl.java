@@ -20,7 +20,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +50,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
-                session.lock( resultSet, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
                 for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
                     Hibernate.initialize( factor );
                 }
@@ -72,7 +72,7 @@ public class ExpressionAnalysisResultSetDaoImpl extends
 
         this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
             public Object doInHibernate( Session session ) throws HibernateException {
-                session.lock( resultSet, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( resultSet );
                 for ( ExperimentalFactor factor : resultSet.getExperimentalFactors() ) {
                     Hibernate.initialize( factor );
                 }

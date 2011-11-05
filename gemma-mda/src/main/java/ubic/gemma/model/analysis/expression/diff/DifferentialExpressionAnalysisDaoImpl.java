@@ -30,7 +30,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,7 +93,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         String[] paramNames = { "rs", "threshold" };
         Object[] objectValues = { ears, threshold };
 
-        List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
+        List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
         if ( qresult.isEmpty() ) {
             log.warn( "No count returned" );
@@ -165,7 +165,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
 
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( differentialExpressionAnalysis, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( differentialExpressionAnalysis );
                 Hibernate.initialize( differentialExpressionAnalysis );
 
                 Hibernate.initialize( differentialExpressionAnalysis.getExperimentAnalyzed() );
@@ -177,14 +177,14 @@ public class DifferentialExpressionAnalysisDaoImpl extends
                 Collection<ExpressionAnalysisResultSet> ears = differentialExpressionAnalysis.getResultSets();
                 Hibernate.initialize( ears );
                 for ( ExpressionAnalysisResultSet ear : ears ) {
-                    session.lock( ear, LockMode.NONE );
+                    session.buildLockRequest( LockOptions.NONE ).lock( ear );
                     Hibernate.initialize( ear );
 
                     if ( deep ) { // not used.
                         Collection<DifferentialExpressionAnalysisResult> ders = ear.getResults();
                         Hibernate.initialize( ders );
                         for ( DifferentialExpressionAnalysisResult der : ders ) {
-                            session.lock( der, LockMode.NONE );
+                            session.buildLockRequest( LockOptions.NONE ).lock( der );
                             Hibernate.initialize( der );
                             if ( der instanceof ProbeAnalysisResult ) {
                                 ProbeAnalysisResult par = ( ProbeAnalysisResult ) der;
@@ -251,7 +251,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         Map<Long, DifferentialExpressionAnalysis> results = new HashMap<Long, DifferentialExpressionAnalysis>();
         final String queryString = "select distinct e, a from DifferentialExpressionAnalysisImpl a"
                 + "   inner join a.experimentAnalyzed e where e.id in (:eeIds)";
-        List qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
+        List<?> qresult = this.getHibernateTemplate().findByNamedParam( queryString, "eeIds", investigationIds );
         for ( Object o : qresult ) {
             Object[] oa = ( Object[] ) o;
             BioAssaySet bas = ( BioAssaySet ) oa[0];
@@ -422,7 +422,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         String[] paramNames = { "rs", "threshold" };
         Object[] objectValues = { par, threshold };
 
-        List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
+        List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
         if ( qresult.isEmpty() ) {
             log.warn( "No count returned" );
@@ -450,7 +450,7 @@ public class DifferentialExpressionAnalysisDaoImpl extends
         String[] paramNames = { "rs", "threshold" };
         Object[] objectValues = { par, threshold };
 
-        List qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
+        List<?> qresult = this.getHibernateTemplate().findByNamedParam( query, paramNames, objectValues );
 
         if ( qresult.isEmpty() ) {
             log.warn( "No count returned" );

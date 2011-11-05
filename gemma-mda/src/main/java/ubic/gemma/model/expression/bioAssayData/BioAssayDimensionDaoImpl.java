@@ -27,7 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,16 +141,16 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
 
         this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( bioAssayDimension, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension );
                 Hibernate.initialize( bioAssayDimension.getBioAssays() );
 
                 for ( BioAssay ba : bioAssayDimension.getBioAssays() ) {
-                    session.lock( ba, LockMode.NONE );
+                    session.buildLockRequest( LockOptions.NONE ).lock( ba );
                     Hibernate.initialize( ba );
                     Hibernate.initialize( ba.getSamplesUsed() );
                     for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                        session.lock( bm, LockMode.NONE );
+                        session.buildLockRequest( LockOptions.NONE ).lock( bm );
                         Hibernate.initialize( bm );
                         Hibernate.initialize( bm.getBioAssaysUsedIn() );
                         Hibernate.initialize( bm.getFactorValues() );
