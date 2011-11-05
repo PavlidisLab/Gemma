@@ -91,6 +91,8 @@ public class Gene2GenePopulationService {
 
     private static Log log = LogFactory.getLog( Gene2GenePopulationService.class.getName() );
 
+    private static RandomEngine randomNumberGenerator = new DRand( new Date() );
+
     /**
      * @param experimentsAnalyzed
      * @return Map of location in the vector to EE ID.
@@ -236,6 +238,27 @@ public class Gene2GenePopulationService {
 
     }
 
+    /**
+     * Populate the node degree table, without analyzing coexpression. This method is public simply to allow
+     * initialization of the table
+     * 
+     * @param expressionExperiments
+     * @param toUseGenes
+     */
+    public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
+            boolean useDB ) {
+        allGeneNodeDegrees.clear();
+        int count = 0;
+        for ( Gene queryGene : toUseGenes ) {
+            computeNodeDegree( queryGene, expressionExperiments );
+            if ( count++ % 200 == 0 ) {
+                log.info( count + "/" + toUseGenes.size() + " genes analyzed for node degree" );
+            }
+        }
+        log.info( "Finalizing node degree computation" );
+        completeNodeDegreeComputations( useDB );
+    }
+
     public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
         this.expressionExperimentSetService = expressionExperimentSetService;
     }
@@ -263,8 +286,6 @@ public class Gene2GenePopulationService {
     public void setSecurityService( SecurityService securityService ) {
         this.securityService = securityService;
     }
-
-    private static RandomEngine randomNumberGenerator = new DRand( new Date() );
 
     /**
      * Finalize the node degree computation and persist it.
@@ -309,6 +330,30 @@ public class Gene2GenePopulationService {
     }
 
     /**
+     * Compute a string to represent the distribution of node degree values.
+     * 
+     * @param vals
+     * @return
+     */
+    private String computeDistribution( DoubleArrayList vals ) {
+        /*
+         * Set up the distribution
+         */
+        int numBins = 10;
+        Histogram h = new Histogram( "", numBins, 0.0, 1.0 );
+        h.fill( MatrixUtil.fromList( vals ) );
+        int tallestBar = h.getBiggestBinSize();
+        StringBuilder buf = new StringBuilder();
+        for ( int i = 0; i < numBins; i++ ) {
+            int f = ( int ) Math.floor( 9.0 * h.getArray()[i] / tallestBar );
+            assert f < 10; // one digit
+            buf.append( f );
+        }
+        String distribution = buf.toString();
+        return distribution;
+    }
+
+    /**
      * @param queryGene
      * @param expressionExperiments
      */
@@ -346,30 +391,6 @@ public class Gene2GenePopulationService {
         // so we can compute summary stats at the end.
         this.allGeneNodeDegrees.add( n );
 
-    }
-
-    /**
-     * Compute a string to represent the distribution of node degree values.
-     * 
-     * @param vals
-     * @return
-     */
-    private String computeDistribution( DoubleArrayList vals ) {
-        /*
-         * Set up the distribution
-         */
-        int numBins = 10;
-        Histogram h = new Histogram( "", numBins, 0.0, 1.0 );
-        h.fill( MatrixUtil.fromList( vals ) );
-        int tallestBar = h.getBiggestBinSize();
-        StringBuilder buf = new StringBuilder();
-        for ( int i = 0; i < numBins; i++ ) {
-            int f = ( int ) Math.floor( 9.0 * h.getArray()[i] / tallestBar );
-            assert f < 10; // one digit
-            buf.append( f );
-        }
-        String distribution = buf.toString();
-        return distribution;
     }
 
     /**
@@ -484,27 +505,6 @@ public class Gene2GenePopulationService {
     }
 
     /**
-     * Populate the node degree table, without analyzing coexpression. This method is public simply to allow
-     * initialization of the table
-     * 
-     * @param expressionExperiments
-     * @param toUseGenes
-     */
-    public void nodeDegreeAnalysis( Collection<BioAssaySet> expressionExperiments, Collection<Gene> toUseGenes,
-            boolean useDB ) {
-        allGeneNodeDegrees.clear();
-        int count = 0;
-        for ( Gene queryGene : toUseGenes ) {
-            computeNodeDegree( queryGene, expressionExperiments );
-            if ( count++ % 200 == 0 ) {
-                log.info( count + "/" + toUseGenes.size() + " genes analyzed for node degree" );
-            }
-        }
-        log.info( "Finalizing node degree computation" );
-        completeNodeDegreeComputations( useDB );
-    }
-
-    /**
      * @param expressionExperiments
      * @param toUseGenes
      * @param stringency
@@ -535,8 +535,8 @@ public class Gene2GenePopulationService {
                 StopWatch timer = new StopWatch();
                 if ( analysis != null ) {
                     timer.start();
-                    Collection<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene,
-                            coexpressions, analysis, genesToAnalyzeMap, processedGenes, stringency );
+                    List<Gene2GeneCoexpression> created = persistCoexpressions( eeIdOrder, queryGene, coexpressions,
+                            analysis, genesToAnalyzeMap, processedGenes, stringency );
                     totalLinks += created.size();
                     timer.stop();
                     if ( timer.getTime() > 2000 ) {
@@ -593,10 +593,13 @@ public class Gene2GenePopulationService {
         return processedGenes;
     }
 
+    /**
+     * Find the old analysis so we can disable it afterwards
+     * 
+     * @param taxon
+     * @return
+     */
     private Collection<GeneCoexpressionAnalysis> findExistingAnalysis( Taxon taxon ) {
-        /*
-         * Find the old analysis so we can disable it afterwards
-         */
 
         Collection<? extends Analysis> analysis = null;
         if ( taxon.getIsSpecies() ) {
@@ -654,6 +657,10 @@ public class Gene2GenePopulationService {
         return null;
     }
 
+    /**
+     * @param co
+     * @return
+     */
     private String format( CoexpressionValueObject co ) {
         StringBuilder buf = new StringBuilder();
 
@@ -744,7 +751,7 @@ public class Gene2GenePopulationService {
      * @param stringency minimum support to store a link.
      * @return
      */
-    private Collection<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
+    private List<Gene2GeneCoexpression> persistCoexpressions( Map<Long, Integer> eeIdOrder, Gene firstGene,
             CoexpressionCollectionValueObject toPersist, GeneCoexpressionAnalysis analysis,
             final Map<Long, Gene> genesToAnalyze, final Collection<Gene> alreadyPersisted, int stringency ) {
 
@@ -752,7 +759,7 @@ public class Gene2GenePopulationService {
 
         Taxon taxon = firstGene.getTaxon();
 
-        Collection<Gene2GeneCoexpression> all = new ArrayList<Gene2GeneCoexpression>();
+        List<Gene2GeneCoexpression> all = new ArrayList<Gene2GeneCoexpression>();
         Collection<Gene2GeneCoexpression> batch = new ArrayList<Gene2GeneCoexpression>();
 
         for ( CoexpressionValueObject co : toPersist.getAllGeneCoexpressionData( stringency ) ) {

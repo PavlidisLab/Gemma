@@ -257,16 +257,6 @@ public interface GeneService {
      */
     public Collection<Gene> loadMultiple( Collection<Long> ids );
 
-    // /**
-    // * Returns a collection of Predicted Genes for the specified taxon
-    // */
-    // public Collection<PredictedGene> loadPredictedGenes( Taxon taxon );
-    //
-    // /**
-    // * Returns a collection of all ProbeAlignedRegion's for the specfied taxon
-    // */
-    // public Collection<ProbeAlignedRegion> loadProbeAlignedRegions( Taxon taxon );
-
     /**
      * Load with objects already thawed.
      * 
@@ -317,5 +307,13 @@ public interface GeneService {
     public void update( Gene gene );
 
     public Collection<? extends Gene> findByEnsemblId( String exactString );
+
+    /**
+     * Like loadKnownGenes, but excludes genes that don't have gene products.
+     * 
+     * @param taxon
+     * @return
+     */
+    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
 
 }

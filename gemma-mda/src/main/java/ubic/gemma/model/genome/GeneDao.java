@@ -32,6 +32,8 @@ import ubic.gemma.persistence.BaseDao;
  */
 public interface GeneDao extends BaseDao<Gene> {
 
+    public Integer countAll();
+
     /**
      * Find all genes at a physical location. All overlapping genes are returned. The location can be a point or a
      * region. If strand is non-null, only genes on the same strand are returned.
@@ -40,15 +42,6 @@ public interface GeneDao extends BaseDao<Gene> {
      * @return
      */
     public Collection<Gene> find( PhysicalLocation physicalLocation );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #find(ubic.gemma.model.genome.Gene)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #find(ubic.gemma.model.genome.Gene)}.
-     * </p>
-     */
-    public ubic.gemma.model.genome.Gene find( String queryString, ubic.gemma.model.genome.Gene gene );
 
     /**
      * 
@@ -67,6 +60,10 @@ public interface GeneDao extends BaseDao<Gene> {
      * </p>
      */
     public java.util.Collection<Gene> findByAlias( java.lang.String search );
+
+    public Collection<? extends Gene> findByEnsemblId( String exactString );
+
+    public Gene findByNcbiId( Integer accession );
 
     /**
      * <p>
@@ -96,15 +93,6 @@ public interface GeneDao extends BaseDao<Gene> {
      * 
      */
     public java.util.Collection<Gene> findByOfficialSymbolInexact( java.lang.String officialSymbol );
-
-    /**
-     * <p>
-     * Does the same thing as {@link #findByOfficialSymbolInexact(java.lang.String)} with an additional argument called
-     * <code>queryString</code>. This <code>queryString</code> argument allows you to override the query string defined
-     * in {@link #findByOfficialSymbolInexact(java.lang.String)}.
-     * </p>
-     */
-    public java.util.Collection<Gene> findByOfficialSymbolInexact( String queryString, java.lang.String officialSymbol );
 
     /**
      * Find the Genes closest to the given location. If the location is in a gene(s), they will be returned. Otherwise a
@@ -201,36 +189,22 @@ public interface GeneDao extends BaseDao<Gene> {
     public Map<BioAssaySet, Double> getGeneCoexpressionNodeDegree( Gene gene, Collection<? extends BioAssaySet> ees );
 
     /**
-     * <p>
      * returns a collections of genes that match the given taxon
-     * </p>
      */
     public java.util.Collection<Gene> getGenesByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
-     * <p>
      * Returns a collection of genes that are actually MicroRNA for a given taxon
-     * </p>
      */
     public java.util.Collection<Gene> getMicroRnaByTaxon( ubic.gemma.model.genome.Taxon taxon );
 
     /**
-     * <p>
      * Returns a collection of genes for the specified taxon (not all genes, ie not probe aligned regions and predicted
      * genes)
-     * </p>
      */
     public java.util.Collection<Gene> loadKnownGenes( ubic.gemma.model.genome.Taxon taxon );
 
-    // /**
-    // * Returns a collection of predicted genes for the specified taxon.
-    // */
-    // public java.util.Collection<PredictedGene> loadPredictedGenes( ubic.gemma.model.genome.Taxon taxon );
-    //
-    // /**
-    // * Returns a collection of probe aligned regions for the specified taxon
-    // */
-    // public java.util.Collection<ProbeAlignedRegion> loadProbeAlignedRegions( ubic.gemma.model.genome.Taxon taxon );
+    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon );
 
     /**
      * @param ids
@@ -256,12 +230,6 @@ public interface GeneDao extends BaseDao<Gene> {
      */
     public Collection<Gene> thawLite( java.util.Collection<Gene> genes );
 
-    public Gene findByNcbiId( Integer accession );
-
-    public Integer countAll();
-
     Collection<Gene> findByPhysicalLocation( PhysicalLocation location );
-
-    public Collection<? extends Gene> findByEnsemblId( String exactString );
 
 }

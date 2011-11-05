@@ -9,8 +9,9 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 /**
- * A PropertyPlaceholderConfigurer that also can take a Configuration. I got the idea for this from
- * {@link http://mail-archives.apache.org/mod_mbox/jakarta-commons-dev/200603.mbox/%3Cbug-39068-7685@http.issues.apache.org/bugzilla/%3E}
+ * A PropertyPlaceholderConfigurer that also can take a Configuration. I got the idea for this from {@link http
+ * ://mail-archives
+ * .apache.org/mod_mbox/jakarta-commons-dev/200603.mbox/%3Cbug-39068-7685@http.issues.apache.org/bugzilla/%3E}
  * <p>
  * Currently values in the configuration overrides any in the properties files.
  * 
@@ -31,7 +32,6 @@ public class CommonsConfigurationPropertyPlaceholderConfigurer extends PropertyP
         this.configuration = configuration;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Properties mergeProperties() throws IOException {
         Properties result = super.mergeProperties();

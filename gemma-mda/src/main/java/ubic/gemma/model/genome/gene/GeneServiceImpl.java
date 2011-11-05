@@ -425,4 +425,9 @@ public class GeneServiceImpl extends GeneServiceBase {
         return this.getGeneDao().findByEnsemblId( exactString );
     }
 
+    @Override
+    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon ) {
+        return this.getGeneDao().loadKnownGenesWithProducts( taxon );
+    }
+
 }

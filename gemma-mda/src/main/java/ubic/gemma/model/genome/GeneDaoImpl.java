@@ -172,6 +172,12 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                 physicalLocation.getNucleotide() + physicalLocation.getNucleotideLength(), physicalLocation.getStrand() );
     }
 
+    @Override
+    public Collection<? extends Gene> findByEnsemblId( String id ) {
+        final String query = "from GeneImpl g where g.ensemblId = :id";
+        return this.getHibernateTemplate().findByNamedParam( query, "id", id );
+    }
+
     /*
      * (non-Javadoc)
      * 
@@ -196,12 +202,6 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         queryObject.setParameter( "officialSymbol", officialSymbol );
         queryObject.setMaxResults( MAX_RESULTS );
         return queryObject.list();
-    }
-
-    @Override
-    public Collection<? extends Gene> findByEnsemblId( String id ) {
-        final String query = "from GeneImpl g where g.ensemblId = :id";
-        return this.getHibernateTemplate().findByNamedParam( query, "id", id );
     }
 
     /*
@@ -493,6 +493,19 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         return result;
 
+    }
+
+    @Override
+    public Collection<Gene> loadKnownGenesWithProducts( Taxon taxon ) {
+
+        if ( taxon == null ) {
+            throw new IllegalArgumentException( "Must provide taxon" );
+        }
+
+        final String queryString = "select distinct gene from GeneImpl as gene fetch all properties join gene.products where gene.taxon = :taxon"
+                + " and gene.class = " + CoexpressionCollectionValueObject.GENE_IMPL;
+
+        return this.getHibernateTemplate().findByNamedParam( queryString, "taxon", taxon );
     }
 
     /*
