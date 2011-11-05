@@ -57,7 +57,6 @@ public abstract class AuditEventDaoBase extends org.springframework.orm.hibernat
         return entities;
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<? extends AuditEvent> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from AuditEventImpl where id in (:ids)", "ids", ids );
     }

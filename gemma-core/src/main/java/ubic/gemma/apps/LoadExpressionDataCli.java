@@ -224,7 +224,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
      * 
      * @see ubic.gemma.util.AbstractCLI#doWork(java.lang.String[])
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
         Exception err = processCommandLine( "Expression Data loader", args );
@@ -321,7 +320,6 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     protected void processAccession( GeoDatasetService geoService, String accession ) {
         try {
 

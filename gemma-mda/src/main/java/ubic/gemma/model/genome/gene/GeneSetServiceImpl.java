@@ -44,7 +44,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#create(java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<GeneSet> create( Collection<GeneSet> sets ) {
         return ( Collection<GeneSet> ) this.geneSetDao.create( sets );
     }
@@ -94,7 +93,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#load(java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<GeneSet> load( Collection<Long> ids ) {
         return ( Collection<GeneSet> ) this.geneSetDao.load( ids );
 
@@ -116,7 +114,6 @@ public class GeneSetServiceImpl implements GeneSetService {
      * @see ubic.gemma.model.genome.gene.GeneSetService#loadAll()
      */
     @Override
-    @SuppressWarnings("unchecked")
     public Collection<GeneSet> loadAll() {
         return ( Collection<GeneSet> ) this.geneSetDao.loadAll();
     }

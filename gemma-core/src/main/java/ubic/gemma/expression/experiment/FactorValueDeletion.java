@@ -41,8 +41,6 @@ import java.util.Collection;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import ubic.gemma.model.expression.experiment.FactorValue;
-
 /**
  * This interface needed to be extracted for factor value deletions in 
  * order to be able to make the methods transactional

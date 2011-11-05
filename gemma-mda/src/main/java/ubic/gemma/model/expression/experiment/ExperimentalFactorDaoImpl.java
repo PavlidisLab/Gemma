@@ -46,7 +46,6 @@ public class ExperimentalFactorDaoImpl extends ubic.gemma.model.expression.exper
      * ubic.gemma.model.expression.experiment.ExperimentalFactorDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalFactor)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public ExperimentalFactor find( ExperimentalFactor experimentalFactor ) {
         try {

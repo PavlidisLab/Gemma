@@ -27,17 +27,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.analysis.preprocess.PreprocessorService;
-import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
-import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
-import ubic.gemma.analysis.preprocess.svd.SVDService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 
 /**
  * @author keshav
@@ -61,7 +56,6 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
      * 
      * @see ubic.gemma.grid.javaspaces.SpacesTask#execute(java.lang.Object)
      */
-    @SuppressWarnings("unchecked")
     @TaskMethod
     public TaskResult execute( ExpressionExperimentLoadTaskCommand command ) {
         ExpressionExperimentLoadTaskCommand jsEeLoadCommand = command;

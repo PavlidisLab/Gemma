@@ -125,7 +125,6 @@ public class AuditTrailDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
     /**
      * @return
      */
-    @SuppressWarnings("unchecked")
     private User getUser() {
         String name = getPrincipalName();
         assert name != null; // might be anonymous

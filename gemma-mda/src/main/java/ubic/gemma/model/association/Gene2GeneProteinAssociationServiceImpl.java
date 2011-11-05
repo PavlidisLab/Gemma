@@ -48,7 +48,6 @@ public class Gene2GeneProteinAssociationServiceImpl extends
     } 
             
     
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Gene2GeneProteinAssociation> handleLoadAll() {
         return ( Collection<Gene2GeneProteinAssociation> ) this.gene2GeneProteinAssociationDao().loadAll();

@@ -95,7 +95,6 @@ public class AssayViewTag extends TagSupport {
      * 
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
-    @SuppressWarnings("unchecked")
     @Override
     public int doStartTag() throws JspException {
 

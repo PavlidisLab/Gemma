@@ -195,7 +195,6 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDaoBase#handleLoad(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioMaterial> handleLoad( Collection<Long> ids ) throws Exception {
         Collection<BioMaterial> bs = null;
@@ -241,7 +240,6 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
      * 
      * @see ubic.gemma.model.expression.biomaterial.BioMaterialDao#thaw(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<BioMaterial> thaw( Collection<BioMaterial> bioMaterials ) {
         if ( bioMaterials.isEmpty() ) return bioMaterials;
@@ -254,7 +252,6 @@ public class BioMaterialDaoImpl extends ubic.gemma.model.expression.biomaterial.
                         EntityUtils.getIds( bioMaterials ) );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<BioMaterial> findByFactorValue( FactorValue fv ) {
         return this.getHibernateTemplate().findByNamedParam(

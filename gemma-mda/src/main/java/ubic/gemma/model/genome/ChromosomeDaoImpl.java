@@ -38,7 +38,6 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         super.setSessionFactory( sessionFactory );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         if ( StringUtils.isBlank( name ) ) {
             throw new IllegalArgumentException( "Name cannot be blank" );

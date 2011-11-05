@@ -58,12 +58,10 @@ public class DifferentialExpressionAnalysisServiceImpl extends
         return null;
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> loadMyAnalyses() {
         return this.loadAll();
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<DifferentialExpressionAnalysis> loadMySharedAnalyses() {
         return this.loadAll();
     }

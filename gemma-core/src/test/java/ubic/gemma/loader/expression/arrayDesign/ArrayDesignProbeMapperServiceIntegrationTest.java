@@ -21,8 +21,6 @@ package ubic.gemma.loader.expression.arrayDesign;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,7 +33,6 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayDesignProcessingTest {
-    private Log log = LogFactory.getLog( this.getClass() );
 
     Blat blat;
 
@@ -56,10 +53,10 @@ public class ArrayDesignProbeMapperServiceIntegrationTest extends AbstractArrayD
         ArrayDesignSequenceProcessingService app = ( ArrayDesignSequenceProcessingService ) getBean( "arrayDesignSequenceProcessingService" );
 
         try {
-        ad =    this.arrayDesignService.thaw( ad );
-            app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" }, ConfigUtils
-                    .getString( "gemma.home" )
-                    + "/gemma-core/src/test/resources/data/loader/genome/blast", false );
+            ad = this.arrayDesignService.thaw( ad );
+            app.processArrayDesign( ad, new String[] { "testblastdb", "testblastdbPartTwo" },
+                    ConfigUtils.getString( "gemma.home" ) + "/gemma-core/src/test/resources/data/loader/genome/blast",
+                    false );
         } catch ( IllegalStateException e ) {
             if ( e.getMessage().startsWith( "No fastacmd executable:" ) ) {
                 return;

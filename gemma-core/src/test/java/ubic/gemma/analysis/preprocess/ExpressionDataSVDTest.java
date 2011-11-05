@@ -176,7 +176,6 @@ public class ExpressionDataSVDTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testMatrixReconstructB() throws Exception {
         GeoConverter gc = new GeoConverter();

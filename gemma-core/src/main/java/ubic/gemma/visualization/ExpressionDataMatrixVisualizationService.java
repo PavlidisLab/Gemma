@@ -132,7 +132,6 @@ public class ExpressionDataMatrixVisualizationService {
      * @param expressionDataMatrix
      * @return ColorMatrix
      */
-    @SuppressWarnings("unchecked")
     private ColorMatrix createColorMatrix( ExpressionDataMatrix expressionDataMatrix ) {
 
         Collection<BioAssay> colElements = new LinkedHashSet<BioAssay>();

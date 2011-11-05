@@ -271,7 +271,6 @@ public abstract class DesignElementDataVectorDaoImpl<T extends DesignElementData
      * @param dedv2genes
      * @param batch
      */
-    @SuppressWarnings("unchecked")
     private void getVectorsBatch( Map<CompositeSequence, Collection<Gene>> cs2gene, org.hibernate.Query queryObject,
             Map<T, Collection<Gene>> dedv2genes, Collection<CompositeSequence> batch ) {
         queryObject.setParameterList( "cs", batch );

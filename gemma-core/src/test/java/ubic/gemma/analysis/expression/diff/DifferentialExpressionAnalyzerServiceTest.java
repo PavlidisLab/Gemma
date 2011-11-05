@@ -156,7 +156,6 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() throws Exception {
 

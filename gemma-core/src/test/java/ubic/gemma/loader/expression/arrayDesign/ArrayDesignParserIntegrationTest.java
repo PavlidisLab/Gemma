@@ -23,8 +23,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.InputStream;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +37,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 @Deprecated
 public class ArrayDesignParserIntegrationTest extends BaseSpringContextTest {
-    protected static final Log log = LogFactory.getLog( ArrayDesignParserIntegrationTest.class );
 
     private ArrayDesignParser arrayDesignParser = null;
 
@@ -59,7 +56,6 @@ public class ArrayDesignParserIntegrationTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testParseAndLoad() throws Exception {
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/expression/arrayDesign/array.txt" );

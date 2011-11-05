@@ -30,8 +30,6 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.GeneImpl;
-import ubic.gemma.model.genome.PredictedGeneImpl;
-import ubic.gemma.model.genome.ProbeAlignedRegionImpl;
 
 /**
  * The coexpressioncollectionValueObject is used for storing all the results of a coexpression search for one query

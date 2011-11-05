@@ -122,7 +122,6 @@ public class AclAuthorizationTest extends BaseSpringContextTest {
      * 
      * @throws Exception
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void testGetCompositeSequencesForArrayDesign() throws Exception {
 

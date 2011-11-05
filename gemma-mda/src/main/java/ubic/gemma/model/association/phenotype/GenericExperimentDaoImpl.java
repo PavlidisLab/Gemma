@@ -38,7 +38,6 @@ public class GenericExperimentDaoImpl extends AbstractDao<GenericExperiment> imp
     }
 
     /** Find all Investigations for a specific pubmed */
-    @SuppressWarnings("unchecked")
     public Collection<GenericExperiment> findByPubmedID( String pubmed ) {
 
         Criteria genericExperiment = super.getSession().createCriteria( GenericExperiment.class );

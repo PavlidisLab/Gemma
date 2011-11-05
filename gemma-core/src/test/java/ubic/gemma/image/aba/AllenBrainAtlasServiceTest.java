@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,8 +39,6 @@ public class AllenBrainAtlasServiceTest extends BaseSpringContextTest {
 
     @Autowired
     private AllenBrainAtlasService abaService = null;
-
-    private static Log log = LogFactory.getLog( AllenBrainAtlasServiceTest.class.getName() );
 
     /**
      * Not all ABA genes have the only the first letter capatalized

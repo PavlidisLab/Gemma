@@ -33,7 +33,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 /**
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class ImageCumulativePlatesLoaderTest extends BaseSpringContextTest {
 
     InputStream is;

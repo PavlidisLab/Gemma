@@ -65,7 +65,7 @@ public abstract class ProbeAlignedRegionDaoBase extends HibernateDaoSupport impl
             throw new IllegalArgumentException( "ProbeAlignedRegion.create - 'probeAlignedRegion' can not be null" );
         }
         this.getHibernateTemplate().save( probeAlignedRegion );
-        return ( ProbeAlignedRegion ) probeAlignedRegion;
+        return probeAlignedRegion;
     }
 
     /**

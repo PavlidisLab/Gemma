@@ -26,7 +26,6 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * <p>

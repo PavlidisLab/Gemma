@@ -45,7 +45,6 @@ import ubic.gemma.util.ConfigUtils;
  * @author Paul
  * @version $Id$
  */
-@SuppressWarnings("unchecked")
 public class QuantitationTypeParameterGuesser {
 
     private static Log log = LogFactory.getLog( QuantitationTypeParameterGuesser.class.getName() );
@@ -255,8 +254,7 @@ public class QuantitationTypeParameterGuesser {
         isBackgroundNamePatterns.get( Boolean.TRUE ).add( "ch[12]b.*" );
         isBackgroundDescPatterns
                 .get( Boolean.TRUE )
-                .add(
-                        ".*(?<!subtracted\\s(by\\s)?)(?<!over the\\s)((pixel|feature)\\s)?(background(\\s|\\sintensity|\\ssignal)?)(?!subtracted).*" );
+                .add( ".*(?<!subtracted\\s(by\\s)?)(?<!over the\\s)((pixel|feature)\\s)?(background(\\s|\\sintensity|\\ssignal)?)(?!subtracted).*" );
 
         isNormalizedPatterns.add( ".*(?<!un)normalized.*" );
         isNormalizedPatterns.add( "ch[12](b)?n.*" );

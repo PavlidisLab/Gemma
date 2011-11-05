@@ -107,7 +107,6 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
     /**
      * @see ubic.gemma.model.expression.bioAssay.BioAssayService#loadAll()
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<BioAssay> handleLoadAll() throws Exception {
         return ( Collection<BioAssay> ) this.getBioAssayDao().loadAll();

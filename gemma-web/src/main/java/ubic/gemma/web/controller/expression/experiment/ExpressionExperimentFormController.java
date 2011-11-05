@@ -266,7 +266,6 @@ public class ExpressionExperimentFormController extends BaseFormController {
      * @param request
      * @return Map
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map referenceData( HttpServletRequest request ) {
         Map<Object, Object> referenceData = new HashMap<Object, Object>();

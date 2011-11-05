@@ -178,7 +178,6 @@ public class GeneCoexpressionAnalysisServiceImpl extends
     /**
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<GeneCoexpressionAnalysis> loadEnabled() {
         Collection<GeneCoexpressionAnalysis> all = ( Collection<GeneCoexpressionAnalysis> ) this
                 .getGeneCoexpressionAnalysisDao().loadAll();

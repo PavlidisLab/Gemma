@@ -590,7 +590,6 @@ public class PersistentDummyObjectHelper {
     /**
      * @return Collection<BioSequence2GeneProduct>
      */
-    @SuppressWarnings("unchecked")
     private Collection<BioSequence2GeneProduct> getTestPersistentBioSequence2GeneProducts( BioSequence bioSequence ) {
 
         Collection<BioSequence2GeneProduct> b2gCol = new HashSet<BioSequence2GeneProduct>();

@@ -29,8 +29,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,8 +61,6 @@ import ubic.gemma.security.authorization.acl.AclTestUtils;
  * @version $Id$
  */
 public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
-
-    private static Log log = LogFactory.getLog( ExperimentalDesignImporterTestC.class.getName() );
 
     ExpressionExperiment ee;
 

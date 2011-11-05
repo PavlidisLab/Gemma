@@ -4,10 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.tools.ant.util.StringUtils;
-
-import ubic.gemma.analysis.service.ExpressionDataFileService;
-
 public class DifferentialExpressionVisualizationValueObject {
     public class GeneScore {
         double score;

@@ -56,7 +56,6 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
      * 
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDaoBase#find(ubic.gemma.model.expression.bioAssay.BioAssay)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public BioAssay find( BioAssay bioAssay ) {
         try {
@@ -85,7 +84,6 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
      * 
      * @see ubic.gemma.model.expression.bioAssay.BioAssayDao#findByAccession(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<BioAssay> findByAccession( String accession ) {
         if ( StringUtils.isBlank( accession ) ) return new HashSet<BioAssay>();

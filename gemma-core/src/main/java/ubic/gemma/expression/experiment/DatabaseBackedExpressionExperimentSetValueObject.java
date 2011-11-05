@@ -44,7 +44,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
-import org.apache.commons.lang.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;

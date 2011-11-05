@@ -46,7 +46,6 @@ public class CompassUtils {
      * 
      * @throws IOException
      */
-    @SuppressWarnings("unchecked")
     public static void deleteCompassLocks() {
         /*
          * FIXME lock directory is now the same as the indexes, by default.

@@ -50,7 +50,6 @@ public class PubMedSearcher extends AbstractSpringAwareCLI {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected Exception doWork( String[] args ) {
 

@@ -35,7 +35,6 @@ public class JobInfoDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Job
         super.setSessionFactory( sessionFactory );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<JobInfo> getUsersJob( String userName ) {
         return this.getHibernateTemplate().findByNamedParam(
                 "select j from JobInfoImpl j inner join j.user on u.userName = :un", "un", "userName" );

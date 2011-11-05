@@ -38,7 +38,6 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#find(ubic.gemma.model.common.auditAndSecurity.Person)
      */
-    @SuppressWarnings("unchecked")
     public Person find( Person person ) {
         try {
             Criteria queryObject = super.getSession().createCriteria( Person.class );

@@ -22,8 +22,6 @@ import static org.junit.Assert.assertFalse;
 
 import java.io.PrintWriter;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +35,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExperimentalDesignWriterTest extends BaseSpringContextTest {
-    private Log log = LogFactory.getLog( this.getClass() );
-
     @Autowired
     ExpressionExperimentService eeService = null;
 

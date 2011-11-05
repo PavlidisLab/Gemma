@@ -24,8 +24,6 @@ import static org.junit.Assert.assertNotNull;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -46,7 +44,6 @@ import ubic.gemma.web.controller.common.description.bibref.BibliographicReferenc
  * @version $Id$
  */
 public class BibRefControllerTest extends BaseSpringWebTest {
-    private static Log log = LogFactory.getLog( BibRefControllerTest.class.getName() );
 
     private BibliographicReference br = null;
     private MockHttpServletRequest req = null;

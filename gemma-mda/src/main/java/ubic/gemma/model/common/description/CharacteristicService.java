@@ -55,7 +55,6 @@ public interface CharacteristicService {
      * </p>
      */
     @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
-    @SuppressWarnings("unchecked")
     public Map<Characteristic, Object> findByParentClass( java.lang.Class parentClass );
 
     /**

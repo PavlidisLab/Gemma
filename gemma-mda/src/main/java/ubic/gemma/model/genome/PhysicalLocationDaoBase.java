@@ -88,7 +88,7 @@ public abstract class PhysicalLocationDaoBase extends HibernateDaoSupport implem
         if ( id == null ) {
             throw new IllegalArgumentException( "PhysicalLocation.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.PhysicalLocation entity = ( ubic.gemma.model.genome.PhysicalLocation ) this.load( id );
+        ubic.gemma.model.genome.PhysicalLocation entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

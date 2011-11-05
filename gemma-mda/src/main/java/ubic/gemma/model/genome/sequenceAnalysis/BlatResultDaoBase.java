@@ -43,8 +43,8 @@ public abstract class BlatResultDaoBase extends HibernateDaoSupport implements
                     public Object doInHibernate( org.hibernate.Session session )
                             throws org.hibernate.HibernateException {
                         for ( java.util.Iterator entityIterator = entities.iterator(); entityIterator.hasNext(); ) {
-                            create( transform, ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) entityIterator
-                                    .next() );
+                            create( transform,
+                                    ( ubic.gemma.model.genome.sequenceAnalysis.BlatResult ) entityIterator.next() );
                         }
                         return null;
                     }
@@ -112,8 +112,7 @@ public abstract class BlatResultDaoBase extends HibernateDaoSupport implements
 
     public Object find( final int transform, final ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
         return this
-                .find(
-                        transform,
+                .find( transform,
                         "from ubic.gemma.model.genome.sequenceAnalysis.BlatResult as blatResult where blatResult.blatResult = :blatResult",
                         blatResult );
     }

@@ -104,14 +104,12 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
          * @return
          */
         @Override
-        @SuppressWarnings("unchecked")
         protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
             TaskResult result = this.process( eeLoadCommand );
             return super.processGeoLoadResult( ( Collection<ExpressionExperiment> ) result.getAnswer() );
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         protected TaskResult processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand eeLoadCommand ) {
             TaskResult result = this.process( eeLoadCommand );
             return super.processArrayDesignResult( ( Collection<ArrayDesign> ) result.getAnswer() );
@@ -198,8 +196,9 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
         protected TaskResult processArrayExpressJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 
             String accession = getAccession( expressionExperimentLoadCommand );
-            ExpressionExperiment result = arrayExpressLoadService.load( accession, expressionExperimentLoadCommand
-                    .getArrayDesignName(), expressionExperimentLoadCommand.isAllowArrayExpressDesign() );
+            ExpressionExperiment result = arrayExpressLoadService.load( accession,
+                    expressionExperimentLoadCommand.getArrayDesignName(),
+                    expressionExperimentLoadCommand.isAllowArrayExpressDesign() );
 
             return processArrayExpressResult( result );
         }
@@ -224,7 +223,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
          * @param aggressiveQtRemoval
          * @return
          */
-        @SuppressWarnings("unchecked")
         protected TaskResult processGEODataJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
 
             String accession = getAccession( expressionExperimentLoadCommand );
@@ -283,7 +281,6 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
          * @param list
          * @return
          */
-        @SuppressWarnings("unchecked")
         protected TaskResult processPlatformOnlyJob( ExpressionExperimentLoadTaskCommand expressionExperimentLoadCommand ) {
             String accession = getAccession( expressionExperimentLoadCommand );
 

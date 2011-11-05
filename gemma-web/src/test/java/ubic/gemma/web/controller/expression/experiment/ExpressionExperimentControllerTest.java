@@ -21,8 +21,6 @@ package ubic.gemma.web.controller.expression.experiment;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -35,7 +33,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExpressionExperimentControllerTest extends BaseSpringContextTest {
-    private static Log log = LogFactory.getLog( ExpressionExperimentControllerTest.class.getName() );
 
     /**
      * Tests getting all the expressionExperiments, which is implemented in

@@ -75,7 +75,6 @@ public class PersonServiceImpl extends ubic.gemma.model.common.auditAndSecurity.
      * (non-Javadoc)
      * @see ubic.gemma.model.common.auditAndSecurity.PersonServiceBase#handleLoadAll()
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Person> handleLoadAll() throws Exception {
         return ( Collection<Person> ) this.getPersonDao().loadAll();

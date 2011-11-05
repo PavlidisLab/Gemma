@@ -39,19 +39,17 @@ package ubic.gemma.genome.gene;
 
 import java.util.Collection;
 
-import ubic.gemma.session.GemmaSessionBackedValueObject;
-
 /**
  * TODO Document Me
  * 
  * @author tvrossum
  * @version $Id$
  */
-public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObject implements GemmaSessionBackedValueObject {
-    
+public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObject {
+
     private static final long serialVersionUID = 3557304710219740029L;
     private String queryString;
-    
+
     /**
      * default constructor to satisfy java bean contract
      */
@@ -59,7 +57,6 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
         super();
     }
 
-    
     /**
      * Method to create a display object from scratch
      * 
@@ -69,25 +66,27 @@ public class FreeTextGeneResultsValueObject extends SessionBoundGeneSetValueObje
      * @param taxonName can be null
      * @param memberIds can be null; for a gene or experiment, this is a collection just containing their id
      */
-    public FreeTextGeneResultsValueObject( String name, 
-            String description, Long taxonId, String taxonName, Collection<Long> memberIds, String queryString ) {
+    public FreeTextGeneResultsValueObject( String name, String description, Long taxonId, String taxonName,
+            Collection<Long> memberIds, String queryString ) {
 
-        this.setName(name);
-        this.setDescription(description);
+        this.setName( name );
+        this.setDescription( description );
         this.setSize( memberIds.size() );
-        this.setTaxonId(taxonId);
-        this.setTaxonName(taxonName);
-        this.setGeneIds(memberIds);
-        this.setId( new Long(-1) );
+        this.setTaxonId( taxonId );
+        this.setTaxonName( taxonName );
+        this.setGeneIds( memberIds );
+        this.setId( new Long( -1 ) );
         this.setModified( false );
         this.setQueryString( queryString );
     }
+
     /**
      * @param queryString the queryString to set
      */
     public void setQueryString( String queryString ) {
         this.queryString = queryString;
     }
+
     /**
      * @return the queryString
      */

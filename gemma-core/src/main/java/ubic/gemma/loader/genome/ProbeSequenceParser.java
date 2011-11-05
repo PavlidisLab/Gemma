@@ -28,9 +28,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -44,8 +41,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  */
 public class ProbeSequenceParser extends BasicLineMapParser<String, BioSequence> {
-
-    protected static final Log log = LogFactory.getLog( ProbeSequenceParser.class );
 
     private Map<String, BioSequence> results = new HashMap<String, BioSequence>();
 

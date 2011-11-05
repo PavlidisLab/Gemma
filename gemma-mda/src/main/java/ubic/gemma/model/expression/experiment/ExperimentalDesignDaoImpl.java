@@ -47,7 +47,6 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#find(ubic.gemma.model.expression.experiment.
      * ExperimentalDesign)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public ExperimentalDesign find( ExperimentalDesign experimentalDesign ) {
         try {
@@ -99,7 +98,6 @@ public class ExperimentalDesignDaoImpl extends ubic.gemma.model.expression.exper
      * ubic.gemma.model.expression.experiment.ExperimentalDesignDaoBase#handleGetExpressionExperiment(ubic.gemma.model
      * .expression.experiment.ExperimentalDesign)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected ExpressionExperiment handleGetExpressionExperiment( ExperimentalDesign ed ) {
 

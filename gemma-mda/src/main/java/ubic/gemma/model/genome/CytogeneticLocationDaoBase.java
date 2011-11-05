@@ -95,8 +95,7 @@ public abstract class CytogeneticLocationDaoBase extends HibernateDaoSupport imp
         if ( id == null ) {
             throw new IllegalArgumentException( "CytogeneticLocation.remove - 'id' can not be null" );
         }
-        ubic.gemma.model.genome.CytogeneticLocation entity = ( ubic.gemma.model.genome.CytogeneticLocation ) this
-                .load( id );
+        ubic.gemma.model.genome.CytogeneticLocation entity = this.load( id );
         if ( entity != null ) {
             this.remove( entity );
         }

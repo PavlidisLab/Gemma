@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,8 +56,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
-
-    private static Log log = LogFactory.getLog( ExperimentalDesignImporterTestB.class.getName() );
 
     ExpressionExperiment ee;
 

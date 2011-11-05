@@ -54,7 +54,6 @@ public class GeneCoexpressionAnalysisDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<GeneCoexpressionAnalysis> /* analyses */findByName( String name ) {
         return this.getHibernateTemplate().findByNamedParam(
@@ -91,7 +90,6 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisDaoImpl#handleFindByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<GeneCoexpressionAnalysis> handleFindByInvestigation( Investigation investigation )
             throws Exception {
@@ -119,7 +117,6 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * * If a taxon is not a species check if it has child taxa and if so retrieve the expression experiments for the
      * child taxa
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<GeneCoexpressionAnalysis> handleFindByParentTaxon( Taxon taxon ) {
         final String queryStringParent = "select distinct goa from GeneCoexpressionAnalysisImpl as goa inner join goa.expressionExperimentSetAnalyzed"
@@ -135,7 +132,6 @@ public class GeneCoexpressionAnalysisDaoImpl extends
      * 
      * @see ubic.gemma.model.analysis.AnalysisDaoBase#handleFindByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<GeneCoexpressionAnalysis> handleFindByTaxon( Taxon taxon ) {
         final String queryString = "select goa from GeneCoexpressionAnalysisImpl as goa where goa.taxon = :taxon ";

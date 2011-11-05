@@ -55,7 +55,6 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
 
     static boolean setupDone = false;
 
-    @SuppressWarnings("unchecked")
     @Before
     public void setup() throws Exception {
 

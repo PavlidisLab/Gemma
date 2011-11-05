@@ -185,7 +185,7 @@ public class GeoBrowserServiceParseTest {
         expect( ads.findByShortName( "GPL570" ) ).andReturn( null );
         expect( ees.findByShortName( "GSE27128" ) ).andReturn( null );
         replay( ads );
-        String details = serv.formatDetails( response );
+        serv.formatDetails( response );
 
     }
 

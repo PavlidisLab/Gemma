@@ -408,7 +408,6 @@ public class ArrayDesignSequenceAlignmentService {
      *        mouse to human)
      * @return
      */
-    @SuppressWarnings("unchecked")
     private Collection<BlatResult> persistBlatResults( Collection<BlatResult> brs ) {
         for ( BlatResult br : brs ) {
             assert br.getQuerySequence() != null;

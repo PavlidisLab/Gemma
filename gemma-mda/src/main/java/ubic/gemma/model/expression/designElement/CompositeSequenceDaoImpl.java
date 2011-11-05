@@ -177,7 +177,6 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
      * 
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceDaoBase#findByName(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<CompositeSequence>  findByName( String name ) {
         final String queryString = "select distinct cs from CompositeSequenceImpl" + " cs where cs.name = :id";

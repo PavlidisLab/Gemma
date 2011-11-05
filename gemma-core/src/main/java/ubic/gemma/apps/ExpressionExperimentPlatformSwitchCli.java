@@ -63,8 +63,11 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option arrayDesignOption = OptionBuilder.hasArg().withArgName( "Array design" ).withDescription(
-                "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
+        Option arrayDesignOption = OptionBuilder
+                .hasArg()
+                .withArgName( "Array design" )
+                .withDescription(
+                        "Array design name (or short name) - no need to specifiy if the platforms used by the EE are merged" )
                 .withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesignOption );
@@ -129,7 +132,7 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
         try {
             ee = this.eeService.thawLite( ee );
 
-            AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+            AuditTrailService ats = ( AuditTrailService ) this.getBean( "auditTrailService" );
             AuditEventType type = ExpressionExperimentPlatformSwitchEvent.Factory.newInstance();
             if ( this.arrayDesignName != null ) {
                 ArrayDesign ad = locateArrayDesign( this.arrayDesignName );
@@ -140,11 +143,11 @@ public class ExpressionExperimentPlatformSwitchCli extends ExpressionExperimentM
                 ad = arrayDesignService.thaw( ad );
                 serv.switchExperimentToArrayDesign( ee, ad );
 
-                auditEventService.addUpdateEvent( ee, type, "Switched to use " + ad );
+                ats.addUpdateEvent( ee, type, "Switched to use " + ad );
 
             } else {
                 serv.switchExperimentToMergedPlatform( ee );
-                auditEventService.addUpdateEvent( ee, type, "Switched to use merged array Design " );
+                ats.addUpdateEvent( ee, type, "Switched to use merged array Design " );
             }
 
             super.successObjects.add( ee.toString() );

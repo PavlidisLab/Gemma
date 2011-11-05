@@ -25,7 +25,6 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
@@ -37,9 +36,6 @@ public class TaxonUtilityTest extends BaseSpringContextTest {
 
     @Autowired
     GeneService geneService;
-
-    @Autowired
-    TaxonService taxonService;
 
     @Test
     public void testIsHuman() throws Exception {

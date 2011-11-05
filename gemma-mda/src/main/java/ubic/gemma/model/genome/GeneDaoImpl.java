@@ -896,8 +896,8 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         if ( ids.size() == 0 ) {
             return new HashSet<Gene>();
         }
-        int BATCH_SIZE = 2000;
-        if ( ids.size() > BATCH_SIZE ) {
+        int batchSize = 2000;
+        if ( ids.size() > batchSize ) {
             log.info( "Loading " + ids.size() + " genes ..." );
         }
 
@@ -907,7 +907,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
 
         for ( Long gene : ids ) {
             batch.add( gene );
-            if ( batch.size() == BATCH_SIZE ) {
+            if ( batch.size() == batchSize ) {
                 genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
                 batch.clear();
             }
@@ -917,7 +917,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             genes.addAll( getHibernateTemplate().findByNamedParam( queryString, "ids", batch ) );
         }
 
-        if ( ids.size() > BATCH_SIZE ) {
+        if ( ids.size() > batchSize ) {
             log.info( "... done" );
         }
 

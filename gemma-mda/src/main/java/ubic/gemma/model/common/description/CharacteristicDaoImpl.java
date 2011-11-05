@@ -82,7 +82,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Characteristic> handleFindByUri( Collection uris ) throws Exception {
         int batchSize = 1000; // to avoid HQL parser barfing
@@ -108,7 +107,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.lang.String)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Collection<Characteristic> handleFindByUri( String searchString ) throws Exception {
         final String queryString = "select char from VocabCharacteristicImpl as char where  char.valueUri = :search";
@@ -141,7 +139,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindParents(java.lang.Class,
      * java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
         Collection<Characteristic> batch = new HashSet<Characteristic>();

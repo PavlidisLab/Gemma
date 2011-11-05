@@ -2,11 +2,9 @@ package ubic.gemma.security.authentication;
 
 import java.io.IOException;
 
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.RedirectStrategy;
@@ -21,20 +19,18 @@ public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
     @Override
     public void onAuthenticationSuccess( HttpServletRequest request, HttpServletResponse response,
             Authentication authentication ) throws ServletException, IOException {
-        
-                
+
         String ajaxLoginTrue = request.getParameter( "ajaxLoginTrue" );
 
         if ( ajaxLoginTrue != null && ajaxLoginTrue.equals( "true" ) ) {
-            
+
             JSONUtil jsonUtil = new JSONUtil( request, response );
             String jsonText = null;
 
             this.setRedirectStrategy( new RedirectStrategy() {
 
                 @Override
-                public void sendRedirect( HttpServletRequest request, HttpServletResponse response, String s )
-                        throws IOException {
+                public void sendRedirect( HttpServletRequest re, HttpServletResponse res, String s ) throws IOException {
                     // do nothing, no redirect to make it work with extjs
 
                 }
@@ -42,9 +38,10 @@ public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
 
             super.onAuthenticationSuccess( request, response, authentication );
             authentication.getName();
-            
-            jsonText = "{success:true,user:\'"+ authentication.getName()+"\',isAdmin:"+SecurityService.isUserAdmin()+"}";
-            jsonUtil.writeToResponse( jsonText);
+
+            jsonText = "{success:true,user:\'" + authentication.getName() + "\',isAdmin:"
+                    + SecurityService.isUserAdmin() + "}";
+            jsonUtil.writeToResponse( jsonText );
         } else {
 
             this.setRedirectStrategy( new DefaultRedirectStrategy() );

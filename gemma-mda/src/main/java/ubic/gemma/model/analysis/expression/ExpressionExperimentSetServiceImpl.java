@@ -40,7 +40,6 @@ public class ExpressionExperimentSetServiceImpl extends
      * 
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#load(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().load( ids );
@@ -112,7 +111,6 @@ public class ExpressionExperimentSetServiceImpl extends
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#loadAll()
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected java.util.Collection<ExpressionExperimentSet> handleLoadAll() throws java.lang.Exception {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().loadAll();

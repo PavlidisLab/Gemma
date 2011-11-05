@@ -19,9 +19,6 @@
 package ubic.gemma.loader.expression.geo;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 import junit.framework.TestCase;

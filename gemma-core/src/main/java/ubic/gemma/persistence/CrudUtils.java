@@ -155,7 +155,6 @@ public class CrudUtils implements InitializingBean {
      * (non-Javadoc)
      * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
      */
-    @SuppressWarnings("unchecked")
     public void afterPropertiesSet() throws Exception {
         metaData = sessionFactory.getAllClassMetadata();
         collectionMetaData = sessionFactory.getAllCollectionMetadata();

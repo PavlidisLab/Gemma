@@ -26,8 +26,6 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.After;
 import org.junit.Test;
 
@@ -42,8 +40,6 @@ import ubic.gemma.util.ConfigUtils;
  * @version $Id$
  */
 public class MageLoadIntegrationTest extends AbstractMageTest {
-
-    private static Log log = LogFactory.getLog( MageLoadIntegrationTest.class.getName() );
 
     ExpressionExperiment ee;
 

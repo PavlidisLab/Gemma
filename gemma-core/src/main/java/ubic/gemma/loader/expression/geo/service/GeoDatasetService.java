@@ -690,7 +690,6 @@ public class GeoDatasetService extends AbstractGeoService {
     /**
      * @param entities
      */
-    @SuppressWarnings("unchecked")
     private void updateReports( Collection entities ) {
         Collection<ArrayDesign> adsToUpdate = new HashSet<ArrayDesign>();
         for ( Object entity : entities ) {

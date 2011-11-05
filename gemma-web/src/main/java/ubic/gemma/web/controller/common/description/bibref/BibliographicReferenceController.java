@@ -27,8 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,7 +53,6 @@ import ubic.gemma.web.util.EntityNotFoundException;
 @Controller
 @RequestMapping("/bibRef")
 public class BibliographicReferenceController extends BaseController {
-    private static Log log = LogFactory.getLog( BibliographicReferenceController.class.getName() );
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService = null;

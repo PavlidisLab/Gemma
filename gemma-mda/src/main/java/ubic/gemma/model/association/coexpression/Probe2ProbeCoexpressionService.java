@@ -23,10 +23,8 @@ import java.util.Map;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.genome.Gene;
 
 /**
  * @author paul

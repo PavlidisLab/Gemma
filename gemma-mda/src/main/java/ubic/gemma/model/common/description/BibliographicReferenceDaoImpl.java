@@ -135,7 +135,6 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() {
         final String query = "select distinct e, b from ExpressionExperimentImpl e join e.primaryPublication b left join fetch b.pubAccession ";
         Map<ExpressionExperiment, BibliographicReference> result = new HashMap<ExpressionExperiment, BibliographicReference>();

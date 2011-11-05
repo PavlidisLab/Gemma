@@ -22,8 +22,6 @@ import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,8 +30,6 @@ import org.junit.Test;
  * @version $Id$
  */
 public class MageMLParserTest extends AbstractMageTest {
-
-    protected static final Log log = LogFactory.getLog( MageMLParserTest.class );
 
     MageMLParser mlp;
     InputStream istBioSequence;

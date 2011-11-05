@@ -32,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import ubic.basecode.util.FileTools; 
+import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
@@ -46,7 +46,9 @@ import ubic.gemma.persistence.PersisterHelper;
  * 
  * @author pavlidis
  * @version $Id$
+ * @deprecated
  */
+@Deprecated
 public class ImageCumulativePlatesLoader {
 
     Log log = LogFactory.getLog( ImageCumulativePlatesLoader.class.getName() );

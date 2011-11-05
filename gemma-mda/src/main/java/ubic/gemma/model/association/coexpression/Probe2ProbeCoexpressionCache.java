@@ -130,7 +130,6 @@ public class Probe2ProbeCoexpressionCache implements InitializingBean {
         return get( eeid, geneid );
     }
 
-    @SuppressWarnings("unchecked")
     private Collection<CoexpressionCacheValueObject> get( Long eeid, Long geneid ) {
         assert cache != null;
         Element element = cache.get( new CacheKey( eeid, geneid ) );

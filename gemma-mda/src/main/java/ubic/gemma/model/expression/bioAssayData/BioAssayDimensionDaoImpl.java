@@ -124,7 +124,6 @@ public class BioAssayDimensionDaoImpl extends ubic.gemma.model.expression.bioAss
         return create( bioAssayDimension );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<? extends BioAssayDimension> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from BioAssayDimensionImpl where id in (:ids)", "ids",
                 ids );

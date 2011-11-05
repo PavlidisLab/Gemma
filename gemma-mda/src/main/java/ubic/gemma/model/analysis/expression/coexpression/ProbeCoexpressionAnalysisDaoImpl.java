@@ -48,7 +48,6 @@ public class ProbeCoexpressionAnalysisDaoImpl extends
         super.setSessionFactory( sessionFactory );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<CompositeSequence> getAssayedProbes( ExpressionExperiment experiment ) {
         Collection<ProbeCoexpressionAnalysis> analyses = this.findByInvestigation( experiment );
 

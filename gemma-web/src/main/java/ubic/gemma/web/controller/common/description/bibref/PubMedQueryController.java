@@ -21,8 +21,6 @@ package ubic.gemma.web.controller.common.description.bibref;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -44,8 +42,6 @@ import ubic.gemma.web.controller.BaseController;
  */
 @Controller("/bibRefSearch.html")
 public class PubMedQueryController extends BaseController {
-
-    private static Log log = LogFactory.getLog( PubMedQueryController.class );
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;

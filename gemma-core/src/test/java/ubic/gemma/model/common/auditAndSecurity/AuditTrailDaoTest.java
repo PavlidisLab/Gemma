@@ -24,8 +24,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Date;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +38,6 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * @version $Id$
  */
 public class AuditTrailDaoTest extends BaseSpringContextTest {
-    protected static final Log log = LogFactory.getLog( AuditTrailDaoTest.class );
 
     @Autowired
     AuditTrailDao auditTrailDao;

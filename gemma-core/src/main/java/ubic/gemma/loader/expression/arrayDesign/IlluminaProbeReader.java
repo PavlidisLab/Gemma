@@ -22,9 +22,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import ubic.gemma.loader.util.parser.BasicLineMapParser;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 
@@ -35,8 +32,6 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
  * @version $Id$
  */
 public class IlluminaProbeReader extends BasicLineMapParser<String, Reporter> {
-
-    protected static final Log log = LogFactory.getLog( IlluminaProbeReader.class );
 
     private Map<String, Reporter> results = new HashMap<String, Reporter>();
 

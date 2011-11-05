@@ -621,7 +621,6 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Set<String>> getHumanMappingsFromDisk() throws Exception {
         Map<String, Set<String>> result;
         ObjectInputStream o = new ObjectInputStream( new FileInputStream( SetupParameters

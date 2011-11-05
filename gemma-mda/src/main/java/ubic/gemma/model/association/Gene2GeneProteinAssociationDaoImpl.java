@@ -54,7 +54,6 @@ public class Gene2GeneProteinAssociationDaoImpl extends Gene2GeneProteinAssociat
         super.setSessionFactory( sessionFactory );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<? extends Gene2GeneProteinAssociation> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from Gene2GeneProteinAssociationImpl where id in (:ids)",
                 "ids", ids );

@@ -24,8 +24,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -52,8 +50,6 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
     @Autowired
     private TTestAnalyzer analyzer;
-
-    private Log log = LogFactory.getLog( this.getClass() );
 
     /**
      * Tests the t-test with an {@link ExpressionExperiment}.

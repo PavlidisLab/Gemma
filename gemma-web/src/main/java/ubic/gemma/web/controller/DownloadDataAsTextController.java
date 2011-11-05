@@ -1,8 +1,6 @@
 package ubic.gemma.web.controller;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -16,7 +14,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.web.controller.diff.DifferentialExpressionSearchController;
 import ubic.gemma.web.view.TextView;
-import ubic.gemma.web.visualization.DifferentialExpressionVisualizationValueObject;
 
 /**
  * 

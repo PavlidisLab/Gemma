@@ -28,7 +28,6 @@ import java.util.List;
  */
 public class ExpressionDataMatrixRowSort {
 
-    @SuppressWarnings("unchecked")
     public static List<ExpressionDataMatrixRowElement> probeNameOrder( ExpressionDataMatrix expressionDataMatrix ) {
         List<ExpressionDataMatrixRowElement> unsortedEls = expressionDataMatrix.getRowElements();
         List<ExpressionDataMatrixRowElement> copy = new ArrayList<ExpressionDataMatrixRowElement>();

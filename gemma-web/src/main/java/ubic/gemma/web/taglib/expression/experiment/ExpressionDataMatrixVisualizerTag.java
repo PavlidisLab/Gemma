@@ -86,7 +86,6 @@ public class ExpressionDataMatrixVisualizerTag extends TagSupport {
      * @see javax.servlet.jsp.tagext.TagSupport#doStartTag()
      */
     @Override
-    @SuppressWarnings("unchecked")
     public int doStartTag() throws JspException {
 
         log.debug( "start tag" );

@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
-import ubic.gemma.analysis.service.ArrayDesignAnnotationService;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.genome.Gene;

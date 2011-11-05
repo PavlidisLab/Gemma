@@ -194,7 +194,9 @@ public class RawExpressionDataVectorDaoImpl extends DesignElementDataVectorDaoIm
             int deleted = getHibernateTemplate().bulkUpdate( ppcRemoveFirstQuery, compositeSequence );
             deleted += getHibernateTemplate().bulkUpdate( ppcRemoveSecondQuery, compositeSequence );
             getHibernateTemplate().bulkUpdate( dedvRemovalQuery, compositeSequence );
+            log.info( "Deleted: " + deleted );
         }
+
     }
 
     public void removeDataForQuantitationType( final QuantitationType quantitationType ) {

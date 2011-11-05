@@ -60,7 +60,6 @@ public class ArrayFilterer<T> implements Filterer<T> {
     /**
      * @see org.springframework.security.acls.afterinvocation.Filterer#getFilteredObject()
      */
-    @SuppressWarnings("unchecked")
     public T[] getFilteredObject() {
         // Recreate an array of same type and filter the removed objects.
         int originalSize = list.length;

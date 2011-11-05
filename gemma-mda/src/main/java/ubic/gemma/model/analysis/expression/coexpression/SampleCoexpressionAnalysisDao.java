@@ -14,8 +14,6 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import java.util.Collection;
-
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;

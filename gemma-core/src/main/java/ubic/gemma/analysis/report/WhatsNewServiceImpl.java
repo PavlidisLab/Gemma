@@ -461,7 +461,6 @@ public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
      * @throws IOException
      * @throws ClassNotFoundException
      */
-    @SuppressWarnings("unchecked")
     private Collection<AuditableObject> loadAuditableObjects( File newObjects ) throws FileNotFoundException,
             IOException, ClassNotFoundException {
         FileInputStream fis = new FileInputStream( newObjects );

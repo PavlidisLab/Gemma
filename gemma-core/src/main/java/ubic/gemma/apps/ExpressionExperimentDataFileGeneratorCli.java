@@ -76,8 +76,9 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
     protected void buildOptions() {
         super.buildOptions();
 
-        Option forceWriteOption = OptionBuilder.hasArg().withArgName( "ForceWrite" ).withDescription(
-                "Overwrites exsiting files if this option is set" ).withLongOpt( "forceWrite" ).create( 'w' );
+        Option forceWriteOption = OptionBuilder.hasArg().withArgName( "ForceWrite" )
+                .withDescription( "Overwrites exsiting files if this option is set" ).withLongOpt( "forceWrite" )
+                .create( 'w' );
 
         addThreadsOption();
         addOption( forceWriteOption );
@@ -174,13 +175,13 @@ public class ExpressionExperimentDataFileGeneratorCli extends ExpressionExperime
         try {
             ee = this.eeService.thawLite( ee );
 
-            AuditTrailService auditEventService = ( AuditTrailService ) this.getBean( "auditTrailService" );
+            AuditTrailService ats = ( AuditTrailService ) this.getBean( "auditTrailService" );
             AuditEventType type = CommentedEvent.Factory.newInstance();
 
             expressionDataFileService.writeOrLocateCoexpressionDataFile( ee, force_write );
             expressionDataFileService.writeOrLocateDiffExpressionDataFile( ee, force_write );
 
-            auditEventService.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
+            ats.addUpdateEvent( ee, type, "Generated Flat data files for downloading" );
             super.successObjects.add( "Success:  generated data file for " + ee.getShortName() + " ID=" + ee.getId() );
 
         } catch ( Exception e ) {

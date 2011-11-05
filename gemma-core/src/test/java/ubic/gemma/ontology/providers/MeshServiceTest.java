@@ -18,9 +18,6 @@
  */
 package ubic.gemma.ontology.providers;
 
-import java.util.Collection;
-
-import ubic.basecode.ontology.model.OntologyTerm;
 import junit.framework.TestCase;
 
 /**

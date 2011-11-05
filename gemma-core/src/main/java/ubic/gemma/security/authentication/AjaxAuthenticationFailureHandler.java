@@ -1,7 +1,6 @@
 package ubic.gemma.security.authentication;
 
 import java.io.IOException;
-import java.io.Writer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -23,25 +22,24 @@ public class AjaxAuthenticationFailureHandler extends SimpleUrlAuthenticationFai
         String ajaxLoginTrue = request.getParameter( "ajaxLoginTrue" );
 
         if ( ajaxLoginTrue != null && ajaxLoginTrue.equals( "true" ) ) {
-            
+
             JSONUtil jsonUtil = new JSONUtil( request, response );
             String jsonText = null;
 
             this.setRedirectStrategy( new RedirectStrategy() {
 
                 @Override
-                public void sendRedirect( HttpServletRequest request, HttpServletResponse response, String s )
-                        throws IOException {
+                public void sendRedirect( HttpServletRequest re, HttpServletResponse res, String s ) throws IOException {
                     // do nothing, no redirect to make it work with extjs
 
                 }
             } );
 
             super.onAuthenticationFailure( request, response, exception );
-            
+
             jsonText = "{success:false}";
-            jsonUtil.writeToResponse( jsonText);
-           
+            jsonUtil.writeToResponse( jsonText );
+
         }
 
         else {

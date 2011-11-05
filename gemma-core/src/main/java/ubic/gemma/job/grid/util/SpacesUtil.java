@@ -147,7 +147,6 @@ public class SpacesUtil implements ApplicationContextAware {
     /**
      * Logs the space statistics from the {@link StatisticsAdmin}.
      */
-    @SuppressWarnings("unchecked")
     public static String logSpaceStatistics() {
 
         if ( !isSpaceRunning() ) {

@@ -55,7 +55,6 @@ public class FeedReader implements InitializingBean {
     /**
      * @return List of news items in HTML format.
      */
-    @SuppressWarnings("unchecked")
     public List<NewsItem> getLatestNews() {
 
         /*

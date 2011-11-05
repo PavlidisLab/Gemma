@@ -40,7 +40,6 @@ package ubic.gemma.genome.gene;
 import java.util.Collection;
 
 import ubic.gemma.model.genome.gene.GeneSet;
-import ubic.gemma.session.GemmaSessionBackedValueObject;
 
 /**
  * TODO Document Me
@@ -48,15 +47,16 @@ import ubic.gemma.session.GemmaSessionBackedValueObject;
  * @author tvrossum
  * @version $Id$
  */
-public class GOGroupValueObject extends SessionBoundGeneSetValueObject implements GemmaSessionBackedValueObject {
+public class GOGroupValueObject extends SessionBoundGeneSetValueObject {
 
     private static final long serialVersionUID = -185326197992950287L;
     private String goId;
     private String searchTerm;
-    
-    public GOGroupValueObject(){
+
+    public GOGroupValueObject() {
         super();
     }
+
     /**
      * Method to create a display object from scratch
      * 

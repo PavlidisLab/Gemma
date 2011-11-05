@@ -43,7 +43,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.commons.lang.RandomStringUtils;
 import ubic.gemma.model.genome.gene.GeneSet;
 
 /**

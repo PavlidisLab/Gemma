@@ -145,7 +145,7 @@ public class DifferentialExpressionGeneConditionSearchService {
 
                             int up = -1, down = -1, total = -1;
                             for ( HitListSize h : resultSet.getHitListSizes() ) {
-                                if ( ( double ) h.getThresholdQvalue() == 0.01 ) {
+                                if ( h.getThresholdQvalue() == 0.01 ) {
                                     if ( h.getDirection().equals( Direction.DOWN ) ) {
                                         down = h.getNumberOfProbes();
                                     } else if ( h.getDirection().equals( Direction.UP ) ) {

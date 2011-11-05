@@ -292,7 +292,6 @@ public class GeoBrowserService implements InitializingBean {
     /**
      * 
      */
-    @SuppressWarnings("unchecked")
     private void initializeLocalInfo() {
         File f = getInfoStoreFile();
         try {

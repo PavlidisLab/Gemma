@@ -81,7 +81,6 @@ public abstract class ChromosomeDaoBase extends org.springframework.orm.hibernat
         return this.getHibernateTemplate().loadAll( ubic.gemma.model.genome.ChromosomeImpl.class );
     }
 
-    @SuppressWarnings("unchecked")
     public Collection<Chromosome> load( Collection<Long> ids ) {
         return this.getHibernateTemplate().findByNamedParam( "from ChromosomeImpl where id in (:ids)", "ids", ids );
     }

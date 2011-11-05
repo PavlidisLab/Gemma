@@ -53,7 +53,6 @@ public class CompositeSequenceServiceImpl extends
      * @see ubic.gemma.model.expression.designElement.CompositeSequenceServiceBase#handleCreate(java.util.Collection)
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected Collection<CompositeSequence> handleCreate( Collection compositeSequences ) throws Exception {
         return ( Collection<CompositeSequence> ) this.getCompositeSequenceDao().create( compositeSequences );
     }
