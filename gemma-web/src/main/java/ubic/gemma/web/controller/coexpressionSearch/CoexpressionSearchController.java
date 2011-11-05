@@ -61,6 +61,8 @@ public class CoexpressionSearchController extends BaseFormController {
     private static final int MAX_GENES_PER_QUERY = 20;
 
     private static final int MAX_RESULTS = 200;
+    
+    private static final int COEX_VIS_RESULTS = 20;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
@@ -118,7 +120,7 @@ public class CoexpressionSearchController extends BaseFormController {
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( eeSetId,
-                genes, 2, 20, false, true );
+                genes, 2, 20, false );
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
@@ -147,18 +149,11 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         log.info( "Coexpression search: " + searchOptions );
-
-        Collection<Long> eeIds = new HashSet<Long>();
-       
-        if ( searchOptions.getEeIds() != null ) {
-            // security filter.
-            eeIds = EntityUtils.getIds( expressionExperimentService.loadMultiple( searchOptions.getEeIds() ) );
-        }        
         
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
-        Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick2( eeIds,
-                genes, searchOptions.getStringency(), MAX_RESULTS, searchOptions.getQueryGenesOnly() );
+        Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(),
+                genes, searchOptions.getStringency(), COEX_VIS_RESULTS, searchOptions.getQueryGenesOnly() );
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {

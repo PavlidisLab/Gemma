@@ -123,13 +123,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
             for ( String id : stringencyInput ) {
                 string = id;
             }
-
-            Collection<String> specificityInput = getSingleNodeValue( requestElement, "specificProbesOnly" );
-            Boolean specificOnly = false;
-            for ( String id : specificityInput ) {
-                specificOnly = id.endsWith( "1" );
-            }
-
+            
             Collection<String> queryGenesOnlyInput = getSingleNodeValue( requestElement, "queryGenesOnly" );
             String query = "";
             for ( String id : queryGenesOnlyInput ) {
@@ -162,7 +156,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
             // get Gene2GeneCoexpressio objects canned analysis
             Collection<CoexpressionValueObjectExt> coexpressedGenes = geneCoexpressionService.coexpressionSearchQuick(
-                    Long.parseLong( analysisId ), geneCol, stringency, MAX_RESULTS, queryGenesOnly, specificOnly );
+                    Long.parseLong( analysisId ), geneCol, stringency, MAX_RESULTS, queryGenesOnly );
 
             if ( coexpressedGenes.isEmpty() ) {
                 String msg = "No coexpressed genes found.";
