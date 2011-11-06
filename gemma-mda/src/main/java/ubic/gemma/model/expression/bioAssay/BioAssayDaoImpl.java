@@ -61,7 +61,7 @@ public class BioAssayDaoImpl extends ubic.gemma.model.expression.bioAssay.BioAss
         try {
             Criteria queryObject = BusinessKey.createQueryObject( super.getSession(), bioAssay );
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {

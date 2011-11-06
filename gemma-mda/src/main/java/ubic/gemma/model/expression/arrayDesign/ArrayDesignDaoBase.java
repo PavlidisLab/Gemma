@@ -178,8 +178,8 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( arrayDesign );
         argNames.add( "arrayDesign" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         Object result = null;
         if ( results.size() > 1 ) {
             throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
@@ -231,8 +231,8 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( name );
         argNames.add( "name" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ArrayDesign result = null;
 
         if ( results.size() > 1 ) {
@@ -263,8 +263,8 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( shortName );
         argNames.add( "shortName" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ArrayDesign result = null;
 
         if ( results.size() > 1 ) {
@@ -289,8 +289,8 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
         java.util.List<Object> args = new java.util.ArrayList<Object>();
         args.add( arrayDesign );
         argNames.add( "arrayDesign" );
-        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam(
-                queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
+        java.util.Set<ArrayDesign> results = new java.util.LinkedHashSet<ArrayDesign>( this.getHibernateTemplate()
+                .findByNamedParam( queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
         ArrayDesign result = null;
 
         if ( results.size() > 1 ) {

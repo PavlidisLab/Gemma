@@ -37,10 +37,9 @@ import org.hibernate.usertype.UserType;
  */
 public class HibernateURLType implements UserType {
 
-    private static final long serialVersionUID = 100002L;
-
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#assemble(java.io.Serializable, java.lang.Object)
      */
     public Object assemble( Serializable cached, Object owner ) throws HibernateException {
@@ -49,6 +48,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#deepCopy(java.lang.Object)
      */
     public Object deepCopy( Object value ) throws HibernateException {
@@ -76,6 +76,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#disassemble(java.lang.Object)
      */
     public Serializable disassemble( Object value ) throws HibernateException {
@@ -84,6 +85,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#equals(java.lang.Object, java.lang.Object)
      */
     public boolean equals( Object x, Object y ) throws HibernateException {
@@ -100,6 +102,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#hashCode(java.lang.Object)
      */
     public int hashCode( Object x ) throws HibernateException {
@@ -108,6 +111,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#isMutable()
      */
     public boolean isMutable() {
@@ -116,6 +120,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#nullSafeGet(java.sql.ResultSet, java.lang.String[], java.lang.Object)
      */
     public Object nullSafeGet( ResultSet rs, String[] names, Object owner ) throws HibernateException, SQLException {
@@ -132,6 +137,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#nullSafeSet(java.sql.PreparedStatement, java.lang.Object, int)
      */
     public void nullSafeSet( PreparedStatement preparedStatement, Object data, int index ) throws HibernateException,
@@ -150,6 +156,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#replace(java.lang.Object, java.lang.Object, java.lang.Object)
      */
     public Object replace( Object original, Object target, Object owner ) throws HibernateException {
@@ -158,6 +165,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#returnedClass()
      */
     public Class returnedClass() {
@@ -166,6 +174,7 @@ public class HibernateURLType implements UserType {
 
     /*
      * (non-Javadoc)
+     * 
      * @see org.hibernate.usertype.UserType#sqlTypes()
      */
     public int[] sqlTypes() {

@@ -46,7 +46,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByInvestigation(ubic.gemma.model.analysis.Investigation)
      */
-    public java.util.Collection findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
+    public java.util.Collection<T> findByInvestigation( final ubic.gemma.model.analysis.Investigation investigation ) {
         try {
             return this.handleFindByInvestigation( investigation );
         } catch ( Throwable th ) {
@@ -72,7 +72,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByName(java.lang.String)
      */
-    public Collection findByName( final java.lang.String name ) {
+    public Collection<T> findByName( final java.lang.String name ) {
         try {
             return this.handleFindByName( name );
         } catch ( Throwable th ) {
@@ -85,7 +85,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection<T> findByParentTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByParentTaxon( taxon );
         } catch ( Throwable th ) {
@@ -98,7 +98,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#findByTaxon(ubic.gemma.model.genome.Taxon)
      */
-    public java.util.Collection findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
+    public java.util.Collection<T> findByTaxon( final ubic.gemma.model.genome.Taxon taxon ) {
         try {
             return this.handleFindByTaxon( taxon );
         } catch ( Throwable th ) {
@@ -137,7 +137,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * @see ubic.gemma.model.analysis.AnalysisService#loadAll()
      */
-    public java.util.Collection loadAll() {
+    public java.util.Collection<T> loadAll() {
         try {
             return this.handleLoadAll();
         } catch ( Throwable th ) {
@@ -154,7 +154,7 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * Performs the core logic for {@link #findByInvestigation(ubic.gemma.model.analysis.Investigation)}
      */
-    protected abstract java.util.Collection handleFindByInvestigation(
+    protected abstract java.util.Collection<T> handleFindByInvestigation(
             ubic.gemma.model.analysis.Investigation investigation ) throws java.lang.Exception;
 
     /**
@@ -166,18 +166,18 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * Performs the core logic for {@link #findByName(java.lang.String)}
      */
-    protected abstract Collection handleFindByName( java.lang.String name ) throws java.lang.Exception;
+    protected abstract Collection<T> handleFindByName( java.lang.String name ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByParentTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
+    protected abstract java.util.Collection<T> handleFindByParentTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByTaxon(ubic.gemma.model.genome.Taxon)}
      */
-    protected abstract java.util.Collection handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
+    protected abstract java.util.Collection<T> handleFindByTaxon( ubic.gemma.model.genome.Taxon taxon )
             throws java.lang.Exception;
 
     /**
@@ -194,6 +194,6 @@ public abstract class AnalysisServiceBase<T extends Analysis> implements ubic.ge
     /**
      * Performs the core logic for {@link #loadAll()}
      */
-    protected abstract java.util.Collection handleLoadAll() throws java.lang.Exception;
+    protected abstract java.util.Collection<T> handleLoadAll() throws java.lang.Exception;
 
 }

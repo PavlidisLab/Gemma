@@ -20,6 +20,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
 
+import ubic.gemma.model.analysis.AnalysisDaoImpl;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
@@ -31,9 +32,8 @@ import ubic.gemma.model.expression.experiment.BioAssaySet;
  * 
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis
  */
-public abstract class DifferentialExpressionAnalysisDaoBase extends
-        ubic.gemma.model.analysis.expression.ExpressionAnalysisDaoImpl<DifferentialExpressionAnalysis> implements
-        ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao {
+public abstract class DifferentialExpressionAnalysisDaoBase extends AnalysisDaoImpl<DifferentialExpressionAnalysis>
+        implements DifferentialExpressionAnalysisDao {
 
     /**
      * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao#create(int,
@@ -70,7 +70,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
                     "DifferentialExpressionAnalysis.create - 'differentialExpressionAnalysis' can not be null" );
         }
         this.getHibernateTemplate().save( differentialExpressionAnalysis );
-        return this.transformEntity( transform, differentialExpressionAnalysis );
+        return differentialExpressionAnalysis;
     }
 
     /**
@@ -141,7 +141,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
         argNames.add( "name" );
         java.util.List<DifferentialExpressionAnalysis> results = this.getHibernateTemplate().findByNamedParam(
                 queryString, argNames.toArray( new String[argNames.size()] ), args.toArray() );
-        transformEntities( transform, results );
         return results;
     }
 
@@ -206,8 +205,7 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
         }
         final Object entity = this.getHibernateTemplate().get(
                 ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl.class, id );
-        return transformEntity( transform,
-                ( ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis ) entity );
+        return ( ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis ) entity;
     }
 
     /**
@@ -233,7 +231,6 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     public java.util.Collection<? extends DifferentialExpressionAnalysis> loadAll( final int transform ) {
         final java.util.Collection<? extends DifferentialExpressionAnalysis> results = this.getHibernateTemplate()
                 .loadAll( ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisImpl.class );
-        this.transformEntities( transform, results );
         return results;
     }
 
@@ -374,54 +371,5 @@ public abstract class DifferentialExpressionAnalysisDaoBase extends
     protected abstract void handleThaw(
             ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis differentialExpressionAnalysis )
             throws java.lang.Exception;
-
-    /**
-     * Transforms a collection of entities using the
-     * {@link #transformEntity(int,ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)} method.
-     * This method does not instantiate a new collection.
-     * <p/>
-     * This method is to be used internally only.
-     * 
-     * @param transform one of the constants declared in
-     *        <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao</code>
-     * @param entities the collection of entities to transform
-     * @return the same collection as the argument, but this time containing the transformed entities
-     * @see #transformEntity(int,ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis)
-     */
-    @Override
-    protected void transformEntities( final int transform, final java.util.Collection entities ) {
-        switch ( transform ) {
-            case TRANSFORM_NONE: // fall-through
-            default:
-                // do nothing;
-        }
-    }
-
-    /**
-     * Allows transformation of entities into value objects (or something else for that matter), when the
-     * <code>transform</code> flag is set to one of the constants defined in
-     * <code>ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao</code>, please note that the
-     * {@link #TRANSFORM_NONE} constant denotes no transformation, so the entity itself will be returned. If the integer
-     * argument value is unknown {@link #TRANSFORM_NONE} is assumed.
-     * 
-     * @param transform one of the constants declared in
-     *        {@link ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao}
-     * @param entity an entity that was found
-     * @return the transformed entity (i.e. new value object, etc)
-     * @see #transformEntities(int,java.util.Collection)
-     */
-    @Override
-    protected DifferentialExpressionAnalysis transformEntity( final int transform,
-            final ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis entity ) {
-        Object target = null;
-        if ( entity != null ) {
-            switch ( transform ) {
-                case TRANSFORM_NONE: // fall-through
-                default:
-                    target = entity;
-            }
-        }
-        return ( DifferentialExpressionAnalysis ) target;
-    }
 
 }

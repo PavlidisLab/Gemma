@@ -20,13 +20,14 @@ package ubic.gemma.model.analysis.expression.coexpression;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -147,7 +148,7 @@ public class GeneCoexpressionAnalysisDaoImpl extends
     @Override
     protected int handleGetNumDatasetsAnalyzed( GeneCoexpressionAnalysis analysis ) throws Exception {
         final String queryString = "select count(e) from GeneCoexpressionAnalysisImpl g inner join g.expressionExperimentSetAnalyzed eesa inner join eesa.experiments e where g=:g";
-        List list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
+        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "g", analysis );
         return ( ( Long ) list.iterator().next() ).intValue();
     }
 
@@ -156,12 +157,19 @@ public class GeneCoexpressionAnalysisDaoImpl extends
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( geneCoexpressionAnalysis, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( geneCoexpressionAnalysis );
                 Hibernate.initialize( geneCoexpressionAnalysis );
                 Hibernate.initialize( geneCoexpressionAnalysis.getExpressionExperimentSetAnalyzed() );
                 return null;
             }
         } );
+    }
+
+    @Override
+    public Collection<? extends GeneCoexpressionAnalysis> load( Collection<Long> ids ) {
+        if ( ids.isEmpty() ) return new HashSet<GeneCoexpressionAnalysis>();
+        return this.getHibernateTemplate().findByNamedParam(
+                "select a from GeneCoexpressionAnalysisImpl as a where a.id in (:ids)", "ids", ids );
     }
 
 }

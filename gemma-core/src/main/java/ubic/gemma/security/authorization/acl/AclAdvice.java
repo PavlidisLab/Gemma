@@ -27,7 +27,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.hibernate.Hibernate;
 import org.hibernate.LazyInitializationException;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.CascadeStyle;
@@ -176,11 +176,11 @@ public class AclAdvice extends HibernateDaoSupport {
     // // Assumption: doesn't exist
     // AuditableAcl acl = null;
     // Sid sid = null;
-    //        
+    //
     // // FIXME: better definition
     // // Object is TOP_PARENT (ROOT of permissions inheritance tree)
     // boolean isTopParent = ;
-    //        
+    //
     // /*
     // * The logic here is: if we're supposed to inherit from the parent, but none is provided (can easily happen), we
     // * have to put in ACEs. Same goes if we're not supposed to inherit. Objects which are not supposed to have their
@@ -225,7 +225,7 @@ public class AclAdvice extends HibernateDaoSupport {
     // //
     // // SPECIAL CASES
     // //
-    //        
+    //
     // /*
     // * NEW USER CREATION AT REGISTRATION
     // * Normal case: We expect anonymous user running with GROUP_RUN_AS_ADMIN privileges.
@@ -257,7 +257,7 @@ public class AclAdvice extends HibernateDaoSupport {
     // parentAcl = aclService.readAclById( oi_temp );
     // acl.setEntriesInheriting( true );
     // }
-    //                
+    //
     // acl.setEntriesInheriting( inheritParent );
     // acl.setOwner( sid );
     //
@@ -269,7 +269,7 @@ public class AclAdvice extends HibernateDaoSupport {
     // }
     //
     // return ( AuditableAcl ) aclService.updateAcl( acl );
-    //        
+    //
     // }
     //
     // private AuditableAcl updateAcl( AuditableAcl acl, Securable object, Acl parentAcl ) {
@@ -778,7 +778,7 @@ public class AclAdvice extends HibernateDaoSupport {
                  * See AuditAdvice.process for a discussion of how difficult this is.
                  */
                 if ( !CrudUtils.methodIsDelete( methodName ) ) {
-                    session.lock( s, LockMode.NONE );
+                    session.buildLockRequest( LockOptions.NONE ).lock( s );
                 }
 
                 Hibernate.initialize( s );

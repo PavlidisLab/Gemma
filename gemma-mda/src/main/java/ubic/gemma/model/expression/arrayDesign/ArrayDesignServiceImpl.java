@@ -217,7 +217,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastAnnotationFile(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, AuditEvent> handleGetLastAnnotationFile( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
@@ -225,7 +224,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not AnnotationFile events
         Set<Long> aaIds = eventMap.keySet();
-        Class eventclass = ArrayDesignAnnotationFileEvent.class;
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignAnnotationFileEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }
@@ -236,13 +235,12 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastGeneMapping(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, AuditEvent> handleGetLastGeneMapping( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         Set<Long> aaIds = eventMap.keySet();
-        Class eventclass = ArrayDesignGeneMappingEvent.class;
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignGeneMappingEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }
@@ -250,14 +248,13 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     /*
      * (non-Javadoc)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, AuditEvent> handleGetLastRepeatAnalysis( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
-        Class eventclass = ArrayDesignRepeatAnalysisEvent.class;
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignRepeatAnalysisEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }
@@ -269,14 +266,13 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceAnalysis(java.util.Collection
      * )
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceAnalysis( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not SequenceAnalysis events
         Set<Long> aaIds = eventMap.keySet();
-        Class eventclass = ArrayDesignSequenceAnalysisEvent.class;
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceAnalysisEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }
@@ -287,14 +283,13 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @see
      * ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleGetLastSequenceUpdate(java.util.Collection)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map<Long, AuditEvent> handleGetLastSequenceUpdate( Collection<Long> ids ) throws Exception {
         Map<Long, Collection<AuditEvent>> eventMap = this.getArrayDesignDao().getAuditEvents( ids );
         Map<Long, AuditEvent> lastEventMap = new HashMap<Long, AuditEvent>();
         // remove all AuditEvents that are not Sequence update events
         Set<Long> aaIds = eventMap.keySet();
-        Class eventclass = ArrayDesignSequenceUpdateEvent.class;
+        Class<? extends ArrayDesignAnalysisEvent> eventclass = ArrayDesignSequenceUpdateEvent.class;
         getMostRecentEvents( eventMap, lastEventMap, aaIds, eventclass );
         return lastEventMap;
     }
@@ -698,7 +693,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
     }
 
     private void checkForMoreRecentMethod( Map<Long, AuditEvent> lastEventMap,
-            Class<ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
+            Class<? extends ArrayDesignAnalysisEvent> eventclass, Long arrayDesignId, ArrayDesign subsumedInto ) {
         AuditEvent lastSubsumerEvent = this.getAuditEventDao().getLastEvent( subsumedInto, eventclass );
         if ( lastSubsumerEvent != null && lastEventMap.containsKey( arrayDesignId )
                 && lastEventMap.get( arrayDesignId ) != null
@@ -714,7 +709,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      * @param eventclass
      */
     private void getMostRecentEvents( Map<Long, Collection<AuditEvent>> eventMap, Map<Long, AuditEvent> lastEventMap,
-            Set<Long> aaIds, Class<ArrayDesignAnalysisEvent> eventclass ) {
+            Set<Long> aaIds, Class<? extends ArrayDesignAnalysisEvent> eventclass ) {
         for ( Long arrayDesignId : aaIds ) {
 
             Collection<AuditEvent> events = eventMap.get( arrayDesignId );

@@ -1,7 +1,7 @@
 /*
  * The Gemma project.
  * 
- * Copyright (c) 2006-2007 University of British Columbia
+ * Copyright (c) 2006-2011 University of British Columbia
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,16 +23,20 @@ import java.util.HashSet;
 
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-/* AbstractDao can find the generic type at runtime and simplify the code
- * implementation of the BaseDao interface
+/**
+ * AbstractDao can find the generic type at runtime and simplify the code implementation of the BaseDao interface
+ * 
+ * @author Anton, Nicolas
+ * @version $Id$
  */
 public abstract class AbstractDao<T> extends HibernateDaoSupport implements BaseDao<T> {
 
     // generic class
     private Class<T> elementClass;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     protected AbstractDao( Class elementClass ) {
+        assert elementClass.isAssignableFrom( elementClass );
         this.elementClass = elementClass;
     }
 
@@ -51,16 +55,31 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
      * ) cl.getGenericSuperclass() ).getActualTypeArguments()[0]; } }
      */
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
+     */
     public Collection<? extends T> create( Collection<? extends T> entities ) {
         this.getHibernateTemplate().saveOrUpdateAll( entities );
         return entities;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
+     */
     public T create( T entity ) {
         this.getHibernateTemplate().save( entity );
         return entity;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#load(java.util.Collection)
+     */
     @SuppressWarnings("unchecked")
     public Collection<T> load( Collection<Long> ids ) {
         Collection<T> result = new HashSet<T>();
@@ -73,34 +92,69 @@ public abstract class AbstractDao<T> extends HibernateDaoSupport implements Base
         return result;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#load(java.lang.Long)
+     */
     public T load( Long id ) {
         T entity = this.getHibernateTemplate().get( elementClass, id );
         return entity;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#loadAll()
+     */
     public Collection<T> loadAll() {
         return this.getHibernateTemplate().loadAll( elementClass );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.util.Collection)
+     */
     public void remove( Collection<? extends T> entities ) {
         this.getHibernateTemplate().deleteAll( entities );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Long)
+     */
     public void remove( Long id ) {
         this.getHibernateTemplate().delete( this.load( id ) );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#remove(java.lang.Object)
+     */
     public void remove( T entity ) {
         if ( entity == null ) return;
         this.getHibernateTemplate().delete( entity );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#update(java.util.Collection)
+     */
     public void update( Collection<? extends T> entities ) {
         for ( T entity : entities ) {
             this.update( entity );
         }
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#update(java.lang.Object)
+     */
     public void update( T entity ) {
         this.getHibernateTemplate().update( entity );
 

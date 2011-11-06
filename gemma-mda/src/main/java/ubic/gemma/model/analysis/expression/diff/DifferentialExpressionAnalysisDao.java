@@ -20,7 +20,7 @@ package ubic.gemma.model.analysis.expression.diff;
 
 import java.util.Collection;
 
-import ubic.gemma.model.analysis.expression.ExpressionAnalysisDao;
+import ubic.gemma.model.analysis.AnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -29,7 +29,7 @@ import ubic.gemma.model.expression.experiment.ExperimentalFactor;
  * @version $Id$
  * @see ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis
  */
-public interface DifferentialExpressionAnalysisDao extends ExpressionAnalysisDao<DifferentialExpressionAnalysis> {
+public interface DifferentialExpressionAnalysisDao extends AnalysisDao<DifferentialExpressionAnalysis> {
 
     /**
      * @param par

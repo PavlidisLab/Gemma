@@ -27,7 +27,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.proxy.HibernateProxy;
 
@@ -82,26 +82,6 @@ public class EntityUtils {
      * @param entities
      * @return
      */
-    public static Collection<String> getIdStrings( Collection<? extends Object> entities ) {
-
-        Collection<String> r;
-
-        if ( List.class.isAssignableFrom( entities.getClass() ) ) {
-            r = new ArrayList<String>();
-        } else {
-            r = new HashSet<String>();
-        }
-
-        for ( Object object : entities ) {
-            r.add( getId( object ).toString() );
-        }
-        return r;
-    }
-
-    /**
-     * @param entities
-     * @return
-     */
     public static <T> Map<Long, T> getIdMap( Collection<? extends T> entities ) {
         Map<Long, T> result = new HashMap<Long, T>();
 
@@ -148,7 +128,7 @@ public class EntityUtils {
                 session.evict( oldObj );
             }
         }
-        session.lock( obj, LockMode.NONE );
+        session.buildLockRequest( LockOptions.NONE ).lock( obj );
     }
 
 }
