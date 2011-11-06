@@ -201,9 +201,10 @@ public class StringProteinInteractionLoader {
             throw new RuntimeException( "Provided biomart file is not readable: " + stringBiomartFile );
         }
 
-        if ( StringUtils.isBlank( stringProteinFileNameRemote ) ) {
-            throw new RuntimeException( "Provided remote string file is invalid (blank) " );
-        }
+        // this is apparently allowed to be null, according to the tests.
+        // if ( StringUtils.isBlank( stringProteinFileNameRemote ) ) {
+        // throw new RuntimeException( "Provided remote string file is invalid (blank) " );
+        // }
     }
 
     /**
