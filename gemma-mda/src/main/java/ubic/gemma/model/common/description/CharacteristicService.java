@@ -33,19 +33,19 @@ public interface CharacteristicService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public Characteristic create( Characteristic c );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void delete( java.lang.Long id );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void delete( Characteristic c );
 
     /**
@@ -54,7 +54,7 @@ public interface CharacteristicService {
      * parent objects.
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
     public Map<Characteristic, Object> findByParentClass( java.lang.Class parentClass );
 
     /**
@@ -84,18 +84,10 @@ public interface CharacteristicService {
 
     /**
      * <p>
-     * Returns the parent object of the specified Characteristic.
-     * </p>
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public Object getParent( Characteristic characteristic );
-
-    /**
-     * <p>
      * Returns a map of the specified characteristics to their parent objects.
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_VALUES_READ" })
     public Map<Characteristic, Object> getParents( Collection<Characteristic> characteristics );
 
     /**
@@ -135,7 +127,7 @@ public interface CharacteristicService {
      * @param c
      * @see SecurityService.isEditable
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( Characteristic c );
 
 }

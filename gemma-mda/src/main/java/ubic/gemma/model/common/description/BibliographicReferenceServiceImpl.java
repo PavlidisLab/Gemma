@@ -93,18 +93,7 @@ public class BibliographicReferenceServiceImpl extends
         return this.getBibliographicReferenceDao().findByExternalId( id, databaseName );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.common.description.BibliographicReferenceServiceBase#handleGetBibliographicReferenceByTitle(
-     * java.lang.String)
-     */
-    @Override
-    protected BibliographicReference handleFindByTitle( String title ) throws Exception {
-
-        return getBibliographicReferenceDao().findByTitle( title );
-    }
+    
 
     @Override
     protected BibliographicReference handleFindOrCreate( BibliographicReference bibliographicReference )

@@ -25,14 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.description.BibliographicReferenceService</code>,
- * provides access to all services and entities referenced by this service.
- * </p>
+ * Service base class for <code>ubic.gemma.model.common.description.BibliographicReferenceService</code>, provides
+ * access to all services and entities referenced by this service.
  * 
  * @see ubic.gemma.model.common.description.BibliographicReferenceService
  */
-public abstract class BibliographicReferenceServiceBase   implements
+public abstract class BibliographicReferenceServiceBase implements
         ubic.gemma.model.common.description.BibliographicReferenceService {
 
     @Autowired
@@ -116,19 +114,6 @@ public abstract class BibliographicReferenceServiceBase   implements
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceService#findByTitle(java.lang.String)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findByTitle( final java.lang.String title ) {
-        try {
-            return this.handleFindByTitle( title );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.BibliographicReferenceServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.BibliographicReferenceService.findByTitle(java.lang.String title)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#findOrCreate(ubic.gemma.model.common.description.BibliographicReference)
      */
     public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
@@ -158,7 +143,7 @@ public abstract class BibliographicReferenceServiceBase   implements
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)
      */
-    public java.util.Collection getRelatedExperiments(
+    public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
         try {
             return this.handleGetRelatedExperiments( bibliographicReference );
@@ -185,7 +170,7 @@ public abstract class BibliographicReferenceServiceBase   implements
     /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceService#loadMultiple(java.util.Collection)
      */
-    public java.util.Collection loadMultiple( final java.util.Collection ids ) {
+    public java.util.Collection<BibliographicReference> loadMultiple( final java.util.Collection<Long> ids ) {
         try {
             return this.handleLoadMultiple( ids );
         } catch ( Throwable th ) {
@@ -299,12 +284,6 @@ public abstract class BibliographicReferenceServiceBase   implements
             java.lang.String id, java.lang.String databaseName ) throws java.lang.Exception;
 
     /**
-     * Performs the core logic for {@link #findByTitle(java.lang.String)}
-     */
-    protected abstract ubic.gemma.model.common.description.BibliographicReference handleFindByTitle(
-            java.lang.String title ) throws java.lang.Exception;
-
-    /**
      * Performs the core logic for {@link #findOrCreate(ubic.gemma.model.common.description.BibliographicReference)}
      */
     protected abstract ubic.gemma.model.common.description.BibliographicReference handleFindOrCreate(
@@ -314,13 +293,14 @@ public abstract class BibliographicReferenceServiceBase   implements
     /**
      * Performs the core logic for {@link #getAllExperimentLinkedReferences()}
      */
-    protected abstract Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences() throws java.lang.Exception;
+    protected abstract Map<ExpressionExperiment, BibliographicReference> handleGetAllExperimentLinkedReferences()
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getRelatedExperiments(ubic.gemma.model.common.description.BibliographicReference)}
      */
-    protected abstract java.util.Collection handleGetRelatedExperiments(
+    protected abstract java.util.Collection<ExpressionExperiment> handleGetRelatedExperiments(
             ubic.gemma.model.common.description.BibliographicReference bibliographicReference )
             throws java.lang.Exception;
 
@@ -333,7 +313,8 @@ public abstract class BibliographicReferenceServiceBase   implements
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleLoadMultiple( java.util.Collection ids ) throws java.lang.Exception;
+    protected abstract java.util.Collection<BibliographicReference> handleLoadMultiple( java.util.Collection<Long> ids )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #remove(ubic.gemma.model.common.description.BibliographicReference)}

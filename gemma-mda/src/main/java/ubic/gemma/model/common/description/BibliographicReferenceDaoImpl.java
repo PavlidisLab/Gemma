@@ -95,7 +95,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
                 throw new NullPointerException( "PubAccession cannot be null" );
             }
 
-            java.util.List results = queryObject.list();
+            java.util.List<?> results = queryObject.list();
             Object result = null;
             if ( results != null ) {
                 if ( results.size() > 1 ) {
@@ -207,7 +207,7 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     }
 
     @Override
-    protected Collection handleLoadMultiple( Collection ids ) throws Exception {
+    protected Collection<BibliographicReference> handleLoadMultiple( Collection ids ) throws Exception {
         return this.getHibernateTemplate().find( "from BibliographicReferenceImpl b where b.id in :bib", ids );
     }
 

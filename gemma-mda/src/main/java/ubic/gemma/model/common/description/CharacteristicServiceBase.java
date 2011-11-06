@@ -21,10 +21,8 @@ package ubic.gemma.model.common.description;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.common.description.CharacteristicService</code>, provides access
- * to all services and entities referenced by this service.
- * </p>
+ * Service base class for <code>ubic.gemma.model.common.description.CharacteristicService</code>, provides access to all
+ * services and entities referenced by this service.
  * 
  * @see ubic.gemma.model.common.description.CharacteristicService
  */
@@ -89,7 +87,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByUri(java.lang.String)
      */
-    public java.util.Collection findByUri( final java.lang.String searchString ) {
+    public java.util.Collection<Characteristic> findByUri( final java.lang.String searchString ) {
         try {
             return this.handleFindByUri( searchString );
         } catch ( Throwable th ) {
@@ -102,7 +100,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * @see ubic.gemma.model.common.description.CharacteristicService#findByUri(java.util.Collection)
      */
-    public java.util.Collection findByUri( final java.util.Collection uris ) {
+    public java.util.Collection<Characteristic> findByUri( final java.util.Collection uris ) {
         try {
             return this.handleFindByUri( uris );
         } catch ( Throwable th ) {
@@ -121,19 +119,6 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
         } catch ( Throwable th ) {
             throw new ubic.gemma.model.common.description.CharacteristicServiceException(
                     "Error performing 'ubic.gemma.model.common.description.CharacteristicService.findByValue(java.lang.String search)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.CharacteristicService#getParent(ubic.gemma.model.common.description.Characteristic)
-     */
-    public java.lang.Object getParent( final ubic.gemma.model.common.description.Characteristic characteristic ) {
-        try {
-            return this.handleGetParent( characteristic );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.common.description.CharacteristicServiceException(
-                    "Error performing 'ubic.gemma.model.common.description.CharacteristicService.getParent(ubic.gemma.model.common.description.Characteristic characteristic)' --> "
                             + th, th );
         }
     }
@@ -216,17 +201,20 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * Performs the core logic for {@link #findByUri(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByUri( java.lang.String searchString ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.lang.String searchString )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByUri(java.util.Collection)}
      */
-    protected abstract java.util.Collection handleFindByUri( java.util.Collection uris ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByUri( java.util.Collection<String> uris )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #findByValue(java.lang.String)}
      */
-    protected abstract java.util.Collection handleFindByValue( java.lang.String search ) throws java.lang.Exception;
+    protected abstract java.util.Collection<Characteristic> handleFindByValue( java.lang.String search )
+            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #getParent(ubic.gemma.model.common.description.Characteristic)}
@@ -237,7 +225,7 @@ public abstract class CharacteristicServiceBase implements ubic.gemma.model.comm
     /**
      * Performs the core logic for {@link #getParents(java.util.Collection)}
      */
-    protected abstract java.util.Map handleGetParents( java.util.Collection characteristics )
+    protected abstract java.util.Map handleGetParents( java.util.Collection<Characteristic> characteristics )
             throws java.lang.Exception;
 
     /**

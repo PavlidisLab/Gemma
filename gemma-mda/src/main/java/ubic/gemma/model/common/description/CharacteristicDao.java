@@ -34,7 +34,7 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
      * Finds all characteristics whose parent object is of the specified class. Returns a map of characteristics to
      * parent objects.
      */
-    public Map findByParentClass( java.lang.Class parentClass );
+    public Map<Characteristic, Collection<?>> findByParentClass( java.lang.Class<?> parentClass );
 
     /**
      * 
@@ -58,7 +58,7 @@ public interface CharacteristicDao extends BrowsingDao<Characteristic> {
      * Returns a map of the specified characteristics to their parent objects.
      * </p>
      */
-    public Map getParents( java.lang.Class parentClass, Collection<Characteristic> characteristics );
+    public Map getParents( java.lang.Class<?> parentClass, Collection<Characteristic> characteristics );
 
     /**
      * Browse through the characteristics, excluding GO annotations.

@@ -36,7 +36,7 @@ public interface BibliographicReferenceService {
      * Adds a document (in PDF format) for the reference.
      * </p>
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void addPDF( LocalFile pdfFile, BibliographicReference bibliographicReference );
 
     public List<BibliographicReference> browse( Integer start, Integer limit );
@@ -48,7 +48,7 @@ public interface BibliographicReferenceService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public BibliographicReference create( BibliographicReference bibliographicReference );
 
     /**
@@ -81,24 +81,19 @@ public interface BibliographicReferenceService {
     /**
      * 
      */
-    public BibliographicReference findByTitle( java.lang.String title );
-
-    /**
-     * 
-     */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public BibliographicReference findOrCreate( BibliographicReference BibliographicReference );
 
     /**
      * Return all the BibRefs that are linked to ExpressionExperiments.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_MAP_READ" })
     public java.util.Map<ExpressionExperiment, BibliographicReference> getAllExperimentLinkedReferences();
 
     /**
      * Get the ExpressionExperiments, if any, that are linked to the given reference.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperiment> getRelatedExperiments(
             BibliographicReference bibliographicReference );
 
@@ -115,7 +110,7 @@ public interface BibliographicReferenceService {
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void remove( BibliographicReference BibliographicReference );
 
     public BibliographicReference thaw( BibliographicReference bibliographicReference );
@@ -125,12 +120,13 @@ public interface BibliographicReferenceService {
     /**
      * 
      */
-    @Secured( { "GROUP_ADMIN" })
+    @Secured({ "GROUP_ADMIN" })
     public void update( BibliographicReference bibliographicReference );
 
     /**
      * @param records
      */
-    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments( Collection<BibliographicReference> records );
+    public Map<BibliographicReference, Collection<ExpressionExperiment>> getRelatedExperiments(
+            Collection<BibliographicReference> records );
 
 }

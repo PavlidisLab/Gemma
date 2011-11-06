@@ -46,10 +46,7 @@ public interface BibliographicReferenceDao extends BrowsingDao<BibliographicRefe
      */
     public BibliographicReference findByExternalId( DatabaseEntry externalId );
 
-    /**
-     * 
-     */
-    public BibliographicReference findByTitle( java.lang.String title );
+  
 
     /**
      * 

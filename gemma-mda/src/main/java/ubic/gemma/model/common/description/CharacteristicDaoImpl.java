@@ -58,7 +58,6 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * 
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByParentClass(java.lang.Class)
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected Map handleFindByParentClass( Class parentClass ) throws Exception {
         String field = "characteristics";
@@ -69,10 +68,10 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
         final String queryString = "select parent, char from " + parentClass.getSimpleName() + " as parent "
                 + "inner join parent." + field + " as char";
 
-        Map charToParent = new HashMap<Characteristic, Object>();
+        Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
         for ( Object o : getHibernateTemplate().find( queryString ) ) {
             Object[] row = ( Object[] ) o;
-            charToParent.put( row[1], row[0] );
+            charToParent.put( ( Characteristic ) row[1], row[0] );
         }
         return charToParent;
     }
@@ -83,13 +82,13 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDaoBase#handleFindByUri(java.util.Collection)
      */
     @Override
-    protected Collection<Characteristic> handleFindByUri( Collection uris ) throws Exception {
+    protected Collection<Characteristic> handleFindByUri( Collection<String> uris ) throws Exception {
         int batchSize = 1000; // to avoid HQL parser barfing
         Collection<String> batch = new HashSet<String>();
         Collection<Characteristic> results = new HashSet<Characteristic>();
         final String queryString = "from VocabCharacteristicImpl where valueUri in (:uris)";
 
-        for ( String uri : ( Collection<String> ) uris ) {
+        for ( String uri : uris ) {
             batch.add( uri );
             if ( batch.size() >= batchSize ) {
                 results.addAll( getHibernateTemplate().findByNamedParam( queryString, "uris", batch ) );
@@ -140,13 +139,13 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * java.util.Collection)
      */
     @Override
-    protected Map handleGetParents( Class parentClass, Collection characteristics ) throws Exception {
+    protected Map handleGetParents( Class parentClass, Collection<Characteristic> characteristics ) throws Exception {
         Collection<Characteristic> batch = new HashSet<Characteristic>();
         Map<Characteristic, Object> charToParent = new HashMap<Characteristic, Object>();
         if ( characteristics == null || characteristics.size() == 0 ) {
             return charToParent;
         }
-        for ( Characteristic c : ( Collection<Characteristic> ) characteristics ) {
+        for ( Characteristic c : characteristics ) {
             batch.add( c );
             if ( batch.size() == BATCH_SIZE ) {
                 batchGetParents( parentClass, batch, charToParent );
@@ -162,7 +161,7 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @param characteristics
      * @param charToParent
      */
-    private void batchGetParents( Class parentClass, Collection<Characteristic> characteristics,
+    private void batchGetParents( Class<?> parentClass, Collection<Characteristic> characteristics,
             Map<Characteristic, Object> charToParent ) {
         if ( characteristics.isEmpty() ) return;
 
@@ -213,8 +212,9 @@ public class CharacteristicDaoImpl extends ubic.gemma.model.common.description.C
      * @see ubic.gemma.model.common.description.CharacteristicDao#count()
      */
     public Integer count() {
-        return ( ( Long ) getHibernateTemplate().find(
-                "select count(*) from CharacteristicImpl where value not like 'GO_%'" ).iterator().next() ).intValue();
+        return ( ( Long ) getHibernateTemplate()
+                .find( "select count(*) from CharacteristicImpl where value not like 'GO_%'" ).iterator().next() )
+                .intValue();
     }
 
 }
