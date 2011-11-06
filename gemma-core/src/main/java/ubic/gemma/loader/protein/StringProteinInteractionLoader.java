@@ -197,9 +197,10 @@ public class StringProteinInteractionLoader {
             throw new RuntimeException( "Provided local string file is not readable: " + stringProteinFileNameLocal );
         }
 
-        if ( stringBiomartFile == null || !stringBiomartFile.canRead() ) {
-            throw new RuntimeException( "Provided biomart file is not readable: " + stringBiomartFile );
-        }
+        // this is apparently allowed to be null, according to the tests.
+        // if ( stringBiomartFile == null || !stringBiomartFile.canRead() ) {
+        // throw new RuntimeException( "Provided biomart file is not readable: " + stringBiomartFile );
+        // }
 
         // this is apparently allowed to be null, according to the tests.
         // if ( StringUtils.isBlank( stringProteinFileNameRemote ) ) {
