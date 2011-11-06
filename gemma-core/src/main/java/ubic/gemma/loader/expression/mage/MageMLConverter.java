@@ -289,7 +289,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                 ee = ( ExpressionExperiment ) object;
             }
         }
-        assert ee != null;
+        if ( ee == null ) {
+            throw new IllegalStateException( "No experiment in the converted result" );
+        }
 
         Collection<BioAssay> toRemove = new HashSet<BioAssay>();
         Collection<String> topLevelBioAssayIdentifiers = this.mageConverterHelper.getTopLevelBioAssayIdentifiers();
@@ -400,7 +402,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
         for ( Object object : convertedResult ) {
             if ( object instanceof ExpressionExperiment ) ee = ( ExpressionExperiment ) object;
         }
-        assert ee != null;
+        if ( ee == null ) {
+            throw new IllegalStateException( "No experiment in the converted result" );
+        }
 
         Collection<ExperimentalFactor> experimentalFactors = ee.getExperimentalDesign().getExperimentalFactors();
         Collection<BioAssay> bioAssays = ee.getBioAssays();
@@ -451,7 +455,9 @@ public class MageMLConverter extends AbstractMageTool implements Converter<Objec
                 ee = ( ExpressionExperiment ) object;
             }
         }
-        assert ee != null;
+        if ( ee == null ) {
+            throw new IllegalStateException( "No experiment in the converted result" );
+        }
 
         for ( Object object : convertedResult ) {
             if ( object instanceof QuantitationType ) {

@@ -193,7 +193,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
                 }
             }
 
-            assert f != null;
+            if ( f == null ) throw new IllegalStateException( "No file was obtained" );
 
             watch.stop();
             log.debug( "Finished writing and downloading a file; done in " + watch.getTime() + " milliseconds" );
@@ -225,10 +225,10 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
 
             if ( this.command.getAnalysisId() != null ) {
 
-                DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.load(command.getAnalysisId());
+                DifferentialExpressionAnalysis analysis = differentialExpressionAnalysisService.load( command
+                        .getAnalysisId() );
                 f = expressionDataFileService.writeOrLocateDiffExpressionDataFile( analysis, command.isForceRewrite() );
 
-                
             } else if ( this.command.getExpressionExperimentId() != null ) {
 
                 Long eeId = this.command.getExpressionExperimentId();
@@ -267,7 +267,7 @@ public class ExpressionExperimentDataFetchController extends AbstractTaskService
 
     @Autowired
     private QuantitationTypeService quantitationTypeService;
-    
+
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
 

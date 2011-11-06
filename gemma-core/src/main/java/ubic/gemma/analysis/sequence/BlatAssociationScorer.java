@@ -286,14 +286,11 @@ public class BlatAssociationScorer {
 
             if ( geneProductBlatAssociations.isEmpty() ) continue;
 
-            if ( geneProductBlatAssociations.size() == 1 ) {
-                keepers.add( geneProductBlatAssociations.iterator().next() );
-                continue;
-            }
+            BlatAssociation ba = geneProductBlatAssociations.iterator().next();
 
             // Find the best one. If there are ties it's arbitrary which one we pick.
-            double maxScore = 0.0;
-            BlatAssociation best = null;
+            double maxScore = ba.getScore();
+            BlatAssociation best = ba;
             for ( BlatAssociation blatAssociation : geneProductBlatAssociations ) {
                 double score = blatAssociation.getScore();
                 if ( score >= maxScore ) {
@@ -301,8 +298,6 @@ public class BlatAssociationScorer {
                     best = blatAssociation;
                 }
             }
-
-            assert best != null;
 
             // Remove the lower-scoring ones for this gene product
             Collection<BlatAssociation> toKeep = new HashSet<BlatAssociation>();

@@ -386,7 +386,7 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
      */
     @Override
     protected Taxon handleGetTaxon( java.lang.Long id ) {
-        return this.getArrayDesignDao().getTaxon( id );
+        return this.getArrayDesignDao().load( id ).getPrimaryTaxon();
     }
 
     @Override

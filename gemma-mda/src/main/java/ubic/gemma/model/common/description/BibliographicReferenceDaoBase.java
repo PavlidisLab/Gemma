@@ -87,64 +87,6 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     }
 
     /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(int, java.lang.String,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( bibliographicReference );
-        argNames.add( "bibliographicReference" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.description.BibliographicReference"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(int,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public Object find( final int transform,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return this
-                .find(
-                        transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.bibliographicReference = :bibliographicReference",
-                        bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(java.lang.String,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference find( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.find( TRANSFORM_NONE, queryString,
-                bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#find(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference find(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return ( ubic.gemma.model.common.description.BibliographicReference ) this.find( TRANSFORM_NONE,
-                bibliographicReference );
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findByExternalId(int, java.lang.String,
      *      java.lang.String)
      */
@@ -310,61 +252,6 @@ public abstract class BibliographicReferenceDaoBase extends HibernateDaoSupport 
     public ubic.gemma.model.common.description.BibliographicReference findByTitle( final java.lang.String queryString,
             final java.lang.String title ) {
         return this.findByTitle( TRANSFORM_NONE, queryString, title );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-
-    public BibliographicReference findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( bibliographicReference );
-        argNames.add( "bibliographicReference" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.description.BibliographicReference"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.BibliographicReference ) result );
-        return ( BibliographicReference ) result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(int,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public BibliographicReference findOrCreate( final int transform,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.common.description.BibliographicReference as bibliographicReference where bibliographicReference.bibliographicReference = :bibliographicReference",
-                        bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return this.findOrCreate( TRANSFORM_NONE, queryString, bibliographicReference );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.BibliographicReferenceDao#findOrCreate(ubic.gemma.model.common.description.BibliographicReference)
-     */
-    public ubic.gemma.model.common.description.BibliographicReference findOrCreate(
-            ubic.gemma.model.common.description.BibliographicReference bibliographicReference ) {
-        return this.findOrCreate( TRANSFORM_NONE, bibliographicReference );
     }
 
     /**

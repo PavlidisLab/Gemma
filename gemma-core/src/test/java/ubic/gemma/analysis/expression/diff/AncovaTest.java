@@ -95,9 +95,11 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
                 Double stat = null;
-                if ( !contrasts.isEmpty() ) {
-                    stat = contrasts.iterator().next().getTstat();
+                if ( contrasts.isEmpty() ) {
+                    continue;
                 }
+
+                stat = contrasts.iterator().next().getTstat();
 
                 assertNotNull( probe );
 
@@ -304,22 +306,30 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
                 ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
                 CompositeSequence probe = probeAnalysisResult.getProbe();
                 Double pvalue = probeAnalysisResult.getPvalue();
-
-                Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
-                Double stat = null;
-                if ( !contrasts.isEmpty() ) {
-                    stat = contrasts.iterator().next().getTstat();
-                }
-
-                assertNotNull( probe );
-
-                // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
-
                 if ( f.equals( super.experimentalFactorA_Area ) ) {
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.8060, pvalue, 0.001 );
                         found198 = true;
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
+                    }
+                } else if ( probe.getName().equals( "probe_10" ) ) {
+                    assertEquals( 0.9088, pvalue, 0.001 );
+                    found3 = true;
+                }
+
+                Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
+                Double stat = null;
+                if ( contrasts.isEmpty() ) {
+                    continue;
+                }
+
+                stat = contrasts.iterator().next().getTstat();
+                assertNotNull( probe );
+                assertNotNull( stat );
+
+                // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; T=" + stat );
+
+                if ( f.equals( super.experimentalFactorA_Area ) ) {
+                    if ( probe.getName().equals( "probe_10" ) ) {
                         assertEquals( 9.215e-09, pvalue, 1e-11 );
                         assertEquals( -152.812, stat, 0.001 );
                     } else if ( probe.getName().equals( "probe_4" ) ) {
@@ -336,9 +346,6 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                     if ( probe.getName().equals( "probe_98" ) ) {
                         assertEquals( 0.2171, pvalue, 0.001 );
-                    } else if ( probe.getName().equals( "probe_10" ) ) {
-                        assertEquals( 0.9088, pvalue, 0.001 );
-                        found3 = true;
                     }
                 }
 
@@ -395,9 +402,11 @@ public class AncovaTest extends BaseAnalyzerConfigurationTest {
 
                 Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
                 Double stat = null;
-                if ( !contrasts.isEmpty() ) {
-                    stat = contrasts.iterator().next().getTstat();
+                if ( contrasts.isEmpty() ) {
+                    continue;
                 }
+
+                stat = contrasts.iterator().next().getTstat();
 
                 if ( factors.size() == 2 ) { // interaction
                     foundInteractions = true;

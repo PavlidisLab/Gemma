@@ -89,65 +89,6 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
     }
 
     /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(int, java.lang.String,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    
-    public Object find( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( externalDatabase );
-        argNames.add( "externalDatabase" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.description.ExternalDatabase"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(int,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    
-    public Object find( final int transform, final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return this
-                .find(
-                        transform,
-                        "from DatabaseEntryImpl where accession=databaseEntry.accession and externalDatabase=databaseEntry.externalDatabase",
-                        externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(java.lang.String,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    
-    public ubic.gemma.model.common.description.ExternalDatabase find( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.find( TRANSFORM_NONE, queryString,
-                externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#find(ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    public ubic.gemma.model.common.description.ExternalDatabase find(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.find( TRANSFORM_NONE, externalDatabase );
-    }
-
-    /**
      * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findByLocalDbInstallName(int, java.lang.String)
      */
     
@@ -241,67 +182,6 @@ public abstract class ExternalDatabaseDaoBase extends HibernateDaoSupport implem
             final java.lang.String name ) {
         return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findByName( TRANSFORM_NONE, queryString,
                 name );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(int, java.lang.String,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    
-    public Object findOrCreate( final int transform, final java.lang.String queryString,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        java.util.List<String> argNames = new java.util.ArrayList<String>();
-        java.util.List<Object> args = new java.util.ArrayList<Object>();
-        args.add( externalDatabase );
-        argNames.add( "externalDatabase" );
-        java.util.Set results = new java.util.LinkedHashSet( this.getHibernateTemplate().findByNamedParam( queryString,
-                argNames.toArray( new String[argNames.size()] ), args.toArray() ) );
-        Object result = null;
-
-        if ( results.size() > 1 ) {
-            throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                    "More than one instance of 'ubic.gemma.model.common.description.ExternalDatabase"
-                            + "' was found when executing query --> '" + queryString + "'" );
-        } else if ( results.size() == 1 ) {
-            result = results.iterator().next();
-        }
-
-        result = transformEntity( transform, ( ubic.gemma.model.common.description.ExternalDatabase ) result );
-        return result;
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(int,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    
-    public Object findOrCreate( final int transform,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return this
-                .findOrCreate(
-                        transform,
-                        "from ubic.gemma.model.common.description.ExternalDatabase as externalDatabase where externalDatabase.externalDatabase = :externalDatabase",
-                        externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(java.lang.String,
-     *      ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    
-    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate( final java.lang.String queryString,
-            final ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findOrCreate( TRANSFORM_NONE, queryString,
-                externalDatabase );
-    }
-
-    /**
-     * @see ubic.gemma.model.common.description.ExternalDatabaseDao#findOrCreate(ubic.gemma.model.common.description.ExternalDatabase)
-     */
-    public ubic.gemma.model.common.description.ExternalDatabase findOrCreate(
-            ubic.gemma.model.common.description.ExternalDatabase externalDatabase ) {
-        return ( ubic.gemma.model.common.description.ExternalDatabase ) this.findOrCreate( TRANSFORM_NONE,
-                externalDatabase );
     }
 
     /**

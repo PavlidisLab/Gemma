@@ -161,7 +161,7 @@ public class GeoConverter implements Converter<Object, Object> {
     private ExternalDatabase genbank;
 
     /**
-     *`
+     * `
      */
     private boolean splitByPlatform = false;
 
@@ -1034,7 +1034,7 @@ public class GeoConverter implements Converter<Object, Object> {
             }
 
             boolean isImage = false;
-            if ( StringUtils.isNotBlank( cloneIdentifier ) ) {
+            if ( cloneIdentifier != null ) {
                 bs.setName( cloneIdentifier );
                 isImage = cloneIdentifier.startsWith( "IMAGE" );
             }
@@ -1918,10 +1918,9 @@ public class GeoConverter implements Converter<Object, Object> {
         int expectedNumSamples = series.getSamples().size() - samplesToSkip.size();
         int actualNumSamples = expExp.getBioAssays().size();
         if ( expectedNumSamples > actualNumSamples ) {
-            log
-                    .warn( ( expectedNumSamples - actualNumSamples )
-                            + " samples were not in the 'sample correspondence'"
-                            + " and have been omitted. Possibly they were in the Series (GSE) but not in the corresponding Dataset (GDS)?" );
+            log.warn( ( expectedNumSamples - actualNumSamples )
+                    + " samples were not in the 'sample correspondence'"
+                    + " and have been omitted. Possibly they were in the Series (GSE) but not in the corresponding Dataset (GDS)?" );
         }
 
         // Dataset has additional information about the samples.

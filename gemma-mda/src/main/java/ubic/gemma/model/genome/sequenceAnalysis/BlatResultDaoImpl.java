@@ -57,7 +57,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
 
         BusinessKey.attachCriteria( queryObject, bioSequence, "querySequence" );
 
-        List results = queryObject.list();
+        List<?> results = queryObject.list();
 
         if ( results != null ) {
             for ( Object object : results ) {
@@ -65,32 +65,11 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
                 if ( br.getTargetChromosome() != null ) {
                     Hibernate.initialize( br.getTargetChromosome() );
                 }
-                br.getQuerySequence();
+                Hibernate.initialize( br.getQuerySequence() );
             }
         }
 
-        return results;
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#findOrCreate(ubic.gemma.model.genome.sequenceAnalysis
-     * .BlatResult)
-     */
-    @Override
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult ) {
-        if ( blatResult.getQuerySequence() == null )
-            throw new IllegalArgumentException( "BlatResult must have a querySequence associated with it." );
-
-        BlatResult result = this.find( blatResult );
-        if ( result != null ) return result;
-
-        logger.debug( "Creating new BlatResult: " + blatResult.toString() );
-        result = create( blatResult );
-        return result;
+        return ( Collection<BlatResult> ) results;
     }
 
     /*
@@ -138,7 +117,7 @@ public class BlatResultDaoImpl extends ubic.gemma.model.genome.sequenceAnalysis.
      * @see ubic.gemma.model.genome.sequenceAnalysis.BlatResultDaoBase#handleLoad(java.util.Collection)
      */
     @Override
-    protected Collection handleLoad( Collection ids ) throws Exception {
+    protected Collection<BlatResult> handleLoad( Collection<Long> ids ) throws Exception {
         final String queryString = "select distinct blatResult from BlatResultImpl blatResult where blatResult.id in (:ids)";
         return this.getHibernateTemplate().findByNamedParam( queryString, "ids", ids );
     }

@@ -374,7 +374,7 @@ public class ExpressionExperimentFilter {
      * @return
      * @throws UnsupportedOperationException if the ee uses both two color and one-color technologies.
      */
-    private boolean isTwoColor() {
+    private Boolean isTwoColor() {
         Boolean answer = null;
 
         if ( arrayDesignsUsed.isEmpty() ) {

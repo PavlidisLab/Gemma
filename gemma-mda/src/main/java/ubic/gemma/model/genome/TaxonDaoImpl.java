@@ -22,7 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
-import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.hibernate3.HibernateTemplate;
@@ -89,7 +89,7 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
         HibernateTemplate templ = this.getHibernateTemplate();
         templ.executeWithNativeSession( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
             public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.lock( taxon, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( taxon );
                 Hibernate.initialize( taxon.getParentTaxon() );
                 Hibernate.initialize( taxon.getExternalDatabase() );
                 session.evict( taxon );

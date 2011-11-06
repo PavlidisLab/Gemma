@@ -159,9 +159,9 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
         newee = this.expressionExperimentService.thawLite( newee );
 
         processedDataVectorService.createProcessedDataVectors( newee );
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-        ees.add( newee );
-        return ees;
+        Collection<ExpressionExperiment> e = new HashSet<ExpressionExperiment>();
+        e.add( newee );
+        return e;
     }
 
     /**

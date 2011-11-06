@@ -28,30 +28,20 @@ import org.springframework.security.access.annotation.Secured;
  */
 public interface BlatResultService {
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public BlatResult create( BlatResult blatResult );
-
-    public BlatResult find( BlatResult blatResult );
 
     public java.util.Collection<BlatResult> findByBioSequence(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
 
-    @Secured( { "GROUP_USER" })
-    public BlatResult findOrCreate( BlatResult blatResult );
-
-    /**
-     * <p>
-     * loads all BlatResults specified by the given ids.
-     * </p>
-     */
     public java.util.Collection<BlatResult> load( java.util.Collection<Long> ids );
 
     public BlatResult load( Long id );
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void remove( BlatResult blatResult );
 
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public void update( BlatResult blatResult );
 
     public BlatResult thaw( BlatResult blatResult );

@@ -522,7 +522,7 @@ public class ExperimentalDesignImporterImpl implements ExperimentalDesignImporte
                         currentExperimentalFactor = experimentalFactor;
                     }
                 }
-                assert currentExperimentalFactor != null;
+                if ( currentExperimentalFactor == null ) throw new IllegalStateException( "No factor" );
 
                 Collection<FactorValue> factorValuesInCurrentExperimentalFactor = currentExperimentalFactor
                         .getFactorValues();

@@ -80,11 +80,11 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
         Collection<HitListSize> hitListSizes = resultSet.getHitListSizes();
         assertEquals( 3 * 5, hitListSizes.size() );
-        for ( HitListSize hitListSize : hitListSizes ) {
-            // TODO explicitly check these counts.
-            // log.info( hitListSize.getDirection() + " " + hitListSize.getThresholdQvalue() + " "
-            // + hitListSize.getNumberOfProbes() );
-        }
+        // for ( HitListSize hitListSize : hitListSizes ) {
+        // // TODO explicitly check these counts.
+        // log.info( hitListSize.getDirection() + " " + hitListSize.getThresholdQvalue() + " "
+        // + hitListSize.getNumberOfProbes() );
+        // }
 
         // check
         for ( DifferentialExpressionAnalysisResult r : resultSet.getResults() ) {
@@ -97,9 +97,11 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
 
             Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
             Double stat = null;
-            if ( !contrasts.isEmpty() ) {
-                stat = contrasts.iterator().next().getTstat();
+            if ( contrasts.isEmpty() ) {
+                continue;
             }
+
+            stat = contrasts.iterator().next().getTstat();
 
             log.debug( "probe: " + probe + "; p-value: " + pvalue );
 

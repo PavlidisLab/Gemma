@@ -578,7 +578,7 @@ public class GeoFamilyParser implements Parser<Object> {
             }
         }
 
-        if ( representativeColumnNames == null ) {
+        if ( representativeColumnNames == null || representativeSample == null ) {
             return;
         }
 
@@ -747,12 +747,11 @@ public class GeoFamilyParser implements Parser<Object> {
             if ( seenColumnNames.contains( columnName ) ) {
 
                 if ( !alreadyWarnedAboutDuplicateColumnName ) {
-                    log
-                            .warn( "\n---------- WARNING ------------\n"
-                                    + columnName
-                                    + " appears more than once for sample "
-                                    + currentSample()
-                                    + ", it will be mangled to make it unique.\nThis usually indicates a problem with the GEO file format! (future similar warnings for this data set suppressed)\n" );
+                    log.warn( "\n---------- WARNING ------------\n"
+                            + columnName
+                            + " appears more than once for sample "
+                            + currentSample()
+                            + ", it will be mangled to make it unique.\nThis usually indicates a problem with the GEO file format! (future similar warnings for this data set suppressed)\n" );
                     alreadyWarnedAboutDuplicateColumnName = true;
                 }
                 /*
@@ -777,17 +776,16 @@ public class GeoFamilyParser implements Parser<Object> {
                 desiredColumnNumber = qtMapForPlatform.get( columnName );
                 if ( desiredColumnNumber != actualColumnNumber ) {
                     if ( !alreadyWarnedAboutInconsistentColumnOrder ) {
-                        log
-                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
-                                        + columnName
-                                        + " is not in previous column "
-                                        + desiredColumnNumber
-                                        + ":\nFor sample "
-                                        + currentSample()
-                                        + ", it is in column "
-                                        + actualColumnNumber
-                                        + ". This usually isn't a problem but it's worth checking to make sure data isn't misaligned"
-                                        + " (future warnings for this data set suppressed)\n" );
+                        log.warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
+                                + columnName
+                                + " is not in previous column "
+                                + desiredColumnNumber
+                                + ":\nFor sample "
+                                + currentSample()
+                                + ", it is in column "
+                                + actualColumnNumber
+                                + ". This usually isn't a problem but it's worth checking to make sure data isn't misaligned"
+                                + " (future warnings for this data set suppressed)\n" );
                         alreadyWarnedAboutInconsistentColumnOrder = true;
                     }
                     /*
@@ -819,14 +817,13 @@ public class GeoFamilyParser implements Parser<Object> {
                     desiredColumnNumber = max + 1;
                     quantitationTypeTargetColumn.get( platformForSample ).put( actualColumnNumber, desiredColumnNumber );
                     if ( !alreadyWarnedAboutClobbering ) {
-                        log
-                                .warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
-                                        + "Current column name "
-                                        + columnName
-                                        + " reassigned to index "
-                                        + desiredColumnNumber
-                                        + " to avoid clobbering. This usually isn't a problem but it's worth checking to make sure data isn't misaligned "
-                                        + "(future similar warnings for this data set suppressed)\n" );
+                        log.warn( "\n---------- POSSIBLE GEO FILE FORMAT PROBLEM WARNING! ------------\n"
+                                + "Current column name "
+                                + columnName
+                                + " reassigned to index "
+                                + desiredColumnNumber
+                                + " to avoid clobbering. This usually isn't a problem but it's worth checking to make sure data isn't misaligned "
+                                + "(future similar warnings for this data set suppressed)\n" );
                         alreadyWarnedAboutClobbering = true;
                     }
                 }
@@ -1652,8 +1649,8 @@ public class GeoFamilyParser implements Parser<Object> {
             parseSeriesVariableSampleListLine( line, value );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_" ) ) {
             Integer variableId = new Integer( extractVariableNumber( line ) );
-            results.getSeriesMap().get( currentSeriesAccession ).getReplicates().get( variableId ).setRepeats(
-                    GeoReplication.convertStringToRepeatType( value ) );
+            results.getSeriesMap().get( currentSeriesAccession ).getReplicates().get( variableId )
+                    .setRepeats( GeoReplication.convertStringToRepeatType( value ) );
         } else if ( startsWithIgnoreCase( line, "!Series_variable_repeats_sample_list" ) ) {
             parseSeriesVariableRepeatsSampleListLine( line, value );
         } else if ( startsWithIgnoreCase( line, "!Series_web_link" ) ) {
@@ -1738,8 +1735,8 @@ public class GeoFamilyParser implements Parser<Object> {
                 if ( log.isDebugEnabled() )
                     log.debug( "Adding sample: " + sampleAccession + " to subset " + currentSubsetAccession );
 
-                results.getSubsetMap().get( currentSubsetAccession ).addSample(
-                        results.getSampleMap().get( sampleAccession ) );
+                results.getSubsetMap().get( currentSubsetAccession )
+                        .addSample( results.getSampleMap().get( sampleAccession ) );
             }
 
         } else if ( startsWithIgnoreCase( line, "!subset_type" ) ) {

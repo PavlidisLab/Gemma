@@ -36,7 +36,6 @@ import ubic.gemma.model.genome.Chromosome;
 import ubic.gemma.model.genome.ChromosomeService;
 import ubic.gemma.model.genome.PhysicalLocation;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
-import ubic.gemma.model.genome.ProbeAlignedRegionService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
@@ -61,8 +60,6 @@ public class ProbeMapper {
     private Log log = LogFactory.getLog( ProbeMapper.class.getName() );
     private ThreePrimeDistanceMethod threeprimeMethod = ThreePrimeDistanceMethod.RIGHT;
 
-    @Autowired
-    private ProbeAlignedRegionService probeAlignedRegionService;
     @Autowired
     private ChromosomeService chromosomeService;
     @Autowired
@@ -476,10 +473,6 @@ public class ProbeMapper {
             return blatAssociations;
         }
 
-        // no genes, have to look for pre-existing probealignedregions that overlap.
-        if ( config.isAllowProbeAlignedRegions() )
-            return findProbeAlignedRegionAssociations( blatResult, ignoreStrand );
-
         return new HashSet<BlatAssociation>();
     }
 
@@ -507,52 +500,6 @@ public class ProbeMapper {
             ignoreStrand = false;
         }
         return ignoreStrand;
-    }
-
-    /**
-     * Identify ProbeAlignedRegions that overlap with the given blat result. A ProbeAlignedRegion is a region in which
-     * there are no known or predicted genes, but a designElement aligned to.
-     * 
-     * @param blatResult
-     * @param ignoreStrand
-     * @return
-     */
-    private Collection<BlatAssociation> findProbeAlignedRegionAssociations( BlatResult blatResult, boolean ignoreStrand ) {
-
-        PhysicalLocation pl = makePhysicalLocation( blatResult, ignoreStrand );
-
-        Collection<ProbeAlignedRegion> pars = probeAlignedRegionService.findAssociations( pl );
-        if ( log.isDebugEnabled() && pars.size() > 0 ) log.debug( "Found " + pars.size() + " PARS for " + blatResult );
-        Collection<BlatAssociation> results = new HashSet<BlatAssociation>();
-        for ( ProbeAlignedRegion region : pars ) {
-
-            BlatAssociation ba = BlatAssociation.Factory.newInstance();
-            GeneProduct product = region.getProducts().iterator().next();
-            assert product.getId() != null;
-            ba.setGeneProduct( product );
-            ba.setBlatResult( blatResult );
-            ba.setBioSequence( blatResult.getQuerySequence() );
-            ba.setOverlap( SequenceManipulation.getGeneProductExonOverlap( blatResult.getTargetStarts(),
-                    blatResult.getBlockSizes(), pl.getStrand(), product ) );
-            results.add( ba );
-
-        }
-        return results;
-    }
-
-    /**
-     * Turn the blat result into a physical location
-     * 
-     * @param blatResult
-     * @param ignoreStrand
-     * @return
-     */
-    private PhysicalLocation makePhysicalLocation( BlatResult blatResult, boolean ignoreStrand ) {
-        PhysicalLocation pl = blatResultToPhysicalLocation( blatResult );
-        if ( ignoreStrand ) {
-            pl.setStrand( null );
-        }
-        return pl;
     }
 
     /**
@@ -593,10 +540,6 @@ public class ProbeMapper {
                 + pl.getNucleotideLength().intValue() ) );
 
         return pl;
-    }
-
-    public void setProbeAlignedRegionService( ProbeAlignedRegionService probeAlignedRegionService ) {
-        this.probeAlignedRegionService = probeAlignedRegionService;
     }
 
     public void setChromosomeService( ChromosomeService chromosomeService ) {

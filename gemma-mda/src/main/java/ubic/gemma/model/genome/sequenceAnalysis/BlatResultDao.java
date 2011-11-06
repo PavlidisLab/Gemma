@@ -34,20 +34,9 @@ public interface BlatResultDao extends BaseDao<BlatResult> {
     public Collection<BlatResult> thaw( Collection<BlatResult> blatResults );
 
     /**
-     * 
-     */
-    public BlatResult find( BlatResult blatResult );
-
-    /**
      * Find BLAT results for the given sequence
      */
     public java.util.Collection<BlatResult> findByBioSequence(
             ubic.gemma.model.genome.biosequence.BioSequence bioSequence );
-
-    /**
-     * 
-     */
-    public ubic.gemma.model.genome.sequenceAnalysis.BlatResult findOrCreate(
-            ubic.gemma.model.genome.sequenceAnalysis.BlatResult blatResult );
 
 }

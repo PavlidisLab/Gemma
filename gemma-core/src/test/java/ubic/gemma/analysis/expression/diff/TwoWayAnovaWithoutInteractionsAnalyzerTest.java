@@ -90,11 +90,18 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
             ProbeAnalysisResult probeAnalysisResult = ( ProbeAnalysisResult ) r;
             CompositeSequence probe = probeAnalysisResult.getProbe();
             Double pvalue = probeAnalysisResult.getPvalue();
+            if ( f.equals( super.experimentalFactorB ) && probe.getName().equals( "probe_1" ) ) {
+                assertEquals( 0.501040, pvalue, 0.001 );
+                found = true;
+            }
             Collection<ContrastResult> contrasts = probeAnalysisResult.getContrasts();
             Double stat = null;
-            if ( !contrasts.isEmpty() ) {
-                stat = contrasts.iterator().next().getTstat();
+            if ( contrasts.isEmpty() ) {
+                continue;
             }
+
+            stat = contrasts.iterator().next().getTstat();
+
             assertNotNull( probe );
 
             // log.debug( "probe: " + probe + "; p-value: " + pvalue + "; F=" + stat );
@@ -118,10 +125,7 @@ public class TwoWayAnovaWithoutInteractionsAnalyzerTest extends BaseAnalyzerConf
 
                 assertEquals( factorValueB2, resultSet.getBaselineGroup() );
 
-                if ( probe.getName().equals( "probe_1" ) ) {
-                    assertEquals( 0.501040, pvalue, 0.001 );
-                    found = true;
-                } else if ( probe.getName().equals( "probe_97" ) ) {
+                if ( probe.getName().equals( "probe_97" ) ) {
                     assertEquals( 0.4449, pvalue, 0.001 );
                 }
 
