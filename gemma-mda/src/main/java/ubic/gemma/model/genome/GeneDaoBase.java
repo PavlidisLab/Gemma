@@ -546,6 +546,22 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
     }
 
     /**
+     * Only thaw the Aliases, very light version
+     * 
+     * @param gene
+     */
+    @Override
+    public Gene thawAliases( final ubic.gemma.model.genome.Gene gene ) {
+        try {
+            return this.thawAliases( gene );
+        } catch ( Throwable th ) {
+            throw new java.lang.RuntimeException(
+                    "Error performing 'ubic.gemma.model.genome.GeneDao.thawAliases(ubic.gemma.model.genome.Gene gene)' --> "
+                            + th, th );
+        }
+    }
+
+    /**
      * @see ubic.gemma.model.genome.GeneDao#thawLite(java.util.Collection)
      */
     public Collection<Gene> thawLite( final java.util.Collection<Gene> genes ) {
@@ -664,18 +680,20 @@ public abstract class GeneDaoBase extends HibernateDaoSupport implements ubic.ge
      */
     protected abstract java.util.Collection<Gene> handleLoadMultiple( java.util.Collection<Long> ids )
             throws java.lang.Exception;
-//
-//    /**
-//     * Performs the core logic for {@link #loadPredictedGenes(ubic.gemma.model.genome.Taxon)}
-//     */
-//    protected abstract java.util.Collection<PredictedGene> handleLoadPredictedGenes( ubic.gemma.model.genome.Taxon taxon )
-//            throws java.lang.Exception;
-//
-//    /**
-//     * Performs the core logic for {@link #loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)}
-//     */
-//    protected abstract java.util.Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions(
-//            ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
+
+    //
+    // /**
+    // * Performs the core logic for {@link #loadPredictedGenes(ubic.gemma.model.genome.Taxon)}
+    // */
+    // protected abstract java.util.Collection<PredictedGene> handleLoadPredictedGenes( ubic.gemma.model.genome.Taxon
+    // taxon )
+    // throws java.lang.Exception;
+    //
+    // /**
+    // * Performs the core logic for {@link #loadProbeAlignedRegions(ubic.gemma.model.genome.Taxon)}
+    // */
+    // protected abstract java.util.Collection<ProbeAlignedRegion> handleLoadProbeAlignedRegions(
+    // ubic.gemma.model.genome.Taxon taxon ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #thaw(ubic.gemma.model.genome.Gene)}

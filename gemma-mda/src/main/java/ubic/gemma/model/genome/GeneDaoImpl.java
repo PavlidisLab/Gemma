@@ -975,6 +975,23 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
         return ( Gene ) res.iterator().next();
     }
 
+    /**
+     * Only thaw the Aliases, very light version
+     * 
+     * @param gene
+     */
+    @Override
+    public Gene thawAliases( final Gene gene ) {
+        if ( gene.getId() == null ) return gene;
+
+        List<?> res = this.getHibernateTemplate().findByNamedParam(
+                "select distinct g from GeneImpl g "
+                        + "left join fetch g.aliases left join fetch g.accessions acc where g.id=:gid", "gid",
+                gene.getId() );
+
+        return ( Gene ) res.iterator().next();
+    }
+
     /*
      * (non-Javadoc)
      * 

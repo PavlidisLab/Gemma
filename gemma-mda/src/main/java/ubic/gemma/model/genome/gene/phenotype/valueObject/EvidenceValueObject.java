@@ -90,7 +90,7 @@ public abstract class EvidenceValueObject {
     }
     
     public EvidenceValueObject() {
-
+        super();
     }
 
     /** set fields common to all evidence. Entity to Value Object */

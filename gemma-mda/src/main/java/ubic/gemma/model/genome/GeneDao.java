@@ -216,6 +216,12 @@ public interface GeneDao extends BaseDao<Gene> {
      * 
      */
     public Gene thaw( Gene gene );
+    
+    /**
+     * Only thaw the Aliases, very light version
+     * @param gene
+     */
+    public Gene thawAliases( Gene gene );
 
     /**
      * @param gene

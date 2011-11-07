@@ -420,6 +420,20 @@ public abstract class GeneServiceBase implements GeneService {
     }
 
     /**
+     * Only thaw the Aliases, very light version
+     * 
+     * @param gene
+     */
+    @Override
+    public Gene thawAliases( Gene gene ) {
+        try {
+            return this.getGeneDao().thawAliases( gene );
+        } catch ( Throwable th ) {
+            throw new GeneServiceException( "Error performing 'GeneService.thawAliases(Gene gene)' --> " + th, th );
+        }
+    }
+
+    /**
      * @see GeneService#update(Gene)
      */
     @Override

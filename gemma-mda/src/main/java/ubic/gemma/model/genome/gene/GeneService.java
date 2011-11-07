@@ -298,6 +298,12 @@ public interface GeneService {
      * @param gene
      */
     public Gene thawLite( Gene gene );
+    
+    /**
+     * Only thaw the Aliases, very light version
+     * @param gene
+     */
+    public Gene thawAliases( Gene gene );
 
     /**
      * @param gene

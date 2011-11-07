@@ -31,7 +31,7 @@ import ubic.gemma.search.SearchSettings;
 public class GeneCoreServiceImpl implements GeneCoreService {
 
     private static Log log = LogFactory.getLog( GeneCoreService.class );
-    
+
     @Autowired
     private GeneService geneService = null;
 
@@ -40,13 +40,12 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
     @Autowired
     private HomologeneService homologeneService = null;
-    
+
     @Autowired
     private SearchService searchService = null;
 
     @Autowired
     private TaxonService taxonService = null;
-    
 
     /**
      * Returns a detailVO for a geneDd
@@ -59,7 +58,7 @@ public class GeneCoreServiceImpl implements GeneCoreService {
 
         Gene gene = this.geneService.load( geneId );
         // need to thaw for aliases (at least)
-        gene = this.geneService.thaw( gene );
+        gene = this.geneService.thawAliases( gene );
 
         Collection<Long> ids = new HashSet<Long>();
         ids.add( gene.getId() );
