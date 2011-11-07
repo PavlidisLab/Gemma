@@ -452,10 +452,17 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
                 eeVo.setBioMaterialCount( cacheVo.getBioMaterialCount() );
                 eeVo.setProcessedExpressionVectorCount( cacheVo.getProcessedExpressionVectorCount() );
                 eeVo.setCoexpressionLinkCount( cacheVo.getCoexpressionLinkCount() );
+
                 eeVo.setDateCached( cacheVo.getDateCached() );
-                eeVo.setDateCreated( cacheVo.getDateCreated() );
-                eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
+
                 eeVo.setDifferentialExpressionAnalyses( cacheVo.getDifferentialExpressionAnalyses() );
+
+                if ( eeVo.getDateCreated() == null ) {
+                    // should be filled in already.
+                    log.warn( "Create date was not populated: " + eeVo );
+                    eeVo.setDateCreated( cacheVo.getDateCreated() );
+                    eeVo.setDateLastUpdated( cacheVo.getDateLastUpdated() );
+                }
 
                 if ( eeVo.getDateLastUpdated() != null ) {
                     result.put( eeVo.getId(), eeVo.getDateLastUpdated() );
