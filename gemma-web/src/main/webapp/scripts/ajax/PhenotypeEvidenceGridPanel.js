@@ -228,20 +228,18 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		    viewConfig: {
 		        forceFit: true
 		    },
-			
-			region: 'center',
 			plugins: rowExpander,
 		    
 			// grid columns
 			columns:[
 				rowExpander,
 				{
-					header: '<img width="16" height="16" src="/Gemma/images/icons/rosette.png">',
+					header: '<img style="vertical-align: bottom;" ext:qwidth="198" ext:qtip="The red dot marks evidence related specifically to your phenotype search." width="16" height="16" src="/Gemma/images/icons/bullet_red.png">',
 					dataIndex: 'relevance',
-					width: 0.1,
+					width: 0.12,
 		            renderer: function(value) {
 						if (value == 1) {
-							return '<img width="16" height="16" src="/Gemma/images/icons/rosette.png">';
+							return this.header;
 						} else {
 							return '';
 						}
@@ -252,13 +250,6 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					header: "Phenotypes",
 					dataIndex: 'phenotypes',
 					width: 0.35,
-		            renderer: function(value) {
-						var phenotypesHtml = '';
-						for (var i = 0; i < value.length; i++) {
-							phenotypesHtml += value[i].value + '<br />';
-						}					
-						return phenotypesHtml;
-		            },
 					sortable: false
 				},
 				{
@@ -307,12 +298,27 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		if (this.title == null) {
 			this.title = evidenceGridDefaultTitle;
 		}
+		this.on('render', function() { 		
+			if (this.evidencePhenotypeColumnRenderer == null) {
+				this.evidencePhenotypeColumnRenderer = function(value) {
+					var phenotypesHtml = '';
+					for (var i = 0; i < value.length; i++) {
+						phenotypesHtml += value[i].value + '<br />';
+					}					
+					return phenotypesHtml;
+			    }
+			}
+			this.colModel.setRenderer(2, this.evidencePhenotypeColumnRenderer);	
+		});
+
 		Gemma.PhenotypeEvidenceGridPanel.superclass.initComponent.apply(this, arguments);
     },
     setProxy: function(proxy) {
 		evidenceStore.proxy = proxy;
-		evidenceStore.load();
     },
+	load: function() {
+		evidenceStore.load();
+	}, 
     loadData: function(data, currentPhenotypes, cssStyle) {
     	// Modify css for the current phenotypes to indicate they are current.  
 		for (var i = 0; i < data.length; i++) {
@@ -329,5 +335,18 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     },
     removeAll: function(silent) {
     	evidenceStore.removeAll(silent);
-    }
+    },
+	loadGene: function(geneId) {
+	    	evidenceStore.reload({
+	    		params: {
+	    			'geneId': geneId
+	    		}
+	    	});
+	    },
+	setColumnHidden: function(index, hidden) {
+		this.getColumnModel().setHidden(index, hidden);
+	},
+	setEvidencePhenotypeRenderer: function(evidencePhenotypeRenderer) {
+		this.evidencePhenotypeRenderer = evidencePhenotypeRenderer;
+	}
 });

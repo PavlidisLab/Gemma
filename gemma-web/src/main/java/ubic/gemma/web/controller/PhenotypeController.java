@@ -16,9 +16,13 @@ package ubic.gemma.web.controller;
 
 import java.util.ArrayList;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
@@ -38,9 +42,14 @@ public class PhenotypeController extends BaseController {
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
-    @RequestMapping("/phenotypes.html")
-    public ModelAndView showAllPhenotypes() {
-        return new ModelAndView("phenotypes");
+    @RequestMapping(value = "/phenotypes.html", method = RequestMethod.GET)
+    public ModelAndView showAllPhenotypes(HttpServletRequest request, HttpServletResponse response) {
+    	ModelAndView mav = new ModelAndView("phenotypes");
+    	
+        mav.addObject( "phenotypeValue", request.getParameter("phenotypeValue"));
+        mav.addObject( "geneId", request.getParameter("geneId"));
+
+    	return mav;
     }
    
     @RequestMapping("/phenotypeAssociationForm.html")

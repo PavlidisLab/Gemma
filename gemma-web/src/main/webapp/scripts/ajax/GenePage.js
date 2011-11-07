@@ -110,7 +110,16 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		});
 		
 		var phenotypeEvidenceGridPanel = new Gemma.PhenotypeEvidenceGridPanel({
-			title: 'Phenotypes'
+			title: 'Phenotypes',
+
+			evidencePhenotypeColumnRenderer: function(value, metadata, record, row, col, ds) {
+				var phenotypesHtml = '';
+				for (var i = 0; i < record.data.phenotypes.length; i++) {
+					phenotypesHtml += String.format('<a target="_blank" href="/Gemma/phenotypes.html?phenotypeValue={0}&geneId={1}" ext:qtip="Go to Phenotype Page (in new window)">{0}</a><br />',
+						record.data.phenotypes[i].value, geneId);
+				}					
+				return phenotypesHtml;
+			}
 		});
 		phenotypeEvidenceGridPanel.setProxy(
 			new Ext.data.DWRProxy({
@@ -124,6 +133,9 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 		        }
 	    	})
 		);
+		phenotypeEvidenceGridPanel.load();		
+		phenotypeEvidenceGridPanel.setColumnHidden(1, true);
+
 		this.add(phenotypeEvidenceGridPanel);
 		
 		this.on('render', function(){

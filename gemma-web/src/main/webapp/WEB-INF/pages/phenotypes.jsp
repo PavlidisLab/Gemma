@@ -6,3 +6,8 @@
 	
 	<jwr:script src='/scripts/app/phenotypes.js' />
 </head>
+
+<body>
+	<input type="hidden" name="phenotypeValue" id="phenotypeValue" value="${phenotypeValue}" />
+	<input type="hidden" name="geneId" id="geneId" value="${geneId}" />
+</body>
