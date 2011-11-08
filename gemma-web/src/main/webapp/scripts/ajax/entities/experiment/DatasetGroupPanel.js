@@ -587,7 +587,6 @@ Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
 										items : new Ext.form.FieldSet({
 													height : 200,
 													items : [new Gemma.TaxonCombo({
-																		id : 'new-eesetTaxon',
 																		isDisplayTaxonWithDatasets : true,
 																		name : 'newEesetTaxon',
 																		fieldLabel : 'Taxon',

@@ -31,9 +31,9 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 				
 				// allow taxon to be set in configs on instantiation
 				this.taxCombo = new Gemma.TaxonCombo({
-								id: 'new-eesetTaxon',
 								name: 'newEesetTaxon',
-								fieldLabel: 'Taxon'
+								fieldLabel: 'Taxon',
+								required:true
 							});
 				
 				
