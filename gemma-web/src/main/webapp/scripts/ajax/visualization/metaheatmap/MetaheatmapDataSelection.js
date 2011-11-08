@@ -195,24 +195,27 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 					// if no experiments were returned, don't show visualizer
 					if (data.conditions.length === 0) {
 						//Ext.Msg.alert('<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.');
-						Ext.DomHelper.overwrite('meta-heatmap-div', {
-							html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
-						});
+						if(this.applyToParam){
+							Ext.DomHelper.overwrite(this.applyToParam, {
+								html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.'
+							});
+						}
+						
 					} else {
 						var title = '<b>Differential Expression Visualisation</b>';
-						_metaVizApp = new Gemma.Metaheatmap.Application({
-									//_selectionController: this, // temp hack so we can re-run search from vizApp
+						var config = {
 									toolbarTitle : title,
-									visualizationData : data,
-									//initGeneSort: (this.initGeneSort)? this.initGeneSort:null,
-									//initExperimentSort: (this.initExperimentSort)? this.initExperimentSort:null,
-									//initFactorFilter: (this.initFactorFilter)? this.initFactorFilter:null,
-									applyTo : 'meta-heatmap-div',
-									//threshold : threshold, //we don't use this yet // should be renamed to p value threshold or something like that
-									//geneSessionGroupQueries :this.geneSessionGroupQueries,
-									//experimentSessionGroupQueries :this.experimentSessionGroupQueries,
-									//loadedFromURL: this.loadedFromURL
-								});
+									visualizationData : data
+								};
+						if(this.applyToParam){
+							Ext.apply(config,{
+								applyTo : this.applyToParam
+							});
+						}
+						_metaVizApp = new Gemma.Metaheatmap.Application(config);
+						
+						// so it can be rendered without rendering to a div (ex might want to add to a panel)
+						//this.fireEvent('visualizationReady', _metaVizApp);
 						
 						_metaVizApp.doLayout();
 						_metaVizApp.refreshVisualization();
@@ -359,6 +362,9 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 			}
 			if (this.param.experimentSessionGroupQueries) {
 				this.experimentSessionGroupQueries = this.param.experimentSessionGroupQueries;
+			}
+			if (this.param.applyTo) {
+				this.applyToParam = this.param.applyTo;
 			}
 			/*if (this.param.pvalue) { //we don't use this yet
 				this.pvalue = this.param.pvalue;
