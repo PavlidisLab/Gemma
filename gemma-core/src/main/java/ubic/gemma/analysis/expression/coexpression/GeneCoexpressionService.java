@@ -118,7 +118,7 @@ public class GeneCoexpressionService {
      * @return
      */
     public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Collection<Long> inputEeIds,
-            Collection<Gene> genes, int stringency, int maxResults, boolean queryGenesOnly ) {
+            Collection<Gene> genes, int stringency, int maxResults, boolean queryGenesOnly, boolean skipDetails ) {
 
         if ( genes.isEmpty() ) {
             return new HashSet<CoexpressionValueObjectExt>();
@@ -137,7 +137,7 @@ public class GeneCoexpressionService {
 
         assert !inputEeIds.isEmpty();
 
-        return getFilteredCannedAnalysisResults2( eeSet, inputEeIds, genes, stringency, maxResults, queryGenesOnly );
+        return getFilteredCannedAnalysisResults2( eeSet, inputEeIds, genes, stringency, maxResults, queryGenesOnly, skipDetails);
 
     }
 
@@ -293,13 +293,13 @@ public class GeneCoexpressionService {
      * @return
      */
     public Collection<CoexpressionValueObjectExt> coexpressionSearchQuick( Long eeSetId, Collection<Gene> queryGenes,
-            int stringency, int maxResults, boolean queryGenesOnly ) {
+            int stringency, int maxResults, boolean queryGenesOnly, boolean skipDetails ) {
 
         ExpressionExperimentSet eeSet = expressionExperimentSetService.load( eeSetId );
         expressionExperimentSetService.thaw( eeSet );
         Collection<Long> allEEIdsInSet = EntityUtils.getIds( eeSet.getExperiments() );
 
-        return coexpressionSearchQuick( allEEIdsInSet, queryGenes, stringency, maxResults, queryGenesOnly );
+        return coexpressionSearchQuick( allEEIdsInSet, queryGenes, stringency, maxResults, queryGenesOnly , skipDetails);
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
@@ -611,20 +611,26 @@ public class GeneCoexpressionService {
      * @return
      */
     private Collection<CoexpressionValueObjectExt> getFilteredCannedAnalysisResults2( ExpressionExperimentSet baseSet,
-            Collection<Long> eeIds, Collection<Gene> queryGenes, int stringency, int maxResults, boolean queryGenesOnly ) {
+            Collection<Long> eeIds, Collection<Gene> queryGenes, int stringency, int maxResults,
+            boolean queryGenesOnly, boolean skipDetails ) {
 
         if ( queryGenes.isEmpty() ) {
             throw new IllegalArgumentException( "No genes in query" );
         }
 
-        List<ExpressionExperimentValueObject> eevos = getSortedEEvos( eeIds );
+        List<ExpressionExperimentValueObject> eevos = null;
+        List<Long> filteredEeIds = null;
 
-        if ( eevos.isEmpty() ) {
-            throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
+        if ( !skipDetails ) {
+
+            eevos = getSortedEEvos( eeIds );
+
+            if ( eevos.isEmpty() ) {
+                throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
+            }
+
+            filteredEeIds = ( List<Long> ) EntityUtils.getIds( eevos );
         }
-
-        List<Long> filteredEeIds = ( List<Long> ) EntityUtils.getIds( eevos );
-
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
@@ -675,9 +681,12 @@ public class GeneCoexpressionService {
 
             assert g2gs != null;
 
-            List<Long> relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
-            relevantEEIdList.retainAll( filteredEeIds );
+            List<Long> relevantEEIdList = null;
 
+            if ( !skipDetails ) {
+                relevantEEIdList = getRelevantEEidsForBitVector( positionToIDMap, g2gs );
+                relevantEEIdList.retainAll( filteredEeIds );
+            }
             GeneValueObject queryGeneValueObject = new GeneValueObject( queryGene );
 
             Map<Gene, Collection<Gene2GeneCoexpression>> foundGenes = new HashMap<Gene, Collection<Gene2GeneCoexpression>>();
@@ -703,9 +712,7 @@ public class GeneCoexpressionService {
                 // All keep the g2g object for debugging purposes.
                 if ( foundGenes.containsKey( foundGene ) ) {
                     foundGenes.get( foundGene ).add( g2g );
-                    // log.warn(
-                    // "Duplicate gene found in coexpression results, skipping: "
-                    // + foundGene
+                    // log.warn( "Duplicate gene found in coexpression results, skipping: " + foundGene
                     // + " From analysis: " + g2g.getSourceAnalysis().getId() );
                     continue; // Found a duplicate gene, don't add to results
                               // just our debugging list
@@ -730,71 +737,90 @@ public class GeneCoexpressionService {
                 timer2.reset();
                 timer2.start();
 
-                List<Long> testingDatasets = Gene2GenePopulationService.getTestedExperimentIds( g2g,
-                        positionToIDMap );
-                testingDatasets.retainAll( filteredEeIds );
+                List<Long> testingDatasets;
+                List<Long> supportingDatasets;
+                List<Long> specificDatasets;
+                if ( !skipDetails ) {
 
-                /*
-                 * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there were
-                 * 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the analyzer.
-                 */
-                List<Long> supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g,
-                        positionToIDMap );
+                    testingDatasets = Gene2GenePopulationService.getTestedExperimentIds( g2g, positionToIDMap );
+                    testingDatasets.retainAll( filteredEeIds );
 
-                // necessary in case any were filtered out.
-                supportingDatasets.retainAll( filteredEeIds );
+                    /*
+                     * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there
+                     * were 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the
+                     * analyzer.
+                     */
+                    supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g, positionToIDMap );
 
-                cvo.setSupportingExperiments( supportingDatasets );
+                    // necessary in case any were filtered out.
+                    supportingDatasets.retainAll( filteredEeIds );
 
-                List<Long> specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g,
-                        positionToIDMap );
+                    cvo.setSupportingExperiments( supportingDatasets );
 
-                /*
-                 * Specific probe EEids contains 1 even if the data set wasn't supporting.
-                 */
-                specificDatasets.retainAll( supportingDatasets );
+                    specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g, positionToIDMap );
 
-                int numTestingDatasets = testingDatasets.size();
-                int numSupportingDatasets = supportingDatasets.size();
+                    /*
+                     * Specific probe EEids contains 1 even if the data set wasn't supporting.
+                     */
+                    specificDatasets.retainAll( supportingDatasets );
 
-                /*
-                 * SANITY CHECKS
-                 */
-                assert specificDatasets.size() <= numSupportingDatasets;
-                assert numTestingDatasets >= numSupportingDatasets;
-                assert numTestingDatasets <= eevos.size();
+                    int numTestingDatasets = testingDatasets.size();
+                    int numSupportingDatasets = supportingDatasets.size();
 
-                cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
-                        relevantEEIdList ) );
+                    /*
+                     * SANITY CHECKS
+                     */
+                    assert specificDatasets.size() <= numSupportingDatasets;
+                    assert numTestingDatasets >= numSupportingDatasets;
+                    assert numTestingDatasets <= eevos.size();
 
-                /*
-                 * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in the
-                 * full set of data sets that were used in the original analysis.
-                 */
-                if ( numSupportingDatasets < stringency ) {
-                    continue;
-                }
+                    cvo.setDatasetVector( getDatasetVector( supportingDatasets, testingDatasets, specificDatasets,
+                            relevantEEIdList ) );
 
-                allTestedDataSets.addAll( testingDatasets );
+                    /*
+                     * This check is necessary in case any data sets were filtered out. (i.e., we're not interested in
+                     * the full set of data sets that were used in the original analysis.
+                     */
+                    if ( numSupportingDatasets < stringency ) {
+                        continue;
+                    }
 
-                int supportFromSpecificProbes = specificDatasets.size();
-                if ( g2g.getEffect() < 0 ) {
-                    cvo.setPosSupp( 0 );
-                    cvo.setNegSupp( numSupportingDatasets );
-                    if ( numSupportingDatasets != supportFromSpecificProbes )
-                        cvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
+                    allTestedDataSets.addAll( testingDatasets );
+
+                    int supportFromSpecificProbes = specificDatasets.size();
+                    if ( g2g.getEffect() < 0 ) {
+                        cvo.setPosSupp( 0 );
+                        cvo.setNegSupp( numSupportingDatasets );
+                        if ( numSupportingDatasets != supportFromSpecificProbes )
+                            cvo.setNonSpecNegSupp( numSupportingDatasets - supportFromSpecificProbes );
+
+                    } else {
+                        cvo.setPosSupp( numSupportingDatasets );
+                        if ( numSupportingDatasets != supportFromSpecificProbes )
+                            cvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
+                        cvo.setNegSupp( 0 );
+                    }
+                    cvo.setSupportKey( Math.max( cvo.getPosSupp(), cvo.getNegSupp() ) );
+                    cvo.setNumTestedIn( numTestingDatasets );
+
+                    for ( Long id : supportingDatasets ) {
+                        supportCount.increment( id );
+                    }
+
+                    allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
                 } else {
-                    cvo.setPosSupp( numSupportingDatasets );
-                    if ( numSupportingDatasets != supportFromSpecificProbes )
-                        cvo.setNonSpecPosSupp( numSupportingDatasets - supportFromSpecificProbes );
-                    cvo.setNegSupp( 0 );
-                }
-                cvo.setSupportKey( Math.max( cvo.getPosSupp(), cvo.getNegSupp() ) );
-                cvo.setNumTestedIn( numTestingDatasets );
 
-                for ( Long id : supportingDatasets ) {
-                    supportCount.increment( id );
+                    if ( g2g.getEffect() < 0 ) {
+                        cvo.setPosSupp( 0 );
+                        cvo.setNegSupp( g2g.getNumDataSets() );
+                    } else {
+                        cvo.setPosSupp( g2g.getNumDataSets() );
+                        cvo.setNegSupp( 0 );
+                    }
+
+                    cvo.setSupportKey( Math.max( cvo.getPosSupp(), cvo.getNegSupp() ) );
+
                 }
 
                 cvo.setSortKey();
@@ -808,8 +834,6 @@ public class GeneCoexpressionService {
                 }
 
                 seen.add( g2g );
-
-                allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
             }
 

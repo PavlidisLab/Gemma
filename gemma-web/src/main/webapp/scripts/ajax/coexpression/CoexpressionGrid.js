@@ -189,14 +189,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						sortable : true,
 						hidden : true
 
-					}, {
+					}/*, {
 						id : 'datasets',
 						header : "Datasets",
 						dataIndex : "datasetVector",
 						renderer : this.bitImageStyler.createDelegate(this),
 						tooltip : "Dataset relevence map",
 						sortable : false
-					}, {
+					}*/, {
 						id : 'linkOut',
 						dataIndex : "foundGene",
 						header : "More",

@@ -156,7 +156,7 @@ public class GeneCoexpressionEndpoint extends AbstractGemmaEndpoint {
 
             // get Gene2GeneCoexpressio objects canned analysis
             Collection<CoexpressionValueObjectExt> coexpressedGenes = geneCoexpressionService.coexpressionSearchQuick(
-                    Long.parseLong( analysisId ), geneCol, stringency, MAX_RESULTS, queryGenesOnly );
+                    Long.parseLong( analysisId ), geneCol, stringency, MAX_RESULTS, queryGenesOnly, false );
 
             if ( coexpressedGenes.isEmpty() ) {
                 String msg = "No coexpressed genes found.";

@@ -120,7 +120,7 @@ public class CoexpressionSearchController extends BaseFormController {
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( eeSetId,
-                genes, 2, 20, false );
+                genes, 2, 20, false , false);
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
@@ -153,8 +153,49 @@ public class CoexpressionSearchController extends BaseFormController {
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( searchOptions.getEeIds(),
-                genes, searchOptions.getStringency(), COEX_VIS_RESULTS, searchOptions.getQueryGenesOnly() );
+                genes, searchOptions.getStringency(), COEX_VIS_RESULTS, searchOptions.getQueryGenesOnly(), true );
+               
+        int resultsLimit = 1000;
+        
+        // strip down results for front end if data is too large
+        if ( geneResults.size() > resultsLimit ) {
+            int oldSize = geneResults.size();            
+            
+            log.info( "Coex Search for "+ searchOptions.getGeneIds().toString() +" returned "+geneResults.size()+" results.  Stripping low stringency results");
+
+            Collection<CoexpressionValueObjectExt> strippedGeneResults = new HashSet<CoexpressionValueObjectExt>();
+
+            for ( int i = 2; i < 20; i++ ) {
+
+                for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+                    
+                    //check
+                    if ( cvoe.getPosSupp() > i || cvoe.getNegSupp() > i ) {
+                        strippedGeneResults.add( cvoe );
+                    }
+
+                }
+                
+                
+                geneResults = strippedGeneResults;
+                
+                if (strippedGeneResults.size()<resultsLimit){                    
+                    
+                    break;
+                }       
+                
+                strippedGeneResults = new HashSet<CoexpressionValueObjectExt>();
+                
+
+            }
+                        
+            
+            log.info( "Original results size: "+ oldSize +" trimmed results size: "+geneResults.size()+"  Total results removed: "+ (oldSize-geneResults.size()));
+
+        }
+        
         result.setKnownGeneResults( geneResults );
+        
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
             result.setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
