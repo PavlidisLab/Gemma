@@ -473,6 +473,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					scope: this
 				},'->','-',{
 						ref: 'orphansToggle',
+						boxLabel:'Hide Orphans',
 						checked: !this.showOrphans,
 						xtype: 'checkbox',
 						style:'margin-top:0px',
@@ -493,8 +494,9 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 							
 						},
 						scope: this
-					},'Hide Orphans','-',{
+					},'-',{
 					ref:'troubledToggle',
+					boxLabel: 'Hide Troubled',
 					checked: !this.showTroubled,
 					hidden: true,
 					style:'margin-top:0px',
@@ -515,7 +517,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 						
 					},
 					scope:this
-				},{ref:'troubledToggleText', html:'Hide Troubled', hidden:true},'-',{
+				},'-',{
 					ref:'ArrayDesignsSummaryWindowBtn',
 					text: 'Array Designs Summary',
 					cls: 'x-toolbar-standardbutton',
@@ -589,7 +591,6 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 		 
 		this.getTopToolbar().troubledToggle.setVisible(isAdmin);
-		this.getTopToolbar().troubledToggleText.setVisible(isAdmin);
 		this.getTopToolbar().ArrayDesignsSummaryWindowBtn.setVisible(isAdmin);
     }
 });
