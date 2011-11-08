@@ -111,6 +111,10 @@ Ext.onReady(function() {
 		if (Ext.get('frontPageSlideShow')) {
 			Ext.get('frontPageSlideShow').remove();
 		}
+						
+		if (Ext.get('sloganText')) {
+			Ext.get('sloganText').remove();
+		}
 		
 		// remove previous diff visualization result
 		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
