@@ -46,7 +46,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	currentResultsStringency:2,
 
 	viewConfig : {
-		forceFit : true
+		forceFit : true,
+        emptyText: 'No coexpressed genes to display'
 	},
 
 	initComponent : function() {
@@ -420,17 +421,20 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * an error thrown of after data load processing
 	 */
 	handleError : function(errorMessage) {
-		Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
-		Ext.DomHelper.overwrite("coexpression-msg", [{
+		if(Ext.get('coexpression-msg')){
+			Ext.DomHelper.applyStyles("coexpression-msg", "height: 2.2em");
+			Ext.DomHelper.overwrite("coexpression-msg", [{
 							tag : 'img',
 							src : '/Gemma/images/icons/information.png'
 						}, {
 							tag : 'span',
 							html : "&nbsp;&nbsp;" + errorMessage
 						}]);
-
+		}else{
+			Ext.Msg.alert("Warning",errorMessage);
+			this.getView().refresh(); //show empty text
+		}
 		this.loadMask.hide();
-		this.hide();
 	},
 
 	clearError : function() {

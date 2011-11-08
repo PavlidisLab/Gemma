@@ -11,8 +11,11 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	autoExpandColumn : 'efs',
 	height : 300,
 	stateful : false,
+
 	viewConfig : {
-	 forceFit : true
+		forceFit : true,
+        emptyText: 'No differential expression to display'
+		//,deferEmptyText: false
 	},
 
 	readMethod : DifferentialExpressionSearchController.getDifferentialExpressionWithoutBatch,
@@ -175,16 +178,19 @@ Gemma.ProbeLevelDiffExGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * Print error message called when application throws and exception or error message set on result.
 	 */
 	handleError : function(errorMessage) {
-		Ext.DomHelper.applyStyles("diffExpression-msg", "height: 2.2em");
-		Ext.DomHelper.overwrite("diffExpression-msg", [{
+		if(Ext.get("diffExpression-msg")){
+			Ext.DomHelper.applyStyles("diffExpression-msg", "height: 2.2em");
+			Ext.DomHelper.overwrite("diffExpression-msg", [{
 							tag : 'img',
 							src : '/Gemma/images/icons/information.png'
 						}, {
 							tag : 'span',
 							html : "&nbsp;&nbsp;" + errorMessage
 						}]);
-
-		this.hide();
+		}else{
+			Ext.Msg.alert("Warning",errorMessage);
+			this.getView().refresh(); //show empty text
+		}
 
 	},
 
