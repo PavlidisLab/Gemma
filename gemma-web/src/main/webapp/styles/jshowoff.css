@@ -13,8 +13,6 @@ License: 	Dual licensed under the MIT and GPL licenses.
 
 
 #features, #slidingFeatures, #labelFeatures, #basicFeatures, #thumbFeatures {
-	background: url(/Gemma/images/slideShow/bg_body.jpg) repeat;
-	background-color: #E0F0FF;
 	position: relative;
 	overflow: hidden;
 	width: 900px;
@@ -36,7 +34,11 @@ License: 	Dual licensed under the MIT and GPL licenses.
 	width: auto;
 	height: auto;
 	}
-.jshowoff div, .jshowoff img, .jshowoff {
+.jshowoff div, .jshowoff {
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+	}
+.jshowoff img.rounded {
 	-webkit-border-top-left-radius: 6px;
 	-webkit-border-top-right-radius: 6px;
 	}
@@ -70,7 +72,7 @@ License: 	Dual licensed under the MIT and GPL licenses.
 .jshowoff-slidelinks a, .jshowoff-controls a {
 	display: block;
 	background-color: #fff;
-	color: #fff;
+	color: teal;
 	padding: 5px 7px 5px;
 	margin: 5px 0 0 5px;
 	float: left;
@@ -78,18 +80,19 @@ License: 	Dual licensed under the MIT and GPL licenses.
 	-moz-border-radius: 4px;
 	-webkit-border-radius: 4px;
 	outline: none;
-	font-size: 11px;
 	line-height: 14px;
+	border: solid 1px gainsboro;
 	}
 .jshowoff-slidelinks a:hover, .jshowoff-controls a:hover {
-	color: #fff;
+	color: orange;
 	}
 .jshowoff-slidelinks a.jshowoff-active, .jshowoff-slidelinks a.jshowoff-active:hover {
 	background-color: #fff;
 	color: #000;
+	border: solid 1px grey;
 	}
 p.jshowoff-controls {
-	background: #aaa;
+	background: transparent;
 	overflow: auto;
 	height: 1%;
 	padding: 0 0 5px 5px;
@@ -110,112 +113,50 @@ p.jshowoff-controls {
 	color: #fff;
 	}
 
-
-/*-- Re-styled Thumbnail Demo --*/
-
-#thumbfeatures {
-	/*needed so links in slides aren't blocked by fwd-back nav element*/
-	width:800px;
-	z-index:100;
-
-}
-.thumbFeatures p.jshowoff-slidelinks {
-	background: #d2e7ec;
-	bottom: 0;
-	padding: 5px 0 5px 5px;
-	right: 53px;
-	height: 32px;
-	z-index:150;
-	}
-.thumbFeatures .jshowoff-slidelinks a {
-	display: block;
-	width: 46px;
-	height: 30px;
-	background-color: none;
-	background-repeat: no-repeat;
-	margin: 0 5px 0 0;
-	padding: 0;
-	border: 1px solid #ffffff;
-	text-indent: -10000em;
-	-moz-border-radius: 0;
-	-webkit-border-radius: 0;
-	}
-.thumbFeatures .jshowoff-slidelinks a.jshowoff-active {
-	border: 1px solid #4f4f4f;
-	}
-.thumbFeatures .jshowoff-slidelink-0 {
-	background-image: url(/Gemma/images/slideShow/gemmaThumbIcon.gif);
-	}
-.thumbFeatures .jshowoff-slidelink-1 {
-	background-image: url(/Gemma/images/slideShow/databaseIcon_thea.png);
-	}
-.thumbFeatures .jshowoff-slidelink-2 {
-	background-image: url(/Gemma/images/slideShow/DiffExpIcon.jpg);
-	}
-.thumbFeatures .jshowoff-slidelink-3 {
-	background-image: url(/Gemma/images/slideShow/lockIcon_GNU-GPL.png);
-	}
-.thumbFeatures p.jshowoff-controls {
-	background: none;
-	height: 38px;
-	overflow: visible;
-	padding: 0;
-	position: absolute;
-	top: 100px;
-	width: 100%;
-	}
-.thumbFeatures .jshowoff-controls a {
-	display: block;
-	width: 22px;
-	height: 38px;
-	background: none;
-	background-repeat: no-repeat;
-	margin: 0;
-	padding: 0;
-	text-indent: -10000em;
-	position: absolute;
-	}
-
-.thumbFeatures .jshowoff-controls a.jshowoff-prev {
-	left: 15px;
-	background-image: url(http://farm5.static.flickr.com/4035/4438728886_fd55756fc5_o_d.gif);
-	}
-.thumbFeatures .jshowoff-controls a.jshowoff-next {
-	right: 15px;
-	background-image: url(http://farm3.static.flickr.com/2743/4438728872_07e935da40_o_d.gif);
-	}
-.thumbFeatures .jshowoff-controls a.jshowoff-play {
-	display: none;
-	}
-.jshowoff.thumbFeatures {
-	height: 250px;
-	}
-.jshowoff.thumbFeatures div, .jshowoff.thumbFeatures img, .jshowoff.thumbFeatures {
-	-webkit-border-radius: 6px;
-	}
-.jshowoff.thumbFeaturesOLD ul {
-	list-style: disc outside;
-	line-height: 100%;
-	font-size: 11pt;
-	margin-left: 30px;
-}
-.jshowoff.thumbFeatures ul {
+.jshowoff ul {
 	list-style: none outside;
 	line-height: 100%;
 	font-size: 11pt;
 	text-align: center;
 }
-.jshowoff.thumbFeatures li {
+.jshowoff li {
 	margin-bottom: 25px;
 	letter-spacing: 1px;
 }
-.jshowoff.thumbFeatures h1, .jshowoff.thumbFeatures h2 {
+.jshowoff .highlightedSlideText {
+	color : #EC7F2C;
+	font-size: 13pt;
+}
+.jshowoff h1, .jshowoff h2 {
 	margin-bottom: 25px;
 	letter-spacing: 1px;
 }
 td.slideTextTD {
 	vertical-align: top;
 	width: 500px;
+	padding-top:40px;
+	width:350px;
+}
+td.slideImageTD {
+	width:300px;
+}
+
+span,img{padding:0;margin:0;border:0;}
+.fancy{
+	position:relative;
+	display:inline-block;
+	font-size:0;
+	line-height:0;
+}
+.fancy:after{
+	position:absolute;
+	top:1px;
+	left:1px;
+	bottom:1px;
+	right:1px;
+	border:1px solid rgba(255,255,255,0.5);
+	outline:1px solid rgba(0,0,0,0.2);
+	content:" ";
 }
 
 /*-- slides --*/

@@ -1,138 +1,105 @@
 <link rel="stylesheet" type="text/css"
 	href="/Gemma/styles/jshowoff.css" />
 
-
-<div id="frontPageSlideShow" width="100%" align="center" style="background: url(/Gemma/images/slideShow/bg_body_colour2.png) repeat; margin-bottom:30px; border-top: 1px solid gainsboro; border-bottom:1px solid gainsboro;">
+<div id="sloganText">
+	<h2 style="text-align:center;color:grey;font-size:1.8em">Tools and database for meta-analysis of functional genomics data</h2>
+</div>
+<div id="frontPageSlideShow" width="100%" align="center" style="background: url(/Gemma/images/slideShow/gradientBack.jpg) repeat-x; margin-bottom:30px; border-top: 1px solid gainsboro; border-bottom:1px solid gainsboro;">
 <!-- div width="100%" align="center" style="background: #c1d1d5"-->
-	<div id="thumbfeatures" style="overflow: hidden; background: url(/Gemma/images/slideShow/bg_body_white_fade_strip.png) repeat">
-		<div title="Gemma">
-			<table height="250px" width="650px">
+	<div id="features" style="overflow: hidden;">
+		<div title="1" id="dataChart">
+			<table>
 				<tr>
-					<td>
-						<img src="/Gemma/images/slideShow/gemma-lg190-188_glow.png">
-					</td>
-					<td width="500px">
-						<h1 style="text-align: center;">
-							Welcome to Gemma!
-						</h1>
-						<h2 style="text-align:center">Database and tools for meta-analysis of functional genomics data</h2>
-					</td>
-				</tr>
-			</table>
-		</div>
-		<div title="DatabaseChart" id="dataChart">
-			<table height="250px" width="650px">
-				<tr>
-					<td>
+					<td class="slideImageTD">
 						
 						<img
 							src="http://chart.apis.google.com/chart?chs=280x240&cht=p&chco=224499&chd=${ googleData}
 									&chds=a&chdl=${ googleLabels}&chf=bg,s,FFFFFF00
 									&chdlp=b|l&chdls=2f2f2f,13"
 							width="280" height="240" alt="" />
-						<img style="position:absolute;top:123px;left:200px" src="/Gemma/images/slideShow/humanOutline_35_3.png"/>
-						<img style="position:absolute;top:60px;left:150px" src="/Gemma/images/slideShow/mouseOutline65_simplified.png"/>
+						<img style="position:absolute;top:123px;left:250px" src="/Gemma/images/slideShow/humanOutline_35_3.png"/>
+						<img style="position:absolute;top:60px;left:200px" src="/Gemma/images/slideShow/mouseOutline65_simplified.png"/>
 						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
-					<td class="slideTextTD" style="width:350px">
+					<td class="slideTextTD">
 						<h2 style="text-align: center;">
 							Functional Genomics Database
 						</h2>
 						<ul style="clear: both;">
 							<li>
-							<span style="color:#EC7F2C;font-size:14pt">Over 3000 data sets </span>
+								<span style="color:#EC7F2C;font-size:14pt">Over 3000 data sets </span>
 							</li>
 							<li>
 								Ongoing updates and additions
 							</li>
-							<c:if
-								test="${not empty updatedExpressionExperimentCount || not empty stats.updatedArrayDesignCount}">
-
-								<li> 
-									<c:if test="${not empty updatedExpressionExperimentCount}">
-									${ updatedExpressionExperimentCount} experiment<c:if
-											test="${updatedExpressionExperimentCount > 1}">s</c:if>
-
-									</c:if>
-									<c:if test="${not empty stats.updatedArrayDesignCount}">
-
-										<c:if test="${not empty updatedExpressionExperimentCount}">
-										and
-									</c:if>
-									
-									${ stats.updatedArrayDesignCount} array design<c:if
-											test="${stats.updatedArrayDesignCount > 1}">s</c:if>
-
-									</c:if>
-									updated in the last week
-								</li>
-							</c:if>
-							<c:if
-								test="${not empty newExpressionExperimentCount || not empty stats.updatedArrayDesignCount}">
-								<li>
-									<c:if test="${not empty newExpressionExperimentCount}">
-									${ newExpressionExperimentCount} experiment<c:if
-											test="${newExpressionExperimentCount > 1}">s</c:if>
-
-									</c:if>
-									<c:if test="${not empty stats.updatedArrayDesignCount}">
-										<c:if test="${not empty newExpressionExperimentCount}">
-										and
-									</c:if>
-									${ stats.newArrayDesignCount} array design<c:if
-											test="${stats.newArrayDesignCount > 1}">s</c:if>
-									</c:if>
-									added in the last week
-								</li>
-							</c:if>
 						</ul>
 					</td>
 				</tr>
 			</table>
 		</div>
-		<div title="Differential Expression">
+		<div title="2">
 			<table>
 				<tr>
-					<td>
-						<img src="/Gemma/images/slideShow/exSlide1.png" height="130px" style="margin:15px;padding:3px; border: 3px double black">
-					</td><td>
-						<img src="/Gemma/images/slideShow/exSlide2.jpg" height="130px">
+					<td class="slideImageTD">
+							<img src="/Gemma/images/slideShow/diffEx.png" style="margin-top:10px"/>
 					</td>
-					<td class="slideTextTD">
+					<td class="slideTextTD"  style="width:450px;">
 						<h2 style="text-align: center;">
-							Differential and Coexpression Analysis
+							Differential Expression Analysis
 						</h2>
 						<ul style="clear: both">
 							<li>
-								Analyse sets of data 
+								<span class="highlightedSlideText">Interactive results</span>
 							</li>
 							<li>
-								Visualise results
+								Custom visualiser allows rearranging by factor
 							</li>
 							<li>
-								Prosper
+								View results as p values and fold changes 
 							</li>
 						</ul>
 					</td>
 				</tr>
 			</table>
 		</div>
-		<div title="My Gemma">
-			<table style="width:750px;margin-right:100px">
+		<div title="3">
+			<table>
 				<tr>
-					<td>
+					<td class="slideImageTD">
+							<img class="rounded" src="/Gemma/images/slideShow/coex.png" style="margin-top:15px;">
+					</td>
+					<td class="slideTextTD">
+						<h2 style="text-align: center;">
+							Coexpression Analysis
+						</h2>
+						<ul style="clear: both">
+							<li>
+								Visualise results with Cytoscape
+							</li>
+							<li>
+								Contextualise links with node degree
+							</li>
+						</ul>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div title="4">
+			<table>
+				<tr>
+					<td class="slideImageTD">
 						<img src="/Gemma/images/slideShow/myGemma2.png" style="padding:15px">
 					</td>
-					<td class="slideTextTD" >
-						<h2 style="text-align: center; margin-right:50px;">
+					<td class="slideTextTD">
+						<h2 style="text-align: center; ">
 							My Gemma
 						</h2>
-						<ul style="clear: both; margin-left:0px; margin-right:50px;">
+						<ul style="clear: both;">
 							<li>
 								Analyse your private data with Gemma tools
 							</li>
 							<li>
-								Save sets of genes and experiments for analysis
+								Save sets of genes and experiments
 							</li>
 							<li>
 								Share your data selectively
@@ -149,14 +116,17 @@
 jQuery.noConflict();
 
 
-	jQuery(document).ready(function() {
-		jQuery('#thumbfeatures').jshowoff( {
-			cssClass : 'thumbFeatures',
+jQuery(document).ready(function() {
+  	  
+		jQuery('#features').jshowoff( {
+			//cssClass : 'thumbFeatures',
 			effect : 'slideLeft',
 			autoPlay: true, // default: true
-			speed: 9000 // default: 3000 (ms)
-			
+			controls: false,
+			speed: 9000, // default: 3000 (ms)
+			hoverPause: false // default: true, was buggy
 		});
-	});
-	
+
+
+});
 </script>

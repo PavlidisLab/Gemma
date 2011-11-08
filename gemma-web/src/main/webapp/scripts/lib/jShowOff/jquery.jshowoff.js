@@ -215,7 +215,7 @@ speed :				time each slide is shown [integer, milliseconds, defaults to 3000]
 
 			// generate and add play/pause, prev, next controls
 			function addControls() {
-				$wrap.append('<p class="jshowoff-controls '+uniqueClass+'-controls"><a class="jshowoff-play '+uniqueClass+'-play" href="#null">'+config.controlText.pause+'</a> <a class="jshowoff-prev '+uniqueClass+'-prev" href="#null">'+config.controlText.previous+'</a> <a class="jshowoff-next '+uniqueClass+'-next" href="#null">'+config.controlText.next+'</a></p>');
+				$wrap.append('<p class="jshowoff-controls '+uniqueClass+'-controls"><a class="jshowoff-play '+uniqueClass+'-play" href="#null">'+config.controlText.pause+'</a> </p>');
 				$('.'+uniqueClass+'-controls a').each(function(){
 						if($(this).hasClass('jshowoff-play')) $(this).click(function(){ isPlaying() ? pause('playBtn') : play(); return false; } );
 						if($(this).hasClass('jshowoff-prev')) $(this).click(function(){ previous(); return false; });
