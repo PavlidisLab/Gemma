@@ -97,14 +97,12 @@ public class Gene2GenePopulationService {
      * @param experimentsAnalyzed
      * @return Map of location in the vector to EE ID.
      */
-    public static Map<Integer, Long> getPositionToIdMap( Collection<Long> experimentIdsAnalyzed ) {
+    public static List<Long> getPositionToIdMap( Collection<Long> experimentIdsAnalyzed ) {
         List<Long> eeIds = new ArrayList<Long>( experimentIdsAnalyzed );
         Collections.sort( eeIds );
-        Map<Integer, Long> eeOrderId = new HashMap<Integer, Long>();
-        int location = 0;
+        List<Long> eeOrderId = new ArrayList<Long>();
         for ( Long id : eeIds ) {
-            eeOrderId.put( location, id );
-            location++;
+            eeOrderId.add( id );
         }
         return eeOrderId;
     }
@@ -114,10 +112,9 @@ public class Gene2GenePopulationService {
      * @param eePositionToIdMap
      * @return
      */
-    public static Collection<Long> getSpecificExperimentIds( Gene2GeneCoexpression ggc,
-            Map<Integer, Long> eePositionToIdMap ) {
+    public static List<Long> getSpecificExperimentIds( Gene2GeneCoexpression ggc, List<Long> eePositionToIdMap ) {
         if ( ggc.getSpecificityVector() == null ) {
-            return new HashSet<Long>();
+            return new ArrayList<Long>();
         }
         // log.info( BitUtil.prettyPrint( ggc.getSpecificityVector() ) );
         return convertBitVector( eePositionToIdMap, ggc.getSpecificityVector() );
@@ -125,12 +122,11 @@ public class Gene2GenePopulationService {
 
     /**
      * @param ggc
-     * @param eePositionToIdMap
+     * @param positionToIDMap
      * @return
      */
-    public static Collection<Long> getSupportingExperimentIds( Gene2GeneCoexpression ggc,
-            Map<Integer, Long> eePositionToIdMap ) {
-        return convertBitVector( eePositionToIdMap, ggc.getDatasetsSupportingVector() );
+    public static List<Long> getSupportingExperimentIds( Gene2GeneCoexpression ggc, List<Long> positionToIDMap ) {
+        return convertBitVector( positionToIDMap, ggc.getDatasetsSupportingVector() );
     }
 
     /**
@@ -138,23 +134,21 @@ public class Gene2GenePopulationService {
      * @param eePositionToIdMap
      * @return
      */
-    public static Collection<Long> getTestedExperimentIds( Gene2GeneCoexpression ggc,
-            Map<Integer, Long> eePositionToIdMap ) {
+    public static List<Long> getTestedExperimentIds( Gene2GeneCoexpression ggc, List<Long> eePositionToIdMap ) {
         return convertBitVector( eePositionToIdMap, ggc.getDatasetsTestedVector() );
     }
 
     /**
-     * @param eePositionToIdMap
+     * @param positionToIDMap
      * @param bitvector
      * @return
      */
-    private static Collection<Long> convertBitVector( Map<Integer, Long> eePositionToIdMap, byte[] bitvector ) {
+    private static List<Long> convertBitVector( List<Long> positionToIDMap, byte[] bitvector ) {
         List<Long> ids = new ArrayList<Long>();
-        for ( int i = 0; i < eePositionToIdMap.size(); i++ ) {
-            if ( BitUtil.get( bitvector, i ) ) {
-                Long supportingEE = eePositionToIdMap.get( i );
-                ids.add( supportingEE );
-            }
+        boolean[] asBools = BitUtil.asBools( bitvector );
+        assert asBools.length >= positionToIDMap.size(); // padding at the end.
+        for ( int i = 0; i < positionToIDMap.size(); i++ ) {
+            if ( asBools[i] ) ids.add( positionToIDMap.get( i ) );
         }
         return ids;
     }
