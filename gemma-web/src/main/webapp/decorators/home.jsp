@@ -19,10 +19,13 @@
 		<%-- for dwr creation of javascript objects to mirror java value objects--%>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DatabaseBackedExpressionExperimentSetValueObject.js'></script>
 		<script type='text/javascript' src='/Gemma/scripts/app/valueObjectsInheritanceStructure.js'></script>
+		
+		<!-- needed for registration widget -->
 		<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
-		<script type="text/javascript"
-			src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js">
-		</script>
+		
+		<!-- needed for chart in front page slide show-->
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js"></script>
+		
 		<jwr:script src="/bundles/include.js" />
 		<jwr:script src="/bundles/gemma-lib.js" />
 		
