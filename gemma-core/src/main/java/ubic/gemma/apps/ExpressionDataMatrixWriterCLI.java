@@ -20,6 +20,8 @@ package ubic.gemma.apps;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +32,7 @@ import org.apache.commons.cli.OptionBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
+import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.datastructure.matrix.MatrixWriter;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.designElement.CompositeSequenceService;
@@ -53,7 +56,7 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
         }
     }
 
-    private String outFileName;
+    private String outFileName = null;
 
     private boolean filter = false;
 
@@ -68,9 +71,12 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     @SuppressWarnings("static-access")
     protected void buildOptions() {
         super.buildOptions();
-        Option outputFileOption = OptionBuilder.hasArg().isRequired().withArgName( "outFilePrefix" ).withDescription(
-                "File prefix for saving the output (short name will be appended)" ).withLongOpt( "outFilePrefix" )
-                .create( 'o' );
+        Option outputFileOption = OptionBuilder
+                .hasArg()
+                .withArgName( "outFilePrefix" )
+                .withDescription(
+                        "File prefix for saving the output (short name will be appended); if not supplied, output to stdout" )
+                .withLongOpt( "outFilePrefix" ).create( 'o' );
         addOption( outputFileOption );
 
         Option geneInfoOption = OptionBuilder.withDescription(
@@ -87,7 +93,8 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
     @Override
     protected Exception doWork( String[] args ) {
         FilterConfig fCon = new FilterConfig();
-        processCommandLine( "expressionDataMatrixWriterCLI", args );
+        Exception err = processCommandLine( "expressionDataMatrixWriterCLI", args );
+        if ( err != null ) return err;
 
         ExpressionDataMatrixService ahs = ( ExpressionDataMatrixService ) this.getBean( "expressionDataMatrixService" );
 
@@ -101,25 +108,32 @@ public class ExpressionDataMatrixWriterCLI extends ExpressionExperimentManipulat
                 dataMatrix = ahs.getProcessedExpressionDataMatrix( ( ExpressionExperiment ) ee );
             }
 
-            Map<Long, Collection<Gene>> genesByProbeId = new HashMap<Long, Collection<Gene>>();
-
             int rows = dataMatrix.rows();
+            Collection<CompositeSequence> probes = new ArrayList<CompositeSequence>();
             for ( int j = 0; j < rows; j++ ) {
                 CompositeSequence probeForRow = dataMatrix.getDesignElementForRow( j );
-                Collection<Gene> genes = css.getGenes( probeForRow );
-                genesByProbeId.put( probeForRow.getId(), genes );
+                probes.add( probeForRow );
             }
 
+            Map<CompositeSequence, Collection<Gene>> genes = css.getGenes( probes );
+
+            Writer writer;
             try {
                 MatrixWriter out = new MatrixWriter();
-                PrintWriter writer = new PrintWriter( outFileName + "_"
-                        + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
 
-                out.write( writer, dataMatrix, genesByProbeId, true, false, addGeneInfo, true );
+                if ( outFileName == null ) {
+                    writer = new PrintWriter( System.out );
+                } else {
+                    writer = new PrintWriter( outFileName + "_"
+                            + ( ( ExpressionExperiment ) ee ).getShortName().replaceAll( "\\s", "" ) + ".txt" );
+                }
+                out.write( writer, dataMatrix, genes, true, false, addGeneInfo, true );
                 writer.flush();
                 writer.close();
             } catch ( IOException e ) {
                 return e;
+            } finally {
+
             }
         }
 

@@ -52,8 +52,9 @@ public class MatrixWriter<T> {
      * @param orderByDesign
      * @throws IOException
      */
-    public void write( Writer writer, ExpressionDataMatrix<T> matrix, Map<Long, Collection<Gene>> geneAnnotations,
-            boolean writeHeader, boolean orderByDesign ) throws IOException {
+    public void write( Writer writer, ExpressionDataMatrix<T> matrix,
+            Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean orderByDesign )
+            throws IOException {
         this.write( writer, matrix, geneAnnotations, writeHeader, true, true, orderByDesign );
     }
 
@@ -70,15 +71,16 @@ public class MatrixWriter<T> {
      * @throws IOException
      */
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<T> matrix,
-            Map<Long, String[]> geneAnnotations, boolean writeHeader ) throws IOException {
+            Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader ) throws IOException {
         this.writeWithStringifiedGeneAnnotations( writer, matrix, geneAnnotations, writeHeader, true, true, true );
     }
 
     /**
      * @param writer
      * @param matrix
-     * @param geneAnnotations Map of composite sequence ids to an array of delimited strings: [probe name,genes symbol,
-     *        gene Name]
+     * @param geneAnnotations Map of composite sequences to an array of delimited strings: [probe name,genes symbol,
+     *        gene Name] -- these include the "|" to indicate multiple genes, and originate in the platform annotation
+     *        files.
      * @param writeHeader
      * @param writeSequence
      * @param writeGeneInfo
@@ -86,8 +88,8 @@ public class MatrixWriter<T> {
      * @throws IOException
      */
     public void writeWithStringifiedGeneAnnotations( Writer writer, ExpressionDataMatrix<T> matrix,
-            Map<Long, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence, boolean writeGeneInfo,
-            boolean orderByDesign ) throws IOException {
+            Map<CompositeSequence, String[]> geneAnnotations, boolean writeHeader, boolean writeSequence,
+            boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
@@ -141,13 +143,14 @@ public class MatrixWriter<T> {
      *        ExpressionDataMatrixColumnSort.orderByExperimentalDesign
      * @throws IOException
      */
-    public void write( Writer writer, ExpressionDataMatrix<T> matrix, Map<Long, Collection<Gene>> geneAnnotations,
-            boolean writeHeader, boolean writeSequence, boolean writeGeneInfo, boolean orderByDesign )
-            throws IOException {
+    public void write( Writer writer, ExpressionDataMatrix<T> matrix,
+            Map<CompositeSequence, Collection<Gene>> geneAnnotations, boolean writeHeader, boolean writeSequence,
+            boolean writeGeneInfo, boolean orderByDesign ) throws IOException {
         int columns = matrix.columns();
         int rows = matrix.rows();
 
         List<BioMaterial> bioMaterials = getBioMaterialsInRequestedOrder( matrix, orderByDesign );
+        int orderedBioMLastIndex = bioMaterials.size() - 1;
 
         StringBuffer buf = new StringBuffer();
         if ( writeHeader ) {
@@ -159,25 +162,25 @@ public class MatrixWriter<T> {
             buf.append( probeForRow.getName() + "\t" );
             if ( writeSequence ) {
                 BioSequence biologicalCharacteristic = probeForRow.getBiologicalCharacteristic();
-                if ( biologicalCharacteristic != null ) buf.append( biologicalCharacteristic.getName() + "\t" );
+                if ( biologicalCharacteristic != null ) buf.append( biologicalCharacteristic.getName() );
+                buf.append( "\t" );
             }
 
             if ( writeGeneInfo ) {
                 addGeneInfo( buf, probeForRow, geneAnnotations );
             }
 
-            int orderedBioMLastIndex = bioMaterials.size() - 1;
-
+            // print the data.
             for ( BioMaterial bioMaterial : bioMaterials ) {
+                buf.append( "\t" );
+
                 int i = matrix.getColumnIndex( bioMaterial );
                 T val = matrix.get( j, i );
-
-                // Don't want line to contain a trailing unnecessary tab
-                if ( bioMaterials.indexOf( bioMaterial ) == orderedBioMLastIndex )
+                if ( val == null || ( val instanceof Double && Double.isNaN( ( Double ) val ) ) ) {
+                    buf.append( "" );
+                } else {
                     buf.append( val );
-                else
-                    buf.append( val + "\t" );
-
+                }
             }
 
             buf.append( "\n" );
@@ -210,8 +213,8 @@ public class MatrixWriter<T> {
      *      annotations are set up.
      */
     private void writeHeader( List<BioMaterial> orderedBioMaterials, ExpressionDataMatrix<T> matrix,
-            Map<Long, ? extends Object> geneAnnotations, boolean writeSequence, boolean writeGeneInfo, int columns,
-            StringBuffer buf ) {
+            Map<CompositeSequence, ? extends Object> geneAnnotations, boolean writeSequence, boolean writeGeneInfo,
+            int columns, StringBuffer buf ) {
 
         ExpressionDataWriterUtils.appendBaseHeader( matrix.getExpressionExperiment(), false, buf );
         buf.append( "Probe" );
@@ -219,8 +222,9 @@ public class MatrixWriter<T> {
 
         if ( writeGeneInfo && geneAnnotations != null && !geneAnnotations.isEmpty() ) {
             buf.append( "\tGeneSymbol\tGeneName" );
-            if ( ( ( String[] ) geneAnnotations.values().iterator().next() ).length > 3 ) {
-                buf.append( "\tNCBIid" );
+            Object o = geneAnnotations.values().iterator().next();
+            if ( o instanceof Collection /* genes */|| ( ( String[] ) o ).length > 3 ) {
+                buf.append( "\tGemmaId\tNCBIid" );
             }
         }
 
@@ -243,12 +247,12 @@ public class MatrixWriter<T> {
      * @see ubic.gemma.analysis.service.ArrayDesignAnnotationService.readAnnotationFileAsString for how the stringified
      *      annotations are set up.
      */
-    private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe, Map<Long, String[]> geneAnnotations ) {
+    private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe,
+            Map<CompositeSequence, String[]> geneAnnotations ) {
         if ( geneAnnotations == null || geneAnnotations.isEmpty() ) return;
-        Long probeid = probe.getId();
-        if ( geneAnnotations.containsKey( probeid ) ) {
+        if ( geneAnnotations.containsKey( probe ) ) {
 
-            String[] geneStrings = geneAnnotations.get( probeid );
+            String[] geneStrings = geneAnnotations.get( probe );
 
             if ( geneStrings.length == 0 ) {
                 buf.append( "\t\t" );
@@ -283,27 +287,37 @@ public class MatrixWriter<T> {
      * @param geneAnnotations Map of composite sequence ids to genes. If null, nothing will be added to the text. If
      *        there are no genes for the probe, then blanks will be added.
      */
-    private void addGeneInfo( StringBuffer buf, CompositeSequence probe, Map<Long, Collection<Gene>> geneAnnotations ) {
+    private void addGeneInfo( StringBuffer buf, CompositeSequence probe,
+            Map<CompositeSequence, Collection<Gene>> geneAnnotations ) {
         if ( geneAnnotations == null || geneAnnotations.isEmpty() ) return;
-        Collection<Gene> genes = geneAnnotations.get( probe.getId() );
-        if ( genes != null ) {
-            List<String> gs = new ArrayList<String>();
-            List<String> gn = new ArrayList<String>();
-            List<Long> ids = new ArrayList<Long>();
-            List<String> ncbiIds = new ArrayList<String>();
-            for ( Gene gene : genes ) {
-                gs.add( gene.getOfficialSymbol() );
-                gn.add( gene.getOfficialName() );
-                ids.add( gene.getId() );
-                ncbiIds.add( gene.getNcbiGeneId() == null ? "" : gene.getNcbiGeneId().toString() );
+        Collection<Gene> genes = geneAnnotations.get( probe );
+        if ( genes != null && !genes.isEmpty() ) {
+
+            if ( genes.size() == 1 ) {
+                // simple case, avoid some overhead.
+                Gene g = genes.iterator().next();
+                buf.append( g.getOfficialSymbol() + "\t" + g.getOfficialName() + "\t" + g.getId() + "\t"
+                        + ( g.getNcbiGeneId() == null ? "" : g.getNcbiGeneId().toString() ) );
+            } else {
+                List<String> gs = new ArrayList<String>();
+                List<String> gn = new ArrayList<String>();
+                List<Long> ids = new ArrayList<Long>();
+                List<String> ncbiIds = new ArrayList<String>();
+                for ( Gene gene : genes ) {
+                    gs.add( gene.getOfficialSymbol() );
+                    gn.add( gene.getOfficialName() );
+                    ids.add( gene.getId() );
+                    ncbiIds.add( gene.getNcbiGeneId() == null ? "" : gene.getNcbiGeneId().toString() );
+                }
+
+                buf.append( StringUtils.join( gs.toArray(), '|' ) );
+                buf.append( "\t" );
+                buf.append( StringUtils.join( gn.toArray(), '|' ) );
+                buf.append( "\t" );
+                buf.append( StringUtils.join( ids.toArray(), '|' ) );
+                buf.append( "\t" );
+                buf.append( StringUtils.join( ncbiIds.toArray(), '|' ) );
             }
-            // tab has already been added before FIXME make sure this format is consistent with other files!!
-            buf.append( StringUtils.join( gs.toArray(), '|' ) );
-            buf.append( "\t" );
-            buf.append( StringUtils.join( gn.toArray(), '|' ) );
-            buf.append( "\t" );
-            buf.append( StringUtils.join( ncbiIds.toArray(), '|' ) );
-            // note I'm leaving out the Gemma gene ID
         } else {
             buf.append( "\t\t\t" );
         }
