@@ -171,7 +171,7 @@ Ext.Panel, {
                 continuousMapper: {
                     attrName: "support",
                     minValue: 1,
-                    maxValue: 6 /*, minAttrValue: 0.1, maxAttrValue: 1.0*/
+                    maxValue: 6 
                 }
 
             },
@@ -260,10 +260,8 @@ Ext.Panel, {
 
                 continuousMapper: {
                     attrName: "nodeDegreeBin",
-                    minValue: Gemma.CytoscapeSettings.nodeColor,
-                    //"#43A2CA",
-                    maxValue: Gemma.CytoscapeSettings.nodeColorFade,
-                    //minAttrValue: 1 //,
+                    minValue: Gemma.CytoscapeSettings.nodeColor,                   
+                    maxValue: Gemma.CytoscapeSettings.nodeColorFade,                   
                     maxAttrValue: 11
                 }
             }
@@ -275,11 +273,11 @@ Ext.Panel, {
                 continuousMapper: {
                     attrName: "support",
                     minValue: 1,
-                    maxValue: 6 /*, minAttrValue: 0.1, maxAttrValue: 1.0*/
+                    maxValue: 6 
                 }
 
             },
-            //TEST OUT OPACITY
+            
             opacity: {
 
                 customMapper: {
@@ -441,9 +439,7 @@ Ext.Panel, {
                             this.currentNodeGeneIds = [];
 
                             this.currentQueryGeneIds = [];
-
-
-                            //todo just pass in results object from form search to avoid below
+                            
                             var results = {};
 
                             Ext.apply(results, {
@@ -548,11 +544,7 @@ Ext.Panel, {
                                 vis.panelRef.currentQueryGeneIds.push(selectedNodes[i].data.geneid);
                             }
                         }
-
-
-
-
-
+                        
                         vis.panelRef.updateSearchFormGenes(vis.panelRef.currentQueryGeneIds);
 
                         Ext.apply(
@@ -594,10 +586,6 @@ Ext.Panel, {
                                     }
                                 }
 
-
-
-
-
                                 vis.panelRef.updateSearchFormGenes(vis.panelRef.currentQueryGeneIds);
 
                                 Ext.apply(
@@ -612,17 +600,8 @@ Ext.Panel, {
                                     callback: vis.panelRef.extendThisNodeInitialCoexSearchCallback.createDelegate(vis.panelRef)
 
                                 });
-
-
-
-
                             }
-
-
                         });
-
-
-
                     }
 
 
@@ -770,9 +749,7 @@ Ext.Panel, {
 
                     } else { //new search
                         Ext.apply(
-                        vis.panelRef.coexCommand, {
-                            //always make 2 for now
-                            //stringency: 2,
+                        vis.panelRef.coexCommand, {                            
                             geneIds: vis.panelRef.currentQueryGeneIds,
                             queryGenesOnly: false
                         });
@@ -908,11 +885,7 @@ Ext.Panel, {
         });
         //end vis.ready()        
         Ext.apply(this, {
-
             visualization: vis
-
-
-
         });
 
         Gemma.CytoscapePanel.superclass.initComponent.apply(
@@ -1031,10 +1004,8 @@ Ext.Panel, {
 
         for (i = 0; i < qlength; i++) {
 
-
             this.currentNodeGeneIds.push(result.queryGenes[i].id);
-
-            //this might have to go
+            
             if (this.currentQueryGeneIds.indexOf(result.queryGenes[i].id) === -1) {
                 this.currentQueryGeneIds.push(result.queryGenes[i].id);
             }
@@ -1059,17 +1030,15 @@ Ext.Panel, {
                 queryGenesOnly: true
             });
 
-            ExtCoexpressionSearchController.doSearchQuick2(
-            this.coexCommand, {
+            ExtCoexpressionSearchController.doSearchQuick2Complete(
+            this.coexCommand, this.currentQueryGeneIds, {
                 callback: this.completeCoexSearchCallback.createDelegate(this)
 
             });
         } else {
-
-            //store results in this for stringency filtering
+            
             this.completeCoexSearchCallback(result);
         }
-
 
     },
 
@@ -1091,7 +1060,6 @@ Ext.Panel, {
             }
         }
 
-
         if (!completeSearchFlag) {
             Ext.Msg.alert('Status of Search', 'No more results found for this gene');
             this.loadMask.hide();
@@ -1102,11 +1070,10 @@ Ext.Panel, {
                 queryGenesOnly: true
             });
 
-            ExtCoexpressionSearchController.doSearchQuick2(this.coexCommand, {
+            ExtCoexpressionSearchController.doSearchQuick2Complete(this.coexCommand, this.currentQueryGeneIds, {
                 callback: this.extendThisNodeCompleteCoexSearchCallback.createDelegate(this)
 
             });
-
 
         }
     },
@@ -1128,12 +1095,8 @@ Ext.Panel, {
         this.dataJSON = this.constructDataJSON(result.queryGenes, result.knownGeneResults);
 
         this.loadMask.hide();
-
+        
         this.drawGraph();
-
-
-
-
     },
 
 
@@ -1153,6 +1116,8 @@ Ext.Panel, {
 
         //helper array to prevent duplicate nodes from being entered
         var graphNodeIds = [];
+        
+        var edgeSet =[];
 
         var kglength = knowngenes.length;
         //populate node data plus populate edge data
@@ -1170,10 +1135,7 @@ Ext.Panel, {
                     if (this.currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) !== -1) {
                         isQueryGene = true;
                     }
-
-
-
-
+                    
                     data.nodes.push({
                         id: knowngenes[i].foundGene.officialSymbol,
                         label: knowngenes[i].foundGene.officialSymbol,
@@ -1214,9 +1176,6 @@ Ext.Panel, {
 
                 }
 
-
-
-
                 var support;
                 var supportsign;
                 if (knowngenes[i].posSupp > 0 && knowngenes[i].negSupp > 0) {
@@ -1230,6 +1189,8 @@ Ext.Panel, {
                     support = knowngenes[i].negSupp;
                     supportsign = "negative";
                 }
+                //double edge check
+                if (edgeSet.indexOf(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol)==-1 && edgeSet.indexOf(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol)==-1){
 
                 data.edges.push({
                     id: knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol,
@@ -1241,6 +1202,11 @@ Ext.Panel, {
                     supportsign: supportsign,
                     nodeDegreeBin: this.nodeDegreeBinMapper(this.getMaxWithNull(knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
                 });
+                
+                edgeSet.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
+                edgeSet.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol)
+                
+                }
 
             } //end if(!filterResults
         } // end for (<kglength)
@@ -1248,9 +1214,7 @@ Ext.Panel, {
         if (filterCurrentResults) {
 
             var completeGraphEdges = [];
-
-
-
+            
             for (i = 0; i < kglength; i++) {
 
                 //if both nodes of the edge are in the graph, and it meets the stringency threshold, and neither of the nodes are query genes(because there edges have already been added) 
@@ -1294,15 +1258,13 @@ Ext.Panel, {
         var qlength = qgenes.length;
 
         var isQueryGene = false;
-
+/*//take this out for now, it just makes the graph look bad to have these orphaned nodes sitting around
         //add query gene nodes NOT in knowngenes, node degree set to zero
         var i;
         for (i = 0; i < qlength; i++) {
 
             if (graphNodeIds.indexOf(qgenes[i].id) === -1) {
-
-
-
+            	
                 //check if this gene was part of current/previous query
                 if (this.currentQueryGeneIds.indexOf(qgenes[i].id) !== -1) {
                     isQueryGene = true;
@@ -1328,9 +1290,9 @@ Ext.Panel, {
                 isQueryGene = false;
             }
         }
-
+*/
         this.currentNodeGeneIds = graphNodeIds;
-
+       
         return data;
 
     },
