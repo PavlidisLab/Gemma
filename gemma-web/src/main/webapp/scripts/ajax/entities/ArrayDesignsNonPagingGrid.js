@@ -334,7 +334,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 							' src="/Gemma/images/icons/subsumed.png"/>&nbsp;';
 						}
 						if (record.get('isSubsumer')) {
-							statusString += '<img title="subsumer: this design "covers" one or more others in that it contains all their sequences"' +
+							statusString += '<img title="subsumer: this design \'covers\' one or more others in that it contains all their sequences"' +
 							' src="/Gemma/images/icons/subsumer.png"/>';
 						}
 						
