@@ -260,10 +260,6 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
         Collection<Gene> unseen = new HashSet<Gene>();
         unseen.addAll( genes );
 
-        /*
-         * Note: doing this using 'in' clauses with many genes is very slow -- it can take minutes to complete a query!
-         * Doing it the dumb way is shockingly fast. For just a few genes it probably doesn't matter.
-         */
         List<Gene2GeneCoexpression> rawResults = new ArrayList<Gene2GeneCoexpression>();
         Collection<Gene> genesNeeded = new HashSet<Gene>();
         for ( Gene g : genes ) {
@@ -271,9 +267,12 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
                     .get( new GeneCached( g.getId(), sourceAnalysis.getId() ) );
             if ( e != null ) {
                 /*
-                 * FIXME findi results for the cached result that include the second gene at the appropriate stringency.
+                 * find results for the cached result that include the second gene at the appropriate stringency.
                  */
-                rawResults.addAll( ( List<Gene2GeneCoexpression> ) e.getValue() );
+                for ( Gene2GeneCoexpression g2g : ( List<Gene2GeneCoexpression> ) e.getValue() ) {
+                    if ( genes.contains( g2g.getFirstGene() ) && genes.contains( g2g.getSecondGene() )
+                            && g2g.getNumDataSets() >= stringency ) rawResults.add( g2g );
+                }
             } else {
                 genesNeeded.add( g );
             }
@@ -301,6 +300,10 @@ public class Gene2GeneCoexpressionDaoImpl extends Gene2GeneCoexpressionDaoBase {
             }
         }
 
+        /*
+         * Note: doing this using two 'in' clauses with many genes is very slow -- it can take minutes to complete a
+         * query! Doing it the dumb way is shockingly fast. For just a few genes it probably doesn't matter.
+         */
         final String firstQueryString = "select g2g from " + g2gClassName
                 + " as g2g where g2g.firstGene = :qgene and g2g.secondGene in (:genes) "
                 + "and g2g.numDataSets >= :stringency and g2g.sourceAnalysis = :sourceAnalysis";
