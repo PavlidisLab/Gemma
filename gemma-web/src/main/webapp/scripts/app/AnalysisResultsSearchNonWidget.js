@@ -96,6 +96,7 @@ Ext.onReady(function() {
 		
 		// before every search, clear the results in preparation for new (possibly blank) results 
 		this.resultsPanel.removeAll(); 
+		this.resultsPanel.hide();
 		panel.clearError();
 		
 		// once the user performs a search, hide the main page elements 
