@@ -109,7 +109,7 @@ public class DifferentialExpressionResultDaoImpl extends
             + " where par.ID = dear.ID and g2s.CS = par.PROBE_FK and "
             + " dear.EXPRESSION_ANALYSIS_RESULT_SET_FK = :rs_id and "
             + " g2s.AD in (:ad_ids) and "
-            + " g2s.GENE IN (:gene_ids) GROUP BY g2s.GENE, dear.CORRECTED_P_VALUE_BIN ORDER BY dear.CORRECTED_P_VALUE_BIN DESC";
+            + " g2s.GENE IN (:gene_ids) ";//GROUP BY g2s.GENE, dear.CORRECTED_P_VALUE_BIN ORDER BY dear.CORRECTED_P_VALUE_BIN DESC";
 
     @Autowired
     public DifferentialExpressionResultDaoImpl( SessionFactory sessionFactory ) {
@@ -491,6 +491,7 @@ public class DifferentialExpressionResultDaoImpl extends
         timer.start();
 
         Map<Long, Long> results = new HashMap<Long, Long>();
+        Map<Long, Integer> best_p_value = new HashMap<Long, Integer>();
 
         Session session = super.getSession();
         try {
@@ -513,9 +514,16 @@ public class DifferentialExpressionResultDaoImpl extends
                 BigInteger geneId = ( BigInteger ) row[0];
                 Integer p_value_bin = ( Integer ) row[1];
                 BigInteger probe_analysis_id = ( BigInteger ) row[2];
-                if ( results.get( geneId.longValue() ) == null ) {
-                    results.put( geneId.longValue(), probe_analysis_id.longValue() );
-                }
+                if ( best_p_value.get( geneId.longValue() ) == null ) { // first encounter
+                    best_p_value.put( geneId.longValue(), p_value_bin );
+                    results.put( geneId.longValue(), probe_analysis_id.longValue() );                    
+                } else {
+                    if ( p_value_bin != null && best_p_value.get( geneId.longValue() ) < p_value_bin) {
+                        // replace   
+                        best_p_value.put( geneId.longValue(), p_value_bin );
+                        results.put( geneId.longValue(), probe_analysis_id.longValue() );                    
+                    }                    
+                }                
             }
 
         } catch ( org.hibernate.HibernateException ex ) {
@@ -523,11 +531,11 @@ public class DifferentialExpressionResultDaoImpl extends
         } finally {
             super.releaseSession( session );
         }
-
+        
         timer.stop();
-        if ( log.isDebugEnabled() )
-            log.debug( "Fetching ProbeResultIds for geneIds " + StringUtils.join( geneIds, "," ) + " and result set "
-                    + resultSetId + " took : " + timer.getTime() + " ms" );
+       // if ( log.isDebugEnabled() )
+            log.info( "Fetching ProbeResults for geneIds " + StringUtils.join( geneIds, "," ) + " and result set "
+                    + resultSetId + " ad used " +  StringUtils.join( adUsed, "," ) + " took : " + timer.getTime() + " ms" );
 
         return results;
     }
