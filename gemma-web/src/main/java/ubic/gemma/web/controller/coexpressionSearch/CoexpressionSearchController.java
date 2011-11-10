@@ -167,35 +167,74 @@ public class CoexpressionSearchController extends BaseFormController {
         int resultsLimit = 700;
 
         // strip down results for front end if data is too large
-        if ( geneResults.size() > resultsLimit ) {
+        if ( geneResults.size() > resultsLimit && queryGeneIds != null ) {
             int oldSize = geneResults.size();
 
-            log.info( "Coex Search for " + searchOptions.getGeneIds().toString() + " returned " + geneResults.size()
+            log.info( "Coex Search for " + searchOptions.getGeneIds().size() + " genes: "
+                    + searchOptions.getGeneIds().toString() + " returned " + geneResults.size()
                     + " results.  Stripping low stringency results" );
 
-            Collection<CoexpressionValueObjectExt> strippedGeneResults = new HashSet<CoexpressionValueObjectExt>();
+            Collection<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<CoexpressionValueObjectExt>();            
 
             for ( int i = 2; i < 40; i++ ) {
 
-                for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+                HashSet<Long> nodeIds = new HashSet<Long>();
 
-                    // check
-                    if ( cvoe.getPosSupp() > i || cvoe.getNegSupp() > i ) {
-                        strippedGeneResults.add( cvoe );
-                    } else if ( queryGeneIds != null
-                            && ( queryGeneIds.contains( cvoe.getFoundGene().getId() ) || queryGeneIds.contains( cvoe
-                                    .getQueryGene().getId() ) ) ) {
+                // add all coexpression links to the original queryGenes
+                for ( CoexpressionValueObjectExt cvoe : geneResults ) {                    
+                   
+                    if ( ( queryGeneIds.contains( cvoe.getFoundGene().getId() ) || queryGeneIds.contains( cvoe
+                            .getQueryGene().getId() ) ) ) {
                         // if one of the query or found genes is in the original search(before the my genes only) keep
                         // that coexpression value object to ensure that node sticks around
+
+                        strippedGeneResults.add( cvoe );
+                        
+                        //need to populate nodeIds appropriately based on stringency for next loop which adds 'my genes only' edges
+                        if ( queryGeneIds.contains( cvoe.getFoundGene().getId() )
+                                && queryGeneIds.contains( cvoe.getQueryGene().getId() ) ) {
+                            nodeIds.add( cvoe.getFoundGene().getId() );
+                            nodeIds.add( cvoe.getQueryGene().getId() );
+                        } else if ( queryGeneIds.contains( cvoe.getFoundGene().getId() ) ) {
+
+                            nodeIds.add( cvoe.getFoundGene().getId() );
+                            if ( cvoe.getPosSupp() > i || cvoe.getNegSupp() > i ) {
+                                nodeIds.add( cvoe.getQueryGene().getId() );
+                            }
+
+                        } else if ( queryGeneIds.contains( cvoe.getQueryGene().getId() ) ) {
+                            nodeIds.add( cvoe.getQueryGene().getId() );
+                            if ( cvoe.getPosSupp() > i || cvoe.getNegSupp() > i ) {
+                                nodeIds.add( cvoe.getFoundGene().getId() );
+                            }
+                        }
+                    }
+                        
+                    
+
+                }
+
+                // need to loop through again to add missing coex links between non query genes(that are in the graph,
+                // i.e. in graphIds) that meet stringency threshold
+                // separate loop is needed because we need to know all the nodes in the graph before we can do this step
+        
+                for ( CoexpressionValueObjectExt cvoe : geneResults ) {
+
+                    if ( !queryGeneIds.contains( cvoe.getFoundGene().getId() )
+                            && !queryGeneIds.contains( cvoe.getQueryGene().getId() )
+                            && ( cvoe.getPosSupp() > i || cvoe.getNegSupp() > i )
+                            && ( nodeIds.contains( cvoe.getFoundGene().getId() ) && nodeIds.contains( cvoe
+                                    .getQueryGene().getId() ) ) ) {
                         strippedGeneResults.add( cvoe );
                     }
 
                 }
+                
 
                 geneResults = strippedGeneResults;
 
                 if ( geneResults.size() < resultsLimit ) {
-                    log.info( "Breaking out of filter coex results loop at stringency:" + i );
+                    log.info( "Breaking out of filter coex results loop after removing edges of stringency:" + i );
                     break;
                 }
 
