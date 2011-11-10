@@ -75,13 +75,13 @@ public class DifferentialExpressionAnalysisDaoImpl extends
      */
     public Integer countProbesMeetingThreshold( ExpressionAnalysisResultSet ears, double threshold ) {
 
-        int up = this.countUpregulated( ears, threshold );
-        int down = this.countDownregulated( ears, threshold );
-        int result = up + down;
-
-        if ( result > 0 ) {
-            return result;
-        }
+//        int up = this.countUpregulated( ears, threshold );
+//        int down = this.countDownregulated( ears, threshold );
+//        int result = up + down;
+//
+//        if ( result > 0 ) {
+//            return result;
+//        }
 
         /*
          * Otherwise, perhaps we have not filled in the contrast information. Try alternative instead. This is basically
