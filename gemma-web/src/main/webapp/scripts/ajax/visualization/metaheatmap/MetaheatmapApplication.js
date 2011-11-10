@@ -90,7 +90,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		
 		var filters = [];
 						
-		var sortByExperimentGroupFn = this.createSortByPropertyFunction_('experimentGroupIndex');
+		var sortByExperimentGroupFn = this.createSortByPropertyFunction_('experimentGroupName');
 		var sortBySpecificityFn = this.createSortByPropertyFunction_('miniPieValue');
 		var sortByFactorCategoryFn = this.createSortByPropertyFunction_ ('factorCategory');
 		var sortByContrastFactorValueFn = this.createSortByPropertyFunction_ ('contrastFactorValue');
@@ -99,20 +99,20 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		var sortByPvaluesFn = this.createSortByPropertyFunction_('inverseSumPvalue');
 
 		var sortByGeneNameFn = this.createSortByPropertyFunction_ ('name'); 
-		var sortGeneByGroupFn = this.createSortByPropertyFunction_ ('groupIndex');
+		var sortGeneByGroupFn = this.createSortByPropertyFunction_ ('groupName');
 						
 		var sortFactorTree = [{'sortFn' : sortByFactorCategoryFn, 'groupBy' : 'factorCategory'},
 		                      {'sortFn' : sortByContrastFactorValueFn, 'groupBy' : 'contrastFactorValue'},
 		                      {'sortFn' : sortByContrastFactorValueFn, 'groupBy' : null}];		
 		
 				
-		var geneSortPreset1 = [{'sortFn' : sortGeneByGroupFn , 'groupBy' : 'groupIndex'},
+		var geneSortPreset1 = [{'sortFn' : sortGeneByGroupFn , 'groupBy' : 'groupName'},
 		                       {'sortFn' : sortByGeneNameFn, 'groupBy' : null}];
 		
-		var geneSortPreset2 = [{'sortFn' : sortGeneByGroupFn , 'groupBy' : 'groupIndex'},
+		var geneSortPreset2 = [{'sortFn' : sortGeneByGroupFn , 'groupBy' : 'groupName'},
 		                       {'sortFn' : sortByPvaluesFn, 'groupBy' : null}];
 		
-		var conditionSortPreset1 = [{'sortFn' : sortByExperimentGroupFn , 'groupBy' : 'experimentGroupIndex'},
+		var conditionSortPreset1 = [{'sortFn' : sortByExperimentGroupFn , 'groupBy' : 'experimentGroupName'},
 		                            {'sortFn' : sortByDatasetNameFn , 'groupBy' : 'datasetShortName'},
 		                            {'sortFn' : sortByContrastFactorValueFn, 'groupBy' : null}];
 
@@ -225,9 +225,12 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 								icon: '/Gemma/images/icons/page_white_text.png',
 								tooltip: 'Download a formatted text version of your search results',
 								handler: function(){
-									var textWindow = new Gemma.Metaheatmap.DownloadWindow();
-									textWindow.convertToText(this.geneTree, this.conditionTree, this.cells);
-									textWindow.show();
+				      		  		var textWindow = new Gemma.Metaheatmap.DownloadWindow({ geneTree : this.geneTree,
+										conditionTree : this.conditionTree,
+										cells : this.cells,
+										isPvalue : this.visualizationPanel.boxHeatmap.isShowPvalue});
+				      		  		textWindow.convertToText ();
+				      		  		textWindow.show();
 								},
 								scope: this
 							}, {
@@ -276,7 +279,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 				       		region  : 'east',
 				       		width   : 300
 				     }
-			        ]
+				    ]
 		});
 
 		Gemma.Metaheatmap.Application.superclass.initComponent.apply (this, arguments);
