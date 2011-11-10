@@ -3,22 +3,11 @@ Ext.namespace('Gemma.Metaheatmap');
  * Summary
  * 
  * 
- * Public methods:
- *  + draw()
- *  + redraw()  
- *  +
- *  +
- *  +
+ * Public methods: + draw() + redraw() + + +
  * 
- * Configuration:
- *  +
- *  +
- *  +
- *  +
+ * Configuration: + + + +
  * 
- * Events:
- *  +   
- *  + 
+ * Events: + +
  */
 Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	// need to use hbox so the heatmap box resizes when the control panel is collapsed
@@ -66,7 +55,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					},
 					items: [{
 						xtype: 'label',
-						text: 'Column size'
+						text: 'Column zoom'
 					}, {
 						xtype: 'slider',
 						ref: 'sldHorizontalZoom',
@@ -85,7 +74,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 						}
 					}, {
 						xtype: 'label',
-						text: 'Row size'
+						text: 'Row zoom'
 					}, {
 						xtype: 'slider',
 						ref: 'sldVerticalZoom',
@@ -145,6 +134,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					}, {
 						xtype: 'button',
 						text: 'Flip axes',
+						disabled : true,
 						width: 80,
 						handler: function(btn, e){
 							this.flipLabels();
@@ -285,7 +275,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		var topPadding = 4; // TODO get actual top padding from somewhere
 		this.fixedWidthCol.pnlMiniControl.setHeight(this.variableWidthCol.boxTopLabels.getHeight() + topPadding);
 
-		this.updateVisibleScores(); //TODO: do this only if filtering options have changed
+		this.updateVisibleScores(); // TODO: do this only if filtering options
+									// have changed
 		
 		this.doLayout();
 		
@@ -299,7 +290,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	},
 
 	onClickGeneLabel : function (label,e ) {
-		// If user held down ctrl while clicking, select column or gene instead of popping up window.
+		// If user held down ctrl while clicking, select column or gene instead
+		// of popping up window.
 		if (e.ctrlKey === true) {
 			if (label.item.isSelected) {
 				label.item.isSelected = false;
@@ -313,7 +305,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	},
 	
 	onClickConditionLabel : function (label, e) {
-		// If user held down ctrl while clicking, select column or gene instead of popping up window.
+		// If user held down ctrl while clicking, select column or gene instead
+		// of popping up window.
 		if (e.ctrlKey === true) {
 			if (label.item.isSelected) {
 				label.item.isSelected = false;
@@ -383,7 +376,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		condition.display.label.drawFn (false);
 	},
 
-	// Some gene/condition scores depend on what is currently visible: % of missing values, inverse of p values sum
+	// Some gene/condition scores depend on what is currently visible: % of
+	// missing values, inverse of p values sum
 	// Other scores are not affected by it: specificity
 	updateVisibleScores : function () {
 		var i, j;
@@ -481,7 +475,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		Gemma.Metaheatmap.VisualizationPanel.superclass.onRender.apply ( this, arguments );
 		
 		this.hoverWindow = new Gemma.Metaheatmap.HoverWindow();
-		this.hoverWindow.isFloating = true;
+		this.hoverWindow.isDocked = false;
 		this.hoverWindow.hide();
 		
 		this.addEvents ('gene_zoom_change', 'condition_zoom_change');
@@ -490,7 +484,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			var labelType = this.variableWidthCol.boxHeatmap.isGeneOnTop ?  'gene' : 'condition';			
 			var msg = this.constructHoverWindowContent (labelType, label.item);
 			this.hoverWindow.show();
-			if (this.hoverWindow.isFloating) {
+			if (!this.hoverWindow.isDocked) {
 				this.hoverWindow.setPagePosition ( e.getPageX() + 20, e.getPageY() + 20 );
 			}
 			this.hoverWindow.update (msg);		
@@ -500,7 +494,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			var labelType = this.variableWidthCol.boxHeatmap.isGeneOnTop ?  'condition' : 'gene';			
 			var msg = this.constructHoverWindowContent (labelType, label.item);
 			this.hoverWindow.show();
-			if (this.hoverWindow.isFloating) {
+			if (!this.hoverWindow.isDocked) {
 				this.hoverWindow.setPagePosition ( e.getPageX() + 20, e.getPageY() + 20 );
 			}
 			this.hoverWindow.update (msg);		
@@ -523,7 +517,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			var msg = this.constructHoverWindowContent ('cell', cell);
 
 			this.hoverWindow.show();
-			if (this.hoverWindow.isFloating) {
+			if (!this.hoverWindow.isDocked) {
 				this.hoverWindow.setPagePosition ( e.getPageX() + 20, e.getPageY() + 20 );
 			}
 			this.hoverWindow.update (msg);
@@ -535,7 +529,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		this.variableWidthCol.boxHeatmap.on ('cell_mouse_out', function (cell,e,t) {
 			cell.gene.display.label.drawFn(false);
 			cell.condition.display.label.drawFn(false);
-			if (this.hoverWindow.isFloating) {
+			if (!this.hoverWindow.isDocked) {
 				this.hoverWindow.hide();
 			}
 		}, this);
@@ -558,103 +552,3 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 });
 
 Ext.reg('Metaheatmap.VisualizationPanel', Gemma.Metaheatmap.VisualizationPanel);
-
-
-
-// Move to separate file?
-//drawGeneLabelFn__ : function (gene, size, textOrientation, backgroundColor) {
-//	var x, y, width, height, fontSize, text;
-//	var drawHighlightedLabel, drawUnhighlightedLabel;
-//	var ctx = this.ctx;
-//	text = gene.name;
-//	if (text === null) { text ='null';}
-//
-//	if (gene.isSelected) {
-//		backgroundColor = 'red';
-//	}
-//	
-//	if (textOrientation === 'horizontal') {
-//		x 		 = this.getWidth();
-//		y 		 = gene.display.pxlEnd; 
-//		width 	 = size; 
-//		height 	 = gene.display.pxlSize; 
-//		fontSize = 9;
-//		if (height < 9) {
-//			drawUnhighlightedLabel = function () {
-//				ctx.fillStyle = 'white';
-//				ctx.fillRect (x-width, y-6, width, 12);             		        				
-//			};
-//			drawHighlightedLabel = function () {
-//				ctx.strokeStyle = 'black';
-//				ctx.drawTextRight ('', 9, x, y+5, text);          		        				
-//			};      		        					
-//		} else {
-//			drawUnhighlightedLabel = function () {
-//				ctx.fillStyle = backgroundColor;
-//				ctx.fillRect (x-width, y-height, width, height);
-//				ctx.strokeStyle = 'black';
-//				ctx.drawTextRight ('', fontSize, x, y, text);          		        				
-//			};
-//			drawHighlightedLabel = function () {
-//				ctx.fillStyle = 'rgb(240,230,140)';
-//				ctx.fillRect (x-width, y-height, width, height);
-//				ctx.strokeStyle = 'black';
-//				ctx.drawTextRight ('', fontSize, x, y, text);          		        				
-//			};      		        					
-//		}
-//	} else {
-//		x 	   	 = gene.display.pxlEnd;
-//		y	   	 = this.getHeight(); 
-//		width  	 = gene.display.pxlSize; 
-//		height   = size;  
-//		fontSize = 9;
-//
-//		if (width < 9) {
-//			drawUnhighlightedLabel = function () {
-//				ctx.fillStyle = 'white';
-//				ctx.fillRect (x-10, y, 20, 80);             		        				
-//			};
-//			drawHighlightedLabel = function () {
-//				ctx.strokeStyle = 'black';		
-//				fontSize = 9;
-//				ctx.drawRotatedText (x - width/2 + fontSize/2, y-10, 270, fontSize, 'black', text);
-//			};      		        					
-//		} else {
-//			drawUnhighlightedLabel = function () {
-//				ctx.fillStyle = backgroundColor;
-//				ctx.fillRect (x-width, y-height, width, height);
-//				ctx.save();
-//				ctx.beginPath();
-//				ctx.rect (x-width, y-height, width, height);				
-//				ctx.clip();			
-//				ctx.strokeStyle = 'black';		
-//				fontSize = 9;
-//				ctx.drawRotatedText (x - width/2 + fontSize/2, y-10, 270, fontSize, 'black', text);
-//				ctx.restore();
-//			};
-//			drawHighlightedLabel = function () {
-//				ctx.fillStyle = 'rgb(240,230,140)';
-//				ctx.fillRect (x-width, y-height, width, height);
-//				ctx.save();
-//				ctx.beginPath();
-//				ctx.rect (x-width, y-height, width, height);				
-//				ctx.clip();			
-//				ctx.strokeStyle = 'black';		
-//				fontSize = 9;
-//				ctx.drawRotatedText (x - width/2 + fontSize/2, y-10, 270, fontSize, 'black', text);
-//				ctx.restore();
-//			};      		        					
-//		}
-//	}
-//
-//	gene.display.label = {};
-//	gene.display.label.drawFn = function (isHighlighted) {
-//		if (isHighlighted) {
-//			drawHighlightedLabel();
-//		} else {
-//			drawUnhighlightedLabel();
-//		}
-//	};
-//
-//	gene.display.label.drawFn(false);
-//},
