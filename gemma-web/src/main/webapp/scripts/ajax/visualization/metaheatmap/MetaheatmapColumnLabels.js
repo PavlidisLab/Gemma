@@ -291,7 +291,8 @@ Gemma.MetaHeatmapRotatedLabels = Ext.extend(Ext.BoxComponent, {
 			// cursor
 			var x = e.getPageX() - Ext.get(t).getX();
 			var y = e.getPageY() - Ext.get(t).getY();
-			if (y > 20 &&
+			console.log("x: "+x+" y:"+y);
+			if (false && y > 20 &&
 			(x <
 			Gemma.MetaVisualizationConfig.labelBaseYCoor *
 			Math.tan((360 - Gemma.MetaVisualizationConfig.labelAngle) * Math.PI / 180) &&

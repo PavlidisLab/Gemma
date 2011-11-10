@@ -56,7 +56,6 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 		// when we say 'owner container' here, we mean the visualisation panel, so travel up the container stack until we get to it
 		// (this is alternative to this.ownerCt which is dangerous to use because it will break if there are any layout changes made)
 		var ownerCt = this.findParentByType('Metaheatmap.VisualizationPanel');
-		console.log(ownerCt);
 		
 		if (!this.amIinitialized) {
 			this.initializeMe();		

@@ -36,15 +36,26 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 			
 	autoScroll : false,			
 	border : false,		
-	initComponent : function() {
+	initComponent : function() { 
 		Ext.apply (this, {
 			
 			items: [
 				{ 
 					xtype: 'fieldset',
-					title:'Genes: Sort & Filter',
+					title:'Genes',
 					ref:'genesControlPanel',
 					flex: 0,
+					height: 135,
+					layout : { 
+						type  : 'vbox',
+						align : 'stretch',
+						pack  : 'start'
+					},
+					defaults:{
+						flex:0,
+						width:250,
+						height:20
+					},
 					items:[
 				        {
 				        	ref : 'cmbGenePresets',
@@ -58,6 +69,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 							mode 		   : 'local',
 							forceSelection : true,
 							autoSelect : true,
+							margins: '0 0 4 0',
 							store :	new Ext.data.ArrayStore({
 										fields : ['text', 'id'],
 										data : this.ownerCt.genePresetNames,
@@ -83,12 +95,17 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	height : 20,
 				        	value  : 100,
 				        	increment : 1,
-				        	minValue  : 1,
+				        	minValue  : 0,
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('Hide gene if it\'s missing data for <b>{0}%</b> of conditions', thumb.value);
-				                 }
+								 	if (thumb.value === 0) {
+								 		return "Hide gene if it's missing data for <b>any</b> conditions";
+								 	} else if (thumb.value === 100) {
+								 		return "Don't hide genes for missing data"
+								 	}
+								 	return String.format('Hide gene if it\'s missing data for >=<b>{0}%</b> of conditions', thumb.value);
+								 }
 				            }),
 				        	listeners : {
 				        			changecomplete : function (slider, newValue, thumb) {
@@ -103,9 +120,9 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        {
 				        	xtype  : 'slider',
 				        	ref    : 'sldGenePvalueFilter',
-				        	value  : 1,
+				        	value  : 0,
 				        	increment : 1,
-				        	minValue  : 1,
+				        	minValue  : 0,
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
@@ -121,7 +138,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				},	// eo gene fieldset		    
 				{
 					xtype: 'fieldset',
-					title:'Conditions: Sort & Filter',
+					title:'Conditions',
 					ref:'conditionsControlPanel',
 					flex: 1,
 					layout : { 
@@ -175,11 +192,16 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	height : 20,
 				        	value  : 100,
 				        	increment : 1,
-				        	minValue  : 1,
+				        	minValue  : 0,
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('Hide condition if <b>{0}%</b> of genes are missing', thumb.value);
+								 	if (thumb.value === 0) {
+								 		return "Hide condition if it's missing data for <b>any</b> genes";
+								 	} else if (thumb.value === 100) {
+								 		return "Don't hide conditions for missing data"
+								 	}
+				                     return String.format('Hide condition if it\'s missing data for >=<b>{0}%</b> of genes', thumb.value);
 				                 }
 				            }),
 				        	listeners : {
@@ -200,11 +222,11 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	height : 20,
 				        	value  : 10,
 				        	increment : 1,
-				        	minValue  : 1,
+				        	minValue  : 0,
 				        	maxValue  : 10,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('{0}% experiment specificity', thumb.value*10);
+				                     return String.format('Hide conditions with <={0}% experiment specificity', thumb.value*10);
 				                 }
 				            }),
 				        	listeners : {
@@ -223,9 +245,9 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	ref    : 'sldConditionPvalueFilter',
 				        	width  : 150,
 				        	height : 20,
-				        	value  : 1,
+				        	value  : 0,
 				        	increment : 1,
-				        	minValue  : 1,
+				        	minValue  : 0,
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){

@@ -166,17 +166,17 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      		  if (pressed) {
 			      			  this.visualizationPanel.isLegendShown = true;
 
-			      			  if (this.visualizationPanel.boxHeatmap.isShowPvalue) {			      				  
-			      				  this.visualizationPanel.colorLegendFoldChange.hide();
-			      				  this.visualizationPanel.colorLegendPvalue.show();			      				  
+			      			  if (this.visualizationPanel.variableWidthCol.boxHeatmap.isShowPvalue) {			      				  
+			      				  this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
+			      				  this.visualizationPanel.variableWidthCol.colorLegendPvalue.show();			      				  
 			      			  } else {
-			      				  this.visualizationPanel.colorLegendFoldChange.show();
-			      				  this.visualizationPanel.colorLegendPvalue.hide();			      				  
+			      				  this.visualizationPanel.variableWidthCol.colorLegendFoldChange.show();
+			      				  this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();			      				  
 			      			  }
 			      		  } else {
 			      			  this.visualizationPanel.isLegendShown = false;
-		      				  this.visualizationPanel.colorLegendFoldChange.hide();
-		      				  this.visualizationPanel.colorLegendPvalue.hide();			      				  
+		      				  this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
+		      				  this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();			      				  
 			      		  }
 			      	  	}, scope : this
 			      	  },
