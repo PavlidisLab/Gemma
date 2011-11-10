@@ -42,14 +42,16 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<tpl if="type==\'contrastCell\'">',  //contrast
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 				'<b>Experiment</b>: {datasetShortName}</a> {datasetName}<br><br>',
-				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', '<b>Log2 fold change</b>: {foldChange}<br>', '<b>pValue</b>: {contrastPvalue} <br>',
+				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', 
+				'<b>Log2 fold change</b>: {foldChange:sciNotation}<br>', 
+				'<b>pValue</b>: {contrastPvalue:sciNotation} <br>',
 				'</tpl>',
 				'<tpl if="type==\'cell\'">',		 //cell
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 				'<b>Experiment</b>: {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
-				'<b>p-value</b>: {pvalue}<br><br>',
-				'<b>fold change</b>: {foldChange}',
+				'<b>p-value</b>: {pvalue:sciNotation}<br><br>',
+				'<b>fold change</b>: {foldChange:sciNotation}',
 				'</tpl>', '</tpl></span>' );
 	},
 

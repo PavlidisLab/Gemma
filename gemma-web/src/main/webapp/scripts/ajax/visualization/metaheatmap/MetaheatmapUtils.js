@@ -70,6 +70,9 @@ Gemma.Metaheatmap.Utils.formatPVal = function(p){
 	}
 };
 
+// for use in XTemplate
+Ext.util.Format.sciNotation = Gemma.Metaheatmap.Utils.formatPVal;
+
 /**
  * Calculates percentage and formats with 1 decimal point
  * @param {Object} n numerator
