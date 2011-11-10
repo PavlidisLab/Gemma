@@ -228,7 +228,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 				      		  		var textWindow = new Gemma.Metaheatmap.DownloadWindow({ geneTree : this.geneTree,
 										conditionTree : this.conditionTree,
 										cells : this.cells,
-										isPvalue : this.visualizationPanel.boxHeatmap.isShowPvalue});
+										isPvalue : this.visualizationPanel.variableWidthCol.boxHeatmap.isShowPvalue});
 				      		  		textWindow.convertToText ();
 				      		  		textWindow.show();
 								},
