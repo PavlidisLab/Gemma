@@ -423,36 +423,38 @@ Ext.Panel, {
                     afterrender: {
                         scope: this,
                         fn: function () {
+                        	
+                        	
+                        	if (this.coexGridRef){
 
 
-                            if (!this.loadMask) {
-                                this.loadMask = new Ext.LoadMask(this.getEl(), {
-                                    msg: "Searching for analysis results ...",
-                                    msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
-                                });
-                            }
-                            this.loadMask.show();
+                        		if (!this.loadMask) {
+                        			this.loadMask = new Ext.LoadMask(this.getEl(), {
+                        				msg: "Searching for analysis results ...",
+                        				msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+                        			});
+                        		}
+                        		this.loadMask.show();
 
+                        		this.currentResultsStringency = this.coexCommand.stringency;
 
-                            this.currentResultsStringency = this.coexCommand.stringency;
+                        		this.currentNodeGeneIds = [];
 
-                            this.currentNodeGeneIds = [];
-
-                            this.currentQueryGeneIds = [];
+                        		this.currentQueryGeneIds = [];
                             
-                            var results = {};
+                        		var results = {};
 
-                            Ext.apply(results, {
-                                queryGenes: this.queryGenes,
-                                knownGeneResults: this.knownGeneResults
-                            });
-                            results.queryGenes = this.queryGenes;
-                            results.knownGeneResults = this.knownGeneResults;
+                        		Ext.apply(results, {
+                        			queryGenes: this.queryGenes,
+                        			knownGeneResults: this.knownGeneResults
+                        		});
+                        		results.queryGenes = this.queryGenes;
+                        		results.knownGeneResults = this.knownGeneResults;
 
-                            this.currentResultsStringency = this.coexCommand.stringency;
-                            this.initialCoexSearchCallback(results);
+                        		this.currentResultsStringency = this.coexCommand.stringency;
+                        		this.initialCoexSearchCallback(results);
 
-
+                        	}
 
                         }
                     }

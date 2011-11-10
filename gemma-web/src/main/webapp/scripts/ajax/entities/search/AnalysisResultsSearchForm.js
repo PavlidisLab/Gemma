@@ -143,6 +143,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
 							experimentSetValueObjects = this.trimExperimentValObjs(experimentSetValueObjects, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY);
 						}
+						this.fireEvent('beforesearch', this);
 						this.doSearch( geneSetValueObjects, experimentSetValueObjects );
 						warningWindow.close();
 						return;
@@ -152,7 +153,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					text: 'Don\'t trim',
 					tooltip:'Continue with your search as is',
 					handler: function(){
-						
+						this.fireEvent('beforesearch', this);
 						this.doSearch(geneSetValueObjects, experimentSetValueObjects);
 						warningWindow.close();
 						return;
@@ -170,6 +171,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			});
 			warningWindow.show();
 		}else{
+			this.fireEvent('beforesearch', this);
 			this.doSearch(geneSetValueObjects, experimentSetValueObjects);
 			return;
 		}
@@ -234,9 +236,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		return trimmedValueObjects;
 	},
 
-	doSearch : function(geneSetValueObjects, experimentSetValueObjects) {
+	doSearch : function(geneSetValueObjects, experimentSetValueObjects) {		
 		
-		this.fireEvent('beforesearch', this);
 		this.collapsePreviews();
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
