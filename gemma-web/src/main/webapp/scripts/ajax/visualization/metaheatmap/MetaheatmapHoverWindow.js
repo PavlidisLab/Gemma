@@ -5,7 +5,7 @@ Ext.namespace('Gemma.Metaheatmap');
 
 Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				  
-	height : 200,
+	//height : 200,
 	width  : 350,
 	//	autoScroll : true,
 	closable   : false,

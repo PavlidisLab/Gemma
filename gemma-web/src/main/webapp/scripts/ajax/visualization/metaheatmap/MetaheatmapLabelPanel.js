@@ -48,28 +48,33 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 			}]
 			
 		});
-		
 		Gemma.Metaheatmap.LabelBox.superclass.initComponent.apply (this, arguments);
 	},
 		
 	resizeAndPosition : function () {
+		
+		// when we say 'owner container' here, we mean the visualisation panel, so travel up the container stack until we get to it
+		// (this is alternative to this.ownerCt which is dangerous to use because it will break if there are any layout changes made)
+		var ownerCt = this.findParentByType('Metaheatmap.VisualizationPanel');
+		console.log(ownerCt);
+		
 		if (!this.amIinitialized) {
 			this.initializeMe();		
 		}
 
-		var headerHeight = this.ownerCt.boxTopLabels.tree.display.size.height;
-		var sideWidth    = this.ownerCt.boxSideLabels.tree.display.size.height;
+		var headerHeight = ownerCt.variableWidthCol.boxTopLabels.tree.display.size.height;
+		var sideWidth    = ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.height;
 		var extraRoom = 20;
 		
 		if (this.orientation === 'vertical') {
-	   		//this.setPosition (0, this.ownerCt.boxTopLabels.tree.display.size.height);	
+	   		//this.setPosition (0, ownerCt.variableWidthCol.boxTopLabels.tree.display.size.height);	
 			this.setWidth (this.tree.display.size.height);					
-			this.setHeight (this.ownerCt.getHeight() - headerHeight - extraRoom);		
+			this.setHeight (ownerCt.getHeight() - headerHeight - extraRoom);		
 			this.boxCanvas.setSize (this.tree.display.size.height, this.tree.display.size.width + 15);
 		} else { // horizontal
-			//this.setPosition (this.ownerCt.boxSideLabels.tree.display.size.height, 0);
+			//this.setPosition (ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.height, 0);
 			this.setHeight (this.tree.display.size.height);					
-			this.setWidth (this.ownerCt.getWidth() - sideWidth - extraRoom);
+			this.setWidth (ownerCt.getWidth() - sideWidth - extraRoom);
 			this.boxCanvas.setSize (this.tree.display.size.width + 15, this.tree.display.size.height);       		        	   			
 		}
 	},
@@ -84,14 +89,15 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 		this.boxCanvas.el.on('mousemove', function(e, t) {
 			if (this.lastLabelMouseIn !== null) {
 				this.lastLabelMouseIn.item.display.label.drawFn (false);				
-				//document.body.style.cursor = 'default'; // makes it really slow
+				document.body.style.cursor = 'default'; // makes it really slow
+				this.fireEvent('label_mouse_out',this.lastLabelMouseIn.label,e,t);
 			}
 			var x = e.getPageX() - Ext.get(t).getX();
 			var y = e.getPageY() - Ext.get(t).getY();
 			var label = this.getLabelByXY (x,y);			
 			if (label !== null) {
 				label.item.display.label.drawFn (true);
-				//document.body.style.cursor = 'pointer'; // makes it really slow
+				document.body.style.cursor = 'pointer'; // makes it really slow
 				this.fireEvent('label_mouse_in',label,e,t);
 			}
 			this.lastLabelMouseIn = label;			
@@ -103,7 +109,7 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 				this.fireEvent('label_mouse_out',this.lastLabelMouseIn.label,e,t);
 			}
 			this.lastLabelMouseIn = null;
-			//document.body.style.cursor = 'default'; // makes it really slow		
+			document.body.style.cursor = 'default'; // makes it really slow		
 		}, this);				
 
 		this.boxCanvas.el.on('click', function(e, t) {

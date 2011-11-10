@@ -25,7 +25,7 @@ Ext.namespace('Gemma.Metaheatmap');
  *         | TopLabelArea  ^  	|			|
  *          ---------------|----			|
  *  ----- 				   |	|	Sort	|
- * |Side |	boxHeatmap     |	Filter	|
+ * |Side |	boxHeatmap     |	|  Filter	|
  * |Label|				   |	|	Panel	|
  * |Area |				   |	|			|
  * |	 |				   |	|			|
@@ -127,19 +127,20 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		                   	{'name' : 'sort by average p-value', 'sort' : geneSortPreset2, 'filter' : []}
 		                   ];
 		
-		this.genePresetNames = [];		
-		for (var i = 0; i < this.genePresets.length; i++) {
+		this.genePresetNames = [];
+		var i;
+		for ( i = 0; i < this.genePresets.length; i++) {
 			this.genePresetNames.push ([this.genePresets[i]['name'], i]);
 		}
 		
-		this.conditionPresets = [
-		                  {'name' : 'sort by experiment', 'sort' : conditionSortPreset1, 'filter' : []},		                         
-		                  {'name' : 'sort by specificity', 'sort' : conditionSortPreset2, 'filter' : []},
-		                  {'name' : 'sort by average p-value', 'sort' : conditionSortPreset3, 'filter' : []}
+		this.conditionPresets = [            
+		                  {'name' : 'sort by experiment', 'sort' : conditionSortPreset1, 'filter' : []},         
+		                  {'name' : 'sort by specificity (group by factor)', 'sort' : conditionSortPreset2, 'filter' : []},
+		                  {'name' : 'sort by average p-value (group by factor)', 'sort' : conditionSortPreset3, 'filter' : []}
 		                ];		
 		
 		this.conditionPresetNames = [];		
-		for (var i = 0; i < this.conditionPresets.length; i++) {
+		for ( i = 0; i < this.conditionPresets.length; i++) {
 			this.conditionPresetNames.push ([this.conditionPresets[i]['name'], i]);
 		}		
 		
@@ -214,31 +215,31 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      		  popup.show();
 			      	  	},
 			      	  	scope: this		      	  
-			      	  },
-			      	  '-',
-			      	  { xtype : 'button',
-			      		text : '<b>As text</b>',
-			      		icon : '/Gemma/images/download.gif',
-			      		cls : 'x-btn-text-icon',
-			      		tooltip:'Download a formatted text version of your search results',		      		
-			      		handler : function() {
-			      		  	var textWindow = new Gemma.Metaheatmap.DownloadWindow();
-			      		  	textWindow.convertToText (this.geneTree, this.conditionTree, this.cells);
-			      		  	textWindow.show();
-			      	  	},
-			      	  	scope: this		      	  
-			      	  },
-			      	  { xtype : 'button',
-				      		text : '<b>As image</b>',
-				      		icon : '/Gemma/images/download.gif',
-				      		cls : 'x-btn-text-icon',
-				      		tooltip:'Download heatmap image',		      		
-				      		handler : function() {
-			      		  		this.visualizationPanel.downloadImage();
-				      	  	},
-				      	  	scope: this		      	  
-				     },
-			      	 '-',
+			      	  },'-',{
+					  	xtype: 'button',
+						text: '<b>Download</b>',
+						icon: '/Gemma/images/download.gif',
+					  	menu: new Ext.menu.Menu({
+							items: [{
+								text: 'As text',
+								icon: '/Gemma/images/icons/page_white_text.png',
+								tooltip: 'Download a formatted text version of your search results',
+								handler: function(){
+									var textWindow = new Gemma.Metaheatmap.DownloadWindow();
+									textWindow.convertToText(this.geneTree, this.conditionTree, this.cells);
+									textWindow.show();
+								},
+								scope: this
+							}, {
+								text: 'As image',
+								icon: '/Gemma/images/icons/picture.png',
+								tooltip: 'Download heatmap image',
+								handler: function(){
+									this.visualizationPanel.downloadImage();
+								},
+								scope: this
+							}]
+						})}, '-',
 			      	 { xtype 	: 'button',
 			      		icon	: '/Gemma/images/icons/question_blue.png',
 			      		cls 	: 'x-btn-icon',
@@ -257,7 +258,8 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			       		cells			  : this.cells,
 			       		geneControls 	  : this.geneControls,
 			       		conditionControls : this.conditionControls,			       					       		
-			       		region  : 'center'
+			       		region  : 'center',
+						autoScroll : true
 			       	 },
 			       	 {	ref		: 'controlPanel',
 				       		xtype   : 'Metaheatmap.ControlPanel',
@@ -266,7 +268,12 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 				       		geneControls 	  : this.geneControls,
 				       		conditionControls : this.conditionControls,
 				       		sortedTree		  : this.factorTree,
-				       		region  : 'east',			       		
+							collapsible       : true,
+							floatable: false,
+							animFloat: false,
+							title: 'Sort & Filter',
+							border:true,
+				       		region  : 'east',
 				       		width   : 300
 				     }
 			        ]

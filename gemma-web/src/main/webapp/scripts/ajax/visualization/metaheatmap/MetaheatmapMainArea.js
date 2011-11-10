@@ -24,11 +24,16 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 	initializeMe : function () {
 		
+		// when we say 'owner container' here, we mean the visualisation panel, so travel up the container stack until we get to it
+		// (this is alternative to this.ownerCt which is dangerous to use because it will break if there are any layout changes made)
+		var ownerCt = this.findParentByType('Metaheatmap.VisualizationPanel');
+		
 		this.addEvents('cell_mouse_in','cell_mouse_out','cell_click');
 		
 		this.ctx = Gemma.Metaheatmap.Utils.getCanvasContext (this.boxCanvas.el.dom);
 		
-		this.boxCanvas.el.on('mousemove', function(e, t) {
+		this.boxCanvas.el.on('mousemove', function(e, t) {	
+			document.body.style.cursor = 'pointer'; // makes it really slow
 			if (this.lastCellMouseIn != null) {
 				this.lastCellMouseIn.draw (this.ctx);
 				this.fireEvent ('cell_mouse_out',this.lastCellMouseIn,e,t);
@@ -43,7 +48,8 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			this.lastCellMouseIn = cell;			
 		}, this);				
 
-		this.boxCanvas.el.on('mouseout', function(e, t) {
+		this.boxCanvas.el.on('mouseout', function(e, t) {	
+			document.body.style.cursor = 'default'; // makes it really slow
 			if (this.lastCellMouseIn != null) {
 				this.lastCellMouseIn.draw (this.ctx);
 				this.fireEvent ('cell_mouse_out',this.lastCellMouseIn,e,t);
@@ -53,8 +59,8 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 		this.body.on('scroll',function (e, t) {						
 			var scroll = this.body.getScroll();
-			this.ownerCt.boxTopLabels.body.scrollTo ('left',scroll.left);
-			this.ownerCt.boxSideLabels.body.scrollTo ('top',scroll.top);			
+			ownerCt.variableWidthCol.boxTopLabels.body.scrollTo ('left',scroll.left);
+			ownerCt.fixedWidthCol.boxSideLabels.body.scrollTo ('top',scroll.top);			
 		}, this);
 		
 		this.boxCanvas.el.on('click', function(e, t) {
@@ -74,20 +80,24 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		if (!this.amIinitialized) {
 			this.initializeMe();		
 		}
+		
+		// when we say 'owner container' here, we mean the visualisation panel, so travel up the container stack until we get to it
+		// (this is alternative to this.ownerCt which is dangerous to use because it will break if there are any layout nesting changes made)
+		var ownerCt = this.findParentByType('Metaheatmap.VisualizationPanel');
 
-		//this.setPosition (this.ownerCt.boxSideLabels.tree.display.size.height, this.ownerCt.boxTopLabels.tree.display.size.height);		
+		//this.setPosition (ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.height, ownerCt.variableWidthCol.boxTopLabels.tree.display.size.height);		
 		
-		var headerHeight = this.ownerCt.boxTopLabels.tree.display.size.height;
-		var sideWidth    = this.ownerCt.boxSideLabels.tree.display.size.height;
+		var headerHeight = ownerCt.variableWidthCol.boxTopLabels.tree.display.size.height;
+		var sideWidth    = ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.height;
 		
-		this.setWidth (this.ownerCt.getWidth() - sideWidth - 20);
-		this.setHeight (this.ownerCt.getHeight() - headerHeight - 20);							
+		this.setWidth (ownerCt.getWidth() - sideWidth - 20);
+		this.setHeight (ownerCt.getHeight() - headerHeight - 20);							
 		
-		this.boxCanvas.setWidth (this.ownerCt.boxTopLabels.tree.display.size.width);
-		this.boxCanvas.setHeight (this.ownerCt.boxSideLabels.tree.display.size.width);							
+		this.boxCanvas.setWidth (ownerCt.variableWidthCol.boxTopLabels.tree.display.size.width);
+		this.boxCanvas.setHeight (ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.width);							
 		
-		this.ctx.canvas.width  = this.ownerCt.boxTopLabels.tree.display.size.width;
-		this.ctx.canvas.height = this.ownerCt.boxSideLabels.tree.display.size.width;
+		this.ctx.canvas.width  = ownerCt.variableWidthCol.boxTopLabels.tree.display.size.width;
+		this.ctx.canvas.height = ownerCt.fixedWidthCol.boxSideLabels.tree.display.size.width;
 		this.doLayout();
 	},
 	

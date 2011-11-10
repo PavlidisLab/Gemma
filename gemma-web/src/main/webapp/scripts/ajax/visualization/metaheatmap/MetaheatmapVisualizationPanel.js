@@ -21,179 +21,203 @@ Ext.namespace('Gemma.Metaheatmap');
  *  + 
  */
 Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
+	// need to use hbox so the heatmap box resizes when the control panel is collapsed
+	layout : 'hbox',
+	layoutConfig: {
+		align: 'stretch',
+		pack: 'start'
+	},
+	frame: false,
+	border: false,
+	defaults: {
+		border: false
+	},
 	initComponent : function () {
-
+		
 		Ext.apply (this, {
-       		layout : 'table',
-       		layoutConfig: {
-       	        columns: 2
-       	    },
-       		frame  : false,
-       		border : false,
-       		isLegendShown : false,
-       		//autoScroll: false,
-       		geneTree      : this.geneTree,
-       		conditionTree : this.conditionTree,
-       		cells		  : this.cells,
-       		items : [       		         
-     		           {
-       		        	   xtype : 'panel',
-       		        	   ref : 'pnlMiniControl',       		        	   
-//       		        	   html : '<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
-//       		        	   		  '<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
-       		        	   border : false,
-       		        	   items : [
-       		        	    {
-       		        	    	xtype : 'label',
-       		        	    	text  : 'Column size'       		        	    	
-       		        	    },       		        	            
-       		 				{
-       		 					xtype  : 'slider',
-       		 					ref    : 'sldHorizontalZoom',
-       		 					width  : 80,
-       		 					height : 20,
-       		 					value  : Gemma.Metaheatmap.defaultConditionZoom,
-       		 					increment : 1,
-       		 					minValue  : 2,
-       		 					maxValue  : 15,
-       		 					listeners : {
-       		 						changecomplete : function (slider, newValue, thumb) {       		        	    			
-       		        	    			this.redraw();
-       		 							//this.fireEvent("horizontal_zoom_change", newValue);
-       		 						},
-       		 						scope: this
-       		 					}					          		        	            
-       		 				},
-       		        	    {
-       		        	    	xtype : 'label',
-       		        	    	text  : 'Row size'       		        	    	
-       		        	    },       		        	            
-       		 				{
-       		 					xtype: 'slider',
-       		 					ref : 'sldVerticalZoom',
-       		 					//vertical : true,
-       		 					width: 80,
-       		 					height: 20,
-       		 					value: Gemma.Metaheatmap.defaultGeneZoom,
-       		 					increment: 1,
-       		 					minValue: 2,
-       		 					maxValue: 15,
-       		 					listeners: {
-       		 						changecomplete : function (slider, newValue, thumb) {       		        	    			
-       		        	    			this.redraw();
-       		 							//this.fireEvent("vertical_zoom_change", newValue);
-       		 						},
-       		 						scope: this
-       		 					}					   
-       		 				},
-       		 				{
-       		        	    	xtype : 'button',
-       		        	    	text  : 'Dock popup',       		        	    	
-       		        	    	enableToggle : true,
-       		        	    	width : 80,
-       		        	    	toggleHandler: function (btn, toggle) {
-       		 						if (toggle) {
-       		 							this.hoverWindow.isFloating = false;
-       		 							//this.hoverWindow.setPagePosition ( 800, 100);
-       		 							btn.setText("Undock popup");       		 							
-       		 						} else {
-       		 							this.hoverWindow.isFloating = true;
-       		 							btn.setText("Dock popup");
-       		 						}
-       		 					},
-       		 					scope: this
-       		 				},
-       		 				{
-       		        	    	xtype : 'button',
-       		        	    	text  : 'fold change',       		        	    	
-       		        	    	width : 80,
-       		        	    	handler: function (btn, e) {
-       		 						this.boxHeatmap.isShowPvalue = !this.boxHeatmap.isShowPvalue;
-       		 						
-       		 						if (this.boxHeatmap.isShowPvalue) {       		 						
-       		 							btn.setText("fold change");
-       		 							if (this.isLegendShown) {
-       		 								this.colorLegendFoldChange.hide();
-       		 								this.colorLegendPvalue.show();
-       		 							}
-       		 						} else {
-       		 							btn.setText("p-value");
-       		 							if (this.isLegendShown) {       		 							
-       		 								this.colorLegendFoldChange.show();
-       		 								this.colorLegendPvalue.hide();
-       		 							}
-       		 						}
-       		 						this.boxHeatmap.draw();
-       		 					},
-       		 					scope: this
-       		 				},
-       		 				{
-       		        	    	xtype : 'button',
-       		        	    	text  : 'Flip axes',
-       		        	    	width : 80,
-       		        	    	handler: function (btn, e) {
-		       		           	    this.flipLabels();
-       		 						this.redraw();
-       		 					},
-       		 					scope: this
-       		        	    } ]		        	            
-       		           },
-       		           {
-       		        	   xtype : 'Metaheatmap.LabelBox',
-       		        	   ref : 'boxTopLabels',       		        	   
-       		        	   border : false,
-       		        	   orientation : 'horizontal',
-       		        	   tree : this.conditionTree,
-       		        	   drawItemLabel_ : this.drawConditionLabel,       		           	   
-       		           	   onClick : this.onClickConditionLabel
-       		           },       		         
-       		           {
-       		        	   xtype : 'Metaheatmap.LabelBox',
-       		        	   ref : 'boxSideLabels',
-       		        	   border : false,
-       		        	   orientation : 'vertical',
-       		        	   tree   : this.geneTree,
-       		        	   drawItemLabel_ : this.drawGeneLabel,       		           	   
-       		           	   onClick : this.onClickGeneLabel      	          		           	   
-       		           },
-       		           {
-       		        	   xtype  : 'Metaheatmap.HeatmapBox',
-       		        	   ref : 'boxHeatmap',							
-       		        	   border : false,
-       		        	   geneTree   	 : this.geneTree,
-       		        	   conditionTree : this.conditionTree,
-       		        	   cells		 : this.cells,
-       		           },
-       		           {
-       		        	   xtype : 'Metaheatmap.ColorLegend',       		        	   
-       		        	   ref : 'colorLegendPvalue',
-       		        	   x : 440,
-       		        	   y : 0,
-       		        	   title : 'P-value',
-       		        	   cellSize : 10,
-       		           	   scaleLabels : ["No Data", "1~0.1", "0.05", "0.01", "0.001", "0.0001", "0.00001", "< 0.00001"],
-       		           	   scaleValues  : [null, 0, 2, 3, 5, 8, 9, 10],
-       		           	   
-       		        	   discreteColorRangeObject  : Gemma.Metaheatmap.Config.basicColourRange,
-       		        	   orientation	: 'vertical',
-       		        	   fontSize	 : 12
-       		           },
-       		           {
-       		        	   xtype : 'Metaheatmap.ColorLegend',       		        	   
-       		        	   ref : 'colorLegendFoldChange',
-       		        	   x : 440,
-       		        	   y : 0,
-       		        	   title : 'Log fold change',
-       		        	   cellSize : 10,
-       		           	   
-       		           	   scaleLabels : ["No Data", "-3", "-2", "-1", "0", "1", "2", "3"],
-       		           	   scaleValues  : [null, -3, -2, -1, 0, 1, 2, 3],
-       		           	   
-       		        	   discreteColorRangeObject  : Gemma.Metaheatmap.Config.contrastsColourRange,
-       		        	   orientation	: 'vertical',
-       		        	   fontSize	 : 12
-       		           }
-       		  ]			
+			isLegendShown: false,
+			//autoScroll: false,
+			geneTree: this.geneTree,
+			conditionTree: this.conditionTree,
+			cells: this.cells,
+			items: [{
+				xtype: 'panel',
+				name: 'fixedWidthCol',
+				ref: 'fixedWidthCol',
+				flex: 0,
+				width: 135,
+				layout: 'vbox',
+				layoutConfig: {
+					align: 'stretch',
+					pack: 'start'
+				},
+				defaults: {
+					border: false
+				},
+				items: [{
+					xtype: 'panel',
+					ref: 'pnlMiniControl',
+					// html : '<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
+					//   '<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
+					border: false,
+					defaults: {
+						border: false,
+						style:'margin-left:10px;margin-top:5px;'
+					},
+					items: [{
+						xtype: 'label',
+						text: 'Column size'
+					}, {
+						xtype: 'slider',
+						ref: 'sldHorizontalZoom',
+						width: 80,
+						height: 20,
+						value: Gemma.Metaheatmap.defaultConditionZoom,
+						increment: 1,
+						minValue: 2,
+						maxValue: 15,
+						listeners: {
+							changecomplete: function(slider, newValue, thumb){
+								this.redraw();
+							//this.fireEvent("horizontal_zoom_change", newValue);
+							},
+							scope: this
+						}
+					}, {
+						xtype: 'label',
+						text: 'Row size'
+					}, {
+						xtype: 'slider',
+						ref: 'sldVerticalZoom',
+						//vertical : true,
+						width: 80,
+						height: 20,
+						value: Gemma.Metaheatmap.defaultGeneZoom,
+						increment: 1,
+						minValue: 2,
+						maxValue: 15,
+						listeners: {
+							changecomplete: function(slider, newValue, thumb){
+								this.redraw();
+							//this.fireEvent("vertical_zoom_change", newValue);
+							},
+							scope: this
+						}
+					}, {
+						xtype: 'button',
+						text: 'Dock popup',
+						enableToggle: true,
+						width: 80,
+						toggleHandler: function(btn, toggle){
+							if (toggle) {
+								this.hoverWindow.isFloating = false;
+								//this.hoverWindow.setPagePosition ( 800, 100);
+								btn.setText("Undock popup");
+							} else {
+								this.hoverWindow.isFloating = true;
+								btn.setText("Dock popup");
+							}
+						},
+						scope: this
+					}, {
+						xtype: 'button',
+						text: 'fold change',
+						width: 80,
+						handler: function(btn, e){
+							this.variableWidthCol.boxHeatmap.isShowPvalue = !this.variableWidthCol.boxHeatmap.isShowPvalue;
+							
+							if (this.variableWidthCol.boxHeatmap.isShowPvalue) {
+								btn.setText("fold change");
+								if (this.isLegendShown) {
+									this.colorLegendFoldChange.hide();
+									this.variableWidthCol.colorLegendPvalue.show();
+								}
+							} else {
+								btn.setText("p-value");
+								if (this.isLegendShown) {
+									this.colorLegendFoldChange.show();
+									this.variableWidthCol.colorLegendPvalue.hide();
+								}
+							}
+							this.variableWidthCol.boxHeatmap.draw();
+						},
+						scope: this
+					}, {
+						xtype: 'button',
+						text: 'Flip axes',
+						width: 80,
+						handler: function(btn, e){
+							this.flipLabels();
+							this.redraw();
+						},
+						scope: this
+					}]
+				}, {
+					xtype: 'Metaheatmap.LabelBox',
+					ref: 'boxSideLabels',
+					border: false,
+					orientation: 'vertical',
+					tree: this.geneTree,
+					drawItemLabel_: this.drawGeneLabel,
+					onClick: this.onClickGeneLabel
+				}]
+			}, {
+				xtype: 'panel',
+				name: 'variableWidthCol',
+				ref: 'variableWidthCol',
+				flex:1,
+				layout:'vbox',
+				layoutConfig: {
+					align: 'stretch',
+					pack: 'start'
+				},
+				defaults: {
+					border: false
+				},
+				items: [{
+					xtype: 'Metaheatmap.LabelBox',
+					ref: 'boxTopLabels',
+					border: false,
+					orientation: 'horizontal',
+					tree: this.conditionTree,
+					drawItemLabel_: this.drawConditionLabel,
+					onClick: this.onClickConditionLabel
+				}, {
+					xtype: 'Metaheatmap.HeatmapBox',
+					ref: 'boxHeatmap',
+					border: false,
+					geneTree: this.geneTree,
+					conditionTree: this.conditionTree,
+					cells: this.cells
+				}, {
+					xtype: 'Metaheatmap.ColorLegend',
+					ref: 'colorLegendPvalue',
+					x: 440,
+					y: 0,
+					title: 'P-value',
+					cellSize: 10,
+					scaleLabels: ["No Data", "1~0.1", "0.05", "0.01", "0.001", "0.0001", "0.00001", "< 0.00001"],
+					scaleValues: [null, 0, 2, 3, 5, 8, 9, 10],
+					
+					discreteColorRangeObject: Gemma.Metaheatmap.Config.basicColourRange,
+					orientation: 'vertical',
+					fontSize: 12
+				}, {
+					xtype: 'Metaheatmap.ColorLegend',
+					ref: 'colorLegendFoldChange',
+					x: 440,
+					y: 0,
+					title: 'Log fold change',
+					cellSize: 10,
+					
+					scaleLabels: ["No Data", "-3", "-2", "-1", "0", "1", "2", "3"],
+					scaleValues: [null, -3, -2, -1, 0, 1, 2, 3],
+					
+					discreteColorRangeObject: Gemma.Metaheatmap.Config.contrastsColourRange,
+					orientation: 'vertical',
+					fontSize: 12
+				}]
+			}]
 		});
 
 		Gemma.Metaheatmap.VisualizationPanel.superclass.initComponent.apply (this, arguments);		
@@ -202,60 +226,64 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		
 	setGeneTree : function (tree) {
 		this.geneTree = tree;
-		this.boxHeatmap.geneTree = tree;
+		this.variableWidthCol.boxHeatmap.geneTree = tree;
 		if (this.isGeneOnTop) {
-			this.boxTopLabels.tree = tree;						
+			this.variableWidthCol.boxTopLabels.tree = tree;						
 		} else {
-			this.boxSideLabels.tree = tree;						
+			this.fixedWidthCol.boxSideLabels.tree = tree;						
 		}		
 	},
 	
 	setConditionTree : function (tree) {
 		this.conditionTree = tree;
-		this.boxHeatmap.conditionTree = tree;
+		this.variableWidthCol.boxHeatmap.conditionTree = tree;
 		if (this.isGeneOnTop) {
-			this.boxSideLabels.tree = tree;						
+			this.fixedWidthCol.boxSideLabels.tree = tree;						
 		} else {
-			this.boxTopLabels.tree = tree;						
+			this.variableWidthCol.boxTopLabels.tree = tree;						
 		}						
 	},
 	
 	flipLabels : function () {
-  	    if (!this.boxHeatmap.isGeneOnTop) {
-      	    this.boxHeatmap.isGeneOnTop = true;
+  	    if (!this.variableWidthCol.boxHeatmap.isGeneOnTop) {
+      	    this.variableWidthCol.boxHeatmap.isGeneOnTop = true;
 					
-      	    this.boxSideLabels.tree = this.conditionTree;       		 							
-      	    this.boxSideLabels.drawItemLabel_ = this.drawConditionLabel;       		           	   
-      	    this.boxSideLabels.onClick = this.onClickConditionLabel;  
+      	    this.fixedWidthCol.boxSideLabels.tree = this.conditionTree;       		 							
+      	    this.fixedWidthCol.boxSideLabels.drawItemLabel_ = this.drawConditionLabel;       		           	   
+      	    this.fixedWidthCol.boxSideLabels.onClick = this.onClickConditionLabel;  
 					
-      	    this.boxTopLabels.tree = this.geneTree;
-      	    this.boxTopLabels.drawItemLabel_ = this.drawGeneLabel;       		           	   
-      	    this.boxTopLabels.onClick = this.onClickGeneLabel;       		       		           	           		       		           	    
+      	    this.variableWidthCol.boxTopLabels.tree = this.geneTree;
+      	    this.variableWidthCol.boxTopLabels.drawItemLabel_ = this.drawGeneLabel;       		           	   
+      	    this.variableWidthCol.boxTopLabels.onClick = this.onClickGeneLabel;       		       		           	           		       		           	    
   	    } else {
-  	    	this.boxHeatmap.isGeneOnTop = false;
+  	    	this.variableWidthCol.boxHeatmap.isGeneOnTop = false;
   	    	
-  	    	this.boxSideLabels.tree = this.geneTree;
-  	    	this.boxSideLabels.drawItemLabel_ = this.drawGeneLabel;       		           	   
-  	    	this.boxSideLabels.onClick = this.onClickGeneLabel;     		           	   
+  	    	this.fixedWidthCol.boxSideLabels.tree = this.geneTree;
+  	    	this.fixedWidthCol.boxSideLabels.drawItemLabel_ = this.drawGeneLabel;       		           	   
+  	    	this.fixedWidthCol.boxSideLabels.onClick = this.onClickGeneLabel;     		           	   
 					
-  	    	this.boxTopLabels.tree = this.conditionTree;
-  	    	this.boxTopLabels.drawItemLabel_ = this.drawConditionLabel;       		           	   
-  	    	this.boxTopLabels.onClick = this.onClickConditionLabel;
+  	    	this.variableWidthCol.boxTopLabels.tree = this.conditionTree;
+  	    	this.variableWidthCol.boxTopLabels.drawItemLabel_ = this.drawConditionLabel;       		           	   
+  	    	this.variableWidthCol.boxTopLabels.onClick = this.onClickConditionLabel;
   	    }		
 	},	
 	
 	redraw : function () {
-  	    if (this.boxHeatmap.isGeneOnTop) {
-      	    this.conditionTree.applyZoom (this.pnlMiniControl.sldVerticalZoom.getValue());
-      	    this.geneTree.applyZoom (this.pnlMiniControl.sldHorizontalZoom.getValue());
+  	    if (this.variableWidthCol.boxHeatmap.isGeneOnTop) {
+      	    this.conditionTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldVerticalZoom.getValue());
+      	    this.geneTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldHorizontalZoom.getValue());
   	    } else {
-  	    	this.conditionTree.applyZoom (this.pnlMiniControl.sldHorizontalZoom.getValue());
-  	    	this.geneTree.applyZoom (this.pnlMiniControl.sldVerticalZoom.getValue());
+  	    	this.conditionTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldHorizontalZoom.getValue());
+  	    	this.geneTree.applyZoom (this.fixedWidthCol.pnlMiniControl.sldVerticalZoom.getValue());
   	    }
   	    
-		this.boxSideLabels.resizeAndPosition();
-		this.boxTopLabels.resizeAndPosition();
-		this.boxHeatmap.resizeAndPosition();
+		this.fixedWidthCol.boxSideLabels.resizeAndPosition();
+		this.variableWidthCol.boxTopLabels.resizeAndPosition();
+		this.variableWidthCol.boxHeatmap.resizeAndPosition();
+		
+		// update size of top left control panel so that gene labels line up with data rows 
+		var topPadding = 4; // TODO get actual top padding from somewhere
+		this.fixedWidthCol.pnlMiniControl.setHeight(this.variableWidthCol.boxTopLabels.getHeight() + topPadding);
 
 		this.updateVisibleScores(); //TODO: do this only if filtering options have changed
 		
@@ -265,9 +293,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	},
 		
 	draw : function () {		
-		this.boxHeatmap.draw();
-		this.boxSideLabels.draw();
-		this.boxTopLabels.draw();		
+		this.variableWidthCol.boxHeatmap.draw();
+		this.fixedWidthCol.boxSideLabels.draw();
+		this.variableWidthCol.boxTopLabels.draw();		
 	},
 
 	onClickGeneLabel : function (label,e ) {
@@ -299,9 +327,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	},
 	
 	downloadImage : function () {
-		var ctxMain = this.boxHeatmap.ctx;
-		var ctxSide = this.boxSideLabels.ctx;
-		var ctxTop = this.boxTopLabels.ctx;
+		var ctxMain = this.variableWidthCol.boxHeatmap.ctx;
+		var ctxSide = this.fixedWidthCol.boxSideLabels.ctx;
+		var ctxTop = this.variableWidthCol.boxTopLabels.ctx;
 		
 		// create temporaray canvas element
 		var canvas = document.createElement('canvas');
@@ -458,8 +486,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		
 		this.addEvents ('gene_zoom_change', 'condition_zoom_change');
 		
-		this.boxTopLabels.on('label_mouse_in', function (label,e,t) {		
-			var labelType = this.boxHeatmap.isGeneOnTop ?  'gene' : 'condition';			
+		this.variableWidthCol.boxTopLabels.on('label_mouse_in', function (label,e,t) {		
+			var labelType = this.variableWidthCol.boxHeatmap.isGeneOnTop ?  'gene' : 'condition';			
 			var msg = this.constructHoverWindowContent (labelType, label.item);
 			this.hoverWindow.show();
 			if (this.hoverWindow.isFloating) {
@@ -468,8 +496,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			this.hoverWindow.update (msg);		
 		}, this );
 
-		this.boxSideLabels.on('label_mouse_in', function (label,e,t) {		
-			var labelType = this.boxHeatmap.isGeneOnTop ?  'condition' : 'gene';			
+		this.fixedWidthCol.boxSideLabels.on('label_mouse_in', function (label,e,t) {		
+			var labelType = this.variableWidthCol.boxHeatmap.isGeneOnTop ?  'condition' : 'gene';			
 			var msg = this.constructHoverWindowContent (labelType, label.item);
 			this.hoverWindow.show();
 			if (this.hoverWindow.isFloating) {
@@ -478,8 +506,20 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			this.hoverWindow.update (msg);		
 		}, this );
 		
+		this.variableWidthCol.boxTopLabels.on('label_mouse_out', function (label,e,t) {		
+			if (this.hoverWindow && this.hoverWindow.isFloating) {
+				this.hoverWindow.hide();
+			}			
+		}, this );
+
+		this.fixedWidthCol.boxSideLabels.on('label_mouse_out', function (label,e,t) {		
+			if (this.hoverWindow && this.hoverWindow.isFloating) {
+				this.hoverWindow.hide();
+			}	
+		}, this );
 		
-		this.boxHeatmap.on('cell_mouse_in', function (cell,e,t) {		
+		
+		this.variableWidthCol.boxHeatmap.on('cell_mouse_in', function (cell,e,t) {		
 			var msg = this.constructHoverWindowContent ('cell', cell);
 
 			this.hoverWindow.show();
@@ -492,7 +532,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			cell.condition.display.label.drawFn (true);
 		}, this );
 		
-		this.boxHeatmap.on ('cell_mouse_out', function (cell,e,t) {
+		this.variableWidthCol.boxHeatmap.on ('cell_mouse_out', function (cell,e,t) {
 			cell.gene.display.label.drawFn(false);
 			cell.condition.display.label.drawFn(false);
 			if (this.hoverWindow.isFloating) {
@@ -500,7 +540,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			}
 		}, this);
 		
-		this.boxHeatmap.on ('cell_click', function (cell) {
+		this.variableWidthCol.boxHeatmap.on ('cell_click', function (cell) {
 			if (cell !== null) {
 				var expressionDetailsWindow = new Gemma.VisualizationWithThumbsWindow ({
 					title : 'Gene Expression',
