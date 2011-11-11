@@ -47,6 +47,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	eeSetReady : false,
 	taxonId: null,
 
+
+	defaultIsDiffEx: true,
+
 	PREVIEW_SIZE : 5,
 
 	// defaults for coexpression
@@ -1046,7 +1049,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					scale : 'medium',
 					width : 150,
 					enableToggle : true,
-					pressed : false
+					pressed : !this.defaultIsDiffEx
 				});
 		this.coexToggle.on('click', function() {
 			this.coexToggle.toggle(true);
@@ -1058,7 +1061,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			cls: 'highlightToggle',
 			width: 150,
 			enableToggle: true,
-			pressed: true
+			pressed: this.defaultIsDiffEx
 		});
 		this.diffExToggle.on('click', function() {
 			this.diffExToggle.toggle(true);
@@ -1115,35 +1118,99 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					tplWriteMode: 'overwrite'
 				});
 
-				this.diffExExamples = new Ext.Panel({
-					ref: 'diffExExamples',
+				this.searchExamples = new Ext.Panel({
+					ref: 'searchExamples',
 					colspan:4,
-					hidden: !this.diffExToggle.pressed,
-					html: 'Example Queries:<br> <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
-					'href="/Gemma/analysesResultsSearch.html?gg=48&eg=6112&t=1">Search for differential expression in ten experiments studying autism spectrum disorder based on genes from AutDB\'s candidate gene list</a> (human)<br>' +
-					' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." ' +
-					'href="/Gemma/analysesResultsSearch.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)',
+					cls : 'left-align-btn transparent-btn transparent-btn-link',
+					//html: '<a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
+					//'href="/Gemma/analysesResultsSearch.html?gg=48&eg=6112&t=1">Search for differential expression in ten experiments studying autism spectrum disorder based on genes from AutDB\'s candidate gene list</a> (human)<br>' +
+					//' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." ' +
+					//'href="/Gemma/analysesResultsSearch.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)',
 					items:[{
+						tag: 'div',
+						html: 'Example Queries:',
+						border: false
+					},{
+						ref: 'diffExExamples',
+						border:false,
+						hidden: !this.defaultIsDiffEx,
+						items: [{
 							xtype: 'button',
-							text: "Autism",
-							width: 55,
-							tooltip:'Run the search',
-							scale: 'medium',
+							ref: 'diffExExample1',
+							text: "Hippocampus development & autism (human)",
+							tooltip: 'Search for differential expression patterns in ten experiments studying autism spectrum disorder based on genes from the &quot;hippocampus development&quot; GO group (human)',
 							listeners: {
 								click: function(){
-									this.runExampleQuery();
-								}.createDelegate(this, [], false)
+									var goName = "GO_0021766";
+									var eeSetId = '6112';
+									var taxonId = '1';
+									this.runExampleQuery(eeSetId, goName, taxonId);
+								},
+								scope: this
+							}
+						
+						}, {
+							xtype: 'button',
+							ref: 'diffExExample2',
+							text: "Forebrain neuron differentiation in fetal mice (mouse)",
+							tooltip: 'Search for differential expression patterns in of genes from the &quot;forebrain neuron differentiation&quot; GO group in experiments using fetal/embryonic mouse samples on the GPL1261 platform. (mouse)',
+							listeners: {
+								click: function(){
+									var goName = "GO_0021879";
+									var eeSetId = '6110';
+									var taxonId = '2';
+									this.runExampleQuery(eeSetId, goName, taxonId);
+								},
+								scope: this
 							}
 						
 						}]
+					},{
+						ref: 'coexExamples',
+						border: false,
+						hidden: this.defaultIsDiffEx,
+						items: [{
+							xtype: 'button',
+							ref: 'coexExample1',
+							text: "Regulation of cell division (yeast)",
+							tooltip: 'Search for coexpression patterns in thirty-three experiments based on genes in the &quot;regulation of cell division&quot; GO group (yeast)',
+							listeners: {
+								click: function(){
+									var goName = "GO_0051302";
+									var eeSetId = '6115';
+									var taxonId = '11';
+									this.runExampleQuery(eeSetId, goName, taxonId);
+								},
+								scope: this
+							}
+						
+						}, {
+							xtype: 'button',
+							ref: 'coexExample2',
+							text: "Visceral motor neuron differentiation (human)",
+							tooltip: 'Search for coexpression patterns in human brain experiments based on genes the &quot;Visceral motor neuron differentiation&quot; GO group (human)',
+							listeners: {
+								click: function(){
+									var goName = "GO_0021524";
+									var eeSetId = '737';
+									var taxonId = '1';
+									this.runExampleQuery(eeSetId, goName, taxonId);
+								},
+								scope: this
+							}
+						
+						}]
+					}]
 				});
 				
 				this.diffExToggle.on('toggle', function(){
 					if (this.diffExToggle.pressed) {
-						this.diffExExamples.show();
+						this.searchExamples.diffExExamples.show();
+						this.searchExamples.coexExamples.hide();
 					}
 					else {
-						this.diffExExamples.hide();
+						this.searchExamples.diffExExamples.hide();
+						this.searchExamples.coexExamples.show();
 					}
 				}, this);
 		/*************** PUT ITEMS IN PANEL *********************/
@@ -1218,7 +1285,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip:'Clear all selections and reset the taxon mode ',
 							handler: this.reset.createDelegate(this)
 						}]
-					},this.diffExExamples]
+					},this.searchExamples]
 				}]
 			}
 		});
@@ -1417,6 +1484,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		// get the chooser to inject
 		var chooser = this.experimentChoosers.getComponent(0);
+		this.addExperimentChooser();
 		var myscope = this;	
 			
 		// make a gene combo record for the db-backed experimentSetValueObject
@@ -1455,13 +1523,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 		// get the chooser to inject
 		var chooser = this.geneChoosers.getComponent(0);
+		this.addGeneChooser();
 		var myscope = this;
 					
 		// make a gene combo record for the db-backed experimentSetValueObject
-		GenePickerController.searchGenesAndGeneGroups( goName, '1' , function(srdos){
-		
-			var geneSet = srdos[0].resultValueObject;
-		
+		GenePickerController.getGeneSetByGOId( goName, taxonId , function(geneSet){
+			
 			var record = new Gemma.GeneAndGeneGroupComboRecord({
 				name : geneSet.name,
 				description: geneSet.descrption,
@@ -1485,7 +1552,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 	},
 	
-	runExampleQuery: function(experimentSetId, goName){
+	runExampleQuery: function(eeSetId, goName, taxonId){
 		
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -1494,9 +1561,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					});
 		}
 		this.loadMask.show();
-		goName = "GO_0021766";
-		eeSetId = '6112';
-		taxonId = 1;
 		// reset all the choosers
 		this.reset();
 		
@@ -1506,19 +1570,23 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.addExperimentSet(eeSetId);
 		// set the gene chooser
 		this.addGOGeneSet(goName, taxonId);
+		
+		var queryRun = false;
 		var geneExampleReady = false;
 		var eeExampleReady = false;
 		this.on('geneExampleReady',function(){
 			geneExampleReady = true;
-			if(eeExampleReady){
-			this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
+			if(eeExampleReady && !queryRun){
+				queryRun = true;
+				this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
 			}
 		});
 				
 		this.on('eeExampleReady',function(){
 			eeExampleReady = true;
-			if(geneExampleReady){
-			this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
+			if(geneExampleReady && !queryRun){
+				queryRun = true;
+				this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
 			}
 		});
 							

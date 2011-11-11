@@ -1040,6 +1040,7 @@ gemma.max.fileupload.size.bytes=
 								<value>searchGenesAndGeneGroupsGetIds</value>
 								<value>searchMultipleGenes</value>
 								<value>searchMultipleGenesGetMap</value>
+								<value>getGeneSetByGOId</value>
 							</list>
 						</property>
 					</bean>

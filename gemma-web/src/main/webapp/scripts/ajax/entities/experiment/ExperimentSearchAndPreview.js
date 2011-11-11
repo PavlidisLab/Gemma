@@ -267,6 +267,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 					}
 					combo.disable().hide();
 					//this.selectionTitle.update(combo.getValue());
+					this.helpBtn.hide();
 					this.removeBtn.show();
 					this.removeBtn.setPosition(300,0);
 					this.doLayout();

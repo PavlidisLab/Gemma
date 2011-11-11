@@ -663,6 +663,9 @@ GenePickerController.searchMultipleGenes = function(p0, p1, callback) {
 GenePickerController.searchMultipleGenesGetMap = function(p0, p1, callback) {
 	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'searchMultipleGenesGetMap', p0, p1, callback);
 }
+GenePickerController.getGeneSetByGOId = function(p0, p1, callback) {
+	dwr.engine._execute(GenePickerController._path, 'GenePickerController', 'getGeneSetByGOId', p0, p1, callback);
+}
 // ====================================================================================
 if (GeoBrowserService == null)
 	var GeoBrowserService = {};

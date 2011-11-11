@@ -131,6 +131,36 @@ public class GenePickerController {
     }
 
     /**
+     * for AJAX get a gene set with all genes in the given taxon that are annotated with the given go id, including its child terms in
+     * the hierarchy
+     * 
+     * @param goId GO id that must be in the format "GO_#######"
+     * @param taxonId must not be null and must correspond to a taxon
+     * @return GOGroupValueObject empty if goId was blank or taxonId didn't correspond to a taxon
+     */
+    public GOGroupValueObject getGeneSetByGOId( String goId, Long taxonId ) {
+
+        Taxon taxon = null;
+        if ( taxonId != null ) {
+            taxon = taxonService.load( taxonId );
+            if ( taxon == null ) {
+                log.warn( "No such taxon with id=" + taxonId );
+            } else {
+                GeneSet goSet = this.geneSetSearch.findByGoId( goId, taxon );
+                GOGroupValueObject ggvo = new GOGroupValueObject( goSet, goId, goId );
+                ggvo.setTaxonId( taxon.getId() );
+                ggvo.setTaxonName( taxon.getCommonName() );
+
+                return ggvo;
+            }
+
+        }
+
+        return new GOGroupValueObject();
+
+    }
+
+    /**
      * for AJAX get all genes in the given taxon that are annotated with the given go id, including its child terms in
      * the hierarchy
      * 

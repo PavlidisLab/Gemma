@@ -271,6 +271,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		});
 		
 		//console.log(searchForm.getHeight());
+		//searchForm.collapsePreviews();
 		//console.log(searchForm.getHeight());
 		//searchForm.doLayout();
 		//console.log(searchForm);
