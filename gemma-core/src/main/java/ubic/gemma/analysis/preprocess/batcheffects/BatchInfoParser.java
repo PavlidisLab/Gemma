@@ -157,9 +157,21 @@ public class BatchInfoParser {
                 } else if ( providerName.equalsIgnoreCase( "illumina" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "illumina" )
                         || arrayDesignUsed.getName().toLowerCase().contains( "sentrix" ) ) {
-                    throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
-                            + " not matched to a supported platform type for scan date extraction for " + ba
-                            + "(Illumina files do not contain dates)" );
+
+                    /*
+                     * Not all illumina arrays are beadarrays - e.g. GPL6799.
+                     */
+                    if ( f.getName().contains( ".gpr" ) ) {
+                        /*
+                         * We'll give it a try.
+                         */
+                        log.info( "Looks like an Illumina spotted array with GPR formatted scan file: " + f );
+                        scanDateExtractor = new GenericScanFileDateExtractor();
+                    } else {
+                        throw new UnsupportedRawdataFileFormatException( arrayDesignUsed
+                                + " not matched to a supported platform type for scan date extraction for " + ba
+                                + "(Illumina files do not contain dates)" );
+                    }
                 } else {
                     log.warn( "Unknown provider/format, attempting a generic extractor for " + f );
                     scanDateExtractor = new GenericScanFileDateExtractor();
