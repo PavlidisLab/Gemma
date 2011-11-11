@@ -379,7 +379,20 @@ Ext.Panel, {
                 hidden : true
 
             },
+            
 */
+            '->',
+            '-',
+	      	 { xtype 	: 'button',
+	      		icon	: '/Gemma/images/icons/question_blue.png',
+	      		cls 	: 'x-btn-icon',
+	      		tooltip : 'Click here for documentation on how to use this visualizer.',
+	      		handler : function() {
+	      		  window.open('http://www.chibi.ubc.ca/faculty/pavlidis/wiki/download/attachments/26706691/cytoscapehelp.png'); 
+	      	  	},
+	      	  	scope	: this		      	 
+	        },
+            
             '->',
 
             {
@@ -400,6 +413,7 @@ Ext.Panel, {
                 pressed: 'true'
 
             },
+            
 
             ],
             //end tbar
