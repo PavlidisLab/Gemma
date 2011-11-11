@@ -377,10 +377,14 @@ public class GenePickerController {
             for ( Taxon taxonForGo : taxonsForGo ) {
                 if ( query.toUpperCase().startsWith( "GO" ) ) {
                     GeneSet goSet = this.geneSetSearch.findByGoId( query, taxonForGo );
-                    if ( goSet != null ) {
+                    if ( goSet != null &&  goSet.getMembers() != null && goSet.getMembers().size() > 0) {
                         GOGroupValueObject ggvo = new GOGroupValueObject( goSet, query, query );
+                        ggvo.setTaxonId( taxonForGo.getId() );
+                        ggvo.setTaxonName( taxonForGo.getCommonName() );
                         SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
                         sdo.setUserOwned( false );
+                        sdo.setTaxonId( taxonForGo.getId() );
+                        sdo.setTaxonName( taxonForGo.getCommonName() );
                         goSRDOs.add( sdo );
                         goSets.add( goSet );
                     }
@@ -390,7 +394,12 @@ public class GenePickerController {
                         // (should probably do this check elsewhere in case it speeds things up)
                         if ( geneSet.getMembers() != null && geneSet.getMembers().size() != 0 ) {
                             GOGroupValueObject ggvo = new GOGroupValueObject( geneSet, null, query );
+                            ggvo.setTaxonId( taxonForGo.getId() );
+                            ggvo.setTaxonName( taxonForGo.getCommonName() );
                             SearchResultDisplayObject sdo = new SearchResultDisplayObject( ggvo );
+                            sdo.setUserOwned( false );
+                            sdo.setTaxonId( taxonForGo.getId() );
+                            sdo.setTaxonName( taxonForGo.getCommonName() );
                             goSRDOs.add( sdo );
                             goSets.add( geneSet );
                         }

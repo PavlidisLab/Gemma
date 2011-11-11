@@ -860,7 +860,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	wereSelectionsModified: function(){
 		var wereModified = false;
 		this.geneChoosers.items.each(function(){
-			if (this.xtype === 'geneSearchAndPreview' && this.getSelectedGeneOrGeneSetValueObject()) {
+			if ( this instanceof Gemma.GeneSearchAndPreview && this.getSelectedGeneOrGeneSetValueObject()) {
 				if( this.listModified){
 					wereModified = true;
 				}
@@ -868,7 +868,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 		if(!wereModified){
 			this.experimentChoosers.items.each(function(){
-				if (this.xtype === 'experimentSearchAndPreview' && this.getSelectedExperimentOrExperimentSetValueObject()) {
+				if ( this instanceof Gemma.ExperimentSearchAndPreview && this.getSelectedExperimentOrExperimentSetValueObject()) {
 					if( this.listModified){
 						wereModified = true;
 					}
@@ -881,7 +881,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getGeneSessionGroupQueries: function(){
 		var queries = [];
 		this.geneChoosers.items.each(function(){
-			if (this.xtype === 'geneSearchAndPreview' && this.getSelectedGeneOrGeneSetValueObject()) {
+			if ( this instanceof Gemma.GeneSearchAndPreview && this.getSelectedGeneOrGeneSetValueObject()) {
 				if( this.queryUsedToGetSessionGroup !== null ){
 					queries.push(this.queryUsedToGetSessionGroup);
 				}
@@ -892,7 +892,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getExperimentSessionGroupQueries: function(){
 		var queries = [];
 		this.experimentChoosers.items.each(function(){
-			if (this.xtype === 'experimentSearchAndPreview' && this.getSelectedExperimentOrExperimentSetValueObject()) {
+			if ( this instanceof Gemma.ExperimentSearchAndPreview && this.getSelectedExperimentOrExperimentSetValueObject()) {
 				if( this.queryUsedToGetSessionGroup !== null ){
 					queries.push(this.queryUsedToGetSessionGroup);
 				}
@@ -903,7 +903,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getSelectedGeneAndGeneSetValueObjects : function() {
 		var selectedVOs = [];
 		this.geneChoosers.items.each(function(){
-			if (this.xtype === 'geneSearchAndPreview' && this.getSelectedGeneOrGeneSetValueObject() ) {
+			if ( this instanceof Gemma.GeneSearchAndPreview && this.getSelectedGeneOrGeneSetValueObject() ) {
 				selectedVOs.push(this.getSelectedGeneOrGeneSetValueObject());
 			}
 		});
@@ -939,7 +939,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getSelectedExperimentAndExperimentSetValueObjects : function() {
 		var selectedVOs = [];
 		this.experimentChoosers.items.each(function() {
-			if (this.xtype === 'experimentSearchAndPreview' && this.getSelectedExperimentOrExperimentSetValueObject() ) {
+			if ( this instanceof Gemma.ExperimentSearchAndPreview  && this.getSelectedExperimentOrExperimentSetValueObject() ) {
 				selectedVOs.push(this.getSelectedExperimentOrExperimentSetValueObject());
 			}
 		});
@@ -1122,7 +1122,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					html: 'Example Queries:<br> <a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
 					'href="/Gemma/analysesResultsSearch.html?gg=48&eg=6112&t=1">Search for differential expression in ten experiments studying autism spectrum disorder based on genes from AutDB\'s candidate gene list</a> (human)<br>' +
 					' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." ' +
-					'href="/Gemma/analysesResultsSearch.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)'
+					'href="/Gemma/analysesResultsSearch.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)',
+					items:[{
+							xtype: 'button',
+							text: "Autism",
+							width: 55,
+							tooltip:'Run the search',
+							scale: 'medium',
+							listeners: {
+								click: function(){
+									this.runExampleQuery();
+								}.createDelegate(this, [], false)
+							}
+						
+						}]
 				});
 				
 				this.diffExToggle.on('toggle', function(){
@@ -1251,12 +1264,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.taxonId = taxonId;
 		// set taxon for ALL geneChooser elements
 		this.geneChoosers.items.each(function() {
-					if (this.xtype === 'geneSearchAndPreview') {
+					if (this instanceof Gemma.GeneSearchAndPreview ) {
 						this.geneCombo.setTaxonId(taxonId);
 					}
 				});
 		this.experimentChoosers.items.each(function() {
-					if (this.xtype === 'experimentSearchAndPreview') {
+					if (this instanceof Gemma.ExperimentSearchAndPreview ) {
 						this.experimentCombo.setTaxonId(taxonId);
 					}
 				});
@@ -1304,7 +1317,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	collapseGenePreviews : function() {
 		if (typeof this.geneChoosers.items !== 'undefined') {
 			this.geneChoosers.items.each(function() {
-						if (this.xtype === 'geneSearchAndPreview') {
+						if (this instanceof Gemma.GeneSearchAndPreview ) {
 							this.collapsePreview(false);
 						}
 					});
@@ -1314,7 +1327,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	collapseExperimentPreviews : function() {
 		if (typeof this.experimentChoosers.items !== 'undefined') {
 			this.experimentChoosers.items.each(function() {
-						if (this.xtype === 'experimentSearchAndPreview') {
+						if (this instanceof Gemma.ExperimentSearchAndPreview ) {
 							this.collapsePreview(false);
 						}
 					});
@@ -1322,28 +1335,28 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 	},
 
-	addGeneChooser : function() {
+	addGeneChooser : function( ) {
 		this.geneChooserIndex++;
-
-		this.geneChoosers.add(
-				{
-			xtype : 'geneSearchAndPreview',
-			searchForm : this,
-			style : 'padding-top:10px;',
-			id : 'geneChooser' + this.geneChooserIndex,
-			taxonId : this.taxonId,
-			listeners : {
-				madeFirstSelection : function() {
-					// Ext.getCmp(this.getId()+'Button').enable();
-					this.searchForm.addGeneChooser();
-					this.removeBtn.show();
-				},
-				removeGene : function() {
-					this.searchForm.removeGeneChooser(this.getId());
+		
+		var chooser = new Gemma.GeneSearchAndPreview({
+			searchForm: this,
+				style: 'padding-top:10px;',
+				id: 'geneChooser' + this.geneChooserIndex,
+				taxonId: this.taxonId,
+				listeners: {
+					madeFirstSelection: function(){
+						// Ext.getCmp(this.getId()+'Button').enable();
+						this.searchForm.addGeneChooser();
+						this.removeBtn.show();
+					},
+					removeGene: function(){
+						this.searchForm.removeGeneChooser(this.getId());
+					}
 				}
-			}
-				// }]
 		});
+
+		this.geneChoosers.add(chooser);
+		
 		// change previous button to 'remove'
 		if (typeof Ext.getCmp('geneChooser' + (this.geneChooserIndex - 1) + 'Button') !== 'undefined') {
 			Ext.getCmp('geneChooser' + (this.geneChooserIndex - 1) + 'Button').show()
@@ -1395,6 +1408,120 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			this.reset();
 		}
 
+	},
+	/**
+	 * set the gene chooser to have chosen a go group and show its preview
+	 * @param geneSetId must be a valid id for a database-backed gene set
+	 */
+	addExperimentSet: function( setId ){
+		
+		// get the chooser to inject
+		var chooser = this.experimentChoosers.getComponent(0);
+		var myscope = this;	
+			
+		// make a gene combo record for the db-backed experimentSetValueObject
+		ExpressionExperimentSetController.load( setId , function(eeSet){
+				
+			var record = new Gemma.ExperimentAndExperimentGroupComboRecord({
+				name : eeSet.name,
+				description: eeSet.descrption,
+				isGroup : true,
+				size: eeSet.expressionExperimentIds.length,
+				taxonId : eeSet.taxonId,
+				taxonName :eeSet.taxonName,
+				memberIds : eeSet.expressionExperimentIds,
+				resultValueObject : eeSet,
+				userOwned : false
+			});
+			
+			// get the chooser's gene combo
+			var eeCombo = chooser.experimentCombo;
+			
+			// insert record into gene combo's store
+			eeCombo.getStore().insert( 0, record );
+			
+			// tell gene combo the GO group was selected
+			//eeCombo.select(0);
+			eeCombo.fireEvent('select', eeCombo, record, 0);
+			myscope.fireEvent('eeExampleReady');
+		});
+		
+	},
+	/**
+	 * set the gene chooser to have chosen a go group and show its preview
+	 * @param geneSetId must be a valid id for a database-backed gene set
+	 */
+	addGOGeneSet: function( goName, taxonId ){
+
+		// get the chooser to inject
+		var chooser = this.geneChoosers.getComponent(0);
+		var myscope = this;
+					
+		// make a gene combo record for the db-backed experimentSetValueObject
+		GenePickerController.searchGenesAndGeneGroups( goName, taxonId , function(srdos){
+		
+			var geneSet = srdos[0].resultValueObject;
+		
+			var record = new Gemma.GeneAndGeneGroupComboRecord({
+				name : geneSet.name,
+				description: geneSet.descrption,
+				isGroup : true,
+				size: geneSet.geneIds.length,
+				taxonId : geneSet.taxonId,
+				taxonName :geneSet.taxonName,
+				memberIds : geneSet.geneIds,
+				resultValueObject : geneSet,
+				comboText: geneSet.name + ": " + geneSet.description,
+				userOwned : false
+			});
+		
+			// get the chooser's gene combo
+			var geneCombo = chooser.geneCombo;
+			
+			// tell gene combo the GO group was selected
+			geneCombo.fireEvent('select', geneCombo, record, 0);
+			
+			myscope.fireEvent('geneExampleReady');
+		});
+	},
+	
+	runExampleQuery: function(experimentSetId, goName){
+		
+		if (!this.loadMask) {
+			this.loadMask = new Ext.LoadMask(this.getEl(), {
+						msg : "Searching for analysis results ...",
+						msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+					});
+		}
+		this.loadMask.show();
+		goName = "GO_0021766";
+		eeSetId = '6112';
+		taxonId = 1;
+		// reset all the choosers
+		this.reset();
+		
+		// taxon needs to be set before gene set is chosen because otherwise there will be >1 choice provided
+		this.setTaxonId(taxonId);
+		
+		this.addExperimentSet(eeSetId);
+		// set the gene chooser
+		this.addGOGeneSet(goName, taxonId);
+		var geneExampleReady = false;
+		var eeExampleReady = false;
+		this.on('geneExampleReady',function(){
+			geneExampleReady = true;
+			if(eeExampleReady){
+			this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
+			}
+		});
+				
+		this.on('eeExampleReady',function(){
+			eeExampleReady = true;
+			if(geneExampleReady){
+			this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
+			}
+		});
+							
 	}
 
 });

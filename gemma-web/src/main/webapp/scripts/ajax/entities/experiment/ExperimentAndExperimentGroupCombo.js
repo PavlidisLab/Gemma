@@ -16,6 +16,36 @@
 
 Ext.namespace('Gemma');
 
+Gemma.ExperimentAndExperimentGroupComboRecord = Ext.data.Record.create([{
+					name: "name",
+					type: "string"
+				}, {
+					name: "description",
+					type: "string"
+				}, {
+					name: "isGroup",
+					type: "boolean"
+				}, {
+					name: "size",
+					type: "int"
+				}, {
+					name: "taxonId",
+					type: "int",
+					defaultValue: "-1"
+				}, {
+					name: "taxonName",
+					type: "string",
+					defaultValue: ""
+				}, {
+					name: "memberIds",
+					defaultValue: []
+				}, {
+					name: "resultValueObject"
+				}, {
+					name: "userOwned",
+					type:"boolean"
+				}]);
+
 Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {			
 
 	name : 'experimentAndExperimentGroupCombo',
@@ -144,35 +174,7 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				}
 			}),
 			store: {
-				reader: new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
-					name: "name",
-					type: "string"
-				}, {
-					name: "description",
-					type: "string"
-				}, {
-					name: "isGroup",
-					type: "boolean"
-				}, {
-					name: "size",
-					type: "int"
-				}, {
-					name: "taxonId",
-					type: "int",
-					defaultValue: "-1"
-				}, {
-					name: "taxonName",
-					type: "string",
-					defaultValue: ""
-				}, {
-					name: "memberIds",
-					defaultValue: []
-				}, {
-					name: "resultValueObject"
-				}, {
-					name: "userOwned",
-					type:"boolean"
-				}])),
+				reader: new Ext.data.ListRangeReader({}, Gemma.ExperimentAndExperimentGroupComboRecord),
 				proxy: new Ext.data.DWRProxy(ExpressionExperimentController.searchExperimentsAndExperimentGroups),
 				autoLoad: false
 			}

@@ -15,6 +15,50 @@
  */
 
 Ext.namespace('Gemma');
+
+Gemma.GeneAndGeneGroupComboRecord = Ext.data.Record.create([
+	{
+		name: "name",
+		type: "string"
+	}, {
+		name: "description",
+		type: "string"
+	}, {
+		name: "isGroup",
+		type: "boolean"
+	}, {
+		name: "size",
+		type: "int"
+	}, {
+		name: "taxonId",
+		type: "int",
+		defaultValue: "-1"
+	}, {
+		name: "taxonName",
+		type: "string",
+		defaultValue: ""
+	}, {
+		name: "memberIds",
+		defaultValue: []
+	}, {
+		name: "comboText",
+		type: "string",
+		convert: function(v, record){
+			if (record.resultValueObject instanceof GOGroupValueObject) {
+				return record.name + ": " + record.description;
+			} else {
+				return record.name;
+			}
+		}
+	}, {
+		name: "resultValueObject"
+	}, {
+		name: "userOwned",
+		type: "boolean"
+	}
+]);
+
+
 /**
  * combo to display search results for genes and gene groups (including session bound groups
  * and GO groups)
@@ -156,47 +200,7 @@ Gemma.GeneAndGeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 				}
 			}),
 			store: {
-				reader: new Ext.data.ListRangeReader({}, Ext.data.Record.create([{
-					name: "name",
-					type: "string"
-				}, {
-					name: "description",
-					type: "string"
-				}, {
-					name: "isGroup",
-					type: "boolean"
-				}, {
-					name: "size",
-					type: "int"
-				}, {
-					name: "taxonId",
-					type: "int",
-					defaultValue: "-1"
-				}, {
-					name: "taxonName",
-					type: "string",
-					defaultValue: ""
-				}, {
-					name: "memberIds",
-					defaultValue: []
-				}, {
-					name: "comboText",
-					type: "string",
-					convert: function(v, record){
-						if (record.resultValueObject instanceof GOGroupValueObject) {
-							return record.name + ": " + record.description;
-						}
-						else {
-							return record.name;
-						}
-					}
-				}, {
-					name: "resultValueObject"
-				}, {
-					name: "userOwned",
-					type:"boolean"
-				}])),
-				
+				reader: new Ext.data.ListRangeReader({}, Gemma.GeneAndGeneGroupComboRecord),
 				proxy: new Ext.data.DWRProxy(GenePickerController.searchGenesAndGeneGroups),
 				autoLoad: false
 			}
