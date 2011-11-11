@@ -1458,7 +1458,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		var myscope = this;
 					
 		// make a gene combo record for the db-backed experimentSetValueObject
-		GenePickerController.searchGenesAndGeneGroups( goName, taxonId , function(srdos){
+		GenePickerController.searchGenesAndGeneGroups( goName, '1' , function(srdos){
 		
 			var geneSet = srdos[0].resultValueObject;
 		
