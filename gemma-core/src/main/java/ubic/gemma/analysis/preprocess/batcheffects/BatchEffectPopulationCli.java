@@ -53,21 +53,22 @@ public class BatchEffectPopulationCli extends ExpressionExperimentManipulatingCL
 
         for ( BioAssaySet bas : this.expressionExperiments ) {
             if ( bas instanceof ExpressionExperiment ) {
-                bas = eeService.thawLite( ( ExpressionExperiment ) bas );
-                log.info( "Processing: " + bas );
 
                 if ( !force && !needToRun( bas, BatchInformationFetchingEvent.class ) ) {
-                    log.info( "Can't or don't need to run " + bas );
+                    log.debug( "Can't or don't need to run " + bas );
                     continue;
                 }
+
+                log.info( "Processing: " + bas );
+
+                bas = eeService.thawLite( ( ExpressionExperiment ) bas );
 
                 try {
                     boolean success = ser.fillBatchInformation( ( ExpressionExperiment ) bas, force );
                     if ( success ) {
                         this.successObjects.add( bas.toString() );
                     } else {
-                        this.errorObjects.add( bas.toString() + ": No dates found" );
-
+                        this.errorObjects.add( bas.toString() );
                     }
 
                 } catch ( Exception e ) {

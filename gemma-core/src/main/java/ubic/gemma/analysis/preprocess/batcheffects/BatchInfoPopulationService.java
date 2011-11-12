@@ -286,11 +286,14 @@ public class BatchInfoPopulationService {
         AuditEvent e = auditEventService.getLastEvent( ee, BatchInformationFetchingEvent.class );
         if ( e == null ) return true;
 
-        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getClass() ) ) return false; // don't bother
-        // running again
-
         if ( FailedBatchInformationFetchingEvent.class.isAssignableFrom( e.getClass() ) ) return true; // worth trying
         // again perhaps
+
+        // on occasions the files appear or were missed the first time ...? GSE20842
+        if ( FailedBatchInformationMissingEvent.class.isAssignableFrom( e.getClass() ) ) {
+            RawDataFetcher fetcher = new RawDataFetcher();
+            return fetcher.checkForFile( ee.getAccession().getAccession() );
+        }
 
         return false; // already did it.
 
