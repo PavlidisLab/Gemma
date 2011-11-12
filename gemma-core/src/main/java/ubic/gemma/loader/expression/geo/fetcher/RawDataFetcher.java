@@ -55,6 +55,29 @@ public class RawDataFetcher extends FtpArchiveFetcher {
     }
 
     /**
+     * @param identifier
+     * @return true if the files exist.
+     */
+    public boolean checkForFile( String identifier ) {
+        try {
+            // FIXME this needs to deal with the URL.
+            if ( this.ftpClient == null || !this.ftpClient.isConnected() )
+                this.ftpClient = ( new GeoUtil() ).connect( FTP.BINARY_FILE_TYPE );
+            assert this.ftpClient != null;
+            final String seekFile = formRemoteFilePath( identifier );
+            try {
+                NetUtils.checkForFile( this.ftpClient, seekFile );
+                return true;
+            } catch ( FileNotFoundException e ) {
+                this.ftpClient.disconnect(); // important to do this!
+                return false;
+            }
+        } catch ( Exception e ) {
+            return false;
+        }
+    }
+
+    /**
      * @param identifier The url for the supplementary file.
      * @see ubic.gemma.loader.loaderutils.Fetcher#fetch(java.lang.String)
      */
@@ -110,7 +133,9 @@ public class RawDataFetcher extends FtpArchiveFetcher {
         return newDir + File.separator + identifier + "_RAW.tar";
     }
 
-    /** ftp://ftp.ncbi.nih.gov/pub/geo/DATA/supplementary/series/GSE1105/GSE1105%5FRAW%2Etar
+    /**
+     * ftp://ftp.ncbi.nih.gov/pub/geo/DATA/supplementary/series/GSE1105/GSE1105%5FRAW%2Etar
+     * 
      * @param identifier
      * @return
      */
