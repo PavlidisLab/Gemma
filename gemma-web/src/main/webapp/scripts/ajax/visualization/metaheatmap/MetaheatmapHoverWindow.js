@@ -7,23 +7,23 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				  
 	//height : 200,
 	width  : 350,
-	//	autoScroll : true,
 	closable   : false,
 	shadow 	   : false,
 	border 	   : false,
 	bodyBorder : false,
 	//hidden	   : true,
 	//	bodyStyle  : 'padding: 7px',
+
+	isDocked : false, // 
 	
 	tplWriteMode : 'overwrite',
 
 	initComponent : function () {
 		Gemma.Metaheatmap.HoverWindow.superclass.initComponent.apply ( this, arguments );
 
-		this.tpl = this.initTemplate_();
-		
+		this.tpl = this.initTemplate_();		
 	},		
-		
+	
 	initTemplate_ : function () {
 		return new Ext.XTemplate (
 				'<span style="font-size: 12px ">',
@@ -51,7 +51,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<b>Experiment</b>: {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
 				'<b>p-value</b>: {pvalue:sciNotation}<br><br>',
-				'<b>fold change</b>: {foldChange:sciNotation}',
+				'<b>log fold change</b>: {foldChange:sciNotation}',
 				'</tpl>', '</tpl></span>' );
 	},
 
