@@ -87,7 +87,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        },
 				        {
 				        	xtype  : 'label',
-				        	text   : '% missing data filter:',
+				        	text   : 'Missing data filter:',
 							height : 15
 				        },			        
 				        {
@@ -116,11 +116,14 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        },
 				        {
 				        	xtype  : 'label',
-				        	text   : 'Sum pValue filter:'
+				        	text   : 'Sum pValue filter:',
+				        	hidden : true
 				        },			        
 				        {
 				        	xtype  : 'slider',
 				        	ref    : 'sldGenePvalueFilter',
+				        	hidden : true,
+				        	disabled : true,
 				        	value  : 0,
 				        	increment : 1,
 				        	minValue  : 0,
@@ -183,7 +186,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        },
 				        {
 				        	xtype  : 'label',
-				        	text   : '% missing data filter:',
+				        	text   : 'Missing data filter:',
 							height : 15
 				        },			        
 				        {
@@ -241,11 +244,14 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        },
 				        {
 				        	xtype  : 'label',
+				        	hidden : true,
 				        	text   : 'Sum pValue filter:',
 							height : 15
 				        },			        
 				        {
 				        	xtype  : 'slider',
+				        	hidden : true,
+				        	disabled : false,
 				        	ref    : 'sldConditionPvalueFilter',
 				        	width  : 150,
 				        	height : 20,
@@ -349,18 +355,18 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 		var specificityThreshold = this.conditionsControlPanel.sldSpecificityFilter.getValue();
 		var specificityFilter = [{'filterFn' : function (o) {return o.miniBarValue > specificityThreshold;} }];
 
-		var geneThreshold = this.genesControlPanel.sldGenePvalueFilter.getValue() / 100;
-		var genePvalueFilter = [{'filterFn' : function (o) {return o.inverseSumPvalue < geneThreshold;} }];
+//		var geneThreshold = this.genesControlPanel.sldGenePvalueFilter.getValue() / 100;
+//		var genePvalueFilter = [{'filterFn' : function (o) {return o.inverseSumPvalue < geneThreshold;} }];
 				
-		var conditionThreshold = this.conditionsControlPanel.sldConditionPvalueFilter.getValue() / 100;
-		var conditionPvalueFilter = [{'filterFn' : function (o) {return o.inverseSumPvalue < conditionThreshold;} }];
+//		var conditionThreshold = this.conditionsControlPanel.sldConditionPvalueFilter.getValue() / 100;
+//		var conditionPvalueFilter = [{'filterFn' : function (o) {return o.inverseSumPvalue < conditionThreshold;} }];
 		
 		var conditionSort = [];
 		conditionSort = conditionSort.concat (this.conditionPreset.sort);
 		
 		var conditionFilter = [];
 		conditionFilter = conditionFilter.concat (specificityFilter);
-		conditionFilter = conditionFilter.concat (conditionPvalueFilter);
+//		conditionFilter = conditionFilter.concat (conditionPvalueFilter);
 		conditionFilter = conditionFilter.concat (conditionPercentMissingFilter);		
 		conditionFilter = conditionFilter.concat (this.factorTreeFilter);
 				
@@ -368,7 +374,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 		geneSort = geneSort.concat (this.genePreset.sort);
 
 		var geneFilter = [];
-		geneFilter = geneFilter.concat (genePvalueFilter);
+//		geneFilter = geneFilter.concat (genePvalueFilter);
 		geneFilter = geneFilter.concat (genePercentMissingFilter);
 		
 		this.fireEvent('applySortGroupFilter', geneSort, geneFilter, conditionSort, conditionFilter);					
