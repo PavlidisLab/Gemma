@@ -46,7 +46,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 					title:'Genes',
 					ref:'genesControlPanel',
 					flex: 0,
-					height: 135,
+					height: 100,
 					layout : { 
 						type  : 'vbox',
 						align : 'stretch',
