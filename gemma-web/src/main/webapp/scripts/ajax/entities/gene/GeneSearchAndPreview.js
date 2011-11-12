@@ -1,4 +1,7 @@
 /**
+ * 
+ * TODO refactor combo and preview parts into separate components (combo was originally displayed in the preveiw, which is why they are part of the same component)
+ * 
  * @author thea
  * @version $Id$
  */
@@ -25,18 +28,22 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		// this.geneSelectionEditorBtn.disable().hide();
 	},
 	showGenePreview : function() {
-		this.loadMask.hide();
+		if(this.loadMask){
+			this.loadMask.hide();
+		}
 		this.geneSelectionEditorBtn.enable();
 		this.geneSelectionEditorBtn.show();
 	},
 
 	maskGenePreview : function() {
-		if (!this.loadMask) {
+		if (!this.loadMask && this.getEl()) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
 						msg : "Loading Genes ..."
 					});
 		}
-		this.loadMask.show();
+		if (this.loadMask) {
+			this.loadMask.show();
+		}
 	},
 	launchGeneSelectionEditor : function() {
 
