@@ -180,10 +180,6 @@ Gemma.GemmaNavigationHeader = Ext.extend(Ext.Toolbar,{
 					text: 'Downloads',
 					href : "http://www.chibi.ubc.ca/Gemma/resources/downloads.html",
 					tooltip: "Download Gemma software and data"
-				}, '-' ,{
-					text: 'Gemma Classic',
-					href: "/Gemma/gemmaClassic.html",
-					tooltip: "Use the classic version of Gemma"
 				}],
 				listeners: {
 					mouseover: function(){

@@ -133,9 +133,11 @@ p.jshowoff-controls {
 }
 td.slideTextTD {
 	vertical-align: top;
-	width: 500px;
-	padding-top:40px;
 	width:350px;
+	font-size: 14pt;
+	line-height: 28px;
+	text-align: center;
+	vertical-align:middle;
 }
 td.slideImageTD {
 	width:300px;

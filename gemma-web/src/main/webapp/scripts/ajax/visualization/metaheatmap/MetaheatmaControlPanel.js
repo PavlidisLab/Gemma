@@ -37,6 +37,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 	autoScroll : false,			
 	border : false,		
 	initComponent : function() { 
+		
 		Ext.apply (this, {
 			
 			items: [
@@ -102,7 +103,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 								 	if (thumb.value === 0) {
 								 		return "Hide gene if it's missing data for <b>any</b> conditions";
 								 	} else if (thumb.value === 100) {
-								 		return "Don't hide genes for missing data"
+								 		return "Don't hide genes for missing data";
 								 	}
 								 	return String.format('Hide gene if it\'s missing data for >=<b>{0}%</b> of conditions', thumb.value);
 								 }
@@ -126,7 +127,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('{0} not sure what', thumb.value/100);
+				                     return String.format('Hide genes with pValue sum <={0}', thumb.value/100);
 				                 }
 				            }),
 				        	listeners : {
@@ -199,7 +200,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 								 	if (thumb.value === 0) {
 								 		return "Hide condition if it's missing data for <b>any</b> genes";
 								 	} else if (thumb.value === 100) {
-								 		return "Don't hide conditions for missing data"
+								 		return "Don't hide conditions for missing data";
 								 	}
 				                     return String.format('Hide condition if it\'s missing data for >=<b>{0}%</b> of genes', thumb.value);
 				                 }
@@ -226,7 +227,10 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	maxValue  : 10,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('Hide conditions with <={0}% experiment specificity', thumb.value*10);
+								 	if (thumb.value === 100) {
+								 		return "Don't hide conditions based on specificity";
+								 	}
+				                     return String.format('Show conditions with specificity <={0}%', thumb.value*10);
 				                 }
 				            }),
 				        	listeners : {
@@ -251,7 +255,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('{0} not sure what', thumb.value/100);
+				                     return String.format('Hide conditions with pValue sum <={0}', thumb.value/100);
 				                 }
 				            }),
 				        	listeners : {
@@ -259,12 +263,11 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 										this.applySortFilter();
 				        			}, scope: this
 				        	}					          		        	            
-				    }, {
+				    },{
 			        	xtype: 'Metaheatmap.FactorTree',
 			        	ref :'factorTree',
 			        	sortedTree : this.sortedTree,
 			        	autoScroll : true,
-			        	//height : 200,
 			        	//bodyStyle : 'padding-bottom:5px',
 			        	border : false,
 						bodyStyle:'background:#F1F6F6', 
@@ -277,7 +280,49 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				
 				
 		Gemma.Metaheatmap.ControlPanel.superclass.initComponent.apply (this, arguments);
-			
+
+/* FOR TESTING IE9 TREE BUG
+ * 			 var tree= new Ext.tree.TreePanel({
+    useArrows: true,
+    autoScroll: true,
+    animate: true,
+    enableDD: true,
+    containerScroll: true,
+    border: false,
+
+    root: {
+        nodeType: 'async',
+        text: 'Ext JS',
+        draggable: false,
+        id: 'source',
+		children: [{
+                text: 'Menu Option 1',
+                leaf: true
+            }, {
+                text: 'Menu Option 2',
+                leaf: true
+            }, {
+                text: 'Menu Option 3',
+                leaf: true
+            }]
+    }
+});
+		var win = new Ext.Window ({ closable : false,
+														layout : 'fit',
+														width : 450,
+														height : 500,
+														items : {html:'hey'} });
+				  	
+		this.on('render', function(){
+			win = new Ext.Window({
+			height:500,
+			width:500,
+			html:'hey',
+			items: tree
+		});
+		win.show();
+		})
+	*/	
 		this.addEvents('gene_zoom_change','condition_zoom_change');
 				
 		/************************* Selection grids ****************************************/
@@ -335,7 +380,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 		this.addEvents('applySortGroupFilter');
 		
 		this.genesControlPanel.cmbGenePresets.setValue (0);
-		this.genePreset = this.ownerCt.genePresets[0]
+		this.genePreset = this.ownerCt.genePresets[0];
 		this.conditionsControlPanel.cmbConditionPresets.setValue (0);
 		this.conditionPreset = this.ownerCt.conditionPresets[0];
 		

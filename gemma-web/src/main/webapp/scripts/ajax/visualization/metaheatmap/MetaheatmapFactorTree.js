@@ -27,7 +27,7 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 				var root = new Ext.tree.TreeNode({
 					expanded : true,
 					text : 'Filter Experiments by Factor',
-					cls : '',
+					cls : ''
 				});
 
 				this.setRootNode (root);

@@ -22,17 +22,7 @@
 						<!-- img style="position:absolute;top:17px;left:300px" src="/Gemma/images/slideShow/rightBrace.png"/-->
 					</td>
 					<td class="slideTextTD">
-						<h2 style="text-align: center;">
-							Functional Genomics Database
-						</h2>
-						<ul style="clear: both;">
-							<li>
-								<span style="color:#EC7F2C;font-size:14pt">Over 3000 data sets </span>
-							</li>
-							<li>
-								Ongoing updates and additions
-							</li>
-						</ul>
+						Over <b>3000</b> curated expression studies
 					</td>
 				</tr>
 			</table>
@@ -43,21 +33,8 @@
 					<td class="slideImageTD">
 							<img src="/Gemma/images/slideShow/diffEx.png" style="margin-top:10px"/>
 					</td>
-					<td class="slideTextTD"  style="width:450px;">
-						<h2 style="text-align: center;">
-							Differential Expression Analysis
-						</h2>
-						<ul style="clear: both">
-							<li>
-								<span class="highlightedSlideText">Interactive results</span>
-							</li>
-							<li>
-								Custom visualiser allows rearranging by factor
-							</li>
-							<li>
-								View results as p values and fold changes 
-							</li>
-						</ul>
+					<td  align=center class="slideTextTD">
+						Search and visualise <b>differential expression</b> patterns across genes and conditions
 					</td>
 				</tr>
 			</table>
@@ -69,17 +46,7 @@
 							<img class="rounded" src="/Gemma/images/slideShow/coex.png" style="margin-top:15px;">
 					</td>
 					<td class="slideTextTD">
-						<h2 style="text-align: center;">
-							Coexpression Analysis
-						</h2>
-						<ul style="clear: both">
-							<li>
-								Visualise results with Cytoscape
-							</li>
-							<li>
-								Contextualise links with node degree
-							</li>
-						</ul>
+						Search <b>coexpression</b> patterns across studies and visualise the results in a network
 					</td>
 				</tr>
 			</table>
@@ -91,20 +58,7 @@
 						<img src="/Gemma/images/slideShow/myGemma2.png" style="padding:15px">
 					</td>
 					<td class="slideTextTD">
-						<h2 style="text-align: center; ">
-							My Gemma
-						</h2>
-						<ul style="clear: both;">
-							<li>
-								Analyse your private data with Gemma tools
-							</li>
-							<li>
-								Save sets of genes and experiments
-							</li>
-							<li>
-								Share your data selectively
-							</li>
-						</ul>
+						<b>Create and share</b> your own gene and experiment groups
 					</td>
 				</tr>
 			</table>
@@ -123,7 +77,7 @@ jQuery(document).ready(function() {
 			effect : 'slideLeft',
 			autoPlay: true, // default: true
 			controls: false,
-			speed: 9000, // default: 3000 (ms)
+			speed: 3000, // default: 3000 (ms)
 			hoverPause: false // default: true, was buggy
 		});
 
