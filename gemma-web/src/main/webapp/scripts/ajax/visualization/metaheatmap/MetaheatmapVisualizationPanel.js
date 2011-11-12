@@ -95,6 +95,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					}, {
 						xtype: 'button',
 						text: 'Dock popup',
+						disabled : true,
+						hidden : true,
 						enableToggle: true,
 						width: 80,
 						toggleHandler: function(btn, toggle){
@@ -110,19 +112,19 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 						scope: this
 					}, {
 						xtype: 'button',
-						text: 'fold change',
-						width: 80,
+						text: 'Show fold change',
+						width: 95,
 						handler: function(btn, e){
 							this.variableWidthCol.boxHeatmap.isShowPvalue = !this.variableWidthCol.boxHeatmap.isShowPvalue;
 							
 							if (this.variableWidthCol.boxHeatmap.isShowPvalue) {
-								btn.setText("fold change");
+								btn.setText("Show fold change");
 								if (this.isLegendShown) {
 									this.colorLegendFoldChange.hide();
 									this.variableWidthCol.colorLegendPvalue.show();
 								}
 							} else {
-								btn.setText("p-value");
+								btn.setText("Show p-value");
 								if (this.isLegendShown) {
 									this.colorLegendFoldChange.show();
 									this.variableWidthCol.colorLegendPvalue.hide();
@@ -135,6 +137,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 						xtype: 'button',
 						text: 'Flip axes',
 						disabled : true,
+						hidden : true,
 						width: 80,
 						handler: function(btn, e){
 							this.flipLabels();
