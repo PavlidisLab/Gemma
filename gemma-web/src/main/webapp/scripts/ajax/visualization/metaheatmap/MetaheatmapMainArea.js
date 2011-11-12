@@ -34,14 +34,14 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 		this.boxCanvas.el.on('mousemove', function(e, t) {	
 			document.body.style.cursor = 'pointer'; // makes it really slow
-			if (this.lastCellMouseIn != null) {
+			if (this.lastCellMouseIn !== null) {
 				this.lastCellMouseIn.draw (this.ctx);
 				this.fireEvent ('cell_mouse_out',this.lastCellMouseIn,e,t);
 			}
 			var x = e.getPageX() - Ext.get(t).getX();
 			var y = e.getPageY() - Ext.get(t).getY();
 			var cell = this.getCellByXY(x,y);			
-			if (cell != null) {
+			if (cell !== null) {
 				cell.highlight (this.ctx);
 				this.fireEvent ('cell_mouse_in',cell,e,t);
 			}
@@ -50,7 +50,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 
 		this.boxCanvas.el.on('mouseout', function(e, t) {	
 			document.body.style.cursor = 'default'; // makes it really slow
-			if (this.lastCellMouseIn != null) {
+			if (this.lastCellMouseIn !== null) {
 				this.lastCellMouseIn.draw (this.ctx);
 				this.fireEvent ('cell_mouse_out',this.lastCellMouseIn,e,t);
 			}
@@ -129,7 +129,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			gene 	  = this.geneTree.findItemByCoordinate (y);
 			condition = this.conditionTree.findItemByCoordinate (x);			
 		}
-		if (gene == null || condition == null) return null;
+		if (gene === null || condition === null) return null;
 		
 		var pValue = 1;
 		var foldChange, isProbeMissing;
@@ -138,7 +138,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		var color = this.getVisualizationValue (gene, condition);
 		
 		
-		if (cell != null ) {			
+		if (cell !== null ) {			
 			pValue = cell.pValue;
 			foldChange = cell.logFoldChange;
 			isProbeMissing = cell.isProbeMissing;

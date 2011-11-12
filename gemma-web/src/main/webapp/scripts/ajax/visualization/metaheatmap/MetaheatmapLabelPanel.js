@@ -150,7 +150,7 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 		} else {
 			item = this.tree.findItemByCoordinate (x);
 		}
-		if (item == null) {return null;}
+		if (item === null) {return null;}
 		
 		var labelItemObj = {
 			'item' : item // gene or condition			
