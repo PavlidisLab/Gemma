@@ -120,13 +120,13 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 							if (this.variableWidthCol.boxHeatmap.isShowPvalue) {
 								btn.setText("Show fold change");
 								if (this.isLegendShown) {
-									this.colorLegendFoldChange.hide();
+									this.variableWidthCol.colorLegendFoldChange.hide();
 									this.variableWidthCol.colorLegendPvalue.show();
 								}
 							} else {
 								btn.setText("Show p-value");
 								if (this.isLegendShown) {
-									this.colorLegendFoldChange.show();
+									this.variableWidthCol.colorLegendFoldChange.show();
 									this.variableWidthCol.colorLegendPvalue.hide();
 								}
 							}
