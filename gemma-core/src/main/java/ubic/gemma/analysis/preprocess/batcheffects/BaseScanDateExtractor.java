@@ -75,7 +75,7 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
      * @return
      */
     protected Date parseLongFormat( String string ) {
-        // 
+        // // FIXME time-zone dependent.
         try {
             DateFormat f = new SimpleDateFormat( "EEE MMM dd HH:mm:ss zzz yyyy" );
 
@@ -174,12 +174,23 @@ public abstract class BaseScanDateExtractor implements ScanDateExtractor {
      * @return
      */
     protected Date parseGenePixDateTime( String line ) {
+        String dateString = line.trim().replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
         try {
-            String dateString = line.trim().replaceAll( "\"", "" ).replaceFirst( "DateTime=", "" );
+
             DateFormat f = new SimpleDateFormat( "yyyy/MM/dd HH:mm:ss" ); // 2005/11/09 11:36:27, 2006/04/07 14:18:18
             return f.parse( dateString );
         } catch ( ParseException e ) {
-            throw new RuntimeException( e );
+            try {
+                /*
+                 * Another format we see in GPR files ... 2008:11:27 10:27:42
+                 */
+                DateFormat f = new SimpleDateFormat( "yyyy:MM:dd HH:mm:ss" ); // 2005/11/09 11:36:27, 2006/04/07
+                                                                              // 14:18:18
+                return f.parse( dateString );
+            } catch ( ParseException e1 ) {
+                throw new RuntimeException( e1 );
+            }
+
         }
     }
 

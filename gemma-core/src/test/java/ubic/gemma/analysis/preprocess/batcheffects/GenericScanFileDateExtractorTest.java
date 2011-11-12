@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.zip.GZIPInputStream;
 
 import org.junit.Test;
 
@@ -48,6 +49,23 @@ public class GenericScanFileDateExtractorTest {
 
         DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
         Date expected = formatter.parse( "2005-08-30T15:17:28" );
+
+        assertEquals( expected, actual );
+    }
+
+    /**
+     * @throws Exception
+     */
+    @Test
+    public void testExtractGpr() throws Exception {
+        InputStream is = new GZIPInputStream( getClass().getResourceAsStream(
+                "/data/loader/expression/rawdata/GSM489680.short.gpr.gz" ) );
+        GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
+
+        Date actual = extractor.extract( is );
+
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
+        Date expected = formatter.parse( "2008-11-27T10:27:42" );
 
         assertEquals( expected, actual );
     }
@@ -88,9 +106,8 @@ public class GenericScanFileDateExtractorTest {
 
         Date actual = extractor.extract( is );
 
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
-        Date expected = formatter.parse( "2002-06-17T20:26:36" );
-
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz" );
+        Date expected = formatter.parse( "2002-06-17T20:26:36 PDT" );
         assertEquals( expected, actual );
     }
 
@@ -98,8 +115,8 @@ public class GenericScanFileDateExtractorTest {
     public void testExtractLongDate() throws Exception {
         GenericScanFileDateExtractor extractor = new GenericScanFileDateExtractor();
         Date actual = extractor.parseLongFormat( "        Date    Wed Jun 19 14:53:29 PST 2002" );
-        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss" );
-        Date expected = formatter.parse( "2002-06-19T15:53:29" );
+        DateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss zzz" );
+        Date expected = formatter.parse( "2002-06-19T15:53:29 PDT" );
 
         assertEquals( expected, actual );
     }
