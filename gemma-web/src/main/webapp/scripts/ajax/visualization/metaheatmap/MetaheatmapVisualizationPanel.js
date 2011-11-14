@@ -95,17 +95,20 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					}, {
 						xtype: 'button',
 						text: 'Dock popup',
-						disabled : true,
-						hidden : true,
+						disabled : false,
+						hidden : false,
 						enableToggle: true,
 						width: 80,
 						toggleHandler: function(btn, toggle){
 							if (toggle) {
-								this.hoverWindow.isFloating = false;
+								this.hoverWindow.isDocked = true;
+								this.hoverWindow.setTitle('Docked popup: click + drag to move');
 								//this.hoverWindow.setPagePosition ( 800, 100);
 								btn.setText("Undock popup");
 							} else {
-								this.hoverWindow.isFloating = true;
+								this.hoverWindow.isDocked = false;
+								this.hoverWindow.setTitle('');
+								
 								btn.setText("Dock popup");
 							}
 						},
@@ -504,13 +507,13 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		}, this );
 		
 		this.variableWidthCol.boxTopLabels.on('label_mouse_out', function (label,e,t) {		
-			if (this.hoverWindow && this.hoverWindow.isFloating) {
+			if (this.hoverWindow && !this.hoverWindow.isDocked) {
 				this.hoverWindow.hide();
 			}			
 		}, this );
 
 		this.fixedWidthCol.boxSideLabels.on('label_mouse_out', function (label,e,t) {		
-			if (this.hoverWindow && this.hoverWindow.isFloating) {
+			if (this.hoverWindow && !this.hoverWindow.isDocked) {
 				this.hoverWindow.hide();
 			}	
 		}, this );
