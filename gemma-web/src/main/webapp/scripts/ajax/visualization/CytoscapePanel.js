@@ -370,11 +370,11 @@ Ext.Panel, {
 
             {
                 xtype: 'button',
-                text: '<b>Export Options</b>',
+                text: '<b>Save As</b>',
                 //icon: '/Gemma/images/download.gif',
                 menu: new Ext.menu.Menu({
                     items: [{
-                        text: 'Export as PNG',
+                        text: 'Save as PNG',
                         tooltip: 'Open a window with this graph as a PNG image',
                         handler: this.exportPNG,
                         scope: this
@@ -391,11 +391,6 @@ Ext.Panel, {
                 //icon: '/Gemma/images/download.gif',
                 menu: new Ext.menu.Menu({
                     items: [{
-                        text: 'Node Degree Emphasis on/off',
-                        tooltip: 'Turn node degree emphasis on or off',
-                        handler: this.nodeDegreeEmphasis,
-                        scope: this
-                    }, {
                         text: 'Change Layout',
                         //icon: '/Gemma/images/icons/picture.png',
                         tooltip: 'Change the layout of the graph',
@@ -409,7 +404,7 @@ Ext.Panel, {
 
             {
                 xtype: 'button',
-                text: '<b>Search Options</b>',
+                text: '<b>Selected Node Actions</b>',
                 //icon: '/Gemma/images/download.gif',
                 menu: new Ext.menu.Menu({
                     items: [{
@@ -425,7 +420,20 @@ Ext.Panel, {
                         scope: this
                     }]
                 })
+            },
+            
+            '->',
+            '-',
+            {
+            	xtype: 'button',
+            	itemId: 'nodeDegreeEmphasis',
+            	text: '<b>Node Degree Emphasis</b>',
+            	enableToggle: 'true',
+            	pressed: 'true',
+            	handler: this.nodeDegreeEmphasis,
+            	scope: this
             }
+          
 
             ],
             //end tbar
