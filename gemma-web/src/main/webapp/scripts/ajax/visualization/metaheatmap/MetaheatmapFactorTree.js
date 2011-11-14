@@ -18,7 +18,8 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 		Ext.apply (this, {
 			
 			lines 		: true,
-			rootVisible : false,
+			// tree will not show up in IE9 if root is not visible
+			rootVisible : true,
 			sortedTree  : this.sortedTree,
 			cls : 'x-tree-noicon',
 			//collapsed : true,
@@ -39,7 +40,6 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 					var ftCategoryNode = new Ext.tree.TreeNode({
 						expanded : true,
 						singleClickExpand : false,
-						//	id : parent.text + nodeParam.text.toLowerCase(),
 						text : sftCategoryNode.groupName,
 						checked : true,
 						iconCls : '',
@@ -53,7 +53,6 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 						var ftFactorNode = new Ext.tree.TreeNode({
 							expanded : false,
 							singleClickExpand : false,
-							//	id : parent.text + nodeParam.text.toLowerCase(),
 							text : sftFactorNode.groupName,
 							checked : true,
 							cls : '',
@@ -68,6 +67,7 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 		});
 		
 		Gemma.Metaheatmap.FactorTree.superclass.initComponent.call (this);
+		
 	},
 	onRender : function() {
 		Gemma.Metaheatmap.FactorTree.superclass.onRender.apply (this, arguments);
