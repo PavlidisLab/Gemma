@@ -380,7 +380,7 @@ Ext.Panel, {
 
             },
             
-*/
+*/ 
             '->',
             '-',
 	      	 { xtype 	: 'button',
@@ -392,8 +392,31 @@ Ext.Panel, {
 	      	  	},
 	      	  	scope	: this		      	 
 	        },
+	        
+ '->',
+ '-',
+            
+            {
+			  	xtype: 'button',
+				text: '<b>Search Options</b>',
+				//icon: '/Gemma/images/download.gif',
+			  	menu: new Ext.menu.Menu({
+					items: [{
+						text: 'Extend Selected Nodes',						
+						tooltip: 'Extend the graph by finding new results for selected genes',
+						handler: this.extendSelectedNodes,
+						scope: this
+					}, {
+						text: 'Search with Selected Nodes',
+						//icon: '/Gemma/images/icons/picture.png',
+						tooltip: 'Start a new search with selected nodes',
+						handler: this.reRunSearchWithSelectedNodes,
+						scope: this
+					}]
+				})},
             
             '->',
+            '-',
 
             {
                 xtype: 'button',
@@ -404,6 +427,7 @@ Ext.Panel, {
             },
 
             '->',
+            '-',
 
             {
                 xtype: 'button',
@@ -907,6 +931,162 @@ Ext.Panel, {
         Gemma.CytoscapePanel.superclass.initComponent.apply(
         this, arguments);
 
+
+    },
+    
+    reRunSearchWithSelectedNodes :function () {
+    	
+    	if (this.ready){
+
+        var selectedNodes = this.visualization.selected("nodes");
+
+        if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+            //do all new searches at stringency 2 so set the spinner value
+            var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+            spinner.setValue(2);
+
+
+            var selectedNodesGeneIdArray = [];
+
+            var sNodesLength = selectedNodes.length;
+
+            var i;
+            for (i = 0; i < sNodesLength; i++) {
+
+                selectedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
+
+            }
+
+            this.currentQueryGeneIds = selectedNodesGeneIdArray;
+
+            this.updateSearchFormGenes(selectedNodesGeneIdArray);
+
+            Ext.apply(
+            this.coexCommand, {
+                stringency: 2,
+                //Change to default or 'heuristic' based value
+                geneIds: selectedNodesGeneIdArray,
+                queryGenesOnly: false
+            });
+
+            this.loadMask.show();
+            ExtCoexpressionSearchController.doSearchQuick2(
+            this.coexCommand, {
+                callback: this.initialCoexSearchCallback.createDelegate(this)
+
+            });
+
+
+        } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+
+            Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY);
+
+        } else {
+
+            Ext.Msg.alert('Status of Search', 'No Genes Selected');
+        }
+
+    	}
+    },
+    
+    
+    extendSelectedNodes : function () {
+    	
+    	if (this.ready){
+
+        var selectedNodes = this.visualization.selected("nodes");
+
+        if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+
+
+            if (this.currentQueryGeneIds.length + selectedNodes.length <= Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+
+                //do all new searches at stringency 2 so set the spinner value
+                var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+                spinner.setValue(2);
+
+                var extendedNodesGeneIdArray = [];
+                var sNodesLength = selectedNodes.length;
+
+                var i;
+                for (i = 0; i < sNodesLength; i++) {
+                    extendedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
+
+                    if (this.currentQueryGeneIds.indexOf(selectedNodes[i].data.geneid) === -1) {
+                        this.currentQueryGeneIds.push(selectedNodes[i].data.geneid);
+                    }
+                }
+                
+                this.updateSearchFormGenes(this.currentQueryGeneIds);
+
+                Ext.apply(
+                this.coexCommand, {
+                    geneIds: extendedNodesGeneIdArray,
+                    queryGenesOnly: false
+                });
+
+                this.loadMask.show();
+                ExtCoexpressionSearchController.doSearchQuick2(
+                this.coexCommand, {
+                    callback: this.extendThisNodeInitialCoexSearchCallback.createDelegate(this)
+
+                });
+
+            } else {
+
+                Ext.Msg.confirm('Status of Search', 'Too many Query Genes. A max of ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY + ' query genes allowed. Click OK to continue search with reduced query genes', function (btn) {
+
+                    if (btn == 'yes') {
+
+                        //do all new searches at stringency 2 so set the spinner value
+                        var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+                        spinner.setValue(2);
+
+                        var extendedNodesGeneIdArray = [];
+                        var sNodesLength = selectedNodes.length;
+
+                        //make room in currentQueryGeneIds for new genes
+                        this.currentQueryGeneIds = this.currentQueryGeneIds.splice(this.currentQueryGeneIds.length - (Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY - selectedNodes.length));
+
+
+                        var i;
+                        for (i = 0; i < sNodesLength; i++) {
+                            extendedNodesGeneIdArray[i] = selectedNodes[i].data.geneid;
+
+                            if (this.currentQueryGeneIds.indexOf(selectedNodes[i].data.geneid) === -1) {
+                                this.currentQueryGeneIds.push(selectedNodes[i].data.geneid);
+                            }
+                        }
+
+                        this.updateSearchFormGenes(this.currentQueryGeneIds);
+
+                        Ext.apply(
+                        this.coexCommand, {
+                            geneIds: extendedNodesGeneIdArray,
+                            queryGenesOnly: false
+                        });
+
+                        this.loadMask.show();
+                        ExtCoexpressionSearchController.doSearchQuick2(
+                        this.coexCommand, {
+                            callback: this.extendThisNodeInitialCoexSearchCallback.createDelegate(this)
+
+                        });
+                    }
+                });
+            }
+
+
+        } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+
+            Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY);
+
+        } else {
+
+            Ext.Msg.alert('Status of Search', 'No Genes Selected');
+        }
+        
+    	}
 
     },
 
