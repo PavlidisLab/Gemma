@@ -177,6 +177,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 			var gene = this.genes.items[i];
 			text += this.makeGeneRow (gene);
 		}
+
 		this.show();
 		this.textAreaPanel.update({
 			text: text
@@ -204,6 +205,8 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 				ref: 'textAreaPanel',
                 readOnly: true,
 				// tabs don't show up in Chrome, but \t doesn't work any better than \t
+				// \n line breaks don't show up in IE9 but are there if the text is pasted into excel
+				// (using <br> instead will work in IE9, but not in FF or excel)
                 tpl: new Ext.XTemplate('<tpl>','{text}','</tpl>'),
 				//tplWriteMode: 'append',
                 bodyStyle: 'white-space: nowrap',

@@ -286,49 +286,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				
 				
 		Gemma.Metaheatmap.ControlPanel.superclass.initComponent.apply (this, arguments);
-
-/* FOR TESTING IE9 TREE BUG
- * 			 var tree= new Ext.tree.TreePanel({
-    useArrows: true,
-    autoScroll: true,
-    animate: true,
-    enableDD: true,
-    containerScroll: true,
-    border: false,
-
-    root: {
-        nodeType: 'async',
-        text: 'Ext JS',
-        draggable: false,
-        id: 'source',
-		children: [{
-                text: 'Menu Option 1',
-                leaf: true
-            }, {
-                text: 'Menu Option 2',
-                leaf: true
-            }, {
-                text: 'Menu Option 3',
-                leaf: true
-            }]
-    }
-});
-		var win = new Ext.Window ({ closable : false,
-														layout : 'fit',
-														width : 450,
-														height : 500,
-														items : {html:'hey'} });
-				  	
-		this.on('render', function(){
-			win = new Ext.Window({
-			height:500,
-			width:500,
-			html:'hey',
-			items: tree
-		});
-		win.show();
-		})
-	*/	
+	
 		this.addEvents('gene_zoom_change','condition_zoom_change');
 				
 		/************************* Selection grids ****************************************/

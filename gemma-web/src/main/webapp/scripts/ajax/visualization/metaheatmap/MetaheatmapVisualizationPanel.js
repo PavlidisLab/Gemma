@@ -46,6 +46,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				items: [{
 					xtype: 'panel',
 					ref: 'pnlMiniControl',
+					autoScroll:true,
 					// html : '<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
 					//   '<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
 					border: false,
@@ -139,8 +140,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					}, {
 						xtype: 'button',
 						text: 'Flip axes',
-						disabled : true,
-						hidden : true,
+						disabled : false,
+						hidden : false,
 						width: 80,
 						handler: function(btn, e){
 							this.flipLabels();
@@ -250,7 +251,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					
       	    this.variableWidthCol.boxTopLabels.tree = this.geneTree;
       	    this.variableWidthCol.boxTopLabels.drawItemLabel_ = this.drawGeneLabel;       		           	   
-      	    this.variableWidthCol.boxTopLabels.onClick = this.onClickGeneLabel;       		       		           	           		       		           	    
+      	    this.variableWidthCol.boxTopLabels.onClick = this.onClickGeneLabel;   
+			
+		    		       		           	           		       		           	    
   	    } else {
   	    	this.variableWidthCol.boxHeatmap.isGeneOnTop = false;
   	    	
@@ -261,8 +264,21 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
   	    	this.variableWidthCol.boxTopLabels.tree = this.conditionTree;
   	    	this.variableWidthCol.boxTopLabels.drawItemLabel_ = this.drawConditionLabel;       		           	   
   	    	this.variableWidthCol.boxTopLabels.onClick = this.onClickConditionLabel;
+			
   	    }		
+		// update size of top left control panel so that gene labels line up with data rows 
+		this.updatePnlMiniControlSize();
 	},	
+	
+	/**
+	 * update size of top left control panel so that side labels line up with data rows 
+	 */
+	updatePnlMiniControlSize: function(){
+		
+		// update size of top left control panel so that gene labels line up with data rows 
+		var topPadding = 0; // TODO get actual top padding from somewhere
+		this.fixedWidthCol.pnlMiniControl.setHeight(this.variableWidthCol.boxTopLabels.getHeight() + topPadding);
+	},
 	
 	redraw : function () {
   	    if (this.variableWidthCol.boxHeatmap.isGeneOnTop) {
@@ -278,8 +294,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		this.variableWidthCol.boxHeatmap.resizeAndPosition();
 		
 		// update size of top left control panel so that gene labels line up with data rows 
-		var topPadding = 4; // TODO get actual top padding from somewhere
-		this.fixedWidthCol.pnlMiniControl.setHeight(this.variableWidthCol.boxTopLabels.getHeight() + topPadding);
+		this.updatePnlMiniControlSize();
 
 		this.updateVisibleScores(); // TODO: do this only if filtering options
 									// have changed
