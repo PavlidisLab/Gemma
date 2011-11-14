@@ -363,7 +363,18 @@ Ext.Panel, {
                 cls: 'x-btn-icon',
                 tooltip: 'Click here for documentation on how to use this visualizer.',
                 handler: function () {
-                    window.open('http://www.chibi.ubc.ca/faculty/pavlidis/wiki/download/attachments/26706691/cytoscapehelp.png');
+                	
+                	var htmlString = '<img src="/Gemma/images/cytoscapehelp.png"/>';
+
+                    var win = new Ext.Window({
+                        title: 'Help'
+
+                        ,
+                        plain: true,
+                        html: htmlString
+                    });
+                    win.show();                	
+                    
                 },
                 scope: this
             }, '->', '-',
