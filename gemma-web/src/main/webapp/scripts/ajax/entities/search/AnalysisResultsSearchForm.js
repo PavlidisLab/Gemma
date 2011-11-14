@@ -1187,11 +1187,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						}, {
 							xtype: 'button',
 							ref: 'coexExample2',
-							text: "Visceral motor neuron differentiation (human)",
-							tooltip: 'Search for coexpression patterns in human brain experiments based on genes the &quot;Visceral motor neuron differentiation&quot; GO group (human)',
+							text: "Protein localization to the synapse (human)",
+							tooltip: 'Search for coexpression patterns in human brain experiments based on genes the &quot;Protein localization to the synapse&quot; GO group (human)',
 							listeners: {
 								click: function(){
-									var goName = "GO_0021524";
+									var goName = "GO_0035418";
 									var eeSetId = '737';
 									var taxonId = '1';
 									this.runExampleQuery(eeSetId, goName, taxonId);
