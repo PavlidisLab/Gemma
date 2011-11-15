@@ -29,7 +29,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<span style="font-size: 12px ">',
 				'<tpl for=".">',
 				'<tpl if="type==\'condition\'">',   //Experiment
-				'<b>Experiment</b>: {datasetName}<br><br>',
+				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
 				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({numberDiffExpressedProbes} out of {numberOfProbesOnArray})<br><br> ',
 				'</tpl>',
@@ -42,14 +42,14 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'</tpl>',
 				'<tpl if="type==\'contrastCell\'">',  //contrast
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
-				'<b>Experiment</b>: {datasetShortName}</a> {datasetName}<br><br>',
+				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', 
 				'<b>Log2 fold change</b>: {foldChange:sciNotation}<br>', 
 				'<b>pValue</b>: {contrastPvalue:sciNotation} <br>',
 				'</tpl>',
 				'<tpl if="type==\'cell\'">',		 //cell
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
-				'<b>Experiment</b>: {datasetName}<br><br>',
+				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
 				'<b>p-value</b>: {pvalue:sciNotation}<br><br>',
 				'<b>log fold change</b>: {foldChange:sciNotation}',

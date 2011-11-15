@@ -87,9 +87,11 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        },
 				        {
 				        	xtype  : 'label',
-				        	text   : 'Missing data filter:',
+				        	//html   : 'Missing data filter <img ext:qtip="<b>Control the tolerance for missing data.</b> '+
+							//			'Allows you to hide a gene based on how many conditions it\'s missing data for" src="/Gemma/images/icons/question_blue.png"/>:',
+							html   : 'Missing data filter:', 
 							height : 15
-				        },			        
+				        },		        
 				        {
 				        	xtype  : 'slider',
 				        	ref    : 'sldGeneDataMissingFilter',
@@ -187,6 +189,8 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        {
 				        	xtype  : 'label',
 				        	text   : 'Missing data filter:',
+				        	//html   : 'Missing data filter <img ext:qtip="<b>Control the tolerance for missing data.</b> '+
+							//			'Allows you to hide a condition based on how many genes it\'s missing data for" src="/Gemma/images/icons/question_blue.png"/>:',
 							height : 15
 				        },			        
 				        {
@@ -216,7 +220,11 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        },
 				        {
 				        	xtype  : 'label',
-				        	text   : 'Specificity filter:',
+							
+				        	html   : 'Specificity filter <img ext:qtip="'+
+										'An experiment\'s specificity is measured as the total number of probes <b>differentially</b> expressed versus the total '+
+										'number of probes expressed. " src="/Gemma/images/icons/question_blue.png"/>:',
+				        	//text   : 'Specificity filter',
 							height : 15
 				        },			        
 				        {

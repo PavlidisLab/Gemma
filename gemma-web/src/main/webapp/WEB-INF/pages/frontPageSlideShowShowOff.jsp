@@ -77,7 +77,7 @@ jQuery(document).ready(function() {
 			effect : 'slideLeft',
 			autoPlay: true, // default: true
 			controls: false,
-			speed: 3000, // default: 3000 (ms)
+			speed: 5000, // default: 3000 (ms)
 			hoverPause: false // default: true, was buggy
 		});
 
