@@ -798,7 +798,7 @@ Ext.Panel, {
 
                 } else {
 
-                    Ext.Msg.confirm('Status of Search', 'Too many Query Genes. A max of ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY + ' query genes allowed. Click OK to continue search with reduced query genes', function (btn) {
+                    Ext.Msg.confirm('Status of Search', 'Too many Query Genes. A max of ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY + ' query genes allowed. Click Yes to continue search with reduced query genes', function (btn) {
 
                         if (btn == 'yes') {
 
@@ -837,7 +837,7 @@ Ext.Panel, {
 
                             });
                         }
-                    });
+                    },this);
                 }
 
 
