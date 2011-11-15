@@ -31,6 +31,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<tpl if="type==\'condition\'">',   //Experiment
 				'<b>Experiment</b>: {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
+				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({numberDiffExpressedProbes} out of {numberOfProbesOnArray})<br><br> ',
 				'</tpl>',
 				'<tpl if="type==\'minipie\'">',     //minipie
 				'{percentProbesDiffExpressed} of probes are differentially expressed.<br><br>',
@@ -52,7 +53,7 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
 				'<b>p-value</b>: {pvalue:sciNotation}<br><br>',
 				'<b>log fold change</b>: {foldChange:sciNotation}',
-				'</tpl>', '</tpl></span>' );
+				'</tpl>', '</tpl></span>');
 	},
 
 	onRender: function() {

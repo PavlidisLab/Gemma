@@ -455,12 +455,17 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					geneFullName : item.fullName
 			};
 		} else if (type === 'condition') {
+			var specificity = Gemma.Metaheatmap.Utils.formatPercent(item.numberDiffExpressedProbes, item.numberOfProbesOnArray, 2);
 			msg = {
 					type 			  : 'condition',
 					factorCategory	  : item.factorCategory,
 					factorName 		  : item.factorName,				
 					factorDescription : item.factorDescription,
-					datasetName 	  : item.datasetName
+					datasetName 	  : item.datasetName,
+					
+					specificityPercent  : specificity,
+					numberDiffExpressedProbes : item.numberDiffExpressedProbes,
+					numberOfProbesOnArray     : item.numberOfProbesOnArray
 			};
 		} else {
 			msg = {

@@ -106,7 +106,6 @@ Gemma.Metaheatmap.Utils.formatPercent = function(n, d, round){
 	
 };
 
-
 /**
  * Create a URL that can be used to query the system.
  * 
