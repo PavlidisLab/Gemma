@@ -656,7 +656,7 @@ Ext.Panel, {
 
 
     },
-
+        
     exportPNG: function () {
 
         var htmlString = '<img src="data:image/png;base64,' + this.visualization.png() + '"/>';
@@ -701,6 +701,8 @@ Ext.Panel, {
     reRunSearchWithSelectedNodes: function () {
 
         if (this.ready) {
+        	
+        	this.clearError();
 
             var selectedNodes = this.visualization.selected("nodes");
 
@@ -757,6 +759,8 @@ Ext.Panel, {
     extendSelectedNodes: function () {
 
         if (this.ready) {
+        	
+        	this.clearError();
 
             var selectedNodes = this.visualization.selected("nodes");
 
@@ -1276,6 +1280,14 @@ Ext.Panel, {
 
 
 
+    },
+    
+    clearError: function (){
+    	
+    	if (Ext.get("analysis-results-search-form-messages")) {
+    		Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
+    	}
+    	
     },
 
     updateSearchFormGenes: function (geneIds) {
