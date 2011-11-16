@@ -129,7 +129,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			gene 	  = this.geneTree.findItemByCoordinate (y);
 			condition = this.conditionTree.findItemByCoordinate (x);			
 		}
-		if (gene === null || condition === null) return null;
+		if ( !gene || !condition || gene === null || condition === null) return null;
 		
 		var pValue = 1;
 		var foldChange, isProbeMissing;
