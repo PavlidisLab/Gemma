@@ -189,6 +189,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				}, {
 					xtype: 'Metaheatmap.ColorLegend',
 					ref: 'colorLegendPvalue',
+					constrain: true,
 					x: 440,
 					y: 0,
 					title: 'P-value',
@@ -202,6 +203,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				}, {
 					xtype: 'Metaheatmap.ColorLegend',
 					ref: 'colorLegendFoldChange',
+					constrain: true,
 					x: 440,
 					y: 0,
 					title: 'Log fold change',
