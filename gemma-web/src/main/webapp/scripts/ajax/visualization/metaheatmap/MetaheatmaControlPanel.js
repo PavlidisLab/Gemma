@@ -35,7 +35,25 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 	factorTreeFilter : [],
 			
 	autoScroll : false,			
-	border : false,		
+	border : false,	
+	
+	/**
+	 * update the title of the genes section of the control panel with the number of genes filtered
+	 * @param {int} numFiltered
+	 * @param {int} numTotal
+	 */
+	updateGenesTitle: function(numFiltered, numTotal){
+		this.genesControlPanel.setTitle("Genes: <span style=\"color:grey;font-weight:normal;\"><b>" + numFiltered + "</b> / "+numTotal+" filtered </span>" );
+	},
+		
+	/**
+	 * update the title of the conditions section of the control panel with the number of conditions filtered
+	 * @param {int} numFiltered
+	 * @param {int} numTotal
+	 */
+	updateConditionsTitle: function(numFiltered, numTotal){
+		this.conditionsControlPanel.setTitle("Conditions: <span style=\"color:grey;font-weight:normal;\"><b>" + numFiltered + "</b> / "+numTotal+" filtered </span>" );
+	},
 	initComponent : function() { 
 		
 		Ext.apply (this, {

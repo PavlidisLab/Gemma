@@ -67,6 +67,9 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 
 		// Add convenience cell retrieval function to cellData object. TODO: refactor out?
 		this.cells.getCell = function (gene, condition) {
+			if (!gene || !condition) {
+				return null;
+			}
 			var geneToCellMap = this.cellData[condition.id];			
 			if (typeof geneToCellMap != 'undefined') {
 				var cellValueObj = geneToCellMap[gene.id];
@@ -295,7 +298,8 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			this.visualizationPanel.setConditionTree (this.conditionTree);
 			this.visualizationPanel.setGeneTree (this.geneTree);	
 			
-			this.topToolbar.titleLabel.setText(this.conditionTree.numFiltered + " conditions and " + this.geneTree.numFiltered + " genes  are filtered.");
+			this.controlPanel.updateGenesTitle(this.geneTree.numFiltered, this.genes.length);
+			this.controlPanel.updateConditionsTitle(this.conditionTree.numFiltered, this.conditions.length);
 						
 			this.visualizationPanel.redraw();			
 		}, this );
