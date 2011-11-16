@@ -259,7 +259,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 								 	if (thumb.value === 100) {
 								 		return "Don't hide conditions based on specificity";
 								 	}
-				                     return String.format('Show conditions with specificity <={0}%', thumb.value*10);
+				                     return String.format('Show conditions with better than {0}% specificity.', thumb.value*10);
 				                 }
 				            }),
 				        	listeners : {
@@ -329,7 +329,12 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 		};
 	},
 	
-	applySortFilter : function () {
+	applySortFilter : function () {			
+		this.ownerCt.visualizationPanel.mask.show();
+		this.doFiltering_.defer(100, this);		
+	},
+	
+	doFiltering_ : function () {
 		var genePercentMissingThreshold = this.genesControlPanel.sldGeneDataMissingFilter.getValue() / 100;
 		var genePercentMissingFilter = [{'filterFn' : function (o) {return o.percentProbesMissing > genePercentMissingThreshold;} }];
 

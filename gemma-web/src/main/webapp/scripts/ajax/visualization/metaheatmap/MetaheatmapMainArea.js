@@ -311,57 +311,5 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 	}
 
 });
+
 Ext.reg ('Metaheatmap.HeatmapBox', Gemma.Metaheatmap.HeatmapBox);
-
-
-/*columnFilters : {},
-
-addFilterFunction : function (filterId, filterFunction) {
-	columnFilters[filterId] = filterFunction;
-},
-
-removeFilterFunction : function (filterId) {
-	delete columnFilters[filterId];
-},
-
-applyFilters : function () {
-	for (var filter in columnFilters) {
-		this.items.each(function() {this.filterColumns(filteringFn);});							
-	}												
-},
-
-filterColumns : function(filteringFn) {
-	var count = 0;
-	this.items.each(function() {
-				count = count + this.filterColumns(filteringFn);
-			});
-	return count;
-},*/
-//_filterRows : function(filteringFn) {
-//
-//					},
-//
-//					_sortColumns : function(asc_desc, sortingFn) {
-//						this.items.each(function() {
-//									this.items.sort(asc_desc, sortingFn);
-//								});
-//					}
-
-//var i;
-//var initialWidth = 0;
-//for (i = 0; i < this.dataDatasetGroups.length; i++) {
-//	if (this.dataDatasetGroups[i].length > 0) {
-//		var dsGroupPanel = new Gemma.MetaHeatmapDatasetGroupPanel({
-//			applicationRoot : this.applicationRoot,
-//			height : this.height,
-//			dataFactorColumns : this.dataDatasetGroups[i],
-//			datasetGroupIndex : i,
-//			geneNames : this.geneNames[i],
-//			geneIds : this.geneIds[i]
-//		});				
-//		this.add(dsGroupPanel);
-//		initialWidth += dsGroupPanel.width + Gemma.MetaVisualizationConfig.groupSeparatorWidth;
-//	}			
-//}
-//this.setWidth(initialWidth);
-

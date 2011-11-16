@@ -99,7 +99,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		var sortByContrastFactorValueFn = this.createSortByPropertyFunction_ ('contrastFactorValue');
 		var sortByDatasetNameFn = this.createSortByPropertyFunction_ ('datasetShortName');
 
-		var sortByPvaluesFn = this.createSortByPropertyFunction_('inverseSumPvalue');
+		var sortByPvaluesFn = this.createSortByPropertyFunction_('inverseSumPvalue', 'DESC');
 
 		var sortByGeneNameFn = this.createSortByPropertyFunction_ ('name'); 
 		var sortGeneByGroupFn = this.createSortByPropertyFunction_ ('groupName');
@@ -291,29 +291,44 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 	onRender : function() {
 		Gemma.Metaheatmap.Application.superclass.onRender.apply (this, arguments);
 		
-		this.controlPanel.on('applySortGroupFilter', function (geneSort, geneFilter, conditionSort, conditionFilter) {
+		this.controlPanel.on('applySortGroupFilter', function (geneSort, geneFilter, conditionSort, conditionFilter) {			
+			
 			this.geneTree 	   = new Gemma.Metaheatmap.SortedFilteredTree (this.genes, geneSort, geneFilter); 			
 			this.conditionTree = new Gemma.Metaheatmap.SortedFilteredTree (this.conditions, conditionSort, conditionFilter);		
 			
 			this.visualizationPanel.setConditionTree (this.conditionTree);
 			this.visualizationPanel.setGeneTree (this.geneTree);	
 			
+			this.topToolbar.titleLabel.setText (this.conditionTree.numFiltered + " conditions and " + this.geneTree.numFiltered + " genes  are filtered.");
+						
+			this.visualizationPanel.redraw();
+
 			this.controlPanel.updateGenesTitle(this.geneTree.numFiltered, this.genes.length);
 			this.controlPanel.updateConditionsTitle(this.conditionTree.numFiltered, this.conditions.length);
 						
-			this.visualizationPanel.redraw();			
+			this.visualizationPanel.mask.hide();
 		}, this );
 		
 	},
 		
-	createSortByPropertyFunction_ : function ( property ) {
-		return function ( a, b ) {
-			if (typeof a[property] == "number") {
-				return (a[property] - b[property]);
-			} else {
-				return ((a[property] < b[property]) ? -1 : ((a[property] > b[property]) ? 1 : 0));
-			}
-		};
+	createSortByPropertyFunction_ : function ( property , direction) {
+		if (direction === 'DESC') {
+			return function ( a, b ) {
+				if (typeof a[property] == "number") {
+					return (b[property] - a[property]);
+				} else {
+					return ((a[property] > b[property]) ? -1 : ((a[property] < b[property]) ? 1 : 0));
+				}
+			};			
+		} else {
+			return function ( a, b ) {
+				if (typeof a[property] == "number") {
+					return (a[property] - b[property]);
+				} else {
+					return ((a[property] < b[property]) ? -1 : ((a[property] > b[property]) ? 1 : 0));
+				}
+			};
+		}		
 	},				
 	
 	refreshVisualization : function() {

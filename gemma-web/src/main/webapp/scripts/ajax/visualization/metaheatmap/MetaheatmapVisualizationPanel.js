@@ -501,9 +501,16 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		return geneIds;
 	},
 	
+	
+	afterRender : function () {
+		Gemma.Metaheatmap.VisualizationPanel.superclass.afterRender.apply ( this, arguments );
+
+		this.mask = new Ext.LoadMask(this.getEl(), {msg:"Filtering..."});
+	},
+	
 	onRender: function() {
 		Gemma.Metaheatmap.VisualizationPanel.superclass.onRender.apply ( this, arguments );
-		
+
 		this.hoverWindow = new Gemma.Metaheatmap.HoverWindow();
 		this.hoverWindow.isDocked = false;
 		this.hoverWindow.hide();
@@ -576,7 +583,6 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				});
 			}
 		});
-		
 	}
 
 });
