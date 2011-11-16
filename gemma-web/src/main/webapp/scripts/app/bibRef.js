@@ -1,3 +1,10 @@
+/**
+ * NOTE: This has been replaced with:
+ * - Gemma.BibliographicReferencePage
+ * - Gemma.BibliographicReferenceDetailsPanel
+ * - Gemma.BibliographicReferencePagingGrid
+ */
+
 Ext.namespace('Gemma');
 
 Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';

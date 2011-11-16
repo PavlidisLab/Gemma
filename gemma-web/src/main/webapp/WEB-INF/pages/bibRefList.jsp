@@ -1,20 +1,15 @@
 <%@ include file="/common/taglibs.jsp"%>
 <head>
-	<title>Bibligraphic Reference List</title>
+<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
 
-	<jwr:script src='/scripts/ajax/ext/data/DwrProxy.js' />
-	<jwr:script src='/scripts/app/bibRef.js' />
-
+<script type="text/javascript">
+Ext.namespace('Gemma');
+Ext.onReady(function() {
+	Ext.QuickTips.init();
+	new Gemma.GemmaViewPort({
+		 	centerPanelConfig: new Gemma.BibliographicReference.Page()
+		 });
+});
+</script>
+	<title>Bibliographic References</title>
 </head>
-<h2>
-	Bibliographic Reference List
-</h2>
-
-<div style="padding: 4px;" id="messages"></div>
-
-
-<div id="bibRefGrid"></div>
-<div id="bibRefPanel"></div>
-<br />
-<div spellcheck="false" id="bibRefDet"></div>
-
