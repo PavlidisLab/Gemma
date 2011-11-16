@@ -298,13 +298,11 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			
 			this.visualizationPanel.setConditionTree (this.conditionTree);
 			this.visualizationPanel.setGeneTree (this.geneTree);	
-			
-			this.topToolbar.titleLabel.setText (this.conditionTree.numFiltered + " conditions and " + this.geneTree.numFiltered + " genes  are filtered.");
-						
+									
 			this.visualizationPanel.redraw();
 
-			this.controlPanel.updateGenesTitle(this.geneTree.numFiltered, this.genes.length);
-			this.controlPanel.updateConditionsTitle(this.conditionTree.numFiltered, this.conditions.length);
+			this.controlPanel.updateGenesTitle (this.geneTree.numFiltered, this.genes.length);
+			this.controlPanel.updateConditionsTitle (this.conditionTree.numFiltered, this.conditions.length);
 						
 			this.visualizationPanel.mask.hide();
 		}, this );
