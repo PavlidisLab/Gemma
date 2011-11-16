@@ -5,11 +5,11 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 	autoScroll:true,
 	padding: 20,
 	updateFields: function(bibRefRecord){
-		
+			
+					
 		this.items.each(function(field){
 			field.show();
 		});
-		
 		//this.setTitle(bibRefRecord.get('title'));
 		
 		this.bibtitle.setValue(bibRefRecord.get('title'));
@@ -21,7 +21,9 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 		} else {
 			this.date.setValue(bibRefRecord.get('publicationDate'));
 		}
-		this.citation.setValue(bibRefRecord.get('citation'));
+		if (bibRefRecord.get('citation')) {
+			this.citation.setValue(bibRefRecord.get('citation').citation);
+		}
 		
 		var allExperiments = '';
 		var i;
@@ -42,6 +44,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 			allMeshTerms += bibRefRecord.get('meshTerms')[i] +
 			"\n";
 		}
+		this.pages.setValue(bibRefRecord.get('pages'));
 		this.pubmed.setValue(bibRefRecord.get('pubAccession'));
 		this.mesh.setValue(allMeshTerms);
 		
@@ -53,10 +56,23 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 			"\n";
 		}
 		this.chemicals.setValue(allChemicalsTerms);
+		
+		
+		this.items.each(function(field){
+			// trick textareas into resizing themselves
+			field.fireEvent('change', field, field.getValue, field.getValue);
+			field.disable();
+		});
 	},
 	defaults:{
-		style: "width:100%",
-		hidden: true
+		style: "width:100%;color:black",
+		hidden: true,
+		grow: true,
+		growMin:1,
+		growMax: 80,
+		growAppend:'',
+		readOnly: true,
+		value: 'placeholder'
 	},
 	initComponent: function(){
 		
@@ -65,8 +81,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 		this.bibtitle = new Ext.form.TextArea({
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
-			fieldLabel: 'Title',
-			readOnly: true
+			fieldLabel: 'Title'
 		});
 		
 		this.abstractBibli = new Ext.form.TextArea({
@@ -75,19 +90,17 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 			fieldLabel: 'Abstract',
 			readOnly: true,
 			grow: true,
-			growMax: 150,
-			padding: '0px 0px 10px 0px'
+			growMax: 150
 		});
 		
 		this.authors = new Ext.form.TextArea({
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
 			fieldLabel: 'Authors',
-			readOnly: true,
-			height: 50
+			readOnly: true
 		});
 		
-		this.publication = new Ext.form.TextField({
+		this.publication = new Ext.form.TextArea({
 			enableKeyEvents: true,
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
@@ -95,7 +108,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 			readOnly: true
 		});
 		
-		this.date = new Ext.form.TextField({
+		this.date = new Ext.form.TextArea({
 			enableKeyEvents: true,
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
@@ -103,7 +116,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 			readOnly: true
 		});
 		
-		this.pages = new Ext.form.TextField({
+		this.pages = new Ext.form.TextArea({
 			enableKeyEvents: true,
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
@@ -111,17 +124,15 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 			readOnly: true
 		});
 		
-		this.experiments = new Ext.form.TextField({
+		this.experiments = new Ext.form.TextArea({
 			enableKeyEvents: true,
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
 			fieldLabel: 'Experiments',
-			width: 850,
 			readOnly: true
-		
 		});
 		
-		this.citation = new Ext.form.TextField({
+		this.citation = new Ext.form.TextArea({
 			enableKeyEvents: true,
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
@@ -129,7 +140,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 			readOnly: true
 		});
 		
-		this.pubmed = new Ext.form.TextField({
+		this.pubmed = new Ext.form.TextArea({
 			enableKeyEvents: true,
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',

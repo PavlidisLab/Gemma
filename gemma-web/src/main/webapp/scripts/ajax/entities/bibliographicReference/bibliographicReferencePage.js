@@ -25,8 +25,8 @@ Gemma.BibliographicReference.Page =  Ext.extend(Ext.Panel, {
 		this.doLayout();
 		
 		grid.on('bibRefSelected', function(record){
-			details.updateFields(record);
 			details.expand();
+			details.updateFields(record);
 		}, this);
 		
 		this.on('render', function(){
