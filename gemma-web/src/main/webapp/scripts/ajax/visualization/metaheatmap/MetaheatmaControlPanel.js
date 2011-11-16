@@ -114,8 +114,8 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	xtype  : 'slider',
 				        	ref    : 'sldGeneDataMissingFilter',
 				        	height : 20,
-				        	value  : 100,
-				        	increment : 1,
+				        	value  : 70,
+				        	increment : 10,
 				        	minValue  : 0,
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
@@ -125,7 +125,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 								 	} else if (thumb.value === 100) {
 								 		return "Don't hide genes for missing data";
 								 	}
-								 	return String.format('Hide gene if it\'s missing data for >=<b>{0}%</b> of conditions', thumb.value);
+								 	return String.format('Hide gene if it\'s missing data for more than <b>{0}%</b> of conditions', thumb.value);
 								 }
 				            }),
 				        	listeners : {
@@ -216,8 +216,8 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	ref    : 'sldConditionDataMissingFilter',
 				        	width  : 150,
 				        	height : 20,
-				        	value  : 100,
-				        	increment : 1,
+				        	value  : 70,
+				        	increment : 10,
 				        	minValue  : 0,
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
@@ -227,7 +227,7 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 								 	} else if (thumb.value === 100) {
 								 		return "Don't hide conditions for missing data";
 								 	}
-				                     return String.format('Hide condition if it\'s missing data for >=<b>{0}%</b> of genes', thumb.value);
+				                     return String.format('Hide condition if it\'s missing data for more than <b>{0}%</b> of genes', thumb.value);
 				                 }
 				            }),
 				        	listeners : {
@@ -250,16 +250,16 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	ref    : 'sldSpecificityFilter',
 				        	width  : 150,
 				        	height : 20,
-				        	value  : 10,
-				        	increment : 1,
+				        	value  : 70,
+				        	increment : 10,
 				        	minValue  : 0,
-				        	maxValue  : 10,
+				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
 								 	if (thumb.value === 100) {
-								 		return "Don't hide conditions based on specificity";
+								 		return "Show conditions with any specificity";
 								 	}
-				                     return String.format('Show conditions with specificity <={0}%', thumb.value*10);
+				                    return String.format('Show conditions with better than {0}% specificity', thumb.value);
 				                 }
 				            }),
 				        	listeners : {
@@ -282,12 +282,12 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 				        	width  : 150,
 				        	height : 20,
 				        	value  : 0,
-				        	increment : 1,
+				        	increment : 10,
 				        	minValue  : 0,
 				        	maxValue  : 100,
 				        	plugins: new Ext.slider.Tip({
 				                 getText: function(thumb){
-				                     return String.format('Hide conditions with pValue sum <={0}', thumb.value/100);
+				                     return String.format('Show conditions Hide conditions with pValue sum <={0}', thumb.value/100);
 				                 }
 				            }),
 				        	listeners : {
@@ -329,14 +329,19 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 		};
 	},
 	
-	applySortFilter : function () {
+	applySortFilter : function () {			
+		this.ownerCt.visualizationPanel.mask.show();
+		this.doFiltering_.defer(100, this);		
+	},
+	
+	doFiltering_ : function () {
 		var genePercentMissingThreshold = this.genesControlPanel.sldGeneDataMissingFilter.getValue() / 100;
 		var genePercentMissingFilter = [{'filterFn' : function (o) {return o.percentProbesMissing > genePercentMissingThreshold;} }];
 
 		var conditionPercentMissingThreshold = this.conditionsControlPanel.sldConditionDataMissingFilter.getValue() / 100;
 		var conditionPercentMissingFilter = [{'filterFn' : function (o) {return o.percentProbesMissing > conditionPercentMissingThreshold;} }];
 		
-		var specificityThreshold = this.conditionsControlPanel.sldSpecificityFilter.getValue();
+		var specificityThreshold = this.conditionsControlPanel.sldSpecificityFilter.getValue() / 10;
 		var specificityFilter = [{'filterFn' : function (o) {return o.miniBarValue > specificityThreshold;} }];
 
 //		var geneThreshold = this.genesControlPanel.sldGenePvalueFilter.getValue() / 100;

@@ -99,11 +99,11 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 						disabled : false,
 						hidden : false,
 						enableToggle: true,
-						width: 80,
+						width: 95,
 						toggleHandler: function(btn, toggle){
 							if (toggle) {
 								this.hoverWindow.isDocked = true;
-								this.hoverWindow.setTitle('Docked popup: click + drag to move');
+								this.hoverWindow.setTitle('Docked popup: click & drag to move');
 								//this.hoverWindow.setPagePosition ( 800, 100);
 								btn.setText("Undock popup");
 							} else {
@@ -347,7 +347,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		var ctxSide = this.fixedWidthCol.boxSideLabels.ctx;
 		var ctxTop = this.variableWidthCol.boxTopLabels.ctx;
 		
-		// create temporaray canvas element
+		// create temporary canvas element
 		var canvas = document.createElement('canvas');
 		canvas.width = ctxMain.canvas.width + 1 + ctxSide.canvas.width;
 		canvas.height = ctxMain.canvas.height + 1 + ctxTop.canvas.height;
