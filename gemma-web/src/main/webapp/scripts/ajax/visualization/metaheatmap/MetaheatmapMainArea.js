@@ -269,9 +269,9 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		var cellData = this.cells.getCell (gene,condition);		
 		if (cellData !== null && cellData.isProbeMissing) {
 			if (this.isGeneOnTop) {
-				this.ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2, condition.display.pxlStart + condition.display.pxlSize/2, 1, 1);			
+				this.ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2-1, condition.display.pxlStart + condition.display.pxlSize/2-1, 2, 2);			
 			} else {
-				this.ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2, gene.display.pxlStart + gene.display.pxlSize/2, 1, 1);						
+				this.ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2-1, gene.display.pxlStart + gene.display.pxlSize/2-1, 2, 2);						
 			}			
 		} else {
 			if (this.isGeneOnTop) {
@@ -288,10 +288,10 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		if (isProbeMissing) {
 			if (isGeneOnTop) {
 				ctx.clearRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
-				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2, condition.display.pxlStart + condition.display.pxlSize/2, 1, 1);			
+				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);			
 			} else {
 				ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
-				ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2, gene.display.pxlStart + gene.display.pxlSize/2, 1, 1);						
+				ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2 - 1, gene.display.pxlStart + gene.display.pxlSize/2 - 1, 2, 2);						
 			}			
 		} else {
 			if (isGeneOnTop) {
