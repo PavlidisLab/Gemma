@@ -1436,6 +1436,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 									 (this.geneChooserIndex - 1)], false));
 		}
 		this.geneChoosers.doLayout();
+		
+		return chooser;
 	},
 
 	removeGeneChooser : function(panelId) {

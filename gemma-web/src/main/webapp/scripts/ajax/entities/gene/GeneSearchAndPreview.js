@@ -169,7 +169,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.maskGenePreview();
 
 		// grab ids to use
-		ids = this.geneIds;
+		var ids = this.geneIds;
 
 		// load some genes to display
 		var limit = (ids.size() < this.searchForm.PREVIEW_SIZE) ? ids.size() : this.searchForm.PREVIEW_SIZE;
@@ -381,14 +381,15 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.fireEvent('select');
 	},
 	/**
-	 * Allows cytoscapepanel to update query genes in form based on selection made in visualisation
-	 * from the GUI.  A stripped down version of getGenesFromList because we already have the GeneValueObjects
+	 * Allows updates to the query genes in the form based on existing GeneValueObjects already returned from the server.
+	 * 
+	 * A stripped down version of getGenesFromList because we already have the GeneValueObjects
 	 * from the search results and there is no need for a call to the back end
 	 * 
 	 * @param {}
 	 *            e
 	 */
-	getGenesFromCytoscape : function(genesToPreview, geneIds, taxonId) {
+	getGenesFromGeneValueObjects : function(genesToPreview, geneIds, taxonId) {
 		var taxonName;
 		if (!taxonId && this.searchForm.getTaxonId()) {
 			taxonId = this.searchForm.getTaxonId();
@@ -428,6 +429,9 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		// write to the gene preview panel
 		for (i = 0; i < genesToPreview.length; i++) {
 			this.previewPart.genePreviewContent.update(genesToPreview[i]);
+			if (i == 4){
+				break;
+			}
 		}
 		this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + " genes)");
 		this.geneSelectionEditorBtn.setText((geneIds.length - genesToPreview.length)+

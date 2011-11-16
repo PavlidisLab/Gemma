@@ -706,7 +706,7 @@ Ext.Panel, {
 
             var selectedNodes = this.visualization.selected("nodes");
 
-            if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+            if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
                 //do all new searches at stringency 2 so set the spinner value
                 var spinner = this.getTopToolbar().getComponent('stringencySpinner');
                 spinner.setValue(2);
@@ -743,11 +743,11 @@ Ext.Panel, {
                 });
 
 
-            } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+            } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
-                Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY);
+                Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY);
 
-            } else {
+            } else if(selectedNodes.length == 0) {
 
                 Ext.Msg.alert('Status of Search', 'No Genes Selected');
             }
@@ -764,10 +764,10 @@ Ext.Panel, {
 
             var selectedNodes = this.visualization.selected("nodes");
 
-            if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+            if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
 
-                if (this.currentQueryGeneIds.length + selectedNodes.length <= Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+                if (this.currentQueryGeneIds.length + selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
                     //do all new searches at stringency 2 so set the spinner value
                     var spinner = this.getTopToolbar().getComponent('stringencySpinner');
@@ -802,7 +802,7 @@ Ext.Panel, {
 
                 } else {
 
-                    Ext.Msg.confirm('Status of Search', 'Too many Query Genes. A max of ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY + ' query genes allowed. Click Yes to continue search with reduced query genes', function (btn) {
+                    Ext.Msg.confirm('Status of Search', 'Too many Query Genes. A max of ' + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY + ' query genes allowed. Click Yes to continue search with reduced query genes', function (btn) {
 
                         if (btn == 'yes') {
 
@@ -814,7 +814,7 @@ Ext.Panel, {
                             var sNodesLength = selectedNodes.length;
 
                             //make room in currentQueryGeneIds for new genes
-                            this.currentQueryGeneIds = this.currentQueryGeneIds.splice(this.currentQueryGeneIds.length - (Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY - selectedNodes.length));
+                            this.currentQueryGeneIds = this.currentQueryGeneIds.splice(this.currentQueryGeneIds.length - (Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY - selectedNodes.length));
 
 
                             var i;
@@ -845,9 +845,9 @@ Ext.Panel, {
                 }
 
 
-            } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+            } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
-                Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY);
+                Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY);
 
             } else {
 
@@ -1295,10 +1295,8 @@ Ext.Panel, {
         //clear current
         this.searchPanelRef.geneChoosers.removeAll();
         //add new genesearchandpreview
-        this.searchPanelRef.addGeneChooser();
-        //grab new genesearchandpreview
-        var geneChooser = Ext.getCmp('geneChooser' + (this.searchPanelRef.geneChooserIndex));
-
+        var geneChooser = this.searchPanelRef.addGeneChooser();
+       
         var genesToPreview = [];
         var genesToPreviewIds = [];
 
@@ -1322,7 +1320,7 @@ Ext.Panel, {
             }
         } // end for (<kglength)
         //add new genes
-        geneChooser.getGenesFromCytoscape(genesToPreview, genesToPreviewIds);
+        geneChooser.getGenesFromGeneValueObjects(genesToPreview, genesToPreviewIds);
 
 
     },
