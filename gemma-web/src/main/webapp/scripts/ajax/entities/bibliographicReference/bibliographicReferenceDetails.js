@@ -69,7 +69,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 		hidden: true,
 		grow: true,
 		growMin:1,
-		growMax: 80,
+		growMax: 60,
 		growAppend:'',
 		readOnly: true,
 		value: 'placeholder'
@@ -87,10 +87,7 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 		this.abstractBibli = new Ext.form.TextArea({
 			disabledClass: 'disabled-plain',
 			fieldClass: 'x-bare-field',
-			fieldLabel: 'Abstract',
-			readOnly: true,
-			grow: true,
-			growMax: 150
+			fieldLabel: 'Abstract'
 		});
 		
 		this.authors = new Ext.form.TextArea({
@@ -165,6 +162,11 @@ Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
 		});
 		
 		this.add([this.bibtitle, this.abstractBibli, this.authors, this.publication, this.date, this.pages, this.citation, this.experiments, this.pubmed, this.mesh, this.chemicals]);
+		
+		// can't do this in the definition b/c it gets overidden by defaults when it's added to parent
+		Ext.apply(this.abstractBibli, {
+			style: "width:100%;color:black;background-color: #fcfcfc; border: 1px solid #cccccc;",
+		});
 		
 	}// eo initComponent
 });
