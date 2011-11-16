@@ -4,12 +4,13 @@ Gemma.MIN_STRINGENCY = 2;
 
 // this is the value used for CLASSIC coexpression and
 // diff expression searches
-Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY = 20;
 Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY = 20; 
 
 // max suggested number of elements to use for a diff ex viz query
 Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY = 100;
 Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY = 100;
+Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY = 20; // this is a hard limit
+Gemma.MAX_EXPERIMENTS_CO_DIFF_EX_VIZ_QUERY = 100000; // effectively no limit
 
 /**
  * The input for guided coexpression and differential expression searches. This
@@ -69,6 +70,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * * SEARCH **
 	 **************************************************************************/
 
+	getMaxNumGenes:function(){
+		return (this.coexToggle.pressed)?Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY : Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY;
+	},
+	getMaxNumExperiments:function(){
+		return (this.coexToggle.pressed)?Gemma.MAX_EXPERIMENTS_PER_CO_EX_VIZ_QUERY : Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY;	
+	},
 	/**
 	 * check that there are some experiments and genes to run on
 	 * if there are too many experiments or genes, warn the user and offer to trim
@@ -108,22 +115,23 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		var stateText = "";
 		var maxText = "";
-		if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY && experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY ){
+		var maxNumGenes = this.getMaxNumGenes();
+		var maxNumExperiments = this.getMaxNumExperiments();
+		if(geneCount > maxNumGenes && experimentCount > maxNumExperiments ){
 			stateText = geneCount + " genes and "+ experimentCount + " experiments";
-			maxText = Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY + " genes and "+Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY +" experiments";
+			maxText = maxNumGenes + " genes and "+maxNumExperiments +" experiments";
 		}
-		else if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
+		else if(experimentCount > maxNumExperiments){
 			stateText = experimentCount + " experiments";
-			maxText = Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY +" experiments";
+			maxText = maxNumExperiments +" experiments";
 		}
-		else if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY){
+		else if(geneCount > maxNumGenes){
 			stateText = geneCount + " genes";
-			maxText = Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY + " genes";
+			maxText = maxNumGenes + " genes";
 		}
 		
-		if( ( this.coexToggle.pressed && geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY ) ||
-			( this.diffExToggle.pressed && (geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY
-				|| experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY)) ){
+		// coex uses a hard limit so trimming isn't optional and is handled elsewhere
+		if( (!this.coexToggle.pressed) && ( geneCount > maxNumGenes  || experimentCount > maxNumExperiments ) ){
 			this.getEl().mask();
 			var warningWindow = new Ext.Window({
 				width:450,
@@ -140,11 +148,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					text: 'Trim',
 					tooltip:'Your query will be trimmed to '+maxText,
 					handler: function(){
-						if(geneCount > Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY){
-							geneSetValueObjects = this.trimGeneValObjs(geneSetValueObjects, Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY);
+						if(geneCount > this.getMaxNumGenes()){
+							geneSetValueObjects = this.trimGeneValObjs(geneSetValueObjects, this.getMaxNumGenes());
 						}
-						if(experimentCount > Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY){
-							experimentSetValueObjects = this.trimExperimentValObjs(experimentSetValueObjects, Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY);
+						if(experimentCount > this.getMaxNumExperiments() ){
+							experimentSetValueObjects = this.trimExperimentValObjs(experimentSetValueObjects, this.getMaxNumExperiments());
 						}
 						this.fireEvent('beforesearch', this);
 						this.doSearch( geneSetValueObjects, experimentSetValueObjects );
@@ -480,12 +488,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			return "There are no datasets that match your search terms";
 		} else if (!csc.eeIds && !csc.eeSetId) {
 			return "Please select an analysis. Taxon, gene(s), and scope must be specified.";
-		} else if (csc.geneIds.length > Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY) {
+		} else if (csc.geneIds.length > this.getMaxNumGenes()) {
 			// if trying to search for more than the allowed limit of genes,
 			// show error
 
 			// prune the gene Ids
-			csc.geneIds = csc.geneIds.slice(0, Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY);
+			csc.geneIds = csc.geneIds.slice(0, this.getMaxNumGenes());
 
 			/*
 			 * //update the previews var runningCount = 0; var i; var
@@ -1122,10 +1130,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					ref: 'searchExamples',
 					colspan:4,
 					cls : 'left-align-btn transparent-btn transparent-btn-link',
-					//html: '<a title="Differential expression of genes from AutDB\'s candidate gene list in experiments studying autism spectrum disorder."' +
-					//'href="/Gemma/analysesResultsSearch.html?gg=48&eg=6112&t=1">Search for differential expression in ten experiments studying autism spectrum disorder based on genes from AutDB\'s candidate gene list</a> (human)<br>' +
-					//' <a title="Differential expression of genes from the &quot;hippocampus development&quot; GO group (GO_0021766) in experiments using fetal/embryonic mouse samples on the GPL1261 platform." ' +
-					//'href="/Gemma/analysesResultsSearch.html?eg=6110&gq=taxon:2;GO:GO_0021766&t=2">Search for differential expression in fifteen experiments using fetal/embryonic mouse samples based on genes from the &quot;hippocampus development&quot; GO group</a> (mouse)',
 					items:[{
 						tag: 'div',
 						html: 'Example Queries:',
