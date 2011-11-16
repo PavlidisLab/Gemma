@@ -6,6 +6,7 @@
 		<%-- Include common set of meta tags for each layout --%>
 		<%@ include file="/common/meta.jsp"%>
 		
+		<link rel="shortcut icon" href="/Gemma/images/logo/gemmaTinyTrans.gif" />
 		<title><decorator:title /> | <fmt:message key="webapp.name" />
 		</title>
 
