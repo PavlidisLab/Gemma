@@ -140,8 +140,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					}, {
 						xtype: 'button',
 						text: 'Flip axes',
-						disabled : false,
-						hidden : false,
+						disabled : true,
+						hidden : true,
 						width: 80,
 						handler: function(btn, e){
 							this.flipLabels();
