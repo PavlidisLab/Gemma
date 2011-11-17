@@ -287,28 +287,27 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 
 		Gemma.Metaheatmap.Application.superclass.initComponent.apply (this, arguments);
 	},
-	
+			
 	onRender : function() {
 		Gemma.Metaheatmap.Application.superclass.onRender.apply (this, arguments);
 		
-		this.controlPanel.on('applySortGroupFilter', function (geneSort, geneFilter, conditionSort, conditionFilter) {			
-			
+		this.controlPanel.on('applySortGroupFilter', function (geneSort, geneFilter, conditionSort, conditionFilter) {
+						
 			this.geneTree 	   = new Gemma.Metaheatmap.SortedFilteredTree (this.genes, geneSort, geneFilter); 			
 			this.conditionTree = new Gemma.Metaheatmap.SortedFilteredTree (this.conditions, conditionSort, conditionFilter);		
-			
+
+			this.controlPanel.updateGenesTitle (this.geneTree.numFiltered, this.genes.length);
+			this.controlPanel.updateConditionsTitle (this.conditionTree.numFiltered, this.conditions.length);
+
 			this.visualizationPanel.setConditionTree (this.conditionTree);
 			this.visualizationPanel.setGeneTree (this.geneTree);	
 									
 			this.visualizationPanel.redraw();
-
-			this.controlPanel.updateGenesTitle (this.geneTree.numFiltered, this.genes.length);
-			this.controlPanel.updateConditionsTitle (this.conditionTree.numFiltered, this.conditions.length);
 						
-			this.visualizationPanel.mask.hide();
-		}, this );
-		
-	},
-		
+			this.visualizationPanel.mask.hide();			
+		}, this);		
+	},	
+	
 	createSortByPropertyFunction_ : function ( property , direction) {
 		if (direction === 'DESC') {
 			return function ( a, b ) {
@@ -329,8 +328,9 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		}		
 	},				
 	
-	refreshVisualization : function() {
-		this.visualizationPanel.redraw();
+	refreshVisualization : function() {	
+		this.visualizationPanel.updateVisibleScores();
+		this.controlPanel.doFiltering_();
 	},
 			
 	getApplicationState : function() {
