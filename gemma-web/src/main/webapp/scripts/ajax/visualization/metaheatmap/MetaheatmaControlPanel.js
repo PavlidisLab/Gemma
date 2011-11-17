@@ -341,8 +341,8 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 		var conditionPercentMissingThreshold = this.conditionsControlPanel.sldConditionDataMissingFilter.getValue() / 100;
 		var conditionPercentMissingFilter = [{'filterFn' : function (o) {return o.percentProbesMissing > conditionPercentMissingThreshold;} }];
 		
-		var specificityThreshold = this.conditionsControlPanel.sldSpecificityFilter.getValue() / 10;
-		var specificityFilter = [{'filterFn' : function (o) {return o.miniBarValue > specificityThreshold;} }];
+		var specificityThreshold = this.conditionsControlPanel.sldSpecificityFilter.getValue() / 100;
+		var specificityFilter = [{'filterFn' : function (o) {return o.experimentSpecificity > specificityThreshold;} }];
 
 //		var geneThreshold = this.genesControlPanel.sldGenePvalueFilter.getValue() / 100;
 //		var genePvalueFilter = [{'filterFn' : function (o) {return o.inverseSumPvalue < geneThreshold;} }];

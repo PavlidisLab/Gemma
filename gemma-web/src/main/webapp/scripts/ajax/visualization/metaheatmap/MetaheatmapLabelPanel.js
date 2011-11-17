@@ -421,10 +421,15 @@ Gemma.Metaheatmap.ConditionLabel.makeVerticalLabelDrawFunction = function (ctx, 
 					ctx.fillRect (x, y, width, height);
 				}
 				if (tinyScale) {
-					// We stop drawing text since small text is not distinguishable.
-					// Draw barchart instead of pie. 
-					ctx.fillStyle = 'black';
-					ctx.fillRect (x, y + height-1- 15 * miniPieValue/360.0, width, 15 * miniPieValue/360.0);					
+					// We stop drawing label since small text is not distinguishable.
+					ctx.strokeStyle = 'black';		
+					if (miniBarValue !== null) {
+						ctx.moveTo(x, y + height - 8.5);
+						ctx.lineTo(x + width,y + height - 8.5);
+						ctx.stroke();
+						ctx.fillStyle = 'black';
+						ctx.fillRect (x, y + height - 0.5 - miniBarValue, width, miniBarValue);
+					}
 				} else {
 					ctx.beginPath();
 					ctx.rect (x+0.5, y, width-1, height);				
@@ -437,9 +442,6 @@ Gemma.Metaheatmap.ConditionLabel.makeVerticalLabelDrawFunction = function (ctx, 
 						ctx.stroke();
 						ctx.fillStyle = 'black';
 						ctx.fillRect (x, y + height - 0.5 - miniBarValue, width, miniBarValue);
-
-						
-						//						MiniPieLib.sPie (ctx, xCenter, y + height - 5, miniPieSize, 'black', miniPieValue);
 					}
 				}
 				ctx.restore();											

@@ -387,8 +387,8 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	drawConditionLabel : function (condition, size, orientation, backgroundColor) {
 
 		condition.miniPieValue = (condition.numberOfProbesOnArray === 0) ? -1 : 360.0 * condition.numberDiffExpressedProbes / condition.numberOfProbesOnArray;
-		condition.miniBarValue = (condition.numberOfProbesOnArray === 0) ? 0 : 9.0 * (condition.numberDiffExpressedProbes / condition.numberOfProbesOnArray);
-
+		condition.miniBarValue = (condition.numberOfProbesOnArray === 0) ? 0 : 9.0 * (condition.numberDiffExpressedProbes / condition.numberOfProbesOnArray);		
+		
 		var maxSize = {
 			'width' : this.getWidth(),
 			'height' : this.getHeight()
@@ -408,6 +408,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		// Calculate visible scores for conditons
 		for (i = 0; i < this.conditionTree.items.length; i++) {
 			var condition = this.conditionTree.items[i];
+			condition.experimentSpecificity = condition.numberDiffExpressedProbes / condition.numberOfProbesOnArray;			
 			var sumPvalue = 0;
 			var numProbesMissing = 0;
 			for (j = 0; j < this.geneTree.items.length; j++) {				
