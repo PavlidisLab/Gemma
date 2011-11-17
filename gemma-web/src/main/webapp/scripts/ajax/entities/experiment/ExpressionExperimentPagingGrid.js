@@ -210,9 +210,6 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                 }
             });
             
-        pageStore.on('load', function(store, records, options){
-                this.setTitle(records.length + ((records.length === 1) ? " Expression Experiment" : " Expression Experiments"));
-            }, this);
         pageStore.setDefaultSort('name');
 			
 		return pageStore;
@@ -221,27 +218,25 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * Show the experiments indicated by the array of ids passed in
 	 * 
 	 * Steps:
-	 * 1) if necessary, unbind the current store from the paging toolbar and bind Gemma.ExperimentPagingStoreSelectedIds
-	 * 2) reconfigure the store with the new store (if necessary)
-	 * 3) load the (new) store with the ids from the parameter pass in
+	 * 1) create a store with the ids from the parameter pass in
+	 * 2) unbind the current store from the paging toolbar and bind Gemma.ExperimentPagingStoreSelectedIds
+	 * 3) reconfigure the grid with the new store
 	 * @param {Object} eeIds
 	 */
 	loadExperimentsById: function(eeIds){
-		// if the grid isn't using an id store, we need to change it
-		if(!(this.getStore() instanceof Gemma.ExperimentPagingStoreSelectedIds)){
-			var idsStore = this.getIdsStore(eeIds);
-			// bind new store to paging toolbar
-            this.getBottomToolbar().bind(idsStore);
-			// reconfigure grid to use new store
-			this.reconfigure(idsStore, this.getColumnModel());
-		}
-		else{
-			lastOptions = this.getStore().lastOptions;
-			Ext.apply(lastOptions.params, {
-			    ids:eeIds
-			});
-			this.getStore().reload(lastOptions);
-		}
+		
+		// I tried being fancy and only creating a new store if the current one
+		// wasn't an id store, but it caused problems on page changes
+		// (the first page loaded fine, but when you navigated to the next page, it
+		// was populated with entries from the previous query)
+		// Always need to create new store for new queries, it seems.
+		
+		var idsStore = this.getIdsStore(eeIds);
+		// bind new store to paging toolbar
+        this.getBottomToolbar().bind(idsStore);
+		// reconfigure grid to use new store
+		this.reconfigure(idsStore, this.getColumnModel());
+		
 	},
 		
 	/**
@@ -358,8 +353,10 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
                 filterById = true;
                 // create a store that browses with selected ids
                 var ids = selectedGroup.memberIds;
-                this.setTitle(selectedGroup.name + ": " + ids.length + " Expression Experiments");
                 this.loadExperimentsById(ids);
+				// ids is not security filtered
+				var totalCount = this.getStore().getTotalCount();
+                this.setTitle("Displaying set: &quot;" + selectedGroup.name + "&quot;");
                 
                 // problem: if the user reaches this grid with a URL like '[...]?taxonId=4' and then does a search, the taxon 
                 // clause will still be in the URL
