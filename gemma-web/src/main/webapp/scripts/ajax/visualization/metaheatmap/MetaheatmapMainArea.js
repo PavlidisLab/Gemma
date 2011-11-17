@@ -33,14 +33,20 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		this.ctx = Gemma.Metaheatmap.Utils.getCanvasContext (this.boxCanvas.el.dom);
 		
 		this.boxCanvas.el.on('mousemove', function(e, t) {	
-			document.body.style.cursor = 'pointer'; // makes it really slow
 			if (this.lastCellMouseIn !== null) {
 				this.lastCellMouseIn.draw (this.ctx);
 				this.fireEvent ('cell_mouse_out',this.lastCellMouseIn,e,t);
 			}
 			var x = e.getPageX() - Ext.get(t).getX();
 			var y = e.getPageY() - Ext.get(t).getY();
-			var cell = this.getCellByXY(x,y);			
+			var cell = this.getCellByXY(x,y);	
+			// don't show "click-me" finger over cells that have no data
+			if (cell && !cell.isProbeMissing) {
+				document.body.style.cursor = 'pointer'; // makes it really slow?
+			} else {
+				document.body.style.cursor = 'default'; // makes it really slow?
+			}
+					
 			if (cell !== null) {
 				cell.highlight (this.ctx);
 				this.fireEvent ('cell_mouse_in',cell,e,t);
@@ -49,7 +55,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		}, this);				
 
 		this.boxCanvas.el.on('mouseout', function(e, t) {	
-			document.body.style.cursor = 'default'; // makes it really slow
+			document.body.style.cursor = 'default'; // makes it really slow?
 			if (this.lastCellMouseIn !== null) {
 				this.lastCellMouseIn.draw (this.ctx);
 				this.fireEvent ('cell_mouse_out',this.lastCellMouseIn,e,t);
@@ -69,7 +75,10 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			
 			var cell = this.getCellByXY (x,y);
 			
-			this.fireEvent('cell_click',cell);
+			// don't do anything if you click on a cell with no data
+			if (cell && !cell.isProbeMissing) {
+				this.fireEvent('cell_click',cell);
+			}
 			
 		}, this);				
 		
@@ -164,6 +173,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			'pValue' 	 : pValue,
 			'foldChange' : foldChange,
 			'visualizationValue' : color,
+			'isProbeMissing' : isProbeMissing,
 			
 			drawCell_ : drawCellFunction,
 			

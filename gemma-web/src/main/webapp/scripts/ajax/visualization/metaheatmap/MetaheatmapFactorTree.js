@@ -28,7 +28,8 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 				var root = new Ext.tree.TreeNode({
 					expanded : true,
 					text : 'Condition categories',
-					cls : ''
+					cls : '',
+					checked:true
 				});
 
 				this.setRootNode (root);
@@ -49,15 +50,25 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 					var factorNodes = sftCategoryNode.children;
 					for (var j = 0; j < factorNodes.length; j++ ) {
 						var sftFactorNode = factorNodes[j];
+						var baselines = [];
+						for (k = 0; k < sftFactorNode.items.length; k++) {
+							if (baselines.indexOf(sftFactorNode.items[k].baselineFactorValue) < 0) {
+								baselines.push(sftFactorNode.items[k].baselineFactorValue);
+							}
+						}
 
 						var ftFactorNode = new Ext.tree.TreeNode({
 							expanded : false,
 							singleClickExpand : false,
-							text : sftFactorNode.groupName,
+							text : sftFactorNode.groupName + "<span style=\"color:grey\"> vs "+baselines.join(',')+'</span>',
 							checked : true,
 							cls : '',
 							iconCls : ''
 						});				
+						Ext.apply(ftFactorNode, {
+							// used for matching in filtering function
+							contrastFactorValue : sftFactorNode.groupName
+						});
 						ftCategoryNode.appendChild (ftFactorNode);						
 					}
 					

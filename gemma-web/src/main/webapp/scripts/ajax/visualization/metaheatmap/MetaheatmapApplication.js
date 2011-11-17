@@ -280,6 +280,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 							title: 'Sort & Filter',
 							border:true,
 				       		region  : 'east',
+							split : true,
 				       		width   : 300
 				     }
 				    ]

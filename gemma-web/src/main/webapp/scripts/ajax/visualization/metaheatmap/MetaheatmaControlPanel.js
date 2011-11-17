@@ -380,11 +380,12 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 		this.conditionPreset = this.ownerCt.conditionPresets[0];
 		
 		this.conditionsControlPanel.factorTree.on('checkchange', function(node, checked) {
+			var i;
 			if (node.isLeaf()) {
 				
 			} else {
 				// Propagate choice to children.
-				for (var i = 0; i < node.childNodes.length; i++) {
+				for ( i = 0; i < node.childNodes.length; i++) {
 					var child = node.childNodes[i];
 					child.ui.toggleCheck (checked);
 					child.attributes.checked = checked;
@@ -394,12 +395,12 @@ Gemma.Metaheatmap.ControlPanel = Ext.extend (Ext.Panel, {
 			// Go through factorTree and create filter functions for unchecked factor values.
 			this.factorTreeFilter = [];
 			var root = this.conditionsControlPanel.factorTree.root;
-			for (var i = 0; i < root.childNodes.length; i++) {
+			for ( i = 0; i < root.childNodes.length; i++) {
 				var categoryNode = root.childNodes[i];
 				for (var j = 0; j < categoryNode.childNodes.length; j++) {
 					var factorNode = categoryNode.childNodes[j];
 					if (factorNode.attributes.checked === false) {
-						this.factorTreeFilter.push ({'filterFn' : this.makeFilterFunction (factorNode.text) });
+						this.factorTreeFilter.push ({'filterFn' : this.makeFilterFunction (factorNode.contrastFactorValue) });
 					}
 				}
 			}
