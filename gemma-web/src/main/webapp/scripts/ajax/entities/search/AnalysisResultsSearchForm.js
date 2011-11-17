@@ -526,7 +526,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			 * this trimmed list or re-enter your gene query(ies) and "+ "use
 			 * the edit tool to manually trim your selection(s).";
 			 */
-			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_CLASSIC_COEX_QUERY +
+			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY +
 					" genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
 			return "";
 
