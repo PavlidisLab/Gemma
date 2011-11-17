@@ -465,7 +465,10 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					factorName 		  : item.factorName,				
 					factorDescription : item.factorDescription,
 					datasetName 	  : item.datasetName,
-					datasetShortName 	  : item.datasetShortName,
+					datasetShortName  : item.datasetShortName,
+					
+					contrastFactorValue	: item.contrastFactorValue,
+					baselineFactorValue : item.baselineFactorValue,				
 					
 					specificityPercent  : specificity,
 					numberDiffExpressedProbes : item.numberDiffExpressedProbes,
@@ -479,6 +482,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					factorDescription : item.condition.factorDescription,
 					datasetName 	  : item.condition.datasetName,
 					datasetShortName  : item.condition.datasetShortName,
+
+					contrastFactorValue	: item.condition.contrastFactorValue,
+					baselineFactorValue : item.condition.baselineFactorValue,				
 
 					geneSymbol   : item.gene.name,
 					geneId 		 : item.gene.id,

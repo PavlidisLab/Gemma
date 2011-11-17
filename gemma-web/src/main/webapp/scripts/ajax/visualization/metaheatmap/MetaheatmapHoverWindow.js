@@ -28,9 +28,10 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 		return new Ext.XTemplate (
 				'<span style="font-size: 12px ">',
 				'<tpl for=".">',
-				'<tpl if="type==\'condition\'">',   //Experiment
+				'<tpl if="type==\'condition\'">',   //condition
 				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
+				'<b>Contrast</b>:{contrastFactorValue} vs {baselineFactorValue}<br><br> ',				
 				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({numberDiffExpressedProbes} out of {numberOfProbesOnArray})<br><br> ',
 				'</tpl>',
 				'<tpl if="type==\'minipie\'">',     //minipie
@@ -40,17 +41,18 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<tpl if="type==\'gene\'">',		//gene
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
 				'</tpl>',
-				'<tpl if="type==\'contrastCell\'">',  //contrast
-				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
-				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
-				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', 
-				'<b>Log2 fold change</b>: {foldChange:sciNotation}<br>', 
-				'<b>pValue</b>: {contrastPvalue:sciNotation} <br>',
-				'</tpl>',
+//				'<tpl if="type==\'contrastCell\'">',  //contrast
+//				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
+//				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
+//				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ', 
+//				'<b>Log2 fold change</b>: {foldChange:sciNotation}<br>', 
+//				'<b>pValue</b>: {contrastPvalue:sciNotation} <br>',
+//				'</tpl>',
 				'<tpl if="type==\'cell\'">',		 //cell
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
 				'<b>Factor</b>:{factorCategory} - {factorDescription}<br><br> ',
+				'<b>Contrast</b>:{contrastFactorValue} vs {baselineFactorValue}<br><br> ',				
 				'<b>p-value</b>: {pvalue:sciNotation}<br><br>',
 				'<b>log fold change</b>: {foldChange:sciNotation}',
 				'</tpl>', '</tpl></span>');
