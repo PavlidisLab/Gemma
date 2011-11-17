@@ -298,7 +298,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		// update size of top left control panel so that gene labels line up with data rows 
 		this.updatePnlMiniControlSize();
 
-		this.updateVisibleScores(); // TODO: do this only if filtering options
+		//this.updateVisibleScores(); // TODO: do this only if filtering options
 									// have changed
 		
 		this.doLayout();
@@ -402,6 +402,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	// Some gene/condition scores depend on what is currently visible: % of
 	// missing values, inverse of p values sum
 	// Other scores are not affected by it: specificity
+	// TODO: this needs to be rethought! i didn't think it through well enough
 	updateVisibleScores : function () {
 		var i, j;
 		// Calculate visible scores for conditons
