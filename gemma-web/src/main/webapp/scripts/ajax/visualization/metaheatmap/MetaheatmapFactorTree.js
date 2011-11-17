@@ -27,7 +27,7 @@ Gemma.Metaheatmap.FactorTree = Ext.extend(Ext.tree.TreePanel, {
 			initializeFromSortedTree : function () {				
 				var root = new Ext.tree.TreeNode({
 					expanded : true,
-					text : 'Condition categories',
+					text : 'Condition category filters',
 					cls : '',
 					checked:true
 				});
