@@ -243,6 +243,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						                	fieldTip: "The minimum number of datasets that must show coexpression for a result to appear"
 
 						            		},
+						                    {
+						        	        	xtype  : 'label',
+						        				
+						        	        	html   : '<img ext:qtip="'+
+						        						'Add/remove genes with more/less dataset support that confirms coexpression'	
+						        	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
+						        	        	//text   : 'Specificity filter',
+						        				height : 15
+						        	        },
 									         {
 									        	 xtype: 'tbspacer'
 									         },

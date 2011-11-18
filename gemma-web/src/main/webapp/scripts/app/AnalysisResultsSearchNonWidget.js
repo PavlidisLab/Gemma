@@ -194,7 +194,7 @@ Ext.onReady(function() {
 			var knownGeneGrid = new Gemma.CoexpressionGrid({
 				width : 900,
 				height : 400,
-				title : "Coexpressed genes",
+				title : "Coexpression Results",
 				colspan : 2,
 				user : user,
 				tabPanelViewFlag : true,
@@ -207,7 +207,7 @@ Ext.onReady(function() {
 		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
 					id : "cytoscaperesults",
-					title : "Cytoscape",
+					title : "Visualization",
 					queryGenes : result.queryGenes,
 					knownGeneResults : result.knownGeneResults,
 					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),

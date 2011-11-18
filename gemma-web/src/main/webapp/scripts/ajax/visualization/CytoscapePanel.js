@@ -351,10 +351,20 @@ Ext.Panel, {
                 maxValue: 999,
                 fieldLabel: 'Stringency ',
                 value: 2,
-                width: 60,
-                fieldTip: "The minimum number of datasets that must show coexpression for a result to appear"
+                width: 60
 
             },
+            
+            
+            {
+	        	xtype  : 'label',
+				
+	        	html   : '<img ext:qtip="'+
+						'Add/remove genes with more/less dataset support that confirms coexpression'	
+	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
+	        	//text   : 'Specificity filter',
+				height : 15
+	        },
 
             '->', '-',
             {
@@ -439,12 +449,21 @@ Ext.Panel, {
             	xtype: 'button',
             	itemId: 'nodeDegreeEmphasis',
             	text: '<b>Node Degree Emphasis</b>',
+            	
             	enableToggle: 'true',
             	pressed: 'true',
             	handler: this.nodeDegreeEmphasis,
             	scope: this
-            }
-          
+            },
+            {
+	        	xtype  : 'label',
+				
+	        	html   : '<img ext:qtip="'+
+						'Node degree is represented by the darkness of a gene node. The closer the node degree of a gene is to 1, the lighter it is and the more that gene shows coexpression with all other genes in that taxon'	
+	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
+	        	//text   : 'Specificity filter',
+				height : 15
+	        }          
 
             ],
             //end tbar
