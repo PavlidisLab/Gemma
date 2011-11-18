@@ -20,6 +20,8 @@
 		<%-- for dwr creation of javascript objects to mirror java value objects--%>
 		<script type='text/javascript' src='/Gemma/dwr/interface/DatabaseBackedExpressionExperimentSetValueObject.js'></script>
 		<script type='text/javascript' src='/Gemma/scripts/app/valueObjectsInheritanceStructure.js'></script>
+		
+		<%-- for registration, possible from any page--%>
 		<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
 		
 		
@@ -54,26 +56,10 @@
 				</div>
 
 
-				<!-- div id="nav" class="inner">
-					<!--  make sure menus are not in front of other things  >
-					<div class="wrapper"
-						style="float: right; position: relative; right: 15px; top: 0px">
-						<h2 class="accessibility">
-							Navigation
-						</h2>
-						<jsp:include page="/WEB-INF/pages/menu.jsp" />
-					</div>
-				</div-->
-				<%-- end nav --%>
-
 			</div>
 			
 			<jsp:include page="/common/userStatusVariables.jsp" />
-			<%-- end content --%>
 
-			<!-- div id="footer" class="clearfix">
-				<jsp:include page="/common/footer.jsp" />
-			</div-->
 		</div>
 
 	</body>
