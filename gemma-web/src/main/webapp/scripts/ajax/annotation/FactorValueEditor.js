@@ -291,8 +291,12 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		}
 
 		this.getTopToolbar().on("toggleExpand", function() {
-					this.getView().toggleAllGroups();
+					this.getView().toggleAllGroups(true);
 				}.createDelegate(this), this);
+		
+		this.getTopToolbar().on("toggleCollapse", function() {
+			this.getView().toggleAllGroups(false);
+		}.createDelegate(this), this);
 
 		if (this.experimentalFactor.id) {
 			this.store.load({
@@ -426,7 +430,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 			initComponent : function() {
 				Gemma.FactorValueToolbar.superclass.initComponent.call(this);
-				this.addEvents("create", "save", "delete", "undo", "toggleExpand");
+				this.addEvents("create", "save", "delete", "undo", "toggleExpand", "toggleCollapse");
 			},
 
 			onRender : function(c, p) {
@@ -486,18 +490,33 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 					this.addSpacer();
 					this.addButton(this.revertButton);
 				}
+				
+				this.collapseButton = new Ext.Toolbar.Button({
+					text : "Collapse all",
+					tooltip : "Hide all factor value details",
+					handler : function() {
+						this.fireEvent("toggleCollapse");
+					},
+					scope : this
+				});
+
+				this.addFill();
+				this.addButton(this.collapseButton);
 
 				this.expandButton = new Ext.Toolbar.Button({
-							text : "Expand/collapse all",
-							tooltip : "Show/hide all factor value details",
+							text : "Expand all",
+							tooltip : "Show all factor value details",
 							handler : function() {
 								this.fireEvent("toggleExpand");
 							},
 							scope : this
 						});
-
+				
 				this.addFill();
 				this.addButton(this.expandButton);
+
+				
+				
 
 				if (this.editable) {
 					this.characteristicToolbar = new Gemma.FactorValueCharacteristicToolbar({
