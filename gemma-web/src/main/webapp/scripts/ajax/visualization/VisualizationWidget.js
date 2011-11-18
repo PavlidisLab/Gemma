@@ -624,7 +624,9 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 	thumbnails : true,
 
 	// supply an initial default. Important!
-	tpl : Gemma.getProfileThumbnailTemplate(false, true),
+	// default params will be updated in initComponent based on 
+	// this.heatmapMode & this.havePvalues
+	tpl : Gemma.getProfileThumbnailTemplate(true, true),
 
 	showThumbNails : true,
 
@@ -891,6 +893,10 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 	},
 
 	initComponent : function() {
+
+		// update default config with other configs
+		// I would remove tpl from default configs altogether, but it seems required 
+		this.tpl = Gemma.getProfileThumbnailTemplate(this.heatmapMode, this.havePvalues);
 
 		this.zoomLegendId = 'zoomLegend-' + Ext.id();
 
