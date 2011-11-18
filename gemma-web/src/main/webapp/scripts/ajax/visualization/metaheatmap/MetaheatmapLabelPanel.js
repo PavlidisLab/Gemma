@@ -135,6 +135,10 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 		}
 		this.clearCanvas_();
 		
+		if (this.tree.isEmpty) {
+			return;
+		}
+			
 		this.alternateColorCounter = [];
 		for (var i = 0; i < this.tree.root.level; i++) {
 			this.alternateColorCounter.push(0);

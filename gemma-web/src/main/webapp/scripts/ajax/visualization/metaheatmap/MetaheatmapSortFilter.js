@@ -225,6 +225,10 @@ Gemma.Metaheatmap.SortedFilteredTree = function (items, sortSettings, filterSett
 		
 	this.applyZoom = function (newItemSize)
 	{	
+		if (this.isEmpty) {
+			return;
+		}
+		
 		this.root.display.levelToY = [];
 		this.root.display.levelToY.push(120);
 
@@ -234,6 +238,9 @@ Gemma.Metaheatmap.SortedFilteredTree = function (items, sortSettings, filterSett
 				
 	this.findItemByCoordinate = function (coordinate)
 	{
+		if (this.isEmpty) {
+			return null;
+		}
 		return this.root.findItemByCoordinate (coordinate);
 	};
 		
@@ -303,5 +310,10 @@ Gemma.Metaheatmap.SortedFilteredTree = function (items, sortSettings, filterSett
 	// Construct tree from items. 	
 	var filteredItems = this.filter_ (items);
 	this.numFiltered = items.length - filteredItems.length;
-	this.root = this.constructTree_  (filteredItems, 0);					
+	if (filteredItems.length == 0) {
+		this.isEmpty = true;
+	} else {
+		this.root = this.constructTree_  (filteredItems, 0);
+		this.isEmpty = false;
+	}
 };

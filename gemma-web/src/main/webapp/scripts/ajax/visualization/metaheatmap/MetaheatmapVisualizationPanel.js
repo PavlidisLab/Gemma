@@ -276,10 +276,9 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 	 * update size of top left control panel so that side labels line up with data rows 
 	 */
 	updatePnlMiniControlSize: function(){
-		
 		// update size of top left control panel so that gene labels line up with data rows 
 		var topPadding = 0; // TODO get actual top padding from somewhere
-		this.fixedWidthCol.pnlMiniControl.setHeight(this.variableWidthCol.boxTopLabels.getHeight() + topPadding);
+		this.fixedWidthCol.pnlMiniControl.setHeight(Math.max(140, this.variableWidthCol.boxTopLabels.getHeight()) + topPadding);
 	},
 	
 	redraw : function () {
