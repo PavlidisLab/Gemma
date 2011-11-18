@@ -1,9 +1,11 @@
 
 /**
  * Dialog to ask user for information about a new set (or potentially modifications to an existing one)
- * 
+ * <p>
+ * May provide a store, used during validation of set name.
  * @extends Ext.Window
  */
+
 Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 			width : 500,
 			height : 300,
@@ -11,6 +13,14 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 			title : "Provide or edit group details",
 			shadow : true,
 			modal : true,
+			/**
+			 * taxon combo option to make it only display taxa with experiments
+			 */
+			isDisplayTaxonWithDatasets : false,
+			/**
+			 * optional config, if set it will be used during validation to check for set name duplicates
+			 */
+			store : false,
 			/**
 			 * set the taxon combo to the corresponding id param and optionally disable the combo
 			 * @param taxonId
@@ -33,7 +43,12 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 				this.taxCombo = new Gemma.TaxonCombo({
 								name: 'newEesetTaxon',
 								fieldLabel: 'Taxon',
-								required:true
+								isDisplayTaxonWithDatasets: this.isDisplayTaxonWithDatasets,
+								invalidText: "You must select a taxon",
+								msgTarget: 'side',
+								validator: function(val){
+									return (val === "" || val === undefined || val === null)?'Taxon value required':true; 
+								}
 							});
 				
 				
@@ -81,26 +96,49 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 					}, {
 						text: "OK",
 						scope:this,
-						handler: function(){
-							if (!this.formPanel.fieldSet.nameField.validate()) {
-								return;
-							}
-							var values = this.formPanel.getForm().getValues();
-							var taxon = this.formPanel.getForm().findField('newEesetTaxon').getTaxon();
-							this.fireEvent("commit", {
-								name: values.newSetName,
-								description: values.newSetDescription,
-								publik: (typeof values.publik !== "undefined" && values.publik === "on"),
-								taxon: taxon
-							});
-							this.hide();
-							return;
-						}
+						handler : this.onCommit.createDelegate(this)
 					}]
 				
 				});
 
 				Gemma.CreateSetDetailsWindow.superclass.initComponent.call(this);
 				this.addEvents("commit");
+			},
+			/**
+			 * private
+			 */
+			onCommit: function(){
+				if (this.taxCombo.validate() &&
+				this.formPanel.fieldSet.nameField.validate()) {
+				
+					var values = this.formPanel.getForm().getValues();
+					var taxon = this.formPanel.getForm().findField('newEesetTaxon').getTaxon();
+					
+					// if store was specified, check for duplicate names
+					if (this.store && this.store instanceof Ext.data.Store) {
+						var indexOfExisting = this.store.findBy(function(record, id){
+							return record.get("name") === values.newSetName;
+						}, this);
+						
+						if (indexOfExisting >= 0) {
+							/*
+							 * This might not be good enough, since sets they don't own
+							 * won't be listed - but we'll figure it out on the server
+							 * side.
+							 */
+							Ext.Msg.alert("Duplicate name", "Please provide a previously unused name for the set");
+							return;
+						}
+					}
+					
+					this.fireEvent("commit", {
+						name: values.newSetName,
+						description: values.newSetDescription,
+						publik: (typeof values.publik !== "undefined" && values.publik === "on"),
+						taxon: taxon
+					});
+					this.hide();
+				}
+				return;
 			}
 		});

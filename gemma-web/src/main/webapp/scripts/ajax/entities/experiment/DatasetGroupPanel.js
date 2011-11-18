@@ -28,7 +28,8 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 
 			getNewDetails : function() {
 				if (!this.detailsWin) {
-					this.detailsWin = new Gemma.EESetDetailsDialog({
+					this.detailsWin = new Gemma.CreateSetDetailsWindow({
+								isDisplayTaxonWithDatasets: true,
 								store : this.ownerCt.getStore()
 							});
 				}
@@ -522,108 +523,3 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 	}
 
 });
-
-/**
- * Dialog to ask user for information about a new set (or potentially
- * modifications to an existing one)
- * <p>
- * Must provide a store, used during validation.
- * 
- * @class Gemma.EESetDetailsDialog
- * @extends Ext.Window
- */
-Gemma.EESetDetailsDialog = Ext.extend(Ext.Window, {
-			width : 500,
-			height : 300,
-			closeAction : 'hide',
-			title : "Provide or edit expression experiment set details",
-			shadow : true,
-			modal : true,
-
-			/**
-			 * 
-			 */
-			onCommit : function() {
-				var values = Ext.getCmp(this.formId).getForm().getValues();
-				var taxon = Ext.getCmp(this.formId).getForm().findField('newEesetTaxon').getTaxon();
-
-				var indexOfExisting = this.store.findBy(function(record, id) {
-							return record.get("name") === values.newEesetName;
-						}, this);
-
-				if (indexOfExisting >= 0) {
-					/*
-					 * This might not be good enough, since sets they don't own
-					 * won't be listed - but we'll figure it out on the server
-					 * side.
-					 */
-					Ext.Msg.alert("Duplicate name", "Please provide a previously unused name for the set");
-					return;
-				} else {
-					this.hide();
-
-					return this.fireEvent("commit", {
-								name : values.newEesetName,
-								description : values.newEesetDescription,
-								publik: (values.publik && values.publik === "on"),
-								taxon : taxon
-							});
-				}
-			},
-
-			/**
-			 * 
-			 */
-			initComponent : function() {
-
-				this.formId = Ext.id();
-
-				Ext.apply(this, {
-							items : new Ext.FormPanel({
-										frame : true,
-										labelAlign : 'left',
-										id : this.formId,
-										height : 250,
-										items : new Ext.form.FieldSet({
-													height : 200,
-													items : [new Gemma.TaxonCombo({
-																		isDisplayTaxonWithDatasets : true,
-																		name : 'newEesetTaxon',
-																		fieldLabel : 'Taxon',
-																		required:true
-																	}), new Ext.form.TextField({
-																		fieldLabel : 'Name',
-																		allowBlank : false,
-																		name : 'newEesetName',
-																		minLength : 3,
-																		invalidText : "You must provide a name",
-																		width : 300
-																	}), new Ext.form.TextArea({
-																		fieldLabel : 'Description',
-																		name : 'newEesetDescription',
-																		value : this.description,
-																		width : 300
-																	}), new Ext.form.Checkbox({
-																		fieldLabel : 'Public group',
-																		name : 'publik',
-																		checked: this.publik,
-																		width : 300
-																	})]
-												}),
-										buttons : [{
-													text : "Cancel",
-													handler : this.hide.createDelegate(this, [])
-												}, {
-													text : "OK",
-													handler : this.onCommit.createDelegate(this),
-													scope : this,
-													tooltip : "OK"
-												}]
-
-									})
-						});
-
-				Gemma.EESetDetailsDialog.superclass.initComponent.call(this);
-				this.addEvents("commit");
-			}
-		});
