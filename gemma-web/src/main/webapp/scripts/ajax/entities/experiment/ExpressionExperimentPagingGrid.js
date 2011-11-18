@@ -236,7 +236,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         this.getBottomToolbar().bind(idsStore);
 		// reconfigure grid to use new store
 		this.reconfigure(idsStore, this.getColumnModel());
-		
+		this.nowSubset();
 	},
 		
 	/**
@@ -403,7 +403,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
         });
         Ext.apply(this, {
             store: pageStore,
-            tbar: [eeCombo, '-', '->', subsetText, showAllButton, '-', editMine],
+            tbar: [eeCombo,'->', subsetText, showAllButton, '-', editMine],
             bbar: mybbar
         });
         if (this.rowExpander) {
