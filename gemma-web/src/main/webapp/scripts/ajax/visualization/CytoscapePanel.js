@@ -377,11 +377,11 @@ Ext.Panel, {
                 	var htmlString = '<img src="/Gemma/images/cytoscapehelp.png"/>';
 
                     var win = new Ext.Window({
-                        title: 'Help'
-
-                        ,
+                        title: 'Help',
+                        height:720,                 
                         plain: true,
-                        html: htmlString
+                        html: htmlString,
+                        autoScroll:true
                     });
                     win.show();                	
                     
