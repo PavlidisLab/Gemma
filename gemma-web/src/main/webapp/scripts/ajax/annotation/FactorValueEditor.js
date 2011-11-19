@@ -135,10 +135,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 								id : "charId"
 							}, this.record),
 					groupField : "id",
-					sortInfo : {
+					/*sortInfo : {
 						field : "category",
 						direction : "ASC"
-					}
+					}*/
 				});
 
 		/*
