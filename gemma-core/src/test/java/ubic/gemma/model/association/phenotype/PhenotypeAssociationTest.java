@@ -14,7 +14,6 @@
  */
 package ubic.gemma.model.association.phenotype;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -57,10 +56,15 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private String geneNCBI = "";
     private UrlEvidenceValueObject evidence = null;
     private String phenotypeValue = "";
+    private String phenotypeValueUri = "";
     private String phenotypeCategory = "";
+    private String phenotypeCategoryUri = "";
+
     private Set<CharacteristicValueObject> phenotypes = null;
 
     private Gene gene;
+    
+    private GeneEvidenceValueObject geneValue = null;
 
     @Before
     public void setup() {
@@ -69,11 +73,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         this.geneNCBI = RandomStringUtils.randomNumeric( 6 );
         // Phenotype
         this.phenotypeValue = RandomStringUtils.randomAlphabetic( 6 );
+        this.phenotypeValueUri = RandomStringUtils.randomAlphabetic( 6 );
         this.phenotypeCategory = RandomStringUtils.randomAlphabetic( 6 );
+        this.phenotypeCategoryUri = RandomStringUtils.randomAlphabetic( 6 );
 
         // Evidence
         CharacteristicValueObject phenotype = new CharacteristicValueObject( this.phenotypeValue,
-                this.phenotypeCategory );
+                this.phenotypeCategory, this.phenotypeValueUri, this.phenotypeCategoryUri );
         this.phenotypes = new HashSet<CharacteristicValueObject>();
         this.phenotypes.add( phenotype );
 
@@ -88,7 +94,8 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     public void tearDown() {
         if ( this.gene != null ) {
             this.gene.getPhenotypeAssociations().clear();
-            this.geneService.remove( this.gene );
+            Gene myGene = this.geneService.load( this.geneValue.getId() );
+            this.geneService.remove( myGene );
         }
     }
 
@@ -98,37 +105,16 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 1 - call the service to add the phenotype association and save the results to the database
         // ********************************************************************************************
-        GeneEvidenceValueObject geneValue = this.phenoAssoService.create( this.geneNCBI, this.evidence );
+        this.geneValue = this.phenoAssoService.create( this.geneNCBI, this.evidence );
 
-        assertNotNull( geneValue );
-        assertNotNull( geneValue.getEvidence() );
-        assertTrue( !geneValue.getEvidence().isEmpty() );
+        assertNotNull( this.geneValue );
+        assertNotNull( this.geneValue.getEvidence() );
+        assertTrue( !this.geneValue.getEvidence().isEmpty() );
 
-        // ********************************************************************************************
-        // 2 - call the service to find all gene for a given phenotype
-        // ********************************************************************************************
-        Set<String> phenotypesValueUri = new HashSet<String>();
-        phenotypesValueUri.add( this.phenotypeValue );
-        Collection<GeneEvidenceValueObject> geneInfoValueObjects = this.phenoAssoService
-                .findCandidateGenes( phenotypesValueUri );
-
-        assertNotNull( geneInfoValueObjects );
-        assertTrue( !geneInfoValueObjects.isEmpty() );
-
-        // ********************************************************************************************
-        // 3 - call the service to find all evidence and phenotypes for a gene
-        // ********************************************************************************************
-        Collection<EvidenceValueObject> evidenceFound = this.phenoAssoService.findEvidenceByGeneNCBI( this.geneNCBI );
-        assertNotNull( evidenceFound );
-
-        // ********************************************************************************************
-        // 4 - Delete the Association
-        // ********************************************************************************************
-        for ( EvidenceValueObject evidenceValueObject : evidenceFound ) {
-            this.phenoAssoService.remove( evidenceValueObject.getDatabaseId() );
+        for ( EvidenceValueObject evidenceValueObject : this.geneValue.getEvidence() ) {
+            EvidenceValueObject evidenceVO = this.phenoAssoService.load( evidenceValueObject.getDatabaseId() );
+            assertNotNull( evidenceVO );
         }
-        assertEquals( 0, this.phenoAssoService.findCandidateGenes( phenotypesValueUri ).size() );
-
     }
 
     // @Test

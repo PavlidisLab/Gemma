@@ -70,7 +70,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     }
 
     @Override
-    /** order TreeCharacteristicValueObjects by deep */
     public int compareTo( CharacteristicValueObject c ) {
 
         if ( c instanceof TreeCharacteristicValueObject ) {
