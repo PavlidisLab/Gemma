@@ -17,6 +17,7 @@ package ubic.gemma.model.association.phenotype;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.Criteria;
 import org.hibernate.ScrollMode;
@@ -40,30 +41,39 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         super.setSessionFactory( sessionFactory );
     }
 
-    /** find Genes link to a phenotype */ 
+    /** find Genes link to a phenotype */
+    @SuppressWarnings("unchecked")
     @Override
-    public Collection<Gene> findByPhenotype( String phenotypeValue ) {
+    public Collection<Gene> findByPhenotype( Set<String> phenotypesValueUri ) {
 
         Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
                 .createCriteria( "phenotypeAssociations" ).createCriteria( "phenotypes" )
-                .add( Restrictions.like( "value", phenotypeValue ) );
+                .add( Restrictions.in( "valueUri", phenotypesValueUri ) );
 
         return geneQueryCriteria.list();
-
     }
 
     /**
      * count the number of Genes with a phenotype
      */
     @Override
-    public Long countGenesWithPhenotype( String phenotypeValue ) {
+    public Long countGenesWithPhenotype( Collection<String> phenotypesUri ) {
+
+        String endQuery = "";
+
+        for ( String phenotypeUri : phenotypesUri ) {
+
+            endQuery = endQuery + " value_uri='" + phenotypeUri + "' OR";
+        }
+
+        endQuery = endQuery.substring( 0, endQuery.length() - 2 ) + ")";
 
         long value = 0;
 
         // TODO make hsql query
-        String queryString = "select count( distinct GENE_FK) from PHENOTYPE_ASSOCIATION where id in( SELECT PHENOTYPE_ASSOCIATION_FK FROM CHARACTERISTIC where value='"
-                + phenotypeValue.replaceAll( "'", "\\\\'" ) + "')";
+        String queryString = "select count( distinct GENE_FK) from PHENOTYPE_ASSOCIATION where id in( SELECT PHENOTYPE_ASSOCIATION_FK FROM CHARACTERISTIC where"
+                + endQuery;
 
         org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
 
@@ -79,9 +89,9 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
      * find all phenotypes
      */
     @Override
-    public Collection<CharacteristicValueObject> loadAllPhenotypes() {
+    public Set<CharacteristicValueObject> loadAllPhenotypes() {
 
-        Collection<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
+        Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
         // TODO make hsql query
         String queryString = "select distinct value,value_uri,category,category_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value";
@@ -102,5 +112,26 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
         results.close();
 
         return phenotypes;
+    }
+
+    /** load all valueURI of Phenotype in the database */
+    @Override
+    public Set<String> loadAllPhenotypesURI() {
+        Set<String> phenotypesURI = new HashSet<String>();
+
+        // TODO make hsql query
+        String queryString = "select value_uri from CHARACTERISTIC where phenotype_association_fk is not null group by value";
+        org.hibernate.SQLQuery queryObject = this.getSession().createSQLQuery( queryString );
+
+        ScrollableResults results = queryObject.scroll( ScrollMode.FORWARD_ONLY );
+        while ( results.next() ) {
+
+            String valueUri = ( String ) results.get( 0 );
+
+            phenotypesURI.add( valueUri );
+        }
+        results.close();
+
+        return phenotypesURI;
     }
 }

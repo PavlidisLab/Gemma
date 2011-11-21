@@ -16,6 +16,7 @@ package ubic.gemma.web.services.rest;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import javax.ws.rs.GET;
@@ -34,39 +35,41 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
 
 /**
- * RESTful web services for phenotypes 
+ * RESTful web services for phenotypes
  * 
  * @author frances
  * @version $Id$
-*/
+ */
 
 @Component
 @Path("/phenotype")
 public class PhenotypeWebService {
-	
+
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @GET
     @Path("/load-all-phenotypes")
-	@Produces(MediaType.APPLICATION_JSON)
-    public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {	
-    	return new JsonReaderResponse<CharacteristicValueObject>(
-    			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.loadAllPhenotypes()));
+    @Produces(MediaType.APPLICATION_JSON)
+    public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {
+        return new JsonReaderResponse<CharacteristicValueObject>( new ArrayList<CharacteristicValueObject>(
+                this.phenotypeAssociationManagerService.loadAllPhenotypes() ) );
     }
 
     @GET
     @Path("/find-candidate-genes")
-	@Produces(MediaType.APPLICATION_JSON)
-    public JsonReaderResponse<GeneValueObject> findCandidateGenes(@QueryParam("phenotypeValue") List<String> phenotypeValues) {
-    	return new JsonReaderResponse<GeneValueObject>(
-    			new ArrayList<GeneValueObject>(phenotypeAssociationManagerService.findCandidateGenes(phenotypeValues.toArray(new String[0]))));
+    @Produces(MediaType.APPLICATION_JSON)
+    // TO DO frances
+    public JsonReaderResponse<GeneValueObject> findCandidateGenes(
+            @QueryParam("phenotypeValue") List<String> phenotypeValues ) {
+        return new JsonReaderResponse<GeneValueObject>( new ArrayList<GeneValueObject>(
+                this.phenotypeAssociationManagerService.findCandidateGenes( new HashSet<String>( phenotypeValues ) ) ) );
     }
 
     @GET
     @Path("/find-evidence")
-	@Produces(MediaType.APPLICATION_JSON)
-    public Collection<EvidenceValueObject> findEvidence(@QueryParam("geneId") Long geneId) {
-    	return phenotypeAssociationManagerService.findEvidenceByGeneId(geneId);
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<EvidenceValueObject> findEvidence( @QueryParam("geneId") Long geneId ) {
+        return this.phenotypeAssociationManagerService.findEvidenceByGeneId( geneId );
     }
 }

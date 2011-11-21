@@ -51,7 +51,7 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
 
         this.experimentCharacteristics = experimentCharacteristics;
     }
-    
+
     public ExperimentalEvidenceValueObject() {
         super();
     }
@@ -73,8 +73,13 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
             for ( Characteristic c : collectionCharacteristics ) {
                 if ( c instanceof VocabCharacteristicImpl ) {
                     VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
-                    this.experimentCharacteristics.add( new CharacteristicValueObject( voCha.getValue(), voCha
-                            .getCategory(), voCha.getValueUri(), voCha.getCategoryUri() ) );
+
+                    CharacteristicValueObject chaValueObject = new CharacteristicValueObject( voCha.getValue(),
+                            voCha.getCategory(), voCha.getValueUri(), voCha.getCategoryUri() );
+
+                    chaValueObject.setId( voCha.getId() );
+
+                    this.experimentCharacteristics.add( chaValueObject );
                 } else {
                     this.experimentCharacteristics.add( new CharacteristicValueObject( c.getValue(), c.getCategory() ) );
                 }

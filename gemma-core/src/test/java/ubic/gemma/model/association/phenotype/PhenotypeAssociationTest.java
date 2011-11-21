@@ -107,8 +107,10 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         // ********************************************************************************************
         // 2 - call the service to find all gene for a given phenotype
         // ********************************************************************************************
+        Set<String> phenotypesValueUri = new HashSet<String>();
+        phenotypesValueUri.add( this.phenotypeValue );
         Collection<GeneEvidenceValueObject> geneInfoValueObjects = this.phenoAssoService
-                .findCandidateGenes( this.phenotypeValue );
+                .findCandidateGenes( phenotypesValueUri );
 
         assertNotNull( geneInfoValueObjects );
         assertTrue( !geneInfoValueObjects.isEmpty() );
@@ -125,7 +127,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         for ( EvidenceValueObject evidenceValueObject : evidenceFound ) {
             this.phenoAssoService.remove( evidenceValueObject.getDatabaseId() );
         }
-        assertEquals( 0, this.phenoAssoService.findCandidateGenes( this.phenotypeValue ).size() );
+        assertEquals( 0, this.phenoAssoService.findCandidateGenes( phenotypesValueUri ).size() );
 
     }
 
@@ -171,35 +173,6 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
             }
             System.out.println();
             System.out.println();
-        }
-    }
-
-    // not a junit test, used to check values
-    public void testFindCandidateGenes() {
-
-        Collection<GeneEvidenceValueObject> geneInfoValueObjects = this.phenoAssoService.findCandidateGenes( "CANCER" );
-
-        for ( GeneEvidenceValueObject geneInfoValueObject : geneInfoValueObjects ) {
-
-            System.out.println( "" );
-            System.out.println( "Gene name: " + geneInfoValueObject.getName() );
-            System.out.println( "" );
-            System.out.println();
-            System.out.println();
-
-            for ( EvidenceValueObject evidenceFound : geneInfoValueObject.getEvidence() ) {
-
-                System.out.println( "Found evidence: " + evidenceFound.getDatabaseId() + "   "
-                        + evidenceFound.getDescription() );
-                System.out.println( "With phenotypes: " );
-
-                for ( CharacteristicValueObject phenotype : evidenceFound.getPhenotypes() ) {
-                    System.out.println( "Value :" + phenotype.getValue() );
-
-                }
-                System.out.println();
-                System.out.println();
-            }
         }
     }
 

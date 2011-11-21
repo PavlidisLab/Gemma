@@ -28,8 +28,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** phenotype present in the database */
     private boolean dbPhenotype = false;
 
-    private int deep = 0;
-
     public TreeCharacteristicValueObject( String value, String valueUri,
             Collection<TreeCharacteristicValueObject> children ) {
         super( value, "", valueUri, "" );
@@ -38,14 +36,6 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     public Collection<TreeCharacteristicValueObject> getChildren() {
         return this.children;
-    }
-
-    public int getDeep() {
-        return this.deep;
-    }
-
-    public void setDeep( int deep ) {
-        this.deep = deep;
     }
 
     @Override
@@ -69,14 +59,11 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
             output = output + " ******* ";
         }
 
-        // output = output + getValue() + deep + "\n";
-
-        output = output + getValue() + "\n";
+        output = output + getValue() + "   " + getOccurence() + "\n";
 
         int currentLevel = level + 1;
         for ( TreeCharacteristicValueObject treeVO : this.children ) {
             output = output + treeVO.toString( currentLevel );
-
         }
 
         return output;
@@ -87,50 +74,50 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     public int compareTo( CharacteristicValueObject c ) {
 
         if ( c instanceof TreeCharacteristicValueObject ) {
-
-            TreeCharacteristicValueObject t = ( TreeCharacteristicValueObject ) c;
-
-            // same deep, lets order by value
-            if ( this.deep == t.deep ) {
-                return this.getValue().compareToIgnoreCase( c.getValue() );
-            } else if ( this.deep > t.deep ) {
-                return -1;
-            } else {
-                return 1;
-            }
-
+            return this.getValue().compareToIgnoreCase( c.getValue() );
         }
         return super.compareTo( c );
-
     }
 
-    /** remove all nodes in the trees found in the Ontology but not in db */
+    public Collection<String> getAllChildrenUri() {
+
+        Collection<String> childrenURI = new HashSet<String>();
+
+        findAllChildPhenotypeURI( childrenURI );
+
+        return childrenURI;
+    }
+
+    private void findAllChildPhenotypeURI( Collection<String> phenotypesToFind ) {
+
+        phenotypesToFind.add( this.getValueUri() );
+
+        for ( TreeCharacteristicValueObject tree : this.getChildren() ) {
+            tree.findAllChildPhenotypeURI( phenotypesToFind );
+        }
+    }
+
     public void removeUnusedPhenotypes() {
 
-        // the new childs nodes, all node between root and flag children were removed
-        this.children = findNewChildren();
+        Collection<TreeCharacteristicValueObject> newRealChilds = new HashSet<TreeCharacteristicValueObject>();
+        findRealChild( newRealChilds );
+        this.children = newRealChilds;
 
-        // for the new childs found remove all nodes that were not flag between the childs and the next flagged child if
-        // any
         for ( TreeCharacteristicValueObject tc : this.children ) {
             tc.removeUnusedPhenotypes();
         }
+
     }
 
-    /** remove all nodes in the trees found between the root and a child node that was flag */
-    private Collection<TreeCharacteristicValueObject> findNewChildren() {
-
-        Collection<TreeCharacteristicValueObject> newChildren = new HashSet<TreeCharacteristicValueObject>();
+    private void findRealChild( Collection<TreeCharacteristicValueObject> newRealChilds ) {
 
         for ( TreeCharacteristicValueObject t : this.children ) {
             if ( t.isDbPhenotype() ) {
-                newChildren.add( t );
+                newRealChilds.add( t );
             } else {
-                t.findNewChildren();
+                t.findRealChild( newRealChilds );
             }
         }
-
-        return newChildren;
     }
 
 }

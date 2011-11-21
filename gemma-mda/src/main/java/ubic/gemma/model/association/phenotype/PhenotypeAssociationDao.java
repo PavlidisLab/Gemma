@@ -15,6 +15,7 @@
 package ubic.gemma.model.association.phenotype;
 
 import java.util.Collection;
+import java.util.Set;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
@@ -27,13 +28,14 @@ import ubic.gemma.persistence.BaseDao;
 public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
-    public Collection<Gene> findByPhenotype( String phenotypeValue );
+    public Collection<Gene> findByPhenotype( Set<String> phenotypesValueUri );
 
     /** find all phenotypes */
-    public Collection<CharacteristicValueObject> loadAllPhenotypes();
+    public Set<CharacteristicValueObject> loadAllPhenotypes();
 
-    /**
-     * count the number of Genes with a phenotype
-     */
-    public Long countGenesWithPhenotype( String phenotypeValue );
+    /** count the number of Genes with a phenotype */
+    public Long countGenesWithPhenotype( Collection<String> phenotypesUri );
+
+    /** load all valueURI of Phenotype in the database */
+    public Set<String> loadAllPhenotypesURI();
 }

@@ -15,10 +15,13 @@
 package ubic.gemma.web.controller;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,31 +40,31 @@ import ubic.gemma.web.remote.JsonReaderResponse;
  * @version $Id$
  */
 @Controller
-public class PhenotypeController extends BaseController { 
+public class PhenotypeController extends BaseController {
 
     @Autowired
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @RequestMapping(value = "/phenotypes.html", method = RequestMethod.GET)
-    public ModelAndView showAllPhenotypes(HttpServletRequest request, HttpServletResponse response) {
-    	ModelAndView mav = new ModelAndView("phenotypes");
-    	
-        mav.addObject( "phenotypeValue", request.getParameter("phenotypeValue"));
-        mav.addObject( "geneId", request.getParameter("geneId"));
+    public ModelAndView showAllPhenotypes( HttpServletRequest request, HttpServletResponse response ) {
+        ModelAndView mav = new ModelAndView( "phenotypes" );
 
-    	return mav;
+        mav.addObject( "phenotypeValue", request.getParameter( "phenotypeValue" ) );
+        mav.addObject( "geneId", request.getParameter( "geneId" ) );
+
+        return mav;
     }
-   
+
     @RequestMapping("/phenotypeAssociationForm.html")
     public ModelAndView createPhenotypeAssociationForm() {
-        return new ModelAndView("phenotypeAssociationForm");
+        return new ModelAndView( "phenotypeAssociationForm" );
     }
 
-//  Frances: This method is not being used and for testing purpose ONLY.    
-//    @RequestMapping("/phenotype-search.html")
-//    public ModelAndView searchPhenotype() {
-//        return new ModelAndView("phenotypeSearch");
-//    }
+    // Frances: This method is not being used and for testing purpose ONLY.
+    // @RequestMapping("/phenotype-search.html")
+    // public ModelAndView searchPhenotype() {
+    // return new ModelAndView("phenotypeSearch");
+    // }
 
     /**
      * Returns all genes that have given phenotypes.
@@ -69,9 +72,14 @@ public class PhenotypeController extends BaseController {
      * @param phenotypes
      * @return all genes that have given phenotypes
      */
-    public JsonReaderResponse<GeneValueObject> findCandidateGenes(String[] phenotypes) {
-    	return new JsonReaderResponse<GeneValueObject>(
-    			new ArrayList<GeneValueObject>(phenotypeAssociationManagerService.findCandidateGenes(phenotypes)));
+    public JsonReaderResponse<GeneValueObject> findCandidateGenes( String[] phenotypes ) {
+        Set<String> myPhenotypes = new HashSet<String>();
+        for ( String pheno : phenotypes ) {
+            myPhenotypes.add( pheno );
+        }
+
+        return new JsonReaderResponse<GeneValueObject>( new ArrayList<GeneValueObject>(
+                this.phenotypeAssociationManagerService.findCandidateGenes( myPhenotypes ) ) );
     }
 
     /**
@@ -80,7 +88,8 @@ public class PhenotypeController extends BaseController {
      * @return all phenotypes in the system
      */
     public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {
-    	return new JsonReaderResponse<CharacteristicValueObject>(
-    			new ArrayList<CharacteristicValueObject>(phenotypeAssociationManagerService.loadAllPhenotypes()));
+
+        return new JsonReaderResponse<CharacteristicValueObject>( new ArrayList<CharacteristicValueObject>(
+                this.phenotypeAssociationManagerService.loadAllPhenotypes() ) );
     }
 }

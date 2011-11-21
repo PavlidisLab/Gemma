@@ -15,11 +15,17 @@
 package ubic.gemma.model.association.phenotype.service;
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.springframework.security.access.annotation.Secured;
 
+import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
+import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
+import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
+import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.UrlEvidence;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -41,10 +47,10 @@ public interface PhenotypeAssociationService {
     /**
      * find Genes link to a phenotype
      * 
-     * @param phenotypeValue FIXME what is this supposed to be?
+     * @param phenotypesValueUri The Ontology valueURI of the phenotype
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<Gene> findPhenotypeAssociations( String phenotypeValue );
+    public Collection<Gene> findPhenotypeAssociations( Set<String> phenotypesValueUri );
 
     /**
      * create a GenericExperiment
@@ -58,12 +64,12 @@ public interface PhenotypeAssociationService {
      * find all phenotypes in Gemma
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<PhenotypeAssociation> loadAll();
+    public Set<PhenotypeAssociation> loadAll();
 
     /**
      * @return all the characteristics (phenotypes) used in the system.
      */
-    public Collection<CharacteristicValueObject> loadAllPhenotypes();
+    public Set<CharacteristicValueObject> loadAllPhenotypes();
 
     /**
      * find GenericExperiments by PubMed ID
@@ -78,6 +84,28 @@ public interface PhenotypeAssociationService {
     public PhenotypeAssociation load( Long id );
 
     /**
+     * load PhenotypeAssociation given an ID
+     */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExperimentalEvidence loadExperimentalEvidence( Long id );
+
+    /** load an ExternalDatabaseEvidence given an ID */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public ExternalDatabaseEvidence loadExternalDatabaseEvidence( Long id );
+
+    /** load an GenericEvidence given an ID */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public GenericEvidence loadGenericEvidence( Long id );
+
+    /** load an LiteratureEvidence given an ID */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public LiteratureEvidence loadLiteratureEvidence( Long id );
+
+    /** load an UrlEvidence given an ID */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    public UrlEvidence loadUrlEvidence( Long id );
+
+    /**
      * update a PhenotypeAssociation
      */
     @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
@@ -86,6 +114,9 @@ public interface PhenotypeAssociationService {
     /**
      * count the number of Genes with a phenotype
      */
-    public Long countGenesWithPhenotype( String phenotypeValue );
+    public Long countGenesWithPhenotype( Collection<String> phenotypesURI );
+
+    /** load all valueURI of Phenotype in the database */
+    public Set<String> loadAllPhenotypesURI();
 
 }

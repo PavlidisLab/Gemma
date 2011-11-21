@@ -63,32 +63,43 @@ public abstract class EvidenceValueObject {
 
             for ( PhenotypeAssociation phe : phenotypeAssociations ) {
 
-                EvidenceValueObject evidence = null;
+                EvidenceValueObject evidence = convert2ValueObjects( phe );
 
-                if ( phe instanceof UrlEvidence ) {
-                    evidence = new UrlEvidenceValueObject( ( UrlEvidence ) phe );
+                if ( evidence != null ) {
                     returnEvidence.add( evidence );
-                } else if ( phe instanceof ExperimentalEvidence ) {
-                    evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
-                    returnEvidence.add( evidence );
-                } else if ( phe instanceof GenericEvidence ) {
-                    evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
-                    returnEvidence.add( evidence );
-                } else if ( phe instanceof LiteratureEvidence ) {
-                    evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
-                    returnEvidence.add( evidence );
-                } else if ( phe instanceof ExternalDatabaseEvidence ) {
-                    evidence = new ExternalDatabaseEvidenceValueObject( ( ExternalDatabaseEvidence ) phe );
-                    returnEvidence.add( evidence );
-                    // TODO
-                } else if ( phe instanceof DifferentialExpressionEvidence ) {
-                    // TODO
                 }
             }
         }
         return returnEvidence;
     }
-    
+
+    /**
+     * Convert an evidence entity to its corresponding value object
+     * 
+     * @param phe The phenotype Entity
+     * @return Collection<EvidenceValueObject> its corresponding value object
+     */
+    public static EvidenceValueObject convert2ValueObjects( PhenotypeAssociation phe ) {
+
+        EvidenceValueObject evidence = null;
+
+        if ( phe instanceof UrlEvidence ) {
+            evidence = new UrlEvidenceValueObject( ( UrlEvidence ) phe );
+        } else if ( phe instanceof ExperimentalEvidence ) {
+            evidence = new ExperimentalEvidenceValueObject( ( ExperimentalEvidence ) phe );
+        } else if ( phe instanceof GenericEvidence ) {
+            evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
+        } else if ( phe instanceof LiteratureEvidence ) {
+            evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
+        } else if ( phe instanceof ExternalDatabaseEvidence ) {
+            evidence = new ExternalDatabaseEvidenceValueObject( ( ExternalDatabaseEvidence ) phe );
+        } else if ( phe instanceof DifferentialExpressionEvidence ) {
+            // TODO
+        }
+
+        return evidence;
+    }
+
     public EvidenceValueObject() {
         super();
     }
@@ -117,6 +128,8 @@ public abstract class EvidenceValueObject {
             VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
             characteristicVO = new CharacteristicValueObject( voCha.getValue().toLowerCase(), voCha.getCategory(),
                     voCha.getValueUri(), voCha.getCategoryUri() );
+
+            characteristicVO.setId( voCha.getId() );
 
             this.phenotypes.add( characteristicVO );
         }

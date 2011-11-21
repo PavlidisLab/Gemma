@@ -22,17 +22,26 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
  */
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
+    private Long id = null;
+
     private String category = "";
     private String categoryUri = "";
 
     private String value = "";
     private String valueUri = "";
 
+    /** number of occurence in all genes */
     private Long occurence = null;
 
+    /** what Ontology uses this term */
     private String ontologyUsed = null;
 
     private boolean alreadyPresentOnGene = false;
+
+    /** child term from a root */
+    private boolean child = false;
+    /** root of a query */
+    private boolean root = false;
 
     public CharacteristicValueObject( String value, String category ) {
         this.category = category;
@@ -87,6 +96,46 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.occurence = occurence;
     }
 
+    public boolean isChild() {
+        return this.child;
+    }
+
+    public void setChild( boolean child ) {
+        this.child = child;
+    }
+
+    public boolean isRoot() {
+        return this.root;
+    }
+
+    public void setRoot( boolean root ) {
+        this.root = root;
+    }
+
+    public String getOntologyUsed() {
+        return this.ontologyUsed;
+    }
+
+    public void setOntologyUsed( String ontologyUsed ) {
+        this.ontologyUsed = ontologyUsed;
+    }
+
+    public boolean getAlreadyPresentOnGene() {
+        return this.alreadyPresentOnGene;
+    }
+
+    public void setAlreadyPresentOnGene( boolean alreadyPresentOnGene ) {
+        this.alreadyPresentOnGene = alreadyPresentOnGene;
+    }
+
+    public Long getId() {
+        return this.id;
+    }
+
+    public void setId( Long id ) {
+        this.id = id;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -117,22 +166,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
             return this.value.compareToIgnoreCase( o.value );
         }
         return this.category.compareTo( o.category );
-    }
-
-    public String getOntologyUsed() {
-        return this.ontologyUsed;
-    }
-
-    public void setOntologyUsed( String ontologyUsed ) {
-        this.ontologyUsed = ontologyUsed;
-    }
-
-    public boolean getAlreadyPresentOnGene() {
-        return this.alreadyPresentOnGene;
-    }
-
-    public void setAlreadyPresentOnGene( boolean alreadyPresentOnGene ) {
-        this.alreadyPresentOnGene = alreadyPresentOnGene;
     }
 
 }

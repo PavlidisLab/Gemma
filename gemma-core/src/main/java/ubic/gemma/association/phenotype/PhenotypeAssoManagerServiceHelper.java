@@ -21,6 +21,7 @@ package ubic.gemma.association.phenotype;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +31,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.DatabaseEntryValueObject;
+import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
@@ -311,9 +313,34 @@ public class PhenotypeAssoManagerServiceHelper {
      */
     public void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
 
-        // TODO
-        phe.setDescription( evidenceValueObject.getDescription() );
+        populatePheAssoWithoutPhenotypes( phe, evidenceValueObject );
 
+        // here lets add the phenotypes
+        Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
+
+        for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
+
+            VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
+
+            myPhenotype.setValue( phenotype.getValue() );
+            myPhenotype.setCategory( phenotype.getCategory() );
+            myPhenotype.setValueUri( phenotype.getValueUri() );
+            myPhenotype.setCategoryUri( phenotype.getCategoryUri() );
+
+            myPhenotypes.add( myPhenotype );
+        }
+
+        phe.getPhenotypes().addAll( myPhenotypes );
+    }
+
+    /**
+     * Sets the fields that are the same for any evidence. Doesn't populate phenotypes
+     * 
+     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
+     * @param evidenceValueObject the value object representing a phenotype
+     */
+    public void populatePheAssoWithoutPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+        phe.setDescription( evidenceValueObject.getDescription() );
         phe.setEvidenceCode( GOEvidenceCode.fromString( evidenceValueObject.getEvidenceCode() ) );
         phe.setIsNegativeEvidence( evidenceValueObject.getIsNegativeEvidence() );
 
@@ -327,23 +354,121 @@ public class PhenotypeAssoManagerServiceHelper {
 
             phe.setAssociationType( associationType );
         }
-        // here lets add the phenotypes
-        Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
+    }
 
-        for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
+    public PhenotypeAssociation populateTypePheAsso( EvidenceValueObject evidence ) {
 
-            // TODO how to set up correct phenotype
-            VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
+        Long id = evidence.getDatabaseId();
 
-            myPhenotype.setValue( phenotype.getValue() );
-            myPhenotype.setCategory( phenotype.getCategory() );
-            myPhenotype.setValueUri( phenotype.getValueUri() );
-            myPhenotype.setCategoryUri( phenotype.getCategoryUri() );
+        if ( evidence instanceof LiteratureEvidenceValueObject ) {
 
-            myPhenotypes.add( myPhenotype );
+            LiteratureEvidenceValueObject literatureVO = ( LiteratureEvidenceValueObject ) evidence;
+            LiteratureEvidence literatureEvidence = this.phenotypeAssociationService.loadLiteratureEvidence( id );
+
+            String primaryPubMed = literatureVO.getCitationValueObject().getPubmedAccession();
+
+            // primary bibliographic reference
+            literatureEvidence.setCitation( findOrCreateBibliographicReference( primaryPubMed ) );
+
+        } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
+
+            ExperimentalEvidenceValueObject experimentalVO = ( ExperimentalEvidenceValueObject ) evidence;
+            ExperimentalEvidence experimentalEvidence = this.phenotypeAssociationService.loadExperimentalEvidence( id );
+            Investigation experiment = experimentalEvidence.getExperiment();
+
+            // ***************************************************************
+            // 1- take care of the characteristic an investigation can have
+            // ***************************************************************
+
+            // the final characteristics to update the evidence with
+            Collection<Characteristic> characteristicsUpdated = new HashSet<Characteristic>();
+
+            // To determine the change in the Characteristic for an Investigation, the id will be used
+            Map<Long, Characteristic> databaseIds = new HashMap<Long, Characteristic>();
+
+            for ( Characteristic cha : experiment.getCharacteristics() ) {
+                databaseIds.put( cha.getId(), cha );
+            }
+
+            Set<Long> newDatabaseIds = new HashSet<Long>();
+
+            for ( CharacteristicValueObject chaVO : experimentalVO.getExperimentCharacteristics() ) {
+
+                // new characteristic, since no database id received
+                if ( chaVO.getId() == null ) {
+
+                    VocabCharacteristic characteristic = VocabCharacteristic.Factory.newInstance();
+
+                    characteristic.setValue( chaVO.getValue() );
+                    characteristic.setCategory( chaVO.getCategory() );
+                    characteristic.setValueUri( chaVO.getValueUri() );
+                    characteristic.setCategoryUri( chaVO.getCategoryUri() );
+                    characteristicsUpdated.add( characteristic );
+
+                }
+                // not new but could be modified, take the values inside VO
+                else {
+                    newDatabaseIds.add( chaVO.getId() );
+
+                    VocabCharacteristic cha = ( VocabCharacteristic ) databaseIds.get( chaVO.getId() );
+
+                    cha.setValue( chaVO.getValue() );
+                    cha.setValueUri( chaVO.getValueUri() );
+                    cha.setCategory( chaVO.getCategory() );
+                    cha.setCategoryUri( chaVO.getCategoryUri() );
+
+                    characteristicsUpdated.add( cha );
+                }
+            }
+
+            // verify if something was deleted
+            for ( Characteristic cha : experiment.getCharacteristics() ) {
+
+                if ( !newDatabaseIds.contains( cha.getId() ) ) {
+                    // delete characteristic from the database
+                    this.characteristicService.delete( cha.getId() );
+                }
+            }
+
+            experiment.getCharacteristics().clear();
+            experiment.getCharacteristics().addAll( characteristicsUpdated );
+
+            // ***************************************************************
+            // 2- The bibliographic references
+            // ***************************************************************
+
+            String primaryPubMed = experimentalVO.getPrimaryPublicationCitationValueObject().getPubmedAccession();
+
+            // primary bibliographic reference
+            experiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubMed ) );
+
+            Set<String> otherRelevantPubMed = new HashSet<String>();
+
+            for ( CitationValueObject citation : experimentalVO.getRelevantPublicationsValueObjects() ) {
+                otherRelevantPubMed.add( citation.getPubmedAccession() );
+            }
+
+            // relevant bibliographic references
+            experiment.setOtherRelevantPublications( findOrCreateBibliographicReference( otherRelevantPubMed ) );
+
+            return experimentalEvidence;
+
+        } else if ( evidence instanceof GenericEvidenceValueObject ) {
+            // nothing special to do
+            return this.phenotypeAssociationService.loadGenericEvidence( id );
+        } else if ( evidence instanceof UrlEvidenceValueObject ) {
+            // nothing special to do
+            return this.phenotypeAssociationService.loadUrlEvidence( id );
+        } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
+            // TODO
+        } else if ( evidence instanceof ExternalDatabaseEvidenceValueObject ) {
+            ExternalDatabaseEvidenceValueObject externalDatabaseVO = ( ExternalDatabaseEvidenceValueObject ) evidence;
+            ExternalDatabaseEvidence externalDatabaseEvidence = this.phenotypeAssociationService
+                    .loadExternalDatabaseEvidence( id );
+            externalDatabaseEvidence.getEvidenceSource().setAccession(
+                    externalDatabaseVO.getDatabaseEntryValueObject().getAccession() );
         }
-
-        phe.getPhenotypes().addAll( myPhenotypes );
+        return null;
     }
 
     /** calls findOrCreateBibliographicReference for a Collection */
@@ -410,56 +535,29 @@ public class PhenotypeAssoManagerServiceHelper {
     }
 
     /** Ontology term to TreeCharacteristicValueObject */
-    public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm ) {
+    public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
+            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
 
         Collection<TreeCharacteristicValueObject> childs = new HashSet<TreeCharacteristicValueObject>();
 
         for ( OntologyTerm ot : ontologyTerms ) {
-            childs.add( ontology2TreeCharacteristicValueObjects( ot ) );
+
+            if ( phenotypeFoundInTree.get( ot.getUri() ) != null ) {
+
+                childs.add( phenotypeFoundInTree.get( ot.getUri() ) );
+            } else {
+                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot, phenotypeFoundInTree );
+                phenotypeFoundInTree.put( tree.getValueUri(), tree );
+                childs.add( tree );
+            }
         }
 
         TreeCharacteristicValueObject treeCharacteristicVO = new TreeCharacteristicValueObject(
                 ontologyTerm.getLabel(), ontologyTerm.getUri(), childs );
 
-        int maxDeep = 0;
-
-        // look for max deep
-        for ( TreeCharacteristicValueObject t : childs ) {
-            if ( t.getDeep() > maxDeep ) {
-                maxDeep = t.getDeep();
-            }
-        }
-        maxDeep++;
-        // deepest child found
-        treeCharacteristicVO.setDeep( maxDeep );
-
         return treeCharacteristicVO;
-    }
-
-    /** Add tree to finalResult and keep track of its nodes */
-    public void addToFinalResult( TreeCharacteristicValueObject tree,
-            HashMap<String, TreeCharacteristicValueObject> hs, Collection<TreeCharacteristicValueObject> finalTrees ) {
-
-        tree.setDeep( 0 );
-
-        finalTrees.add( tree );
-
-        // keep track in a HashMap of all nodes found
-        for ( TreeCharacteristicValueObject t : tree.getChildren() ) {
-            hs.put( t.getValueUri(), t );
-            addTermsToHash( t, hs );
-        }
-    }
-
-    private void addTermsToHash( TreeCharacteristicValueObject tree, HashMap<String, TreeCharacteristicValueObject> hs ) {
-
-        for ( TreeCharacteristicValueObject t : tree.getChildren() ) {
-            hs.put( t.getValueUri(), t );
-
-            addTermsToHash( t, hs );
-        }
     }
 
 }

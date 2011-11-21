@@ -15,6 +15,7 @@
 package ubic.gemma.association.phenotype;
 
 import java.util.Collection;
+import java.util.Set;
 
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
@@ -22,7 +23,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObjec
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 
 /**
- * TODO Document Me
+ * High Level Service used to add Candidate Gene Management System capabilities
  * 
  * @author paul
  * @version $Id$
@@ -55,12 +56,12 @@ public interface PhenotypeAssociationManagerService {
     public Collection<EvidenceValueObject> findEvidenceByGeneId( Long geneId );
 
     /**
-     * Given an array of phenotypes returns the genes that have all those phenotypes
+     * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
-     * @param 1 to many phenotypes
+     * @param phenotypesValuesUri the roots phenotype of the query
      * @return A collection of the genes found
      */
-    public Collection<GeneEvidenceValueObject> findCandidateGenes( String... phenotypesValues );
+    public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesURI );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype
@@ -75,6 +76,13 @@ public interface PhenotypeAssociationManagerService {
      * @param id The Evidence database id
      */
     public void remove( Long id );
+
+    /**
+     * Load an evidence
+     * 
+     * @param id The Evidence database id
+     */
+    public EvidenceValueObject load( Long id );
 
     /**
      * Modify an existing evidence
@@ -101,8 +109,7 @@ public interface PhenotypeAssociationManagerService {
     public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId );
 
     /**
-     * 1- Loads all phenotypes in Gemma 2- For each phenotype construct a tree 3- Order the trees by deep 4- For each
-     * tree place it in an other deeper tree if possible 5- Remove phenotypes in trees not in the database
+     * Using all the phenotypes in the database, builds a tree structure using the Ontology, uses cache for fast access
      * 
      * @return Collection<TreeCharacteristicValueObject> list of all phenotypes in gemma represented as trees
      */

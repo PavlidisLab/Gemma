@@ -15,14 +15,25 @@
 package ubic.gemma.model.association.phenotype.service;
 
 import java.util.Collection;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
+import ubic.gemma.model.association.phenotype.ExperimentalEvidenceDao;
+import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
+import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidenceDao;
+import ubic.gemma.model.association.phenotype.GenericEvidence;
+import ubic.gemma.model.association.phenotype.GenericEvidenceDao;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.GenericExperimentDao;
+import ubic.gemma.model.association.phenotype.LiteratureEvidence;
+import ubic.gemma.model.association.phenotype.LiteratureEvidenceDao;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociationDao;
+import ubic.gemma.model.association.phenotype.UrlEvidence;
+import ubic.gemma.model.association.phenotype.UrlEvidenceDao;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
@@ -34,6 +45,21 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     @Autowired
     private PhenotypeAssociationDao phenotypeAssociationDao;
+
+    @Autowired
+    private ExperimentalEvidenceDao experimentalEvidenceDao;
+
+    @Autowired
+    private ExternalDatabaseEvidenceDao externalDatabaseEvidenceDao;
+
+    @Autowired
+    private GenericEvidenceDao genericEvidenceDao;
+
+    @Autowired
+    private LiteratureEvidenceDao literatureEvidenceDao;
+
+    @Autowired
+    private UrlEvidenceDao urlEvidenceDao;
 
     @Autowired
     private GenericExperimentDao genericExperimentDao;
@@ -49,14 +75,15 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** find Genes link to a phenotype */
     @Override
-    public Collection<Gene> findPhenotypeAssociations( String phenotypeValue ) {
-        return this.phenotypeAssociationDao.findByPhenotype( phenotypeValue );
+    public Collection<Gene> findPhenotypeAssociations( Set<String> phenotypesValueUri ) {
+        return this.phenotypeAssociationDao.findByPhenotype( phenotypesValueUri );
     }
 
     /** find all phenotypes */
-    @Override 
-    public Collection<PhenotypeAssociation> loadAll() {
-        return ( Collection<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
+    @SuppressWarnings("unchecked")
+    @Override
+    public Set<PhenotypeAssociation> loadAll() {
+        return ( Set<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
     }
 
     /** create a GenericExperiment */
@@ -77,15 +104,54 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.load( id );
     }
 
+    /** load an ExternalDatabaseEvidence given an ID */
+    @Override
+    public ExternalDatabaseEvidence loadExternalDatabaseEvidence( Long id ) {
+        return this.externalDatabaseEvidenceDao.load( id );
+    }
+
+    /** load an GenericEvidence given an ID */
+    @Override
+    public GenericEvidence loadGenericEvidence( Long id ) {
+        return this.genericEvidenceDao.load( id );
+    }
+
+    /** load an LiteratureEvidence given an ID */
+    @Override
+    public LiteratureEvidence loadLiteratureEvidence( Long id ) {
+        return this.literatureEvidenceDao.load( id );
+    }
+
+    /** load an UrlEvidence given an ID */
+    @Override
+    public UrlEvidence loadUrlEvidence( Long id ) {
+        return this.urlEvidenceDao.load( id );
+    }
+
+    /** load an ExperimentalEvidence given an ID */
+    @Override
+    public ExperimentalEvidence loadExperimentalEvidence( Long id ) {
+        return this.experimentalEvidenceDao.load( id );
+    }
+
     /** update an evidence */
     @Override
     public void update( PhenotypeAssociation evidence ) {
         this.phenotypeAssociationDao.update( evidence );
     }
 
+    /**
+     * @return all the characteristics (phenotypes) used in the system.
+     */
     @Override
-    public Collection<CharacteristicValueObject> loadAllPhenotypes() {
+    public Set<CharacteristicValueObject> loadAllPhenotypes() {
         return this.phenotypeAssociationDao.loadAllPhenotypes();
+    }
+
+    /** load all valueURI of Phenotype in the database */
+    @Override
+    public Set<String> loadAllPhenotypesURI() {
+        return this.phenotypeAssociationDao.loadAllPhenotypesURI();
     }
 
     @Override
@@ -93,10 +159,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
         return this.phenotypeAssociationDao.create( p );
     }
 
-    /** find the number of Genes with a phenotype */
+    /**
+     * count the number of Genes with a phenotype
+     */
     @Override
-    public Long countGenesWithPhenotype( String phenotypeValue ) {
-        return this.phenotypeAssociationDao.countGenesWithPhenotype( phenotypeValue );
+    public Long countGenesWithPhenotype( Collection<String> phenotypesURI ) {
+        return this.phenotypeAssociationDao.countGenesWithPhenotype( phenotypesURI );
     }
 
 }
