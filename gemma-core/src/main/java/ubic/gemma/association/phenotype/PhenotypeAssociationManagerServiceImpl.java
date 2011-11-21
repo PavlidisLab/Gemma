@@ -544,14 +544,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // for each phenotype in Gemma construct its subtree of children if necessary
         for ( CharacteristicValueObject c : allPhenotypes ) {
 
-            if ( c.getValue().equalsIgnoreCase( "Cognitive impairment" ) ) {
-                System.out.println();
-            }
-
-            if ( c.getValue().equalsIgnoreCase( "Developmental delay" ) ) {
-                System.out.println();
-            }
-
             // dont create the tree if it is already present in an other
             if ( phenotypeFoundInTree.get( c.getValueUri() ) != null ) {
                 // flag the node as phenotype found in database
