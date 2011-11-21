@@ -135,7 +135,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.detailsStyler.createDelegate(this),
 						tooltip : "Links for probe-level details",
 						sortable : false,
-						width : 30
+						width : 30,
+						hidden : this.tabPanelViewFlag
 					}, {
 						id : 'visualize',
 						header : "Visualize",
@@ -143,7 +144,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						renderer : this.visStyler.createDelegate(this),
 						tooltip : "Link for visualizing raw data",
 						sortable : false,
-						width : 35
+						width : 35,
+						hidden : this.tabPanelViewFlag
 
 					}, {
 						id : 'found',
@@ -285,9 +287,12 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 
 		Gemma.CoexpressionGrid.superclass.initComponent.call(this);
-
-		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 		
+		if (this.tabPanelViewFlag){
+
+			this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
+		
+		}
 		
 		if (this.getTopToolbar() && !this.getTopToolbar().getComponent('stringencySpinner').hasListener('spin')) {
 
