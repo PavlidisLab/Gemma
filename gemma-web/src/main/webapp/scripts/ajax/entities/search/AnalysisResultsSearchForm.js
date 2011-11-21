@@ -82,6 +82,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * 
 	 * after optional trimming, call the search function (doSearch)
 	 * 
+	 * only called by "Go!" button and example query buttons 
+	 * 
 	 * @param {Object} geneSetValueObjects
 	 * @param {Object} experimentSetValueObjects
 	 * @return 
@@ -250,6 +252,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	doSearch : function(geneSetValueObjects, experimentSetValueObjects) {		
 		
 		this.collapsePreviews();
+		this.hideExampleQueries();
+		
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
 						msg : "Searching for analysis results ...",
@@ -1276,6 +1280,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							scale: 'medium',
 							listeners: {
 								click: function(){
+									this.runningExampleQuery = false;
 									this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
 								}.createDelegate(this, [], false)
 							}
@@ -1482,9 +1487,22 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 
 	},
+	
 	/**
-	 * set the gene chooser to have chosen a go group and show its preview
-	 * @param geneSetId must be a valid id for a database-backed gene set
+	 * hide the example queries
+	 */
+	hideExampleQueries : function(){
+		this.searchExamples.hide();
+	},
+	/**
+	 * hide the example queries
+	 */
+	showExampleQueries : function(){
+		this.searchExamples.show();
+	},
+	/**
+	 * set the first experiment chooser to have chosen a set and show its preview
+	 * @param setId must be a valid id for a database-backed experimetn set
 	 */
 	addExperimentSet: function( setId ){
 		
@@ -1584,6 +1602,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			geneExampleReady = true;
 			if(eeExampleReady && !queryRun){
 				queryRun = true;
+				this.runningExampleQuery = true;
 				this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
 			}
 		});
@@ -1592,6 +1611,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			eeExampleReady = true;
 			if(geneExampleReady && !queryRun){
 				queryRun = true;
+				this.runningExampleQuery = true;
 				this.validateSearch(this.getSelectedAsGeneSetValueObjects(), this.getSelectedAsExperimentSetValueObjects());
 			}
 		});
