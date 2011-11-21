@@ -51,9 +51,6 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Component
@@ -79,9 +76,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private CharacteristicService characteristicService;
-
-    @Autowired
-    private CacheManager cacheManager = null;
 
     private DiseaseOntologyService diseaseOntologyService = null;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
@@ -535,81 +529,59 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
-        // first time we use this cache it is not register yet
-        if ( !this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-            this.cacheManager.addCache( new Cache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE, 1500, false,
-                    false, 12 * 3600, 12 * 3600 ) );
-        }
+        // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
+        TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
 
-        // find the cache
-        Cache phenoCountCache = this.cacheManager.getCache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE );
+        // all phenotypes in Gemma
+        Set<CharacteristicValueObject> allPhenotypes = this.associationService.loadAllPhenotypes();
 
-        // verify if the object inside the cache have expired, if yes fetch the information from the database
-        if ( phenoCountCache.get( "phenoTree" ) == null ) {
+        // use specific ontologies
+        useDiseaseMpHpOntologies();
 
-            // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
-            TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
+        // keep track of all phenotypes found in the trees, used to find quickly the position to add subtrees
+        HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
 
-            // all phenotypes in Gemma
-            Set<CharacteristicValueObject> allPhenotypes = this.associationService.loadAllPhenotypes();
+        // for each phenotype in Gemma construct its subtree of children if necessary
+        for ( CharacteristicValueObject c : allPhenotypes ) {
 
-            // use specific ontologies
-            useDiseaseMpHpOntologies();
+            // dont create the tree if it is already present in an other
+            if ( phenotypeFoundInTree.get( c.getValueUri() ) != null ) {
+                // flag the node as phenotype found in database
+                phenotypeFoundInTree.get( c.getValueUri() ).setDbPhenotype( true );
 
-            // keep track of all phenotypes found in the trees, used to find quickly the position to add subtrees
-            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();
+            } else {
 
-            // for each phenotype in Gemma construct its subtree of children if necessary
-            for ( CharacteristicValueObject c : allPhenotypes ) {
+                // find the ontology term using the valueURI
+                OntologyTerm ontologyTerm = findPhenotypeInOntology( c.getValueUri() );
 
-                // dont create the tree if it is already present in an other
-                if ( phenotypeFoundInTree.get( c.getValueUri() ) != null ) {
-                    // flag the node as phenotype found in database
-                    phenotypeFoundInTree.get( c.getValueUri() ).setDbPhenotype( true );
+                if ( ontologyTerm != null ) {
 
-                } else {
+                    // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
+                    TreeCharacteristicValueObject treeCharacteristicValueObject = this.phenotypeAssoManagerServiceHelper
+                            .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree );
 
-                    // find the ontology term using the valueURI
-                    OntologyTerm ontologyTerm = findPhenotypeInOntology( c.getValueUri() );
+                    // set flag that this node represents a phenotype in the database
+                    treeCharacteristicValueObject.setDbPhenotype( true );
 
-                    if ( ontologyTerm != null ) {
+                    // add tree to the phenotypes found in ontology
+                    phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
 
-                        // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
-                        TreeCharacteristicValueObject treeCharacteristicValueObject = this.phenotypeAssoManagerServiceHelper
-                                .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree );
-
-                        // set flag that this node represents a phenotype in the database
-                        treeCharacteristicValueObject.setDbPhenotype( true );
-
-                        // add tree to the phenotypes found in ontology
-                        phenotypeFoundInTree.put( ontologyTerm.getUri(), treeCharacteristicValueObject );
-
-                        treesPhenotypes.add( treeCharacteristicValueObject );
-                    }
-
-                }
-
-                // remove all nodes in the trees found in the Ontology but not in the database
-                for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-                    tc.removeUnusedPhenotypes();
-                }
-
-                // last step is to count how many unique Genes we have for each phenotype + children count
-                for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-                    countGeneOccurence( tc );
+                    treesPhenotypes.add( treeCharacteristicValueObject );
                 }
             }
-
-            phenoCountCache.put( new Element( "phenoTree", treesPhenotypes ) );
-
-            return treesPhenotypes;
         }
 
-        // if already there use cache values
-        @SuppressWarnings("unchecked")
-        Collection<TreeCharacteristicValueObject> cachePhenoValues = ( Collection<TreeCharacteristicValueObject> ) phenoCountCache
-                .get( "phenoTree" ).getObjectValue();
-        return cachePhenoValues;
+        // remove all nodes in the trees found in the Ontology but not in the database
+        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+            tc.removeUnusedPhenotypes();
+        }
+
+        // last step is to count how many unique Genes we have for each phenotype + children count
+        for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
+            countGeneOccurence( tc );
+        }
+
+        return treesPhenotypes;
 
     }
 
@@ -741,7 +713,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         t.setValue( t.getValue().toLowerCase() );
 
-        characteristcsVO.add( t );
+        CharacteristicValueObject cha = new CharacteristicValueObject( t.getValue().toLowerCase(), t.getValueUri() );
+
+        cha.setOccurence( t.getOccurence() );
+
+        characteristcsVO.add( cha );
 
         for ( TreeCharacteristicValueObject tree : t.getChildren() ) {
             addChildren( characteristcsVO, tree );
