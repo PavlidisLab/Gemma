@@ -665,7 +665,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.taxonName = "?";
 		}
 		
-		if (this.noSmallGemma){
+		if (this.noSmallGemma || this.tabPanelViewFlag){
 			return this.foundGeneTemplateNoGemma.apply(g);
 		}
 		
@@ -689,7 +689,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			g.officialName = "";
 		}
 
-		g.abaGeneUrl = record.data.abaQueryGeneUrl;		
+		g.abaGeneUrl = record.data.abaQueryGeneUrl;	
+		
+		if (this.tabPanelViewFlag){
+			return this.foundGeneTemplateNoGemma.apply(g);
+		}
 		
 		return this.foundGeneTemplate.apply(g);
 	},
