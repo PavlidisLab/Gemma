@@ -62,10 +62,12 @@ Gemma.Metaheatmap.Utils.formatPVal = function(p){
 	if (p === null) {
 		return '-';
 	}
+	if (isNaN(p)) {
+		return p;
+	}
 	if (p < 0.001) {
 		return sprintf("%.3e", p);
-	}
-	else {
+	} else {
 		return sprintf("%.3f", p);
 	}
 };
