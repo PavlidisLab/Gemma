@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -536,7 +537,8 @@ public class PhenotypeAssoManagerServiceHelper {
 
     /** Ontology term to TreeCharacteristicValueObject */
     public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
-            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree ) {
+            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree,
+            TreeSet<TreeCharacteristicValueObject> treesPhenotypes ) {
 
         Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
 
@@ -547,8 +549,10 @@ public class PhenotypeAssoManagerServiceHelper {
             if ( phenotypeFoundInTree.get( ot.getUri() ) != null ) {
 
                 childs.add( phenotypeFoundInTree.get( ot.getUri() ) );
+                treesPhenotypes.remove( phenotypeFoundInTree.get( ot.getUri() ) );
             } else {
-                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot, phenotypeFoundInTree );
+                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot, phenotypeFoundInTree,
+                        treesPhenotypes );
                 phenotypeFoundInTree.put( tree.getValueUri(), tree );
                 childs.add( tree );
             }

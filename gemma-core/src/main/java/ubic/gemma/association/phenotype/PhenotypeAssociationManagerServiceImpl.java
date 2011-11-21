@@ -544,6 +544,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // for each phenotype in Gemma construct its subtree of children if necessary
         for ( CharacteristicValueObject c : allPhenotypes ) {
 
+            if ( c.getValue().equalsIgnoreCase( "Cognitive impairment" ) ) {
+                System.out.println();
+            }
+
+            if ( c.getValue().equalsIgnoreCase( "Developmental delay" ) ) {
+                System.out.println();
+            }
+
             // dont create the tree if it is already present in an other
             if ( phenotypeFoundInTree.get( c.getValueUri() ) != null ) {
                 // flag the node as phenotype found in database
@@ -558,7 +566,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                     // transform an OntologyTerm and his children to a TreeCharacteristicValueObject
                     TreeCharacteristicValueObject treeCharacteristicValueObject = this.phenotypeAssoManagerServiceHelper
-                            .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree );
+                            .ontology2TreeCharacteristicValueObjects( ontologyTerm, phenotypeFoundInTree,
+                                    treesPhenotypes );
 
                     // set flag that this node represents a phenotype in the database
                     treeCharacteristicValueObject.setDbPhenotype( true );
