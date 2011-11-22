@@ -252,7 +252,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						                	fieldLabel: 'Stringency ',
 						                	value: 2,
 						                	width: 60,
-						                	fieldTip: "The minimum number of datasets that must show coexpression for a result to appear"
+						                	fieldTip: "The minimum number of datasets that must show coexpression for a result to appear",
+						                	enableKeyEvents : true
 
 						            		},
 						                    {
@@ -329,6 +330,42 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             }, this);
 
 
+        }
+		
+		if (this.getTopToolbar() && !this.getTopToolbar().getComponent('stringencySpinner').hasListener('specialkey')) {
+
+            this.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
+            	
+            	if (e.getKey() == e.ENTER) {
+
+                var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+                
+              //prevent spinner from going below currentResultsStringency by manual entry
+            	if (spinner.getValue() < this.currentResultsStringency){
+            		spinner.setValue(this.currentResultsStringency);
+            	}
+
+                if (spinner.getValue() >= this.currentResultsStringency) {
+
+                    var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
+                    
+                    this.loadData(false, 2,trimmed.trimmedKnownGeneResults, null);
+                    
+                    //update cytoscape                 
+                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
+                    	
+                    	this.cytoscapeRef.coexGridUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+                    	
+                    }
+                    
+
+                }
+                
+            	}
+
+            }, this);
+
+            
         }
 		
 		

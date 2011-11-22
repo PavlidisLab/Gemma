@@ -351,7 +351,8 @@ Ext.Panel, {
                 maxValue: 999,
                 fieldLabel: 'Stringency ',
                 value: 2,
-                width: 60
+                width: 60,
+                enableKeyEvents : true
 
             },
             
@@ -539,6 +540,46 @@ Ext.Panel, {
             vis.edgeTooltipsEnabled(true);
 
             vis.panelRef.getTopToolbar().getComponent('stringencySpinner').value = vis.panelRef.coexCommand.stringency;
+            
+            
+            if (!vis.panelRef.getTopToolbar().getComponent('stringencySpinner').hasListener('specialkey')) {
+
+                vis.panelRef.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
+                               
+                    if (e.getKey() == e.ENTER) {
+                    	var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
+
+                    	//prevent spinner from going below currentResultsStringency by manual entry
+                    	if (spinner.getValue() < vis.panelRef.currentResultsStringency){
+                    		spinner.setValue(vis.panelRef.currentResultsStringency);
+                    	}
+                    	
+                        if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
+
+                            var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
+                            vis.panelRef.trimmedKnownGeneResults = trimmed.trimmedKnownGeneResults;
+                            vis.panelRef.trimmedNodeIds = trimmed.trimmedNodeIds;
+
+                            vis.panelRef.coexGridRef.cytoscapeUpdate(spinner.getValue(), vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults);
+
+
+                            vis.filter("nodes", function (node) {
+
+                                return vis.panelRef.trimmedNodeIds.indexOf(node.data.geneid) !== -1;
+
+                            });
+
+                            vis.filter("edges", function (edge) {
+
+                                return edge.data.support >= vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
+
+                            });
+                            
+                        } 
+                    }
+         
+                }, this);
+            }
 
 
             if (!vis.panelRef.getTopToolbar().getComponent('stringencySpinner').hasListener('spin')) {
