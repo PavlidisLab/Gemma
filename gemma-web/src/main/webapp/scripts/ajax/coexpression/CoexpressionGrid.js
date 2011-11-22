@@ -117,7 +117,17 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						width : 30,
 						renderer : this.proteinlinkStyler.createDelegate(this),
 						tooltip : "Evidence for interactions from external sources",
+						sortable : true,
+						hidden: true
+					}, {
+						id : 'nodeDegree',
+						header : "Node Degree",
+						dataIndex : "foundGeneNodeDegree",
+						width : 60,
+						renderer : this.nodeDegreeStyler.createDelegate(this),
+						tooltip : "nodeDegree",
 						sortable : true
+						
 					}];
 		} else {
 			columns = [{
@@ -288,7 +298,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		Gemma.CoexpressionGrid.superclass.initComponent.call(this);
 		
-		if (this.tabPanelViewFlag){
+		if (!this.tabPanelViewFlag){
 
 			this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 		
