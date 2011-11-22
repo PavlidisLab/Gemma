@@ -173,6 +173,7 @@ Gemma.PhenotypeStore = Ext.extend(Ext.data.Store, {
 		idProperty: "value",
 		fields: [ 
 			'value',
+			'valueUri',
 			{ name: 'occurence', type: "long" },
 			{ name: 'isChecked', sortDir: 'DESC' }
 		]
@@ -204,7 +205,7 @@ Gemma.PhenotypeCheckboxSelectionModel = Ext.extend(Ext.grid.CheckboxSelectionMod
 			    for (var i = 0; i < phenotypeSelections.length; i++) {
 			    	var currPhenotypeValue = phenotypeSelections[i].get('value');
 
-			        storeBaseParams.push(currPhenotypeValue);
+			        storeBaseParams.push(phenotypeSelections[i].get('valueUri'));
 			        
 					selectedPhenotypeHeader += currPhenotypeValue;
 					selectedPhenotypeTooltip += currPhenotypeValue;
