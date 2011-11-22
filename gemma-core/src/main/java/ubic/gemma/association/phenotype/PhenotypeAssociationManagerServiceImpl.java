@@ -51,6 +51,9 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Component
@@ -76,6 +79,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private CharacteristicService characteristicService;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     private DiseaseOntologyService diseaseOntologyService = null;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
@@ -529,6 +535,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<TreeCharacteristicValueObject> findAllPhenotypesByTree() {
 
+        // init the cache if it is not
+        if ( !this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
+            this.cacheManager.addCache( new Cache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE, 1500, false,
+                    false, 24 * 3600, 24 * 3600 ) );
+        }
+
         // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
 
@@ -577,13 +589,26 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             tc.removeUnusedPhenotypes();
         }
 
+        // look in cache we if have this tree
+        Cache phenoCountCache = this.cacheManager.getCache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE );
+
+        Collection<TreeCharacteristicValueObject> finalTree = new HashSet<TreeCharacteristicValueObject>();
+
         // last step is to count how many unique Genes we have for each phenotype + children count
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
-            countGeneOccurence( tc );
+
+            // not in the cache
+            if ( phenoCountCache.get( tc.getValueUri() ) == null ) {
+                countGeneOccurence( tc );
+                phenoCountCache.put( new Element( tc.getValueUri(), tc ) );
+                finalTree.add( tc );
+            } else {
+                tc = ( TreeCharacteristicValueObject ) phenoCountCache.get( tc.getValueUri() ).getObjectValue();
+                finalTree.add( tc );
+            }
         }
 
-        return treesPhenotypes;
-
+        return finalTree;
     }
 
     /**
