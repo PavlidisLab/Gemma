@@ -737,9 +737,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     /** This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future */
     private void addChildren( Collection<CharacteristicValueObject> characteristcsVO, TreeCharacteristicValueObject t ) {
 
-        t.setValue( t.getValue().toLowerCase() );
-
-        CharacteristicValueObject cha = new CharacteristicValueObject( t.getValue().toLowerCase(), t.getValueUri() );
+        CharacteristicValueObject cha = new CharacteristicValueObject( t.getValue().toLowerCase(), t.getCategory(),
+                t.getValueUri(), t.getCategoryUri() );
 
         cha.setOccurence( t.getOccurence() );
 
