@@ -595,13 +595,10 @@ public class ArrayDesignAnnotationService {
 
         writer.write( probeId + "\t" + gene + "\t" + formattedDescription + "\t" );
 
-        if ( ( goTerms == null ) || goTerms.isEmpty() ) {
-            writer.write( "\n" );
-            return;
+        if ( goTerms != null && !goTerms.isEmpty() ) {
+            String goterms = StringUtils.join( new TransformIterator( goTerms.iterator(), goTermExtractor ), "|" );
+            writer.write( goterms );
         }
-
-        String goterms = StringUtils.join( new TransformIterator( goTerms.iterator(), goTermExtractor ), "|" );
-        writer.write( goterms );
 
         writer.write( "\t" + geneIds + "\t" + ncbiIds );
 
