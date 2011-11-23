@@ -598,82 +598,42 @@ public class ExpressionExperimentController extends AbstractTaskService {
         boolean taxonLimited = ( taxonId != null ) ? true : false;
 
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
-        List<SearchResultDisplayObject> usersResults = new LinkedList<SearchResultDisplayObject>();
-        List<SearchResultDisplayObject> publicResults = new LinkedList<SearchResultDisplayObject>();
-        List<SearchResultDisplayObject> autoGenResults = new LinkedList<SearchResultDisplayObject>();
-
-        // get authenticated user's sets
-        Collection<ExpressionExperimentSet> userExperimentSets = new ArrayList<ExpressionExperimentSet>();
-        // if user is admin, their sets will be loaded
-        if ( SecurityService.isUserLoggedIn() ) {
-            userExperimentSets = expressionExperimentSetService.loadMySets();
-            SearchResultDisplayObject newSRDO = null;
-            for ( ExpressionExperimentSet registeredUserSet : userExperimentSets ) {
-
-                expressionExperimentSetService.thaw( registeredUserSet );
-                taxonService.thaw( registeredUserSet.getTaxon() );
-                if ( !taxonLimited || registeredUserSet.getTaxon().getId().equals( taxonId ) ) {
-                    newSRDO = new SearchResultDisplayObject( registeredUserSet );
-                    ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
-                            .setPublik( securityService.isPublic( registeredUserSet ) );
-
-                    // private groups are treated differently than public ones in the UI
-                    if ( !( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() ).isPublik() ) {
-                        newSRDO.setUserOwned( true );
-                        usersResults.add( newSRDO );
-                    } else {
-                        newSRDO.setUserOwned( false );
-                        autoGenResults.add( newSRDO );
-                    }
-                }
-            }
-        }
+        List<SearchResultDisplayObject> setResults = new LinkedList<SearchResultDisplayObject>();
 
         // get all public sets (if user is admin, these were already loaded with
         // expressionExperimentSetService.loadMySets() )
         // filtered by security.
-        if ( !SecurityService.isUserAdmin() ) {
-            Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
-            sets.removeAll( userExperimentSets );
-            for ( ExpressionExperimentSet set : sets ) {
-                // if ( set.getName().indexOf( "All" ) == 0 ) {
-                expressionExperimentSetService.thaw( set );
+        Collection<ExpressionExperimentSet> sets = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
+        SearchResultDisplayObject newSRDO = null;
+        for ( ExpressionExperimentSet set : sets ) {
+           expressionExperimentSetService.thaw( set );
                 if ( !taxonLimited || set.getTaxon().getId().equals( taxonId ) ) {
-
-                    autoGenResults.add( new SearchResultDisplayObject( set ) );
+                    newSRDO = new SearchResultDisplayObject( set );
+                    newSRDO.setUserOwned( securityService.isPrivate( set ) );
+                    ( ( ExpressionExperimentSetValueObject ) newSRDO.getResultValueObject() )
+                    .setPublik( securityService.isPublic( set ) );
+                    setResults.add( new SearchResultDisplayObject( set ) );
                 }
-                // }
-            }
         }
 
         // get any session-bound groups
-        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = sessionListManager
-                .getModifiedExperimentSets();
+        Collection<SessionBoundExpressionExperimentSetValueObject> sessionResult = ( taxonLimited ) ? sessionListManager.getModifiedExperimentSets( taxonId )
+                                                                            : sessionListManager.getModifiedExperimentSets();
 
         List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
 
+        // create SearchResultDisplayObjects
         if ( sessionResult != null && sessionResult.size() > 0 ) {
-            Collection<ExpressionExperimentSetValueObject> toRmv = new ArrayList<ExpressionExperimentSetValueObject>();
-            // for every object passed in, create a SearchResultDisplayObject
             for ( SessionBoundExpressionExperimentSetValueObject eevo : sessionResult ) {
-                if ( eevo.getTaxonId() == null ) {
-                    toRmv.add( eevo );
-                } else {
-                    if ( !taxonLimited || eevo.getTaxonId().equals( taxonId ) ) {
-                        SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
-                        srdo.setUserOwned( true );
-                        sessionSets.add( srdo );
-                    }
-                }
+                SearchResultDisplayObject srdo = new SearchResultDisplayObject( eevo );
+                srdo.setUserOwned( true );
+                sessionSets.add( srdo );
             }
-            sessionResult.removeAll( toRmv );
         }
+        
         // keep sets in proper order (user's groups first, then public ones)
         Collections.sort( sessionSets );
         displayResults.addAll( sessionSets );
-
-        Collections.sort( usersResults );
-        displayResults.addAll( usersResults );
 
         // combine autogen and public results and then sort by taxon
         /*
@@ -681,11 +641,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
          * displayResults.addAll( publicResults );
          */
 
-        Collections.sort( autoGenResults );
-        displayResults.addAll( autoGenResults );
-
-        Collections.sort( publicResults );
-        displayResults.addAll( publicResults );
+        Collections.sort( setResults );
+        displayResults.addAll( setResults );
 
         return displayResults;
     }
