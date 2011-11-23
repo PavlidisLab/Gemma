@@ -280,14 +280,7 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 						if (selModel.hasSelection()) {
 							var geneGridSelection = geneGrid.getSelectionModel().getSelected();
 		
-							var phenotypeGridSelections = phenotypeGrid.getSelectionModel().getSelections();
-							var selectedPhenotypes = [];					
-							for (var i = 0; i < phenotypeGridSelections.length; i++) {
-								selectedPhenotypes.push(phenotypeGridSelections[i].get('value'));
-							}				
-		
-							// Make the selected phenotypes bold and red.
-							evidenceGrid.loadData(geneGridSelection.json.evidence, selectedPhenotypes, 'font-weight: bold; color: red;');
+							evidenceGrid.loadData(geneGridSelection.json.evidence);
 							evidenceGrid.setTitle("Evidence for " + geneGridSelection.get('officialSymbol'));					
 						} else {
 							evidenceGrid.removeAll(false);

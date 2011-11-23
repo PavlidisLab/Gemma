@@ -319,14 +319,11 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 	load: function() {
 		evidenceStore.load();
 	}, 
-    loadData: function(data, currentPhenotypes, cssStyle) {
-    	// Modify css for the current phenotypes to indicate they are current.  
+    loadData: function(data) {
 		for (var i = 0; i < data.length; i++) {
 			for (var j = 0; j < data[i].phenotypes.length; j++) {
-				for (var k = 0; k < currentPhenotypes.length; k++) {
-					if (currentPhenotypes[k].toLowerCase() ==  data[i].phenotypes[j].value.toLowerCase()) {
-				  		data[i].phenotypes[j].value = '<span style="' + cssStyle + '">' + data[i].phenotypes[j].value + '</span>'; 
-					}
+				if (data[i].phenotypes[j].child || data[i].phenotypes[j].root) {
+			  		data[i].phenotypes[j].value = '<span style="font-weight: bold; color: red;">' + data[i].phenotypes[j].value + '</span>'; 
 				}
 			}
 		}
