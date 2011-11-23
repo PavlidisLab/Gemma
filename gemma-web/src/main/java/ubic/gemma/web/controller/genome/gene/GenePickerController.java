@@ -553,7 +553,7 @@ public class GenePickerController {
         // session-bound sets
 
         // right now, no public gene sets are useful so we don't want to prompt them
-        boolean promptPublicSets = true;
+        boolean promptPublicSets = false;
                 
         // get all public sets (if user is admin, these were already loaded with geneSetService.loadMySets() )
         // filtered by security.
