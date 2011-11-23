@@ -92,7 +92,13 @@ public class SessionListManager {
     }
 
     public Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets() {
-        return getAllGeneSets( null );
+
+        // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
+        // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
+        @SuppressWarnings("unchecked")
+        List<SessionBoundGeneSetValueObject> castedCollection = ( List ) geneSetList.getSessionBoundModifiedGroups();
+
+        return castedCollection;
     }
 
     public Collection<SessionBoundGeneSetValueObject> getModifiedGeneSets( Long taxonId ) {
@@ -247,6 +253,30 @@ public class SessionListManager {
 
         return castedCollection;
 
+    }
+    
+
+    public Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets( Long taxonId ) {
+
+        // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
+        // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
+        @SuppressWarnings("unchecked")
+        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList.getSessionBoundModifiedGroups();
+
+        // filter collection if taxonId is specified
+        if ( taxonId != null ) {
+            List<SessionBoundExpressionExperimentSetValueObject> taxonFilteredCollection = new ArrayList<SessionBoundExpressionExperimentSetValueObject>();
+            for ( SessionBoundExpressionExperimentSetValueObject gsvo : castedCollection ) {
+                if ( gsvo.getTaxonId() == taxonId ) {
+                    taxonFilteredCollection.add( gsvo );
+                }
+            }
+
+            castedCollection = taxonFilteredCollection;
+
+        }
+
+        return castedCollection;
     }
 
     public SessionBoundExpressionExperimentSetValueObject addExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo ) {
