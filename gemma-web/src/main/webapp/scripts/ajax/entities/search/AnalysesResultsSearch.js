@@ -58,8 +58,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		var errorPanel = new Ext.Panel({
 			tpl:'<img src="/Gemma/images/icons/warning.png">{msg}',
 			border:false,
-			hidden:true,
-			title:'Errors'
+			hidden:true
 		});
 		this.add(errorPanel);
 		
@@ -79,19 +78,19 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			//deferredRender: true,
 			bodyStyle: 'text-align:left;',
 			style: 'text-align:left',
-			title: 'Search Results',
-			items:[{html: 'Use the form above to search for coexpression or differential expression'}]
+			hidden:true
 		});
 
 		this.searchPanel = new Ext.Panel({
-			layout:'ux.center',
 			items: [searchForm],
 			title:'Search Form',
 			collapsible: true,
-			titleCollapse: true
+			titleCollapse: true,
+			border:false,
+			bodyStyle: 'margin-left:auto;margin-right:auto;width:'+this.SEARCH_FORM_WIDTH+'px;'
 		});
 		this.add(this.searchPanel);
-		this.add(coexResultsTabPanel);
+		this.add(new Ext.Panel({items:[coexResultsTabPanel], title:'Results', layout:'fit'}));
 		this.add(diffExResultsDiv);
 		/*this.add({
 			tag: 'div',
@@ -120,6 +119,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			coexResultsTabPanel.removeAll();
 			panel.clearError();
 			coexResultsTabPanel.doLayout();
+			coexResultsTabPanel.hide();
 			
 			// for clearing diff ex
 			this.remove(diffExResultsDiv.getId());
@@ -259,11 +259,11 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		
 		
 		var knownGeneGrid = new Gemma.CoexpressionGrid({
-
 			title: "Coexpressed genes",
 			user: this.user,
 			tabPanelViewFlag: true
 		});
+		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
 			id : "cytoscaperesults",
 			title: "Cytoscape",
@@ -276,13 +276,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			hideMode: 'visibility'
 		
 		});
-		
-		//console.log(searchForm.getHeight());
-		//searchForm.collapsePreviews();
-		//console.log(searchForm.getHeight());
-		//searchForm.doLayout();
-		//console.log(searchForm);
-		searchPanel.doLayout();
+
 		searchPanel.collapse();
 		
 		coexResultsTabPanel.add(knownGeneGrid);
@@ -295,7 +289,6 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
 			
 		knownGeneGrid.show();
-		
-		
+				
 	}
 });
