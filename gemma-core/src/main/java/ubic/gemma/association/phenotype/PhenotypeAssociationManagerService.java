@@ -61,7 +61,7 @@ public interface PhenotypeAssociationManagerService {
      * @param phenotypesValuesUri the roots phenotype of the query
      * @return A collection of the genes found
      */
-    public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesURI );
+    public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesUri);
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype

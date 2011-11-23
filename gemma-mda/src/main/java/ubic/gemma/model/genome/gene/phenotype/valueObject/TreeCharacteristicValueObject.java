@@ -28,6 +28,9 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
     /** phenotype present in the database */
     private boolean dbPhenotype = false;
 
+    // if we need to reconstruct part of the tree in the cache we need to know highest root parent
+    private String rootOfTree = "";
+
     public TreeCharacteristicValueObject( String value, String valueUri,
             Collection<TreeCharacteristicValueObject> children ) {
         super( value, "", valueUri, "" );
@@ -49,6 +52,14 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     public void setDbPhenotype( boolean dbPhenotype ) {
         this.dbPhenotype = dbPhenotype;
+    }
+
+    public String getRootOfTree() {
+        return this.rootOfTree;
+    }
+
+    public void setRootOfTree( String rootOfTree ) {
+        this.rootOfTree = rootOfTree;
     }
 
     public String toString( int level ) {
@@ -96,25 +107,26 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         }
     }
 
-    public void removeUnusedPhenotypes() {
+    public void removeUnusedPhenotypes( String rootValueUri ) {
 
         Collection<TreeCharacteristicValueObject> newRealChilds = new HashSet<TreeCharacteristicValueObject>();
-        findRealChild( newRealChilds );
+        findRealChild( newRealChilds, rootValueUri );
         this.children = newRealChilds;
 
         for ( TreeCharacteristicValueObject tc : this.children ) {
-            tc.removeUnusedPhenotypes();
+            tc.removeUnusedPhenotypes( rootValueUri );
         }
 
     }
 
-    private void findRealChild( Collection<TreeCharacteristicValueObject> newRealChilds ) {
+    private void findRealChild( Collection<TreeCharacteristicValueObject> newRealChilds, String rootValueUri ) {
 
         for ( TreeCharacteristicValueObject t : this.children ) {
             if ( t.isDbPhenotype() ) {
+                t.setRootOfTree( rootValueUri );
                 newRealChilds.add( t );
             } else {
-                t.findRealChild( newRealChilds );
+                t.findRealChild( newRealChilds, rootValueUri );
             }
         }
     }
