@@ -23,6 +23,8 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
     private Long id = null;
+    /** id used by url*/
+    private String urlId = "";
 
     private String category = "";
     private String categoryUri = "";
@@ -54,6 +56,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.categoryUri = categoryUri;
         this.value = value;
         this.valueUri = valueUri;
+        if ( valueUri != null && !valueUri.equals( "" ) && valueUri.indexOf( "#" ) > 0 ) {
+            this.urlId = valueUri.substring( valueUri.indexOf( "#" ) + 1, valueUri.length() );
+        }
     }
 
     public String getCategoryUri() {
@@ -134,6 +139,14 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     public void setId( Long id ) {
         this.id = id;
+    }
+
+    public String getUrlId() {
+        return this.urlId;
+    }
+
+    public void setUrlId( String urlId ) {
+        this.urlId = urlId;
     }
 
     @Override
