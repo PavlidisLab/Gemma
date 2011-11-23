@@ -80,7 +80,11 @@ Gemma.ExperimentAndExperimentGroupCombo = Ext.extend(Ext.form.ComboBox, {
                     if ( e.getKey() === e.TAB || e.getKey() === e.RIGHT  || e.getKey() === e.DOWN ) {
                         this.expand();
                     }else if (e.getKey() === e.ENTER ) {
-                        this.doQuery(this.lastQuery);
+						if (this.getValue() && this.getValue() !== null) {
+							this.doQuery(this.getValue(), true);
+						} else {
+							this.doQuery('', true);
+						}
                     }else if (e.getKey() === e.ESC ) {
                         this.collapse();
                     }
