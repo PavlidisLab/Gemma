@@ -259,7 +259,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
                     fieldLabel: "Taxon",
                     html: g.taxonName
                 }, {
-                    fieldLabel: 'Experiments',
+                    fieldLabel: 'Genes',
                     html: this.renderNumber(g)
                 }, {
                     fieldLabel: 'Status',
@@ -296,10 +296,6 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 				});
 		geneMembersGrid.loadMask.show();*/
 		
-		geneMembersGrid.loadGeneSetValueObject(g, function() {
-					//geneMembersGrid.loadMask.hide();
-				}.createDelegate(this, [], false));
-				
 		geneMembersGrid.on('geneListSavedOver',function(){
 			Ext.getBody().mask('Reloading set');
 			// could just update experiment count, but this is easier for now since we'll probably change the tab layout soon

@@ -318,9 +318,16 @@ public class GenePickerController {
             settings.setSearchGeneSets( true ); // add searching for geneSets
             if ( taxon != null ) settings.setTaxon( taxon ); // this doesn't work yet
             Map<Class<?>, List<SearchResult>> results = searchService.search( settings );
-            List<SearchResult> geneSetSearchResults = results.get( GeneSet.class );
-            List<SearchResult> geneSearchResults = results.get( Gene.class );
+            List<SearchResult> geneSetSearchResults = new ArrayList<SearchResult>();
+            List<SearchResult> geneSearchResults = new ArrayList<SearchResult>();
 
+            if(results.get( GeneSet.class ) != null){
+                geneSetSearchResults.addAll(results.get( GeneSet.class ));
+            }
+            if(results.get( Gene.class ) != null){
+                geneSearchResults.addAll( results.get( Gene.class ) );
+            }
+                        
             Collection<SearchResultDisplayObject> genes = null;
             Collection<SearchResultDisplayObject> geneSets = null;
             
@@ -540,51 +547,71 @@ public class GenePickerController {
             }
         }
 
-        boolean privateOnly = true;
-
         List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
 
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
 
-            // get authenticated user's sets
-            Collection<GeneSet> userGeneSets = new ArrayList<GeneSet>();
-            Collection<GeneSetValueObject> result = new ArrayList<GeneSetValueObject>();
-            if ( SecurityService.isUserLoggedIn() ) {
-                // get DB groups
-                if ( privateOnly ) {
-                    try {
-                        userGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService
-                                .loadMyGeneSets();
-                        userGeneSets.retainAll( securityService.choosePrivate( userGeneSets ) );
-                    } catch ( AccessDeniedException e ) {
-                        // okay, they just aren't allowed to see those.
-                    }
-                } else {
-                    userGeneSets = ( taxon != null ) ? geneSetService.loadMyGeneSets( taxon ) : geneSetService
-                            .loadMyGeneSets();
-                }
-                result.addAll( DatabaseBackedGeneSetValueObject.convert2ValueObjects( userGeneSets, false ) );
+        // right now, no public gene sets are useful so we don't want to prompt them
+        boolean promptPublicSets = true;
+                
+        // get all public sets (if user is admin, these were already loaded with geneSetService.loadMySets() )
+        // filtered by security.
+        SearchResultDisplayObject newSRDO = null;
+        if ( promptPublicSets ) {
+            Collection<GeneSet> sets = new ArrayList<GeneSet>() ;
+            try {
+                sets = geneSetService.loadAll( taxon );
+            } catch ( AccessDeniedException e ) {
+                // okay, they just aren't allowed to see those.
             }
-            // get any session-bound groups
-
-            Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxon != null ) ? sessionListManager.getModifiedGeneSets( taxonId )
-                                                                                : sessionListManager.getModifiedGeneSets( );
-
-            result.addAll( sessionResult );
-
-            SearchResultDisplayObject newSRDO = null;
-            for ( GeneSetValueObject registeredUserSet : result ) {
-                newSRDO = new SearchResultDisplayObject( registeredUserSet );
-                newSRDO.setUserOwned( true );
+            for ( GeneSet set : sets ) {
+                newSRDO = new SearchResultDisplayObject( set );
+                newSRDO.setTaxonId( ((GeneSetValueObject) newSRDO.getResultValueObject()).getTaxonId() );
+                newSRDO.setTaxonName( ((GeneSetValueObject) newSRDO.getResultValueObject()).getTaxonName() );
+                boolean isPrivate = securityService.isPrivate( set );
+                newSRDO.setUserOwned( isPrivate );
+                ( ( GeneSetValueObject ) newSRDO.getResultValueObject() )
+                .setPublik( !isPrivate );
                 displayResults.add( newSRDO );
             }
-            Collections.sort( displayResults );
+        }else if (SecurityService.isUserLoggedIn()){
+            Collection<GeneSet> sets = geneSetService.loadMyGeneSets( taxon );
+            for ( GeneSet set : sets ) {
+                    newSRDO = new SearchResultDisplayObject( set );
+                    newSRDO.setTaxonId( ((GeneSetValueObject) newSRDO.getResultValueObject()).getTaxonId() );
+                    newSRDO.setTaxonName( ((GeneSetValueObject) newSRDO.getResultValueObject()).getTaxonName() );
+                    newSRDO.setUserOwned( true );
+                    ( ( GeneSetValueObject ) newSRDO.getResultValueObject() )
+                    .setPublik( securityService.isPublic( set ) );
+                    displayResults.add( newSRDO );
+            }
+        }
 
+        // get any session-bound groups
+
+        Collection<SessionBoundGeneSetValueObject> sessionResult = ( taxon != null ) ? sessionListManager
+                .getModifiedGeneSets( taxonId ) : sessionListManager.getModifiedGeneSets();
+
+        List<SearchResultDisplayObject> sessionSets = new ArrayList<SearchResultDisplayObject>();
+
+        // create SearchResultDisplayObjects
+        if ( sessionResult != null && sessionResult.size() > 0 ) {
+            for ( SessionBoundGeneSetValueObject gvo : sessionResult ) {
+                SearchResultDisplayObject srdo = new SearchResultDisplayObject( gvo );
+                srdo.setUserOwned( true );
+                sessionSets.add( srdo );
+            }
+        }
+
+        // keep sets in proper order (user's groups first, then public ones)
+        Collections.sort( sessionSets );
+        displayResults.addAll( sessionSets );
 
         if ( displayResults.isEmpty() ) {
-            log.info( "No results for blank query search, taxon="
-                    + ( ( taxon == null ) ? null : taxon.getCommonName() ) );
+            log
+                    .info( "No results for blank query search, taxon="
+                            + ( ( taxon == null ) ? null : taxon.getCommonName() ) );
             return new HashSet<SearchResultDisplayObject>();
         }
         log.info( "Results for blank query search, size=" + displayResults.size() );

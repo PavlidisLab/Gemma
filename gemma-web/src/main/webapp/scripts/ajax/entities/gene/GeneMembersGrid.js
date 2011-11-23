@@ -238,27 +238,29 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.addEvents('addgenes', 'removegenes', 'geneListModified');
 
-		this.on("keypress", function(e) {
-					if (!this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE) {
-						this.removeGene();
-					}
-				}, this);
-
-		// load genes stored in genes var, which can either be an array or comma
-		// separated list of gene ids
-		this.on('render', function(){
-			if(this.selectedGeneSetValueObject){
-				this.loadGeneSetValueObject(this.selectedGeneSetValueObject);
-			}else if (this.genes || this.geneIds) {
-				var gis = ((this.genes)?this.genes:this.geneIds);
-				var genes = gis instanceof Array ? gis : gis.split(",");
-				this.loadGenes(gis);
-			}
-		
-		}, this);
 		
 
 	},// eo initComponent
+
+	listeners: {
+		render: function(){
+		
+			// load genes stored in genes var, which can either be an array or comma
+			// separated list of gene ids
+			if (this.selectedGeneSetValueObject) {
+				this.loadGeneSetValueObject(this.selectedGeneSetValueObject);
+			} else if (this.genes || this.geneIds) {
+				var gis = ((this.genes) ? this.genes : this.geneIds);
+				var genes = gis instanceof Array ? gis : gis.split(",");
+				this.loadGenes(gis);
+			}
+		},
+		keypress: function(e){
+			if (!this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE) {
+				this.removeGene();
+			}
+		}
+	},
 
 	removeGene : function() {
 		var selected = this.getSelectionModel().getSelections();
@@ -607,20 +609,6 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 					this.doneButton.enable();
 				}, this);
 
-		this.on("keypress", function(e) {
-					if (!this.getTopToolbar().disabled && e.getCharCode() === Ext.EventObject.DELETE) {
-						this.removeGene();
-					}
-				}, this);
-
-		if(this.selectedGeneSetValueObject){
-			this.loadGeneSetValueObject(this.selectedGeneSetValueObject);
-		}else if (this.genes) {
-		// load genes stored in genes var, which can either be an array or comma
-		// separated list of gene ids
-			var genes = this.genes instanceof Array ? this.genes : this.genes.split(",");
-			this.loadGenes(genes);
-		}
 		
 		this.on('genesLoaded',function(){
 			if (this.selectedGeneSetValueObject) {
