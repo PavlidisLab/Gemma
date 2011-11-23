@@ -164,7 +164,7 @@ public class ExpressionExperimentValueObject implements java.io.Serializable,
 
     private String technologyType;
 
-    private String troubleDetails = "Reason for trouble not populated)";
+    private String troubleDetails = "(Reason for trouble not populated)";
 
     private boolean troubled = false;
 
