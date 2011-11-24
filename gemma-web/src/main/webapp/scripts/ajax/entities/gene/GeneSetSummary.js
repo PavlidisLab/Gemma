@@ -7,7 +7,7 @@ Ext.BLANK_IMAGE_URL = '/Gemma/images/default/s.gif';
  *
  * pass in the gene set id obj as geneSetId
  *
- * @class Gemma.ExpressionExperimentDetails
+ * @class Gemma.GeneSetSummary
  * @extends Ext.Panel
  *
  */
@@ -202,9 +202,9 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
         });
 
         var deleteEEButton = new Ext.Button({
-            text: 'Delete Experiment Set',
+            text: 'Delete Gene Set',
             icon: '/Gemma/images/icons/cross.png',
-            toolTip: 'Delete the experiment from the system',
+            toolTip: 'Delete the gene set from the system',
             disabled: !this.editable,
             handler: this.deleteGeneSet,
             scope: this
@@ -290,15 +290,10 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 			enableSaveOnlyAfterModification: true,
 			flex: 1
 		});
-		
-		/*geneMembersGrid.loadMask = new Ext.LoadMask(geneMembersGrid.getEl(), {
-					msg : "Loading experiments ..."
-				});
-		geneMembersGrid.loadMask.show();*/
-		
+				
 		geneMembersGrid.on('geneListSavedOver',function(){
 			Ext.getBody().mask('Reloading set');
-			// could just update experiment count, but this is easier for now since we'll probably change the tab layout soon
+			// could just update gene count, but this is easier for now since we'll probably change the tab layout soon
 			window.location.reload();
 		});
 				
@@ -314,7 +309,7 @@ Gemma.GeneSetSummary = Ext.extend(Ext.Panel, {
 		// adjust when user logs in or out
 		Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){
 			var appScope = this;
-			GeneSetController.canCurrentUserEditGroup(this.experimentDetails.id, {
+			GeneSetController.canCurrentUserEditGroup(this.geneSet.id, {
 				callback: function(editable){
 					appScope.adjustForIsEditable(editable);
 				},
