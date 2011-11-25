@@ -186,7 +186,7 @@ function getTypeColumnHtml(record) {
 var evidenceStore = new Ext.data.Store({
     reader: new Ext.data.JsonReader({
         fields: [
-        	'relevance', 'className', 'evidenceCode', 'phenotypes', // 'experimentCharacteristics',
+        	'relevance', 'className', 'evidenceCode', 'phenotypes', 'isNegativeEvidence',
             {
 				name: 'description',
 				convert: function(value, record) {
@@ -211,6 +211,19 @@ var evidenceStore = new Ext.data.Store({
 evidenceStore.setDefaultSort('relevance', 'desc');
 
 var rowExpander = new Ext.grid.RowExpander({
+    getRowClass : function(record, rowIndex, p, ds){
+        p.cols = p.cols-1;
+        var content = this.bodyContent[record.id];
+        if(!content && !this.lazyRender){
+            content = this.getBodyContent(record, rowIndex);
+        }
+        if(content){
+            p.body = content;
+        }
+
+        return (this.state[record.id] ? 'x-grid3-row-expanded' : 'x-grid3-row-collapsed') +
+        	(record.data.isNegativeEvidence ? ' negative-annotation' : '');
+    },
 	// Use class="x-grid3-cell-inner" so that we have padding around the description.
     tpl: new Ext.Template(
         '<div class="x-grid3-cell-inner" style="white-space: normal;">{description}</div>'
@@ -256,6 +269,12 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					header: "Type",
 					dataIndex: 'type',
 					width: 1,
+					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
+						return (record.data.isNegativeEvidence ? 
+									"<img ext:qwidth='200' ext:qtip='This negative sign denotes evidence for a negative association.' src='/Gemma/images/icons/delete.png' height='16' width='16'/> " :
+									"") +
+								value;						
+					},
 					sortable: true
 				},
 				{
