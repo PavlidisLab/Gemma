@@ -55,6 +55,11 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	getSelectedExperimentSet: function(){
 		return this.getSelectedExpressionExperimentSetValueObject();
 	},
+	
+	// used as 'interface' with geneMembersGrid
+	loadSetValueObject : function(eesvo, callback, args) {
+		this.loadExperimentSetValueObject(eesvo, callback, args);
+	},
 	/**
 	 * Add to table.
 	 * 
@@ -74,6 +79,10 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		// update genes in grid
 		this.loadExperiments(eesvo.expressionExperimentIds, callback, args);
 
+	},
+	// used as 'interface' with geneMembersGrid
+	loadEntities : function(eeIds, callback, args) {
+		this.loadExperiments(eeIds, callback, args);
 	},
 	/**
 	 * Add to table.

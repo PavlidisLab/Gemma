@@ -1423,7 +1423,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					madeFirstSelection: function(){
 						// Ext.getCmp(this.getId()+'Button').enable();
 						this.searchForm.addGeneChooser();
-						this.removeBtn.show();
 					},
 					removeGene: function(){
 						this.searchForm.removeGeneChooser(this.getId());
@@ -1467,7 +1466,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				madeFirstSelection: function(){
 					// Ext.getCmp(this.getId()+'Button').enable();
 					this.searchForm.addExperimentChooser();
-					this.removeBtn.show();
 				},
 				removeExperiment: function(){
 					this.searchForm.removeExperimentChooser(this.getId());

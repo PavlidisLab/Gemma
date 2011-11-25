@@ -65,6 +65,10 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	getSelectedGeneSetValueObject: function(){
 		return this.selectedGeneSetValueObject;
 	},
+	// used as 'interface' with experimentMembersGrid
+	loadSetValueObject: function(gsvo, callback, args){
+		this.loadGeneSetValueObject(gsvo, callback, args);
+	},
 	loadGeneSetValueObject: function(gsvo, callback, args){
 		// update title
 		this.setTitle("Edit your gene selection, from group: \""+gsvo.name+"\"");
@@ -72,6 +76,10 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.setSelectedGeneSetValueObject(gsvo);
 		// update genes in grid
 		this.loadGenes(gsvo.geneIds, callback, args);
+	},
+	// used as 'interface' with experimentMembersGrid
+	loadEntities : function(geneIds, callback, args){
+		this.loadGenes(geneIds, callback, args);
 	},
 	/**
 	 * Add to table.

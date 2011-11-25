@@ -1,6 +1,6 @@
 /**
  * 
- * TODO refactor combo and preview parts into separate components (combo was originally displayed in the preveiw, which is why they are part of the same component)
+ * TODO refactor combo and preview parts into separate components (combo was originally displayed in the preview, which is why they are part of the same component)
  * 
  * @author thea
  * @version $Id$
@@ -12,29 +12,23 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	getSelectedGeneOrGeneSetValueObject:function(){
 		return (this.selectedGeneOrGroup)?this.selectedGeneOrGroup.resultValueObject:null;
 	},
-	setselectedGeneSetValueObject: function(gsvo){
+	setSelectedGeneSetValueObject: function(gsvo){
 		this.selectedGeneSetValueObject = gsvo;
 		this.isGeneSet = true;
 		this.isGene = false;
 	},
-	getselectedGeneSetValueObject: function(){
+	getSelectedGeneSetValueObject: function(){
 		return this.selectedGeneSetValueObject;
 	},
 	resetGenePreview : function() {
-		Ext.DomHelper.overwrite(this.previewPart.genePreviewContent.body, {
-					cn : ''
-				});
-		// this.genePreviewExpandBtn.disable().hide();
-		// this.geneSelectionEditorBtn.disable().hide();
+		this.preview.resetPreview();
 	},
 	showGenePreview : function() {
-		if(this.loadMask){
-			this.loadMask.hide();
-		}
-		this.geneSelectionEditorBtn.enable();
-		this.geneSelectionEditorBtn.show();
+		this.preview.showPreview();
 	},
-
+	collapsePreview : function(){
+		this.preview.collapsePreview();
+	},
 	maskGenePreview : function() {
 		if (!this.loadMask && this.getEl()) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -45,42 +39,19 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			this.loadMask.show();
 		}
 	},
-	launchGeneSelectionEditor : function() {
 
-		if (!(this.selectedGeneOrGroup && this.selectedGeneOrGroup.resultValueObject) || !this.geneIds || this.geneIds === null || this.geneIds.length === 0) {
-			return;
-		}
-		this.searchForm.getEl().mask();
-
-		this.geneSelectionEditorWindow.show();
-
-		this.geneSelectionEditor.loadMask = new Ext.LoadMask(this.geneSelectionEditor.getEl(), {
-					msg : "Loading genes ..."
-				});
-		this.geneSelectionEditor.loadMask.show();
-		Ext.apply(this.geneSelectionEditor, {
-					taxonId : this.searchForm.getTaxonId(),
-					taxonName : this.searchForm.getTaxonName()
-				});
-
-		if(this.selectedGeneSetValueObject){
-			this.geneSelectionEditor.loadGeneSetValueObject(this.selectedGeneSetValueObject, function() {
-					this.geneSelectionEditor.loadMask.hide();
-				}.createDelegate(this, [], false));
-		}else{
-			this.geneSelectionEditor.loadGenes(this.geneIds, function() {
-					this.geneSelectionEditor.loadMask.hide();
-				}.createDelegate(this, [], false));
-		}
-		
-		
-	},
-
+	/**
+	 * called when a record is selected from geneAndGeneGroupCombo
+	 * @param {Object} record
+	 * @param {Object} query
+	 */
 	loadGeneOrGroup : function(record, query) {
 
 		this.selectedGeneOrGroup = record.data;
 		if(this.selectedGeneOrGroup.resultValueObject instanceof GeneSetValueObject){
-			this.setselectedGeneSetValueObject( this.selectedGeneOrGroup.resultValueObject );
+			this.setSelectedGeneSetValueObject( this.selectedGeneOrGroup.resultValueObject );
+			this.isGeneSet = true;
+			this.isGene = false;
 		}else if (this.selectedGeneOrGroup.resultValueObject instanceof GeneValueObject){
 			this.isGene = true;
 			this.isGeneSet = false;
@@ -107,15 +78,12 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		// load preview of group if group was selected
 		if (this.isGeneSet) {
 			
-			geneIds = record.get('memberIds');
-			if (geneIds === null || geneIds.length === 0) {
-				return;
-			}
-			this.loadGenes(geneIds);
+			this.preview.loadGenePreviewFromGeneSet(this.getSelectedGeneSetValueObject());
 
 		}
 		// load single gene if gene was selected
 		else {
+			
 			this.selectedGeneOrGroup.memberIds = [id];
 			this.geneIds = [id];
 
@@ -124,18 +92,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			// reset the gene preview panel content
 			this.resetGenePreview();
 
-			// update the gene preview panel content
-			this.previewPart.genePreviewContent.update({
-						officialSymbol : record.get("name"),
-						officialName : record.get("description"),
-						id : record.get("resultValueObject").id,
-						taxonCommonName : record.get("taxonName")
-					});
-			this.updateTitle(this.selectedGeneOrGroup.name, 1);
-			this.geneSelectionEditorBtn.setText('0 more - Edit');
-			this.previewPart.moreIndicator.update('');
-			this.geneSelectionEditorBtn.enable();
-			this.geneSelectionEditorBtn.show();
+			this.preview.loadGenePreviewFromGenes([this.selectedGeneOrGroup.resultValueObject]);
 		}
 	},
 
@@ -148,58 +105,13 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	 */
 	loadGenes : function(ids) {
 
-		this.maskGenePreview();
+		this.preview.mask();
 
 		// store the ids
 		this.geneIds = ids;
 		this.searchForm.geneIds = ids;
 		// load the preview
-		this.loadGenePreview();
-
-	},
-
-	/**
-	 * update the contents of the gene preview box with the this.geneIds value
-	 * 
-	 * @param geneIds
-	 *            an array of geneIds to use
-	 */
-	loadGenePreview : function() {
-
-		this.maskGenePreview();
-
-		// grab ids to use
-		var ids = this.geneIds;
-
-		// load some genes to display
-		var limit = (ids.size() < this.searchForm.PREVIEW_SIZE) ? ids.size() : this.searchForm.PREVIEW_SIZE;
-		var previewIds = ids.slice(0, limit);
-		GenePickerController.getGenes(previewIds, function(genes) {
-
-					// reset the gene preview panel content
-					this.resetGenePreview();
-					for (var i = 0; i < genes.size(); i++) {
-						this.previewPart.genePreviewContent.update(genes[i]);
-					}
-					this.updateTitle();
-				
-					this.showGenePreview();
-
-					if (ids.size() <= this.searchForm.PREVIEW_SIZE) {
-						this.previewPart.moreIndicator.update('');
-					}else{
-						this.previewPart.moreIndicator.update('[...]');
-					}
-
-					if (ids.size() === 1) {
-						this.geneSelectionEditorBtn.setText('0 more - Edit');
-					}else{
-						this.geneSelectionEditorBtn.setText((ids.size() - limit) + ' more - Edit');
-					}
-					this.geneSelectionEditorBtn.enable().show();
-					this.previewPart.genePreviewContent.expand();
-
-				}.createDelegate(this));
+		this.preview.loadGenePreviewFromIds(ids);
 
 	},
 
@@ -229,7 +141,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneCombo.disable().hide();
 		this.helpBtn.hide();
 		this.symbolListButton.hide();
-		this.removeBtn.setPosition(300,0);
 		this.fireEvent('madeFirstSelection');
 		this.doLayout();
 								
@@ -334,39 +245,23 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				// reset the gene preview panel content
 				this.resetGenePreview();
 
+
+				this.preview.loadGenePreviewFromGenes(genesToPreview);
+				this.preview.setTaxonId(taxonId);
+				
+				
 				if (queriesWithMoreThanOneResult.length > 0 || queriesWithNoResults.length > 0) {
 
-					Ext.DomHelper.append(this.previewPart.genePreviewContent.body, {
-								cn : '<div style="padding-bottom:7px;color:red;">Not all symbols had exact matches ('+
+					this.preview.insertMessage('<div style="padding-bottom:7px;color:red;">Not all symbols had exact matches ('+
 										 '<a onmouseover="this.style.cursor=\'pointer\'" '+
 										 'onclick="Ext.Msg.alert(\'Query Result Details\',\'<br>'+
 										 msgMany+
 										 msgNone+
 										 '\');" style="color: red; text-decoration: underline;">details</a>)</div>'
-							});
+							);
 				}
-
-				// write to the gene preview panel
-				for (i = 0; i < genesToPreview.length; i++) {
-					this.previewPart.genePreviewContent.update(genesToPreview[i]);
-				}
-				this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + " genes)");
-				this.geneSelectionEditorBtn.setText((geneIds.length - genesToPreview.length)+
-						 ' more - Edit');
-				this.showGenePreview();
-				this.previewPart.genePreviewContent.show();
-				this.previewPart.show();
-
-				if (geneIds.size() <= this.searchForm.PREVIEW_SIZE) {
-					this.previewPart.moreIndicator.update('');
-				}else{
-					this.previewPart.moreIndicator.update('[...]');
-				}
-
-				if (geneIds.size() <= 1) {
-					this.geneSelectionEditorBtn.setText('0 more - Edit');
-					this.geneSelectionEditorBtn.enable().show();
-				}
+				
+				this.preview.show();
 
 				loadMask.hide();
 
@@ -377,7 +272,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				Ext.Msg.alert('There was an error', e);
 			}
 		});
-		this.geneSelectionEditorBtn.show();
 		this.fireEvent('select');
 	},
 	/**
@@ -422,62 +316,34 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneCombo.disable().hide();
 		this.helpBtn.hide();
 		this.symbolListButton.hide();
-		this.removeBtn.setPosition(300,0);
 		this.fireEvent('madeFirstSelection');
 		this.doLayout();
 		
-		// write to the gene preview panel
-		for (i = 0; i < genesToPreview.length; i++) {
-			this.previewPart.genePreviewContent.update(genesToPreview[i]);
-			if (i == 4){
-				break;
-			}
-		}
-		this.previewPart.genePreviewContent.setTitle("Gene Selection Preview (" + geneIds.length + " genes)");
-		this.geneSelectionEditorBtn.setText((geneIds.length - genesToPreview.length)+
-				 ' more - Edit');
-		this.geneSelectionEditorBtn.enable();
-		this.geneSelectionEditorBtn.show();
-		this.previewPart.genePreviewContent.show();
-		this.previewPart.show();
-
-		if (geneIds.size() <= this.searchForm.PREVIEW_SIZE) {
-			this.previewPart.moreIndicator.update('');
-		}else{
-			this.previewPart.moreIndicator.update('[...]');
-		}
-
-		if (geneIds.size() <= 1) {
-			this.geneSelectionEditorBtn.setText('0 more - Edit');
-			this.geneSelectionEditorBtn.enable().show();
-		}
+		
+		this.preview.loadGenePreviewFromGenes(genesToPreview);
+		this.preview.show();
 		
 		this.fireEvent('select');
 	},
 	initComponent : function() {
 
-		/**
-		 * **** GENE COMBO
-		 * *****************************************************************************
-		 */
-		/* this.geneCombo = new Gemma.MyEXTGeneAndGeneGroupCombo; */
 		this.newBoxTriggered = false;
 		this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
 			width: 282,
 			hideTrigger: true,
 			taxonId: this.taxonId
 		});
+		
 		this.geneCombo.on('select', function(combo, record, index) {
 								
 								this.searchForm.taxonChanged(record.get("taxonId"), record.get("taxonName"));
 					
 								var query = combo.store.baseParams.query;
 								this.loadGeneOrGroup(record, query);
-								this.previewPart.genePreviewContent.show();
-								this.previewPart.show();
-								this.previewPart.genePreviewContent.expand();
+								this.preview.showPreview();
+								this.preview.show();
 								
-								this.geneSelectionEditor.setTaxonId(record.get("taxonId"));
+								this.preview.setTaxonId(record.get("taxonId"));
 
 								// if this was the first time a selection was
 								// made using this box
@@ -486,12 +352,10 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 									this.newBoxTriggered = true;
 									this.helpBtn.hide();
 									this.symbolListButton.hide();
-									this.removeBtn.show();
 								}
 								combo.disable().hide();
 								this.helpBtn.hide();
 								this.symbolListButton.hide();
-								this.removeBtn.setPosition(300,0);
 								this.doLayout();
 								
 							},
@@ -499,8 +363,10 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 						);
 					
 
+	
 		this.relayEvents(this.geneCombo, ['select']);
 
+	
 		this.symbolList = new Gemma.GeneImportPanel({
 			height:300,
 			showTaxonCombo: true,
@@ -534,159 +400,28 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					}.createDelegate(this, [], true)
 				});
 
-		/**
-		 * ***** GENE SELECTION EDITOR
-		 * *****************************************************************
-		 */
-		this.geneSelectionEditor = new Gemma.GeneMembersSaveGrid({
-			// id: 'geneSelectionEditor',
-			name: 'geneSelectionEditor',
-			// hidden: 'true',
-			hideHeaders: true,
-			width: 500,
-			height: 500,
-			frame: false
-		});
-
-		this.geneSelectionEditor.on('geneListModified', function(newSets) {
+		this.preview = new Gemma.GeneSetPreview();
+			
+		this.preview.on('geneListModified', function(newSets) {
 			var i;
 			for (i = 0; i < newSets.length; i++) { // should only be one
 				if (typeof newSets[i].geneIds !== 'undefined' && typeof newSets[i].name !== 'undefined') {
-					this.loadGenes(newSets[i].geneIds);
 					// update record
 					this.selectedGeneOrGroup.resultValueObject = newSets[i];
-					this.setselectedGeneSetValueObject(newSets[i]);
-					this.updateTitle();
+					this.setSelectedGeneSetValueObject(newSets[i]);
 				}
 			}
-				this.listModified = true;
-			}, this);
-
-		this.geneSelectionEditor.on('doneModification', function() {
-					this.searchForm.getEl().unmask();
-					this.geneSelectionEditorWindow.hide();
-				}, this);
-
-		this.geneSelectionEditorBtn = new Ext.Button({
-					handler : this.launchGeneSelectionEditor,
-					scope : this,
-					style : 'float:right;text-align:right; padding-right:10px; padding-bottom:5px',
-					tooltip : "Edit your selection",
-					hidden : true,
-					//disabled : true, // enabling later is buggy in IE
-					ctCls : 'right-align-btn transparent-btn transparent-btn-link'
-				});
-
-		this.geneSelectionEditorWindow = new Ext.Window({
-					// id : 'geneSelectionEditorWindow',
-					// closeAction: 'hide',
-					closable : false,
-					layout : 'fit',
-					width : 500,
-					height : 500,
-					items : this.geneSelectionEditor,
-					title : 'Edit Your Gene Selection'
-				});
-		this.geneSelectionEditor.on('titlechange', function(panel, newTitle){
-			this.geneSelectionEditorWindow.setTitle(newTitle);
 		}, this);
 
-		/**
-		 * **** GENE PREVIEW
-		 * ***************************************************************************
-		 */
-		this.previewPart = new Ext.Panel({
-			border: true,
-				hidden: true,
-				forceLayout:true,
-				hideBorders: true,
-				bodyStyle: 'border-color:#B5B8C8; background-color:ghostwhite',
-				items: [{
-					width : 322,
-					ref: 'genePreviewContent',
-					tpl : new Ext.Template('<div style="padding-bottom:7px;">'+
-					'<a target="_blank" href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} '+
-					'<span style="color:grey">({taxonCommonName})</span></div>'),
-					tplWriteMode : 'append', // use this to append to content when
-					// calling update instead of replacing
-					title : 'Gene Selection Preview',
-					collapsible : true,
-					forceLayout:true,
-					cls : 'unstyledTitle',
-					bodyStyle: 'padding:10px;padding-bottom:0px; background-color:transparent', 
-					hidden : false,
-					tools: [{
-						id: 'delete',
-						handler: function(event, toolEl, panel, toolConfig){
-							this.searchForm.removeGeneChooser(this.id);
-						// this.fireEvent('removeExperiment');
-						}.createDelegate(this, [], true)					,
-						qtip: 'Remove this gene or group from your search'
-					}],
-					listeners : {
-						collapse : function() {
-							this.previewPart.moreIndicator.hide();
-							this.geneSelectionEditorBtn.hide();
-						},
-						expand : function() {
-							this.geneSelectionEditorBtn.show();
-							this.previewPart.moreIndicator.show();
-						},
-						scope:this
-					}
-				},{
-					xtype:'box',
-					ref:'moreIndicator',
-					html:'[...]',
-					hidden:false,
-					style: 'margin-left:10px; background-color:transparent', 
-				}, this.geneSelectionEditorBtn]
-		});
-		/**
-		 * don't use params if you want to update name based on this.selectedGeneOrGroup.resultValueObject
-		 * @param {Object} name
-		 * @param {Object} size
-		 */
-		this.updateTitle = function(name, size){
-			
-			// if an experiment set page exists for this set, make title a link 
-			if (!name && this.selectedGeneSetValueObject instanceof GeneSetValueObject) {
-				size = this.selectedGeneSetValueObject.geneIds.size();
-				
-				if (this.selectedGeneSetValueObject instanceof DatabaseBackedGeneSetValueObject) {
-				
-					name = '<a target="_blank" href="/Gemma/geneSet/showGeneSet.html?id=' +
-					this.selectedGeneSetValueObject.id +'">' +
-					this.selectedGeneSetValueObject.name +'</a>'
-					
-				} else if (this.selectedGeneSetValueObject instanceof GOGroupValueObject) {
-					name = this.selectedGeneSetValueObject.name + ": " + this.selectedGeneSetValueObject.description;
-				} else {
-					name = this.selectedGeneSetValueObject.name;
-				}
-			}
-			
-			this.previewPart.genePreviewContent.setTitle(
-				'<span style="font-size:1.2em">'+name+
-				'</span> &nbsp;&nbsp;<span style="font-weight:normal">(' + size + ((size > 1)?" genes)":" gene)"));
-		};
-		this.collapsePreview = function(){
-			this.geneSelectionEditorBtn.hide();
-			if(typeof this.previewPart.genePreviewContent !== 'undefined'){
-				this.previewPart.genePreviewContent.collapse(true);
-			}
-		};				
+		this.preview.on('doneModification', function() {
+			this.searchForm.getEl().unmask();
+		}, this);
 		
-		this.removeBtn = new Ext.Button({
-					icon : "/Gemma/images/icons/cross.png",
-					cls : "x-btn-icon",
-					tooltip : 'Remove this experiment or group from your search',
-					hidden : true,
-					handler : function() {
-						this.fireEvent('removeGene');
-					}.createDelegate(this, [], true)
-				});
-
+		
+		this.preview.on('removeMe', function() {
+			this.fireEvent('removeGene');
+		}, this);
+	
 		this.helpBtn = new Gemma.InlineHelpIcon({
 			tooltipText:'Select a general group of genes or try searching for genes by symbol, '+
 					'GO terms or keywords such as: schizophrenia, hippocampus etc.<br><br>'+
@@ -701,7 +436,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				layout: 'hbox',
 				hideBorders: true,
 				items: [this.symbolListButton, this.geneCombo, this.helpBtn]
-			}, this.previewPart]
+			}, this.preview]
 		});
 				
 		Gemma.GeneSearchAndPreview.superclass.initComponent.call(this);
