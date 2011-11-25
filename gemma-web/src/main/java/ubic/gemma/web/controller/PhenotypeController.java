@@ -49,7 +49,7 @@ public class PhenotypeController extends BaseController {
     public ModelAndView showAllPhenotypes( HttpServletRequest request, HttpServletResponse response ) {
         ModelAndView mav = new ModelAndView( "phenotypes" );
 
-        mav.addObject( "phenotypeValue", request.getParameter( "phenotypeValue" ) );
+        mav.addObject( "phenotypeUrlId", request.getParameter( "phenotypeUrlId" ) );
         mav.addObject( "geneId", request.getParameter( "geneId" ) );
 
         return mav;

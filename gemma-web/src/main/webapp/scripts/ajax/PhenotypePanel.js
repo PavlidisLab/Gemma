@@ -16,7 +16,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 							    	        read: {
 							        	        dwrFunction: PhenotypeController.findCandidateGenes,
 							            	    getDwrArgsFunction: function(request){
-							            	    	return [request.params["phenotypeValue"]];
+							            	    	return [request.params["phenotypeValueUri"]];
 								                }
 							    	        }
 								        }
@@ -72,8 +72,8 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 		
 		var isStoreFirstLoad = true;
 		phenotypeGrid.getStore().on('load', function() {
-			if (isStoreFirstLoad && Ext.get("phenotypeValue") != null && Ext.get("phenotypeValue").getValue() != "") {
-				var currentRecord = phenotypeGrid.getStore().getById(Ext.get("phenotypeValue").getValue());
+			if (isStoreFirstLoad && Ext.get("phenotypeUrlId") != null && Ext.get("phenotypeUrlId").getValue() != "") {
+				var currentRecord = phenotypeGrid.getStore().getById(Ext.get("phenotypeUrlId").getValue());
 
 				phenotypeGrid.getSelectionModel().selectRecords( [ currentRecord ], false); // false to not keep existing selections
 				
@@ -170,8 +170,9 @@ Gemma.PhenotypeStore = Ext.extend(Ext.data.Store, {
 		successProperty: 'success', // same as default.
 		messageProperty: 'message', // optional
 		totalProperty: 'totalRecords', // default is 'total'; optional unless paging.
-		idProperty: "value",
-		fields: [ 
+		idProperty: "urlId",
+		fields: [
+			'urlId',
 			'value',
 			'valueUri',
 			{ name: 'occurence', type: "long" },
@@ -219,7 +220,7 @@ Gemma.PhenotypeCheckboxSelectionModel = Ext.extend(Ext.grid.CheckboxSelectionMod
 				}
 				var geneStore = geneGrid.getStore();
 				geneStore.baseParams = geneStore.baseParams || {};
-			    geneStore.baseParams['phenotypeValue'] = storeBaseParams;
+			    geneStore.baseParams['phenotypeValueUri'] = storeBaseParams;
 evidenceGrid.removeAll(false);
 			    geneStore.reload({
 			    	params: {
