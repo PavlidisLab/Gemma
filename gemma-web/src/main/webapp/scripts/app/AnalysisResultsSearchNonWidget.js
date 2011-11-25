@@ -199,7 +199,9 @@ Ext.onReady(function() {
 				user : user,
 				tabPanelViewFlag : true,
 				layoutOnTabChange:true,
-				hideMode:'offsets'
+				hideMode:'offsets',
+				currentResultsStringency: searchPanel.getLastCoexpressionSearchCommand().stringency,
+				initialDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency
 				//hidden:true
 			});
 		}
@@ -345,9 +347,19 @@ Ext.onReady(function() {
 		knownGeneDatasetGrid.loadData(result.knownGeneDatasets);
 		*/
 		knownGeneGrid.cytoscapeRef=cytoscapePanel;
+		
+		if (knownGeneGrid.initialDisplayStringency > knownGeneGrid.currentResultsStringency){
+        	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes), knownGeneGrid.initialDisplayStringency);
+        	
+        	knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, trimmed.trimmedKnownGeneResults,
+    				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
+        	
+        }
+		else{
+		
 		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
 				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
-			
+		}	
 		knownGeneGrid.show();
 				
 		if (admin) {

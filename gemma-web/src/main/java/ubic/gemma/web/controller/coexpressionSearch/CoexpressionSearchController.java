@@ -163,6 +163,13 @@ public class CoexpressionSearchController extends BaseFormController {
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick(
                 searchOptions.getEeIds(), genes, searchOptions.getStringency(), COEX_VIS_RESULTS,
                 searchOptions.getQueryGenesOnly(), true );
+        
+        int stringencyTrimLimit = searchOptions.getEeIds().size();
+        
+        //make sure the limit isn't too big
+        if (stringencyTrimLimit>1400){
+            stringencyTrimLimit=1400;
+        }
 
         int resultsLimit = 700;
 
@@ -172,11 +179,11 @@ public class CoexpressionSearchController extends BaseFormController {
 
             log.info( "Coex Search for " + searchOptions.getGeneIds().size() + " genes: "
                     + searchOptions.getGeneIds().toString() + " returned " + geneResults.size()
-                    + " results.  Stripping low stringency results" );
+                    + " results.  Stripping non query gene low stringency results(possible up to a stringency of "+stringencyTrimLimit+")" );
 
             Collection<CoexpressionValueObjectExt> strippedGeneResults = new ArrayList<CoexpressionValueObjectExt>();            
 
-            for ( int i = 2; i < 40; i++ ) {
+            for ( int i = 2; i < stringencyTrimLimit; i++ ) {
 
                 HashSet<Long> nodeIds = new HashSet<Long>();
 
@@ -241,12 +248,17 @@ public class CoexpressionSearchController extends BaseFormController {
                 strippedGeneResults = new HashSet<CoexpressionValueObjectExt>();
 
             }
+            
+            
 
             log.info( "Original results size: " + oldSize + " trimmed results size: " + geneResults.size()
                     + "  Total results removed: " + ( oldSize - geneResults.size() ) );
 
+            
+        
+        
         }
-
+        
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {

@@ -44,6 +44,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	currentQueryGeneIds:[],
 	
 	currentResultsStringency:2,
+	initialDisplayStringency:2,
 
 	viewConfig : {
 		forceFit : true,
@@ -247,10 +248,10 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						                	allowBlank: false,
 						                	allowDecimals: false,
 						                	allowNegative: false,
-						                	minValue: Gemma.MIN_STRINGENCY,
+						                	minValue: this.currentResultsStringency,
 						                	maxValue: 999,
 						                	fieldLabel: 'Stringency ',
-						                	value: 2,
+						                	value: this.initialDisplayStringency,
 						                	width: 60,
 						                	fieldTip: "The minimum number of datasets that must show coexpression for a result to appear",
 						                	enableKeyEvents : true
@@ -320,7 +321,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     //update cytoscape                 
                     if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
                     	
-                    	this.cytoscapeRef.coexGridUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
                     	
                     }
                     
@@ -354,7 +355,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     //update cytoscape                 
                     if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
                     	
-                    	this.cytoscapeRef.coexGridUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
                     	
                     }
                     
@@ -389,11 +390,14 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		return supporting;
 	},
 	
-	cytoscapeUpdate : function(stringency, numQueryGenes, data){ 
+	cytoscapeUpdate : function(stringency, numQueryGenes, data, minStringency){ 
 		
 		//TODO update toolbar stringency
 		if (this.getTopToolbar()) {
 			this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
+			if (minStringency){
+				this.getTopToolbar().getComponent('stringencySpinner').minValue = minStringency;
+			}
 		}
 		this.loadData(false, numQueryGenes, data, null);
 		

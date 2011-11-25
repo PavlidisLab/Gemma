@@ -53,6 +53,8 @@ public class CoexpressionSearchCommand {
     private boolean queryGenesOnly;
 
     private Integer stringency;
+    
+    private Integer displayStringency;
 
     private boolean useMyDatasets;
 
@@ -163,6 +165,14 @@ public class CoexpressionSearchCommand {
                 + this.forceProbeLevelSearch + " QueryGenesOnly=" + this.getQueryGenesOnly() + " tax=" + getTaxonId()
                 + " Stringency=" + stringency + " ees="
                 + StringUtils.abbreviate( StringUtils.join( getEeIds(), "," ), 100 );
+    }
+
+    public void setDisplayStringency( Integer displayStringency ) {
+        this.displayStringency = displayStringency;
+    }
+
+    public Integer getDisplayStringency() {
+        return displayStringency;
     }
 
 }

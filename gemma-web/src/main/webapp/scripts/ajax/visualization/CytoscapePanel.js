@@ -37,6 +37,8 @@ Ext.Panel, {
     layoutIndex: 0,
 
     currentResultsStringency: 2,
+    
+    initialDisplayStringency: 2,
 
     currentNodeGeneIds: [],
 
@@ -350,7 +352,7 @@ Ext.Panel, {
                 minValue: Gemma.MIN_STRINGENCY,
                 maxValue: 999,
                 fieldLabel: 'Stringency ',
-                value: 2,
+                value: this.coexCommand.initialDisplayStringency,
                 width: 60,
                 enableKeyEvents : true
 
@@ -413,9 +415,9 @@ Ext.Panel, {
                 //icon: '/Gemma/images/download.gif',
                 menu: new Ext.menu.Menu({
                     items: [{
-                        text: 'Change Layout',
+                        text: 'Refresh Layout',
                         //icon: '/Gemma/images/icons/picture.png',
-                        tooltip: 'Change the layout of the graph',
+                        tooltip: 'Refresh the layout of the graph',
                         handler: this.changeLayout,
                         scope: this
                     }]
@@ -488,9 +490,7 @@ Ext.Panel, {
                         scope: this,
                         fn: function () {
 
-
                             if (this.coexGridRef) {
-
 
                                 if (!this.loadMask) {
                                     this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -499,9 +499,7 @@ Ext.Panel, {
                                     });
                                 }
                                 this.loadMask.show();
-
-                                this.currentResultsStringency = this.coexCommand.stringency;
-
+                               
                                 this.currentNodeGeneIds = [];
 
                                 this.currentQueryGeneIds = [];
@@ -513,9 +511,16 @@ Ext.Panel, {
                                     knownGeneResults: this.knownGeneResults
                                 });
                                 results.queryGenes = this.queryGenes;
-                                results.knownGeneResults = this.knownGeneResults;
-
-                                this.currentResultsStringency = this.coexCommand.stringency;
+                                results.knownGeneResults = this.knownGeneResults;                                
+                                
+                                var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+                            	
+                            	if (spinner.getValue() < this.coexCommand.displayStringency){
+                            		spinner.setValue(this.coexCommand.displayStringency);
+                            	}
+                            	
+                            	//spinner.minValue = this.currentResultsStringency;
+                                
                                 this.initialCoexSearchCallback(results);
 
                             }
@@ -538,9 +543,6 @@ Ext.Panel, {
             vis.nodeTooltipsEnabled(true);
 
             vis.edgeTooltipsEnabled(true);
-
-            vis.panelRef.getTopToolbar().getComponent('stringencySpinner').value = vis.panelRef.coexCommand.stringency;
-            
             
             if (!vis.panelRef.getTopToolbar().getComponent('stringencySpinner').hasListener('specialkey')) {
 
@@ -549,9 +551,9 @@ Ext.Panel, {
                     if (e.getKey() == e.ENTER) {
                     	var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
 
-                    	//prevent spinner from going below currentResultsStringency by manual entry
-                    	if (spinner.getValue() < vis.panelRef.currentResultsStringency){
-                    		spinner.setValue(vis.panelRef.currentResultsStringency);
+                    	//prevent spinner from going below 2  by manual entry
+                    	if (spinner.getValue() < 2){
+                    		spinner.setValue(2);
                     	}
                     	
                         if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
@@ -575,7 +577,43 @@ Ext.Panel, {
 
                             });
                             
-                        } 
+                        }
+                        else { //new search 
+                        	
+                        	Ext.Msg.confirm('New Search', 'Doing a new slow search if you click yes', function (btn) {
+
+                                if (btn == 'yes') {
+                                	
+                                	var displayStringency = spinner.getValue();
+                                	var resultsStringency = spinner.getValue();
+                                
+                                	if (displayStringency > 5){
+                						resultsStringency = displayStringency - Math.round(displayStringency/4);
+                					}
+                                	
+                                    Ext.apply(
+                                    vis.panelRef.coexCommand, {
+                                    	stringency: resultsStringency,
+                                    	displayStringency : displayStringency,
+                                        geneIds: vis.panelRef.currentQueryGeneIds,
+                                        queryGenesOnly: false
+                                    });
+
+                                    vis.panelRef.loadMask.show();
+                                    ExtCoexpressionSearchController.doSearchQuick2(
+                                    vis.panelRef.coexCommand, {
+                                        callback: vis.panelRef.initialCoexSearchCallback.createDelegate(vis.panelRef)
+
+                                    });
+                                   
+                                    
+                                } else {
+                                	spinner.setValue(spinner.getValue()+1);
+                                }
+                            },this);
+                        	                    	
+                            
+                        }
                     }
          
                 }, this);
@@ -587,6 +625,13 @@ Ext.Panel, {
                 vis.panelRef.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
 
                     var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
+                    
+                    /*
+                    //prevent spinner from going below currentResultsStringency
+                    if (spinner.getValue() < vis.panelRef.currentResultsStringency){
+                		spinner.setValue(vis.panelRef.currentResultsStringency);
+                	}
+*/
 
                     if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
 
@@ -595,7 +640,6 @@ Ext.Panel, {
                         vis.panelRef.trimmedNodeIds = trimmed.trimmedNodeIds;
 
                         vis.panelRef.coexGridRef.cytoscapeUpdate(spinner.getValue(), vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults);
-
 
                         vis.filter("nodes", function (node) {
 
@@ -611,19 +655,42 @@ Ext.Panel, {
                         });
 
 
-                    } else { //new search
-                        Ext.apply(
-                        vis.panelRef.coexCommand, {
-                            geneIds: vis.panelRef.currentQueryGeneIds,
-                            queryGenesOnly: false
-                        });
+                    }
+                    else { //new search 
+                    	
+                    	Ext.Msg.confirm('New Search', 'Doing a new slow search if you click yes', function (btn) {
 
-                        vis.panelRef.loadMask.show();
-                        ExtCoexpressionSearchController.doSearchQuick2(
-                        vis.panelRef.coexCommand, {
-                            callback: vis.panelRef.initialCoexSearchCallback.createDelegate(vis.panelRef)
+                            if (btn == 'yes') {
+                            	
+                            	var displayStringency = spinner.getValue();
+                            	var resultsStringency = spinner.getValue();
+                            
+                            	if (displayStringency > 5){
+            						resultsStringency = displayStringency - Math.round(displayStringency/4);
+            					}
+                            	
+                                Ext.apply(
+                                vis.panelRef.coexCommand, {
+                                	stringency: resultsStringency,
+                                	displayStringency : displayStringency,
+                                    geneIds: vis.panelRef.currentQueryGeneIds,
+                                    queryGenesOnly: false
+                                });
 
-                        });
+                                vis.panelRef.loadMask.show();
+                                ExtCoexpressionSearchController.doSearchQuick2(
+                                vis.panelRef.coexCommand, {
+                                    callback: vis.panelRef.initialCoexSearchCallback.createDelegate(vis.panelRef)
+
+                                });
+                               
+                                
+                            } else {
+                            	spinner.setValue(spinner.getValue()+1);
+                            }
+                        },this);
+                    	                    	
+                        
                     }
 
                 }, this);
@@ -680,31 +747,20 @@ Ext.Panel, {
 
             });
 */
-            if (vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue() > vis.panelRef.currentResultsStringency) {
-
-                var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
-                vis.panelRef.trimmedKnownGeneResults = trimmed.trimmedKnownGeneResults;
-                vis.panelRef.trimmedNodeIds = trimmed.trimmedNodeIds;
-
-                vis.panelRef.coexGridRef.cytoscapeUpdate(spinner.getValue(), vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults);
-                vis.panelRef.coexGridRef.knownGeneResults = vis.panelRef.knownGeneResults;
-                vis.panelRef.coexGridRef.currentQueryGeneIds = vis.panelRef.currentQueryGeneIds;
-
-                vis.filter("nodes", function (node) {
-
-                    return vis.panelRef.trimmedNodeIds.indexOf(node.data.geneid) !== -1;
-
-
-                });
-
-                vis.filter("edges", function (edge) {
-
-                    return edge.data.support >= vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
-
-                });
-            }
 
             vis.panelRef.ready = true;
+            
+            
+            //filter visable results based on initialDisplayStringency
+            if (vis.panelRef.initialDisplayStringency > vis.panelRef.currentResultsStringency){
+            	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.initialDisplayStringency);
+            	vis.panelRef.stringencyUpdate(vis.panelRef.initialDisplayStringency, trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+            	            	
+            	//update the grid with trimmed data (underlying data in coexGridRef has already been set)
+                vis.panelRef.coexGridRef.cytoscapeUpdate(vis.panelRef.initialDisplayStringency, vis.panelRef.currentQueryGeneIds.length, trimmed.trimmedKnownGeneResults, this.currentResultsStringency);
+                
+            }
+            
         });
         //end vis.ready()        
         Ext.apply(this, {
@@ -767,11 +823,16 @@ Ext.Panel, {
             var selectedNodes = this.visualization.selected("nodes");
 
             if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-                //do all new searches at stringency 2 so set the spinner value
+                
                 var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                spinner.setValue(2);
-
-
+                
+                var displayStringency = spinner.getValue();
+                var resultsStringency = spinner.getValue();
+                
+                if (displayStringency > 5){
+					resultsStringency = displayStringency - Math.round(displayStringency/4);
+				}
+                
                 var selectedNodesGeneIdArray = [];
 
                 var sNodesLength = selectedNodes.length;
@@ -789,11 +850,13 @@ Ext.Panel, {
 
                 Ext.apply(
                 this.coexCommand, {
-                    stringency: 2,
+                    stringency: resultsStringency,
+                    displayStringency : displayStringency,
                     //Change to default or 'heuristic' based value
                     geneIds: selectedNodesGeneIdArray,
                     queryGenesOnly: false
                 });
+                
 
                 this.loadMask.show();
                 ExtCoexpressionSearchController.doSearchQuick2(
@@ -825,13 +888,16 @@ Ext.Panel, {
             var selectedNodes = this.visualization.selected("nodes");
 
             if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-
-
+            	
                 if (this.currentQueryGeneIds.length + selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-
-                    //do all new searches at stringency 2 so set the spinner value
+                    
                     var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                    spinner.setValue(2);
+                    var displayStringency = spinner.getValue();
+                	var resultsStringency = spinner.getValue();
+                
+                	if (displayStringency > 5){
+						resultsStringency = displayStringency - Math.round(displayStringency/4);
+					}
 
                     var extendedNodesGeneIdArray = [];
                     var sNodesLength = selectedNodes.length;
@@ -849,6 +915,8 @@ Ext.Panel, {
 
                     Ext.apply(
                     this.coexCommand, {
+                    	stringency: resultsStringency,
+                    	displayStringency : displayStringency,
                         geneIds: extendedNodesGeneIdArray,
                         queryGenesOnly: false
                     });
@@ -865,10 +933,14 @@ Ext.Panel, {
                     Ext.Msg.confirm('Status of Search', 'Too many Query Genes. A max of ' + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY + ' query genes allowed. Click Yes to continue search with reduced query genes', function (btn) {
 
                         if (btn == 'yes') {
-
-                            //do all new searches at stringency 2 so set the spinner value
+                           
                             var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                            spinner.setValue(2);
+                            var displayStringency = spinner.getValue();
+                			var resultsStringency = spinner.getValue();
+                
+                			if (displayStringency > 5){
+								resultsStringency = displayStringency - Math.round(displayStringency/4);
+							}
 
                             var extendedNodesGeneIdArray = [];
                             var sNodesLength = selectedNodes.length;
@@ -890,6 +962,8 @@ Ext.Panel, {
 
                             Ext.apply(
                             this.coexCommand, {
+                            	stringency: resultsStringency,
+                    			displayStringency : displayStringency,
                                 geneIds: extendedNodesGeneIdArray,
                                 queryGenesOnly: false
                             });
@@ -1003,23 +1077,25 @@ Ext.Panel, {
         var spinner = this.getTopToolbar().getComponent('stringencySpinner');
 
         //update the grid
-        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults);
+        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
         //update underlying data 
         this.coexGridRef.knownGeneResults = this.knownGeneResults;
         this.coexGridRef.currentQueryGeneIds = this.currentQueryGeneIds;
 
         this.dataJSON = this.constructDataJSON(this.queryGenes, this.knownGeneResults);
 
-        this.loadMask.hide();
-
         this.drawGraph();
+       
+        this.loadMask.hide();
+        
 
     },
 
     initialCoexSearchCallback: function (result) {
-
-        this.currentResultsStringency = this.coexCommand.stringency;
-
+    	
+    	this.currentResultsStringency = this.coexCommand.stringency;
+        this.initialDisplayStringency = this.coexCommand.displayStringency;
+        
         this.currentNodeGeneIds = [];
         var qlength = result.queryGenes.length;
 
@@ -1067,6 +1143,9 @@ Ext.Panel, {
     },
 
     extendThisNodeInitialCoexSearchCallback: function (result) {
+    	
+    	this.currentResultsStringency = this.coexCommand.stringency;
+        this.initialDisplayStringency = this.coexCommand.displayStringency;
 
         var qgenes = result.queryGenes;
         var knowngenes = result.knownGeneResults;
@@ -1110,12 +1189,11 @@ Ext.Panel, {
         var spinner = this.getTopToolbar().getComponent('stringencySpinner');
 
         //update the grid
-        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults);
+        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
         //update underlying data because of new results
         this.coexGridRef.knownGeneResults = this.knownGeneResults;
         this.coexGridRef.currentQueryGeneIds = this.currentQueryGeneIds;
-
-        //update coexGrid
+     
         this.dataJSON = this.constructDataJSON(result.queryGenes, result.knownGeneResults);
 
         this.loadMask.hide();
@@ -1385,9 +1463,8 @@ Ext.Panel, {
 
     },
 
-    coexGridUpdate: function (stringency, trimmedKnownGeneResults, trimmedNodeIds) {
-
-        this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
+    stringencyUpdate: function (stringency, trimmedKnownGeneResults, trimmedNodeIds) {
+      
 
         this.trimmedKnownGeneResults = trimmedKnownGeneResults;
         this.trimmedNodeIds = trimmedNodeIds;
@@ -1404,7 +1481,7 @@ Ext.Panel, {
 
         filterFunctionEdges = function (edge) {
 
-            return edge.data.support >= this.getTopToolbar().getComponent('stringencySpinner').getValue();
+            return edge.data.support >= this.initialDisplayStringency;
 
         };
 
