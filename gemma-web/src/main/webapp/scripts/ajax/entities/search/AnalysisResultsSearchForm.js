@@ -13,14 +13,10 @@ Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY = 20; // this is a hard limit
 Gemma.MAX_EXPERIMENTS_CO_DIFF_EX_VIZ_QUERY = 100000; // effectively no limit
 
 /**
- * The input for guided coexpression and differential expression searches. This
- * form has four main parts: a taxon chooser, an experiment (group) searcher, a
- * gene (group) searcher and links to perform searches
- * 
- * Coexpression search has an optional part that appears if the user is doing a
- * 'custom' analysis, I've used defaults for these options: Stringency = 2
- * "Force Probe query" = false "Use my data" = false "My genes only" = false
- * 
+ * The input form to run coexpression and differential expression searches. This
+ * form has three main parts: a search mode chooser, an experiment (group) searcher, and a
+ * gene (group) searcher
+ *  
  * @author thea
  * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
  *          Exp $
@@ -51,12 +47,23 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 	defaultIsDiffEx: true,
 
-	PREVIEW_SIZE : 5,
-
 	// defaults for coexpression
+	/**
+	 * @cfg
+	 * DEFAULT_STRINGENCY for coexpression
+	 */
 	DEFAULT_STRINGENCY : 2,
+	/**
+	 * @cfg
+	 */
 	DEFAULT_forceProbeLevelSearch : false,
+	/**
+	 * @cfg
+	 */
 	DEFAULT_useMyDatasets : false,
+	/**
+	 * @cfg
+	 */
 	DEFAULT_queryGenesOnly : false,
 
 	// defaults for differential expression
@@ -66,17 +73,29 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	geneGroupId : null, // keep track of what gene group has been selected
 	experimentIds : [],
 
-	/***************************************************************************
-	 * * SEARCH **
-	 **************************************************************************/
+	//***************************************************************************
+	// * * SEARCH **
+	// **************************************************************************/
 
+	/**
+	 * get the recommended maximum number of genes to run the search with
+	 * may be different for coexpression and differential expression
+	 */
 	getMaxNumGenes:function(){
-		return (this.coexToggle.pressed)?Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY : Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY;
+		
+		return (this.coexToggle.pressed)?Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY :
+				(this.showClassicDiffExResults)? Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY : 
+					Gemma.MAX_GENES_PER_DIFF_EX_VIZ_QUERY;
 	},
+	/**
+	 * get the recommended maximum number of experiments to run the search with
+	 * may be different for coexpression and differential expression
+	 */
 	getMaxNumExperiments:function(){
 		return (this.coexToggle.pressed)?Gemma.MAX_EXPERIMENTS_PER_CO_EX_VIZ_QUERY : Gemma.MAX_EXPERIMENTS_PER_DIFF_EX_VIZ_QUERY;	
 	},
 	/**
+	 * @private
 	 * check that there are some experiments and genes to run on
 	 * if there are too many experiments or genes, warn the user and offer to trim
 	 * 
@@ -84,8 +103,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * 
 	 * only called by "Go!" button and example query buttons 
 	 * 
-	 * @param {Object} geneSetValueObjects
-	 * @param {Object} experimentSetValueObjects
+	 * @param {GeneSetValueObject[]} geneSetValueObjects
+	 * @param {experimentSetValueObject[]} experimentSetValueObjects
 	 * @return 
 	 */
 	validateSearch: function(geneSetValueObjects, experimentSetValueObjects){
@@ -133,7 +152,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		
 		// coex uses a hard limit so trimming isn't optional and is handled elsewhere
-		if( (!this.coexToggle.pressed) && ( geneCount > maxNumGenes  || experimentCount > maxNumExperiments ) ){
+		if( (!this.coexToggle.pressed && !this.showClassicDiffExResults) && ( geneCount > maxNumGenes  || experimentCount > maxNumExperiments ) ){
 			this.getEl().mask();
 			var warningWindow = new Ext.Window({
 				width:450,
@@ -249,6 +268,16 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		return trimmedValueObjects;
 	},
 
+	/**
+	 * @private
+	 * Run the search with entity set value objects.<br>
+	 * If any of the parameter sets have a null, undefined, or negative id 
+	 * then they are not "saved" anywhere (in the db or in the session-bound set list).
+	 * Before the search runs, these sets are "saved" to the session-bound list. 
+	 * 
+	 * @param {GeneSetValueObject[]} geneSetValueObjects
+	 * @param {ExpressionExperimentSetValueObject[]} experimentSetValueObjects
+	 */
 	doSearch : function(geneSetValueObjects, experimentSetValueObjects) {		
 		
 		this.collapsePreviews();
@@ -356,9 +385,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				this.doDifferentialExpressionSearch();
 			}else{
 				var data = this.getDataForDiffVisualization(geneSetValueObjects, experimentSetValueObjects);
+				this.fireEvent('showDiffExResults', this, null, data);
 			}
 			
-			this.fireEvent('showDiffExResults', this, null, data);
+			
 		}
 
 		// if coexpression button is depressed, do a coexpression search
@@ -368,15 +398,16 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 	},
 
-	/***************************************************************************
-	 * * COEXPRESSION **
-	 **************************************************************************/
+	//***************************************************************************
+	// * * COEXPRESSION **
+	// **************************************************************************/
 
 	/**
+	 * @private
 	 * Construct the coexpression command object from the form, to be sent to
 	 * the server.
 	 * 
-	 * @return {}
+	 * @return newCsc
 	 */
 	getCoexpressionSearchCommand : function() {
 		var newCsc = {};
@@ -405,7 +436,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		return newCsc;
 	},
-	
+	/**
+	 * @return csc
+	 */
 	getLastCoexpressionSearchCommand : function() {
 		return this.lastCSC;
 	},
@@ -435,7 +468,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		this.doCoexpressionSearch(this.lastCSC);
 		return "";
 	},
-
+/**
+ * @private
+ * @param {Object} csc
+ */
 	doCoexpressionSearch : function(csc) {
 		if (!csc) {
 			csc = this.getCoexpressionSearchCommand();
@@ -480,7 +516,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		*/
 		
 	},
-
+	/**
+	 * Do some more checks before running the coex search
+	 * @private
+	 * @param {Object} csc
+	 */
 	validateCoexSearch : function(csc) {
 		if (csc.queryGenesOnly && csc.geneIds.length < 2) {
 			return "You must select more than one query gene to use 'search among query genes only'";
@@ -530,7 +570,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			 * this trimmed list or re-enter your gene query(ies) and "+ "use
 			 * the edit tool to manually trim your selection(s).";
 			 */
-			this.handleError("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY +
+			this.handleWarning("You can only perform a coexpression search with up to " + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY +
 					" genes. Please note that your list(s) of genes have been trimmed automatically.<br>");
 			return "";
 
@@ -565,13 +605,14 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		return url;
 	},
 
-	/***************************************************************************
-	 * * DIFFERENTIAL EXPRESSION **
-	 **************************************************************************/
+	//***************************************************************************
+	// * * DIFFERENTIAL EXPRESSION **
+	// **************************************************************************/
 	/**
 	 * Construct the differential command object from the form, to be sent to
 	 * the server.
 	 * 
+	 * @private
 	 * @return {}
 	 */
 	getDiffSearchCommand : function() {
@@ -613,7 +654,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * asynchronously, so listen for the factors-chosen event.
 	 */
 	chooseFactors : function() {
-		if (this.getSelectedExperimentSetValueObjects().length <= 0) {
+		if (this.getSelectedAsExperimentSetValueObjects().length <= 0) {
 			Ext.Msg.alert("Warning",
 					"You must select an expression experiment set before choosing factors. Scope must be specified.");
 		} else if (this.getExperimentIds().length === 0) {
@@ -634,31 +675,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		if (msg.length !== 0) {
 			this.handleError(msg);
 			return;
-		}
-		else {
+		} else {
 		
 			this.chooseFactors();
 			this.efChooserPanel.on("factors-chosen", function(efmap){
 			
-				if (!dsc) {
-					dsc = this.getDiffSearchCommand();
-				}
-				else {
-					dsc.selectedFactors = efmap;
-				}
-				this.clearError();
-				var msg = this.validateDiffExSearch(dsc);
-				if (msg.length === 0) {
-					this.loadMask.show();
-					var errorHandler = this.handleError.createDelegate(this, [], true);
-					DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
-						callback: this.returnFromDiffExSearch.createDelegate(this),
-						errorHandler: errorHandler
-					});
-				}
-				else {
-					this.handleError(msg, e);
-				}
+				dsc.selectedFactors = efmap;
+				
+				var errorHandler = this.handleError.createDelegate(this, [], true);
+				
+				DifferentialExpressionSearchController.getDiffExpressionForGenes(dsc, {
+					callback: this.returnFromDiffExSearch.createDelegate(this),
+					errorHandler: errorHandler
+				});
+				
 				if (typeof pageTracker !== 'undefined') {
 					pageTracker._trackPageview("/Gemma/differentialExpressionSearch.doSearch");
 				}
@@ -678,6 +708,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	getDiffExBookmarkableLink : function(dsc) {
 		if (!dsc) {
 			dsc = this.getDiffSearchCommand();
+		}
+		var msg = this.validateDiffExSearch(dsc);
+		if (msg.length !== 0) {
+			this.handleError(msg);
+			return;
 		}
 		var queryStart = document.URL.indexOf("?");
 		var url = queryStart > -1 ? document.URL.substr(0, queryStart) : document.URL;
@@ -735,13 +770,12 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
 			// prune the gene Ids
 			dsc.geneIds = dsc.geneIds.slice(0, Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY);
-			this.loadGenes(dsc.geneIds); // TODO loadGenes isn't in this
+			//this.loadGenes(dsc.geneIds); // TODO loadGenes isn't in this
 			// class anymore
 
-			return "You can only search up to " + Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY +
-					 " genes. Please note that your list of genes has been trimmed automatically. <br>" +
-					 "Press 'Go' again to run the search with this trimmed list or re-enter your gene query and " +
-					 "use the edit tool to manually trim your selection.";
+			this.handleWarning("You can only search up to " + Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY +
+					 " genes. Please note that your list of genes has been trimmed automatically.");
+			return "";
 
 		} else {
 			return "";
@@ -749,8 +783,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 
 	/** Shared methods * */
-
-	handleError : function(msg, e) {
+	handleWarning : function(msg, e) {
 		if (Ext.get("analysis-results-search-form-messages")) {
 			Ext.DomHelper.overwrite("analysis-results-search-form-messages", {
 				tag: 'img',
@@ -778,6 +811,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				this.fireEvent("handleError", "Error retrieving results.");
 			}
 		}
+	},
+
+	handleError : function(msg, e) {
+		this.handleWarning(msg,e);
 		
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, e);

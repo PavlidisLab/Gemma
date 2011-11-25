@@ -10,50 +10,6 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		this.user = (Ext.get('hasUser') !== null) ? Ext.get('hasUser').getValue() : null;
 
 		
-		// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
-		var redirectToClassic = false;
-		if (!document.createElement("canvas").getContext) {
-			redirectToClassic = true;
-			//not supported
-			if (Ext.isIE8) {
-				// excanvas doesn't cover all functionality of new diff ex metaheatmap visualization
-				Ext.DomHelper.append('browser-warnings', {
-					tag: 'p',
-					cls: 'trouble',
-					id: 'browserWarning',
-					html: 'Advanced differential expression visualizations are not available in your browser (Internet Explorer 8). We suggest upgrading to  ' +
-					'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>, ' +
-					'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
-					'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.'
-				});
-			}
-			else 
-				if (Ext.isIE) {
-					Ext.DomHelper.append('browser-warnings', {
-						tag: 'p',
-						cls: 'trouble',
-						id: 'browserWarning',
-						html: 'This page may display improperly in older versions of Internet Explorer(IE). Please upgrade to ' +
-						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">IE 9</a>, ' +
-						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
-						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.' +
-						' If you are running IE 9 and you see this message, please make sure you are not in compatibility mode. '
-					});
-				}
-				else {
-					Ext.DomHelper.append('browser-warnings', {
-						tag: 'p',
-						cls: 'trouble',
-						id: 'browserWarning',
-						html: 'This page may not display properly in all browsers. (The \"canvas\" element is requried.)' +
-						' Please switch to ' +
-						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a>,' +
-						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a> or' +
-						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>.'
-					});
-				}
-		}
-		
 				
 		var errorPanel = new Ext.Panel({
 			tpl:'<img src="/Gemma/images/icons/warning.png">{msg}',
@@ -62,6 +18,40 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		});
 		this.add(errorPanel);
 		
+		
+		// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
+		var redirectToClassic = false;
+		var browserWarning = "";
+		if ( !document.createElement("canvas").getContext ) {
+			redirectToClassic = true;
+			//not supported
+			// excanvas doesn't cover all functionality of new diff ex metaheatmap visualization
+			if (Ext.isIE8) {
+				browserWarning = 'Advanced differential expression visualizations are not available in your browser (Internet Explorer 8). We suggest upgrading to  ' +
+					'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>, ' +
+					'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
+					'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.';
+				
+			}
+			else 
+				if (Ext.isIE) {
+					browserWarning = 'This page may display improperly in older versions of Internet Explorer(IE). Please upgrade to ' +
+						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">IE 9</a>, ' +
+						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
+						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.' +
+						' If you are running IE 9 and you see this message, please make sure you are not in compatibility mode. ';
+				
+				}
+				else {
+					browserWarning = 'This page may not display properly in all browsers. (The \"canvas\" element is requried.)' +
+						' Please switch to ' +
+						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a>,' +
+						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a> or' +
+						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>.';
+				
+				}
+		}
+
 		// panel for performing search, appears on load
 		var searchForm = new Gemma.AnalysisResultsSearchForm({
 			width: this.SEARCH_FORM_WIDTH,
@@ -106,6 +96,13 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		this.diffVisualizer = null;
 		
 		
+		if (browserWarning !== "") {
+			errorPanel.on('render', function(){
+				this.update('<img src="/Gemma/images/icons/warning.png">'+browserWarning);
+				this.show();
+			});
+		}
+		
 		// get ready to show results
 		searchForm.on("beforesearch", function(panel){
 		
@@ -118,6 +115,9 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			// before every search, clear the results in preparation for new (possibly blank) results 
 			coexResultsTabPanel.removeAll();
 			panel.clearError();
+			// clear errors
+			errorPanel.update();
+			errorPanel.hide();
 			coexResultsTabPanel.doLayout();
 			coexResultsTabPanel.hide();
 			
@@ -127,10 +127,6 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			this.add(diffExResultsDiv);
 			this.doLayout();
 			
-			//clear browser warning
-			if (redirectToClassic) {
-				document.getElementById('browserWarning').style.display = "none";
-			}
 		}, this);
 		
 		
@@ -197,30 +193,25 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			}
 			else {
 			
-				var diffExResultsGrid = new Gemma.DiffExpressionGrid({
-					title: "Differentially expressed genes",
-					searchForm: searchForm,
-					viewConfig: {
-						forceFit: true
-					},
-					height: 200,
-					width: 900
-				});
-				coexResultsTabPanel.removeAll();
-				formPanel.collapsePreviews();
-				coexResultsTabPanel.add({
-					html: "<h2>Differential Expression Search Results</h2>",
-					border: false
-				});
-				coexResultsTabPanel.add(diffExResultsGrid);
+			var diffExResultsGrid = new Gemma.DiffExpressionGrid({
+				renderTo: diffExResultsDiv.getId(),
+				title: "Differentially expressed genes",
+				searchPanel: formPanel,
+				viewConfig: {
+					forceFit: true
+				},
+				width:'auto',
+				style:'width:100%'
 				
-				var link = formPanel.getDiffExBookmarkableLink();
-				diffExResultsGrid.setTitle(String.format("Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a target='_blank' href='{0}&export'>(export as text)</a>", link));
-				
-				var resultsP = Ext.get('analysis-results-search-form-results-panel');
-				coexResultsTabPanel.show();
-				coexResultsTabPanel.doLayout();
-				diffExResultsGrid.loadData(result);
+			});
+			
+			
+			diffExResultsGrid.loadData(result);
+			
+			var link = formPanel.getDiffExBookmarkableLink();
+			//diffExResultsGrid.setTitle(String.format("Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a target='_blank' href='{0}&export'>(export as text)</a>", link));
+			diffExResultsGrid.setTitle(String.format("Differentially expressed genes <a target='_blank' href='{0}&export'>(export as text)</a>", link));
+
 			}
 		},this);
 	
@@ -239,19 +230,19 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 	 */
 		if (result.errorState) {
 		
-			var errorPanel = new Ext.Panel({
+			var emptyPanel = new Ext.Panel({
 				html: "<br> " + result.errorState,
 				border: false,
 				title: "No Coexpression Search Results"
 			});
 			
 			
-			coexResultsTabPanel.add(errorPanel);
+			coexResultsTabPanel.add(emptyPanel);
 			//Ext.DomHelper.overwrite('analysis-results-search-form-messages', result.errorState);
 			//if (knownGeneGrid) {knownGeneGrid.getStore().removeAll();}
 			coexResultsTabPanel.show();
 			coexResultsTabPanel.doLayout();
-			errorPanel.show();
+			emptyPanel.show();
 			
 			return;
 		}

@@ -405,35 +405,27 @@ Ext.onReady(function() {
 		}
 		else {
 			
+			this.resultsPanel.removeAll(); 
+			this.resultsPanel.hide(); 
 			var diffExResultsGrid = new Gemma.DiffExpressionGrid({
-				//renderTo : "analysis-results-search-form-results",
+				renderTo: 'meta-heatmap-div',
 				title: "Differentially expressed genes",
 				searchPanel: searchPanel,
 				viewConfig: {
 					forceFit: true
 				},
-				height: 200,
-				width: 900
+				width:'auto',
+				style:'width:100%'
+				
 			});
-			resultsPanel.removeAll();
-			panel.collapsePreviews();
-			resultsPanel.add({
-				html: "<h2>Differential Expression Search Results</h2>",
-				border: false
-			});
-			resultsPanel.add(diffExResultsGrid);
+			
+			
+			diffExResultsGrid.loadData(result);
 			
 			var link = panel.getDiffExBookmarkableLink();
-			diffExResultsGrid.setTitle(String.format("Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a target='_blank' href='{0}&export'>(export as text)</a>", link));
-			
-			var resultsP = Ext.get('analysis-results-search-form-results-panel');
-			
-			//if(resultsP) resultsP.animate({height:{from:0},opacity:{to:1}},2);
-			//resultsPanel.show({height:{from:0},opacity:{from:0}});
-			resultsPanel.show();
-			resultsPanel.doLayout();
-			diffExResultsGrid.loadData(result);
-		//this.diffVisualizer.show();
+			//diffExResultsGrid.setTitle(String.format("Differentially expressed genes <a href='{0}'>(bookmarkable link)</a> <a target='_blank' href='{0}&export'>(export as text)</a>", link));
+			diffExResultsGrid.setTitle(String.format("Differentially expressed genes <a target='_blank' href='{0}&export'>(export as text)</a>", link));
+
 		}
-	});
+	}, this);
 });
