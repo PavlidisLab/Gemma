@@ -580,7 +580,7 @@ Ext.Panel, {
                         }
                         else { //new search 
                         	
-                        	Ext.Msg.confirm('New Search', 'Doing a new slow search if you click yes', function (btn) {
+                        	Ext.Msg.confirm('New Search', 'Lowering the stringency to this level will run a new search to retrieve low stringency results. Low stringency results may not be meaningful for the number of datasets your are searching in. Click Yes to Continue ', function (btn) {
 
                                 if (btn == 'yes') {
                                 	
@@ -658,7 +658,7 @@ Ext.Panel, {
                     }
                     else { //new search 
                     	
-                    	Ext.Msg.confirm('New Search', 'Doing a new slow search if you click yes', function (btn) {
+                    	Ext.Msg.confirm('New Search', 'Lowering the stringency to this level will run a new search to retrieve low stringency results. Low stringency results may not be meaningful for the number of datasets your are searching in. Click Yes to Continue', function (btn) {
 
                             if (btn == 'yes') {
                             	
