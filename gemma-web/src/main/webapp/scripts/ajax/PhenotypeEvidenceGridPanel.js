@@ -210,18 +210,9 @@ var evidenceStore = new Ext.data.Store({
 });
 evidenceStore.setDefaultSort('relevance', 'desc');
 
-var rowExpander = new Ext.grid.RowExpander({
-    getRowClass : function(record, rowIndex, p, ds){
-        p.cols = p.cols-1;
-        var content = this.bodyContent[record.id];
-        if(!content && !this.lazyRender){
-            content = this.getBodyContent(record, rowIndex);
-        }
-        if(content){
-            p.body = content;
-        }
-
-        return (this.state[record.id] ? 'x-grid3-row-expanded' : 'x-grid3-row-collapsed') +
+Gemma.PhenotypeEvidenceRowExpander = Ext.extend(Ext.grid.RowExpander, {
+    getRowClass : function(record, rowIndex, p, ds) {
+        return this.superclass().getRowClass.call(this, record, rowIndex, p, ds) +
         	(record.data.isNegativeEvidence ? ' negative-annotation' : '');
     },
 	// Use class="x-grid3-cell-inner" so that we have padding around the description.
@@ -229,6 +220,7 @@ var rowExpander = new Ext.grid.RowExpander({
         '<div class="x-grid3-cell-inner" style="white-space: normal;">{description}</div>'
     )
 });
+var rowExpander = new Gemma.PhenotypeEvidenceRowExpander();
 
 Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
     initComponent: function() {
