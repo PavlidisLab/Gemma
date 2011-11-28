@@ -30,11 +30,14 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			conditionTree: this.conditionTree,
 			cells: this.cells,
 			items: [{
+				xtype : 'Metaheatmap.HoverWindow',
+				ref : 'hoverWindow'
+			    },{
 				xtype: 'panel',
 				name: 'fixedWidthCol',
 				ref: 'fixedWidthCol',
 				flex: 0,
-				width: 135,
+				//width: 135,
 				layout: 'vbox',
 				layoutConfig: {
 					align: 'stretch',
@@ -44,12 +47,12 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					border: false
 				},
 				items: [{
-					xtype: 'panel',
-					ref: 'pnlMiniControl',
-					autoScroll:true,
+					xtype : 'panel',
+					ref : 'pnlMiniControl',
+					autoScroll : true,
 					// html : '<span style="color:dimGrey;font-size:0.9em;line-height:1.6em"><b>Hover</b> for quick info<br>'+
 					//   '<b>Click</b> for details<br><b>"ctrl" + click</b> to select genes</span>',
-					border: false,
+					border : false,
 					defaults: {
 						border: false,
 						style:'margin-left:10px;margin-top:5px;'
@@ -514,14 +517,15 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		Gemma.Metaheatmap.VisualizationPanel.superclass.afterRender.apply ( this, arguments );
 
 		this.mask = new Ext.LoadMask(this.getEl(), {msg:"Filtering..."});
+
+		this.hoverWindow.isDocked = false;
+		this.hoverWindow.hide();
 	},
 	
 	onRender: function() {
 		Gemma.Metaheatmap.VisualizationPanel.superclass.onRender.apply ( this, arguments );
 
-		this.hoverWindow = new Gemma.Metaheatmap.HoverWindow();
-		this.hoverWindow.isDocked = false;
-		this.hoverWindow.hide();
+		//this.hoverWindow = new Gemma.Metaheatmap.HoverWindow();
 		
 		this.addEvents ('gene_zoom_change', 'condition_zoom_change');
 		
@@ -584,11 +588,20 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 				var expressionDetailsWindow = new Gemma.VisualizationWithThumbsWindow ({
 					title : 'Gene Expression',
 					thumbnails : false,
+					closableAction : 'hide',
 					downloadLink: String.format ("/Gemma/dedv/downloadDEDV.html?ee={0}&g={1}", cell.condition.datasetId, cell.gene.id)
 				});
 				expressionDetailsWindow.show ({
 					params : [ [cell.condition.datasetId], [cell.gene.id] ]
 				});
+				var xy = expressionDetailsWindow.getPosition();
+				expressionDetailsWindow.setPosition (xy[0] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20, xy[1] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20);
+				Gemma.MetaVisualizationPopups.cascadeLayoutCounter++;
+				if (Gemma.MetaVisualizationPopups.cascadeLayoutCounter > 4) {
+					Gemma.MetaVisualizationPopups.cascadeLayoutCounter = 0;
+				}
+
+				
 			}
 		});
 	}

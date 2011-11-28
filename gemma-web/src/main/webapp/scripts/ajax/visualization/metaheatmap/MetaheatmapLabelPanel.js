@@ -33,8 +33,8 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 	colors : {
 		groupLabelA : 'rgb(179,226,205)', 
 		groupLabelB : 'rgb(253,205,172)',
-		itemLabelA : 'rgba(203,213,232, 0.5)',
-		itemLabelB : 'rgba(203,213,232, 0.9)'
+		itemLabelA  : 'rgba(203,213,232, 0.5)',
+		itemLabelB  : 'rgba(203,213,232, 0.9)'
 	},
 	
 	initComponent : function() {
@@ -67,6 +67,7 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 		
 		if (this.orientation === 'vertical') {
 	   		//this.setPosition (0, ownerCt.variableWidthCol.boxTopLabels.tree.display.size.height);	
+			ownerCt.fixedWidthCol.setWidth(this.tree.display.size.height);
 			this.setWidth (this.tree.display.size.height);					
 			this.setHeight (ownerCt.getHeight() - headerHeight - extraRoom);		
 			this.boxCanvas.setSize (this.tree.display.size.height, this.tree.display.size.width + 15);
@@ -317,7 +318,6 @@ Gemma.Metaheatmap.ConditionLabel.constructDrawLabelFunction = function (ctx, ite
 };
 
 Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx, item, text, x, y, width, height, highlightBox, backgroundColor) {				
-	//var text 	     = condition.contrastFactorValue;
 	var isSelected   = item.isSelected;
 	var miniPieValue = item.miniPieValue;
 	
@@ -474,120 +474,3 @@ Gemma.Metaheatmap.ConditionLabel.makeVerticalLabelDrawFunction = function (ctx, 
 		}
 	};			
 };
-
-//Gemma.Metaheatmap.ConditionLabel.verticalSmall_fns = function (ctx, text, x, y, width, height, maxHeight, backgroundColor, isSelected, miniPieValue) {			
-//	var xCenter = x + width/2;	
-//
-//	var highlightBox = {
-//			width : 14,
-//			height : maxHeight,
-//			x : Math.max (0, xCenter - 7),
-//			y : 0
-//	};
-//
-//	if (isSelected) {
-//		backgroundColor = 'red';
-//	}	
-//
-//	var savedLabelImage = null;
-//		
-//	return {
-//		
-//		draw : function () {
-//			if (savedLabelImage !== null) {
-//				// Restore non-highlighted label if it was previously drawn.
-//				ctx.putImageData (savedLabelImage, highlightBox.x, highlightBox.y);
-//			} else {
-//				savedLabelImage = ctx.getImageData (highlightBox.x, highlightBox.y, highlightBox.width, highlightBox.height);
-//			}
-//		},
-//				
-//		highlight : function () {
-//			var fontSize = 12;
-//			var miniPieSize = 10;
-//
-//			ctx.fillStyle = backgroundColor;//'rgb(240,230,140)'; //TODO: 
-//			ctx.fillRect (highlightBox.x, highlightBox.y, highlightBox.width, highlightBox.height);
-//			ctx.save();
-//			ctx.beginPath();
-//			ctx.rect (highlightBox.x, highlightBox.y, highlightBox.width, highlightBox.height);				
-//			ctx.clip();			
-//			ctx.strokeStyle = 'black';		
-//			ctx.drawRotatedText (xCenter + fontSize/2, y + height - miniPieSize - 2, 270, fontSize, 'black', text);
-//			MiniPieLib.drawMiniPie (ctx, xCenter, y + height - 4, miniPieSize, 'black', miniPieValue);
-//			ctx.restore();								
-//		}		
-//	};	
-//};
-
-//if (text === null) { text ='null';}
-
-//Gemma.Metaheatmap.ConditionLabel.constructDrawHorizontalConditionLabelFn_ : function (condition, size, backgroundColor) {
-//	var drawLabel, drawHighlightedLabel;
-//	var x 		 = this.getWidth();
-//	var y 		 = condition.display.pxlEnd; 
-//	var width 	 = size; 
-//	var height 	 = condition.display.pxlSize; 
-//	var availableWidth = this.getWidth();
-//	var fontSize = 9;
-//	var text = condition.contrastFactorValue;
-//
-//	var savedImageData = null;
-//	
-//	if (height < 9) {
-//		drawLabel = function () {
-//			if (savedImageData !== null) {
-//				ctx.putImageData (savedImageData, 0, y - height);
-//			} else {
-//				savedImageData = ctx.getImageData (0, y - height, availableWidth, height);
-//			}				
-////			ctx.fillStyle = 'white';
-////			ctx.fillRect (x-width, y-6, width, 12);             		        				
-//		};
-//		drawHighlightedLabel = function () {
-//			ctx.strokeStyle = 'black';					
-//			ctx.drawTextRight ('', 9, x-10, y+5, text);          		        				
-//		};      		        					
-//	} else {
-//		drawLabel = function () {					
-//			if (savedImageData !== null) {
-//				ctx.putImageData (savedImageData, 0, y - height);					
-//			} else {
-//				ctx.fillStyle = backgroundColor;
-//				ctx.fillRect (x-width, y-height, width, height);
-//				ctx.save();
-//				ctx.beginPath();
-//				ctx.rect (x-width, y-height, width, height);				
-//				ctx.clip();			
-//				ctx.strokeStyle = 'black';
-//				ctx.drawTextRight ('', fontSize, x-10, y-height/2+4, text);
-//				ctx.restore();
-//				MiniPieLib.drawMiniPie (ctx, x-9, y-height/2, 8,'black', condition.miniPieValue);
-//				savedImageData = ctx.getImageData (0, y - height, availableWidth, height);
-//			}
-//		};
-//		drawHighlightedLabel = function () {
-//			ctx.fillStyle = 'rgb(240,230,140)';
-//			ctx.fillRect (x-width, y-height, width, height);
-//			ctx.save();
-//			ctx.beginPath();
-//			ctx.rect (x-width, y-height, width, height);				
-//			ctx.clip();			
-//			ctx.strokeStyle = 'black';
-//			ctx.drawTextRight ('', fontSize, x, y, text);
-//			ctx.restore();
-//		};      		        					
-//	}	
-//	
-//	return function (isHighlighted) {
-//		if (isHighlighted) {
-//			drawHighlightedLabel();
-//		} else {
-//			drawLabel();
-//		}
-//	};
-//};
-
-
-
-
