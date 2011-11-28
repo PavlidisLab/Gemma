@@ -134,4 +134,38 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
         return phenotypesURI;
     }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    /** find PhenotypeAssociations associated with a BibliographicReference */
+    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID ) {
+
+        Collection<PhenotypeAssociation> phenotypeAssociationsFound = new HashSet<PhenotypeAssociation>();
+
+        // Literature Evidence have BibliographicReference
+        Criteria geneQueryCriteria = super.getSession().createCriteria( LiteratureEvidence.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "citation" )
+                .createCriteria( "pubAccession" ).add( Restrictions.like( "accession", pubMedID ) );
+
+        phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
+
+        // Experimental Evidence have a primary BibliographicReference
+        geneQueryCriteria = super.getSession().createCriteria( ExperimentalEvidence.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "experiment" )
+                .createCriteria( "primaryPublication" ).createCriteria( "pubAccession" )
+                .add( Restrictions.like( "accession", pubMedID ) );
+
+        phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
+
+        // Experimental Evidence have relevant BibliographicReference
+        geneQueryCriteria = super.getSession().createCriteria( ExperimentalEvidence.class )
+                .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY ).createCriteria( "experiment" )
+                .createCriteria( "otherRelevantPublications" ).createCriteria( "pubAccession" )
+                .add( Restrictions.like( "accession", pubMedID ) );
+
+        phenotypeAssociationsFound.addAll( geneQueryCriteria.list() );
+
+        return phenotypeAssociationsFound;
+
+    }
 }

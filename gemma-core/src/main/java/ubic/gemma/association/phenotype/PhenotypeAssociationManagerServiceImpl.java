@@ -26,6 +26,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import net.sf.ehcache.Cache;
+import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Element;
+
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -33,8 +38,13 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
+import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
+import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
+import ubic.gemma.model.common.description.BibliographicReference;
+import ubic.gemma.model.common.description.BibliographicReferenceService;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
@@ -43,6 +53,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -52,13 +63,9 @@ import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 
-import net.sf.ehcache.Cache;
-import net.sf.ehcache.CacheManager;
-import net.sf.ehcache.Element;
-
 /** High Level Service used to add Candidate Gene Management System capabilities */
 @Component
-public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService {
+public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
     @Autowired
     private PhenotypeAssociationService associationService;
@@ -84,9 +91,21 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Autowired
     private CacheManager cacheManager;
 
+    @Autowired
+    private BibliographicReferenceService bibliographicReferenceService;
+
     private DiseaseOntologyService diseaseOntologyService = null;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
+    private PubMedXMLFetcher pubMedXmlFetcher = null;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
+        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
+        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
+        this.pubMedXmlFetcher = new PubMedXMLFetcher();
+    }
 
     /**
      * Links an Evidence to a Gene
@@ -174,9 +193,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( phenotypesValuesUri.size() == 0 ) {
             return null;
         }
-
-        // use specific ontologies
-        useDiseaseMpHpOntologies();
 
         // load all current phenotypes in the database
         Set<String> phenotypesUriInDatabase = this.associationService.loadAllPhenotypesURI();
@@ -354,8 +370,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             return;
         }
 
-        useDiseaseMpHpOntologies();
-
         // replace specific values for this type type of evidence
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .populateTypePheAsso( evidenceValueObject );
@@ -407,17 +421,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * Giving a phenotype searchQuery, return a selection choice to the user
      * 
      * @param termUsed is what the user typed
-     * @return Collection<CharacteristicValueObject> list of choices returned
-     */
-    @Override
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery ) {
-        return searchOntologyForPhenotype( searchQuery, null );
-    }
-
-    /**
-     * Giving a phenotype searchQuery, return a selection choice to the user
-     * 
-     * @param termUsed is what the user typed
      * @param geneId the id of the gene chosen
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
@@ -446,8 +449,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 newSearchQuery = newSearchQuery + "AND ";
             }
         }
-
-        useDiseaseMpHpOntologies();
 
         Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
@@ -614,6 +615,52 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return geneValueObjectsFilter;
     }
 
+    @Override
+    /**
+     * Find all phenotypes associated to a pubmedID
+     * 
+     * @param pubMedId
+     * @return BibliographicReferenceValueObject 
+     */
+    public BibliographicReferenceValueObject findPhenotypesForBibliographicReference( String pubMedId ) {
+
+        // check if already in the database
+        BibliographicReference bibRef = this.bibliographicReferenceService.findByExternalId( pubMedId );
+
+        if ( bibRef == null ) {
+            // creates a new BibliographicReference
+            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+
+            // the pudmedId doesn't exists
+            if ( bibRef == null ) {
+                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
+            }
+        }
+
+        BibliographicReferenceValueObject bibRedVO = new BibliographicReferenceValueObject( bibRef );
+
+        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObject = new HashSet<BibliographicPhenotypesValueObject>();
+
+        Collection<PhenotypeAssociation> phenotypeAssociation = this.associationService
+                .findPhenotypesForBibliographicReference( pubMedId );
+
+        for ( PhenotypeAssociation phe : phenotypeAssociation ) {
+
+            Collection<String> phenotypeValues = new HashSet<String>();
+
+            for ( Characteristic cha : phe.getPhenotypes() ) {
+                phenotypeValues.add( cha.getValue() );
+            }
+            BibliographicPhenotypesValueObject bibPheVO = new BibliographicPhenotypesValueObject( phe.getGene()
+                    .getName(), phenotypeValues );
+            bibliographicPhenotypesValueObject.add( bibPheVO );
+        }
+
+        bibRedVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObject );
+
+        return bibRedVO;
+    }
+
     /** counts gene on a TreeCharacteristicValueObject */
     private void countGeneOccurence( TreeCharacteristicValueObject tc ) {
 
@@ -623,13 +670,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( TreeCharacteristicValueObject tree : tc.getChildren() ) {
             countGeneOccurence( tree );
         }
-    }
-
-    /** Use specific Ontologies from ontologyService */
-    private void useDiseaseMpHpOntologies() {
-        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
     }
 
     /** For a valueUri return the Characteristic (represents a phenotype) */
@@ -710,9 +750,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // all phenotypes in Gemma
         Set<CharacteristicValueObject> allPhenotypes = this.associationService.loadAllPhenotypes();
-
-        // use specific ontologies
-        useDiseaseMpHpOntologies();
 
         // keep track of all phenotypes found in the trees, used to find quickly the position to add subtrees
         HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree = new HashMap<String, TreeCharacteristicValueObject>();

@@ -18,7 +18,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,8 +33,8 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -45,46 +44,38 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class PhenotypeAssociationTest extends BaseSpringContextTest {
 
     @Autowired
-    private UrlEvidenceDao urlDao;
-
-    @Autowired
     private GeneService geneService;
 
     @Autowired
     private PhenotypeAssociationManagerService phenoAssoService;
 
-    private String geneNCBI = "";
-    private UrlEvidenceValueObject evidence = null;
-    private String phenotypeValue = "";
-    private String phenotypeValueUri = "";
-    private String phenotypeCategory = "";
-    private String phenotypeCategoryUri = "";
-
-    private Set<CharacteristicValueObject> phenotypes = null;
-
-    private Gene gene;
-    
+    private String geneNCBI = RandomStringUtils.randomNumeric( 6 );
+    private EvidenceValueObject evidence = null;
+    private String phenotypeValue = RandomStringUtils.randomAlphabetic( 6 );
+    private Gene gene = null;
     private GeneEvidenceValueObject geneValue = null;
+    private String primaryPubmed = "17699851";
 
     @Before
     public void setup() {
 
-        // Gene NCBI used
-        this.geneNCBI = RandomStringUtils.randomNumeric( 6 );
-        // Phenotype
-        this.phenotypeValue = RandomStringUtils.randomAlphabetic( 6 );
-        this.phenotypeValueUri = RandomStringUtils.randomAlphabetic( 6 );
-        this.phenotypeCategory = RandomStringUtils.randomAlphabetic( 6 );
-        this.phenotypeCategoryUri = RandomStringUtils.randomAlphabetic( 6 );
-
         // Evidence
-        CharacteristicValueObject phenotype = new CharacteristicValueObject( this.phenotypeValue,
-                this.phenotypeCategory, this.phenotypeValueUri, this.phenotypeCategoryUri );
-        this.phenotypes = new HashSet<CharacteristicValueObject>();
-        this.phenotypes.add( phenotype );
+        CharacteristicValueObject phenotype = new CharacteristicValueObject( this.phenotypeValue, "phenotypeCategory",
+                "phenotypeValueUri", "phenotypeCategoryUri" );
+        CharacteristicValueObject caracteristic = new CharacteristicValueObject( "chaValue", "chaCategory",
+                "chaValueUri", "chaCategoryUri" );
 
-        this.evidence = new UrlEvidenceValueObject( "test_description", null, new Boolean( false ), "IC",
-                this.phenotypes, "www.test.com" );
+        Set<String> relevantPublication = new HashSet<String>();
+        relevantPublication.add( "17699851" );
+
+        Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
+        phenotypes.add( phenotype );
+
+        Set<CharacteristicValueObject> characteristics = new HashSet<CharacteristicValueObject>();
+        characteristics.add( caracteristic );
+
+        this.evidence = new ExperimentalEvidenceValueObject( "test Description", null, new Boolean( true ), "IC",
+                phenotypes, this.primaryPubmed, relevantPublication, characteristics );
 
         // Make sure a Gene exist in the database with the NCBI id
         this.gene = makeGene( this.geneNCBI );
@@ -100,66 +91,26 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     }
 
     @Test
-    public void testPhenotypeAssociation() {
+    public void testPhenotypeAssoService() {
 
-        // ********************************************************************************************
-        // 1 - call the service to add the phenotype association and save the results to the database
-        // ********************************************************************************************
         this.geneValue = this.phenoAssoService.create( this.geneNCBI, this.evidence );
 
         assertNotNull( this.geneValue );
         assertNotNull( this.geneValue.getEvidence() );
         assertTrue( !this.geneValue.getEvidence().isEmpty() );
 
+        assertTrue( this.phenoAssoService.findGenesWithEvidence( this.geneValue.getName(), null ).size() > 0 );
+
         for ( EvidenceValueObject evidenceValueObject : this.geneValue.getEvidence() ) {
+
             EvidenceValueObject evidenceVO = this.phenoAssoService.load( evidenceValueObject.getDatabaseId() );
             assertNotNull( evidenceVO );
+
+            this.phenoAssoService.remove( evidenceValueObject.getDatabaseId() );
+            evidenceVO = this.phenoAssoService.load( evidenceValueObject.getDatabaseId() );
+            assertNull( evidenceVO );
         }
-    }
 
-    // @Test
-    public void testDaoUrlEvidence() {
-
-        // create
-        UrlEvidence urlEvidence = new UrlEvidenceImpl();
-        urlEvidence.setDescription( "testDescription" );
-        urlEvidence.setName( "testname" );
-        urlEvidence.setUrl( "www.test.com" );
-        UrlEvidence entityReturn = this.urlDao.create( urlEvidence );
-        assertNotNull( entityReturn.getId() );
-
-        // update
-        urlEvidence.setUrl( "www.testupdate.com" );
-        this.urlDao.update( urlEvidence );
-
-        // load
-        UrlEvidence urlEvidenceLoad = this.urlDao.load( entityReturn.getId() );
-        assertNotNull( urlEvidenceLoad );
-        assertTrue( urlEvidenceLoad.getUrl().equals( "www.testupdate.com" ) );
-
-        // remove
-        this.urlDao.remove( entityReturn.getId() );
-        assertNull( this.urlDao.load( entityReturn.getId() ) );
-    }
-
-    // not a junit test, used to check values // not used
-    public void testFindPhenotypeAssociations() {
-
-        // call to the service
-        Collection<EvidenceValueObject> evidenceFound = this.phenoAssoService.findEvidenceByGeneNCBI( "2" );
-
-        for ( EvidenceValueObject evidenceVO : evidenceFound ) {
-
-            System.out.println( "Found evidence: " + evidenceVO.getDatabaseId() + "   " + evidenceVO.getDescription() );
-            System.out.println( "With phenotypes: " );
-
-            for ( CharacteristicValueObject phenotype : evidenceVO.getPhenotypes() ) {
-                System.out.println( "Value :" + phenotype.getValue() );
-
-            }
-            System.out.println();
-            System.out.println();
-        }
     }
 
     private Gene makeGene( String ncbiId ) {

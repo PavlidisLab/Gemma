@@ -69,6 +69,7 @@ public interface PhenotypeAssociationService {
     /**
      * @return all the characteristics (phenotypes) used in the system.
      */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Set<CharacteristicValueObject> loadAllPhenotypes();
 
     /**
@@ -117,6 +118,11 @@ public interface PhenotypeAssociationService {
     public Long countGenesWithPhenotype( Collection<String> phenotypesURI );
 
     /** load all valueURI of Phenotype in the database */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Set<String> loadAllPhenotypesURI();
+
+    /** find PhenotypeAssociations associated with a BibliographicReference */
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedId );
 
 }

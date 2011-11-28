@@ -38,4 +38,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesURI();
+    
+    /** find PhenotypeAssociations associated with a BibliographicReference */
+    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference(String pubMedID);
 }

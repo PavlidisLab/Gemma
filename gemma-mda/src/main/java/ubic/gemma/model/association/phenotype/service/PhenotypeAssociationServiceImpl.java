@@ -153,6 +153,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Set<String> loadAllPhenotypesURI() {
         return this.phenotypeAssociationDao.loadAllPhenotypesURI();
     }
+    
+    @Override
+    /** find PhenotypeAssociations associated with a BibliographicReference */
+    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference(String pubMedId){
+        return this.phenotypeAssociationDao.findPhenotypesForBibliographicReference(pubMedId);
+    }
 
     @Override
     public PhenotypeAssociation create( PhenotypeAssociation p ) {

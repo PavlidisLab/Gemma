@@ -71,7 +71,7 @@ public class PhenotypeAssoManagerServiceHelper {
     private BibliographicReferenceService bibliographicReferenceService;
 
     @Autowired
-    CharacteristicService characteristicService;
+    private CharacteristicService characteristicService;
 
     @Autowired
     private PhenotypeAssociationService phenotypeAssociationService;

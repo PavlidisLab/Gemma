@@ -117,7 +117,7 @@ public abstract class EvidenceValueObject {
             String category = phenotypeAssociation.getAssociationType().getCategory();
             String value = phenotypeAssociation.getAssociationType().getValue();
 
-            this.associationType = new CharacteristicValueObject( value, category );
+            this.associationType = new CharacteristicValueObject( value, category, null, null );
         }
         this.phenotypes = new TreeSet<CharacteristicValueObject>();
 

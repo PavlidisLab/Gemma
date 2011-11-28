@@ -17,6 +17,7 @@ package ubic.gemma.association.phenotype;
 import java.util.Collection;
 import java.util.Set;
 
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -95,14 +96,6 @@ public interface PhenotypeAssociationManagerService {
      * Giving a phenotype searchQuery, return a selection choice to the user
      * 
      * @param termUsed is what the user typed
-     * @return Collection<CharacteristicValueObject> list of choices returned
-     */
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery );
-
-    /**
-     * Giving a phenotype searchQuery, return a selection choice to the user
-     * 
-     * @param termUsed is what the user typed
      * @param geneId the id of the gene chosen
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
@@ -123,5 +116,13 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<GeneEvidenceValueObject> list of Genes
      */
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
+    
+    /**
+     * Find all phenotypes associated to a pubmedID
+     * 
+     * @param pubMedId
+     * @return BibliographicReferenceValueObject 
+     */
+    public BibliographicReferenceValueObject findPhenotypesForBibliographicReference(String pubMedId);
 
 }

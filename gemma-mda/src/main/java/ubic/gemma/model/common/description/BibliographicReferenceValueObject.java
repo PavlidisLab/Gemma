@@ -28,6 +28,7 @@ import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.MedicalSubjectHeading;
 import ubic.gemma.model.expression.biomaterial.Compound;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 
 /**
  * represents a BibliographicReferenceValueObject when this value object is needed in core, the same value object exists
@@ -81,6 +82,8 @@ public class BibliographicReferenceValueObject {
 
     private Collection<String> meshTerms;
     private Collection<String> chemicalsTerms;
+    
+    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes;
 
     public BibliographicReferenceValueObject() {
         super();
@@ -352,4 +355,14 @@ public class BibliographicReferenceValueObject {
     public static Collection<CitationValueObject> constructCitations( Collection<BibliographicReference> bibs ){
         return CitationValueObject.convert2CitationValueObjects( bibs );
     }
+
+    public Collection<BibliographicPhenotypesValueObject> getBibliographicPhenotypes() {
+        return bibliographicPhenotypes;
+    }
+
+    public void setBibliographicPhenotypes( Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
+        this.bibliographicPhenotypes = bibliographicPhenotypes;
+    }
+    
+    
 }
