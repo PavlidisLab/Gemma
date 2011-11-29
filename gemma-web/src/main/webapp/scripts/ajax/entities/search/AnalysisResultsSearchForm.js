@@ -498,6 +498,40 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	},
 	
 	restrictCoexSearch : function(csc) {
+		
+		var k = 50;
+		
+		var numDatasets = csc.eeIds.length;
+		
+		var displayStringency = 2;
+		var resultsStringency = 2;
+		
+		if (numDatasets > k){
+		
+			displayStringency = 2 + Math.round(numDatasets/k);
+		
+		}
+		
+		if (displayStringency > 20){
+			displayStringency = 20;
+		}
+		
+		if (displayStringency > 5){
+			resultsStringency = displayStringency - Math.round(displayStringency/4);
+		}
+		
+		
+		/*
+		if (displayStringency > 2){
+			csc.stringency = displayStringency -1;
+		}
+		*/
+		csc.displayStringency = displayStringency;	
+		
+		csc.stringency = resultsStringency;
+		
+		
+		
 		/*
 		if (csc.geneIds.length>10){
 			//make it 'my genes only'
