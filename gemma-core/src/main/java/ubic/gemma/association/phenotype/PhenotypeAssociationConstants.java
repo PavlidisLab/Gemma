@@ -24,5 +24,6 @@ public class PhenotypeAssociationConstants {
     public final static String MAMMALIAN_PHENOTYPE = "Mammalian Phenotype";
     public final static String HUMAN_PHENOTYPE = "Human Phenotype";
     public final static String PHENOTYPES_COUNT_CACHE = "PhenotypesCount";
-
+    public final static String PHENOTYPE = "Phenotype";
+    public final static String PHENOTYPE_CATEGORY_URI = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Phenotype";
 }

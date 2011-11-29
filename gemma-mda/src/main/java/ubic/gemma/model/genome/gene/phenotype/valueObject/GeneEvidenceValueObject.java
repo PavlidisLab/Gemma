@@ -21,6 +21,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneValueObject;
@@ -76,6 +77,20 @@ public class GeneEvidenceValueObject extends GeneValueObject {
 
     public void setEvidence( Collection<EvidenceValueObject> evidence ) {
         this.evidence = evidence;
+    }
+    
+    /** Given a geneVO finds all valueRI of phenotypes for that gene */
+    public Set<String> findAllPhenotpyesOnGene () {
+
+        Set<String> allPhenotypesOnGene = new HashSet<String>();
+
+        for ( EvidenceValueObject evidenceVO : this.evidence ) {
+            for ( CharacteristicValueObject chaVO : evidenceVO.getPhenotypes() ) {
+                allPhenotypesOnGene.add( chaVO.getValueUri() );
+            }
+        }
+
+        return allPhenotypesOnGene;
     }
 
 }

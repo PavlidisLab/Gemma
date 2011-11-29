@@ -186,7 +186,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             throw new IllegalArgumentException();
         }
 
-        // map query phenotypes given to the set of possible children phenotypes in the database + root
+        // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
         HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotypes( phenotypesValuesUri );
 
         String firstPhenotypesValuesUri = "";
@@ -216,7 +216,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             genesVO = filterGenesWithPhenotypes( genesWithFirstPhenotype, phenotypesWithChildren );
         }
 
-        // put some flags for the Interface indication witch phenotypes are root or children
+        // put some flags for the Interface indicating witch phenotypes are root for the given query or children
         flagEvidence( genesVO, phenotypesWithChildren, phenotypesValuesUri );
 
         return genesVO;
@@ -271,6 +271,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param evidenceValueObject the evidence with modified fields
      */
     @Override
+    // TODO to test and to be modified
     public void update( EvidenceValueObject evidenceValueObject ) {
 
         // new phenotypes found on the evidence (the difference will be what is added or removed)
@@ -282,10 +283,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // an evidenceValueObject always has at least 1 phenotype
         if ( newPhenotypesValuesUri.size() == 0 ) {
-            return;
+            throw new IllegalArgumentException();
         }
 
-        // replace specific values for this type type of evidence
+        // replace specific values for this type of evidence
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
                 .populateTypePheAsso( evidenceValueObject );
 
@@ -333,7 +334,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Giving a phenotype searchQuery, return a selection choice to the user
+     * Giving a phenotype searchQuery, returns a selection choice to the user
      * 
      * @param termUsed is what the user typed
      * @param geneId the id of the gene chosen
@@ -376,8 +377,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> phenotypesNoRuleFound = new ArrayList<CharacteristicValueObject>();
 
         /*
-         * for each CharacteristicVO made from the Ontology search lets filter them and add them to a specific list if
-         * they satisfied the condition
+         * for each CharacteristicVO found from the Ontology, filter them and add them to a specific list if they
+         * satisfied the condition
          */
         for ( CharacteristicValueObject cha : allPhenotypesFoundInOntology ) {
 
@@ -448,6 +449,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             this.cacheManager.addCache( new Cache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE, 1500, false,
                     false, 24 * 3600, 24 * 3600 ) );
         }
+        // the phenotypes in the database correspond to many trees not linked to each other, each of those tree are keep
+        // in the cache separately, when a change is detected we only need to reconstruct the specific tree the
+        // phenotype belong to ( the occurence count for a phenotype depends his children occurence)
 
         Collection<TreeCharacteristicValueObject> treesPhenotypes = buildTree( null );
 
@@ -455,11 +459,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Collection<TreeCharacteristicValueObject> finalTree = new HashSet<TreeCharacteristicValueObject>();
 
-        // last step is to count how many unique Genes we have for each phenotype + children count
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
 
-            // not in the cache
+            // the branch is not in the cache ( it was removed or expired)
             if ( phenoCountCache.get( tc.getValueUri() ) == null ) {
+                // count occurence for each phenotype in the branch
                 countGeneOccurence( tc );
                 phenoCountCache.put( new Element( tc.getValueUri(), tc ) );
                 finalTree.add( tc );
@@ -483,7 +487,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
 
         if ( query == null || query.length() == 0 ) {
-            return null;
+            throw new IllegalArgumentException();
         }
 
         // make sure it does an inexact search
@@ -511,9 +515,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<GeneEvidenceValueObject> geneValueObjectsFilter = new ArrayList<GeneEvidenceValueObject>();
 
         for ( GeneEvidenceValueObject gene : geneEvidenceValueObjects ) {
-
             if ( gene.getEvidence() != null && gene.getEvidence().size() != 0 ) {
-
                 geneValueObjectsFilter.add( gene );
             }
         }
@@ -521,50 +523,40 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return geneValueObjectsFilter;
     }
 
-    @Override
     /**
      * Find all phenotypes associated to a pubmedID
      * 
      * @param pubMedId
-     * @return BibliographicReferenceValueObject 
+     * @return BibliographicReferenceValueObject
      */
+    @Override
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId ) {
 
         // check if already in the database
-        BibliographicReference bibRef = this.bibliographicReferenceService.findByExternalId( pubMedId );
+        BibliographicReference bibliographicReference = this.bibliographicReferenceService.findByExternalId( pubMedId );
 
-        if ( bibRef == null ) {
-            // creates a new BibliographicReference
-            bibRef = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+        if ( bibliographicReference == null ) {
+            // find the Bibliographic on PubMed
+            bibliographicReference = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
 
-            // the pudmedId doesn't exists
-            if ( bibRef == null ) {
+            // the pudmedId doesn't exists in PudMed
+            if ( bibliographicReference == null ) {
                 throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
             }
         }
 
-        BibliographicReferenceValueObject bibRedVO = new BibliographicReferenceValueObject( bibRef );
+        BibliographicReferenceValueObject bibliographicReferenceVO = new BibliographicReferenceValueObject(
+                bibliographicReference );
 
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObject = new HashSet<BibliographicPhenotypesValueObject>();
-
-        Collection<PhenotypeAssociation> phenotypeAssociation = this.associationService
+        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
                 .findPhenotypesForBibliographicReference( pubMedId );
 
-        for ( PhenotypeAssociation phe : phenotypeAssociation ) {
+        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+                .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
 
-            Collection<String> phenotypeValues = new HashSet<String>();
+        bibliographicReferenceVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
 
-            for ( Characteristic cha : phe.getPhenotypes() ) {
-                phenotypeValues.add( cha.getValue() );
-            }
-            BibliographicPhenotypesValueObject bibPheVO = new BibliographicPhenotypesValueObject( phe.getGene()
-                    .getName(), phenotypeValues );
-            bibliographicPhenotypesValueObject.add( bibPheVO );
-        }
-
-        bibRedVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObject );
-
-        return bibRedVO;
+        return bibliographicReferenceVO;
     }
 
     /** counts gene on a TreeCharacteristicValueObject */
@@ -587,8 +579,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         myPhenotype.setValueUri( o.getUri() );
         myPhenotype.setValue( o.getLabel() );
-        myPhenotype.setCategoryUri( "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Phenotype" );
-        myPhenotype.setCategory( "Phenotype" );
+        myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
+        myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
 
         return myPhenotype;
     }
@@ -618,20 +610,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             phenotypes.addAll( evidenceVO.getPhenotypes() );
         }
         return phenotypes;
-    }
-
-    /** Given a geneVO finds all valueRI of phenotypes for that gene */
-    private Set<String> findUniquePhenotpyesForGeneId( GeneEvidenceValueObject geneVO ) {
-
-        Set<String> allPhenotypesOnGene = new HashSet<String>();
-
-        for ( EvidenceValueObject evidenceVO : geneVO.getEvidence() ) {
-            for ( CharacteristicValueObject chaVO : evidenceVO.getPhenotypes() ) {
-                allPhenotypesOnGene.add( chaVO.getValueUri() );
-            }
-        }
-
-        return allPhenotypesOnGene;
     }
 
     /** This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future */
@@ -715,9 +693,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return treesPhenotypes;
     }
 
-    /** map query phenotypes given to the set of possible children phenotypes in the database + root */
+    /** map query phenotypes given to the set of possible children phenotypes in the database */
     private HashMap<String, Set<String>> findChildrenForEachPhenotypes( Set<String> phenotypesValuesUri ) {
 
+        // root corresponds to one value found in phenotypesValuesUri
         // root ---> root+children phenotypes
         HashMap<String, Set<String>> parentPheno = new HashMap<String, Set<String>>();
 
@@ -743,6 +722,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return parentPheno;
     }
 
+    /** Filter a set of genes if who have the root phenotype or a children of a root phenotype */
     private Collection<GeneEvidenceValueObject> filterGenesWithPhenotypes(
             Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
             HashMap<String, Set<String>> phenotypesWithChildren ) {
@@ -752,7 +732,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( GeneEvidenceValueObject geneVO : geneEvidenceValueObjects ) {
 
             // all phenotypeUri for a gene
-            Set<String> allPhenotypesOnGene = findUniquePhenotpyesForGeneId( geneVO );
+            Set<String> allPhenotypesOnGene = geneVO.findAllPhenotpyesOnGene();
 
             // if the Gene has all the phenotypes
             boolean keepGene = true;
@@ -785,6 +765,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return genesVO;
     }
 
+    /** add flag to Evidence and CharacteristicvalueObjects */
     private void flagEvidence( Collection<GeneEvidenceValueObject> genesVO,
             HashMap<String, Set<String>> phenotypesWithChildren, Set<String> phenotypesValuesUri ) {
         Set<String> possibleChildrenPhenotypes = new HashSet<String>();
@@ -819,6 +800,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
+    /** change a seachQuery to make it seach in the Ontology using * and AND */
     private String prepareOntologyQuery( String searchQuery ) {
         String[] tokens = searchQuery.split( " " );
         String newSearchQuery = "";
@@ -835,7 +817,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return newSearchQuery;
     }
 
-    /** search the disease,hp and mp ontology and return an ordered set */
+    /** search the disease,hp and mp ontology for a searchQuery and return an ordered set of CharacteristicVO */
     private Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) {
         Set<CharacteristicValueObject> allPhenotypesFoundInOntology = new TreeSet<CharacteristicValueObject>();
 
