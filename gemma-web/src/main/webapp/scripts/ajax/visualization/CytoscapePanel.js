@@ -1517,7 +1517,7 @@ Ext.Panel, {
             }
         } // end for (<kglength)
         //add new genes
-        geneChooser.getGenesFromGeneValueObjects(genesToPreview, genesToPreviewIds);
+        geneChooser.getGenesFromGeneValueObjects(genesToPreview, genesToPreviewIds, this.taxonId, this.taxonName);
 
 
     },

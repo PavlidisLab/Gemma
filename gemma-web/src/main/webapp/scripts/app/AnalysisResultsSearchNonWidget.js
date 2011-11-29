@@ -206,7 +206,6 @@ Ext.onReady(function() {
 			});
 		}
 		
-		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
 					id : "cytoscaperesults",
 					title : "Visualization",
@@ -215,8 +214,10 @@ Ext.onReady(function() {
 					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
 					coexGridRef: knownGeneGrid,
 					searchPanelRef: searchPanel,
-					width:850
-					,hideMode:'visibility'
+					width:850,
+					taxonId: searchPanel.getTaxonId(),
+					taxonName: searchPanel.getTaxonName(),
+					hideMode:'visibility'
 					
 				});
 		

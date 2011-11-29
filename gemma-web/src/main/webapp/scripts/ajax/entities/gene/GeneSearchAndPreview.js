@@ -278,20 +278,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	 * @param {}
 	 *            e
 	 */
-	getGenesFromGeneValueObjects : function(genesToPreview, geneIds, taxonId) {
-		var taxonName;
-		if (!taxonId && this.searchForm.getTaxonId()) {
-			taxonId = this.searchForm.getTaxonId();
-			taxonName = this.searchForm.getTaxonName();
-		}else{
-			taxonId = this.symbolList._taxonCombo.getTaxon().id;
-			taxonName = this.symbolList._taxonCombo.getTaxon().data.commonName;
-		}
-
-		if (isNaN(taxonId)) {
-			Ext.Msg.alert("Missing information", "Please select a taxon.");
-			return;
-		}
+	getGenesFromGeneValueObjects : function(genesToPreview, geneIds, taxonId, taxonName) {		
 		
 		this.searchForm.geneIds = geneIds;
 		this.geneIds = geneIds;
