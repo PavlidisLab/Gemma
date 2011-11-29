@@ -366,6 +366,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		
 		var image_url = canvas.toDataURL("image/png");
 		var win = new Ext.Window({
+			title : 'Right-click the image and save the image as file.',
 		    html: '<img src="'+image_url+'" />',
 		    height: 700,
 		    widht: 900
