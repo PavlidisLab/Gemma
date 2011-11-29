@@ -24,6 +24,17 @@
 		<%-- for registration, possible from any page--%>
 		<script type="text/javascript" src="http://api.recaptcha.net/js/recaptcha_ajax.js"> </script>
 		
+		<%-- log javascript errors --%>
+		<script type="text/javascript">
+			window.onerror = function(errorMessage, url, line){		
+				// message == text-based error description
+			    // url     == url which exhibited the script error
+			    // line    == the line number being executed when the error occurred
+				JavascriptLogger.writeToErrorLog(errorMessage, url, line, document.location.href, navigator.userAgent);
+				
+				//return true; // supresses js error messages
+			};
+		</script>
 		
 		<decorator:head />
 

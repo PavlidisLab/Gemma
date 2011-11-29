@@ -40,6 +40,19 @@
 		<!-- Cytoscape Web JS API (needed to reference org.cytoscapeweb.Visualization) -->
 		<script type="text/javascript" src="/Gemma/scripts/cytoscapev8/js/min/cytoscapeweb.min.js"></script>
 
+
+		<!-- log javascript errors -->
+		<script type="text/javascript">
+			window.onerror = function(errorMessage, url, line){		
+				// message == text-based error description
+			    // url     == url which exhibited the script error
+			    // line    == the line number being executed when the error occurred
+				JavascriptLogger.writeToErrorLog(errorMessage, url, line, document.location.href, navigator.userAgent);
+				
+				//return true; // supresses js error messages
+			};
+		</script>
+
 		<decorator:head />
 		
 	</head>

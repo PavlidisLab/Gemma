@@ -1311,6 +1311,15 @@ gemma.max.fileupload.size.bytes=
 						</property>
 					</bean>
 				</entry>
+				<entry key="JavascriptLogger">
+					<bean class="org.directwebremoting.spring.CreatorConfig">
+						<property name="creator">
+							<bean class="org.directwebremoting.spring.BeanCreator">
+								<property name="bean" ref="javascriptLogger" />
+							</bean>
+						</property>
+					</bean>
+				</entry>
 			</map>
 		</property>
 		<!--
