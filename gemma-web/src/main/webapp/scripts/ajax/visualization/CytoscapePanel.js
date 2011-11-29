@@ -25,7 +25,11 @@ Gemma.CytoscapeSettings = {
     //edge stuff
     supportColorBoth: "#CCCCCC",
     supportColorPositive: "#E66101",
-    supportColorNegative: "#5E3C99"
+    supportColorNegative: "#5E3C99",
+    
+    selectionGlowColor: "#0000FF",
+    
+    selectionGlowOpacity: 1
 
 };
 
@@ -164,7 +168,11 @@ Ext.Panel, {
 
             },
 
-            color: Gemma.CytoscapeSettings.nodeColor
+            color: Gemma.CytoscapeSettings.nodeColor,                        
+            
+            selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
+            
+            selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
         },
         edges: {
             tooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
@@ -195,7 +203,11 @@ Ext.Panel, {
                         value: Gemma.CytoscapeSettings.supportColorNegative
                     }]
                 }
-            }
+            },
+            
+            selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
+            
+            selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
         }
     },
     visual_style_node_degree: {
@@ -266,7 +278,11 @@ Ext.Panel, {
                     maxValue: Gemma.CytoscapeSettings.nodeColorFade,
                     maxAttrValue: 11
                 }
-            }
+            },
+            
+            selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
+            
+            selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
         },
         edges: {
             tooltipText: "Edge Nodes: ${target} to ${source}<br/>Positive Support:${positivesupport}<br/>Negative Support:${negativesupport}",
@@ -304,7 +320,11 @@ Ext.Panel, {
                         value: Gemma.CytoscapeSettings.supportColorNegative
                     }]
                 }
-            }
+            },
+            
+            selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
+            
+            selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
 
 
         }
@@ -328,6 +348,57 @@ Ext.Panel, {
             return 1.05 - data["nodeDegreeBin"] / 10;
 
         };
+        
+        this.actionsMenu = new Ext.menu.Menu({
+            items: [{
+            	itemId: 'extendSelectedNodesButton',
+                text: 'Extend Selected Nodes',
+                tooltip: 'Extend the graph by finding new results for selected genes',
+                handler: this.extendSelectedNodes,
+                scope: this
+            }, {
+            	itemId: 'searchWithSelectedNodesButton',
+                text: 'Search with Selected Nodes',
+                //icon: '/Gemma/images/icons/picture.png',
+                tooltip: 'Start a new search with selected nodes',
+                handler: this.reRunSearchWithSelectedNodes,
+                scope: this
+            }]
+        });
+        
+        var actionsButtonHandler = function(){
+        	
+        	
+        	if (this.ready){
+        		
+        		
+        		var nodes = this.visualization.selected("nodes");             		
+        		
+        		
+        		if (nodes.length > 0){
+        			this.actionsMenu.getComponent('extendSelectedNodesButton').setDisabled(false);
+        			this.actionsMenu.getComponent('searchWithSelectedNodesButton').setDisabled(false);
+        			
+        		}
+        		else {
+        			this.actionsMenu.getComponent('extendSelectedNodesButton').setDisabled(true);
+        			this.actionsMenu.getComponent('searchWithSelectedNodesButton').setDisabled(true);
+        		}
+        		
+        	}               	
+        	
+        };
+        
+        this.actionsButton = new Ext.Button({
+        	
+            text: '<b>Actions</b>',
+            itemId: 'actionsButton',
+            menu: this.actionsMenu
+        	
+        	
+        });
+        
+        this.actionsButton.addListener('mouseover', actionsButtonHandler, this);
 
 
         Ext.apply(
@@ -372,8 +443,8 @@ Ext.Panel, {
             '->', '-',
             {
                 xtype: 'button',
-                icon: '/Gemma/images/icons/question_blue.png',
-                cls: 'x-btn-icon',
+                //icon: '/Gemma/images/icons/question_blue.png',
+                text: '<b>Help</b>',                
                 tooltip: 'Click here for documentation on how to use this visualizer.',
                 handler: function () {
                 	
@@ -426,25 +497,9 @@ Ext.Panel, {
 
             '->', '-',
 
-            {
-                xtype: 'button',
-                text: '<b>Selected Node Actions</b>',
-                //icon: '/Gemma/images/download.gif',
-                menu: new Ext.menu.Menu({
-                    items: [{
-                        text: 'Extend Selected Nodes',
-                        tooltip: 'Extend the graph by finding new results for selected genes',
-                        handler: this.extendSelectedNodes,
-                        scope: this
-                    }, {
-                        text: 'Search with Selected Nodes',
-                        //icon: '/Gemma/images/icons/picture.png',
-                        tooltip: 'Start a new search with selected nodes',
-                        handler: this.reRunSearchWithSelectedNodes,
-                        scope: this
-                    }]
-                })
-            },
+            
+                this.actionsButton
+            ,
             
             '->',
             '-',
@@ -778,11 +833,15 @@ Ext.Panel, {
         var htmlString = '<img src="data:image/png;base64,' + this.visualization.png() + '"/>';
 
         var win = new Ext.Window({
-            title: 'Graph'
+            title: 'Right-click the image and save the image as file.'
 
             ,
             plain: true,
-            html: htmlString
+            html: htmlString,
+            height: 700,
+            width: 900,
+            autoScroll:true
+		    
         });
         win.show();
 
