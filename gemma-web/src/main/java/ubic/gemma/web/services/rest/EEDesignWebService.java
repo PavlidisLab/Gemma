@@ -61,11 +61,13 @@ public class EEDesignWebService {
         if (experiment == null) throw new NotFoundException("Dataset not found.");
 
         for (BioAssay bioAssay : experiment.getBioAssays()) {
+            
+            String accession = bioAssay.getAccession().getAccession();
+            
             for (BioMaterial bioMaterial : bioAssay.getSamplesUsed()) {                    
-
-                String sampleName = bioMaterial.getName();
+            
                 Map<String,String> annotations = new HashMap<String,String>();
-                
+
                 for (FactorValue factorValue : bioMaterial.getFactorValues()) {                    
                     if (factorValue.getExperimentalFactor().getName().equals( "batch" )) {
                         // skip batch
@@ -73,7 +75,7 @@ public class EEDesignWebService {
                         annotations.put( factorValue.getExperimentalFactor().getName(), getFactorValueString( factorValue ) );                        
                     }                
                 }
-                result.put( sampleName, annotations );                
+                result.put( accession, annotations );                
             }                
         }
         
