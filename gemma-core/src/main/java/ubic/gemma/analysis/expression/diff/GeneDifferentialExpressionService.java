@@ -337,7 +337,8 @@ public class GeneDifferentialExpressionService {
              * probes map to the same gene.
              */
             ProbeAnalysisResult res = findMinPenalizedProbeResult( filteredResults );
-
+            if ( res == null ) continue;
+            
             Double p = res.getPvalue();
             if ( p == null ) continue;
 
