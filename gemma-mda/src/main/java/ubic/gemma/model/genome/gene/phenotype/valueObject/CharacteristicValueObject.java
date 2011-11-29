@@ -23,7 +23,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
     private Long id = null;
-    /** id used by url*/
+    /** id used by url */
     private String urlId = "";
 
     private String category = "";
@@ -39,6 +39,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     private String ontologyUsed = null;
 
     private boolean alreadyPresentOnGene = false;
+    private boolean alreadyPresentInDatabase = false;
 
     /** child term from a root */
     private boolean child = false;
@@ -149,6 +150,14 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.urlId = urlId;
     }
 
+    public boolean isAlreadyPresentInDatabase() {
+        return this.alreadyPresentInDatabase;
+    }
+
+    public void setAlreadyPresentInDatabase( boolean alreadyPresentInDatabase ) {
+        this.alreadyPresentInDatabase = alreadyPresentInDatabase;
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -175,10 +184,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     @Override
     public int compareTo( CharacteristicValueObject o ) {
 
-        if ( this.category.equalsIgnoreCase( o.category ) ) {
-            return this.value.compareToIgnoreCase( o.value );
-        }
-        return this.category.compareTo( o.category );
+        return this.value.compareToIgnoreCase( o.value );
     }
 
 }

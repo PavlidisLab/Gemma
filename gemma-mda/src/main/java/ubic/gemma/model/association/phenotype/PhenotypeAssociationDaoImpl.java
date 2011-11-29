@@ -116,7 +116,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
 
     /** load all valueURI of Phenotype in the database */
     @Override
-    public Set<String> loadAllPhenotypesURI() {
+    public Set<String> loadAllPhenotypesUri() {
         Set<String> phenotypesURI = new HashSet<String>();
 
         // TODO make hsql query

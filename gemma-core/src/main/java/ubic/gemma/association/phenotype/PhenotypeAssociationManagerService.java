@@ -99,7 +99,7 @@ public interface PhenotypeAssociationManagerService {
      * @param geneId the id of the gene chosen
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId );
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
 
     /**
      * Using all the phenotypes in the database, builds a tree structure using the Ontology, uses cache for fast access
@@ -123,6 +123,6 @@ public interface PhenotypeAssociationManagerService {
      * @param pubMedId
      * @return BibliographicReferenceValueObject 
      */
-    public BibliographicReferenceValueObject findPhenotypesForBibliographicReference(String pubMedId);
+    public BibliographicReferenceValueObject findBibliographicReference(String pubMedId);
 
 }

@@ -150,8 +150,8 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** load all valueURI of Phenotype in the database */
     @Override
-    public Set<String> loadAllPhenotypesURI() {
-        return this.phenotypeAssociationDao.loadAllPhenotypesURI();
+    public Set<String> loadAllPhenotypesUri() {
+        return this.phenotypeAssociationDao.loadAllPhenotypesUri();
     }
     
     @Override

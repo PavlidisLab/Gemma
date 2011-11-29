@@ -117,10 +117,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public GeneEvidenceValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
-        // find the gene we wish to add the evidence and phenotype
         Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
 
-        // convert all evidence for this gene to valueObject
         Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
                 .getPhenotypeAssociations() );
 
@@ -132,18 +130,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
         }
 
-        // convert the valueObject received to the corresponding entity
-        PhenotypeAssociation pheAsso = this.phenotypeAssoManagerServiceHelper.valueObject2Entity( evidence );
+        PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
+                .valueObject2Entity( evidence );
+        phenotypeAssociation.setGene( gene );
+        phenotypeAssociation = this.associationService.create( phenotypeAssociation );
+        gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
-        // Important.
-        pheAsso.setGene( gene );
-
-        pheAsso = this.associationService.create( pheAsso );
-
-        // add the entity to the gene
-        gene.getPhenotypeAssociations().add( pheAsso );
-
-        // return the saved gene result
         return new GeneEvidenceValueObject( gene );
     }
 
@@ -159,7 +151,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
 
         if ( gene == null ) {
-            return null;
+            return new HashSet<EvidenceValueObject>();
         }
         return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
@@ -176,7 +168,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Gene gene = this.geneService.load( ( geneId.longValue() ) );
 
         if ( gene == null ) {
-            return null;
+            return new HashSet<EvidenceValueObject>();
         }
         return EvidenceValueObject.convert2ValueObjects( gene.getPhenotypeAssociations() );
     }
@@ -190,118 +182,42 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesUri ) {
 
-        if ( phenotypesValuesUri.size() == 0 ) {
-            return null;
+        if ( phenotypesValuesUri == null || phenotypesValuesUri.size() == 0 ) {
+            throw new IllegalArgumentException();
         }
 
-        // load all current phenotypes in the database
-        Set<String> phenotypesUriInDatabase = this.associationService.loadAllPhenotypesURI();
+        // map query phenotypes given to the set of possible children phenotypes in the database + root
+        HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotypes( phenotypesValuesUri );
 
-        // set of all possible children for all given root phenotypes
-        Set<String> possibleChildrenPhenotypes = new HashSet<String>();
+        String firstPhenotypesValuesUri = "";
 
-        // map a root phenotype given to the set of possible children phenotypes in the database + root
-        // root ---> root+children phenotypes
-        HashMap<String, Set<String>> parentPheno = new HashMap<String, Set<String>>();
-
-        // lets keep track of one root phenotype to make the first sql query, then we will filter it
-        String aRootPhenotype = "";
-
-        // determine all children terms for each other phenotypes
-        for ( String phenoRoot : phenotypesValuesUri ) {
-
-            OntologyTerm ontologyTermFound = findPhenotypeInOntology( phenoRoot );
-            Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
-
-            Set<String> parentChilren = new HashSet<String>();
-            parentChilren.add( phenoRoot );
-
-            for ( OntologyTerm ot : ontologyChildrenFound ) {
-
-                if ( phenotypesUriInDatabase.contains( ot.getUri() ) ) {
-                    possibleChildrenPhenotypes.add( ot.getUri() );
-                    parentChilren.add( ot.getUri() );
-                }
-            }
-            parentPheno.put( phenoRoot, parentChilren );
-            aRootPhenotype = phenoRoot;
+        for ( String phenotypeValueUri : phenotypesValuesUri ) {
+            firstPhenotypesValuesUri = phenotypeValueUri;
+            break;
         }
 
-        // take one of the root phenotype + its children and find all Gene that has evidence with root or children
-        Collection<Gene> genes = this.associationService.findPhenotypeAssociations( parentPheno.get( aRootPhenotype ) );
-        parentPheno.remove( aRootPhenotype );
+        // find all Genes containing the first phenotypeValueUri
+        Collection<Gene> genes = this.associationService.findPhenotypeAssociations( phenotypesWithChildren
+                .get( firstPhenotypesValuesUri ) );
+        phenotypesWithChildren.remove( firstPhenotypesValuesUri );
 
         Collection<GeneEvidenceValueObject> genesWithFirstPhenotype = GeneEvidenceValueObject
                 .convert2GeneEvidenceValueObjects( genes );
 
-        Collection<GeneEvidenceValueObject> genesVO = new HashSet<GeneEvidenceValueObject>();
+        Collection<GeneEvidenceValueObject> genesVO = null;
 
-        // simple case, we only had one root phenotype
+        // only 1 phenotypeValueUri in the query, so no need to filter values received
         if ( phenotypesValuesUri.size() == 1 ) {
             genesVO = genesWithFirstPhenotype;
         }
-        // we received a set of Gene with the first root phenotype, we need to filter this set and keep only Gene
-        // that have all root phenotypes or their children
+        // we received a set of Gene with the first phenotype, we need to filter this set and keep only genes that have
+        // all root phenotypes or their children
         else {
-
-            for ( GeneEvidenceValueObject geneVO : genesWithFirstPhenotype ) {
-
-                // all phenotypeUri for a gene
-                Set<String> allPhenotypesOnGene = findUniquePhenotpyesForGeneId( geneVO );
-
-                // if the Gene has all the phenotypes
-                boolean keepGene = true;
-
-                for ( String phe : parentPheno.keySet() ) {
-
-                    // at least 1 value must be found
-                    Set<String> possiblePheno = parentPheno.get( phe );
-
-                    boolean foundSpecificPheno = false;
-
-                    for ( String pheno : possiblePheno ) {
-
-                        if ( allPhenotypesOnGene.contains( pheno ) ) {
-                            foundSpecificPheno = true;
-                        }
-                    }
-
-                    if ( foundSpecificPheno == false ) {
-                        // dont keep gene since a root phenotype + children was not found for all evidence of that gene
-                        keepGene = false;
-                        break;
-                    }
-                }
-                if ( keepGene ) {
-                    genesVO.add( geneVO );
-                }
-            }
+            genesVO = filterGenesWithPhenotypes( genesWithFirstPhenotype, phenotypesWithChildren );
         }
 
-        // flag relevant evidence, root phenotypes and children phenotypes
-        for ( GeneEvidenceValueObject geneVO : genesVO ) {
-            for ( EvidenceValueObject evidenceVO : geneVO.getEvidence() ) {
-
-                boolean relevantEvidence = false;
-
-                for ( CharacteristicValueObject chaVO : evidenceVO.getPhenotypes() ) {
-
-                    // if the phenotype is a root
-                    if ( phenotypesValuesUri.contains( chaVO.getValueUri() ) ) {
-                        relevantEvidence = true;
-                        chaVO.setRoot( true );
-                    }
-                    // if the phenotype is a children of the root
-                    else if ( possibleChildrenPhenotypes.contains( chaVO.getValueUri() ) ) {
-                        chaVO.setChild( true );
-                        relevantEvidence = true;
-                    }
-                }
-                if ( relevantEvidence ) {
-                    evidenceVO.setRelevance( new Double( 1.0 ) );
-                }
-            }
-        }
+        // put some flags for the Interface indication witch phenotypes are root or children
+        flagEvidence( genesVO, phenotypesWithChildren, phenotypesValuesUri );
 
         return genesVO;
     }
@@ -318,11 +234,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Collection<CharacteristicValueObject> characteristcsVO = new TreeSet<CharacteristicValueObject>();
 
         // load the tree
-        Collection<TreeCharacteristicValueObject> tree = findAllPhenotypesByTree();
+        Collection<TreeCharacteristicValueObject> treeCharacteristicValueObject = findAllPhenotypesByTree();
 
         // undo the tree in a simple structure
-        for ( TreeCharacteristicValueObject t : tree ) {
-
+        for ( TreeCharacteristicValueObject t : treeCharacteristicValueObject ) {
             addChildren( characteristcsVO, t );
         }
 
@@ -424,11 +339,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param geneId the id of the gene chosen
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
-    // TO DO test and discuss more
     @Override
-    public Collection<CharacteristicValueObject> searchOntologyForPhenotype( String searchQuery, Long geneId ) {
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId ) {
 
-        Collection<CharacteristicValueObject> phenotypesFound = new ArrayList<CharacteristicValueObject>();
+        ArrayList<CharacteristicValueObject> orderedPhenotypesFromOntology = new ArrayList<CharacteristicValueObject>();
 
         boolean geneProvided = true;
 
@@ -436,97 +350,89 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             geneProvided = false;
         }
 
-        String[] tokens = searchQuery.split( " " );
+        // prepare the searchQuery to correctly query the Ontology
+        String newSearchQuery = prepareOntologyQuery( searchQuery );
 
-        String newSearchQuery = "";
+        // search the Ontology with the new search query
+        Set<CharacteristicValueObject> allPhenotypesFoundInOntology = findPhenotypesInOntology( newSearchQuery );
 
-        for ( int i = 0; i < tokens.length; i++ ) {
-
-            newSearchQuery = newSearchQuery + tokens[i] + "* ";
-
-            // last one
-            if ( i != tokens.length - 1 ) {
-                newSearchQuery = newSearchQuery + "AND ";
-            }
-        }
-
-        Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
-
-        // search disease ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                this.diseaseOntologyService.findTerm( newSearchQuery ), PhenotypeAssociationConstants.DISEASE ) );
-
-        // search mp ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                this.mammalianPhenotypeOntologyService.findTerm( newSearchQuery ),
-                PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
-
-        // search hp ontology
-        phenotypes.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
-                this.humanPhenotypeOntologyService.findTerm( newSearchQuery ),
-                PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
-
-        // This list will contain exact match found in the Ontology search result
-        Collection<CharacteristicValueObject> phenotypesFound1 = new ArrayList<CharacteristicValueObject>();
-        // This list will contain phenotypes that are already present for that gene
-        Collection<CharacteristicValueObject> phenotypesFound2 = new ArrayList<CharacteristicValueObject>();
-        // This list will contain phenotypes that are a substring of the searchQuery
-        Collection<CharacteristicValueObject> phenotypesFound3 = new ArrayList<CharacteristicValueObject>();
-        // Phenotypes present in the database already and found in the ontology search
-        Collection<CharacteristicValueObject> phenotypesFound4 = new ArrayList<CharacteristicValueObject>();
-        // others
-        Collection<CharacteristicValueObject> phenotypesFound5 = new ArrayList<CharacteristicValueObject>();
-
-        // Set of all the phenotypes present on the gene
-        Set<CharacteristicValueObject> phenotypesOnGene = null;
+        // All phenotypes present on the gene (if the gene was given)
+        Set<CharacteristicValueObject> phenotypesOnCurrentGene = null;
 
         if ( geneProvided ) {
-            phenotypesOnGene = findUniquePhenotpyesForGeneId( geneId );
+            phenotypesOnCurrentGene = findUniquePhenotpyesForGeneId( geneId );
         }
 
-        // lets load all phenotypes presents in the database
-        Collection<CharacteristicValueObject> allPhenotypes = this.associationService.loadAllPhenotypes();
+        // all phenotypes currently in the database
+        Set<String> allPhenotypesInDatabase = this.associationService.loadAllPhenotypesUri();
+
+        // rules to order the Ontology results found
+        Collection<CharacteristicValueObject> phenotypesWithExactMatch = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> phenotypesAlreadyPresentOnGene = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> phenotypesStartWithQueryAndInDatabase = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> phenotypesStartWithQuery = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> phenotypesSubstringAndInDatabase = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> phenotypesSubstring = new ArrayList<CharacteristicValueObject>();
+        Collection<CharacteristicValueObject> phenotypesNoRuleFound = new ArrayList<CharacteristicValueObject>();
 
         /*
          * for each CharacteristicVO made from the Ontology search lets filter them and add them to a specific list if
          * they satisfied the condition
          */
-        for ( CharacteristicValueObject cha : phenotypes ) {
+        for ( CharacteristicValueObject cha : allPhenotypesFoundInOntology ) {
+
+            // set flag for UI, flag if the phenotype is on the Gene or if in the database
+            if ( phenotypesOnCurrentGene != null && phenotypesOnCurrentGene.contains( cha ) ) {
+                cha.setAlreadyPresentOnGene( true );
+            } else if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
+                cha.setAlreadyPresentInDatabase( true );
+            }
+
+            // order the results by specific rules
 
             // Case 1, exact match
             if ( cha.getValue().equalsIgnoreCase( searchQuery ) ) {
-
-                // if also already present on that gene
-                if ( phenotypesOnGene != null && phenotypesOnGene.contains( cha ) ) {
-                    cha.setAlreadyPresentOnGene( true );
-                }
-                phenotypesFound1.add( cha );
+                phenotypesWithExactMatch.add( cha );
             }
             // Case 2, phenotype already present on Gene
-            else if ( phenotypesOnGene != null && phenotypesOnGene.contains( cha ) ) {
-                cha.setAlreadyPresentOnGene( true );
-                phenotypesFound2.add( cha );
+            else if ( phenotypesOnCurrentGene != null && phenotypesOnCurrentGene.contains( cha ) ) {
+                phenotypesAlreadyPresentOnGene.add( cha );
             }
-            // Case 3, contains a substring of the word
-            else if ( searchQuery.toLowerCase().indexOf( cha.getValue().toLowerCase() ) != -1 ) {
-                phenotypesFound3.add( cha );
+            // Case 3, starts with a substring of the word
+            else if ( cha.getValue().toLowerCase().startsWith( searchQuery.toLowerCase() ) ) {
+                if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
+                    phenotypesStartWithQueryAndInDatabase.add( cha );
+                } else {
+                    phenotypesStartWithQuery.add( cha );
+                }
             }
-            // Case 4, phenotypes already in Gemma database
-            else if ( allPhenotypes.contains( cha ) ) {
-                phenotypesFound4.add( cha );
+            // Case 4, contains a substring of the word
+            else if ( cha.getValue().toLowerCase().indexOf( searchQuery.toLowerCase() ) != -1 ) {
+                if ( allPhenotypesInDatabase.contains( cha.getValueUri() ) ) {
+                    phenotypesSubstringAndInDatabase.add( cha );
+                } else {
+                    phenotypesSubstring.add( cha );
+                }
             } else {
-                phenotypesFound5.add( cha );
+                phenotypesNoRuleFound.add( cha );
             }
         }
 
         // place them in the correct order to display
-        phenotypesFound.addAll( phenotypesFound1 );
-        phenotypesFound.addAll( phenotypesFound2 );
-        phenotypesFound.addAll( phenotypesFound3 );
-        phenotypesFound.addAll( phenotypesFound4 );
-        phenotypesFound.addAll( phenotypesFound5 );
+        orderedPhenotypesFromOntology.addAll( phenotypesWithExactMatch );
+        orderedPhenotypesFromOntology.addAll( phenotypesAlreadyPresentOnGene );
+        orderedPhenotypesFromOntology.addAll( phenotypesStartWithQueryAndInDatabase );
+        orderedPhenotypesFromOntology.addAll( phenotypesStartWithQuery );
+        orderedPhenotypesFromOntology.addAll( phenotypesSubstringAndInDatabase );
+        orderedPhenotypesFromOntology.addAll( phenotypesSubstring );
+        orderedPhenotypesFromOntology.addAll( phenotypesNoRuleFound );
 
-        return phenotypesFound;
+        // limit the size of the returned phenotypes to 100 terms
+        if ( orderedPhenotypesFromOntology.size() > 100 ) {
+            return orderedPhenotypesFromOntology.subList( 0, 100 );
+        }
+
+        return orderedPhenotypesFromOntology;
     }
 
     /**
@@ -622,7 +528,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * @param pubMedId
      * @return BibliographicReferenceValueObject 
      */
-    public BibliographicReferenceValueObject findPhenotypesForBibliographicReference( String pubMedId ) {
+    public BibliographicReferenceValueObject findBibliographicReference( String pubMedId ) {
 
         // check if already in the database
         BibliographicReference bibRef = this.bibliographicReferenceService.findByExternalId( pubMedId );
@@ -807,6 +713,147 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return treesPhenotypes;
+    }
+
+    /** map query phenotypes given to the set of possible children phenotypes in the database + root */
+    private HashMap<String, Set<String>> findChildrenForEachPhenotypes( Set<String> phenotypesValuesUri ) {
+
+        // root ---> root+children phenotypes
+        HashMap<String, Set<String>> parentPheno = new HashMap<String, Set<String>>();
+
+        Set<String> phenotypesUriInDatabase = this.associationService.loadAllPhenotypesUri();
+
+        // determine all children terms for each other phenotypes
+        for ( String phenoRoot : phenotypesValuesUri ) {
+
+            OntologyTerm ontologyTermFound = findPhenotypeInOntology( phenoRoot );
+            Collection<OntologyTerm> ontologyChildrenFound = ontologyTermFound.getChildren( false );
+
+            Set<String> parentChildren = new HashSet<String>();
+            parentChildren.add( phenoRoot );
+
+            for ( OntologyTerm ot : ontologyChildrenFound ) {
+
+                if ( phenotypesUriInDatabase.contains( ot.getUri() ) ) {
+                    parentChildren.add( ot.getUri() );
+                }
+            }
+            parentPheno.put( phenoRoot, parentChildren );
+        }
+        return parentPheno;
+    }
+
+    private Collection<GeneEvidenceValueObject> filterGenesWithPhenotypes(
+            Collection<GeneEvidenceValueObject> geneEvidenceValueObjects,
+            HashMap<String, Set<String>> phenotypesWithChildren ) {
+
+        Collection<GeneEvidenceValueObject> genesVO = new HashSet<GeneEvidenceValueObject>();
+
+        for ( GeneEvidenceValueObject geneVO : geneEvidenceValueObjects ) {
+
+            // all phenotypeUri for a gene
+            Set<String> allPhenotypesOnGene = findUniquePhenotpyesForGeneId( geneVO );
+
+            // if the Gene has all the phenotypes
+            boolean keepGene = true;
+
+            for ( String phe : phenotypesWithChildren.keySet() ) {
+
+                // at least 1 value must be found
+                Set<String> possiblePheno = phenotypesWithChildren.get( phe );
+
+                boolean foundSpecificPheno = false;
+
+                for ( String pheno : possiblePheno ) {
+
+                    if ( allPhenotypesOnGene.contains( pheno ) ) {
+                        foundSpecificPheno = true;
+                    }
+                }
+
+                if ( foundSpecificPheno == false ) {
+                    // dont keep gene since a root phenotype + children was not found for all evidence of that gene
+                    keepGene = false;
+                    break;
+                }
+            }
+            if ( keepGene ) {
+                genesVO.add( geneVO );
+            }
+        }
+
+        return genesVO;
+    }
+
+    private void flagEvidence( Collection<GeneEvidenceValueObject> genesVO,
+            HashMap<String, Set<String>> phenotypesWithChildren, Set<String> phenotypesValuesUri ) {
+        Set<String> possibleChildrenPhenotypes = new HashSet<String>();
+
+        for ( String key : phenotypesWithChildren.keySet() ) {
+            possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
+        }
+
+        // flag relevant evidence, root phenotypes and children phenotypes
+        for ( GeneEvidenceValueObject geneVO : genesVO ) {
+            for ( EvidenceValueObject evidenceVO : geneVO.getEvidence() ) {
+
+                boolean relevantEvidence = false;
+
+                for ( CharacteristicValueObject chaVO : evidenceVO.getPhenotypes() ) {
+
+                    // if the phenotype is a root
+                    if ( phenotypesValuesUri.contains( chaVO.getValueUri() ) ) {
+                        relevantEvidence = true;
+                        chaVO.setRoot( true );
+                    }
+                    // if the phenotype is a children of the root
+                    else if ( possibleChildrenPhenotypes.contains( chaVO.getValueUri() ) ) {
+                        chaVO.setChild( true );
+                        relevantEvidence = true;
+                    }
+                }
+                if ( relevantEvidence ) {
+                    evidenceVO.setRelevance( new Double( 1.0 ) );
+                }
+            }
+        }
+    }
+
+    private String prepareOntologyQuery( String searchQuery ) {
+        String[] tokens = searchQuery.split( " " );
+        String newSearchQuery = "";
+
+        for ( int i = 0; i < tokens.length; i++ ) {
+
+            newSearchQuery = newSearchQuery + tokens[i] + "* ";
+
+            // last one
+            if ( i != tokens.length - 1 ) {
+                newSearchQuery = newSearchQuery + "AND ";
+            }
+        }
+        return newSearchQuery;
+    }
+
+    /** search the disease,hp and mp ontology and return an ordered set */
+    private Set<CharacteristicValueObject> findPhenotypesInOntology( String searchQuery ) {
+        Set<CharacteristicValueObject> allPhenotypesFoundInOntology = new TreeSet<CharacteristicValueObject>();
+
+        // search disease ontology
+        allPhenotypesFoundInOntology.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+                this.diseaseOntologyService.findTerm( searchQuery ), PhenotypeAssociationConstants.DISEASE ) );
+
+        // search mp ontology
+        allPhenotypesFoundInOntology.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+                this.mammalianPhenotypeOntologyService.findTerm( searchQuery ),
+                PhenotypeAssociationConstants.MAMMALIAN_PHENOTYPE ) );
+
+        // search hp ontology
+        allPhenotypesFoundInOntology.addAll( this.phenotypeAssoManagerServiceHelper.ontology2CharacteristicValueObject(
+                this.humanPhenotypeOntologyService.findTerm( searchQuery ),
+                PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
+
+        return allPhenotypesFoundInOntology;
     }
 
 }

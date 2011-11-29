@@ -119,7 +119,7 @@ public interface PhenotypeAssociationService {
 
     /** load all valueURI of Phenotype in the database */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Set<String> loadAllPhenotypesURI();
+    public Set<String> loadAllPhenotypesUri();
 
     /** find PhenotypeAssociations associated with a BibliographicReference */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
