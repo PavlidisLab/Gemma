@@ -191,26 +191,9 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			
 			draw : function (ctx) {
 				this.drawCell_ (ctx, gene, condition, color, isProbeMissing, isGeneOnTop);				
-//				ctx.clearRect (x, y, width, height);
-//				ctx.fillStyle = color;
-//				ctx.fillRect (x, y, width, height);
 			}			
 		};
 	},
-
-	//TODO: remove
-//	getCellData : function (gene, condition) {
-//		var geneToCellMap = this.cellData[condition.id];
-//		
-//		if (typeof geneToCellMap != 'undefined') {
-//			var cellValueObj = geneToCellMap[gene.id];
-//			if (typeof cellValueObj != 'undefined') {
-//				return cellValueObj;			
-//			}
-//		}
-//		
-//		return null;
-//	},
 	
 	getVisualizationValue : function (gene, condition) {
 		var color;
@@ -234,38 +217,20 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		return color;
 	},
 		
-    calculateVisualizationValueBasedOnFoldChange : function ( foldChange ) {
-        var visualizationValue = 0.0;
-        var absFoldChange = Math.abs(foldChange - 1);
-        if (absFoldChange >= 0 && absFoldChange < 0.05) visualizationValue = 0.1;                
-        else if (absFoldChange >= 0.05 && absFoldChange < 0.1 ) visualizationValue = 0.2;                                 
-        else if (absFoldChange >= 0.1 && absFoldChange < 0.2 ) visualizationValue = 0.3; 
-        else if (absFoldChange >= 0.2 && absFoldChange < 0.3 ) visualizationValue = 0.4; 
-        else if (absFoldChange >= 0.3 && absFoldChange < 0.4 ) visualizationValue = 0.5;
-        else if (absFoldChange >= 0.4 && absFoldChange < 0.5 ) visualizationValue = 0.6;
-        else if (absFoldChange >= 0.5 && absFoldChange < 0.6 ) visualizationValue = 0.7;
-        else if (absFoldChange >= 0.6 && absFoldChange < 0.7 ) visualizationValue = 0.8;
-        else if (absFoldChange >= 0.7 && absFoldChange < 0.8 ) visualizationValue = 0.9;
-        else if (absFoldChange >= 0.8) visualizationValue = 1;
-
-        if (foldChange < 0) visualizationValue = (-1)*visualizationValue;
-        return visualizationValue;
-    },
-
     calculateVisualizationValueBasedOnPvalue : function ( pValue ) {
         var visualizationValue = 0;
         if ( pValue < 0.5 && pValue >= 0.25 )
-            visualizationValue = 1;
+            visualizationValue = 0.5;
         else if ( pValue < 0.25 && pValue >= 0.1 )
-            visualizationValue = 2;
+            visualizationValue = 1;
         else if ( pValue < 0.1 && pValue >= 0.05 )
-            visualizationValue = 3;
+            visualizationValue = 2;
         else if ( pValue < 0.05 && pValue >= 0.01 )
-            visualizationValue = 4;
+            visualizationValue = 3;
         else if ( pValue < 0.01 && pValue >= 0.001 )
-            visualizationValue = 6;
+            visualizationValue = 4;
         else if ( pValue < 0.001 && pValue >= 0.0001 )
-            visualizationValue = 8;
+            visualizationValue = 7;
         else if ( pValue < 0.0001 && pValue >= 0.00001 )
             visualizationValue = 9;
         else if ( pValue < 0.00001 ) visualizationValue = 10;
@@ -274,36 +239,30 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 	
 	drawCell : function (gene, condition) {
 		var color = this.getVisualizationValue (gene, condition);		
-		this.ctx.fillStyle = color;		
-		
 		var cellData = this.cells.getCell (gene,condition);		
-		if (cellData !== null && cellData.isProbeMissing) {
-			if (this.isGeneOnTop) {
-				this.ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2-1, condition.display.pxlStart + condition.display.pxlSize/2-1, 2, 2);			
-			} else {
-				this.ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2-1, gene.display.pxlStart + gene.display.pxlSize/2-1, 2, 2);						
-			}			
-		} else {
-			if (this.isGeneOnTop) {
-				this.ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);			
-			} else {
-				this.ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);						
-			}
-		}
+		
+		this.drawCell_( this.ctx, gene, condition, color, cellData.isProbeMissing, this.isGeneOnTop )		
 	},
 
 	drawCell_ : function (ctx, gene, condition, color, isProbeMissing, isGeneOnTop) {
-		ctx.fillStyle = color;		
-		
 		if (isProbeMissing) {
 			if (isGeneOnTop) {
 				ctx.clearRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
+				ctx.fillStyle = 'white';
+				ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
+				
+				ctx.fillStyle = color;		
 				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);			
 			} else {
 				ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
+				ctx.fillStyle = 'white';
+				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
+
+				ctx.fillStyle = color;		
 				ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2 - 1, gene.display.pxlStart + gene.display.pxlSize/2 - 1, 2, 2);						
 			}			
 		} else {
+			ctx.fillStyle = color;		
 			if (isGeneOnTop) {
 				ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);			
 			} else {
