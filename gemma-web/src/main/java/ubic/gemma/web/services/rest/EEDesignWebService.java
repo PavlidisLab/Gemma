@@ -14,7 +14,10 @@
  */
 package ubic.gemma.web.services.rest;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -34,7 +37,7 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 
 /**
@@ -46,9 +49,10 @@ import ubic.gemma.model.expression.experiment.FactorValue;
 @Component
 @Path("/eedesign")
 public class EEDesignWebService {
-        
+            
     @Autowired
-    private ExpressionExperimentDao expressionExperimentDao;
+    private ExpressionExperimentService expressionExperimentService;
+    
      
     @GET
     @Path("/findByShortName/{shortName}")
@@ -57,7 +61,7 @@ public class EEDesignWebService {
         
         Map<String,Map<String,String>> result = new HashMap<String,Map<String,String>>();
         
-        ExpressionExperiment experiment = this.expressionExperimentDao.findByShortName( shortName );        
+        ExpressionExperiment experiment = this.expressionExperimentService.findByShortName( shortName );        
         if (experiment == null) throw new NotFoundException("Dataset not found.");
 
         for (BioAssay bioAssay : experiment.getBioAssays()) {
@@ -82,6 +86,26 @@ public class EEDesignWebService {
         return result;
     }
         
+    @GET
+    @Path("/getAllDatasetNames")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<String> getAllDatasetNames ( @Context HttpServletResponse servletResponse ) {
+        
+        List<String> result = new LinkedList<String>();
+                
+        Collection<ExpressionExperiment> experiments = this.expressionExperimentService.loadAll();                
+        if (experiments == null) throw new NotFoundException("No datasets were found.");
+
+        for (ExpressionExperiment experiment : experiments) {
+            result.add( experiment.getShortName() );
+        
+        }
+                
+        return result;
+    }
+    
+    
+    
     private String getFactorValueString( FactorValue fv ) {
         if ( fv == null ) return "null";
 
