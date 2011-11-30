@@ -161,6 +161,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				var queriesWithMoreThanOneResult = [];
 				var queriesWithNoResults = [];
 				var query;
+				var allGenes = [];
 
 				// for each query
 				for (query in queryToGenes) {
@@ -181,6 +182,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					for (i = 0; i < genes.length; i++) {
 						// store all ids
 						geneIds.push(genes[i].id);
+						allGenes.push(genes[i]);
 					}
 				}
 
@@ -241,7 +243,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				this.resetGenePreview();
 
 
-				this.preview.loadGenePreviewFromGenes(genes);
+				this.preview.loadGenePreviewFromGenes(allGenes);
 				this.preview.setTaxonId(taxonId);
 				
 				
