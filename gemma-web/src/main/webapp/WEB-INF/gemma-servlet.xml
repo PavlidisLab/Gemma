@@ -1373,6 +1373,7 @@ gemma.max.fileupload.size.bytes=
 						<property name="excludes">
 							<list>
 								<value>auditTrail</value>
+								<value>status</value>
 							</list>
 						</property>
 					</bean>
@@ -1824,6 +1825,7 @@ gemma.max.fileupload.size.bytes=
 								<value>designProvider</value>
 								<value>auditTrail</value>
 								<value>localfiles</value>
+								<value>status</value>
 							</list>
 						</property>
 					</bean>
@@ -2049,11 +2051,6 @@ gemma.max.fileupload.size.bytes=
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.model.common.auditAndSecurity.AuditEvent">
-					<bean class="org.directwebremoting.spring.ConverterConfig">
-						<property name="type" value="bean" />
-					</bean>
-				</entry>
-				<entry key="ubic.gemma.model.common.auditAndSecurity.StatusImpl">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>
