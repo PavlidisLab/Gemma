@@ -423,8 +423,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         orderedPhenotypesFromOntology.addAll( phenotypesWithExactMatch );
         orderedPhenotypesFromOntology.addAll( phenotypesAlreadyPresentOnGene );
         orderedPhenotypesFromOntology.addAll( phenotypesStartWithQueryAndInDatabase );
-        orderedPhenotypesFromOntology.addAll( phenotypesStartWithQuery );
         orderedPhenotypesFromOntology.addAll( phenotypesSubstringAndInDatabase );
+        orderedPhenotypesFromOntology.addAll( phenotypesStartWithQuery );
         orderedPhenotypesFromOntology.addAll( phenotypesSubstring );
         orderedPhenotypesFromOntology.addAll( phenotypesNoRuleFound );
 
