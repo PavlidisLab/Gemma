@@ -420,6 +420,9 @@ public interface ExpressionExperimentService {
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
 
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
+    
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadLackingFactors();
 

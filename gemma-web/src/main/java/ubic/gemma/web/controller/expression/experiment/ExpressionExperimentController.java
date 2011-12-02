@@ -1191,6 +1191,8 @@ public class ExpressionExperimentController extends AbstractTaskService {
         }
         Taxon taxon = taxonService.load( taxonId );
         if ( taxon == null ) {
+            log.info( "Attempted to browse experiments by taxon with id = "+taxonId+
+                    ", but this id is invalid. Browsing without taxon restriction." );
             return browse( batch );
         }
         List<ExpressionExperiment> records = loadAllOrdered( batch, taxon );
@@ -1316,7 +1318,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
         } else {
             if ( ids != null ) {
                 records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadMultiple( ids ) );
-            } else {
+            } else if ( taxon != null ) {
+                records = expressionExperimentService.loadAllTaxon( taxon );
+            }  else {
                 records = new ArrayList<ExpressionExperiment>( expressionExperimentService.loadAll() );
             }
         }

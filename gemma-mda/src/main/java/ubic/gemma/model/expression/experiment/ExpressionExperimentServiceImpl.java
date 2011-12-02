@@ -191,6 +191,11 @@ public class ExpressionExperimentServiceImpl extends
     }
 
     @Override
+    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
+        return this.getExpressionExperimentDao().loadAllTaxon( taxon );
+    }
+
+    @Override
     public Collection<ExpressionExperiment> loadLackingFactors() {
         return this.getExpressionExperimentDao().loadLackingFactors();
     }

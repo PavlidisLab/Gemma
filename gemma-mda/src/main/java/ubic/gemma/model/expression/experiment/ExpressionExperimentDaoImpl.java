@@ -400,6 +400,17 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         query.setParameter( "taxon", taxon );
         return query.list();
     }
+    
+    @Override
+    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
+        String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
+                + "inner join ba.samplesUsed as sample ";
+        String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
+
+        Query query = this.getSession().createQuery( qs+where );
+        query.setParameter( "taxon", taxon );
+        return query.list();
+    }
 
     /*
      * (non-Javadoc)
@@ -1498,7 +1509,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + "s.createDate, " // 11
                 + "AD.technologyType, ee.class, " // 12, 13
                 + " EDES.id,  " // 14
-                + " s.lastUpdateDate " // 15
+                + " s.lastUpdateDate, " // 15
+                + " AD.status " // 16
                 + " from ExpressionExperimentImpl as ee inner join ee.bioAssays as BA  "
                 + "left join BA.samplesUsed as SU left join BA.arrayDesignUsed as AD "
                 + "left join SU.sourceTaxon as taxon left join ee.accession acc left join acc.externalDatabase as ED "
@@ -1557,6 +1569,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setClazz( ( String ) res[13] );
             v.setExperimentalDesign( ( Long ) res[14] );
             v.setDateLastUpdated( ( ( Date ) res[15] ) );
+            //System.out.println(res[16]);
             vo.put( eeId, v );
         }
 

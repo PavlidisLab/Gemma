@@ -315,6 +315,8 @@ public interface ExpressionExperimentDao extends BioAssaySetDao<ExpressionExperi
 
     public List<ExpressionExperiment> loadAllTaxonOrdered( String orderField, boolean descending, Taxon taxon );
 
+    public List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
+
     /**
      * Includes ones which are untroubled and which don't have a troubled ArrayDesign.
      * 
