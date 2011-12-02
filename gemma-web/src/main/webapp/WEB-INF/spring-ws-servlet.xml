@@ -249,7 +249,6 @@
 		<description>
 			returns gene coexpression 
 		</description>
-		<property name="taxonService" ref="taxonService" />
 		<property name="geneService" ref="geneService" />
 		<property name="geneCoexpressionService" ref="geneCoexpressionService" />
 		<property name="manualAuthenticationService" ref="manualAuthenticationService" />
