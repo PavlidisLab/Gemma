@@ -315,14 +315,14 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
     },
     renderEESets:function(eeSets){
 		var eeSetLinks = [];
-		var i, geneSet;
+		var i;
 		for (i = 0; i < eeSets.length; i++) {
 			if (eeSets[i] && eeSets[i].name && eeSets[i].id) {
 				eeSetLinks.push(' <a target="_blank" href="/Gemma/expressionExperimentSet/showExpressionExperimentSet.html?id='+eeSets[i].id+'">'+eeSets[i].name+'</a>');
 			}
 		}
 		if(eeSetLinks.length === 0){
-			eeSetLinks.push('Not currently a member of any gene group');
+			eeSetLinks.push('Not currently a member of any experiment group');
 		}
 		return eeSetLinks;
 	},
