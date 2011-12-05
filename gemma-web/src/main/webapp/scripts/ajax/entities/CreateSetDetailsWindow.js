@@ -126,7 +126,8 @@ Gemma.CreateSetDetailsWindow = Ext.extend(Ext.Window, {
 							 * won't be listed - but we'll figure it out on the server
 							 * side.
 							 */
-							Ext.Msg.alert("Duplicate name", "Please provide a previously unused name for the set");
+							Ext.Msg.alert(Gemma.HelpText.CommonWarnings.DuplicateName.title,
+								Gemma.HelpText.CommonWarnings.DuplicateName.text );
 							return;
 						}
 					}

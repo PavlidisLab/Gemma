@@ -198,7 +198,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      		text : '<b>Save selected genes</b>',
 			      		icon : '/Gemma/images/download.gif',
 			      		cls : 'x-btn-text-icon',
-			      		tooltip:'Save your selection as a list of genes.',		      		
+			      		tooltip:'Select genes by holding down the "Ctrl" key and clicking on gene symbols.',		      		
 			      		handler : function() {
 			      		  var geneSetGrid = new Gemma.GeneMembersSaveGrid({
 						  	genes: this.visualizationPanel.getSelectedGenes(),

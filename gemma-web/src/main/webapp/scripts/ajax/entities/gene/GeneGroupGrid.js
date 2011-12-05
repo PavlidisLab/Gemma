@@ -34,7 +34,7 @@ Gemma.GeneGroupPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 				Gemma.GeneGroupPanel.superclass.afterRender.call(this);
 
 				this.loadMask = new Ext.LoadMask(this.body, {
-							msg : 'Loading ...',
+							msg : Gemma.StatusText.Loading.generic,
 							store : this.store
 						});
 						

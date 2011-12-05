@@ -11,7 +11,7 @@ Ext.onReady(function() {
 		Ext.DomHelper.append('coexpression-all', {
 			tag : 'p',
 			cls : 'trouble',
-			html : 'This page may display improperly in older versions of Internet Explorer. Please upgrade to Internet Explorer 8 or newer.'
+			html : Gemma.HelpText.CommonWarnings.BrowserWarnings.ie7
 		});
 	}
 

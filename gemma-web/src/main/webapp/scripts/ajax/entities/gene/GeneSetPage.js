@@ -72,7 +72,7 @@ Gemma.GeneSetPage = Ext.extend(Ext.TabPanel, {
         this.on('render', function(){
             if (!this.loadMask) {
                 this.loadMask = new Ext.LoadMask(this.getEl(), {
-                    msg: "Loading ...",
+                    msg: Gemma.StatusText.Loading.generic,
                     msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
                 });
             }

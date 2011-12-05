@@ -159,11 +159,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				height:200,
 				closable:false,
 				bodyStyle:'padding:7px;background: white; font-size:1.1em',
-				title: "Warning",
-				html: "You are using " + stateText + " for your search. " +
-					"Searching for more than " + maxText +
-					" can take some time to load and can slow down your interactions with the search results. " +
-					"We suggest you cancel this search and refine your selections or let us trim your query.",
+				title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.trimmingWarningTitle,
+				html: String.format(Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.trimmingWarningText, stateText, maxText),
 				//icon: Ext.Msg.WARNING,
 				buttons: [{
 					text: 'Trim',
@@ -285,7 +282,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
-						msg : "Searching for analysis results ...",
+						msg : Gemma.StatusText.Searching.analysisResults,
 						msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 					});
 		}
@@ -807,8 +804,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			//this.loadGenes(dsc.geneIds); // TODO loadGenes isn't in this
 			// class anymore
 
-			this.handleWarning("You can only search up to " + Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY +
-					 " genes. Please note that your list of genes has been trimmed automatically.");
+			this.handleWarning(String.format(Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.autoTrimmingText, 
+												Gemma.MAX_GENES_PER_CLASSIC_DIFFEX_QUERY, 'genes'));
 			return "";
 
 		} else {
@@ -1184,20 +1181,20 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					html: 'these experiments',
 					style: 'text-align:center;font-size:1.4em;',
 					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ',
-					 'ext:qtip="Searches are limited to one taxon, if you want to change the taxon, click the reset button.">',
-					 '{taxonCommonName} </span> experiments ', 
-					 '<img src="/Gemma/images/icons/question_blue.png" title="Searches are limited to one taxon, ' +
-					'if you want to change the taxon, click the reset button on the right."/> '),
+						 'ext:qtip="'+Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'">',
+						 '{taxonCommonName} </span> experiments ', 
+						 '<img src="/Gemma/images/icons/question_blue.png" title="'+
+						 Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'"/> '),
 					tplWriteMode: 'overwrite'
 				});
 				this.theseGenesPanel = new Ext.Panel({
 					html: 'these genes',
 					style: 'text-align:center;font-size:1.4em;padding:0px',
 					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ', 
-					'ext:qtip="Searches are limited to one taxon, if you want to change the taxon, click the reset button.">', 
-					'{taxonCommonName}</span> genes ', 
-					'<img src="/Gemma/images/icons/question_blue.png" title="Searches are limited to one taxon, ' +
-					'if you want to change the taxon, click the reset button on the right."/> '),
+						'ext:qtip="'+Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'">', 
+						'{taxonCommonName}</span> genes ', 
+						'<img src="/Gemma/images/icons/question_blue.png" title="'+
+						Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'"/> '),
 					tplWriteMode: 'overwrite'
 				});
 
@@ -1216,8 +1213,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						items: [{
 							xtype: 'button',
 							ref: 'diffExExample1',
-							text: "Hippocampus development & autism (human)",
-							tooltip: 'Search for differential expression patterns in ten experiments studying autism spectrum disorder based on genes from the &quot;hippocampus development&quot; GO group (human)',
+							text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx1Text,
+							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx1TT,
 							listeners: {
 								click: function(){
 									var goName = "GO_0021766";
@@ -1231,8 +1228,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						}, {
 							xtype: 'button',
 							ref: 'diffExExample2',
-							text: "Forebrain neuron differentiation in fetal mice (mouse)",
-							tooltip: 'Search for differential expression patterns in of genes from the &quot;forebrain neuron differentiation&quot; GO group in experiments using fetal/embryonic mouse samples on the GPL1261 platform. (mouse)',
+							text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx2Text,
+							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx2TT,
 							listeners: {
 								click: function(){
 									var goName = "GO_0021879";
@@ -1251,8 +1248,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						items: [{
 							xtype: 'button',
 							ref: 'coexExample1',
-							text: "Regulation of cell division (yeast)",
-							tooltip: 'Search for coexpression patterns in thirty-three experiments based on genes in the &quot;regulation of cell division&quot; GO group (yeast)',
+							text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex1Text,
+							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex1TT,
 							listeners: {
 								click: function(){
 									var goName = "GO_0051302";
@@ -1266,8 +1263,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						}, {
 							xtype: 'button',
 							ref: 'coexExample2',
-							text: "Protein localization to the synapse (human)",
-							tooltip: 'Search for coexpression patterns in human brain experiments based on genes the &quot;Protein localization to the synapse&quot; GO group (human)',
+							text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex2Text,
+							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex2TT,
 							listeners: {
 								click: function(){
 									var goName = "GO_0035418";

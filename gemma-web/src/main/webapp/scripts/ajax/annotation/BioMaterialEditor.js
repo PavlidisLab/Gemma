@@ -53,7 +53,7 @@ Ext.extend(Gemma.BioMaterialEditor, Ext.Panel, {
 				var loadMaskTarget = this.el !== null ? this.el : Ext.getBody();
 
 				this.loadMask = new Ext.LoadMask(loadMaskTarget, {
-							msg : "Please wait..."
+							msg : Gemma.StatusText.waiting
 						});
 
 				this.loadMask.show();
@@ -263,8 +263,9 @@ Gemma.BioMaterialGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 		this.getTopToolbar().on("refresh", function() {
 					if (this.store.getModifiedRecords().length > 0) {
-						Ext.Msg.confirm('Unsaved changes!',
-								'You have unsaved changes, are you sure you want to refresh?',
+						Ext.Msg.confirm(
+						Gemma.HelpText.CommonWarnings.LoseChanges.title,
+						Gemma.HelpText.CommonWarnings.LoseChanges.text,
 
 								function(but) {
 									if (but == 'yes') {

@@ -1000,8 +1000,8 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 		
 		// check if canvas is supported (not supported in IE < 9; need to use excanvas in IE8)
 		if (!document.createElement("canvas").getContext && Ext.isIE) {
-			browserWarning = "<span ext:qtip='Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. Firefox, Chrome, Safari and Opera will be faster too.'>"
-					+ "Too slow in Explorer? Try <a href='http://www.google.com/chromeframe/' target='_blank'>Chrome Frame</a></span>";
+			browserWarning = "<span ext:qtip='"+
+				Gemma.HelpText.WidgetDefaults.VisualizationWithThumbsPanel.browserWarning+"' target='_blank'>Chrome Frame</a></span>";
 		}
 
 		Ext.apply(this, {
@@ -1130,7 +1130,7 @@ Gemma.VisualizationWithThumbsPanel = Ext.extend(Ext.Panel, {
 	loadFromParam:function(config){
 				
 		this.loadMask = new Ext.LoadMask(this.getEl(), {
-				msg : "Loading ...",
+				msg : Gemma.StatusText.Loading.generic,
 				msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 			});
 		this.loadMask.show();

@@ -161,13 +161,12 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
         
         if (ee.hasMultiplePreferredQuantitationTypes) {
             result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' +
-            'title="This experiment has multiple \'preferred\' quantitation types. ' +
-            'This isn\'t necessarily a problem but is suspicious."/>';
+            'title="'+Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultiplePreferredQuantitationTypes+'"/>';
         }
         
         if (ee.hasMultipleTechnologyTypes) {
             result = result + '<img src="/Gemma/images/icons/stop.png" alt="trouble" ' +
-            'title="This experiment seems to mix array designs with different technology types."/>';
+            'title="'+Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.statusMultipleTechnologyTypes+'"/>';
         }
         
         result = result +
@@ -769,8 +768,8 @@ Gemma.ExpressionExperimentDetails = Ext.extend(Ext.Panel, {
                     '<span class="link" ext:qtip="Download the tab delimited data" onClick="fetchData(false,' +
                     e.id +
                     ', \'text\', null, null)">Unfiltered</span> &nbsp;&nbsp;' +
-                    '<a class="helpLink" href="?" onclick="showHelpTip(event, \'Tab-delimited data file for this experiment. ' +
-                    'The filtered version corresponds to what is used in most Gemma analyses, removing some probes. Unfiltered includes all probes\');' +
+                    '<a class="helpLink" href="?" onclick="showHelpTip(event, \''+
+					Gemma.HelpText.WidgetDefaults.ExpressionExperimentDetails.profileDownloadTT+'\');' +
                     ' return false"> <img src="/Gemma/images/help.png" /> </a>' +
                     '</div>',
                     width: 400

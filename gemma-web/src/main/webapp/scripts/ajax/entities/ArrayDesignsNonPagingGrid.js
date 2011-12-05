@@ -152,7 +152,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     autoScroll: true,
     stripeRows: true,
     rowExpander: true,
-    emptyText: 'Either you didn\'t select any experiments, or you don\'t have permissions to view the ones you chose.',
+    emptyText: Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.emptyText,
     viewConfig: {
         forceFit: true
     },
@@ -166,7 +166,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 	loadArrayDesigns: function( adIds ){
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
-						msg : "Loading Array Designs ..."
+						msg : Gemma.StatusText.Loading.arrayDesigns
 					});
 		}
 		this.loadMask.show();
@@ -205,7 +205,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.action = new Ext.ux.grid.RowActions({
 			header: 'Actions',
 			dataIndex:'actions',
-			tooltip: 'Regenerate this report or delete orphaned designs (designs that aren\'t used by any experiments in Gemma)',
+			tooltip: Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.actionsColumnTT,
 			// ,autoWidth:false
 			// ,hideMode:'display'
 			keepSelection: true,
@@ -226,7 +226,8 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		this.action.on({
 			action: function(grid, record, action, row, col){
 				if (action === 'icon-cross') {
-					Ext.Msg.confirm("Confirm Deletion", "Are you sure you want to delete this array design? This cannot be undone.", function(btnId){
+					Ext.Msg.confirm(Gemma.HelpText.CommonWarnings.Deletion.title, 
+						String.format(Gemma.HelpText.CommonWarnings.Deletion.text, 'array design') , function(btnId){
 						if (btnId === 'yes') {
 							
 							var callParams = [];
@@ -261,12 +262,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 		});
 		
 		rowExpander = new Ext.grid.RowExpander({
-			tpl: '<p>Probes: <b>{designElementCount}</b></p>' +
-			'<p>With sequences: <b>{numProbeSequences}</b> <span style="color:grey">(Number of probes with sequences)</span></p>' +
-			'<p>With align: <b>{numProbeAlignments}</b> <span style="color:grey">(Number of probes with at least one genome alignment)</span></p>' +
-			'<p>Mapped to genes: <b>{numProbesToKnownGenes}</b> <span style="color:grey">(Number of probes mapped to known genes (including predicted and anonymous locations))</span></p>' +
-			'<p>Unique genes: <b>{numGenes}</b> <span style="color:grey">(Number of unique genes represented on the array)</span></p>' +
-			'<p> (as of {dateCached})</p>',
+			tpl: Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails,
 		});
 		
 		var cellTips = new Ext.ux.plugins.grid.CellToolTips([
@@ -322,19 +318,19 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 							}
 						}
 						if (record.get('isMerged')) {
-							statusString += '<img title="merged: this design was created by merging others"' +
+							statusString += '<img title="'+Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergedTT+'"' +
 							' src="/Gemma/images/icons/merging_result.png"/>&nbsp;';
 						}
 						if (record.get('isMergee')) {
-							statusString += '<img title="mergee: this design was merged with others to create a new design"' +
+							statusString += '<img title="'+Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isMergeeTT+'"' +
 							' src="/Gemma/images/icons/arrow_merge.png"/>&nbsp;';
 						}
 						if (record.get('isSubsumed')) {
-							statusString += '<img title="subsumed: all the sequences in this design are covered by another"' +
+							statusString += '<img title="'+Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumedTT+'"' +
 							' src="/Gemma/images/icons/subsumed.png"/>&nbsp;';
 						}
 						if (record.get('isSubsumer')) {
-							statusString += '<img title="subsumer: this design \'covers\' one or more others in that it contains all their sequences"' +
+							statusString += '<img title="'+Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.isSubsumerTT+'"' +
 							' src="/Gemma/images/icons/subsumer.png"/>';
 						}
 						
@@ -477,7 +473,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 						checked: !this.showOrphans,
 						xtype: 'checkbox',
 						style:'margin-top:0px',
-						tooltip: "Click to show/hide array designs that aren't used by any experiments in Gemma",
+						tooltip: Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideOrphansTT,
 						handler: function(checkbox, isChecked){
 							if (!isChecked) {
 							
@@ -501,7 +497,7 @@ Gemma.ArrayDesignsNonPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 					hidden: true,
 					style:'margin-top:0px',
 					xtype:'checkbox',
-					tooltip: "Click to show/hide array designs that are troubled",
+					tooltip: Gemma.HelpText.WidgetDefaults.ArrayDesignsNonPagingGrid.hideTroubledTT,
 					handler: function(checkbox, isChecked){
 						if(!isChecked){
 							
@@ -621,11 +617,7 @@ Gemma.ArrayDesignsSummaryWindow = Ext.extend(Ext.Window,{
 		}.createDelegate(this));
 	},
 	tpl: '<a href="/Gemma/arrays/generateArrayDesignSummary.html" onclick="return confirm(\'Regenerate report for all platforms?\');">Regenerate this report</a><br><br>'+
-			'<p>With sequences: <b>{numProbeSequences}</b> <span style="color:grey">(Number of probes with sequences)</span></p>' +
-			'<p>With align: <b>{numProbeAlignments}</b> <span style="color:grey">(Number of probes with at least one genome alignment)</span></p>' +
-			'<p>Mapped to genes: <b>{numProbesToKnownGenes}</b> <span style="color:grey">(Number of probes mapped to known genes (including predicted and anonymous locations))</span></p>' +
-			'<p>Unique genes:<b>{numGenes}</b> <span style="color:grey">(Number of unique genes represented on the array)</span></p>' +
-			'<p> (as of {dateCached})</p>',
+			Gemma.Widget.tpl.ArrayDesignsNonPagingGrid.rowDetails,
 	padding:7,
 	defaultData:{
 		numProbeSequences: '<span style="color:grey">[Not avail.]</span>',

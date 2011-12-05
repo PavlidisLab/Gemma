@@ -253,7 +253,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						                	fieldLabel: 'Stringency ',
 						                	value: this.initialDisplayStringency,
 						                	width: 60,
-						                	fieldTip: "The minimum number of datasets that must show coexpression for a result to appear",
 						                	enableKeyEvents : true
 
 						            		},
@@ -261,7 +260,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						        	        	xtype  : 'label',
 						        				
 						        	        	html   : '<img ext:qtip="'+
-						        						'Add/remove genes with more/less dataset support that confirms coexpression'	
+						        						Gemma.HelpText.WidgetDefaults.CoexpressionGrid.stringencySpinnerTT	
 						        	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
 						        	        	//text   : 'Specificity filter',
 						        				height : 15
@@ -275,7 +274,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 												pressed : true,
 												enableToggle : true,
 												text : Gemma.SHOW_ONLY_MINE,
-												tooltip : "Click to show/hide results containing only my data",
+												tooltip : Gemma.HelpText.WidgetDefaults.CoexpressionGrid.myDataButtonTT,
 												cls : 'x-btn-text-icon details',
 												toggleHandler : this.toggleMyData.createDelegate(this)
 											}, ' ', ' ', {

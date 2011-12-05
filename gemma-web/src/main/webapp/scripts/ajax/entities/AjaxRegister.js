@@ -130,7 +130,7 @@ Gemma.AjaxLogin.AjaxRegister = Ext.extend(Ext.Window, {
 		
 		if (!signup.getForm().isValid()) {			
 			var erdiv = Ext.get('ajax-error_ajaxRegister');
-					Ext.DomHelper.overwrite(erdiv,"Form is not valid, check entries before clicking 'submit'");
+					Ext.DomHelper.overwrite(erdiv, Gemma.HelpText.CommonErrors.InvalidForm.text);
 			return;
 		}
 
@@ -142,7 +142,8 @@ Gemma.AjaxLogin.AjaxRegister = Ext.extend(Ext.Window, {
 						var sb = Ext.getCmp('my-status_ajaxRegister');
 						sb.clearStatus();
 						
-						Ext.Msg.alert("Registration Successful","A confirmation email was sent. Please check your mail and click the link it contains");
+						Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxRegister.successTitle, 
+							Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxRegister.successText);
 						
 						var registerWidget=  Ext.getCmp("_ajaxRegister");
 						registerWidget.fireEvent("register_success");						

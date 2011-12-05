@@ -68,7 +68,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 					new Ext.Button({
 						id : this.vizButtonId,
 						text : "Visualize",
-						tooltip : "Click to display data for selected genes, or a 'random' selection of data from this experiment",
+						tooltip : Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.visualizaButtonTT,
 						handler : this.showButHandler,
 						scope : this,
 						cls: 'x-toolbar-standardbutton'
@@ -79,11 +79,7 @@ Gemma.EEDetailsVisualizationWidget = Ext.extend(Gemma.GeneGrid, {
 						handler : function() {
 							Ext.Msg.show({
 								title : 'Visualization',
-								msg : 'Use the search fields to find individual genes, or groups of genes. ' +
-										'Gene group searches work for GO terms and other groups in Gemma. ' +
-										'To create groups use the <a href=\"/Gemma/geneGroupManager.html\">gene group manager</a>.' +
-										' Click "show" to view the data for those genes. ' +
-										'Note that when viewing gene groups, not all genes in the group are necessarily in the data set.',
+								msg : Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.instructions,
 								buttons : Ext.Msg.OK,
 								icon : Ext.MessageBox.INFO
 							});
@@ -280,21 +276,21 @@ Gemma.VisualizationWidgetGeneSelectionToolbar = Ext.extend(Ext.Toolbar,{
 	updateButtonText: function(){
 		var numIds = this.getGeneIds().length;
 		if (numIds === 0) {
-			this.vizBtn.setText('Visualize \'random\' genes');
+			this.vizBtn.setText(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.GoButtonText.random);
 		}else if (numIds === 1) {
-			this.vizBtn.setText('Visualize 1 gene');
+			this.vizBtn.setText(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.GoButtonText.one);
 		}else {
-			this.vizBtn.setText('Visualize ' + numIds + ' genes');
+			this.vizBtn.setText(String.format(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.GoButtonText.multiple, numIds));
 		}
 	},
 	updateStatusText: function(){
 		var numIds = this.getGeneIds().length;
 		if (numIds === 0) {
-			this.tbarText.update('Visualizing 20 \'random\' genes.');
+			this.tbarText.update(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.random);
 		}else if (numIds === 1) {
-			this.tbarText.update('Visualizaing selected gene.');
+			this.tbarText.update(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.one);
 		}else {
-			this.tbarText.update('Visualizaing selected genes. Note that not all genes are necessarily in the data set.');
+			this.tbarText.update(String.format(Gemma.HelpText.WidgetDefaults.EEDetailsVisualizationWidget.StatusText.multiple, numIds));
 		}
 	},
 	clearHandler: function(){

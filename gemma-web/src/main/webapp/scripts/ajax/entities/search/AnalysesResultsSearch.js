@@ -8,8 +8,6 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		
 		this.admin = (Ext.get('hasAdmin') !== null) ? Ext.get('hasAdmin').getValue() : null;
 		this.user = (Ext.get('hasUser') !== null) ? Ext.get('hasUser').getValue() : null;
-
-		
 				
 		var errorPanel = new Ext.Panel({
 			tpl:'<img src="/Gemma/images/icons/warning.png">{msg}',
@@ -27,29 +25,18 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			//not supported
 			// excanvas doesn't cover all functionality of new diff ex metaheatmap visualization
 			if (Ext.isIE8) {
-				browserWarning = 'Advanced differential expression visualizations are not available in your browser (Internet Explorer 8). We suggest upgrading to  ' +
-					'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>, ' +
-					'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
-					'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.';
+				
+				browserWarning = Gemma.HelpText.CommonWarnings.BrowserWarnings.ie8;
+				
+			}else if (Ext.isIE) {
+				
+				browserWarning = Gemma.HelpText.CommonWarnings.BrowserWarnings.ieNot8;
+				
+			}else {
+				
+				browserWarning = Gemma.HelpText.CommonWarnings.BrowserWarnings.generic;
 				
 			}
-			else 
-				if (Ext.isIE) {
-					browserWarning = 'This page may display improperly in older versions of Internet Explorer(IE). Please upgrade to ' +
-						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">IE 9</a>, ' +
-						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a> or ' +
-						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a>.' +
-						' If you are running IE 9 and you see this message, please make sure you are not in compatibility mode. ';
-				
-				}
-				else {
-					browserWarning = 'This page may not display properly in all browsers. (The \"canvas\" element is requried.)' +
-						' Please switch to ' +
-						'<a href="http://www.mozilla.com/en-US/firefox/new/" target="_blank">Firefox</a>,' +
-						'<a href="http://www.google.com/chrome/" target="_blank">Chrome</a> or' +
-						'<a href="http://windows.microsoft.com/en-US/internet-explorer/downloads/ie" target="_blank">Internet Explorer 9</a>.';
-				
-				}
 		}
 
 		// panel for performing search, appears on load

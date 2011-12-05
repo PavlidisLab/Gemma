@@ -191,12 +191,13 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 			getGenesFromList : function(e, taxon) {
 
 				if (!taxon) {
-					Ext.Msg.alert("Problem", "Please select a taxon first");
+					Ext.Msg.alert(Gemma.HelpText.CommonErrors.MissingInput.title,
+						Gemma.HelpText.CommonErrors.MissingInput.text);
 					return;
 				}
 
 				var loadMask = new Ext.LoadMask(this.getEl(), {
-							msg : "Loading genes..."
+							msg : Gemma.StatusText.Loading.genes
 						});
 				loadMask.show();
 
@@ -456,7 +457,8 @@ Gemma.GeneChooserToolBar = Ext.extend(Ext.Toolbar, {
 							handler : function() {
 
 								if (!this.getTaxon()) {
-									Ext.Msg.alert("Problem", "Please select a taxon first");
+									Ext.Msg.alert(Gemma.HelpText.CommonErrors.MissingInput.title,
+										Gemma.HelpText.CommonErrors.MissingInput.text);
 									return;
 								}
 
@@ -556,9 +558,8 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 									},{
 										xtype : 'textarea',
 										ref:'_geneText',
-										fieldLabel : "Type or paste in gene symbols, one per line, up to " +
-												Gemma.MAX_GENES_PER_QUERY+". (Note that searches are "+
-												"limited to a smaller number of genes.)",
+										fieldLabel : String.format(Gemma.HelpText.WidgetDefaults.GeneImportPanel.instructions,
+												Gemma.MAX_GENES_PER_QUERY),
 										width : 250,
 										height:290
 									}]
@@ -569,8 +570,8 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										id : 'gene-list-text',
 										xtype : 'textarea',
 										ref:'_geneText',
-										fieldLabel : "Paste in gene symbols, one per line, up to " +
-												Gemma.MAX_GENES_PER_QUERY,
+										fieldLabel : String.format(Gemma.HelpText.WidgetDefaults.GeneImportPanel.instructions,
+												Gemma.MAX_GENES_PER_QUERY),
 										width : 290,
 										height: 290
 									}]

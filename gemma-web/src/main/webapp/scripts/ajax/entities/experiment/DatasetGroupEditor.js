@@ -19,9 +19,9 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 			id : 'dataset-chooser',
 			name : 'datasetchooser',
 			layout : 'border',
-			title : "Dataset Group Editor <a href=\"javascript:void()\" style=\"float:right\" title=\"Use this tool to create and edit groups of datasets. "+
-				"You can modify a built-in set by making a copy (clone) and editing the copy\" "+
-				"onClick=\"window.open(Gemma.HOST + 'faculty/pavlidis/wiki/display/gemma/Dataset+chooser', 'DataSetChooserHelp');\">"+
+			title : "Dataset Group Editor <a href=\"javascript:void()\" style=\"float:right\" title=\""+
+				Gemma.HelpText.WidgetDefaults.DatasetGroupEditor.widgetTT+"\" "+
+				"onClick=\"window.open('"+Gemma.HelpText.WidgetDefaults.DatasetGroupEditor.helpURL+"', 'DataSetChooserHelp');\">"+
 				"<img src=\"/Gemma/images/icons/question_blue.png\"></a>",
 			isLoggedIn : false,
 
@@ -317,7 +317,7 @@ Gemma.DatasetGroupEditor = Ext.extend(Ext.Panel, {
 			},
 
 			onHelp : function() {
-				window.open(Gemma.HOST + 'faculty/pavlidis/wiki/display/gemma/Dataset+chooser', 'DataSetChooserHelp');
+				window.open(Gemma.HelpText.WidgetDefaults.DatasetGroupEditor.helpURL, 'DataSetChooserHelp');
 			}
 
 		});

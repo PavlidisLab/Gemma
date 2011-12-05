@@ -38,7 +38,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 		var statusString = "";
 		if (!e.modifiable) {
 			statusString += "<img src='/Gemma/images/icons/shield.png' height='16' width='16' "+
-				"title='Protected; cannot have members changed, usually applies to automatically generated groups.' />&nbsp;"
+				"title='"+Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT+"' />&nbsp;"
 		}
 		var sl = Gemma.SecurityManager.getSecurityLink("ubic.gemma.model.analysis.expression.ExpressionExperimentSetImpl", 
 					e.id, e.publik, e.shared, e.currentUserIsOwner);
@@ -69,7 +69,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
         save = function(){
 			if (!this.saveMask) {
 				this.saveMask = new Ext.LoadMask(this.getEl(), {
-					msg: "Saving ..."
+					msg: Gemma.StatusText.saving
 				});
 			}
 			this.saveMask.show();
@@ -341,8 +341,8 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 		var id = this.experimentSet.id;
 		var redirectHome = true;
 		Ext.Msg.show({
-					title : 'Delete '+this.experimentSet.name+'?',
-					msg : 'Are you sure you want to delete experiment set "'+this.experimentSet.name+'"? This cannot be undone.',
+					title : Gemma.HelpText.CommonWarnings.Deletion.title,
+					msg : String.format(Gemma.HelpText.CommonWarnings.Deletion.text,'set ('+this.experimentSet.name+')'),
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
@@ -350,7 +350,7 @@ Gemma.ExpressionExperimentSetSummary = Ext.extend(Ext.Panel, {
 							callParams.push([{id:id}]);
 							if (!this.deleteMask) {
 								this.deleteMask = new Ext.LoadMask(Ext.getBody(), {
-									msg: "Deleting ..."
+									msg: Gemma.StatusText.deleting
 								});
 							}
 							this.deleteMask.show();

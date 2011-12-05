@@ -32,7 +32,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	maskGenePreview : function() {
 		if (!this.loadMask && this.getEl()) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
-						msg : "Loading Genes ..."
+						msg : Gemma.StatusText.Loading.genes
 					});
 		}
 		if (this.loadMask) {
@@ -133,7 +133,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		}
 
 		if (isNaN(taxonId)) {
-			Ext.Msg.alert("Missing information", "Please select a taxon.");
+			Ext.Msg.alert(Gemma.HelpText.CommonErrors.MissingInput.title, Gemma.HelpText.CommonErrors.MissingInput.taxon);
 			return;
 		}
 
@@ -145,7 +145,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.doLayout();
 								
 		var loadMask = new Ext.LoadMask(this.getEl(), {
-					msg : "Loading genes..."
+					msg : Gemma.StatusText.Loading.genes
 				});
 		loadMask.show();
 		var text = e.geneNames;
@@ -249,13 +249,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				
 				if (queriesWithMoreThanOneResult.length > 0 || queriesWithNoResults.length > 0) {
 
-					this.preview.insertMessage('<div style="padding-bottom:7px;color:red;">Not all symbols had exact matches ('+
-										 '<a onmouseover="this.style.cursor=\'pointer\'" '+
-										 'onclick="Ext.Msg.alert(\'Query Result Details\',\'<br>'+
-										 msgMany+
-										 msgNone+
-										 '\');" style="color: red; text-decoration: underline;">details</a>)</div>'
-							);
+					this.preview.insertMessage(String.format(Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.inexactFromList, msgMany, msgNone));
 				}
 				
 				this.preview.show();
@@ -375,7 +369,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.symbolListButton = new Ext.Button({
 					icon : "/Gemma/images/icons/page_upload.png",
 					cls : "x-btn-icon",
-					tooltip : "Select multiple genes with a list of symbols or NCBI IDs",
+					tooltip : Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.symbolListButtonInstructions,
 					disabled : false,
 					style:'padding-right:5px',
 					handler : function() {
@@ -407,9 +401,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		}, this);
 	
 		this.helpBtn = new Gemma.InlineHelpIcon({
-			tooltipText:'Select a general group of genes or try searching for genes by symbol, '+
-					'GO terms or keywords such as: schizophrenia, hippocampus etc.<br><br>'+
-					'<b>Example: search for "map kinase" and select a GO group</b>'
+			tooltipText: Gemma.HelpText.WidgetDefaults.GeneSearchAndPreview.instructions
 		});
 		Ext.apply(this, {
 			width: 335,

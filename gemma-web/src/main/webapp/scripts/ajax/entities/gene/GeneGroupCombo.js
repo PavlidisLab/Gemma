@@ -30,7 +30,7 @@ Gemma.GeneGroupCombo = Ext.extend(Ext.form.ComboBox, {
 	 */
 	prepopulate : true,
 
-	loadingText : 'Searching...',
+	loadingText : Gemma.StatusText.Searching.generic,
 
 	emptyText : "Choose or search for groups",
 	minChars : 1,

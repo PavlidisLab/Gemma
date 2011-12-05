@@ -230,7 +230,8 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			remove : function() {
 				var rec = this.getCurrentSet();
 				if (rec) {
-					Ext.Msg.confirm("Delete?", "Are you sure you want to delete this set? This cannot be undone.",
+					Ext.Msg.confirm(Gemma.HelpText.CommonWarnings.Deletion.title, 
+						String.format(Gemma.HelpText.CommonWarnings.Deletion.text,'set'),
 							function(but) {
 
 								if (but === 'no') {
@@ -283,9 +284,8 @@ Gemma.DatasetGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 					rec = recordsToSave[i];
 					if(!rec.get("expressionExperimentIds") || rec.get("expressionExperimentIds").length === 0){
 						Ext.Msg.show({
-						   title:'Cannot save set "'+rec.get("name")+'"',
-						   msg: 'You cannot save an empty set. No changes have been saved.<br>'+
-						   		' Add experiments to set "'+rec.get("name")+'" or delete it.',
+						   title:Gemma.HelpText.CommonErrors.EmptySet.title,
+						   msg: String.format(Gemma.HelpText.CommonErrors.EmptySet.text,rec.get("name")),
 						   buttons: Ext.Msg.OK,
 						   icon: Ext.MessageBox.WARNING
 						});
@@ -417,7 +417,8 @@ Gemma.DatasetGroupGridPanel = Ext.extend(Ext.grid.EditorGridPanel, {
 					renderer : function(value, metaData, record, rowIndex, colIndex, store) {
 						var v = "";
 						if (!value) {
-							v = "<img src='/Gemma/images/icons/shield.png' height='16' width='16' ext:qtip='Protected; cannot have members changed, usually applies to automatically generated groups.' />";
+							v = "<img src='/Gemma/images/icons/shield.png' height='16' width='16' "+
+								"ext:qtip='"+Gemma.HelpText.WidgetDefaults.DatasetGroupGridPanel.protectedTT+"' />";
 						}
 						var canEdit = (record.get('id') && record.get('id') > 0)?
 										record.get('currentUserHasWritePermission') : false;

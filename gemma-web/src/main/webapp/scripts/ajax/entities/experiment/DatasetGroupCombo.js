@@ -14,7 +14,7 @@ Gemma.DatasetGroupCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	displayField : 'name',
 	valueField : 'id',
 	editable : false,
-	loadingText : "Loading ...",
+	loadingText : Gemma.StatusText.Loading.generic,
 	listWidth : 250,
 	triggerAction : 'all',
 

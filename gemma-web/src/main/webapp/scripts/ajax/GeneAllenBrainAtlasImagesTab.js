@@ -15,7 +15,7 @@ Gemma.GeneAllenBrainAtlasImages =  Ext.extend(Ext.Panel, {
 		this.on('render', function(){
 			if (!this.loadMask) {
 				this.loadMask = new Ext.LoadMask(this.getEl(), {
-					msg: "Loading ...",
+					msg: Gemma.StatusText.Loading.generic,
 					msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 				});
 			}
@@ -35,11 +35,11 @@ Gemma.GeneAllenBrainAtlasImages =  Ext.extend(Ext.Panel, {
 				this.add({
 					html:'<h3>Allen Brain Atlas expression pattern'+
 							'<a class="helpLink" href="javascript:void(0)"'+
-				'onclick="showHelpTip(event, \'Below is a sampling of expression profile pictures from the allen brain atlas. Beside is a link to the allen brain atlas\'); return false">'+
-				'<img src="/Gemma/images/help.png" /> </a>'+
-				'<a title="Go to Allen Brain Atlas details for '+img.queryGeneSymbol+'" href="'+img.abaGeneURL+'" target="_blank">'+
-				 '<img src="/Gemma/images/logo/aba-icon.png" height="20" width="20" /> </a>'+
-				'</h3>'+'<p>'+homologueText+'<p/>'
+							'onclick="showHelpTip(event, \''+Gemma.HelpText.WidgetDefaults.GeneAllenBrainAtlasImages.helpTT+'\'); return false">'+
+							'<img src="/Gemma/images/help.png" /> </a>'+
+							'<a title="Go to Allen Brain Atlas details for '+img.queryGeneSymbol+'" href="'+img.abaGeneURL+'" target="_blank">'+
+							 '<img src="/Gemma/images/logo/aba-icon.png" height="20" width="20" /> </a>'+
+							'</h3>'+'<p>'+homologueText+'<p/>'
 				});
 				var i;
 				for(i = 0; i< imageObjects.length; i++){

@@ -53,7 +53,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 		this.on('render', function(){
 			if (!this.loadMask && this.getEl()) {
 				this.loadMask = new Ext.LoadMask(this.getEl(), {
-					msg: "Loading ...",
+					msg: Gemma.StatusText.Loading.generic,
 					msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 				});
 			}
@@ -92,10 +92,11 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: this.renderGeneSets(geneDetails.geneSets).join(',')
 						}, {
 							fieldLabel: 'Probes' + '<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
-							'\'Number of probes for this gene on expression platforms in Gemma\'); return false">' +
-							'<img src="/Gemma/images/help.png" /> </a>',
-							html: geneDetails.compositeSequenceCount + ' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id=' + geneDetails.id + '">' +
-							'<img src="/Gemma/images/magnifier.png"> </a>'
+								'\''+Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT+'\'); return false">' +
+								'<img src="/Gemma/images/help.png" /> </a>', 
+							html: geneDetails.compositeSequenceCount + 
+								' <a target="_blank" href="/Gemma/gene/showCompositeSequences.html?id=' + geneDetails.id + '">' +
+								'<img src="/Gemma/images/magnifier.png"> </a>'
 						}, {
 							fieldLabel: 'Notes',
 							html: geneDetails.description

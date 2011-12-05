@@ -352,15 +352,15 @@ Ext.Panel, {
         this.actionsMenu = new Ext.menu.Menu({
             items: [{
             	itemId: 'extendSelectedNodesButton',
-                text: 'Extend Selected Nodes',
-                tooltip: 'Extend the graph by finding new results for selected genes',
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeText,
+                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeTT,
                 handler: this.extendSelectedNodes,
                 scope: this
             }, {
             	itemId: 'searchWithSelectedNodesButton',
-                text: 'Search with Selected Nodes',
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedText,
                 //icon: '/Gemma/images/icons/picture.png',
-                tooltip: 'Start a new search with selected nodes',
+                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedTT,
                 handler: this.reRunSearchWithSelectedNodes,
                 scope: this
             }]
@@ -434,7 +434,7 @@ Ext.Panel, {
 	        	xtype  : 'label',
 				
 	        	html   : '<img ext:qtip="'+
-						'Add/remove genes with more/less dataset support that confirms coexpression'	
+						Gemma.HelpText.WidgetDefaults.CytoscapePanel.stringencySpinnerTT
 	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
 	        	//text   : 'Specificity filter',
 				height : 15
@@ -445,7 +445,7 @@ Ext.Panel, {
                 xtype: 'button',
                 //icon: '/Gemma/images/icons/question_blue.png',
                 text: '<b>Help</b>',                
-                tooltip: 'Click here for documentation on how to use this visualizer.',
+                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.widgetHelpTT,
                 handler: function () {
                 	
                 	var htmlString = '<img src="/Gemma/images/cytoscapehelp.png"/>';
@@ -470,7 +470,7 @@ Ext.Panel, {
                 menu: new Ext.menu.Menu({
                     items: [{
                         text: 'Save as PNG',
-                        tooltip: 'Open a window with this graph as a PNG image',
+                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.saveAsImageTT,
                         handler: this.exportPNG,
                         scope: this
                     }]
@@ -486,9 +486,9 @@ Ext.Panel, {
                 //icon: '/Gemma/images/download.gif',
                 menu: new Ext.menu.Menu({
                     items: [{
-                        text: 'Refresh Layout',
+                        text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,
                         //icon: '/Gemma/images/icons/picture.png',
-                        tooltip: 'Refresh the layout of the graph',
+                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutTT,
                         handler: this.changeLayout,
                         scope: this
                     }]
@@ -506,8 +506,7 @@ Ext.Panel, {
             {
             	xtype: 'button',
             	itemId: 'nodeDegreeEmphasis',
-            	text: '<b>Node Degree Emphasis</b>',
-            	
+            	text: '<b>'+Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisText+'</b>',
             	enableToggle: 'true',
             	pressed: 'true',
             	handler: this.nodeDegreeEmphasis,
@@ -517,7 +516,7 @@ Ext.Panel, {
 	        	xtype  : 'label',
 				
 	        	html   : '<img ext:qtip="'+
-						'Node degree is represented by the darkness of a gene node. The closer the node degree of a gene is to 1, the lighter it is and the more that gene shows coexpression with all other genes in that taxon'	
+						Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisTT	
 	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
 	        	//text   : 'Specificity filter',
 				height : 15
@@ -549,7 +548,7 @@ Ext.Panel, {
 
                                 if (!this.loadMask) {
                                     this.loadMask = new Ext.LoadMask(this.getEl(), {
-                                        msg: "Searching for analysis results ...",
+                                        msg: Gemma.StatusText.Searching.analysisResults,
                                         msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
                                     });
                                 }
@@ -635,7 +634,7 @@ Ext.Panel, {
                         }
                         else { //new search 
                         	
-                        	Ext.Msg.confirm('New Search', 'Lowering the stringency to this level will run a new search to retrieve low stringency results. Low stringency results may not be meaningful for the number of datasets your are searching in. Click Yes to Continue ', function (btn) {
+                        	Ext.Msg.confirm('New Search', Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (btn) {
 
                                 if (btn == 'yes') {
                                 	
@@ -713,7 +712,7 @@ Ext.Panel, {
                     }
                     else { //new search 
                     	
-                    	Ext.Msg.confirm('New Search', 'Lowering the stringency to this level will run a new search to retrieve low stringency results. Low stringency results may not be meaningful for the number of datasets your are searching in. Click Yes to Continue', function (btn) {
+                    	Ext.Msg.confirm('New Search', Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (btn) {
 
                             if (btn == 'yes') {
                             	
@@ -833,9 +832,7 @@ Ext.Panel, {
         var htmlString = '<img src="data:image/png;base64,' + this.visualization.png() + '"/>';
 
         var win = new Ext.Window({
-            title: 'Right-click the image and save the image as file.'
-
-            ,
+            title: Gemma.HelpText.WidgetDefaults.CytoscapePanel.exportPNGWindowTitle,
             plain: true,
             html: htmlString,
             height: 700,
@@ -927,11 +924,13 @@ Ext.Panel, {
 
             } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
-                Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY);
+                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+					String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
 
             } else if(selectedNodes.length == 0) {
 
-                Ext.Msg.alert('Status of Search', 'No Genes Selected');
+                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+						Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
             }
 
         }
@@ -989,7 +988,9 @@ Ext.Panel, {
 
                 } else {
 
-                    Ext.Msg.confirm('Status of Search', 'Too many Query Genes. A max of ' + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY + ' query genes allowed. Click Yes to continue search with reduced query genes', function (btn) {
+                    Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+						String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY),
+					function (btn) {
 
                         if (btn == 'yes') {
                            
@@ -1039,12 +1040,12 @@ Ext.Panel, {
 
 
             } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-
-                Ext.Msg.alert('Status of Search', 'Too Many Genes Selected. Max number of selected genes is ' + Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY);
+                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+						String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
 
             } else {
-
-                Ext.Msg.alert('Status of Search', 'No Genes Selected');
+                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+						Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
             }
 
         }
@@ -1223,7 +1224,9 @@ Ext.Panel, {
         }
 
         if (!completeSearchFlag) {
-            Ext.Msg.alert('Status of Search', 'No more results found for this gene');
+			Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+						Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusNoMoreResults);
+						
             this.loadMask.hide();
         } else {
 

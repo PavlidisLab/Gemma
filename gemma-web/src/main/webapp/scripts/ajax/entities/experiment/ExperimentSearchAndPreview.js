@@ -33,7 +33,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 	maskExperimentPreview : function() {
 		if (!this.loadMask && this.getEl()) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
-						msg : "Loading Experiments ..."
+						msg : Gemma.StatusText.Loading.experiments
 					});
 		}
 		if (this.loadMask) {
@@ -180,9 +180,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 		
 
 		this.helpBtn = new Gemma.InlineHelpIcon({
-			tooltipText:'Select a group of experiments or try searching for experiments by name, '+
-					' or keywords such as: schizophrenia, hippocampus, GPL96 etc.<br><br>'+
-					'<b>Example: search for Alzheimer\'s and select all human experiments'
+			tooltipText: Gemma.HelpText.WidgetDefaults.ExperimentSearchAndPreview.widgetHelpTT
 		});
 		
 		Ext.apply(this, {

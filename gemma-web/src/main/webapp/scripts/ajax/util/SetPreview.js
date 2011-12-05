@@ -174,7 +174,7 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 		this.selectionEditorWindow.show();
 		
 		this.selectionEditor.loadMask = new Ext.LoadMask(this.selectionEditor.getEl(), {
-			msg: "Loading ..."
+			msg: Gemma.StatusText.Loading.generic
 		});
 		this.selectionEditor.loadMask.show();
 		Ext.apply(this.selectionEditor, {

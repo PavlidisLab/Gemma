@@ -247,7 +247,8 @@ Gemma.GeneGroupEditToolbar = Ext.extend(Ext.Toolbar, {
 			remove : function() {
 				var rec = this.getCurrentSet();
 				if (rec) {
-					Ext.Msg.confirm("Delete?", "Are you sure you want to delete this set? This cannot be undone.",
+					Ext.Msg.confirm(Gemma.HelpText.CommonWarnings.Deletion.title, 
+						String.format(Gemma.HelpText.CommonWarnings.Deletion.text, "set"),
 							function(but) {
 								if (but === 'no') {
 									return;

@@ -288,18 +288,7 @@ Ext.onReady(function() {
 			collapsed : false,
 			frame : false,
 			border : true,
-			html : '<ul class="plainList" >' 
-					+ '<li>Is your data available on GEO? If so, it is probably already loaded for you. '
-					+ 'Check <a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">here</a>.</li>'
-					+ '<li>Complete all sections of the form, upload your data file (compress it first to speed things up)'
-					+ ', and click "Validate data"; once validation is complete you will be able to click "Submit data".</li>'
-					+ '<li>Most of the descriptive text you enter can be modified later. '
-					+ 'The taxon, array design and the data themselves cannot easily be altered after submission.</li>'
-					+ '<li>For help with the file data file format, see '
-					+ '<a target="_blank" href="/Gemma/static/expressionExperiment/upload_help.html">this page</a>.</li> '
-					+ '<li>The probe identifiers in your file must match those in the array design on record.</li>'
-					+ '<li>If you used more than one array type in your study, there may be a "combined" array that will take care of your case. If not, let us know.</li>'
-					+ '<li>Problems? Questions? Please <a href="mailto:gemma@ubic.ca">contact us</a></li></ul>'
+			html : Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.instructions
 		}, {
 
 			xtype : 'form',
@@ -323,10 +312,8 @@ Ext.onReady(function() {
 									listeners:{
 										blur: function(value){
 											if(value.getValue().match(/^GSE\d{3,6}$/i)){
-												Ext.Msg.alert('GEO Dataset Check',
-												'It looks like you\'re trying to load a GEO dataset. ' +
-												'Please check that it is not already loaded in Gemma. ' +
-												'\nTry looking <a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">here</a>.')
+												Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningTitle ,
+												Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningText);
 											}
 										}
 									},
@@ -348,10 +335,8 @@ Ext.onReady(function() {
 									listeners:{
 										blur: function(value){
 											if(value.getValue().match(/^GSE\d{3,6}$/i)){
-												Ext.Msg.alert('GEO Dataset Check',
-												'It looks like you\'re trying to load a GEO dataset. ' +
-												'Please check that it is not already loaded in Gemma. ' +
-												'\nTry looking <a href="/Gemma/expressionExperiment/showAllExpressionExperiments.html">here</a>.')											}
+												Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningTitle ,
+												Gemma.HelpText.WidgetDefaults.ExpressionDataUpload.loadingGEOWarningText);										}
 										}
 									}
 								}, {

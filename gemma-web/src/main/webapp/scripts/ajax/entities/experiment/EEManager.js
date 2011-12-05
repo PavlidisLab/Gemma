@@ -291,12 +291,10 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 						text : 'Help',
 						handler : function() {
 							Ext.Msg
-									.alert(
-											"Help with tagging",
-											"Select a 'category' for the term; then enter a term, "
-													+ "choosing from existing terms if possible. "
-													+ "Click 'create' to save it. You can also edit existing terms;"
-													+ " click 'save' to make the change stick, or 'delete' to remove a selected tag.");
+									.alert( 
+									Gemma.HelpText.WidgetDefaults.AnnotationGrid.taggingHelpTitle,
+									Gemma.HelpText.WidgetDefaults.AnnotationGrid.taggingHelpText
+										);
 						}
 					}, {
 						text : 'Done',
@@ -305,8 +303,9 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 							var r = Ext.getCmp('annotator-grid').getEditedCharacteristics();
 
 							if (r.length > 0) {
-								Ext.Msg.confirm("Unsaved changes",
-										"There are unsaved changes. Do you want to continue without saving?", function(
+								Ext.Msg.confirm(Gemma.HelpText.CommonWarnings.UnsavedChanges.title,
+											Gemma.HelpText.CommonWarnings.UnsavedChanges.text
+										, function(
 												btn, txt) {
 											if (btn == 'OK') {
 												w.hide();
@@ -331,8 +330,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 
 	deleteExperiment : function(id, redirectHome) {
 		Ext.Msg.show({
-					title : 'Really delete?',
-					msg : 'Are you sure you want to delete the experiment? This cannot be undone.',
+					title : Gemma.HelpText.CommonWarnings.Deletion.title,
+					msg : String.format(Gemma.HelpText.CommonWarnings.Deletion.text, 'experiment'),
 					buttons : Ext.Msg.YESNO,
 					fn : function(btn, text) {
 						if (btn == 'yes') {
@@ -355,12 +354,7 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 										}.createDelegate(this)
 									});
 							ExpressionExperimentController.deleteById.apply(this, callParams);
-							if(redirectHome){
-								window.location = '/Gemma/home.html';
-							}else{
-								/* after deletion, clear bottom details pane */
-								Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
-							}
+							
 						}
 					},
 					scope : this,
@@ -674,10 +668,8 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 					scope : this,
 					handler : function() {
 						Ext.Msg.show({
-							title : 'Processed vector analysis',
-							msg : 'Choose which factors to include in the model. If you choose only one, the analysis will be a t-test or one-way-anova. If you choose two factors, you might be able to include interactions. If you choose three or more, '
-									+ 'interactions will not be estimated.'
-									+ 'You can also choose to analyze different parts of the data sets separately, by splitting it up according to the factors listed. The analysis is then done independently on each subset.',
+							title : Gemma.HelpText.WidgetDefaults.EEManager.customiseDiffExHelpTitle,
+							msg : Gemma.HelpText.WidgetDefaults.EEManager.customiseDiffExHelpText,
 							buttons : Ext.Msg.OK,
 							icon : Ext.MessageBox.INFO
 						});
@@ -1013,6 +1005,15 @@ Gemma.EEManager = Ext.extend(Ext.Component, {
 			 * TODO
 			 */
 		};
+		
+		this.on('deleted', function(){
+			if (redirectHome) {
+				window.location = '/Gemma/home.html';
+			} else {
+				/* after deletion, clear bottom details pane */
+				Ext.get('dataSetDetailsPanel').first().last().dom.innerHTML = '<span></span>';
+			}
+		});
 
 	}
 

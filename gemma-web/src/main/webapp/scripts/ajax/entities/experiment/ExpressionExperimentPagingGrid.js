@@ -139,7 +139,7 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
     autoScroll: true,
     stripeRows: true,
     rowExpander: true,
-    emptyText: 'Either you didn\'t select any experiments, or you don\'t have permissions to view the ones you chose.',
+    emptyText: Gemma.HelpText.WidgetDefaults.ExperimentPagingGrid.emptyText ,
     viewConfig: {
         forceFit: true
     },
@@ -278,21 +278,20 @@ Gemma.ExperimentPagingGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * @param {Object} eeIds
 	 */
 	loadExperimentsByTaxon: function(taxonId){
-		// if the grid isn't using an id store, we need to change it
-		if(!(this.getStore() instanceof Gemma.ExperimentPagingStoreTaxon)){
-			var store = this.getTaxonStore(taxonId);
-			// bind new store to paging toolbar
-            this.getBottomToolbar().bind(store);
-			// reconfigure grid to use new store
-			this.reconfigure(store, this.getColumnModel());
-		}
-		else{
-			lastOptions = this.getStore().lastOptions;
-			Ext.apply(lastOptions.params, {
-			    taxonId:taxonId
-			});
-			this.getStore().reload(lastOptions);
-		}
+				
+		// I tried being fancy and only creating a new store if the current one
+		// wasn't a taxon store, but it caused problems on page changes
+		// (the first page loaded fine, but when you navigated to the next page, it
+		// was populated with entries from the previous query)
+		// Always need to create new store for new queries, it seems.
+		
+		var store = this.getTaxonStore(taxonId);
+		// bind new store to paging toolbar
+        this.getBottomToolbar().bind(store);
+		// reconfigure grid to use new store
+		this.reconfigure(store, this.getColumnModel());
+		this.nowSubset();
+		
 	},
     initComponent: function(){
     

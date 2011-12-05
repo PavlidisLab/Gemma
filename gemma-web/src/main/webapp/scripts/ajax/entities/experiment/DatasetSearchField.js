@@ -37,7 +37,7 @@ Gemma.DatasetSearchField = function(config) {
  */
 Ext.extend(Gemma.DatasetSearchField, Ext.form.TriggerField, {
 
-			loadingText : 'Searching...',
+			loadingText : Gemma.StatusText.Searching.generic,
 			emptyText : 'Enter search term',
 
 			initComponent : function() {

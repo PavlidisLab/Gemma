@@ -97,7 +97,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		}
 		if (this.getEl()) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
-				msg: "Loading genes ...",
+				msg: Gemma.StatusText.Loading.genes,
 				msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 			});
 			this.loadMask.show();
@@ -512,7 +512,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		this.saveAsButton = new Ext.Button({
 			text: "Save As",
 			handler: this.saveAsBtnHandler,
-			tooltip: 'Save your selection as a new set.',
+			tooltip: Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.saveAsTT,
 			scope: this,
 			disabled: !this.showSeparateSaveAs,
 			hidden: !this.showSeparateSaveAs
@@ -520,21 +520,21 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		this.saveButton = new Ext.Button({
 			text: "Save...",
 			handler: this.saveBtnHandler,
-			tooltip: 'Save your selection permanently.',
+			tooltip:  Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.saveTT,
 			scope: this,
 			disabled: this.enableSaveOnlyAfterModification
 		});
 		this.doneButton = new Ext.Button({
 			text: "Done",
 			handler: this.done,
-			qtip: 'Return to search using your edited list. (Selection will be kept temporarily.)',
+			qtip:  Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.doneTT,
 			scope: this,
 			disabled: true,
 			hidden: !this.allowSaveToSession
 		});
 		this.exportButton = new Ext.Button({
 			text: "Export",
-			qtip: 'Get a plain text version of this list',
+			qtip:  Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.exportTT,
 			handler: this.exportToTxt,
 			scope: this,
 			disabled: false

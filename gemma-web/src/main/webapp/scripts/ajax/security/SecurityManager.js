@@ -56,14 +56,12 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 			readerChecks = [{
 				xtype: 'panel',
 				border:false,
-				html: 'You cannot share this entity because you do not belong to any user groups.'+
-					'<br>Would you like to <a href="/Gemma/manageGroups.html">create one</a>? '
+				html: Gemma.HelpText.WidgetDefaults.SecurityManager.noGroupsToShareWith
 			}];
 			writerChecks = [{
 				xtype: 'panel',
 				border:false,
-				html: 'You cannot share this entity because you do not belong to any user groups.'+
-					' <br>Would you like to <a href="/Gemma/manageGroups.html">create one</a>? '
+				html: Gemma.HelpText.WidgetDefaults.SecurityManager.noGroupsToShareWith
 			}];
 		}
 
@@ -106,8 +104,7 @@ Gemma.SecurityManager.managePermissions = function(elid, clazz, id) {
 				border:false,
 				width: widgetWidth-50,
 				bodyStyle:'background-color:#F7F9D0;padding:5px;border:1px solid #FF7575',
-				html: 'Please note: setting the read permissions to "public" means that all ' +
-				'users of Gemma (registered and anonymous) will be able to view this entity and use it in analyses.'
+				html: Gemma.HelpText.WidgetDefaults.SecurityManager.publicWarning
 			}]
         });		
 		var privateReadingFieldSet = new Ext.ux.RadioFieldset({

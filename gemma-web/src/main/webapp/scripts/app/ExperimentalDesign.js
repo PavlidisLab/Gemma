@@ -38,13 +38,7 @@ var showDesignUploadForm = function() {
 					collapsed : false,
 					frame : false,
 					border : true,
-					html : '<p>Experimental design submission works in two phases. ' +
-							'First you must upload your design file (file format instructions' +
-							' <a target="_blank" href="' +
-							Gemma.HOST +
-							'faculty/pavlidis/wiki/display/gemma/Experimental+Design+Upload">here</a>). ' +
-							'Then click "submit". If your file format is invalid or does not match the properties of the ' +
-							'experiment the design is intended for, you will see an error message.</p>'
+					html : Gemma.HelpText.WidgetDefaults.ExperimentalDesignUpload.instructions
 				}, uploadForm],
 				buttons : [{
 							id : 'submit-design-button',

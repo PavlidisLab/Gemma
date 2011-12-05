@@ -1,7 +1,8 @@
 Ext.namespace('Gemma');
 
 /**
- * User interface for selecting experimental factors.
+ * User interface for selecting experimental factors. Used if the user's browser cannot support
+ * canvas elements. (ex IE8) 
  * 
  * @class Gemma.ExperimentalFactorChooserPanel
  * @extends Ext.Window
@@ -98,13 +99,8 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 
 		Ext.Msg
 				.alert(
-						"Help for factor choose",
-						"The meta-analysis can only use one factor per study. Experiments that have more"
-								+ " than one factor will be shown here (or view all experiments)."
-								+ " Click on the factor field to get a menu for choosing among multiple possibilities. Use the 'hinting' "
-								+ "button to choose the type of factor most useful to you, to save manual work. For more help see <a target='_blank' "
-								+ "href='" + Gemma.WIKI
-								+ "Dataset+chooser#Datasetchooser-TheGemmaexperimentalfactorchooser'>this page</a>");
+						Gemma.HelpText.WidgetDefaults.ExperimentalFactorChooserPanel.helpTitle,
+						Gemma.HelpText.WidgetDefaults.ExperimentalFactorChooserPanel.helpText);
 
 	},
 
@@ -391,8 +387,9 @@ Gemma.ExperimentalFactorChooserPanel = Ext.extend(Ext.Window, {
 			this.efGrid.getStore().filterBy(this.filter, this, 0);
 		} else {
 			this.loadMask.hide();
-			Ext.Msg.alert("No results",
-					"Sorry, there are no differential expression analyses for the data sets you selected.");
+			Ext.Msg.alert(
+					Gemma.HelpText.WidgetDefaults.ExperimentalFactorChooserPanel.noResultsTitle,
+					Gemma.HelpText.WidgetDefaults.ExperimentalFactorChooserPanel.noResultsText);
 		}
 	}
 });

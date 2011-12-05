@@ -154,7 +154,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 					this.getTopToolbar().on("create", function(newFactorValue) {
 						var oldmsg = this.loadMask.msg;
-						this.loadMask.msg = "Creating new experimental factor";
+						this.loadMask.msg = String.format(Gemma.StatusText.creating, 'experimental factor');
 						this.loadMask.show();
 
 						var callback = function() {
@@ -180,7 +180,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.getTopToolbar().on("delete", function() {
 								var selected = this.getSelectedIds();
 								var oldmsg = this.loadMask.msg;
-								this.loadMask.msg = "Deleting experimental factor(s)";
+								this.loadMask.msg = String.format(Gemma.StatusText.deleteing, 'experimental factor');
 								this.loadMask.show();
 
 								var callback = function() {
@@ -205,7 +205,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.getTopToolbar().on("save", function() {
 								var edited = this.getEditedRecords();
 								var oldmsg = this.loadMask.msg;
-								this.loadMask.msg = "Saving ...";
+								this.loadMask.msg = Gemma.StatusText.saving;
 								this.loadMask.show();
 								var callback = function() {
 									this.recordsChanged(edited);
@@ -322,14 +322,14 @@ Gemma.ExperimentalFactorAddWindow = Ext.extend(Ext.Window, {
 							fieldLabel : "Description",
 							validator : function(value) {
 								return this.store.findExact('description', value) < 0 ? true
-										: "Description must be unique among factors";
+										: Gemma.HelpText.WidgetDefaults.ExperimentalFactorAddWindow.descriptionUnique;
 							}.createDelegate(this),
-							emptyText : "A short phrase such as 'control vs. drug'"
+							emptyText : Gemma.HelpText.WidgetDefaults.ExperimentalFactorAddWindow.emptyText
 						}, {
 							xtype : 'checkbox',
 							id : 'factor-type-checkbox',
 							fieldLabel : 'Continuous',
-							tooltip : "Check if the factor is a measurement that can take arbitrary numerical values. If in doubt leave this unchecked."
+							tooltip : Gemma.HelpText.WidgetDefaults.ExperimentalFactorAddWindow.continuousCheckboxTT
 						}]
 			}],
 			buttons : [{
@@ -405,8 +405,8 @@ Gemma.ExperimentalFactorToolbar = Ext.extend(Ext.Toolbar, {
 							handler : function() {
 								Ext.Msg
 						.confirm(
-								'Deleting records',
-								'Are you sure? This cannot be undone. Any associated differential expression analyses will be deleted as well.',
+								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorWarningTitle,
+								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorWarningText,
 										function(but) {
 											if (but == 'yes') {
 												this.deleteButton.disable();

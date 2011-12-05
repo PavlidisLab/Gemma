@@ -239,7 +239,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 			columns:[
 				rowExpander,
 				{
-					header: '<img style="vertical-align: bottom;" ext:qwidth="198" ext:qtip="The red dot marks evidence related specifically to your phenotype search." width="16" height="16" src="/Gemma/images/icons/bullet_red.png">',
+					header: '<img style="vertical-align: bottom;" ext:qwidth="198" ext:qtip="'+
+							Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.specificallyRelatedTT+
+							'" width="16" height="16" src="/Gemma/images/icons/bullet_red.png">',
 					dataIndex: 'relevance',
 					width: 0.12,
 		            renderer: function(value) {
@@ -263,7 +265,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					width: 1,
 					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 						return (record.data.isNegativeEvidence ? 
-									"<img ext:qwidth='200' ext:qtip='This negative sign denotes evidence for a negative association.' src='/Gemma/images/icons/delete.png' height='16' width='16'/> " :
+									"<img ext:qwidth='200' ext:qtip='"+
+									Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativEvidenceTT+
+									"' src='/Gemma/images/icons/delete.png' height='16' width='16'/> " :
 									"") +
 								value;						
 					},
@@ -279,16 +283,16 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 		            	
 						switch (value) {
 							case 'EXP' :
-				            	displayText = 'Inferred from Experiment';
-				            	tooltipText = 'An experimental assay has been located in the cited reference, whose results indicate a gene association (or non-association) to a phenotype.';
+				            	displayText = Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.EvidenceCodes.expText;
+				            	tooltipText = Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.EvidenceCodes.expTT;
 								break;
 							case 'IC' :
-				            	displayText = 'Inferred by Curator';
-				            	tooltipText = 'The association between the gene and phenotype is not supported by any direct evidence, but can be reasonably inferred by a curator. This includes annotations from animal models or cell cultures.';
+				            	displayText = Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.EvidenceCodes.icText;
+				            	tooltipText = Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.EvidenceCodes.icTT;
 								break;
 							case 'TAS' :
-				            	displayText = 'Traceable Author Statement';
-				            	tooltipText = 'The gene-to-phenotype association is stated in a review paper or a website (external database) with a reference to the original publication.';
+				            	displayText = Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.EvidenceCodes.tasText;
+				            	tooltipText = Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.EvidenceCodes.tasTT;
 								break;
 							default :
 								return value; 

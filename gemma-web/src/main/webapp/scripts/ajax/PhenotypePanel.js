@@ -62,10 +62,7 @@ Gemma.PhenotypePanel = Ext.extend(Ext.Panel, {
 		        ]
 			});
     	} else {
-    		Ext.Msg.alert('Error in Gemma.PhenotypePanel', 'If you are using PhenotypePanel inside of Gemma,<br />' +
-    			'<b>phenotypeStoreProxy</b>, <b>geneStoreProxy</b> and<br />' +
-    			'<b>geneColumnRenderer</b> should not be set <br />' +
-    			'in config. Otherwise, all of them should be set.');
+    		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorTitle, Gemma.HelpText.WidgetDefaults.PhenotypePanel.setupErrorText);
     	}
 
 		Gemma.PhenotypePanel.superclass.initComponent.call(this);
@@ -329,7 +326,8 @@ Gemma.PhenotypePanelSearchField = Ext.extend(Ext.form.TwinTriggerField, {
 	            }
 	        }, this);
     	} else {
-    		Ext.Msg.alert('Error in Gemma.PhenotypePanelSearchField', 'You should set all these configs: <b>getSelectionModel</b>, <b>getStore</b>, <b>filterFields</b> and <b>emptyText</b>.');
+    		Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.PhenotypePanelSearchField.setupErrorTitle, 
+							Gemma.HelpText.WidgetDefaults.PhenotypePanelSearchField.setupErrorText);
     	}
     },
 	

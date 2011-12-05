@@ -34,7 +34,7 @@ Gemma.TaxonCombo = Ext.extend(Gemma.StatefulRemoteCombo, {
 	displayField : 'commonName',
 	valueField : 'id',
 	editable : false,
-	loadingText : "Loading ...",
+	loadingText : Gemma.StatusText.Loading.generic,
 	triggerAction : 'all', // so selecting doesn't hide the others
 	listWidth : 250,
 	width : 120,

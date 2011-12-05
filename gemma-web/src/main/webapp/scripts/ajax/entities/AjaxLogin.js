@@ -234,7 +234,7 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend(Ext.Window, {
 					allowBlank: false,
 					inputType: 'password'
 				}, {
-					fieldLabel: '<a href="/Gemma/passwordHint.html">Forgot your password?</a>',
+					fieldLabel: '<a href="/Gemma/passwordHint.html">'+Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxLoginWindow.passwordHintLink+'</a>',
 					name: 'passwordHint',
 					id: 'passwordHint',
 					labelSeparator: '',
@@ -255,7 +255,7 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend(Ext.Window, {
 				}],
 				
 				buttons: [{
-					text: 'Need an account? Register',
+					text: Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxLoginWindow.registerButton,
 					minWidth: 75,
 					handler: this.registerHandler,
 					scope: this
@@ -344,7 +344,7 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend(Ext.Window, {
 				
 				var erdiv = Ext.get('ajax-error');
 				if(erdiv){
-					Ext.DomHelper.overwrite(erdiv, 'Invalid Username/Password');
+					Ext.DomHelper.overwrite(erdiv, Gemma.HelpText.WidgetDefaults.AjaxLogin_AjaxLoginWindow.invalidLogin);
 				}
 				
 				var loginWidget = Ext.getCmp("_ajaxLogin");

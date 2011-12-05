@@ -65,7 +65,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 			// this should go in grid itself, but it wasn't working properly (or at all)
 			if (!this.loadMask && this.getEl()) {
 				this.loadMask = new Ext.LoadMask(this.getEl(), {
-					msg : "Loading ...",
+					msg : Gemma.StatusText.Loading.generic,
 					msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 				});
 			}

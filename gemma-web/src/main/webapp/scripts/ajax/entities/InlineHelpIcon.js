@@ -23,3 +23,5 @@ Gemma.InlineHelpIcon = Ext.extend(Ext.Button, {
 		});
 	}
 });
+
+Ext.reg('Gemma.InlineHelpIcon',Gemma.InlineHelpIcon);

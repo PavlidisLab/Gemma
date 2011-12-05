@@ -258,15 +258,13 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 					Ext.Msg
 							.confirm(
-									'Deleting factor value(s)',
-									'Are you sure? This cannot be undone. Any associated differential expression analyses will be deleted as well.',
+								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorValueWarningTitle,
+								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorValueWarningText,
 									function(but) {
 										if (but == 'yes') {
 											Ext.getCmp('factor-value-delete-button').disable();
 											var ef = this.experimentalFactor;
-											var callback = function() {
-												this.factorValuesDeleted(selected);
-											}.createDelegate(this);
+											var callback = this.factorValuesDeleted.createDelegate(this);
 											ExperimentalDesignController.deleteFactorValues(ef, selected, callback);
 										}
 									}.createDelegate(this));

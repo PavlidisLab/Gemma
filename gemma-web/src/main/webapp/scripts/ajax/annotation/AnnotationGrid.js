@@ -182,7 +182,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			},
 
 			loadMask : {
-				msg : 'Processing ...',
+				msg : Gemma.StatusText.processing,
 				store : this.store
 			},
 
@@ -261,7 +261,7 @@ Gemma.AnnotationGrid = Ext.extend(Gemma.GemmaGridPanel, {
 										header : "Annotation belongs to:",
 										dataIndex : "parentLink",
 										renderer : this.parentStyler.createDelegate(this),
-										tooltip : "The 'owner' of this annotation. May be hidden due to security.",
+										tooltip : Gemma.HelpText.WidgetDefaults.AnnotationGrid.parentLinkDescription,
 										hidden : this.showParent ? false : true,
 										sortable : false
 									}, {

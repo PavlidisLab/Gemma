@@ -11,7 +11,7 @@ Ext.namespace('Gemma');
 Gemma.ExpressionExperimentExperimentalFactorGrid = Ext.extend(Ext.grid.PropertyGrid, {
 
 			loadMask : {
-				msg : 'Loading factors ...'
+				msg : Gemma.StatusText.Loading.experimentFactors
 			},
 			collapsible : true,
 			editable : true,
