@@ -304,8 +304,8 @@ Gemma.HelpText.WidgetDefaults = {
 								"To select experiments, hold down &quot;Ctrl&quot; and click on condition labels."
 	},
 	PhenotypeEvidenceGridPanel:{
-		specificallyRelatedTT: 'The red dot marks evidence related specifically to your phenotype search.',
-		negativeEvidenceTT: 'This negative sign denotes evidence for a negative association.',
+		specificallyRelatedTT: 'Marks evidence related specifically to your phenotype search',
+		negativeEvidenceTT: 'Denotes evidence against association',
 		EvidenceCodes: {
 			expText: 'Inferred from Experiment',
 			expTT: 'An experimental assay has been located in the cited reference, whose results indicate a gene association (or non-association) to a phenotype.',
