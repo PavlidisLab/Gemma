@@ -15,13 +15,13 @@
 package ubic.gemma.web.controller;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
+import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -46,18 +47,18 @@ public class PhenotypeController extends BaseController {
     private PhenotypeAssociationManagerService phenotypeAssociationManagerService;
 
     @RequestMapping(value = "/phenotypes.html", method = RequestMethod.GET)
-    public ModelAndView showAllPhenotypes( HttpServletRequest request, HttpServletResponse response ) {
-        ModelAndView mav = new ModelAndView( "phenotypes" );
+    public ModelAndView showAllPhenotypes(HttpServletRequest request, HttpServletResponse response) {
+        ModelAndView mav = new ModelAndView("phenotypes");
 
-        mav.addObject( "phenotypeUrlId", request.getParameter( "phenotypeUrlId" ) );
-        mav.addObject( "geneId", request.getParameter( "geneId" ) );
+        mav.addObject("phenotypeUrlId", request.getParameter("phenotypeUrlId"));
+        mav.addObject("geneId", request.getParameter("geneId"));
 
         return mav;
     }
 
     @RequestMapping("/phenotypeAssociationForm.html")
     public ModelAndView createPhenotypeAssociationForm() {
-        return new ModelAndView( "phenotypeAssociationForm" );
+        return new ModelAndView("phenotypeAssociationForm");
     }
 
     // Frances: This method is not being used and for testing purpose ONLY.
@@ -72,14 +73,14 @@ public class PhenotypeController extends BaseController {
      * @param phenotypes
      * @return all genes that have given phenotypes
      */
-    public JsonReaderResponse<GeneValueObject> findCandidateGenes( String[] phenotypes ) {
+    public JsonReaderResponse<GeneValueObject> findCandidateGenes(String[] phenotypes) {
         Set<String> myPhenotypes = new HashSet<String>();
-        for ( String pheno : phenotypes ) {
-            myPhenotypes.add( pheno );
+        for (String pheno : phenotypes) {
+            myPhenotypes.add(pheno);
         }
 
-        return new JsonReaderResponse<GeneValueObject>( new ArrayList<GeneValueObject>(
-                this.phenotypeAssociationManagerService.findCandidateGenes( myPhenotypes ) ) );
+        return new JsonReaderResponse<GeneValueObject>(new ArrayList<GeneValueObject>(
+                phenotypeAssociationManagerService.findCandidateGenes(myPhenotypes)));
     }
 
     /**
@@ -88,8 +89,28 @@ public class PhenotypeController extends BaseController {
      * @return all phenotypes in the system
      */
     public JsonReaderResponse<CharacteristicValueObject> loadAllPhenotypes() {
+        return new JsonReaderResponse<CharacteristicValueObject>(new ArrayList<CharacteristicValueObject>(
+                phenotypeAssociationManagerService.loadAllPhenotypes()));
+    }
 
-        return new JsonReaderResponse<CharacteristicValueObject>( new ArrayList<CharacteristicValueObject>(
-                this.phenotypeAssociationManagerService.loadAllPhenotypes() ) );
+    /**
+     * Returns all phenotypes satisfied the given search criteria. 
+     * 
+     * @param query
+     * @param geneId
+     * @return Collection of phenotypes
+     */
+    public Collection<CharacteristicValueObject> searchOntologyForPhenotypes(String query, Long geneId) {
+        return phenotypeAssociationManagerService.searchOntologyForPhenotypes(query, geneId);
+    }
+
+    /**
+     * Finds bibliographic reference with the given pubmed id. 
+     * 
+     * @param pubMedId
+     * @return bibliographic reference with the given pubmed id
+     */
+    public BibliographicReferenceValueObject findBibliographicReference(String pubMedId) {
+        return phenotypeAssociationManagerService.findBibliographicReference(pubMedId);
     }
 }

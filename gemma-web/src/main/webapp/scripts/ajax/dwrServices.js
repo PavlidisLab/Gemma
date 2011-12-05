@@ -975,6 +975,12 @@ PhenotypeController.findCandidateGenes = function(p0, callback) {
 PhenotypeController.loadAllPhenotypes = function(callback) {
 	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'loadAllPhenotypes', callback);
 }
+PhenotypeController.searchOntologyForPhenotypes = function(p0, p1, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'searchOntologyForPhenotypes', p0, p1, callback);
+}
+PhenotypeController.findBibliographicReference = function(p0, callback) {
+	dwr.engine._execute(PhenotypeController._path, 'PhenotypeController', 'findBibliographicReference', p0, callback);
+}
 //=====================================================================================
 if (JavascriptLogger == null)
 	var JavascriptLogger = {};

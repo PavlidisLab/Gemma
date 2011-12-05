@@ -1,5 +1,35 @@
 Ext.namespace('Gemma.BibliographicReference');
 
+Gemma.BibliographicReference.Record = new Ext.data.Record.create([{
+        name: "id",
+        type: "int"
+    }, {
+        name: "volume"
+    }, {
+        name: "title"
+    }, {
+        name: "publicationDate",
+        type: 'date'
+    }, {
+        name: "publication"
+    }, {
+        name: "pubAccession"
+    }, {
+        name: "pages"
+    }, {
+        name: "citation"
+    }, {
+        name: "authorList"
+    }, {
+        name: "abstractText"
+    }, {
+        name: "experiments"
+    }, {
+        name: "meshTerms"
+    }, {
+        name: "chemicalsTerms"
+}]);
+
 Gemma.BibliographicReference.PagingStore = Ext.extend(Ext.data.Store, {
 	initComponent: function(){
 		Gemma.BibliographicReference.PagingStore.superclass.initComponent.call(this);
@@ -24,35 +54,7 @@ Gemma.BibliographicReference.PagingStore = Ext.extend(Ext.data.Store, {
         totalProperty: 'totalRecords', // default is 'total'; optional unless
         // paging.
         idProperty: "id", // same as default
-        fields: [{
-            name: "id",
-            type: "int"
-        }, {
-            name: "volume"
-        }, {
-            name: "title"
-        }, {
-            name: "publicationDate",
-            type: 'date'
-        }, {
-            name: "publication"
-        }, {
-            name: "pubAccession"
-        }, {
-            name: "pages"
-        }, {
-            name: "citation"
-        }, {
-            name: "authorList"
-        }, {
-            name: "abstractText"
-        }, {
-            name: "experiments"
-        }, {
-            name: "meshTerms"
-        }, {
-            name: "chemicalsTerms"
-        }]
+        fields: Gemma.BibliographicReference.Record
     }),
     
     writer: new Ext.data.JsonWriter({

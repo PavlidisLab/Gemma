@@ -1307,6 +1307,8 @@ gemma.max.fileupload.size.bytes=
 							<list>
 								<value>findCandidateGenes</value>
 								<value>loadAllPhenotypes</value>
+								<value>searchOntologyForPhenotypes</value>
+								<value>findBibliographicReference</value>
 							</list>
 						</property>
 					</bean>

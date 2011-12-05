@@ -211,10 +211,10 @@ var evidenceStore = new Ext.data.Store({
 evidenceStore.setDefaultSort('relevance', 'desc');
 
 Gemma.PhenotypeEvidenceRowExpander = Ext.extend(Ext.grid.RowExpander, {
-    getRowClass : function(record, rowIndex, p, ds) {
-        return this.superclass().getRowClass.call(this, record, rowIndex, p, ds) +
-        	(record.data.isNegativeEvidence ? ' negative-annotation' : '');
-    },
+//    getRowClass : function(record, rowIndex, p, ds) {
+//        return this.superclass().getRowClass.call(this, record, rowIndex, p, ds) +
+//        	(record.data.isNegativeEvidence ? ' negative-annotation' : '');
+//    },
 	// Use class="x-grid3-cell-inner" so that we have padding around the description.
     tpl: new Ext.Template(
         '<div class="x-grid3-cell-inner" style="white-space: normal;">{description}</div>'
@@ -266,8 +266,8 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					renderer: function(value, metadata, record, rowIndex, colIndex, store) {
 						return (record.data.isNegativeEvidence ? 
 									"<img ext:qwidth='200' ext:qtip='"+
-									Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativEvidenceTT+
-									"' src='/Gemma/images/icons/delete.png' height='16' width='16'/> " :
+									Gemma.HelpText.WidgetDefaults.PhenotypeEvidenceGridPanel.negativeEvidenceTT+
+									"' src='/Gemma/images/icons/thumbsdown.png' height='12'/> " :
 									"") +
 								value;						
 					},

@@ -1,6 +1,11 @@
 Ext.namespace('Gemma.BibliographicReference');
 
-Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.FormPanel, {
+// Originally, this panel extended from Ext.FormPanel. It should not do so because we may put it inside  
+// another FormPanel, but FormPanel cannot be put inside another FormPanel. To be able to layout components
+// in the same way as in FormPanel, we make it to have form layout by adding the config:
+// 		layout: 'form'
+Gemma.BibliographicReference.DetailsPanel  = Ext.extend(Ext.Panel, {
+	layout: 'form',
 	title: 'Bibliographic Reference Details',
 	autoScroll:true,
 	padding: 20,
