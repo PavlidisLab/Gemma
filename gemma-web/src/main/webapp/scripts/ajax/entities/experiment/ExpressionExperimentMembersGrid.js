@@ -94,28 +94,36 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	 * @param {}
 	 *            args optional
 	 */
-	loadExperiments : function(eeIds, callback, args) {
+	loadExperiments: function(eeIds, callback, args){
 		if (!eeIds || eeIds.length === 0) {
 			return;
 		}
-
-		ExpressionExperimentController.loadExpressionExperiments(eeIds, function(ees) {
-					var eeData = [];
-					var i;
-					for (i = 0; i < ees.length; ++i) {
-						eeData.push([ees[i].id, ees[i].shortName, ees[i].name, ees[i].arrayDesignCount,
-								ees[i].bioAssayCount]);
-					}
-					/*
-					 * FIXME this can result in the same gene listed twice. This
-					 * is taken care of at the server side but looks funny.
-					 */
-					this.getStore().loadData(eeData);
-					if (callback) {
-						callback(args);
-					}
-					this.fireEvent('experimentsLoaded');
-				}.createDelegate(this));
+		
+		ExpressionExperimentController.loadExpressionExperiments(eeIds, function(ees){
+			var eeData = [];
+			var i;
+			
+			var taxonId = (ees[0]) ? ees[0].taxonId : -1;
+			
+			for (i = 0; i < ees.length; ++i) {
+				eeData.push([ees[i].id, ees[i].shortName, ees[i].name, ees[i].arrayDesignCount, ees[i].bioAssayCount]);
+				if (taxonId != ees[i].taxonId) {
+					var taxonId = -1;
+				}
+			}
+			if (taxonId != -1) {
+				this.setTaxonId(taxonId);
+			}
+			/*
+		 * FIXME this can result in the same gene listed twice. This
+		 * is taken care of at the server side but looks funny.
+		 */
+			this.getStore().loadData(eeData);
+			if (callback) {
+				callback(args);
+			}
+			this.fireEvent('experimentsLoaded');
+		}.createDelegate(this));
 	},
 	/**
 	 * @param {Object} data eeSetValueObject

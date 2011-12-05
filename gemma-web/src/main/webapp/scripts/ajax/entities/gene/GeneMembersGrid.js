@@ -109,14 +109,22 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			}
 			var geneData = [];
 			var i = 0;
+			var taxonId = (genes[0])? genes[0].taxonId:-1;
 			for (i = 0; i < genes.length; i++) {
 				geneData.push([genes[i].id, genes[i].taxonScientificName, genes[i].officialSymbol, genes[i].officialName]);
+				if (taxonId != genes[i].taxonId) {
+					var taxonId = -1;
+				}
 			}
+			if (taxonId != -1) {
+				this.setTaxonId(taxonId);
+			}
+			this.getStore().loadData(geneData);
+			
 			/*
 		 * FIXME this can result in the same gene listed twice. This
 		 * is taken care of at the server side but looks funny.
 		 */
-			this.getStore().loadData(geneData);
 			if (callback) {
 				callback(args);
 			}

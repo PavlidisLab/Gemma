@@ -502,7 +502,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 		return msg;
 	},
 	
-	getSelectedGenes : function () {
+	getSelectedGeneIds : function () {
 		var geneIds = [];
 		for (var i = 0; i < this.geneTree.items.length; i++) {
 			var gene = this.geneTree.items[i];
@@ -511,6 +511,17 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 			}
 		}
 		return geneIds;
+	},
+		
+	getSelectedDatasetIds : function () {
+		var dsIds = [];
+		for (var i = 0; i < this.conditionTree.items.length; i++) {
+			var condition = this.conditionTree.items[i];
+			if (condition.isSelected) {
+				dsIds.push (condition.datasetId);
+			}
+		}
+		return dsIds;
 	},
 	
 	

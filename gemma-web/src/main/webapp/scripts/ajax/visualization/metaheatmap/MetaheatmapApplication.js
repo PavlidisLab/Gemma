@@ -194,30 +194,73 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      	  	scope : this
 			      	  },
 			      	  '-',
-			      	  { xtype : 'button',
-			      		text : '<b>Save selected genes</b>',
-			      		icon : '/Gemma/images/download.gif',
+			      	  { 
+					  	xtype : 'button',
+			      		text : '<b>Save Selected</b>',
+			      		icon : '/Gemma/images/icons/disk.png',
 			      		cls : 'x-btn-text-icon',
-			      		tooltip:'Select genes by holding down the "Ctrl" key and clicking on gene symbols.',		      		
-			      		handler : function() {
-			      		  var geneSetGrid = new Gemma.GeneMembersSaveGrid({
-						  	genes: this.visualizationPanel.getSelectedGenes(),
-						  	frame: false
-						  });
-						  this.getEl().mask();
-			      		  var popup = new Ext.Window ({ closable : false,
-														layout : 'fit',
-														width : 450,
-														height : 500,
-														items : geneSetGrid });	
-														
-							geneSetGrid.on('doneModification', function() {
+			      		tooltip:'Select genes or experiments by holding down the "Ctrl" key and clicking on row or column labels.',
+			      	  	scope: this,
+						menu: new Ext.menu.Menu({
+							scope: this,
+							items: [{
+								text: 'Genes',
+								scope: this,
+								handler: function(){
+									if (this.visualizationPanel.getSelectedGeneIds().length == 0) {
+										Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.noGenesSelectedTitle,
+											Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.noGenesSelectedText);
+										return;
+									}
+									var geneSetGrid = new Gemma.GeneMembersSaveGrid({
+										genes: this.visualizationPanel.getSelectedGeneIds(),
+										frame: false
+									});
+									this.getEl().mask();
+									var popup = new Ext.Window({
+										closable: false,
+										layout: 'fit',
+										width: 450,
+										height: 500,
+										items: geneSetGrid
+									});
+									
+									geneSetGrid.on('doneModification', function(){
 										this.getEl().unmask();
 										popup.hide();
 									}, this);
-			      		  popup.show();
-			      	  	},
-			      	  	scope: this		      	  
+									popup.show();
+								}
+							}, {
+								text: 'Experiments',
+								scope: this,
+								handler: function(){
+									if (this.visualizationPanel.getSelectedDatasetIds().length == 0) {
+										Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.noDatasetsSelectedTitle,
+											Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.noDatasetsSelectedText);
+										return;
+									}
+									var eeSetGrid = new Gemma.ExpressionExperimentMembersGrid({
+										eeids: this.visualizationPanel.getSelectedDatasetIds(),
+										frame: false
+									});
+									this.getEl().mask();
+									var popup = new Ext.Window({
+										closable: false,
+										layout: 'fit',
+										width: 450,
+										height: 500,
+										items: eeSetGrid
+									});
+									
+									eeSetGrid.on('doneModification', function(){
+										this.getEl().unmask();
+										popup.hide();
+									}, this);
+									popup.show();
+								}
+							}]
+						})	      	  
 			      	  },'-',{
 					  	xtype: 'button',
 						text: '<b>Download</b>',

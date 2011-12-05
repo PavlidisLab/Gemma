@@ -295,6 +295,14 @@ Gemma.HelpText.WidgetDefaults = {
 							'onclick="Ext.Msg.alert(\'Query Result Details\',\'<br>{0}{1}'+
 							'\');" style="color: red; text-decoration: underline;">details</a>)</div>'
 	},
+	MetaheatmapApplication:{
+		noGenesSelectedTitle: "No Genes Selected",
+		noGenesSelectedText: "Selection cannot be saved because no genes have been selected. "+
+								"To select genes, hold down &quot;Ctrl&quot; and click on gene symbols.",
+		noDatasetsSelectedTitle: "No Experiments Selected",
+		noDatasetsSelectedText: "Selection cannot be saved because no experiments have been selected. "+
+								"To select experiments, hold down &quot;Ctrl&quot; and click on condition labels."
+	},
 	PhenotypeEvidenceGridPanel:{
 		specificallyRelatedTT: 'The red dot marks evidence related specifically to your phenotype search.',
 		negativeEvidenceTT: 'This negative sign denotes evidence for a negative association.',
