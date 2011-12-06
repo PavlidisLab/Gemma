@@ -315,7 +315,12 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
                     var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
                     
-                    this.loadData(false, 2,trimmed.trimmedKnownGeneResults, null);
+                    var filteredData;
+            		//filter away non-query genes
+            		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, trimmed.trimmedKnownGeneResults);
+                    
+                    
+                    this.loadData(false, 2,filteredData, null);
                     
                     //update cytoscape                 
                     if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
@@ -349,7 +354,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
                     var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
                     
-                    this.loadData(false, 2,trimmed.trimmedKnownGeneResults, null);
+                    var filteredData;
+            		//filter away non-query genes
+            		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, trimmed.trimmedKnownGeneResults);
+                    
+                    this.loadData(false, 2, filteredData, null);
                     
                     //update cytoscape                 
                     if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
@@ -391,14 +400,19 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 	
 	cytoscapeUpdate : function(stringency, numQueryGenes, data, minStringency){ 
 		
-		//TODO update toolbar stringency
+		
 		if (this.getTopToolbar()) {
 			this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
 			if (minStringency){
 				this.getTopToolbar().getComponent('stringencySpinner').minValue = minStringency;
 			}
 		}
-		this.loadData(false, numQueryGenes, data, null);
+		
+		var filteredData;
+		//filter away non-query genes
+		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, data);
+		
+		this.loadData(false, numQueryGenes, filteredData, null);
 		
 		
 	},

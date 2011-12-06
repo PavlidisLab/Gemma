@@ -9,7 +9,9 @@ Gemma.CoexValueObjectUtil = {
 	        //helper array to prevent duplicate nodes from being entered
 	        var graphNodeIds = [];
 
-	        var trimmedGeneResults = [];	        
+	        var trimmedGeneResults = [];
+	        
+	        
 	       
 	        var kglength = knowngenes.length;
 	        for (i = 0; i < kglength; i++) {
@@ -28,7 +30,7 @@ Gemma.CoexValueObjectUtil = {
 	                    graphNodeIds.push(knowngenes[i].queryGene.id);
 	                }
 	                
-	                trimmedGeneResults.push(knowngenes[i]);
+	                trimmedGeneResults.push(knowngenes[i]);	                
 
 	            } //end if
 	        } // end for (<kglength)
@@ -71,6 +73,55 @@ Gemma.CoexValueObjectUtil = {
 	        }
 	        
 	        return currentQueryGeneIds;
+	    },
+	    
+	    //for filtering results down to only results that involve geneids 
+	    filterGeneResultsByGeneIds: function(geneIds, knowngenes){
+	    	
+	    		var trimmedGeneResults = [];	        
+		       
+		        var kglength = knowngenes.length;
+		        var i;
+		        for (i = 0; i < kglength; i++) {
+
+		            // go in only if the query or known gene is contained in the original query geneids AND the stringency is >= the filter stringency
+		            if (geneIds.indexOf(knowngenes[i].foundGene.id) !== -1 || geneIds.indexOf(knowngenes[i].queryGene.id) !== -1)
+
+		            {		                
+		                
+		                trimmedGeneResults.push(knowngenes[i]);
+
+		            } //end if
+		        } // end for (<kglength)
+	    	
+		        return trimmedGeneResults;
+	    },
+	    
+	    //backend sometimes returns duplicate results
+	    removeDuplicates: function(knowngenes){
+	    	
+	    	var edgeSet = [];
+	    	
+	    	var duplicatesRemovedResults = [];
+		       
+	        var kglength = knowngenes.length;
+	        for (i = 0; i < kglength; i++) {
+
+	            
+	                
+	                if (edgeSet.indexOf(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol) == -1 && edgeSet.indexOf(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol) == -1) {
+	                
+	                	duplicatesRemovedResults.push(knowngenes[i]);
+	                
+	                	edgeSet.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
+	                	edgeSet.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol);
+	                }
+
+	            
+	        } // end for (<kglength)
+	        
+	        return duplicatesRemovedResults;
+	    	
 	    }
 		
 		

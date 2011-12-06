@@ -120,7 +120,7 @@ public class CoexpressionSearchController extends BaseFormController {
         result.setQueryGenes( GeneValueObject.convert2ValueObjects( genes ) );
 
         Collection<CoexpressionValueObjectExt> geneResults = geneCoexpressionService.coexpressionSearchQuick( eeSetId,
-                genes, 2, 20, false , false);
+                genes, 2, COEX_VIS_RESULTS, false , false);
         result.setKnownGeneResults( geneResults );
 
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
@@ -172,10 +172,14 @@ public class CoexpressionSearchController extends BaseFormController {
         }
 
         int resultsLimit = 700;
+        
+        boolean displayInfo = false;
+        int displayTrimmedStringency = 0;
 
         // strip down results for front end if data is too large
         if ( geneResults.size() > resultsLimit && queryGeneIds != null ) {
             int oldSize = geneResults.size();
+            displayInfo = true;
 
             log.info( "Coex Search for " + searchOptions.getGeneIds().size() + " genes: "
                     + searchOptions.getGeneIds().toString() + " returned " + geneResults.size()
@@ -242,20 +246,17 @@ public class CoexpressionSearchController extends BaseFormController {
 
                 if ( geneResults.size() < resultsLimit ) {
                     log.info( "Breaking out of filter coex results loop after removing edges of stringency:" + i );
+                    displayTrimmedStringency = i;
                     break;
                 }
 
                 strippedGeneResults = new HashSet<CoexpressionValueObjectExt>();
+                displayTrimmedStringency = i;
 
             }
-            
-            
 
             log.info( "Original results size: " + oldSize + " trimmed results size: " + geneResults.size()
                     + "  Total results removed: " + ( oldSize - geneResults.size() ) );
-
-            
-        
         
         }
         
@@ -264,6 +265,10 @@ public class CoexpressionSearchController extends BaseFormController {
         if ( result.getKnownGeneResults() == null || result.getKnownGeneResults().isEmpty() ) {
             result.setErrorState( "Sorry, No genes are currently coexpressed under the selected search conditions " );
             log.info( "No search results for query: " + searchOptions );
+        }
+        
+        if (displayInfo){
+            result.setDisplayInfo( "Results not involving query genes have been removed to a stringency of "+ displayTrimmedStringency+" due to size of graph." );
         }
 
         return result;

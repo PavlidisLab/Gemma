@@ -33,6 +33,7 @@ public class CoexpressionMetaValueObject {
 
     private List<ExpressionExperimentValueObject> datasets;
     private String errorState;
+    private String displayInfo;
     private Collection<CoexpressionDatasetValueObject> knownGeneDatasets;
     private Collection<CoexpressionValueObjectExt> knownGeneResults;
 
@@ -142,6 +143,14 @@ public class CoexpressionMetaValueObject {
             buf.append( "\n" );
         }
         return buf.toString();
+    }
+
+    public void setDisplayInfo( String displayInfo ) {
+        this.displayInfo = displayInfo;
+    }
+
+    public String getDisplayInfo() {
+        return displayInfo;
     }
 
 }
