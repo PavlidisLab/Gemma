@@ -4,7 +4,7 @@ Gemma.CytoscapeSettings = {
 
     backgroundColor: "#FFF7FB",
 
-    //node stuff
+    // node stuff
     labelFontName: 'Monospace',
     labelFontColor: "#252525",
     labelFontColorFade: "#BDBDBD",
@@ -22,13 +22,13 @@ Gemma.CytoscapeSettings = {
     nodeQueryColorTrue: "#E41A1C",
     nodeQueryColorFalse: "#6BAED6",
 
-    //edge stuff
+    // edge stuff
     supportColorBoth: "#CCCCCC",
     supportColorPositive: "#E66101",
     supportColorNegative: "#5E3C99",
-    
+
     selectionGlowColor: "#0000FF",
-    
+
     selectionGlowOpacity: 1
 
 };
@@ -39,19 +39,26 @@ Ext.Panel, {
     title: 'Cytoscape',
 
     layoutIndex: 0,
+    
+    layout: 'fit',
 
     currentResultsStringency: 2,
-    
+
     initialDisplayStringency: 2,
+    
+    currentSpinnerValue: 2,
 
     currentNodeGeneIds: [],
 
     currentQueryGeneIds: [],
 
-    //used to pass a subset of results that meet the stringency threshold to the coexpressionGrid widget displaying the results in a table
+    // used to pass a subset of results that meet the stringency
+    // threshold to the coexpressionGrid widget displaying the
+    // results in a table
     trimmedKnownGeneResults: [],
 
-    //used to apply a filter to the graph to remove nodes when stringency changes
+    // used to apply a filter to the graph to remove nodes when
+    // stringency changes
     trimmedNodeIds: [],
 
     ready: false,
@@ -138,7 +145,6 @@ Ext.Panel, {
                     }]
                 }
 
-
             },
 
             size: {
@@ -168,10 +174,10 @@ Ext.Panel, {
 
             },
 
-            color: Gemma.CytoscapeSettings.nodeColor,                        
-            
+            color: Gemma.CytoscapeSettings.nodeColor,
+
             selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
-            
+
             selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
         },
         edges: {
@@ -188,8 +194,6 @@ Ext.Panel, {
 
             color: {
 
-
-
                 discreteMapper: {
                     attrName: "supportsign",
                     entries: [{
@@ -204,9 +208,9 @@ Ext.Panel, {
                     }]
                 }
             },
-            
+
             selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
-            
+
             selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
         }
     },
@@ -228,7 +232,6 @@ Ext.Panel, {
                         value: 0
                     }]
                 }
-
 
             },
 
@@ -279,9 +282,9 @@ Ext.Panel, {
                     maxAttrValue: 11
                 }
             },
-            
+
             selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
-            
+
             selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
         },
         edges: {
@@ -306,7 +309,6 @@ Ext.Panel, {
 
             color: {
 
-
                 discreteMapper: {
                     attrName: "supportsign",
                     entries: [{
@@ -321,18 +323,13 @@ Ext.Panel, {
                     }]
                 }
             },
-            
-            selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
-            
-            selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
 
+            selectionGlowColor: Gemma.CytoscapeSettings.selectionGlowColor,
+
+            selectionGlowOpacity: Gemma.CytoscapeSettings.selectionGlowOpacity
 
         }
     },
-
-
-
-
 
     initComponent: function () {
 
@@ -348,58 +345,53 @@ Ext.Panel, {
             return 1.05 - data["nodeDegreeBin"] / 10;
 
         };
-        
+
         this.actionsMenu = new Ext.menu.Menu({
             items: [{
-            	itemId: 'extendSelectedNodesButton',
+                itemId: 'extendSelectedNodesButton',
                 text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeText,
                 tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.extendNodeTT,
                 handler: this.extendSelectedNodes,
                 scope: this
             }, {
-            	itemId: 'searchWithSelectedNodesButton',
+                itemId: 'searchWithSelectedNodesButton',
                 text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedText,
-                //icon: '/Gemma/images/icons/picture.png',
+                // icon:
+                // '/Gemma/images/icons/picture.png',
                 tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchWithSelectedTT,
                 handler: this.reRunSearchWithSelectedNodes,
                 scope: this
             }]
         });
-        
-        var actionsButtonHandler = function(){
-        	
-        	
-        	if (this.ready){
-        		
-        		
-        		var nodes = this.visualization.selected("nodes");             		
-        		
-        		
-        		if (nodes.length > 0){
-        			this.actionsMenu.getComponent('extendSelectedNodesButton').setDisabled(false);
-        			this.actionsMenu.getComponent('searchWithSelectedNodesButton').setDisabled(false);
-        			
-        		}
-        		else {
-        			this.actionsMenu.getComponent('extendSelectedNodesButton').setDisabled(true);
-        			this.actionsMenu.getComponent('searchWithSelectedNodesButton').setDisabled(true);
-        		}
-        		
-        	}               	
-        	
-        };
-        
+
+        var actionsButtonHandler = function () {
+
+                if (this.ready) {
+
+                    var nodes = this.visualization.selected("nodes");
+
+                    if (nodes.length > 0) {
+                        this.actionsMenu.getComponent('extendSelectedNodesButton').setDisabled(false);
+                        this.actionsMenu.getComponent('searchWithSelectedNodesButton').setDisabled(false);
+
+                    } else {
+                        this.actionsMenu.getComponent('extendSelectedNodesButton').setDisabled(true);
+                        this.actionsMenu.getComponent('searchWithSelectedNodesButton').setDisabled(true);
+                    }
+
+                }
+
+            };
+
         this.actionsButton = new Ext.Button({
-        	
+
             text: '<b>Actions</b>',
             itemId: 'actionsButton',
             menu: this.actionsMenu
-        	
-        	
-        });
-        
-        this.actionsButton.addListener('mouseover', actionsButtonHandler, this);
 
+        });
+
+        this.actionsButton.addListener('mouseover', actionsButtonHandler, this);
 
         Ext.apply(
         this, {
@@ -425,40 +417,41 @@ Ext.Panel, {
                 fieldLabel: 'Stringency ',
                 value: this.coexCommand.initialDisplayStringency,
                 width: 60,
-                enableKeyEvents : true
+                enableKeyEvents: true
 
             },
-            
-            
+
             {
-	        	xtype  : 'label',
-				
-	        	html   : '<img ext:qtip="'+
-						Gemma.HelpText.WidgetDefaults.CytoscapePanel.stringencySpinnerTT
-	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
-	        	//text   : 'Specificity filter',
-				height : 15
-	        },
+                xtype: 'label',
+
+                html: '<img ext:qtip="'
+                	+ Gemma.HelpText.WidgetDefaults.CytoscapePanel.stringencySpinnerTT
+                	+ '" src="/Gemma/images/icons/question_blue.png"/>',
+                // text : 'Specificity
+                // filter',
+                height: 15
+            },
 
             '->', '-',
             {
                 xtype: 'button',
-                //icon: '/Gemma/images/icons/question_blue.png',
-                text: '<b>Help</b>',                
+                // icon:
+                // '/Gemma/images/icons/question_blue.png',
+                text: '<b>Help</b>',
                 tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.widgetHelpTT,
                 handler: function () {
-                	
-                	var htmlString = '<img src="/Gemma/images/cytoscapehelp.png"/>';
+
+                    var htmlString = '<img src="/Gemma/images/cytoscapehelp.png"/>';
 
                     var win = new Ext.Window({
                         title: 'Help',
-                        height:720,                 
+                        height: 720,
                         plain: true,
                         html: htmlString,
-                        autoScroll:true
+                        autoScroll: true
                     });
-                    win.show();                	
-                    
+                    win.show();
+
                 },
                 scope: this
             }, '->', '-',
@@ -466,7 +459,8 @@ Ext.Panel, {
             {
                 xtype: 'button',
                 text: '<b>Save As</b>',
-                //icon: '/Gemma/images/download.gif',
+                // icon:
+                // '/Gemma/images/download.gif',
                 menu: new Ext.menu.Menu({
                     items: [{
                         text: 'Save as PNG',
@@ -477,17 +471,18 @@ Ext.Panel, {
                 })
             },
 
-
             '->', '-',
 
             {
                 xtype: 'button',
                 text: '<b>Visual Options</b>',
-                //icon: '/Gemma/images/download.gif',
+                // icon:
+                // '/Gemma/images/download.gif',
                 menu: new Ext.menu.Menu({
                     items: [{
                         text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,
-                        //icon: '/Gemma/images/icons/picture.png',
+                        // icon:
+                        // '/Gemma/images/icons/picture.png',
                         tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutTT,
                         handler: this.changeLayout,
                         scope: this
@@ -497,33 +492,50 @@ Ext.Panel, {
 
             '->', '-',
 
-            
-                this.actionsButton
-            ,
-            
-            '->',
-            '-',
+            this.actionsButton,
+
+            '->', '-',
             {
-            	xtype: 'button',
-            	itemId: 'nodeDegreeEmphasis',
-            	text: '<b>'+Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisText+'</b>',
-            	enableToggle: 'true',
-            	pressed: 'true',
-            	handler: this.nodeDegreeEmphasis,
-            	scope: this
-            },
-            {
-	        	xtype  : 'label',
-				
-	        	html   : '<img ext:qtip="'+
-						Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisTT	
-	        			+'" src="/Gemma/images/icons/question_blue.png"/>',
-	        	//text   : 'Specificity filter',
-				height : 15
-	        }          
+                xtype: 'button',
+                itemId: 'nodeDegreeEmphasis',
+                text: '<b>'+Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisText+'</b>',
+
+                enableToggle: 'true',
+                pressed: 'true',
+                handler: this.nodeDegreeEmphasis,
+                scope: this
+            }, {
+                xtype: 'label',
+
+                html: '<img ext:qtip="' +
+                Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisTT 
+                + '" src="/Gemma/images/icons/question_blue.png"/>',
+                // text : 'Specificity
+                // filter',
+                height: 15
+            }
 
             ],
-            //end tbar
+            // end tbar
+            bbar: [{
+                xtype: 'tbtext',
+                text: '',
+                itemId: 'bbarStatus'
+            },'->', {
+				xtype : 'button',
+				icon: "/Gemma/images/icons/cross.png",
+				itemId: 'bbarClearButton',
+				handler : function(){					
+					this.currentbbarText="";
+					this.getBottomToolbar().hide();
+					this.doLayout();
+					
+				},
+				scope : this
+			}
+
+            ],
+
             margins: {
                 top: 0,
                 right: 0,
@@ -534,9 +546,7 @@ Ext.Panel, {
             items: [
 
             {
-                xtype: 'flash',
-                height: 555,
-                width: 898,
+                xtype: 'flash',                
 
                 id: 'cytoscapeweb',
                 listeners: {
@@ -547,34 +557,49 @@ Ext.Panel, {
                             if (this.coexGridRef) {
 
                                 if (!this.loadMask) {
-                                    this.loadMask = new Ext.LoadMask(this.getEl(), {
+                                    this.loadMask = new Ext.LoadMask(
+                                    this.getEl(), {
                                         msg: Gemma.StatusText.Searching.analysisResults,
                                         msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
                                     });
                                 }
                                 this.loadMask.show();
-                               
+
                                 this.currentNodeGeneIds = [];
 
                                 this.currentQueryGeneIds = [];
 
                                 var results = {};
 
-                                Ext.apply(results, {
+                                Ext.apply(
+                                results, {
                                     queryGenes: this.queryGenes,
                                     knownGeneResults: this.knownGeneResults
                                 });
                                 results.queryGenes = this.queryGenes;
-                                results.knownGeneResults = this.knownGeneResults;                                
-                                
+                                results.knownGeneResults = this.knownGeneResults;
+
                                 var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                            	
-                            	if (spinner.getValue() < this.coexCommand.displayStringency){
-                            		spinner.setValue(this.coexCommand.displayStringency);
-                            	}
-                            	
-                            	//spinner.minValue = this.currentResultsStringency;
-                                
+
+                                if (this.coexCommand.displayStringency > Gemma.MIN_STRINGENCY) {
+                                    spinner.setValue(this.coexCommand.displayStringency);
+                                    
+                                    var bbarText = this.getBottomToolbar().getComponent('bbarStatus');
+                                    
+                                    this.currentbbarText = "Display Stringency set to "+this.coexCommand.displayStringency+" based on number of experiments chosen.";
+                                    
+                                    bbarText.setText(this.currentbbarText);                                                                      
+                                                                        
+                                }
+                                else{
+                                	spinner.setValue(Gemma.MIN_STRINGENCY);
+                                	this.getBottomToolbar().hide();
+                					this.doLayout();
+                                }
+
+                                // spinner.minValue
+                                // =
+                                // this.currentResultsStringency;
                                 this.initialCoexSearchCallback(results);
 
                             }
@@ -589,7 +614,6 @@ Ext.Panel, {
             ]
         });
 
-
         vis.panelRef = this;
 
         vis.ready(function () {
@@ -597,58 +621,69 @@ Ext.Panel, {
             vis.nodeTooltipsEnabled(true);
 
             vis.edgeTooltipsEnabled(true);
-            
+
             if (!vis.panelRef.getTopToolbar().getComponent('stringencySpinner').hasListener('specialkey')) {
 
                 vis.panelRef.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
-                               
+
                     if (e.getKey() == e.ENTER) {
-                    	var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
+                        var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
 
-                    	//prevent spinner from going below 2  by manual entry
-                    	if (spinner.getValue() < 2){
-                    		spinner.setValue(2);
-                    	}
-                    	
+                        // prevent
+                        // spinner from
+                        // going below 2
+                        // by manual
+                        // entry
+                        if (spinner.getValue() < 2) {
+                            spinner.setValue(2);
+                        }
+
                         if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
+                        	
+                        	this.currentSpinnerValue = spinner.getValue();
 
-                            var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
+                            var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(
+                            vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
                             vis.panelRef.trimmedKnownGeneResults = trimmed.trimmedKnownGeneResults;
                             vis.panelRef.trimmedNodeIds = trimmed.trimmedNodeIds;
 
-                            vis.panelRef.coexGridRef.cytoscapeUpdate(spinner.getValue(), vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults);
+                            vis.panelRef.coexGridRef.cytoscapeUpdate(
+                            spinner.getValue(), vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults);
 
-
-                            vis.filter("nodes", function (node) {
+                            vis.filter("nodes", function (
+                            node) {
 
                                 return vis.panelRef.trimmedNodeIds.indexOf(node.data.geneid) !== -1;
 
                             });
 
-                            vis.filter("edges", function (edge) {
+                            vis.filter("edges", function (
+                            edge) {
 
                                 return edge.data.support >= vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
 
                             });
-                            
-                        }
-                        else { //new search 
-                        	
-                        	Ext.Msg.confirm('New Search', Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (btn) {
+
+                        } else { // new
+                            // search
+                            Ext.Msg.confirm('New Search', Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (
+                            btn) {
 
                                 if (btn == 'yes') {
                                 	
-                                	var displayStringency = spinner.getValue();
-                                	var resultsStringency = spinner.getValue();
-                                
-                                	if (displayStringency > 5){
-                						resultsStringency = displayStringency - Math.round(displayStringency/4);
-                					}
-                                	
+                                	this.currentSpinnerValue = spinner.getValue();
+
+                                    var displayStringency = spinner.getValue();
+                                    var resultsStringency = spinner.getValue();
+
+                                    if (displayStringency > 5) {
+                                        resultsStringency = displayStringency - Math.round(displayStringency / 4);
+                                    }
+
                                     Ext.apply(
                                     vis.panelRef.coexCommand, {
-                                    	stringency: resultsStringency,
-                                    	displayStringency : displayStringency,
+                                        stringency: resultsStringency,
+                                        displayStringency: displayStringency,
                                         geneIds: vis.panelRef.currentQueryGeneIds,
                                         queryGenesOnly: false
                                     });
@@ -659,74 +694,78 @@ Ext.Panel, {
                                         callback: vis.panelRef.initialCoexSearchCallback.createDelegate(vis.panelRef)
 
                                     });
-                                   
-                                    
+
                                 } else {
-                                	spinner.setValue(spinner.getValue()+1);
+                                    spinner.setValue(this.currentSpinnerValue);
                                 }
-                            },this);
-                        	                    	
-                            
+                            }, this);
+
                         }
                     }
-         
+
                 }, this);
             }
-
 
             if (!vis.panelRef.getTopToolbar().getComponent('stringencySpinner').hasListener('spin')) {
 
                 vis.panelRef.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
 
                     var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
-                    
+
                     /*
-                    //prevent spinner from going below currentResultsStringency
-                    if (spinner.getValue() < vis.panelRef.currentResultsStringency){
-                		spinner.setValue(vis.panelRef.currentResultsStringency);
-                	}
-*/
+                     * //prevent spinner
+                     * from going below
+                     * currentResultsStringency
+                     * if
+                     * (spinner.getValue() <
+                     * vis.panelRef.currentResultsStringency){
+                     * spinner.setValue(vis.panelRef.currentResultsStringency); }
+                     */
 
                     if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
+                    	
+                    	this.currentSpinnerValue = spinner.getValue();
 
-                        var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
+                        var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(
+                        vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
                         vis.panelRef.trimmedKnownGeneResults = trimmed.trimmedKnownGeneResults;
                         vis.panelRef.trimmedNodeIds = trimmed.trimmedNodeIds;
 
-                        vis.panelRef.coexGridRef.cytoscapeUpdate(spinner.getValue(), vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults);
+                        vis.panelRef.coexGridRef.cytoscapeUpdate(
+                        spinner.getValue(), vis.panelRef.queryGenes.length, vis.panelRef.trimmedKnownGeneResults);
 
-                        vis.filter("nodes", function (node) {
+                        vis.filter("nodes", function (
+                        node) {
 
                             return vis.panelRef.trimmedNodeIds.indexOf(node.data.geneid) !== -1;
 
-
                         });
 
-                        vis.filter("edges", function (edge) {
+                        vis.filter("edges", function (
+                        edge) {
 
                             return edge.data.support >= vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue();
 
                         });
 
-
-                    }
-                    else { //new search 
-                    	
-                    	Ext.Msg.confirm('New Search', Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (btn) {
+                    } else { // new
+                        // search
+                        Ext.Msg.confirm('New Search',Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (
+                        btn) {
 
                             if (btn == 'yes') {
-                            	
-                            	var displayStringency = spinner.getValue();
-                            	var resultsStringency = spinner.getValue();
-                            
-                            	if (displayStringency > 5){
-            						resultsStringency = displayStringency - Math.round(displayStringency/4);
-            					}
-                            	
+
+                                var displayStringency = spinner.getValue();
+                                var resultsStringency = spinner.getValue();
+
+                                if (displayStringency > 5) {
+                                    resultsStringency = displayStringency - Math.round(displayStringency / 4);
+                                }
+
                                 Ext.apply(
                                 vis.panelRef.coexCommand, {
-                                	stringency: resultsStringency,
-                                	displayStringency : displayStringency,
+                                    stringency: resultsStringency,
+                                    displayStringency: displayStringency,
                                     geneIds: vis.panelRef.currentQueryGeneIds,
                                     queryGenesOnly: false
                                 });
@@ -737,86 +776,76 @@ Ext.Panel, {
                                     callback: vis.panelRef.initialCoexSearchCallback.createDelegate(vis.panelRef)
 
                                 });
-                               
-                                
+
                             } else {
-                            	spinner.setValue(spinner.getValue()+1);
+                                spinner.setValue(spinner.getValue() + 1);
                             }
-                        },this);
-                    	                    	
-                        
+                        }, this);
+
                     }
 
                 }, this);
 
-
             }
 
-/*
-            vis.addContextMenuItem("Export Graph as graphml", "none", function () {
-
-
-                var htmlString = vis.graphml();
-
-                var win = new Ext.Window({
-                    title: 'graphml',
-                    height: 600,
-                    width: 800,
-                    plain: true,
-                    html: htmlString
-                });
-                win.show();
-
-
-            });
-
-            vis.addContextMenuItem("Export Graph as sif", "none", function () {
-
-                var htmlString = vis.sif();
-
-                var win = new Ext.Window({
-                    title: 'sif',
-                    height: 600,
-                    width: 800,
-                    plain: true,
-                    html: htmlString
-                });
-                win.show();
-
-
-            });
-            vis.addContextMenuItem("Export Graph as xgmml", "none", function () {
-
-                var htmlString = vis.xgmml();
-
-                var win = new Ext.Window({
-                    title: 'xgmml',
-                    height: 600,
-                    width: 800,
-                    plain: true,
-                    html: htmlString
-                });
-                win.show();
-
-
-            });
-*/
+            /*
+             * vis.addContextMenuItem("Export Graph as
+             * graphml", "none", function () {
+             * 
+             * 
+             * var htmlString = vis.graphml();
+             * 
+             * var win = new Ext.Window({ title:
+             * 'graphml', height: 600, width: 800,
+             * plain: true, html: htmlString });
+             * win.show();
+             * 
+             * 
+             * });
+             * 
+             * vis.addContextMenuItem("Export Graph as
+             * sif", "none", function () {
+             * 
+             * var htmlString = vis.sif();
+             * 
+             * var win = new Ext.Window({ title: 'sif',
+             * height: 600, width: 800, plain: true,
+             * html: htmlString }); win.show();
+             * 
+             * 
+             * }); vis.addContextMenuItem("Export Graph
+             * as xgmml", "none", function () {
+             * 
+             * var htmlString = vis.xgmml();
+             * 
+             * var win = new Ext.Window({ title:
+             * 'xgmml', height: 600, width: 800, plain:
+             * true, html: htmlString }); win.show();
+             * 
+             * 
+             * });
+             */
 
             vis.panelRef.ready = true;
-            
-            
-            //filter visable results based on initialDisplayStringency
-            if (vis.panelRef.initialDisplayStringency > vis.panelRef.currentResultsStringency){
-            	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.initialDisplayStringency);
-            	vis.panelRef.stringencyUpdate(vis.panelRef.initialDisplayStringency, trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
-            	            	
-            	//update the grid with trimmed data (underlying data in coexGridRef has already been set)
-                vis.panelRef.coexGridRef.cytoscapeUpdate(vis.panelRef.initialDisplayStringency, vis.panelRef.currentQueryGeneIds.length, trimmed.trimmedKnownGeneResults, this.currentResultsStringency);
-                
+
+            // filter visable results based on
+            // initialDisplayStringency
+            if (vis.panelRef.initialDisplayStringency > vis.panelRef.currentResultsStringency) {
+                var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(
+                vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.initialDisplayStringency);
+                vis.panelRef.stringencyUpdate(
+                vis.panelRef.initialDisplayStringency, trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+
+                // update the grid with trimmed data
+                // (underlying data in coexGridRef has
+                // already been set)
+                vis.panelRef.coexGridRef.cytoscapeUpdate(
+                vis.panelRef.initialDisplayStringency, vis.panelRef.currentQueryGeneIds.length, trimmed.trimmedKnownGeneResults, this.currentResultsStringency);
+
             }
-            
+
         });
-        //end vis.ready()        
+        // end vis.ready()
         Ext.apply(this, {
             visualization: vis
         });
@@ -824,9 +853,8 @@ Ext.Panel, {
         Gemma.CytoscapePanel.superclass.initComponent.apply(
         this, arguments);
 
-
     },
-        
+
     exportPNG: function () {
 
         var htmlString = '<img src="data:image/png;base64,' + this.visualization.png() + '"/>';
@@ -837,11 +865,10 @@ Ext.Panel, {
             html: htmlString,
             height: 700,
             width: 900,
-            autoScroll:true
-		    
+            autoScroll: true
+
         });
         win.show();
-
 
     },
 
@@ -873,22 +900,26 @@ Ext.Panel, {
     reRunSearchWithSelectedNodes: function () {
 
         if (this.ready) {
-        	
-        	this.clearError();
+
+            this.clearError();
 
             var selectedNodes = this.visualization.selected("nodes");
 
             if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-                
+            	
+            	this.getBottomToolbar().setVisible(false);
+            	this.doLayout();
+            	this.currentbbarText = '';
+
                 var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                
+
                 var displayStringency = spinner.getValue();
                 var resultsStringency = spinner.getValue();
-                
-                if (displayStringency > 5){
-					resultsStringency = displayStringency - Math.round(displayStringency/4);
-				}
-                
+
+                if (displayStringency > 5) {
+                    resultsStringency = displayStringency - Math.round(displayStringency / 4);
+                }
+
                 var selectedNodesGeneIdArray = [];
 
                 var sNodesLength = selectedNodes.length;
@@ -904,15 +935,14 @@ Ext.Panel, {
 
                 this.updateSearchFormGenes(selectedNodesGeneIdArray);
 
-                Ext.apply(
-                this.coexCommand, {
+                Ext.apply(this.coexCommand, {
                     stringency: resultsStringency,
-                    displayStringency : displayStringency,
-                    //Change to default or 'heuristic' based value
+                    displayStringency: displayStringency,
+                    // Change to default or 'heuristic' based
+                    // value
                     geneIds: selectedNodesGeneIdArray,
                     queryGenesOnly: false
                 });
-                
 
                 this.loadMask.show();
                 ExtCoexpressionSearchController.doSearchQuick2(
@@ -921,41 +951,43 @@ Ext.Panel, {
 
                 });
 
-
             } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
-                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
-					String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
+                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle,
+                		String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
 
-            } else if(selectedNodes.length == 0) {
+            } else if (selectedNodes.length == 0) {
 
                 Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
-						Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
+                		Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
             }
 
         }
     },
 
-
     extendSelectedNodes: function () {
 
         if (this.ready) {
         	
-        	this.clearError();
+            this.clearError();
 
             var selectedNodes = this.visualization.selected("nodes");
 
             if (selectedNodes.length > 0 && selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
             	
+            	this.getBottomToolbar().setVisible(false);
+            	this.doLayout();
+            	this.currentbbarText = '';
+
                 if (this.currentQueryGeneIds.length + selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-                    
+
                     var spinner = this.getTopToolbar().getComponent('stringencySpinner');
                     var displayStringency = spinner.getValue();
-                	var resultsStringency = spinner.getValue();
-                
-                	if (displayStringency > 5){
-						resultsStringency = displayStringency - Math.round(displayStringency/4);
-					}
+                    var resultsStringency = spinner.getValue();
+
+                    if (displayStringency > 5) {
+                        resultsStringency = displayStringency - Math.round(displayStringency / 4);
+                    }
 
                     var extendedNodesGeneIdArray = [];
                     var sNodesLength = selectedNodes.length;
@@ -971,10 +1003,9 @@ Ext.Panel, {
 
                     this.updateSearchFormGenes(this.currentQueryGeneIds);
 
-                    Ext.apply(
-                    this.coexCommand, {
-                    	stringency: resultsStringency,
-                    	displayStringency : displayStringency,
+                    Ext.apply(this.coexCommand, {
+                        stringency: resultsStringency,
+                        displayStringency: displayStringency,
                         geneIds: extendedNodesGeneIdArray,
                         queryGenesOnly: false
                     });
@@ -989,25 +1020,25 @@ Ext.Panel, {
                 } else {
 
                     Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
-						String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY),
-					function (btn) {
+    						String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY), function (btn) {
 
                         if (btn == 'yes') {
-                           
+
                             var spinner = this.getTopToolbar().getComponent('stringencySpinner');
                             var displayStringency = spinner.getValue();
-                			var resultsStringency = spinner.getValue();
-                
-                			if (displayStringency > 5){
-								resultsStringency = displayStringency - Math.round(displayStringency/4);
-							}
+                            var resultsStringency = spinner.getValue();
+
+                            if (displayStringency > 5) {
+                                resultsStringency = displayStringency - Math.round(displayStringency / 4);
+                            }
 
                             var extendedNodesGeneIdArray = [];
                             var sNodesLength = selectedNodes.length;
 
-                            //make room in currentQueryGeneIds for new genes
+                            // make room in
+                            // currentQueryGeneIds
+                            // for new genes
                             this.currentQueryGeneIds = this.currentQueryGeneIds.splice(this.currentQueryGeneIds.length - (Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY - selectedNodes.length));
-
 
                             var i;
                             for (i = 0; i < sNodesLength; i++) {
@@ -1022,8 +1053,8 @@ Ext.Panel, {
 
                             Ext.apply(
                             this.coexCommand, {
-                            	stringency: resultsStringency,
-                    			displayStringency : displayStringency,
+                                stringency: resultsStringency,
+                                displayStringency: displayStringency,
                                 geneIds: extendedNodesGeneIdArray,
                                 queryGenesOnly: false
                             });
@@ -1035,17 +1066,18 @@ Ext.Panel, {
 
                             });
                         }
-                    },this);
+                    }, this);
                 }
 
-
             } else if (selectedNodes.length > Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
-                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+
+            	Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
 						String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooMany, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY));
 
             } else {
-                Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
-						Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
+
+            	 Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+ 						Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooFew);
             }
 
         }
@@ -1066,10 +1098,12 @@ Ext.Panel, {
 
         return tString;
     },
-    //inputs should be two node degrees between 0 and 1, if null(missing data) return 1 as nodes/edges with 1 fade into the background
+    // inputs should be two node degrees between 0 and 1, if
+    // null(missing data) return 1 as nodes/edges with 1 fade
+    // into the background
     getMaxWithNull: function (n1, n2) {
 
-        //missing data check
+        // missing data check
         if (n1 == null || n2 == null) {
             return 1;
         }
@@ -1087,79 +1121,84 @@ Ext.Panel, {
 
     },
 
-
-
     nodeDegreeBinMapper: function (nodeDegree) {
 
-        //no data for some genes 
+        // no data for some genes
         if (nodeDegree == null) {
             return null;
         }
         return nodeDegree * 10;
-/*
-        //this should stay zero for the opacity use
-        var lowVis = 0;
-        if (nodeDegree > 0.9989) {
-            return lowVis + 10;
-        } else if (nodeDegree > 0.9899) {
-            return lowVis + 9;
-        } else if (nodeDegree > 0.8999) {
-            return lowVis + 8;
-        } else if (nodeDegree > 0.8499) {
-            return lowVis + 7;
-        } else if (nodeDegree > 0.7999) {
-            return lowVis + 6;
-        } else if (nodeDegree > 0.1999) {
-            //this should be bland colour
-            return lowVis + 5;
-        } else if (nodeDegree > 0.1499) {
-            return lowVis + 4;
-        } else if (nodeDegree > 0.0999) {
-            return lowVis + 4;
-        } else if (nodeDegree > 0.0499) {
-            return lowVis + 3;
-        } else if (nodeDegree > 0.0099) {
-            return lowVis + 2;
-        } else if (nodeDegree > 0.0009) {
-            return lowVis + 1;
-        } else {
-            return lowVis;
-        }
-
-*/
+        /*
+         * //this should stay zero for the opacity use var
+         * lowVis = 0; if (nodeDegree > 0.9989) { return lowVis +
+         * 10; } else if (nodeDegree > 0.9899) { return lowVis +
+         * 9; } else if (nodeDegree > 0.8999) { return lowVis +
+         * 8; } else if (nodeDegree > 0.8499) { return lowVis +
+         * 7; } else if (nodeDegree > 0.7999) { return lowVis +
+         * 6; } else if (nodeDegree > 0.1999) { //this should be
+         * bland colour return lowVis + 5; } else if (nodeDegree >
+         * 0.1499) { return lowVis + 4; } else if (nodeDegree >
+         * 0.0999) { return lowVis + 4; } else if (nodeDegree >
+         * 0.0499) { return lowVis + 3; } else if (nodeDegree >
+         * 0.0099) { return lowVis + 2; } else if (nodeDegree >
+         * 0.0009) { return lowVis + 1; } else { return lowVis; }
+         * 
+         */
     },
 
     completeCoexSearchCallback: function (result) {
 
         this.queryGenes = result.queryGenes;
 
-        this.knownGeneResults = result.knownGeneResults;
+        //get rid of duplicates
+        var duplicatesRemoved = Gemma.CoexValueObjectUtil.removeDuplicates(result.knownGeneResults);
+
+
+        this.knownGeneResults = duplicatesRemoved;
         var spinner = this.getTopToolbar().getComponent('stringencySpinner');
 
-        //update the grid
-        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
-        //update underlying data 
+        // update underlying data
         this.coexGridRef.knownGeneResults = this.knownGeneResults;
         this.coexGridRef.currentQueryGeneIds = this.currentQueryGeneIds;
+
+        // update the grid
+        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
+        
+        this.currentSpinnerValue = spinner.getValue();
 
         this.dataJSON = this.constructDataJSON(this.queryGenes, this.knownGeneResults);
 
         this.drawGraph();
-       
-        this.loadMask.hide();
         
+        if (result.displayInfo){        
+        	var bbarText = this.getBottomToolbar().getComponent('bbarStatus');        	
+        	
+        	if (this.currentbbarText){        	
+        		bbarText.setText(this.currentbbarText + ' ' +result.displayInfo);
+        	}
+        	else{
+        		bbarText.setText(result.displayInfo);
+        	}
+        	if (!this.getBottomToolbar().isVisible()){
+        		this.getBottomToolbar().setVisible(true);
+        		this.doLayout();
+        	}
+        	
+        }
+
+        this.loadMask.hide();
 
     },
 
     initialCoexSearchCallback: function (result) {
-    	
-    	this.currentResultsStringency = this.coexCommand.stringency;
+
+        this.currentResultsStringency = this.coexCommand.stringency;
         this.initialDisplayStringency = this.coexCommand.displayStringency;
-        
+
         this.currentNodeGeneIds = [];
         var qlength = result.queryGenes.length;
 
-        //populate geneid array for complete graph
+        // populate geneid array for complete graph
         var i;
 
         for (i = 0; i < qlength; i++) {
@@ -1184,8 +1223,7 @@ Ext.Panel, {
 
         if (!this.coexCommand.queryGenesOnly && kglength > 0) {
 
-            Ext.apply(
-            this.coexCommand, {
+            Ext.apply(this.coexCommand, {
                 geneIds: this.currentNodeGeneIds,
                 queryGenesOnly: true
             });
@@ -1203,8 +1241,8 @@ Ext.Panel, {
     },
 
     extendThisNodeInitialCoexSearchCallback: function (result) {
-    	
-    	this.currentResultsStringency = this.coexCommand.stringency;
+
+        this.currentResultsStringency = this.coexCommand.stringency;
         this.initialDisplayStringency = this.coexCommand.displayStringency;
 
         var qgenes = result.queryGenes;
@@ -1224,9 +1262,9 @@ Ext.Panel, {
         }
 
         if (!completeSearchFlag) {
-			Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
-						Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusNoMoreResults);
-						
+        	Ext.Msg.alert(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, 
+					Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusNoMoreResults);
+					
             this.loadMask.hide();
         } else {
 
@@ -1235,7 +1273,8 @@ Ext.Panel, {
                 queryGenesOnly: true
             });
 
-            ExtCoexpressionSearchController.doSearchQuick2Complete(this.coexCommand, this.currentQueryGeneIds, {
+            ExtCoexpressionSearchController.doSearchQuick2Complete(
+            this.coexCommand, this.currentQueryGeneIds, {
                 callback: this.extendThisNodeCompleteCoexSearchCallback.createDelegate(this)
 
             });
@@ -1246,23 +1285,46 @@ Ext.Panel, {
     extendThisNodeCompleteCoexSearchCallback: function (result) {
 
         this.queryGenes = result.queryGenes;
-        this.knownGeneResults = result.knownGeneResults;
+
+        //get rid of duplicates
+        var duplicatesRemoved = Gemma.CoexValueObjectUtil.removeDuplicates(result.knownGeneResults);
+
+        this.knownGeneResults = duplicatesRemoved;
 
         var spinner = this.getTopToolbar().getComponent('stringencySpinner');
 
-        //update the grid
-        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
-        //update underlying data because of new results
+        // update underlying data because of new results
         this.coexGridRef.knownGeneResults = this.knownGeneResults;
         this.coexGridRef.currentQueryGeneIds = this.currentQueryGeneIds;
-     
-        this.dataJSON = this.constructDataJSON(result.queryGenes, result.knownGeneResults);
+
+        // update the grid
+        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
+        
+        this.currentSpinnerValue = spinner.getValue();
+
+        this.dataJSON = this.constructDataJSON(
+        result.queryGenes, result.knownGeneResults);
 
         this.loadMask.hide();
 
         this.drawGraph();
+        
+        if (result.displayInfo){        
+        	var bbarText = this.getBottomToolbar().getComponent('bbarStatus');        	
+        	
+        	if (this.currentbbarText){        	
+        		bbarText.setText(this.currentbbarText + ' ' +result.displayInfo);
+        	}
+        	else{
+        		bbarText.setText(result.displayInfo);
+        	}
+        	if (!this.getBottomToolbar().isVisible()){
+        		this.getBottomToolbar().setVisible(true);
+        		this.doLayout();
+        	}
+        	
+        }
     },
-
 
     constructDataJSON: function (qgenes, knowngenes) {
 
@@ -1270,7 +1332,7 @@ Ext.Panel, {
 
     },
 
-    //always send in qgenes
+    // always send in qgenes
     constructDataJSONFilter: function (qgenes, knowngenes, filterCurrentResults, filterStringency) {
 
         var data = {
@@ -1278,16 +1340,20 @@ Ext.Panel, {
             edges: []
         }
 
-        //helper array to prevent duplicate nodes from being entered
+        // helper array to prevent duplicate nodes from being
+        // entered
         var graphNodeIds = [];
 
         var edgeSet = [];
 
         var kglength = knowngenes.length;
-        //populate node data plus populate edge data
+        // populate node data plus populate edge data
         for (i = 0; i < kglength; i++) {
 
-            //if not filtering go in, or if filtering: go in only if the query or known gene is contained in the original query geneids AND the stringency is >= the filter stringency
+            // if not filtering go in, or if filtering: go in
+            // only if the query or known gene is contained in
+            // the original query geneids AND the stringency is
+            // >= the filter stringency
             if (!filterCurrentResults || ((this.currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) !== -1 || (this.currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) !== -1)) && (knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency))
 
             ) {
@@ -1313,7 +1379,6 @@ Ext.Panel, {
 
                     graphNodeIds.push(knowngenes[i].foundGene.id);
 
-
                 }
 
                 if (graphNodeIds.indexOf(knowngenes[i].queryGene.id) === -1) {
@@ -1337,7 +1402,6 @@ Ext.Panel, {
 
                     graphNodeIds.push(knowngenes[i].queryGene.id);
 
-
                 }
 
                 var support;
@@ -1353,7 +1417,7 @@ Ext.Panel, {
                     support = knowngenes[i].negSupp;
                     supportsign = "negative";
                 }
-                //double edge check
+                // double edge check
                 if (edgeSet.indexOf(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol) == -1 && edgeSet.indexOf(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol) == -1) {
 
                     data.edges.push({
@@ -1364,31 +1428,37 @@ Ext.Panel, {
                         negativesupport: knowngenes[i].negSupp,
                         support: support,
                         supportsign: supportsign,
-                        nodeDegreeBin: this.nodeDegreeBinMapper(this.getMaxWithNull(knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
+                        nodeDegreeBin: this.nodeDegreeBinMapper(this.getMaxWithNull(
+                        knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
                     });
 
                     edgeSet.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
-                    edgeSet.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol)
+                    edgeSet.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol);
 
                 }
 
-            } //end if(!filterResults
+            } // end if(!filterResults
         } // end for (<kglength)
-        //if we are filtering, we need to loop through again to add edges that we missed the first time (because we were unsure whether both nodes would be in the graph)
+        // if we are filtering, we need to loop through again to
+        // add edges that we missed the first time (because we
+        // were unsure whether both nodes would be in the graph)
         if (filterCurrentResults) {
 
             var completeGraphEdges = [];
 
             for (i = 0; i < kglength; i++) {
 
-                //if both nodes of the edge are in the graph, and it meets the stringency threshold, and neither of the nodes are query genes(because there edges have already been added) 
+                // if both nodes of the edge are in the graph,
+                // and it meets the stringency threshold, and
+                // neither of the nodes are query genes(because
+                // there edges have already been added)
                 if (graphNodeIds.indexOf(knowngenes[i].foundGene.id) !== -1 && graphNodeIds.indexOf(knowngenes[i].queryGene.id) !== -1 && (knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency) && this.currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) === -1 && this.currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) === -1) {
-
 
                     var support;
                     var supportsign;
                     if (knowngenes[i].posSupp >= filterStringency && knowngenes[i].negSupp >= filterStringency) {
-                        support = Math.max(knowngenes[i].posSupp, knowngenes[i].negSupp);
+                        support = Math.max(
+                        knowngenes[i].posSupp, knowngenes[i].negSupp);
                         supportsign = "both";
 
                     } else if (knowngenes[i].posSupp >= filterStringency) {
@@ -1407,7 +1477,8 @@ Ext.Panel, {
                         negativesupport: knowngenes[i].negSupp,
                         support: support,
                         supportsign: supportsign,
-                        nodeDegreeBin: this.nodeDegreeBinMapper(this.getMaxWithNull(knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
+                        nodeDegreeBin: this.nodeDegreeBinMapper(this.getMaxWithNull(
+                        knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
                     });
 
                     completeGraphEdges.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
@@ -1415,46 +1486,40 @@ Ext.Panel, {
 
                 }
 
-
             } // end for (<kglength)
         }
 
         var qlength = qgenes.length;
 
         var isQueryGene = false;
-/*//take this out for now, it just makes the graph look bad to have these orphaned nodes sitting around
-        //add query gene nodes NOT in knowngenes, node degree set to zero
-        var i;
-        for (i = 0; i < qlength; i++) {
-
-            if (graphNodeIds.indexOf(qgenes[i].id) === -1) {
-            	
-                //check if this gene was part of current/previous query
-                if (this.currentQueryGeneIds.indexOf(qgenes[i].id) !== -1) {
-                    isQueryGene = true;
-                }
-
-                if (!filterCurrentResults || this.currentQueryGeneIds.indexOf(qgenes[i].id) !== -1) {
-
-                    data.nodes.push({
-                        id: qgenes[i].officialSymbol,
-                        label: qgenes[i].officialSymbol,
-                        geneid: qgenes[i].id,
-                        queryflag: isQueryGene,
-                        officialName: this.ttSubstring(qgenes[i].officialName),
-                        ncbiId: qgenes[i].ncbiId,
-                        nodeDegreeBin: 0,
-                        nodeDegree: 0
-                    });
-
-                    graphNodeIds.push(qgenes[i].id);
-
-                }
-
-                isQueryGene = false;
-            }
-        }
-*/
+        /*
+         * //take this out for now, it just makes the graph look
+         * bad to have these orphaned nodes sitting around //add
+         * query gene nodes NOT in knowngenes, node degree set
+         * to zero var i; for (i = 0; i < qlength; i++) {
+         * 
+         * if (graphNodeIds.indexOf(qgenes[i].id) === -1) {
+         * 
+         * //check if this gene was part of current/previous
+         * query if
+         * (this.currentQueryGeneIds.indexOf(qgenes[i].id) !==
+         * -1) { isQueryGene = true; }
+         * 
+         * if (!filterCurrentResults ||
+         * this.currentQueryGeneIds.indexOf(qgenes[i].id) !==
+         * -1) {
+         * 
+         * data.nodes.push({ id: qgenes[i].officialSymbol,
+         * label: qgenes[i].officialSymbol, geneid:
+         * qgenes[i].id, queryflag: isQueryGene, officialName:
+         * this.ttSubstring(qgenes[i].officialName), ncbiId:
+         * qgenes[i].ncbiId, nodeDegreeBin: 0, nodeDegree: 0 });
+         * 
+         * graphNodeIds.push(qgenes[i].id);
+         *  }
+         * 
+         * isQueryGene = false; } }
+         */
         this.currentNodeGeneIds = graphNodeIds;
 
         return data;
@@ -1478,25 +1543,23 @@ Ext.Panel, {
             layout: "ForceDirected"
         });
 
-
-
     },
-    
-    clearError: function (){
-    	
-    	if (Ext.get("analysis-results-search-form-messages")) {
-    		Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
-    	}
-    	
+
+    clearError: function () {
+
+        if (Ext.get("analysis-results-search-form-messages")) {
+            Ext.DomHelper.overwrite("analysis-results-search-form-messages", "");
+        }
+
     },
 
     updateSearchFormGenes: function (geneIds) {
 
-        //clear current
+        // clear current
         this.searchPanelRef.geneChoosers.removeAll();
-        //add new genesearchandpreview
+        // add new genesearchandpreview
         var geneChooser = this.searchPanelRef.addGeneChooser();
-       
+
         var genesToPreview = [];
         var genesToPreviewIds = [];
 
@@ -1504,7 +1567,6 @@ Ext.Panel, {
 
         var kglength = knowngenes.length;
         for (i = 0; i < kglength; i++) {
-
 
             if (genesToPreviewIds.indexOf(knowngenes[i].foundGene.id) === -1 && geneIds.indexOf(knowngenes[i].foundGene.id) !== -1) {
 
@@ -1519,14 +1581,18 @@ Ext.Panel, {
 
             }
         } // end for (<kglength)
-        //add new genes
-        geneChooser.getGenesFromGeneValueObjects(genesToPreview, genesToPreviewIds, this.taxonId, this.taxonName);
-
+        // add new genes
+        geneChooser.getGenesFromGeneValueObjects(
+        genesToPreview, genesToPreviewIds, this.taxonId, this.taxonName);
 
     },
 
     stringencyUpdate: function (stringency, trimmedKnownGeneResults, trimmedNodeIds) {
-      
+
+        if (this.getTopToolbar()) {
+            this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
+
+        }
 
         this.trimmedKnownGeneResults = trimmedKnownGeneResults;
         this.trimmedNodeIds = trimmedNodeIds;
@@ -1535,11 +1601,9 @@ Ext.Panel, {
 
             return this.trimmedNodeIds.indexOf(node.data.geneid) !== -1;
 
-
         };
 
         this.visualization.filter("nodes", filterFunctionNodes.createDelegate(this));
-
 
         filterFunctionEdges = function (edge) {
 
@@ -1550,7 +1614,5 @@ Ext.Panel, {
         this.visualization.filter("edges", filterFunctionEdges.createDelegate(this));
 
     }
-
-
 
 });
