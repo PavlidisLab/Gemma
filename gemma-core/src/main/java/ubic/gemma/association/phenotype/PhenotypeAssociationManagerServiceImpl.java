@@ -38,7 +38,6 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
-import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
@@ -541,7 +540,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // the pudmedId doesn't exists in PudMed
             if ( bibliographicReference == null ) {
-                throw new EntityNotFoundException( "Could not locate reference with pubmed id=" + pubMedId );
+                return null;
             }
         }
 
