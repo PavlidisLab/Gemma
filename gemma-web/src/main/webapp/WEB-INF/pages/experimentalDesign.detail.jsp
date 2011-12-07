@@ -20,7 +20,7 @@
 
 <div id="messages" style="margin: 10px; width: 400px"></div>
 
-<div style="padding: 2px; margin-bottom: 10px;">
+<div style="padding-left: 20px; margin-bottom: 10px;">
 	<h2>
 		<fmt:message key="experimentalDesign.details" />
 		for
