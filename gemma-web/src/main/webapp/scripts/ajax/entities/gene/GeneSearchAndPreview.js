@@ -303,6 +303,28 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		
 		this.fireEvent('select');
 	},
+	
+	createGeneImportPanel : function(){
+		return new Gemma.GeneImportPanel({
+			height:300,
+			showTaxonCombo: true,
+			listeners: {
+				'commit': {
+					fn: this.getGenesFromList.createDelegate(this),
+					scope: this
+				},
+				'show': {
+					fn: function(){
+						if (this.searchForm.getTaxonId() !== null && this.searchForm.getTaxonId() && typeof this.searchForm.getTaxonId() !== 'undefined') {
+							this.symbolList._taxonCombo.setTaxonById(this.searchForm.getTaxonId());
+							this.symbolList._taxonCombo.disable();
+						}
+					},
+					scope:this
+				}
+			}
+		});
+	},
 	initComponent : function() {
 
 		this.newBoxTriggered = false;
@@ -344,26 +366,6 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	
 		this.relayEvents(this.geneCombo, ['select']);
 
-	
-		this.symbolList = new Gemma.GeneImportPanel({
-			height:300,
-			showTaxonCombo: true,
-			listeners: {
-				'commit': {
-					fn: this.getGenesFromList.createDelegate(this),
-					scope: this
-				},
-				'show': {
-					fn: function(){
-						if (this.searchForm.getTaxonId() !== null && this.searchForm.getTaxonId() && typeof this.searchForm.getTaxonId() !== 'undefined') {
-							this.symbolList._taxonCombo.setTaxonById(this.searchForm.getTaxonId());
-							this.symbolList._taxonCombo.disable();
-						}
-					},
-					scope:this
-				}
-			}
-		});
 		
 
 		this.symbolListButton = new Ext.Button({
@@ -374,6 +376,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 					style:'padding-right:5px',
 					handler : function() {
 						this.geneCombo.reset();
+						this.symbolList = this.createGeneImportPanel();
 						this.symbolList.show();
 					}.createDelegate(this, [], true)
 				});
