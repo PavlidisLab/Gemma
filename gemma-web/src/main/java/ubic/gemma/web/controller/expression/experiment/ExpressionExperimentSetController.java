@@ -556,7 +556,8 @@ public class ExpressionExperimentSetController extends BaseController {
         /*
          * Sanity check.
          */
-        if ( expressionExperimentService.findByName( obj.getName() ) != null ) {
+        Collection<ExpressionExperimentSet> dups = expressionExperimentSetService.findByName( obj.getName() );
+        if ( dups == null || !dups.isEmpty() ) {
             throw new IllegalArgumentException( "Sorry, there is already a set with that name (" + obj.getName() + ")" );
         }
 
