@@ -9,6 +9,7 @@
 </head>
 
 <body>
+<div class="padded">
 	<div id="messages" style="margin: 10px; width: 400px"></div>
 	<p>
 		Use this page to view and manage expression experiments you have access to.
@@ -23,5 +24,5 @@
 
 <input type="hidden" id="reloadOnLogout" value="true">
 <input type="hidden" id="reloadOnLogin" value="true"/>
-
+</div>
 </body>
