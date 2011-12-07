@@ -48,6 +48,8 @@ import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
+import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
@@ -531,6 +533,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId ) {
 
+        Collection<ExpressionExperiment> experiments = null;
+
         // check if already in the database
         BibliographicReference bibliographicReference = this.bibliographicReferenceService.findByExternalId( pubMedId );
 
@@ -542,6 +546,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             if ( bibliographicReference == null ) {
                 return null;
             }
+        } else {
+            experiments = this.bibliographicReferenceService.getRelatedExperiments( bibliographicReference );
         }
 
         BibliographicReferenceValueObject bibliographicReferenceVO = new BibliographicReferenceValueObject(
@@ -554,6 +560,11 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
 
         bibliographicReferenceVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
+
+        if ( experiments != null && experiments.size() > 0 ) {
+            bibliographicReferenceVO
+                    .setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( experiments ) );
+        }
 
         return bibliographicReferenceVO;
     }

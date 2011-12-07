@@ -126,7 +126,7 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         this.ontologyUsed = ontologyUsed;
     }
 
-    public boolean getAlreadyPresentOnGene() {
+    public boolean isAlreadyPresentOnGene() {
         return this.alreadyPresentOnGene;
     }
 

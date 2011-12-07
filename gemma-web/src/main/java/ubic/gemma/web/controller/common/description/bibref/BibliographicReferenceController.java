@@ -33,11 +33,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
+import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
 import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
@@ -60,6 +63,9 @@ public class BibliographicReferenceController extends BaseController {
     @Autowired
     private PersisterHelper persisterHelper;
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
+
+    @Autowired
+    private PhenotypeAssociationService phenotypeAssociationService;
 
     /**
      * Add or update a record.
@@ -103,24 +109,31 @@ public class BibliographicReferenceController extends BaseController {
      * @return
      */
     public JsonReaderResponse<BibliographicReferenceValueObject> browse( ListBatchCommand batch ) {
-        Integer count = bibliographicReferenceService.count();
+        Integer count = this.bibliographicReferenceService.count();
         List<BibliographicReference> records = getBatch( batch );
-        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = bibliographicReferenceService
+        Map<BibliographicReference, Collection<ExpressionExperiment>> relatedExperiments = this.bibliographicReferenceService
                 .getRelatedExperiments( records );
 
         List<BibliographicReferenceValueObject> valueObjects = new ArrayList<BibliographicReferenceValueObject>();
 
         for ( BibliographicReference ref : records ) {
 
-            ref = bibliographicReferenceService.thaw( ref );
+            ref = this.bibliographicReferenceService.thaw( ref );
             BibliographicReferenceValueObject vo = new BibliographicReferenceValueObject( ref );
 
             if ( relatedExperiments.containsKey( ref ) ) {
-                vo
-                        .setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments
-                                .get( ref ) ) );
+                vo.setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( relatedExperiments.get( ref ) ) );
             }
             valueObjects.add( vo );
+
+            // adding phenotype informations to the Bibliographic Reference
+            
+            Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
+                    .findPhenotypesForBibliographicReference( vo.getPubAccession() );
+
+            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+                    .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
+            vo.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
 
         }
 
@@ -192,8 +205,8 @@ public class BibliographicReferenceController extends BaseController {
 
         boolean isIncomplete = bibRef.getPublicationDate() == null;
         addMessage( request, "object.found", new Object[] { messagePrefix, pubMedId } );
-        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef ).addObject(
-                "existsInSystem", Boolean.TRUE ).addObject( "incompleteEntry", isIncomplete );
+        return new ModelAndView( "bibRefView" ).addObject( "bibliographicReference", bibRef )
+                .addObject( "existsInSystem", Boolean.TRUE ).addObject( "incompleteEntry", isIncomplete );
     }
 
     /**

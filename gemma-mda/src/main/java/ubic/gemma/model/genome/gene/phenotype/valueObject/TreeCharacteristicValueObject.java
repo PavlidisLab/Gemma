@@ -89,6 +89,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         return super.compareTo( c );
     }
 
+    /** return all valueUri of children */
     public Collection<String> getAllChildrenUri() {
 
         Collection<String> childrenURI = new HashSet<String>();
@@ -98,6 +99,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         return childrenURI;
     }
 
+    /** step into the tree and keep tracks of all valueURI */
     private void findAllChildPhenotypeURI( Collection<String> phenotypesToFind ) {
 
         phenotypesToFind.add( this.getValueUri() );
@@ -107,6 +109,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         }
     }
 
+    /** the tree is built with many terms in the Ontology, this method removes all nodes not found in the database*/
     public void removeUnusedPhenotypes( String rootValueUri ) {
 
         Collection<TreeCharacteristicValueObject> newRealChilds = new HashSet<TreeCharacteristicValueObject>();
