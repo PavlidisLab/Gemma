@@ -35,6 +35,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -540,43 +541,50 @@ public class GenePickerController {
             }
         }
 
-        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
-
         // if query is blank, return list of auto generated sets, user-owned sets (if logged in) and user's recent
         // session-bound sets
 
         // right now, no public gene sets are useful so we don't want to prompt them
         boolean promptPublicSets = false;
 
+        StopWatch watch = new StopWatch();
+        watch.start();
+        
         // get all public sets (if user is admin, these were already loaded with geneSetService.loadMySets() )
         // filtered by security.
-        SearchResultDisplayObject newSRDO = null;
-        if ( promptPublicSets ) {
-            Collection<GeneSet> sets = new ArrayList<GeneSet>();
+        Collection<GeneSet> sets = new ArrayList<GeneSet>();
+        if ( promptPublicSets &&  !SecurityService.isUserLoggedIn() ) {
             try {
                 sets = geneSetService.loadAll( taxon );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
-            for ( GeneSet set : sets ) {
-                newSRDO = new SearchResultDisplayObject( set );
-                newSRDO.setTaxonId( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonId() );
-                newSRDO.setTaxonName( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonName() );
-                boolean isPrivate = securityService.isPrivate( set );
-                newSRDO.setUserOwned( isPrivate );
-                ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).setPublik( !isPrivate );
-                displayResults.add( newSRDO );
-            }
         } else if ( SecurityService.isUserLoggedIn() ) {
-            Collection<GeneSet> sets = geneSetService.loadMyGeneSets( taxon );
-            for ( GeneSet set : sets ) {
-                newSRDO = new SearchResultDisplayObject( set );
-                newSRDO.setTaxonId( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonId() );
-                newSRDO.setTaxonName( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonName() );
-                newSRDO.setUserOwned( true );
-                ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).setPublik( securityService.isPublic( set ) );
-                displayResults.add( newSRDO );
-            }
+            /*
+             * actually, loadMyGeneSets and loadAll point to the same method 
+             * (they just use  different spring security filters) 
+             */
+            sets = ( taxon != null )? geneSetService.loadMyGeneSets( taxon ):
+                                                            geneSetService.loadMyGeneSets();
+            log.info( "Loading the user's gene sets took: "+watch.getTime() );
+        }
+        
+        // separate these out because they go at the top of the list
+        List<SearchResultDisplayObject> displayResultsPrivate = new LinkedList<SearchResultDisplayObject>();
+        List<SearchResultDisplayObject> displayResultsPublic = new LinkedList<SearchResultDisplayObject>();
+        SearchResultDisplayObject newSRDO = null;
+        for ( GeneSet set : sets ) {
+            newSRDO = new SearchResultDisplayObject( set );
+            newSRDO.setTaxonId( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonId() );
+            newSRDO.setTaxonName( ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).getTaxonName() );
+            boolean isPrivate = securityService.isPrivate( set );
+            newSRDO.setUserOwned( isPrivate );
+            ( ( GeneSetValueObject ) newSRDO.getResultValueObject() ).setPublik( !isPrivate );
+            if(isPrivate) { 
+               displayResultsPrivate.add( newSRDO );
+            }else{
+               displayResultsPublic.add( newSRDO ); 
+            } 
         }
 
         // get any session-bound groups
@@ -596,8 +604,15 @@ public class GenePickerController {
         }
 
         // keep sets in proper order (user's groups first, then public ones)
+        Collections.sort( displayResultsPrivate );
+        Collections.sort( displayResultsPublic );
         Collections.sort( sessionSets );
+
+        List<SearchResultDisplayObject> displayResults = new LinkedList<SearchResultDisplayObject>();
+        
         displayResults.addAll( sessionSets );
+        displayResults.addAll( displayResultsPrivate );
+        displayResults.addAll( displayResultsPublic );
 
         if ( displayResults.isEmpty() ) {
             log.info( "No results for blank query search, taxon=" + ( ( taxon == null ) ? null : taxon.getCommonName() ) );
