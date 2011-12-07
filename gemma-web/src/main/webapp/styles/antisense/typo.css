@@ -111,18 +111,6 @@ h1, .big {
 	padding: 0;
 }
 
-div#branding h1 {
-	font-size: 2.6em;
-	letter-spacing: -1px;
-	margin: 0;
-	line-height: 1.5em;
-	color: #3e9ade;
-}
-
-div#branding p {
-	margin: 0;
-	line-height: 1em;
-}
 
 h2, .medium {
 	font-size: 1.6em;

@@ -108,18 +108,6 @@
 		</property>
 	</bean>
 
-
-
-	<!-- ==================================================== -->
-	<!--           Used to configure menus on pages           -->
-	<!-- ==================================================== -->
-	<!-- 
-	<bean id="menu" class="net.sf.navigator.menu.MenuLoader">
-		<property name="menuConfig">
-			<value>/WEB-INF/menu-config.xml</value>
-		</property>
-	</bean>
- -->
 	<!--
 		 Used for file uploads. Simply defining this makes Spring use it.
 	-->

@@ -4,32 +4,17 @@ body {
 	margin: 0;
 	padding: 0;
 	background: white top left repeat-x;
-//	text-align: center;
+//	text-align: left;
 }
 
 div#page {
 	width: 100%;
 	margin: 0 auto;
 	padding: 0;
-	text-align: center;
+	text-align: left;
 }
 
 /* HEADER */
-div#header {
-	margin: 0 0 2em 0;
-	padding: 10px 0px 2px 20px;
-	text-align: left;
-	height: 80px; /* needed by IE 7 */
-	background: white url(images/heatfade.inner.png) no-repeat;
-	background-position: right;
-}
-div#headerclear {
-	margin: 0 0 2em 0;
-	padding: 10px 0px 2px 20px;
-	text-align: left;
-	height: 50px; /* needed by IE 7 */
-	background-position: right;
-}
 div#headerclearnopadding {
 	margin: 0 0 2em 0;
 	padding: 0px;
@@ -38,40 +23,9 @@ div#headerclearnopadding {
 	background-position: right;
 }
 
-
-
-div#homeheader {
-	margin: 0 0 2em 0;
-	padding: 10px 0px 2px 20px;
-	text-align: left;
-	height: 120px; /* needed by IE 7 */
-	background: white url(images/heatfade.png) no-repeat;
-	background-position: right;
-}
-
-div#homeheaderclear {
-	padding: 10px 0px 2px 20px;
-	text-align: left;
-	height: 120px; /* needed by IE 7 */
-	background-position: right;
-}
-
-div#homeheaderclearnopadding {
-	text-align: left;
-	height: 120px; /* needed by IE 7 */
-	background-position: right;
-}
-
 div#switchLocale {
 	position: absolute;
 	right: 10px;
-}
-
-div#branding {
-	float: left;
-	margin: 0;
-	padding: 0;
-	text-align: right;
 }
 
 div#headerLeft {
@@ -89,17 +43,10 @@ div#search {
 	padding: 2px 10px 10px 10px;
 }
 
-input#searchfield {
-	border: inset #333 1px
-}
-
-input#searchbutton {
-	border: solid 1px black;
-}
-
 /* END HEADER */ /* CONTENT */
 div#content {
-	
+	padding-left:0px;
+	text-align: left;
 }
 
 body#error #content {
@@ -108,7 +55,12 @@ body#error #content {
 
 /* MAIN */
 div#main {
-	padding-left: 15px;
+	padding-left: 0px;
+}
+
+div .padded{
+	padding-left:20px;
+	text-align: left;
 }
 
 div#main.home {
@@ -139,29 +91,22 @@ div#sub ul li {
 /* END SUB */ /* END CONTENT */ /* FOOTER */
 div#footer {
 	color: #666666;
-	width: 95%;
-	margin: 10px 0px 0px;
-	padding: 20px 0px 0px 30px;
+	width: 100%;
+	margin: 0px;
+	padding-top: 30px;
 	text-align: left;
 	font-size: 0.9em;
+	float: left;
+}
+
+div#footer .left {
+	float: left;
+	padding-left:20px;
 }
 
 div#footer div#divider {
 	margin: 0 0 4px 0;
 	border-top: 1px solid #abc;
-}
-
-div#footer .left {
-	float: left;
-}
-
-div#footer .right {
-	float: right;
-}
-
-div#footer a:hover {
-	color: #003366;
-	text-decoration: none;
 }
 
 /* END FOOTER */ /* END LAYOUT */ /* custom layout for data summary */
@@ -204,25 +149,6 @@ div#footer a:hover {
 	-moz-border-radius: 0px 0px 0px 0px;
 }
 
-/* custom layout for search tables */
-.searchTable {
-	border-width: 1px 1px 1px 1px;
-	border-spacing: 2px;
-	border-style: outset outset outset outset;
-	border-color: blue blue blue blue;
-	border-collapse: separate;
-	background-color: white;
-}
-
-.searchTable td {
-	border-width: 1px 1px 1px 1px;
-	padding: 2px 2px 2px 2px;
-	border-style: none none none none;
-	border-color: gray gray gray gray;
-	background-color: white;
-	-moz-border-radius: 0px 0px 0px 0px;
-}
-
 table.list {
 	border-width: 1px 2px 1px 2px;
 	border-spacing: 4px;
@@ -230,83 +156,4 @@ table.list {
 	border-color: gray gray gray gray;
 	border-collapse: separate;
 	background-color: white;
-}
-
-/* Curved corners */
-.roundedcornr_box_962327 {
-	background: #fff47e;
-}
-
-.roundedcornr_top_962327 div {
-	background-image: url(images/corners/roundedcornr_962327_tl.png);
-	background-position: top left;
-	background-repeat: no-repeat;
-}
-
-.roundedcornr_top_962327 {
-	background-image: url(images/corners/roundedcornr_962327_tr.png);
-	background-position: top right;
-	background-repeat: no-repeat;
-}
-
-.roundedcornr_bottom_962327 div {
-	background-image: url(images/corners/roundedcornr_962327_bl.png);
-	background-position: bottom left;
-	background-repeat: no-repeat;
-}
-
-.roundedcornr_bottom_962327 {
-	background-image: url(images/corners/roundedcornr_962327_br.png);
-	background-position: bottom right;
-	background-repeat: no-repeat;
-}
-
-.roundedcornr_top_962327 div,.roundedcornr_top_962327,.roundedcornr_bottom_962327 div,.roundedcornr_bottom_962327
-	{
-	width: 100%;
-	height: 10px;
-	font-size: 1px;
-}
-
-.roundedcornr_content_962327 {
-	margin: 0 10px;
-}
-
-.roundedcornr_box_777249 {
-	background: white;
-}
-
-.roundedcornr_top_777249 div {
-	background-image: url(images/corners/roundedcornr_777249_tl.png);
-	background-position: top left;
-	background-repeat: no-repeat;
-}
-
-.roundedcornr_top_777249 {
-	background: url(images/corners/roundedcornr_777249_tr.png);
-	background-repeat: no-repeat;
-	background-position: top right;
-}
-
-.roundedcornr_bottom_777249 div {
-	background-image: url(images/corners/roundedcornr_777249_bl.png);
-	background-repeat: no-repeat;
-	background-position: bottom left;
-}
-
-.roundedcornr_bottom_777249 {
-	background-image: url(images/corners/roundedcornr_777249_br.png);
-	background-position: bottom right;
-	background-repeat: no-repeat;
-}
-
-.roundedcornr_top_777249 div,.roundedcornr_top_777249,.roundedcornr_bottom_777249 div,.roundedcornr_bottom_777249
-	{
-	width: 100%;
-	height: 15px;
-	font-size: 1px;
-}
-
-.roundedcornr_content_777249 {
-	margin: 0 10px;
 }

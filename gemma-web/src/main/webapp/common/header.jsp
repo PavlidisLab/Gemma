@@ -15,13 +15,6 @@
 </c:if>
 
 
-<!-- div id="branding">
-	<div id="headerLeft">
-		<a href="<c:url value='/home.html'/>"><img src="<c:url value='/images/logo/gemma-lg153x350.gif'/>" alt="gemma" />
-		</a>
-	</div>
-</div-->
-
 <div id="extheaderandnavigationhome" class="clearfix"></div>
 <script type="text/javascript">
 Ext.namespace('Gemma');

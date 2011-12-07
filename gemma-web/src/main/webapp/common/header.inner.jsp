@@ -14,13 +14,6 @@
 	</div>
 </c:if>
 
-<!-- div id="branding">
-	<div id="headerLeft">
-		<a href="<c:url value='/home.html'/>"><img src="<c:url value='/images/logo/gemma-sm50x195.png'/>" alt="gemma" />
-		</a>
-	</div>
-</div-->
-	
 <div id="extheaderandnavigation" class="clearfix"></div>
 				
 <script type="text/javascript">
