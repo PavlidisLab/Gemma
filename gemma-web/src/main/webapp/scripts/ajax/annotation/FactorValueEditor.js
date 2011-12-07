@@ -264,10 +264,13 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 										if (but == 'yes') {
 											Ext.getCmp('factor-value-delete-button').disable();
 											var ef = this.experimentalFactor;
-											var callback = this.factorValuesDeleted.createDelegate(this);
-											ExperimentalDesignController.deleteFactorValues(ef, selected, callback);
+											this.getEl().mask();
+											// need to defer otherwise the callback will run before the store is changed
+											// (even though the call back )bug 2356
+											var callback = this.factorValuesDeleted.createDelegate(this).defer(500);
+											ExperimentalDesignController.deleteFactorValues(ef, selected, callback, this);
 										}
-									}.createDelegate(this));
+									}, this);
 				} else {
 					Ext.Msg.alert("Nothing selected", "You have not checked any factor values for deletion");
 				}
@@ -286,6 +289,10 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 			this.getTopToolbar().on("undo", this.revertSelected.createDelegate(this), this);
 
+			this.getTopToolbar().on("refresh", function(){
+				this.getStore().reload();
+			}, this);
+
 		}
 
 		this.getTopToolbar().on("toggleExpand", function() {
@@ -301,14 +308,6 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 						params : [this.experimentalFactor]
 					});
 		}
-		
-		this.on('factorvaluedelete',function(fvs) {
-		this.store.reload();
-		this.refresh();
-		this.store.rejectChanges();
-		var ct = this.getTopToolbar().characteristicToolbar;
-		ct.factorValueCombo.store.reload();
-	});
 		
 	}, // init component
 
@@ -360,11 +359,11 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	factorValuesDeleted : function(fvs) {
-		this.store.reload();
-		this.refresh();
 		this.store.rejectChanges();
+		this.store.reload();
 		var ct = this.getTopToolbar().characteristicToolbar;
 		ct.factorValueCombo.store.reload();
+		this.getEl().unmask();
 		this.fireEvent('factorvaluedelete', this, fvs);
 	},
 
@@ -428,7 +427,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 			initComponent : function() {
 				Gemma.FactorValueToolbar.superclass.initComponent.call(this);
-				this.addEvents("create", "save", "delete", "undo", "toggleExpand", "toggleCollapse");
+				this.addEvents("create", "save", "delete", "undo", "refresh", "toggleExpand", "toggleCollapse");
 			},
 
 			onRender : function(c, p) {
@@ -479,6 +478,15 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 							scope : this
 						});
 
+				this.refreshButton = new Ext.Toolbar.Button({
+					icon:'/Gemma/images/icons/arrow_refresh_small.png',
+					tooltip: 'Refresh the factor values',
+					handler: function(){
+						this.fireEvent("refresh");
+					},
+					scope: this
+				});
+
 				if (this.editable) {
 					this.addButton(this.createFactorValueButton);
 					this.addSeparator();
@@ -487,6 +495,8 @@ Gemma.FactorValueToolbar = Ext.extend(Ext.Toolbar, {
 					this.addButton(this.saveButton);
 					this.addSpacer();
 					this.addButton(this.revertButton);
+					this.addSpacer();
+					this.addButton(this.refreshButton);
 				}
 				
 				this.collapseButton = new Ext.Toolbar.Button({
