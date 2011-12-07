@@ -23,7 +23,7 @@ public class BibliographicPhenotypesValueObject {
 
     public BibliographicPhenotypesValueObject( PhenotypeAssociation phenotypeAssociation ) {
         super();
-        this.geneName = phenotypeAssociation.getName();
+        this.geneName = phenotypeAssociation.getGene().getName();
         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
             this.phenotypesValues.add( cha.getValue() );
         }
