@@ -254,10 +254,9 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 * delete a factor value
 			 */
 			this.getTopToolbar().on("delete", function() {
-				var selected = this.getSelectedFactorValues();
-				var selectedRecords = this.getSelectionModel().getSelections();
+				var selectedIds = this.getSelectedFactorValues();
 
-				if (selected && selected.length > 0) {
+				if (selectedIds && selectedIds.length > 0) {
 
 					Ext.Msg
 							.confirm(
@@ -269,9 +268,9 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 											var ef = this.experimentalFactor;
 											this.getEl().mask();
 											var callback = function(){
-												this.factorValuesDeleted(selectedRecords);
+												this.factorValuesDeleted(selectedIds);
 											}.createDelegate(this);
-											ExperimentalDesignController.deleteFactorValues(ef, selected, callback, this);
+											ExperimentalDesignController.deleteFactorValues(ef, selectedIds, callback, this);
 										}
 									}, this);
 				} else {
@@ -361,19 +360,25 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 		this.fireEvent('factorvaluechange', this, fvs);
 	},
 
-	factorValuesDeleted : function(fvs) {
+	factorValuesDeleted : function(fvIds) {
 		// don't reload store, caching issues can cause an error (bug 2553)
-		this.store.remove(fvs);
 		var ct = this.getTopToolbar().characteristicToolbar;
-		// since the combo and grid are not using the same store, can't just remove the records	
 		var i;	
-		for (i = 0; i< fvs.length; i++) {
-			var fv = fvs[i];
-			var indexToRemove = ct.factorValueCombo.getStore().findExact("id", fv.get('id'));
+		var matchIds = function(record, id){
+			var z = fvIds.indexOf(record.data.id+"");
+			return (fvIds.indexOf(record.data.id+"") > -1);
+		};
+		for (i = 0; i< fvIds.length; i++) {
+			var fvId = fvIds[i];
+			// combo and grid are not using the same store
+			// store.findExact doesn't work
+			var indexToRemove = ct.factorValueCombo.getStore().findBy(matchIds);
 			ct.factorValueCombo.getStore().removeAt(indexToRemove);
+			indexToRemove = this.store.findBy(matchIds);
+			this.store.removeAt(indexToRemove);
 		}
 		this.getEl().unmask();
-		this.fireEvent('factorvaluedelete', this, fvs);
+		this.fireEvent('factorvaluedelete', this, fvIds);
 	},
 
 	changeExperimentalFactor : function(efId) {
