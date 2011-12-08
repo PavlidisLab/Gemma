@@ -554,7 +554,8 @@ Gemma.GeneImportPanel = Ext.extend(Ext.Window, {
 										emptyText : 'Select a taxon (required)',
 										fieldLabel : 'Select a taxon',
 										width: 250,
-										msgTarget:'side'
+										msgTarget:'side',
+										isDisplayTaxonWithGenes: true
 									},{
 										xtype : 'textarea',
 										ref:'_geneText',
