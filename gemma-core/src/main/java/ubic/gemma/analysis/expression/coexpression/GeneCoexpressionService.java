@@ -620,17 +620,14 @@ public class GeneCoexpressionService {
 
         List<ExpressionExperimentValueObject> eevos = null;
         List<Long> filteredEeIds = null;
+        
+        eevos = getSortedEEvos( eeIds );
 
-        if ( !skipDetails ) {
-
-            eevos = getSortedEEvos( eeIds );
-
-            if ( eevos.isEmpty() ) {
-                throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
-            }
-
-            filteredEeIds = ( List<Long> ) EntityUtils.getIds( eevos );
+        if ( eevos.isEmpty() ) {
+           throw new IllegalArgumentException( "There are no usable experiments in the selected set" );
         }
+
+        filteredEeIds = ( List<Long> ) EntityUtils.getIds( eevos );
         /*
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
@@ -736,9 +733,13 @@ public class GeneCoexpressionService {
                 timer2.stop();
                 timer2.reset();
                 timer2.start();
+                
+                List<Long> supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g, positionToIDMap );
+                // necessary in case any were filtered out.
+                supportingDatasets.retainAll( filteredEeIds );
+                cvo.setSupportingExperiments( supportingDatasets );
 
-                List<Long> testingDatasets;
-                List<Long> supportingDatasets;
+                List<Long> testingDatasets;                
                 List<Long> specificDatasets;
                 if ( !skipDetails ) {
 
@@ -750,12 +751,7 @@ public class GeneCoexpressionService {
                      * were 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the
                      * analyzer.
                      */
-                    supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g, positionToIDMap );
-
-                    // necessary in case any were filtered out.
-                    supportingDatasets.retainAll( filteredEeIds );
-
-                    cvo.setSupportingExperiments( supportingDatasets );
+                    
 
                     specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g, positionToIDMap );
 
@@ -810,12 +806,17 @@ public class GeneCoexpressionService {
                     allDatasetsWithSpecificProbes.addAll( specificDatasets );
 
                 } else {
+                    
+                    int numSupportingDatasets = supportingDatasets.size();                    
+                    if ( numSupportingDatasets < stringency ) {
+                        continue;
+                    }
 
                     if ( g2g.getEffect() < 0 ) {
                         cvo.setPosSupp( 0 );
-                        cvo.setNegSupp( g2g.getNumDataSets() );
+                        cvo.setNegSupp( numSupportingDatasets );
                     } else {
-                        cvo.setPosSupp( g2g.getNumDataSets() );
+                        cvo.setPosSupp( numSupportingDatasets );
                         cvo.setNegSupp( 0 );
                     }
 
