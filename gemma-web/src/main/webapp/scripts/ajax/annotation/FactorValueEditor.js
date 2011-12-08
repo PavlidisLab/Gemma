@@ -6,6 +6,32 @@ Ext.namespace('Gemma');
  * @author Luke, Paul
  * @version $Id$
  */
+Gemma.FactorValueRecord = Ext.data.Record.create([{
+						name : "charId",
+						type : "int"
+					}, {
+						name : "id",
+						type : "int"
+					}, {
+						name : "category",
+						type : "string"
+					}, {
+						name : "categoryUri",
+						type : "string"
+					}, {
+						name : "value",
+						type : "string"
+					}, {
+						name : "measurement",
+						type : "bool"
+					}, {
+						name : "valueUri",
+						type : "string"
+					}, {
+						name : "factorValue",
+						type : "string"
+					}]);
+					
 Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	loadMask : true,
@@ -18,31 +44,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	disabledClass : '.x-factor-grid-disabled',
 
-	record : Ext.data.Record.create([{
-				name : "charId",
-				type : "int"
-			}, {
-				name : "id",
-				type : "int"
-			}, {
-				name : "category",
-				type : "string"
-			}, {
-				name : "categoryUri",
-				type : "string"
-			}, {
-				name : "value",
-				type : "string"
-			}, {
-				name : "measurement",
-				type : "bool"
-			}, {
-				name : "valueUri",
-				type : "string"
-			}, {
-				name : "factorValue", // summarizes whole thing
-				type : "string"
-			}]),
+	record : Gemma.FactorValueRecord,
 
 	categoryStyler : function(value, metadata, record, row, col, ds) {
 		return Gemma.GemmaGridPanel.formatTermWithStyle(value, record.data.categoryUri);
@@ -253,6 +255,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			 */
 			this.getTopToolbar().on("delete", function() {
 				var selected = this.getSelectedFactorValues();
+				var selectedRecords = this.getSelectionModel().getSelections();
 
 				if (selected && selected.length > 0) {
 
@@ -265,9 +268,9 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 											Ext.getCmp('factor-value-delete-button').disable();
 											var ef = this.experimentalFactor;
 											this.getEl().mask();
-											// need to defer otherwise the callback will run before the store is changed
-											// (even though the call back )bug 2356
-											var callback = this.factorValuesDeleted.createDelegate(this).defer(500);
+											var callback = function(){
+												this.factorValuesDeleted(selectedRecords);
+											}.createDelegate(this);
 											ExperimentalDesignController.deleteFactorValues(ef, selected, callback, this);
 										}
 									}, this);
@@ -359,10 +362,16 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 	},
 
 	factorValuesDeleted : function(fvs) {
-		this.store.rejectChanges();
-		this.store.reload();
+		// don't reload store, caching issues can cause an error (bug 2553)
+		this.store.remove(fvs);
 		var ct = this.getTopToolbar().characteristicToolbar;
-		ct.factorValueCombo.store.reload();
+		// since the combo and grid are not using the same store, can't just remove the records	
+		var i;	
+		for (i = 0; i< fvs.length; i++) {
+			var fv = fvs[i];
+			var indexToRemove = ct.factorValueCombo.getStore().findExact("id", fv.get('id'));
+			ct.factorValueCombo.getStore().removeAt(indexToRemove);
+		}
 		this.getEl().unmask();
 		this.fireEvent('factorvaluedelete', this, fvs);
 	},
