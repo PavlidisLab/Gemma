@@ -29,7 +29,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 				"]</a>&nbsp;&nbsp;&nbsp;";
 		}
 		if(homologueStr === ''){
-			homologueStr = "No aliases defined";
+			homologueStr = "No homologues defined";
 		}
 		return homologueStr;
 	},
