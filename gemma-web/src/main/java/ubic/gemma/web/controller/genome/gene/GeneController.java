@@ -225,14 +225,14 @@ public class GeneController extends BaseController {
     public ModelAndView show( HttpServletRequest request, HttpServletResponse response ) {
 
         String idString = request.getParameter( "id" );
-        if ( idString == null ) {
+        String ncbiId = request.getParameter( "ncbiid" );
+        
+        if ( idString == null && ncbiId == null ) {
             addMessage( request, "object.notfound", new Object[] { "Gene" } );
             return new ModelAndView( "index" );
         }
 
         Long id = null;
-
-        String ncbiId = null;
 
         Gene gene = null;
 
