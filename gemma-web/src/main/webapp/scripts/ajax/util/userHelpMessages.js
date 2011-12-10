@@ -156,6 +156,12 @@ Gemma.HelpText.WidgetDefaults = {
 		searchStatusTooManyReduce: 'Too many Query Genes. A max of {0} query genes allowed. Click Yes to continue search with reduced query genes',
 		searchStatusTooFew: 'No Genes Selected',
 		searchStatusNoMoreResults: 'No more results found for this gene',
+		compressGraphTT: 'Compress the graph so that the nodes are closer together',
+		compressGraphText: 'Compress Graph',
+		unCompressGraphText: 'Uncompress Graph',
+		nodeLabelsTT: 'Turn node labels on/off',
+		nodeLabelsText: 'Node Labels On',
+		noNodeLabelsText: 'Node Labels Off'
 		
 	},
 	DatasetGroupEditor:{

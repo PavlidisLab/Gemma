@@ -5,11 +5,15 @@ Gemma.CytoscapeSettings = {
     backgroundColor: "#FFF7FB",
 
     // node stuff
-    labelFontName: 'Monospace',
+    labelFontName: 'Arial',
     labelFontColor: "#252525",
     labelFontColorFade: "#BDBDBD",
     labelGlowStrength: 100,
     labelFontWeight: "bold",
+    labelFontSize: 11,
+    
+    labelFontSizeBigger: 18,
+    labelFontSizeBiggest: 25,
 
     labelYOffset: -20,
 
@@ -29,16 +33,17 @@ Gemma.CytoscapeSettings = {
 
     selectionGlowColor: "#0000FF",
 
-    selectionGlowOpacity: 1
+    selectionGlowOpacity: 1,    
+    
+    zoomLevelBiggerFont: 0.65,    
+    zoomLevelBiggestFont: 0.4,
 
 };
 
 Gemma.CytoscapePanel = Ext.extend(
 Ext.Panel, {
 
-    title: 'Cytoscape',
-
-    layoutIndex: 0,
+    title: 'Cytoscape',    
     
     layout: 'fit',
 
@@ -124,6 +129,31 @@ Ext.Panel, {
     nodeDegreeVisualStyleFlag: true,
 
     visualization: {},
+    
+    forceDirectedLayoutCompressed:{
+    	
+    	name: "ForceDirected",
+    	options: {
+    		mass : 2,
+    		gravitation :-300,
+    		tension: 0.3,
+    		drag: 0.4,
+    		minDistance: 1,
+    		maxDistance: 10000,
+    		iterations: 400,
+    		maxTime: 30000
+    	}
+    	
+    	
+    },
+    
+    defaultForceDirectedLayout:{
+    	
+    	name: "ForceDirected"    	    	
+    	
+    },
+    
+    currentLayout:{},       
 
     visual_style_regular: {
         global: {
@@ -334,6 +364,8 @@ Ext.Panel, {
     initComponent: function () {
 
         var vis = new org.cytoscapeweb.Visualization("cytoscapeweb", this.options);
+        
+        this.currentLayout = this.defaultForceDirectedLayout;
 
         vis["edgeOpacityMapper"] = function (data) {
 
@@ -345,6 +377,29 @@ Ext.Panel, {
             return 1.05 - data["nodeDegreeBin"] / 10;
 
         };
+        
+        this.visualOptionsMenu = new Ext.menu.Menu({
+            items: [{
+            	itemId: 'refreshLayoutButton',
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,                
+                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutTT,
+                handler: this.refreshLayout,
+                scope: this
+            },{
+            	itemId: 'compressGraphButton',
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.compressGraphText,                
+                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.compressGraphTT,
+                handler: this.compressGraph,
+                scope: this
+            },{
+            	itemId: 'nodeLabelsButton',
+                text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.noNodeLabelsText,                
+                tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeLabelsTT,
+                handler: this.nodeLabelsToggle,
+                scope: this
+            }
+            ]
+        });
 
         this.actionsMenu = new Ext.menu.Menu({
             items: [{
@@ -478,16 +533,7 @@ Ext.Panel, {
                 text: '<b>Visual Options</b>',
                 // icon:
                 // '/Gemma/images/download.gif',
-                menu: new Ext.menu.Menu({
-                    items: [{
-                        text: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutText,
-                        // icon:
-                        // '/Gemma/images/icons/picture.png',
-                        tooltip: Gemma.HelpText.WidgetDefaults.CytoscapePanel.refreshLayoutTT,
-                        handler: this.changeLayout,
-                        scope: this
-                    }]
-                })
+                menu: this.visualOptionsMenu
             },
 
             '->', '-',
@@ -621,6 +667,88 @@ Ext.Panel, {
             vis.nodeTooltipsEnabled(true);
 
             vis.edgeTooltipsEnabled(true);
+            
+            vis.addListener("zoom", function(evt){
+            	
+            	if (vis.panelRef.ready){
+            		
+            		var zoom = evt.value; 
+            		
+            		if (vis.panelRef.lastZoomLevel){
+            			
+            			//start changing font size
+            			
+            			var newFontSize;
+            			if (zoom < vis.panelRef.lastZoomLevel){            				
+            				
+            				//if the zoom is less than the biggest font threshold AND the last zoom level used to be bigger than the last zoom level
+            				if (zoom < Gemma.CytoscapeSettings.zoomLevelBiggestFont && vis.panelRef.lastZoomLevel>Gemma.CytoscapeSettings.zoomLevelBiggestFont){
+            					newFontSize = Gemma.CytoscapeSettings.labelFontSizeBiggest;
+            				}
+            				else if (zoom < Gemma.CytoscapeSettings.zoomLevelBiggerFont && vis.panelRef.lastZoomLevel>Gemma.CytoscapeSettings.zoomLevelBiggerFont){
+            					newFontSize = Gemma.CytoscapeSettings.labelFontSizeBigger;
+            				}
+            				
+            			} else if (zoom > vis.panelRef.lastZoomLevel){            				
+            				
+            				if (zoom > Gemma.CytoscapeSettings.zoomLevelBiggerFont && vis.panelRef.lastZoomLevel<Gemma.CytoscapeSettings.zoomLevelBiggerFont){            					
+            					newFontSize = Gemma.CytoscapeSettings.labelFontSize;
+            				} else if (zoom > Gemma.CytoscapeSettings.zoomLevelBiggestFont && vis.panelRef.lastZoomLevel<Gemma.CytoscapeSettings.zoomLevelBiggestFont){            					
+            					newFontSize = Gemma.CytoscapeSettings.labelFontSizeBigger;
+            				}
+            				
+            			}
+            			
+            			if (newFontSize){
+            				
+            				vis.panelRef.visual_style_regular.nodes.labelFontSize = newFontSize;        					
+        					vis.panelRef.visual_style_node_degree.nodes.labelFontSize = newFontSize;
+        					
+        					if (vis.panelRef.nodeDegreeVisualStyleFlag) {
+        						vis.visualStyle(vis.panelRef.visual_style_node_degree);
+                            } else {
+                            	vis.visualStyle(vis.panelRef.visual_style_regular);
+                            }            					
+        					
+            			}           			
+            			
+            			//end changing font size
+            			
+            			vis.panelRef.lastZoomLevel = zoom;
+                    
+            		} else {
+            			//first time in event handler
+            			
+            			vis.panelRef.lastZoomLevel = zoom;
+            			var newFontSize;
+            			
+        					if (zoom < Gemma.CytoscapeSettings.zoomLevelBiggestFont){
+        						//biggest
+        						newFontSize = Gemma.CytoscapeSettings.labelFontSizeBiggest;
+        					}else if (zoom < Gemma.CytoscapeSettings.zoomLevelBiggerFont){
+        						//bigger
+        						newFontSize = Gemma.CytoscapeSettings.labelFontSizeBigger;
+        					} else {
+        						//normal
+        						newFontSize = Gemma.CytoscapeSettings.labelFontSize;
+        					}
+            			
+            			if (newFontSize){
+            				
+            				vis.panelRef.visual_style_regular.nodes.labelFontSize = newFontSize;        					
+        					vis.panelRef.visual_style_node_degree.nodes.labelFontSize = newFontSize;
+        					
+        					if (vis.panelRef.nodeDegreeVisualStyleFlag) {
+        						vis.visualStyle(vis.panelRef.visual_style_node_degree);
+                            } else {
+                            	vis.visualStyle(vis.panelRef.visual_style_regular);
+                            }            					
+        					
+            			} 
+            		}//end first time
+            	}            	            	
+            	
+            });
 
             if (!vis.panelRef.getTopToolbar().getComponent('stringencySpinner').hasListener('specialkey')) {
 
@@ -640,7 +768,7 @@ Ext.Panel, {
 
                         if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
                         	
-                        	this.currentSpinnerValue = spinner.getValue();
+                        	vis.panelRef.currentSpinnerValue = spinner.getValue();
 
                             var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(
                             vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
@@ -671,7 +799,7 @@ Ext.Panel, {
 
                                 if (btn == 'yes') {
                                 	
-                                	this.currentSpinnerValue = spinner.getValue();
+                                	vis.panelRef.currentSpinnerValue = spinner.getValue();
 
                                     var displayStringency = spinner.getValue();
                                     var resultsStringency = spinner.getValue();
@@ -724,7 +852,7 @@ Ext.Panel, {
 
                     if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
                     	
-                    	this.currentSpinnerValue = spinner.getValue();
+                    	vis.panelRef.currentSpinnerValue = spinner.getValue();
 
                         var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(
                         vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.getTopToolbar().getComponent('stringencySpinner').getValue());
@@ -886,14 +1014,47 @@ Ext.Panel, {
         }
     },
 
-    changeLayout: function () {
+    refreshLayout: function () {
 
         if (this.ready) {
 
-            this.visualization.layout({
-                name: "ForceDirected"
-            });
+            this.visualization.layout(this.currentLayout);
 
+        }
+    },
+    
+    compressGraph: function () {
+
+        if (this.ready) {
+        	
+        	if (this.layoutCompressed){
+        		this.currentLayout = this.defaultForceDirectedLayout;
+        		this.layoutCompressed = false;
+        		this.visualOptionsMenu.getComponent('compressGraphButton').setText(Gemma.HelpText.WidgetDefaults.CytoscapePanel.compressGraphText);
+           	} else {
+           		this.currentLayout = this.forceDirectedLayoutCompressed;
+           		this.layoutCompressed = true;
+           		this.visualOptionsMenu.getComponent('compressGraphButton').setText(Gemma.HelpText.WidgetDefaults.CytoscapePanel.unCompressGraphText);
+           	}
+        	
+        	this.visualization.layout(this.currentLayout);
+        	this.visualization.zoomToFit();
+
+        }
+    },
+    
+    nodeLabelsToggle: function () {
+
+        if (this.ready) {
+        	
+        	if (!this.visualization.nodeLabelsVisible()){        		
+        		this.visualOptionsMenu.getComponent('nodeLabelsButton').setText(Gemma.HelpText.WidgetDefaults.CytoscapePanel.noNodeLabelsText);
+        		this.visualization.nodeLabelsVisible(true);        		
+           	} else {           		
+           		this.visualOptionsMenu.getComponent('nodeLabelsButton').setText(Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeLabelsText); 
+           		this.visualization.nodeLabelsVisible(false); 
+           	}
+        	
         }
     },
 
@@ -937,9 +1098,7 @@ Ext.Panel, {
 
                 Ext.apply(this.coexCommand, {
                     stringency: resultsStringency,
-                    displayStringency: displayStringency,
-                    // Change to default or 'heuristic' based
-                    // value
+                    displayStringency: displayStringency,                    
                     geneIds: selectedNodesGeneIdArray,
                     queryGenesOnly: false
                 });
@@ -1169,6 +1328,7 @@ Ext.Panel, {
         this.dataJSON = this.constructDataJSON(this.queryGenes, this.knownGeneResults);
 
         this.drawGraph();
+        this.visualOptionsMenu.getComponent('nodeLabelsButton').setText(Gemma.HelpText.WidgetDefaults.CytoscapePanel.noNodeLabelsText);
         
         if (result.displayInfo){        
         	var bbarText = this.getBottomToolbar().getComponent('bbarStatus');        	
@@ -1308,6 +1468,8 @@ Ext.Panel, {
         this.loadMask.hide();
 
         this.drawGraph();
+        
+        this.visualOptionsMenu.getComponent('nodeLabelsButton').setText(Gemma.HelpText.WidgetDefaults.CytoscapePanel.noNodeLabelsText);
         
         if (result.displayInfo){        
         	var bbarText = this.getBottomToolbar().getComponent('bbarStatus');        	
@@ -1489,14 +1651,14 @@ Ext.Panel, {
             } // end for (<kglength)
         }
 
-        var qlength = qgenes.length;
-
-        var isQueryGene = false;
         /*
          * //take this out for now, it just makes the graph look
          * bad to have these orphaned nodes sitting around //add
          * query gene nodes NOT in knowngenes, node degree set
-         * to zero var i; for (i = 0; i < qlength; i++) {
+         * to zero 
+         *var qlength = qgenes.length;
+         *var isQueryGene = false;        
+         *var i; for (i = 0; i < qlength; i++) {
          * 
          * if (graphNodeIds.indexOf(qgenes[i].id) === -1) {
          * 
@@ -1540,7 +1702,7 @@ Ext.Panel, {
         this.visualization.draw({
             network: dataMsg,
             visualStyle: this.nodeDegreeVisualStyleFlag ? this.visual_style_node_degree : this.visual_style_regular,
-            layout: "ForceDirected"
+            layout: this.currentLayout
         });
 
     },
@@ -1613,6 +1775,19 @@ Ext.Panel, {
 
         this.visualization.filter("edges", filterFunctionEdges.createDelegate(this));
 
+    },
+    
+    changeFontSize: function (fontSize){
+    	this.visual_style_regular.nodes.labelFontSize = fontSize;
+		
+		this.visual_style_node_degree.nodes.labelFontSize = fontSize;
+		
+		if (this.nodeDegreeVisualStyleFlag) {
+			this.visualization.visualStyle(this.visual_style_node_degree);
+        } else {
+        	this.visualization.visualStyle(this.visual_style_regular);
+        }
     }
+    
 
 });
