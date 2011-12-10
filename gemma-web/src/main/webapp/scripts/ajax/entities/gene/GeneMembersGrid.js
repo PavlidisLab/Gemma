@@ -163,9 +163,12 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	 */
 	setTaxonId: function(taxonId){
 		this.taxonId = taxonId;
-		Ext.apply(this.getTopToolbar().geneCombo, {
-			taxonId: taxonId
-		});
+		if (this.getTopToolbar()) {
+			Ext.apply(this.getTopToolbar().geneCombo, {
+				taxonId: taxonId
+			});
+		}
+		
 	},
 	/*buttons:[new Ext.Button({
 			text: "Done",

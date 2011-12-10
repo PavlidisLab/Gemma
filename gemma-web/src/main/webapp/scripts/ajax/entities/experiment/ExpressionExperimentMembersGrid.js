@@ -163,9 +163,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 	 */
 	setTaxonId: function(taxonId){
 		this.taxonId = taxonId;
-		Ext.apply(this.getTopToolbar().eeCombo, {
-			taxonId: taxonId
-		});
+		if (this.getTopToolbar()) {
+			Ext.apply(this.getTopToolbar().eeCombo, {
+				taxonId: taxonId
+			});
+		}
+		
 	},
 
 	initComponent : function() {
