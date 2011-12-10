@@ -278,7 +278,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	doSearch : function(geneSetValueObjects, experimentSetValueObjects) {		
 		
 		this.collapsePreviews();
-		this.hideExampleQueries();
+		//this.hideExampleQueries();
 		
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -1217,7 +1217,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx1TT,
 							listeners: {
 								click: function(){
-									var goName = "GO_0021766";
+									//var goName = "GO_0021766";
+									var goName = "GO_0045208";
 									var eeSetId = '6112';
 									var taxonId = '1';
 									this.runExampleQuery(eeSetId, goName, taxonId);

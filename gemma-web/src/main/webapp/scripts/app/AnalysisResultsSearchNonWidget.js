@@ -114,6 +114,7 @@ Ext.onReady(function() {
 		
 		// remove previous diff visualization result
 		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
+		Ext.DomHelper.overwrite('tutorial-control-div',{html:''});
 		
 		//clear browser warning
 		if (redirectToClassic) {
@@ -392,6 +393,7 @@ Ext.onReady(function() {
 			this.diffVisualizer.on('visualizationLoaded', function(){
 				panel.loadMask.hide();
 			}, this);
+			
 		}
 		else {
 			
@@ -408,7 +410,6 @@ Ext.onReady(function() {
 				style:'width:100%'
 				
 			});
-			
 			
 			diffExResultsGrid.loadData(result);
 			

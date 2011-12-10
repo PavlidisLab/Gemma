@@ -54,3 +54,12 @@ a.helpLink:hover {
 	color: blue !important;
 	background: none;
 }
+
+/** Added by Thea**/
+.x-tip-yellow .x-tip-tc, .x-tip-yellow .x-tip-tl, .x-tip-yellow .x-tip-tr, .x-tip-yellow .x-tip-bc, .x-tip-yellow .x-tip-bl, .x-tip-yellow .x-tip-br, .x-tip-yellow .x-tip-ml, .x-tip-yellow .x-tip-mr {
+	background-image: url(/Gemma/images/documentation/tip-sprite-yellow.gif);
+}
+
+.x-tip-yellow .x-tip-anchor {
+    background-image:url(/Gemma/images/documentation/tip-anchor-sprite-yellow.gif);
+}

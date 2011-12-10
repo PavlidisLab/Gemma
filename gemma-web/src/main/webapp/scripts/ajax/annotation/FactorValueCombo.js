@@ -1,3 +1,4 @@
+Ext.namespace('Gemma');
 /**
  * Combobox to show factor values for a given factor. The factor values can be loaded from the server or passed in
  * directly from JSON (JsonReader, not ArrayReader)
@@ -5,6 +6,8 @@
  * @class Gemma.FactorValueCombo
  * @extends Ext.form.ComboBox
  */
+
+
 Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 
 			displayField : "factorValue",
@@ -14,31 +17,7 @@ Gemma.FactorValueCombo = Ext.extend(Ext.form.ComboBox, {
 			triggerAction : "all",
 			listWidth : 200,
 
-			record : Ext.data.Record.create([{
-						name : "charId",
-						type : "int"
-					}, {
-						name : "id",
-						type : "int"
-					}, {
-						name : "category",
-						type : "string"
-					}, {
-						name : "categoryUri",
-						type : "string"
-					}, {
-						name : "value",
-						type : "string"
-					}, {
-						name : "measurement",
-						type : "bool"
-					}, {
-						name : "valueUri",
-						type : "string"
-					}, {
-						name : "factorValue",
-						type : "string"
-					}]),
+			record : Gemma.FactorValueRecord,
 
 			initComponent : function() {
 

@@ -73,7 +73,9 @@
 	color: #f47f20;
 	text-decoration: none;
 }
-
+.transparent-btn-link x-btn-pressed{
+	color:red
+}
 
 
 #fi-button-msg {
@@ -90,6 +92,12 @@
 
 table.x-btn.highlightToggle{
 	padding: 2px;
+}
+table.x-btn.highlightToggleBorderOn{
+	margin 7px;
+	border: 1px solid #FFA858;
+	border-radius: 4px;
+	padding: 1px;
 }
 table.x-btn-pressed.highlightToggle{
 	margin 7px;

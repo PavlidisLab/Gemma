@@ -58,6 +58,7 @@ Gemma.Metaheatmap.defaultGeneZoom = 10;
 
 Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 	
+	tutorialReady : false,
 	initComponent : function () {
 
 		this.conditions = this.visualizationData.conditions;
@@ -161,28 +162,31 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 						text: ""
 					  },
 			      	  '->',
-			      	  {	xtype : 'button',
-			      		text  : '<b>Color Legend</b>',
-			      		enableToggle : true,
-			      		tooltip : 'Show/hide the color legend',
-			      		toggleHandler : function (btn,pressed) {
-			      		  if (pressed) {
-			      			  this.visualizationPanel.isLegendShown = true;
-
-			      			  if (this.visualizationPanel.variableWidthCol.boxHeatmap.isShowPvalue) {			      				  
-			      				  this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
-			      				  this.visualizationPanel.variableWidthCol.colorLegendPvalue.show();			      				  
-			      			  } else {
-			      				  this.visualizationPanel.variableWidthCol.colorLegendFoldChange.show();
-			      				  this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();			      				  
-			      			  }
-			      		  } else {
-			      			  this.visualizationPanel.isLegendShown = false;
-		      				  this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
-		      				  this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();			      				  
-			      		  }
-			      	  	}, scope : this
-			      	  },
+			      	  {
+					  	ref: 'colorLegendButton',
+					  	xtype: 'button',
+					  	text: '<b>Color Legend</b>',
+					  	enableToggle: true,
+					  	//tooltip : 'Show/hide the color legend',
+						toggleHandler: function(btn, pressed){
+									if (pressed) {
+										this.visualizationPanel.isLegendShown = true;
+										
+										if (this.visualizationPanel.variableWidthCol.boxHeatmap.isShowPvalue) {
+											this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
+											this.visualizationPanel.variableWidthCol.colorLegendPvalue.show();
+										} else {
+											this.visualizationPanel.variableWidthCol.colorLegendFoldChange.show();
+											this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();
+										}
+									} else {
+										this.visualizationPanel.isLegendShown = false;
+										this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
+										this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();
+									}
+								},
+								scope: this
+							},
 			      	  '-',
 			      	  {	xtype : 'button',
 			      		text : '<b>Bookmarkable Link</b>',
@@ -196,6 +200,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      	  '-',
 			      	  { 
 					  	xtype : 'button',
+						ref: 'saveSelectedButton',
 			      		text : '<b>Save Selected</b>',
 			      		icon : '/Gemma/images/icons/disk.png',
 			      		cls : 'x-btn-text-icon',
@@ -350,6 +355,10 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 						
 			this.visualizationPanel.mask.hide();			
 		}, this);		
+		
+		
+		this.on('afterLayout', this.showHelp);
+		
 	},	
 	
 	createSortByPropertyFunction_ : function ( property , direction) {
@@ -495,6 +504,56 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 	
 	// TODO			
 	getApplicationStateFromURL : function (url) {
-	}
+	},
 		
+		
+	showHelp: function(){
+	
+		if (!this.tutorialReady) {
+			this.tutorialReady = true;
+					
+			this.tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
+				hidden:true,
+				renderTo: 'tutorial-control-div'
+			});
+			this.tutorialControlPanel.show();
+					
+			var elementToText = [];
+			elementToText.push({
+				element: this.getTopToolbar().colorLegendButton,
+				title: 'First',
+				text: 'Some really neat text. Gosh, isn\'t that interesting!',
+				tipConfig:{
+					alignTo: 't' // not working yet
+				}
+			});
+			elementToText.push({
+				element: this.getTopToolbar().saveSelectedButton,
+				title: 'Second',
+				text: 'More interesting text! Amazing. This Gemma site really is the cat\'s meow'
+			});
+			elementToText.push({
+				element: this.controlPanel,
+				title: 'Third',
+				text: 'And it keeps coming! Will you just look at what a wonderfully well designed and useful site this is.'
+			});
+			elementToText.push({
+				element: this.visualizationPanel.variableWidthCol.boxHeatmap,
+				title: 'Forth',
+				text: 'Look out--here comes science!',
+				tipConfig:{
+					anchor: 'r'
+				}
+			});
+			
+			this.tutorialControlPanel.initTips(elementToText);
+			this.tutorialControlPanel.playTips(0);
+				
+			this.tutorialControlPanel.on('closeTutorial',function(){
+				this.tutorialControlPanel.close();
+				this.tutorialReady = false;
+			});
+		}
+	}
+	
 });
