@@ -13,6 +13,10 @@ Ext.namespace('Gemma.Tutorial');
 		}
 	});
  * 
+ * set config
+	stateId: [...],
+	for this particular tutorial to stay hidden once closed
+ * 
  * @param {Object[]} elementToText
  */
 Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
@@ -26,6 +30,17 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		border: false,
 		padding: 5
 	},
+		
+	stateful: true,
+	// what describes the state of this panel - in this case it is the "hidden" field
+	getState: function(){
+		return {
+			hidden: this.hidden
+		};
+	},
+	// specify when the state should be saved - in this case after panel was hidden or shown
+	stateEvents: ['hide', 'show'],
+	
 	initComponent: function(){
 		this.currIndex = 0;
 		Gemma.Tutorial.ControlPanel.superclass.initComponent.call(this);
@@ -43,7 +58,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 				cls: 'transparent-btn',
 				tooltip: 'Close this tutorial',
 				icon: '/Gemma/images/icons/cross.png',
-				handler: this.closeTutorial,
+				handler: this.hideTutorial,
 				scope: this,
 				flex: 0
 			}]
@@ -128,12 +143,12 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		if (this.currIndex) this.hideTip(this.tips[this.currIndex], this.currIndex);
 		this.showTip(this.tips[--this.currIndex], this.currIndex);
 	},
-	closeTutorial: function(){
+	hideTutorial: function(){
 		this.currIndex = -1;
 		this.hideAllTips();
 		this.hide();
-		this.fireEvent('tutorialClosed');
-		this.destroy();
+		this.fireEvent('tutorialHidden');
+		//this.destroy();
 	},
 	hideAllTips: function(){
 		var i;
@@ -161,9 +176,11 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		tipConfig = elementToText.tipConfig;
 		// need this for override of onShow
 		var topScope = this;
-		var tip = new Ext.ToolTip({
+		var defaultConfigs = {
 			cls: 'x-tip-yellow',
 			anchorToTarget: true,
+			anchor: 'top',
+			trackMouse: false,
 			target: element.el, // The overall target element.
 			// overwrite the onShow method to control when the tool tip is shown
 			// we don't want its show/hide state to be effected by hovering on the target element	
@@ -171,6 +188,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 				// if the tip is supposed to be shown according to the tutorial's controls, then show it
 				var onId = (topScope.tips[topScope.currIndex])? topScope.tips[topScope.currIndex].id : -1;
 				if ( onId === this.id) {
+					element.addClass('highlightToggleBorderOn');
 					if (this.floating) {
 						return this.el.show();
 					}
@@ -181,13 +199,11 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 			},
 			hidden: true,
 			padding: 10,
-			trackMouse: false,
 			renderTo: Ext.getBody(), // Render immediately so that tip.body can be referenced prior to the element show.
 			html: tipBody,
 			title: tipTitle,
-			anchor: 'right',
 			autoHide: false,
-			draggable: true,
+			draggable: true, // need this to be true so clicking outside the tip doesn't close it
 			closable: true,
 			listeners: {
 				'render': function(){
@@ -198,15 +214,15 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 						delegate: 'a'
 					});
 				},
-				'show': function(){
-					element.addClass('highlightToggleBorderOn');
-				},
 				'hide': function(){
 					element.removeClass('highlightToggleBorderOn');
 				}
 			}
-		});
-		Ext.apply(tip, tipConfig);
+		};
+		// need to apply configs before creating tooltip to control anchor config
+		Ext.apply(defaultConfigs, tipConfig);
+		
+		var tip = new Ext.ToolTip(defaultConfigs);
 		return tip;
 	}
 });

@@ -114,11 +114,13 @@ Ext.onReady(function() {
 		
 		// remove previous diff visualization result
 		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
+		
 		var tut = Ext.getCmp('tutorial-cntlPanel-diff-ex');
 		if (tut) {
-			tut.closeTutorial();
+			tut.hideTutorial();
+			this.diffExTutorialAlreadyShown = true;
 		}
-		Ext.DomHelper.overwrite('tutorial-control-div',{html:''});
+		//Ext.DomHelper.overwrite('tutorial-control-div',{html:''});
 		
 		
 		
@@ -409,6 +411,13 @@ Ext.onReady(function() {
 			// show metaheatmap viewer (but not control panel)
 			// control panel is responsible for creating the visualisation view space
 			Ext.apply(data, {applyTo : 'meta-heatmap-div'});
+			
+			// override showing tutorial, for now only works with non-widget version
+			if (this.diffExTutorialAlreadyShown) {
+				Ext.apply(data,{showTutorial:false});
+			}
+			
+				
 			this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data);
 			
 			this.diffVisualizer.on('visualizationLoaded', function(){

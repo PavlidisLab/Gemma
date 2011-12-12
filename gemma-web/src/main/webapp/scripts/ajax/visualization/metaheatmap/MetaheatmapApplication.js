@@ -509,52 +509,57 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		
 	showHelpConditionally: function(){
 	
-		if (this.showTutorial && !this.tutorialReady) {
+		if (this.showTutorial && !this.tutorialReady && !this.tutorialControlPanel) {
 			this.tutorialReady = true;
 					
 			this.tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
-				hidden:true,
 				renderTo: 'tutorial-control-div',
 				// need id to clear tutorial between searches
-				id: 'tutorial-cntlPanel-diff-ex'
+				id: 'tutorial-cntlPanel-diff-ex',
+				stateId: 'diffExVisualiserTutorial'
 			});
-			this.tutorialControlPanel.show();
-					
-			var elementToText = [];
-			elementToText.push({
-				element: this.getTopToolbar().colorLegendButton,
-				title: 'First',
-				text: 'Some really neat text. Gosh, isn\'t that interesting!',
-				tipConfig:{
-					alignTo: 't' // not working yet
-				}
-			});
-			elementToText.push({
-				element: this.getTopToolbar().saveSelectedButton,
-				title: 'Second',
-				text: 'More interesting text! Amazing. This Gemma site really is the cat\'s meow'
-			});
-			elementToText.push({
-				element: this.controlPanel,
-				title: 'Third',
-				text: 'And it keeps coming! Will you just look at what a wonderfully well designed and useful site this is.'
-			});
-			elementToText.push({
-				element: this.visualizationPanel.variableWidthCol.boxHeatmap,
-				title: 'Forth',
-				text: 'Look out--here comes science!',
-				tipConfig:{
-					anchor: 'r'
-				}
-			});
-			
-			this.tutorialControlPanel.initTips(elementToText);
-			this.tutorialControlPanel.playTips(0);
+			// hidden is stateful, the panel will be created hidden if the tutorial has already been shown
+			if (!this.tutorialControlPanel.hidden) {
+				var elementToText = [];
+				elementToText.push({
+					element: this.getTopToolbar().colorLegendButton,
+					title: 'First',
+					text: 'Some really neat text. Gosh, isn\'t that interesting!'
+				});
+				elementToText.push({
+					element: this.getTopToolbar().saveSelectedButton,
+					title: 'Second',
+					text: 'More interesting text! Amazing. This Gemma site really is the cat\'s meow'
+				});
+				elementToText.push({
+					element: this.controlPanel,
+					title: 'Third',
+					text: 'And it keeps coming! Will you just look at what a wonderfully well designed and useful site this is.',
+					tipConfig:{
+						anchor: 'right'
+					}
+				});
+				elementToText.push({
+					element: this.visualizationPanel.variableWidthCol.boxHeatmap,
+					title: 'Fourth',
+					text: 'Look out--here comes science!',
+					tipConfig:{
+						anchor: 'bottom',
+						anchorOffset: 130, // offsets the little arrow part only
+					}
+				});
 				
-			this.tutorialControlPanel.on('tutorialClosed',function(){
-				delete this.tutorialControlPanel;
-				this.tutorialReady = false;
-			});
+				this.tutorialControlPanel.initTips(elementToText);
+				this.tutorialControlPanel.playTips(0);
+					
+			}
+				this.tutorialControlPanel.on('tutorialHidden',function(){
+					this.tutorialControlPanel.hide();
+					this.tutorialReady = false;
+				}, this);
+			//this.tutorialControlPanel.show();
+					
+			
 		}
 	}
 	
