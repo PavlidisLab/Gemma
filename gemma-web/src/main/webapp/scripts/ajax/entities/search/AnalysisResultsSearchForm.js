@@ -1199,14 +1199,48 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					tplWriteMode: 'overwrite'
 				});
 
+				var toggleHidingExamples = function(){
+					var h = !this.searchExamples.examplesTitle.hidingExamples;
+					this.searchExamples.diffExExamples.diffExExample1.setVisible(h);
+					this.searchExamples.diffExExamples.diffExExample2.setVisible(h);
+					this.searchExamples.coexExamples.coexExample1.setVisible(h);
+					this.searchExamples.coexExamples.coexExample2.setVisible(h);
+					if (h) {
+						this.searchExamples.examplesTitle.update({
+							sign: '-'
+						});
+					} else {
+						this.searchExamples.examplesTitle.update({
+							sign: '+'
+						});
+					}
+				};
+
 				this.searchExamples = new Ext.Panel({
 					ref: 'searchExamples',
 					colspan:4,
 					cls : 'left-align-btn transparent-btn transparent-btn-link',
 					items:[{
-						tag: 'div',
-						html: 'Example Queries:',
-						border: false
+						ref: 'examplesTitle',
+						tpl: 'Example Queries: <a href="javascript:void(0);">[ {sign} ]</a>',
+						data: {sign:'-'},
+						border: false,
+						hidingExamples: false,
+						listeners: {
+							'render': function(){
+									this.body.on('click', function(e){
+										e.stopEvent();
+										this.hidingExamples = !this.hidingExamples; 
+										this.fireEvent('toggleHideExamples');
+									}, this, {
+										delegate: 'a'
+									});
+							},
+							'toggleHideExamples': {
+								fn: toggleHidingExamples,
+								scope: this
+							}
+						}
 					},{
 						ref: 'diffExExamples',
 						border:false,
@@ -1218,8 +1252,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx1TT,
 							listeners: {
 								click: function(){
-									//var goName = "GO_0021766";
-									var goName = "GO_0045208";
+									var goName = "GO_0021766";
+									//var goName = "GO_0045208";
 									var eeSetId = '6112';
 									var taxonId = '1';
 									this.runExampleQuery(eeSetId, goName, taxonId);
