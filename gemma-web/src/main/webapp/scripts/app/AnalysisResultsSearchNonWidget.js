@@ -187,6 +187,31 @@ Ext.onReady(function() {
 			});
 	*/
 		if(!knownGeneGrid){
+			
+			//sometimes when the results get trimmed to the display stringency, the trimmed results are empty, in this case just use retrieved results and reset initial display stringency
+			var displayedResults = result.knownGeneResults;
+			
+			if (searchPanel.getLastCoexpressionSearchCommand().displayStringency > searchPanel.getLastCoexpressionSearchCommand().stringency){			
+			
+				var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes),
+						searchPanel.getLastCoexpressionSearchCommand().displayStringency);
+			
+				if (trimmed.trimmedKnownGeneResults.length != 0){				
+					displayedResults = trimmed.trimmedKnownGeneResults;
+					initialDisplayStringency = searchPanel.getLastCoexpressionSearchCommand().displayStringency;
+									
+				}
+				else{
+					//empty trimmed results at initial Display stringency so reset coexCommand.displayStringency
+					searchPanel.getLastCoexpressionSearchCommand().displayStringency = searchPanel.getLastCoexpressionSearchCommand().stringency;				
+					
+				}
+			
+			
+			}
+			
+			
+			
 			var knownGeneGrid = new Gemma.CoexpressionGrid({
 				width : 900,
 				height : 400,
@@ -344,19 +369,9 @@ Ext.onReady(function() {
 		knownGeneDatasetGrid.loadData(result.knownGeneDatasets);
 		*/
 		knownGeneGrid.cytoscapeRef=cytoscapePanel;
-		
-		if (knownGeneGrid.initialDisplayStringency > knownGeneGrid.currentResultsStringency){
-        	var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes), knownGeneGrid.initialDisplayStringency);
-        	
-        	knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, trimmed.trimmedKnownGeneResults,
-    				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
-        	
-        }
-		else{
-		
-		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
+		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, displayedResults,
 				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
-		}	
+		
 		knownGeneGrid.show();
 				
 		if (admin) {

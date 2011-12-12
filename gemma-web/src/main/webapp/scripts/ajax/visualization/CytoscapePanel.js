@@ -1769,7 +1769,7 @@ Ext.Panel, {
 
         filterFunctionEdges = function (edge) {
 
-            return edge.data.support >= this.initialDisplayStringency;
+            return edge.data.support >= stringency;
 
         };
 
