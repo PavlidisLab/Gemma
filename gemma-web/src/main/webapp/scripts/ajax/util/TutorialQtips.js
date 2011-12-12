@@ -21,26 +21,37 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 	currIndex: 0,
 	padding: 10,
 	bodyStyle: 'background-color: #FFFDE9;line-height:22px',
-	defaults:{
-		bodyStyle:'background: transparent;margin-left:auto;margin-right:auto;width:600px;',
+	defaults: {
+		bodyStyle: 'background: transparent;margin-left:auto;margin-right:auto;width:600px;',
 		border: false,
-		padding:5
+		padding: 5
 	},
 	initComponent: function(){
 		this.currIndex = 0;
 		Gemma.Tutorial.ControlPanel.superclass.initComponent.call(this);
 		this.add([{
-			xtype:'button',
-			text:'close',
-			handler:this.closeTutorial,
-			scope: this
-		},{
-			html: 'You are now using a tutorial. How fun! click the "next" and "previous" buttons.'
+			layout: 'hbox',
+			flex: 1,
+			height: 30,
+			items: [{
+				html: 'You are now using a tutorial. How fun! click the "next" and "previous" buttons.',
+				border: false,
+				bodyStyle: 'background: transparent;',
+				flex: 1
+			}, {
+				xtype: 'button',
+				cls: 'transparent-btn',
+				tooltip: 'Close this tutorial',
+				icon: '/Gemma/images/icons/cross.png',
+				handler: this.closeTutorial,
+				scope: this,
+				flex: 0
+			}]
 		}, {
 			ref: 'controlBtns',
 			layout: {
-				type:'hbox',
-				pack:'end'
+				type: 'hbox',
+				pack: 'end'
 			},
 			
 			items: [{
@@ -66,11 +77,11 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		for (i = 0; i < elementToText.length; i++) {
 			this.targetEls.push(elementToText[i].element);
 			// make tips
-			this.tips.push(Gemma.Tutorial.initTip(elementToText[i]));
+			this.tips.push(this.initTip(elementToText[i]));
 			// make nav buttons for tips
-			this.controlBtns.insert(1+i, {
+			this.controlBtns.insert(1 + i, {
 				xtype: 'button',
-				ref: 'progBtn'+i,
+				ref: 'progBtn' + i,
 				icon: '/Gemma/images/icons/bullet_black.png',
 				cls: 'transparent-btn',
 				toggleHandler: function(button, state){
@@ -102,7 +113,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		} else {
 			this.controlBtns.prevBtn.enable();
 		}
-		if (this.currIndex === (this.tips.length-1)) {
+		if (this.currIndex === (this.tips.length - 1)) {
 			this.controlBtns.nextBtn.disable();
 		} else {
 			this.controlBtns.nextBtn.enable();
@@ -113,8 +124,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		this.showTip(this.tips[++this.currIndex], this.currIndex);
 	},
 	showPrevTip: function(){
-		if(this.currIndex)
-		this.hideTip(this.tips[this.currIndex], this.currIndex);
+		if (this.currIndex) this.hideTip(this.tips[this.currIndex], this.currIndex);
 		this.showTip(this.tips[--this.currIndex], this.currIndex);
 	},
 	closeTutorial: function(){
@@ -129,16 +139,17 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		}
 	},
 	hideTip: function(tip, index){
-		if(!tip) return;
+		if (!tip) 			
+			return;
 		tip.hide();
-		this.controlBtns['progBtn'+index].toggle(false);
+		this.controlBtns['progBtn' + index].toggle(false);
 		//element.removeClass('highlightToggleBorderOn');
 	},
 	showTip: function(tip, index){
 		if (tip) {
 			tip.show();
 		}
-		this.controlBtns['progBtn'+index].toggle(true);
+		this.controlBtns['progBtn' + index].toggle(true);
 		this.updateBtnDisabling();
 		//element.addClass('highlightToggleBorderOn');
 	},
@@ -147,33 +158,45 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 			delete this.targetEls[i].tip;
 			this.targetEls[i].tip = this.targetEls[i].originalTip;
 		}
-	}
-});
-
-Ext.reg('Tutorial.ControlPanel', Gemma.Tutorial.ControlPanel);
-
-Gemma.Tutorial.initTip = function(elementToText){
-	var element, tipTitle, tipBody, tipConfig;
-	element = elementToText.element;
-	tipTitle = elementToText.title;
-	tipBody = elementToText.text;
-	tipConfig = elementToText.tipConfig;
-	if (element.tip ) {
-		element.originalTip = element.tip; 
-	}
-	var tip = new Ext.ToolTip({
+	},
+	initTip: function(elementToText){
+		var element, tipTitle, tipBody, tipConfig;
+		element = elementToText.element;
+		tipTitle = elementToText.title;
+		tipBody = elementToText.text;
+		tipConfig = elementToText.tipConfig;
+		if (element.tip) {
+			element.originalTip = element.tip;
+		}
+		// need this for override of onShow
+		var topScope = this;
+		var tip = new Ext.ToolTip({
 			cls: 'x-tip-yellow',
 			anchorToTarget: true,
+			target: element.el, // The overall target element.
+			// overwrite the onShow method to control when the tool tip is shown
+			// we don't want its show/hide state to be effected by hovering on the target element	
+			onShow: function(){
+				// if the tip is supposed to be shown according to the tutorial's controls, then show it
+				var onId = (topScope.tips[topScope.currIndex])? topScope.tips[topScope.currIndex].id : -1;
+				if ( onId === this.id) {
+					if (this.floating) {
+						return this.el.show();
+					}
+					Ext.Panel.superclass.onShow.call(this);
+				}
+				// in any other case, don't show it
+				return false;
+			},
 			hidden: true,
 			padding: 10,
-			target: element.el, // The overall target element.
 			trackMouse: false,
 			renderTo: Ext.getBody(), // Render immediately so that tip.body can be referenced prior to the element show.
 			html: tipBody,
 			title: tipTitle,
 			anchor: 'right',
 			autoHide: false,
-			draggable:true,
+			draggable: true,
 			closable: true,
 			listeners: {
 				'render': function(){
@@ -184,36 +207,11 @@ Gemma.Tutorial.initTip = function(elementToText){
 						delegate: 'a'
 					});
 				}
-		}
-	});
-	
-	Ext.apply(tip, tipConfig);
-	return tip;
-}
-Gemma.Tutorial.showHelp = function(elementToText){
-
-	var hideTip = function(element){
-		if(!element.tip) return;
-		element.tip.hide();
-		element.removeClass('highlightToggleBorderOn');
-	}
-		
-	var currDef, currTip;
-	var playTips = function (i) {
-			if (i < elementToText.length) {
-				currDef = elementToText[i];
-				currTip = Gemma.Tutorial.initTip(currDef);
-				currTip.on('nextTip', function(){
-					hideTip(currDef.element);
-					playTips(++i);
-				}, this);
-			} else {
-				hideTip(currDef.element);
 			}
-			return;
-		}.createDelegate(this);
-		
-	playTips(0);
-		
+		});
+		Ext.apply(tip, tipConfig);
+		return tip;
+	}
+});
 
-};
+Ext.reg('Tutorial.ControlPanel', Gemma.Tutorial.ControlPanel);
