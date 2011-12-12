@@ -128,6 +128,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		this.showTip(this.tips[--this.currIndex], this.currIndex);
 	},
 	closeTutorial: function(){
+		this.currIndex = -1;
 		this.hideAllTips();
 		this.resetToOriginalTips();
 		this.hide();
