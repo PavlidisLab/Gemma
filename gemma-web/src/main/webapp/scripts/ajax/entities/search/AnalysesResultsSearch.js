@@ -163,6 +163,10 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			//coexResultsTabPanel.add(diffExResultsDiv);
 			//coexResultsTabPanel.doLayout();
 				Ext.apply(data,{applyTo:diffExResultsDiv.getId()});
+				
+				// override showing tutorial, for now only works with non-widget version
+				Ext.apply(data,{showTutorial:false});
+				
 				this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data);
 				this.diffVisualizer.on('visualizationLoaded', function(){
 					this.searchPanel.collapse();

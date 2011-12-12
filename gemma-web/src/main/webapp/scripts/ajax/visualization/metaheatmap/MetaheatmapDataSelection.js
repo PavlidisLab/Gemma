@@ -205,7 +205,8 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 						var title = '<b>Differential Expression Visualisation</b>';
 						var config = {
 									toolbarTitle : title,
-									visualizationData : data
+									visualizationData : data,
+									showTutorial: this.param.showTutorial
 								};
 						if(this.applyToParam){
 							Ext.apply(config,{

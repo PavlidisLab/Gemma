@@ -72,6 +72,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 	},
 	initTips: function(elementToText){
 		this.currIndex = 0;
+		this.tips = [];
 		var i;
 		var progressBtns = [];
 		for (i = 0; i < elementToText.length; i++) {
@@ -130,8 +131,9 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 	closeTutorial: function(){
 		this.currIndex = -1;
 		this.hideAllTips();
-		this.resetToOriginalTips();
 		this.hide();
+		this.fireEvent('tutorialClosed');
+		this.destroy();
 	},
 	hideAllTips: function(){
 		var i;
@@ -140,25 +142,16 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		}
 	},
 	hideTip: function(tip, index){
-		if (!tip) 			
-			return;
+		if (!tip) return;
 		tip.hide();
 		this.controlBtns['progBtn' + index].toggle(false);
-		//element.removeClass('highlightToggleBorderOn');
+		
 	},
 	showTip: function(tip, index){
-		if (tip) {
-			tip.show();
-		}
+		if (!tip) return;
+		tip.show();
 		this.controlBtns['progBtn' + index].toggle(true);
 		this.updateBtnDisabling();
-		//element.addClass('highlightToggleBorderOn');
-	},
-	resetToOriginalTips: function(){
-		for (i = 0; i < this.targetEls.length; i++) {
-			delete this.targetEls[i].tip;
-			this.targetEls[i].tip = this.targetEls[i].originalTip;
-		}
 	},
 	initTip: function(elementToText){
 		var element, tipTitle, tipBody, tipConfig;
@@ -166,9 +159,6 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		tipTitle = elementToText.title;
 		tipBody = elementToText.text;
 		tipConfig = elementToText.tipConfig;
-		if (element.tip) {
-			element.originalTip = element.tip;
-		}
 		// need this for override of onShow
 		var topScope = this;
 		var tip = new Ext.ToolTip({
@@ -207,6 +197,12 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 					}, this, {
 						delegate: 'a'
 					});
+				},
+				'show': function(){
+					element.addClass('highlightToggleBorderOn');
+				},
+				'hide': function(){
+					element.removeClass('highlightToggleBorderOn');
 				}
 			}
 		});

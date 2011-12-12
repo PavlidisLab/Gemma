@@ -114,7 +114,13 @@ Ext.onReady(function() {
 		
 		// remove previous diff visualization result
 		Ext.DomHelper.overwrite('meta-heatmap-div',{html:''});
+		var tut = Ext.getCmp('tutorial-cntlPanel-diff-ex');
+		if (tut) {
+			tut.closeTutorial();
+		}
 		Ext.DomHelper.overwrite('tutorial-control-div',{html:''});
+		
+		
 		
 		//clear browser warning
 		if (redirectToClassic) {

@@ -167,7 +167,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 					  	xtype: 'button',
 					  	text: '<b>Color Legend</b>',
 					  	enableToggle: true,
-					  	//tooltip : 'Show/hide the color legend',
+					  	tooltip : 'Show/hide the color legend',
 						toggleHandler: function(btn, pressed){
 									if (pressed) {
 										this.visualizationPanel.isLegendShown = true;
@@ -354,10 +354,10 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			this.visualizationPanel.redraw();
 						
 			this.visualizationPanel.mask.hide();			
-		}, this);		
+		}, this);	
 		
 		
-		this.on('afterLayout', this.showHelp);
+		this.on('afterLayout', this.showHelpConditionally);
 		
 	},	
 	
@@ -507,14 +507,16 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 	},
 		
 		
-	showHelp: function(){
+	showHelpConditionally: function(){
 	
-		if (!this.tutorialReady) {
+		if (this.showTutorial && !this.tutorialReady) {
 			this.tutorialReady = true;
 					
 			this.tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
 				hidden:true,
-				renderTo: 'tutorial-control-div'
+				renderTo: 'tutorial-control-div',
+				// need id to clear tutorial between searches
+				id: 'tutorial-cntlPanel-diff-ex'
 			});
 			this.tutorialControlPanel.show();
 					
@@ -549,8 +551,8 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			this.tutorialControlPanel.initTips(elementToText);
 			this.tutorialControlPanel.playTips(0);
 				
-			this.tutorialControlPanel.on('closeTutorial',function(){
-				this.tutorialControlPanel.close();
+			this.tutorialControlPanel.on('tutorialClosed',function(){
+				delete this.tutorialControlPanel;
 				this.tutorialReady = false;
 			});
 		}
