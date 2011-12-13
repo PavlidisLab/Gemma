@@ -370,6 +370,8 @@ public class PhenotypeAssoManagerServiceHelper {
 
             // primary bibliographic reference
             literatureEvidence.setCitation( findOrCreateBibliographicReference( primaryPubMed ) );
+            
+            return literatureEvidence;
 
         } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
 
@@ -468,6 +470,7 @@ public class PhenotypeAssoManagerServiceHelper {
                     .loadExternalDatabaseEvidence( id );
             externalDatabaseEvidence.getEvidenceSource().setAccession(
                     externalDatabaseVO.getDatabaseEntryValueObject().getAccession() );
+            return externalDatabaseEvidence;
         }
         return null;
     }

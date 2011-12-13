@@ -137,6 +137,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         phenotypeAssociation = this.associationService.create( phenotypeAssociation );
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
+        // if the trees are present in the cache, change the tree with the corresponding phenotypes
+        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE )){
+            buildTree( evidence.getPhenotypes() );
+        }
+        
+
         return new GeneEvidenceValueObject( gene );
     }
 
@@ -253,6 +259,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public void remove( Long id ) {
         PhenotypeAssociation loaded = this.associationService.load( id );
+
+        EvidenceValueObject evidenceVo = EvidenceValueObject.convert2ValueObjects(loaded);
+
+        // if the trees are present in the cache, change the tree with the corresponding phenotypes
+        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE )){
+            buildTree( evidenceVo.getPhenotypes() );
+        }
+
         if ( loaded != null ) this.associationService.remove( loaded );
     }
 
@@ -638,7 +652,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** built the tree, the valueUriUpdate is used when a new phenotype is created or deleted to reset cache */
-    private Collection<TreeCharacteristicValueObject> buildTree( String valueUriUpdate ) {
+    private Collection<TreeCharacteristicValueObject> buildTree( Collection<CharacteristicValueObject> phenotypesUpdate ) {
         // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
 
@@ -685,18 +699,25 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // used to update the tree in cache when there is a new phenotype or deleted phenotype
-        if ( valueUriUpdate != null ) {
+        if ( phenotypesUpdate != null && phenotypesUpdate.size() > 0 ) {
             if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-
-                // find the new added or deleted term
-                TreeCharacteristicValueObject treeCharacteristicValueObject = phenotypeFoundInTree.get( valueUriUpdate );
-                // determine the root of the tree this phenotype is in
-                String rootParent = treeCharacteristicValueObject.getRootOfTree();
 
                 Cache phenoCountCache = this.cacheManager
                         .getCache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE );
-                // remove the root from the cache has the gene counts changed
-                phenoCountCache.remove( rootParent );
+
+                for ( CharacteristicValueObject phenotypeUpdate : phenotypesUpdate ) {
+
+                    // find the new added or deleted term
+                    TreeCharacteristicValueObject treeCharacteristicValueObject = phenotypeFoundInTree
+                            .get( phenotypeUpdate.getValueUri() );
+                    if ( treeCharacteristicValueObject != null ) {
+                        // determine the root of the tree this phenotype is in
+                        String rootParent = treeCharacteristicValueObject.getRootOfTree();
+
+                        // remove the root from the cache has the gene counts changed
+                        phenoCountCache.remove( rootParent );
+                    }
+                }
             }
         }
 
@@ -847,5 +868,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         return allPhenotypesFoundInOntology;
     }
+    
 
 }
