@@ -891,7 +891,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			pvalue : Gemma.DEFAULT_THRESHOLD,
 			datasetCount : experimentCount,
 			selectionsModified : this.wereSelectionsModified(),
-			showTutorial: this.runningExampleQuery
+			showTutorial: false//this.runningExampleQuery
 		};
 		return data;
 	},
@@ -910,7 +910,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		}
 		this.loadMask.hide();
 		this.fireEvent('aftersearch', this, result);
-		this.fireEvent('showCoexResults', this, result, this.runningExampleQuery);
+		this.fireEvent('showCoexResults', this, result, false); //this.runningExampleQuery);
 		var csc = this.lastCSC;
 		/*
 		 * take this out for now because of new coexSearchQuick2 call
@@ -929,7 +929,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			if (!this.doneCoex) {
 				return;
 			} else {
-				this.fireEvent('showCoexResults', this, result, this.runningExampleQuery);
+				this.fireEvent('showCoexResults', this, result, false);//this.runningExampleQuery);
 			}
 		}
 		this.loadMask.hide();
