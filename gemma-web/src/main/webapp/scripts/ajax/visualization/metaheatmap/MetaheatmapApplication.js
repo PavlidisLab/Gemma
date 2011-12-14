@@ -514,6 +514,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		if (this.showTutorial && !this.tutorialControlPanel) {
 		
 			this.tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
+				instructions: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.instructions,
 				renderTo: 'tutorial-control-div',
 				// need id to clear tutorial between searches
 				id: 'tutorial-cntlPanel-diff-ex',

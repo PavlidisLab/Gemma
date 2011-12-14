@@ -334,7 +334,8 @@ Gemma.HelpText.WidgetDefaults = {
 			sortAndFilterTitle: 'Sort and Filter',
 			sortAndFilterText: 'Change the layout of your data to clarify patterns.',
 			downloadTitle: 'Download your Results',
-			downloadText: 'Save an image of your chart or save a text version of the results.'
+			downloadText: 'Save an image of your chart or save a text version of the results.',
+			instructions: 'This tutorial will point out some features of your differential expression search results. Click the "next" and "previous" buttons to navigate between tips and click the "X" to close the tutorial.'
 		}
 	},
 	PhenotypeEvidenceGridPanel:{
@@ -372,7 +373,7 @@ Gemma.HelpText.WidgetDefaults = {
 	},
 	Tutorial:{
 		ControlPanel: {
-			instructions: 'You are now using a tutorial. How fun! click the "next" and "previous" buttons.'
+			instructions: 'This tutorial will point out some features of this page. Click the "next" and "previous" buttons to navigate between tips and click the "X" to close the tutorial.'
 		}
 	},
 	VisualizationWithThumbsPanel: {

@@ -20,7 +20,7 @@ Ext.namespace('Gemma.Tutorial');
  * @param {Object[]} tipDefinition
  */
 Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
-	
+	instructions: Gemma.HelpText.WidgetDefaults.Tutorial.ControlPanel.instructions,
 	padding: 10,
 	bodyStyle: 'background-color: #FFFDE9;line-height:22px',
 	defaults: {
@@ -49,7 +49,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 			flex: 1,
 			height: 30,
 			items: [{
-				html: Gemma.HelpText.WidgetDefaults.Tutorial.ControlPanel.instructions,
+				html: this.instructions,
 				border: false,
 				bodyStyle: 'background: transparent;',
 				flex: 1
