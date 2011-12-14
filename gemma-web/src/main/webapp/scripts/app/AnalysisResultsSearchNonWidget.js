@@ -127,7 +127,7 @@ Ext.onReady(function() {
 	},this);
 		
 	searchPanel.on("showCoexResults",function(panel,result, showTutorial){
-		this.showTutorial = showTutorial; 
+		this.showCoexTutorial = showTutorial; 
 		/*
 		 * Report any errors.
 		 */
@@ -272,7 +272,7 @@ Ext.onReady(function() {
 		// render may fire more than once
 		//resultsPanel.tutorialStarted = false;
 		resultsPanel.on('afterlayout', function(){
-			if (!resultsPanel.tutorialStarted && this.showTutorial) {
+			if (!resultsPanel.tutorialStarted && this.showCoexTutorial) {
 				//resultsPanel.tutorialStarted = true;
 				this.coexTutorialControlPanel.show();
 				this.coexTutorialControlPanel.playTips(0);
