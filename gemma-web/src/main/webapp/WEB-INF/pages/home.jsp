@@ -52,19 +52,23 @@ Ext.onReady(function() {
 
 <input type="hidden" id="reloadOnLogout" value="false">
 
+	
 <div style="padding-left:0px">
 <div align="center">
+
+	
 	<div style="width: 900px">
 		<div align="center">
 			<div id="analysis-results-search-form-warnings" align="left"></div>
 			<div id="analysis-results-search-form" align="left"></div>
 			<br>
+			
+	<div id="tutorial-control-div" align="left"></div>
 			<div id="analysis-results-search-form-messages" align="left"></div>
 			<div id="analysis-results-search-form-results" align="left"></div>
 		</div>
 	</div>
 
-	<div id="tutorial-control-div" align="left"></div>
 	<div id="meta-heatmap-div" align="left"></div>
 
 	<div style="width: 900px">

@@ -56,26 +56,6 @@ Ext.onReady(function() {
 	
 	// override actions triggered by nav keys for combo boxes (ie tab should not bring the user to the next box)
 
-	// panel to hold all results of searches 
-	this.resultsPanel = new Ext.TabPanel({
-		id:'analysis-results-search-form-results-panel',
-		renderTo : 'analysis-results-search-form-results',
-		height: 610,
-		defaults: {
-			autoScroll: true,
-			width: 850
-		},
-		deferredRender: true,
-		hidden:true
-				
-		//layout:'fit' //only works with one component per container
-		//border:false,
-		//autoHeight:true,
-		
-		//bodyStyle:'text-align:left;',
-		//style:'text-align:left'
-		
-	});
 		
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
 	//Ext.EventManager.onWindowResize(this.resultsPanel.doLayout, this.resultsPanel); 
@@ -90,8 +70,11 @@ Ext.onReady(function() {
 		if (Ext.getCmp("cytoscaperesults")){
 			Ext.getCmp("cytoscaperesults").coexGridRef=null;
 		}
-		this.resultsPanel.removeAll(); 
-		this.resultsPanel.hide();
+		if (this.resultsPanel) {
+			this.resultsPanel.removeAll(); 
+			this.resultsPanel.hide();
+		}
+		
 		panel.clearError();
 		
 		// once the user performs a search, hide the main page elements 
@@ -133,13 +116,19 @@ Ext.onReady(function() {
 		
 	searchPanel.on("showCoexResults",function(panel,result){
 		
-		var coexOptions = new Gemma.CoexpressionSearchOptions();
-		coexOptions.on('rerunSearch',function(stringency, forceProbe, queryGenesOnly){
-				coexOptions.hide();
-				resultsPanel.removeAll();
-				searchPanel.redoRecentCoexpressionSearch(stringency, forceProbe, queryGenesOnly);
-			},this);
-					
+
+	// panel to hold all results of searches 
+	var resultsPanel = new Ext.TabPanel({
+		id:'analysis-results-search-form-results-panel',
+		height: 610,
+		defaults: {
+			autoScroll: true,
+			width: 850
+		},
+		deferredRender: false, // so tutorial works
+		hidden:true
+		
+	});
 		/*
 		 * Report any errors.
 		 */
@@ -161,33 +150,7 @@ Ext.onReady(function() {
 			
 			return;
 		}
-		/*
-		var summaryPanel = new Ext.Panel({
-				width : 900,
-				id : 'summarypanel',
-				height : 300,
-				collapsed : true
-			});
-*/
-		/*
-		var summaryGrid = new Gemma.CoexpressionSummaryGrid({
-					genes : result.queryGenes,
-					//renderTo : "summarypanel",
-					summary : result.summary,
-					//collapsed:true,
-					//collapsible:true,
-					width:900
-				});
-		*/
-		
-		/*
-		var knownGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
-				width : 900,
-				colspan : 2,
-				collapsible : false,
-				collapsed : false
-			});
-	*/
+
 		if(!knownGeneGrid){
 			
 			//sometimes when the results get trimmed to the display stringency, the trimmed results are empty, in this case just use retrieved results and reset initial display stringency
@@ -218,6 +181,8 @@ Ext.onReady(function() {
 				width : 900,
 				height : 400,
 				title : "Coexpression Results",
+				ref: 'coexGridResults',
+				id: 'coexGridResults',
 				colspan : 2,
 				user : user,
 				tabPanelViewFlag : true,
@@ -231,6 +196,7 @@ Ext.onReady(function() {
 		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
 					id : "cytoscaperesults",
+					ref: 'coexCytoscapeResults',
 					title : "Visualization",
 					queryGenes : result.queryGenes,
 					knownGeneResults : result.knownGeneResults,
@@ -243,166 +209,105 @@ Ext.onReady(function() {
 					hideMode:'visibility'
 					
 				});
-		
-		
-		
-	//var items = [summaryPanel, knownGeneDatasetGrid, knownGeneGrid];
-		
-			if (admin) {
-
-		/*
-		 * Note: doing allPanel.add doesn't work. Probably something to do with the table layout; indeed:
-		 * https://extjs.com/forum/showthread.php?p=173090
-		 */
-/*
-		predictedGeneDatasetGrid = new Gemma.CoexpressionDatasetGrid({
-					width : 900,
-					colspan : 2,
-					adjective : "predicted gene",
-					collapsed : true
-				});
-
-		predictedGeneGrid = new Gemma.CoexpressionGrid({
-					width : 900,
-					title : "Coexpressed predicted genes",
-					id : 'pred-gene-grid',
-					colspan : 2,
-					height : 400,
-					collapsed : true
-				});
-
-		probeAlignedDatasetGrid = new Gemma.CoexpressionDatasetGrid({
-					width : 900,
-					colspan : 2,
-					id : 'par-dataset-grid',
-					adjective : "probe-aligned region",
-					collapsed : true
-				});
-
-		probeAlignedGrid = new Gemma.CoexpressionGrid({
-					width : 900,
-					colspan : 2,
-					height : 400,
-					title : "Coexpressed probe-aligned regions",
-					collapsed : true
-				});
-
-		//items.push(predictedGeneDatasetGrid);
-		//items.push(predictedGeneGrid);
-		//items.push(probeAlignedDatasetGrid);
-		//items.push(probeAlignedGrid);
-*/
-		}
+								
+		setupCoexTutorial(resultsPanel, knownGeneGrid, cytoscapePanel);
 		
 		panel.collapsePreviews();
-		/*resultsPanel.add(
-		{
-			layout: 'hbox',
-			items: [{
-				html: "<h2>Coexpression Search Results</h2><br>",
-				border:false
-			}, {
-				xtype: 'button',
-				text: 'refine',
-				style: 'padding-top: 5px; padding-left: 10px',
-				scope: this,
-				handler: function(){
-					coexOptions.show();
-				}
-			}],
-			border: false
-		});*/
-		//resultsPanel.add(summaryGrid);
 		
 		resultsPanel.add(knownGeneGrid);
-		resultsPanel.add(cytoscapePanel);
-		//resultsPanel.add(knownGeneDatasetGrid);		
+		resultsPanel.add(cytoscapePanel);	
+		
+		resultsPanel.render('analysis-results-search-form-results');
+		
 		resultsPanel.show();
 		resultsPanel.doLayout();
-		//cytoscapePanel.show();
-
-		//reset coex summary panel
-		//Ext.DomHelper.overwrite('summarypanel', "");
-		
-/*
-		var eeMap = {};
-		if (result.datasets) {
-			for (var i = 0; i < result.datasets.length; ++i) {
-				var ee = result.datasets[i];
-				eeMap[ee.id] = ee;
-			}
-		}
-*/
-		
-		/*summaryPanel = new Gemma.CoexpressionSummaryGrid({
-					genes : result.queryGenes,
-					renderTo : "summarypanel",
-					summary : result.summary
-				});*/
-
-		// create expression experiment image map
-		/*var imageMap = Ext.get("eeMap");
-		if (!imageMap) {
-			imageMap = Ext.getBody().createChild({
-						tag : 'map',
-						id : 'eeMap',
-						name : 'eeMap'
-					});
-		}
-
-		Gemma.CoexpressionGrid.getBitImageMapTemplate().overwrite(imageMap, result.datasets);
-
-		var link = panel.getCoexBookmarkableLink();
-		knownGeneGrid
-				.setTitle(String
-						.format(
-								"Coexpressed genes &nbsp;&nbsp;&nbsp;<a href='{0}' title='bookmarkable link'><img src=\"/Gemma/images/icons/link.png\" alt='bookmark'/></a>&nbsp; <a target='_blank' href='{0}&export' title='download'><img src=\"/Gemma/images/download.gif\" alt='download'/></a>",
-								link));
-
-				
-		resultsPanel.doLayout();
-		//resultsPanel.show();
-*/
-				
-		
-
-		/*
-		Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.knownGeneDatasets, eeMap);
-		knownGeneDatasetGrid.loadData(result.knownGeneDatasets);
-		*/
 		knownGeneGrid.cytoscapeRef=cytoscapePanel;
 		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, displayedResults,
 				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
 		
 		knownGeneGrid.show();
-				
-		if (admin) {
-			/*
-			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.predictedGeneDatasets, eeMap);
-			predictedGeneDatasetGrid.loadData(result.predictedGeneDatasets);
-			predictedGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.predictedGeneResults,
-					result.predictedGeneDatasets);
 
-			Gemma.CoexpressionDatasetGrid.updateDatasetInfo(result.probeAlignedRegionDatasets, eeMap);
-			probeAlignedDatasetGrid.loadData(result.probeAlignedRegionDatasets);
-			probeAlignedGrid.loadData(result.isCannedAnalysis, result.queryGenes.length,
-					result.probeAlignedRegionResults, result.probeAlignedRegionDatasets);
-			*/
-		}
 	});
 	
-	searchPanel.on("showOptions",function(stringency, forceProbeLevelSearch, queryGenesOnly){
-		if(this.admin){
-			resultsPanel.insert(1, {border:false,html:'<h4>Refinements Used:</h4>Stringency = '+stringency+
-			'<br>Probe-level search: '+forceProbeLevelSearch+
-			"<br>Results only among query genes: "+queryGenesOnly+'<br>'});
-		}else{
-			resultsPanel.insert(1, {border:false,html:'<h4>Refinements Used:</h4>Stringency = '+stringency+
-			"<br>Results only among query genes: "+queryGenesOnly+'<br>'});
+	var setupCoexTutorial = function(resultsPanel, knownGeneGrid, cytoscapePanel){
+		this.coex = {};
+		if (this.coex.showTutorial && this.coex.tutorialReady && this.coex.tutorialControlPanel) {
+			this.coex.tutorialControlPanel.show();
 		}
-		
-		resultsPanel.doLayout();
-	});
+		else{
+				this.tutorialReady = true;
+			var tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
+				renderTo: 'tutorial-control-div',
+			// need id to clear tutorial between searches
+			//id: 'tutorial-cntlPanel-coex',
+			//stateId: 'coExVisualiserTutorial'
+			});
+			this.coex.tutorialControlPanel = tutorialControlPanel;
+			// if hidden is stateful, the panel will be created hidden if the tutorial has already been shown
+			if (!tutorialControlPanel.hidden) {
+				knownGeneGrid.getTopToolbar().stringencyfield.on('afterrender', function(){
+					var tipDefs = [];
+					tipDefs.push({
+						element: knownGeneGrid.getTopToolbar().stringencyfield,
+						title: 'Stringency',
+						text: 'Some really awesome info about stringency',
+						tipConfig: {
+							ownerTabId: knownGeneGrid.id
+						},
+						onShow: function(){
+							resultsPanel.setActiveTab('coexGridResults');
+						}.createDelegate(this)
+					});
+					
+					tutorialControlPanel.addTips(tipDefs);
+					
+				}, this);
+				
+				cytoscapePanel.getTopToolbar().nodeDegreeEmphasis.on('afterrender', function(){
+					var tipDefs = [];
+					tipDefs.push({
+						element: cytoscapePanel.getTopToolbar().nodeDegreeEmphasis,
+						title: 'node deg',
+						text: 'Some really awesome info about node deg',
+						tipConfig: {
+							anchor: 'top',
+							ownerTabId: cytoscapePanel.id
+						},
+						onShow: function(){
+							resultsPanel.setActiveTab('cytoscaperesults');
+						}.createDelegate(this)
+					});
+					tutorialControlPanel.addTips(tipDefs);
+				});
+				
+				
+			}
+			resultsPanel.tutorialStarted = false;
+			resultsPanel.on('afterlayout', function(){
+				if (!resultsPanel.tutorialStarted) {
+					resultsPanel.tutorialStarted = true;
+					tutorialControlPanel.playTips(0);
+					
+					resultsPanel.on('beforetabchange', function(tabPanel, newTab, currTab){
+						// don't hide first showing of tab
+						if (tabPanel.getActiveTab()) {
+							var tabTips = tutorialControlPanel.getTipsBy(function(tip){
+								return (tip.ownerTabId === currTab.id);
+							}.createDelegate(this));
+							tutorialControlPanel.hideTips(tabTips);
+						}
+					});
+				}
+			}, this);
+			
+			tutorialControlPanel.on('tutorialHidden', function(){
+				tutorialControlPanel.hide();
+				this.tutorialReady = false;
+			}, this);
+		}
+			
+	};
+	
 	
 	searchPanel.on("showDiffExResults",function(panel,result, data){
 		
@@ -427,6 +332,31 @@ Ext.onReady(function() {
 		}
 		else {
 			
+	// panel to hold all results of searches 
+	this.resultsPanel = new Ext.TabPanel({
+		id:'analysis-results-search-form-results-panel',
+		renderTo : 'analysis-results-search-form-results',
+		height: 610,
+		defaults: {
+			autoScroll: true,
+			width: 850
+		},
+		deferredRender: false, // so tutorial works
+		hidden:true,
+		listeners: {
+			'afterrender': function(){
+				console.log('afttter');
+			}
+		}
+				
+		//layout:'fit' //only works with one component per container
+		//border:false,
+		//autoHeight:true,
+		
+		//bodyStyle:'text-align:left;',
+		//style:'text-align:left'
+		
+	});
 			this.resultsPanel.removeAll(); 
 			this.resultsPanel.hide(); 
 			var diffExResultsGrid = new Gemma.DiffExpressionGrid({

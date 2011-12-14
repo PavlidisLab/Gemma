@@ -73,6 +73,8 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	geneGroupId : null, // keep track of what gene group has been selected
 	experimentIds : [],
 
+	hidingExamples: false,
+
 	//***************************************************************************
 	// * * SEARCH **
 	// **************************************************************************/
@@ -278,7 +280,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	doSearch : function(geneSetValueObjects, experimentSetValueObjects) {		
 		
 		this.collapsePreviews();
-		//this.hideExampleQueries();
+		this.toggleHidingExamples();
 		
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -1199,23 +1201,6 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					tplWriteMode: 'overwrite'
 				});
 
-				var toggleHidingExamples = function(){
-					var h = !this.searchExamples.examplesTitle.hidingExamples;
-					this.searchExamples.diffExExamples.diffExExample1.setVisible(h);
-					this.searchExamples.diffExExamples.diffExExample2.setVisible(h);
-					this.searchExamples.coexExamples.coexExample1.setVisible(h);
-					this.searchExamples.coexExamples.coexExample2.setVisible(h);
-					if (h) {
-						this.searchExamples.examplesTitle.update({
-							sign: '-'
-						});
-					} else {
-						this.searchExamples.examplesTitle.update({
-							sign: '+'
-						});
-					}
-				};
-
 				this.searchExamples = new Ext.Panel({
 					ref: 'searchExamples',
 					colspan:4,
@@ -1230,14 +1215,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							'render': function(){
 									this.body.on('click', function(e){
 										e.stopEvent();
-										this.hidingExamples = !this.hidingExamples; 
 										this.fireEvent('toggleHideExamples');
 									}, this, {
 										delegate: 'a'
 									});
 							},
 							'toggleHideExamples': {
-								fn: toggleHidingExamples,
+								fn: this.toggleHidingExamples,
 								scope: this
 							}
 						}
@@ -1593,8 +1577,26 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	/**
 	 * hide the example queries
 	 */
-	hideExampleQueries : function(){
-		this.searchExamples.hide();
+	toggleHidingExamples : function(){
+		
+		//this.searchExamples.hide();
+		//var toggleHidingExamples = function(){
+					var h = !this.hidingExamples;
+					this.searchExamples.diffExExamples.diffExExample1.setVisible(h);
+					this.searchExamples.diffExExamples.diffExExample2.setVisible(h);
+					this.searchExamples.coexExamples.coexExample1.setVisible(h);
+					this.searchExamples.coexExamples.coexExample2.setVisible(h);
+					if (h) {
+						this.searchExamples.examplesTitle.update({
+							sign: '-'
+						});
+					} else {
+						this.searchExamples.examplesTitle.update({
+							sign: '+'
+						});
+					}
+				this.hidingExamples = !this.hidingExamples; 
+		//		};
 	},
 	/**
 	 * hide the example queries

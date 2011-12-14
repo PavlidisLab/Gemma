@@ -269,6 +269,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			      	  },'-',{
 					  	xtype: 'button',
 						text: '<b>Download</b>',
+						ref: 'downloadButton',
 						icon: '/Gemma/images/download.gif',
 					  	menu: new Ext.menu.Menu({
 							items: [{
@@ -515,41 +516,55 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			this.tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
 				renderTo: 'tutorial-control-div',
 				// need id to clear tutorial between searches
-				id: 'tutorial-cntlPanel-diff-ex',
-				stateId: 'diffExVisualiserTutorial'
+				//id: 'tutorial-cntlPanel-diff-ex',
+				//stateId: 'diffExVisualiserTutorial'
 			});
 			// hidden is stateful, the panel will be created hidden if the tutorial has already been shown
 			if (!this.tutorialControlPanel.hidden) {
 				var elementToText = [];
 				elementToText.push({
-					element: this.getTopToolbar().colorLegendButton,
-					title: 'First',
-					text: 'Some really neat text. Gosh, isn\'t that interesting!'
+					element: this.visualizationPanel.variableWidthCol.boxHeatmap,
+					title: 'Search Results',
+					text: 'Your results are displayed as a heatmap of genes vs conditions. The darker the pink, the smaller the p value. Hover over a cell for more details.',
+					tipConfig:{
+						anchor: 'bottom',
+						anchorOffset: 130 // offsets the little arrow part only
+					},
+					position: {
+						moveDown: 50
+					}
 				});
 				elementToText.push({
-					element: this.getTopToolbar().saveSelectedButton,
-					title: 'Second',
-					text: 'More interesting text! Amazing. This Gemma site really is the cat\'s meow'
+					element: this.visualizationPanel.fixedWidthCol.pnlMiniControl.showFoldChangeToggle,
+					title: 'Fold Change',
+					text: 'Use this button to toggle between p value and fold change.',
+					tipConfig:{
+						anchor: 'left'
+					}
+				});
+				elementToText.push({
+					element: this.getTopToolbar().colorLegendButton,
+					title: 'Color Legend',
+					text: 'View the color legend for the chart.'
 				});
 				elementToText.push({
 					element: this.controlPanel,
-					title: 'Third',
-					text: 'And it keeps coming! Will you just look at what a wonderfully well designed and useful site this is.',
+					title: 'Sort and Filter',
+					text: 'Change the layout of your data to clarify patterns.',
 					tipConfig:{
 						anchor: 'right'
+					},
+					position: {
+						moveDown: 150
 					}
 				});
 				elementToText.push({
-					element: this.visualizationPanel.variableWidthCol.boxHeatmap,
-					title: 'Fourth',
-					text: 'Look out--here comes science!',
-					tipConfig:{
-						anchor: 'bottom',
-						anchorOffset: 130, // offsets the little arrow part only
-					}
+					element: this.getTopToolbar().downloadButton,
+					title: 'Download your Results',
+					text: 'Save an image of your chart or save a text version of the results.'
 				});
 				
-				this.tutorialControlPanel.initTips(elementToText);
+				this.tutorialControlPanel.addTips(elementToText);
 				this.tutorialControlPanel.playTips(0);
 					
 			}

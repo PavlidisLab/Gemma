@@ -243,7 +243,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						                	decimalPrecision: 1,
 						                	incrementValue: 1,
 						                	accelerate: false,
-						                	//ref: 'stringencyfield',
+						                	ref: 'stringencyfield',
 						                	allowBlank: false,
 						                	allowDecimals: false,
 						                	allowNegative: false,

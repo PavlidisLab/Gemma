@@ -119,6 +119,7 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 						scope: this
 					}, {
 						xtype: 'button',
+						ref: 'showFoldChangeToggle',
 						text: 'Show fold change',
 						width: 95,
 						handler: function(btn, e){

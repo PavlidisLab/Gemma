@@ -518,6 +518,7 @@ Ext.Panel, {
                 xtype: 'tbspacer'
             }, {
                 xtype: 'spinnerfield',
+				ref: 'stringencySpinner',
                 itemId: 'stringencySpinner',
                 decimalPrecision: 1,
                 incrementValue: 1,
@@ -626,6 +627,7 @@ Ext.Panel, {
             {
                 xtype: 'button',
                 itemId: 'nodeDegreeEmphasis',
+				ref: 'nodeDegreeEmphasis',
                 text: '<b>'+Gemma.HelpText.WidgetDefaults.CytoscapePanel.nodeDegreeEmphasisText+'</b>',
 
                 enableToggle: 'true',
