@@ -149,15 +149,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						width : 30,
 						hidden : this.tabPanelViewFlag
 					}, {
-						id : 'visualize',
-						header : "Visualize",
-						dataIndex : "visualize",
-						renderer : this.visStyler.createDelegate(this),
-						tooltip : "Link for visualizing raw data",
-						sortable : false,
-						width : 35						
-
-					}, {
 						id : 'found',
 						header : "Coexpressed Gene",
 						dataIndex : "foundGene",
@@ -181,6 +172,15 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						tooltip : "nodeDegree",
 						sortable : true
 						
+					}, {
+						id : 'visualize',
+						header : "Visualize",
+						dataIndex : "visualize",
+						renderer : this.visStyler.createDelegate(this),
+						tooltip : "Link for visualizing raw data",
+						sortable : false,
+						width : 35						
+
 					}, {
 						id : 'gene2GeneProteinAssociationStringUrl',
 						header : "PPI",
@@ -216,7 +216,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						sortable : false,
 						width : 30,
 						tooltip : "Links to other websites for more information",
-						renderer : this.linkOutStyler
+						renderer : this.linkOutStyler,
+						hidden : true
 					}];
 		}
 
@@ -608,6 +609,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 				name : "foundGeneNodeDegree",
 				type : "float"
 			}, {
+				name : "queryGeneNodeDegree",
+				type : "float"
+			}, {
 				name : "containsMyData",
 				type : "boolean"
 			}, {
@@ -657,11 +661,18 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		var d = record.data;
 		
+		//display the 'worst' (highest) node degree
+		var displayedNodeDegree;
+		
 		if (d.foundGeneNodeDegree == null){
 			return 0;
+		} else if (d.queryGeneNodeDegree > d.foundGeneNodeDegree){
+			displayedNodeDegree = d.queryGeneNodeDegree;
+		}else{
+			displayedNodeDegree = d.foundGeneNodeDegree;
 		}
 		
-		return Ext.util.Format.number(d.foundGeneNodeDegree, '0.0000');
+		return Ext.util.Format.number(displayedNodeDegree, '0.00');
 	},
 
 	/**
