@@ -358,7 +358,8 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		}, this);	
 		
 		
-		this.on('afterLayout', this.showHelpConditionally);
+		//this.on('afterLayout', this.showHelpConditionally);
+		this.showHelpConditionally();
 		
 	},	
 	
@@ -509,24 +510,24 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		
 		
 	showHelpConditionally: function(){
-	
-		if (this.showTutorial && !this.tutorialReady && !this.tutorialControlPanel) {
-			this.tutorialReady = true;
-					
+		
+		if (this.showTutorial && !this.tutorialControlPanel) {
+		
 			this.tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
 				renderTo: 'tutorial-control-div',
 				// need id to clear tutorial between searches
 				id: 'tutorial-cntlPanel-diff-ex',
-				//stateId: 'diffExVisualiserTutorial'
+			//stateId: 'diffExVisualiserTutorial'
 			});
 			// hidden is stateful, the panel will be created hidden if the tutorial has already been shown
+			// 
 			if (!this.tutorialControlPanel.hidden) {
-				var elementToText = [];
-				elementToText.push({
+				var tipDefinitions = [];
+				tipDefinitions.push({
 					element: this.visualizationPanel.variableWidthCol.boxHeatmap,
 					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.searchResultsTitle,
 					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.searchResultsText,
-					tipConfig:{
+					tipConfig: {
 						anchor: 'bottom',
 						anchorOffset: 130 // offsets the little arrow part only
 					},
@@ -534,48 +535,51 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 						moveDown: 50
 					}
 				});
-				elementToText.push({
+				tipDefinitions.push({
 					element: this.visualizationPanel.fixedWidthCol.pnlMiniControl.showFoldChangeToggle,
-					title:  Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeTitle,
-					text:  Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeText,
-					tipConfig:{
+					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeTitle,
+					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeText,
+					tipConfig: {
 						anchor: 'left'
 					}
 				});
-				elementToText.push({
+				tipDefinitions.push({
 					element: this.getTopToolbar().colorLegendButton,
 					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.colourLegendTitle,
 					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.colourLegendText
 				});
-				elementToText.push({
+				tipDefinitions.push({
 					element: this.controlPanel,
 					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.sortAndFilterTitle,
 					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.sortAndFilterText,
-					tipConfig:{
+					tipConfig: {
 						anchor: 'right'
 					},
 					position: {
 						moveDown: 150
 					}
 				});
-				elementToText.push({
+				tipDefinitions.push({
 					element: this.getTopToolbar().downloadButton,
 					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.downloadTitle,
 					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.downloadText
 				});
 				
-				this.tutorialControlPanel.addTips(elementToText);
-				this.tutorialControlPanel.playTips(0);
-					
+				this.tutorialControlPanel.addTips(tipDefinitions);
+				
 			}
-				this.tutorialControlPanel.on('tutorialHidden',function(){
-					this.tutorialControlPanel.hide();
-					this.tutorialReady = false;
-				}, this);
-			//this.tutorialControlPanel.show();
-					
-			
+			this.tutorialControlPanel.on('tutorialHidden', function(){
+				this.tutorialControlPanel.hide();
+			}, this);
 		}
+		this.on('afterrender', function(){
+			if (this.showTutorial && !this.tutorialControlPanel) {
+				this.showHelpConditionally();
+			}
+			if (this.showTutorial && this.tutorialControlPanel) {
+				this.tutorialControlPanel.playTips(0);
+			}
+		});
 	}
 	
 });

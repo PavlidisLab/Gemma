@@ -62,7 +62,7 @@ Ext.onReady(function() {
 				autoScroll: true,
 				width: 850
 			},
-			deferredRender: false, // so tutorial works
+			deferredRender: true,
 			hidden:true
 			
 		});
@@ -89,12 +89,6 @@ Ext.onReady(function() {
 		
 		
 		panel.clearError();
-		
-		// once the user performs a search, hide the main page elements 
-		// hide and remove main page elements with an animation (if they haven't already been removed)
-
-		//if(left) left.animate({height:{to:0},opacity:{to:0}},2,function(){left.remove()});
-		//if(right) right.animate({height:{to:0},opacity:{to:0}},2,function(){right.remove()});
 		
 		if (Ext.get('frontPageContent')) {
 			Ext.get('frontPageContent').remove();
@@ -133,7 +127,7 @@ Ext.onReady(function() {
 	},this);
 		
 	searchPanel.on("showCoexResults",function(panel,result, showTutorial){
-		
+		this.showTutorial = showTutorial; 
 		/*
 		 * Report any errors.
 		 */
@@ -156,46 +150,40 @@ Ext.onReady(function() {
 			return;
 		}
 
-		if(!knownGeneGrid){
-			
+		if (!knownGeneGrid) {
+		
 			//sometimes when the results get trimmed to the display stringency, the trimmed results are empty, in this case just use retrieved results and reset initial display stringency
 			var displayedResults = result.knownGeneResults;
 			
-			if (searchPanel.getLastCoexpressionSearchCommand().displayStringency > searchPanel.getLastCoexpressionSearchCommand().stringency){			
+			if (searchPanel.getLastCoexpressionSearchCommand().displayStringency > searchPanel.getLastCoexpressionSearchCommand().stringency) {
 			
-				var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes),
-						searchPanel.getLastCoexpressionSearchCommand().displayStringency);
-			
-				if (trimmed.trimmedKnownGeneResults.length != 0){				
+				var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes), searchPanel.getLastCoexpressionSearchCommand().displayStringency);
+				
+				if (trimmed.trimmedKnownGeneResults.length != 0) {
 					displayedResults = trimmed.trimmedKnownGeneResults;
 					initialDisplayStringency = searchPanel.getLastCoexpressionSearchCommand().displayStringency;
-									
-				}
-				else{
+					
+				} else {
 					//empty trimmed results at initial Display stringency so reset coexCommand.displayStringency
-					searchPanel.getLastCoexpressionSearchCommand().displayStringency = searchPanel.getLastCoexpressionSearchCommand().stringency;				
+					searchPanel.getLastCoexpressionSearchCommand().displayStringency = searchPanel.getLastCoexpressionSearchCommand().stringency;
 					
 				}
-			
-			
 			}
-			
-			
-			
+						
 			var knownGeneGrid = new Gemma.CoexpressionGrid({
-				width : 900,
-				height : 400,
-				title : "Coexpression Results",
+				width: 900,
+				height: 400,
+				title: "Coexpression Results",
 				ref: 'coexGridResults',
 				id: 'coexGridResults',
-				colspan : 2,
-				user : user,
-				tabPanelViewFlag : true,
-				layoutOnTabChange:true,
-				hideMode:'offsets',
+				colspan: 2,
+				user: user,
+				tabPanelViewFlag: true,
+				layoutOnTabChange: true,
+				hideMode: 'offsets',
 				currentResultsStringency: searchPanel.getLastCoexpressionSearchCommand().stringency,
 				initialDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency
-				//hidden:true
+			//hidden:true
 			});
 		}
 		
@@ -214,14 +202,17 @@ Ext.onReady(function() {
 					hideMode:'visibility'
 					
 				});
-								
-		setupCoexTutorial(resultsPanel, knownGeneGrid, cytoscapePanel, showTutorial);
+		
+		if (showTutorial) {
+			setupCoexTutorial(resultsPanel, knownGeneGrid, cytoscapePanel);
+		}					
 		
 		panel.collapsePreviews();
 		
 		resultsPanel.add(knownGeneGrid);
 		resultsPanel.add(cytoscapePanel);	
 		
+		// won't fire the render event if it's already rendered
 		resultsPanel.render('analysis-results-search-form-results');
 		
 		resultsPanel.show();
@@ -234,22 +225,20 @@ Ext.onReady(function() {
 
 	});
 	
-	var setupCoexTutorial = function(resultsPanel, knownGeneGrid, cytoscapePanel, showTutorial){
-		if (showTutorial && this.coexTutorialReady && this.coexTutorialControlPanel) {
-			this.coexTutorialControlPanel.show();
+	var setupCoexTutorial = function(resultsPanel, knownGeneGrid, cytoscapePanel){
+		if (this.coexTutorialControlPanel) {
+			// need to make a new one because we've created new target elements 
+			this.coexTutorialControlPanel.destroy();
 		}
-		else{
-			this.coexTutorialReady = true;
-			var tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
+		var tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
 				renderTo: 'tutorial-control-div',
 				// need id to clear tutorial between searches
 				id: 'tutorial-cntlPanel-coex',
-				//stateId: 'coExVisualiserTutorial'
+			//stateId: 'coExVisualiserTutorial'
 			});
 			this.coexTutorialControlPanel = tutorialControlPanel;
 			// if hidden is stateful, the panel will be created hidden if the tutorial has already been shown
 			if (!tutorialControlPanel.hidden) {
-				knownGeneGrid.getTopToolbar().stringencyfield.on('afterrender', function(){
 					var tipDefs = [];
 					tipDefs.push({
 						element: knownGeneGrid.getTopToolbar().stringencyfield,
@@ -263,12 +252,6 @@ Ext.onReady(function() {
 						}.createDelegate(this)
 					});
 					
-					tutorialControlPanel.addTips(tipDefs);
-					
-				}, this);
-				
-				cytoscapePanel.getTopToolbar().nodeDegreeEmphasis.on('afterrender', function(){
-					var tipDefs = [];
 					tipDefs.push({
 						element: cytoscapePanel.getTopToolbar().nodeDegreeEmphasis,
 						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.nodeDegreeTitle,
@@ -282,34 +265,34 @@ Ext.onReady(function() {
 						}.createDelegate(this)
 					});
 					tutorialControlPanel.addTips(tipDefs);
-				});
-				
 				
 			}
-			resultsPanel.tutorialStarted = false;
-			resultsPanel.on('afterlayout', function(){
-				if (!resultsPanel.tutorialStarted) {
-					resultsPanel.tutorialStarted = true;
-					tutorialControlPanel.playTips(0);
-					
-					resultsPanel.on('beforetabchange', function(tabPanel, newTab, currTab){
-						// don't hide first showing of tab
-						if (tabPanel.getActiveTab()) {
-							var tabTips = tutorialControlPanel.getTipsBy(function(tip){
-								return (tip.ownerTabId === currTab.id);
-							}.createDelegate(this));
-							tutorialControlPanel.hideTips(tabTips);
-						}
-					});
-				}
-			}, this);
-			
-			tutorialControlPanel.on('tutorialHidden', function(){
-				tutorialControlPanel.hide();
-				this.tutorialReady = false;
-			}, this);
-		}
-			
+		
+		
+		// render may fire more than once
+		//resultsPanel.tutorialStarted = false;
+		resultsPanel.on('afterlayout', function(){
+			if (!resultsPanel.tutorialStarted && this.showTutorial) {
+				//resultsPanel.tutorialStarted = true;
+				this.coexTutorialControlPanel.show();
+				this.coexTutorialControlPanel.playTips(0);
+				
+				resultsPanel.on('beforetabchange', function(tabPanel, newTab, currTab){
+					// don't hide first showing of tab
+					if (tabPanel.getActiveTab()) {
+						var tabTips = this.coexTutorialControlPanel.getTipsBy(function(tip){
+							return (tip.ownerTabId === currTab.id);
+						}.createDelegate(this));
+						this.coexTutorialControlPanel.hideTips(tabTips);
+					}
+				}, this);
+			}
+		}, this);
+		
+		this.coexTutorialControlPanel.on('tutorialHidden', function(){
+			this.coexTutorialControlPanel.hide();
+		}, this);
+		
 	};
 	
 	
@@ -322,11 +305,10 @@ Ext.onReady(function() {
 			Ext.apply(data, {applyTo : 'meta-heatmap-div'});
 			
 			// override showing tutorial, for now only works with non-widget version
-			if (this.diffExTutorialAlreadyShown) {
+			/*if (this.diffExTutorialAlreadyShown) {
 				Ext.apply(data,{showTutorial:false});
-			}
+			}*/
 			
-				
 			this.diffVisualizer = new Gemma.MetaHeatmapDataSelection(data);
 			
 			this.diffVisualizer.on('visualizationLoaded', function(){

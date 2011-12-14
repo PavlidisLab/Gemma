@@ -20,9 +20,7 @@ Ext.namespace('Gemma.Tutorial');
  * @param {Object[]} tipDefinition
  */
 Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
-	tips: [],
-	targetEls: [],
-	currIndex: 0,
+	
 	padding: 10,
 	bodyStyle: 'background-color: #FFFDE9;line-height:22px',
 	defaults: {
@@ -43,13 +41,15 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 	
 	initComponent: function(){
 		this.currIndex = 0;
+		this.tips = [];
+		this.targetEls = [];
 		Gemma.Tutorial.ControlPanel.superclass.initComponent.call(this);
 		this.add([{
 			layout: 'hbox',
 			flex: 1,
 			height: 30,
 			items: [{
-				html: 'You are now using a tutorial. How fun! click the "next" and "previous" buttons.',
+				html: Gemma.HelpText.WidgetDefaults.Tutorial.ControlPanel.instructions,
 				border: false,
 				bodyStyle: 'background: transparent;',
 				flex: 1
@@ -215,7 +215,8 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 			anchorToTarget: true,
 			anchor: 'right',
 			trackMouse: false,
-			target: element.el, // The overall target element.
+			target: Ext.getBody(),//placeholder so that it doesn't error out, actualy element is bound on the element's afterrender
+			realTarget: element,
 			// overwrite the onShow method to control when the tool tip is shown
 			// we don't want its show/hide state to be effected by hovering on the target element	
 			onShow: function(){
@@ -237,7 +238,6 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 			hidden: true,
 			padding: 10,
 			shadow: 'frame',
-			renderTo: Ext.getBody(), // Render immediately so that tip.body can be referenced prior to the element show.
 			html: tipBody,
 			title: tipTitle,
 			autoHide: false,
@@ -265,7 +265,22 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		Ext.apply(defaultConfigs, tipConfig);
 		
 		var tip = new Ext.ToolTip(defaultConfigs);
+		
+		element.on('render', function(){
+			tip.initTarget(element.el); 
+		}, this);
+		
 		return tip;
+	},
+	updateRenderingTargets: function(){
+		var i;
+		console.log(this.tips);
+		for (i = 0; i < this.tips.length; i++) {
+			var tip = this.tips[i]
+			tip.realTarget.on('render', function(){
+				tip.initTarget(tip.realTarget.el); 
+			}, this);
+		}
 	}
 });
 

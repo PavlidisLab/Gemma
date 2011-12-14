@@ -370,6 +370,11 @@ Gemma.HelpText.WidgetDefaults = {
 		publicWarning: 'Please note: setting the read permissions to "public" means that all ' +
 				'users of Gemma (registered and anonymous) will be able to view this entity and use it in analyses.'
 	},
+	Tutorial:{
+		ControlPanel: {
+			instructions: 'You are now using a tutorial. How fun! click the "next" and "previous" buttons.'
+		}
+	},
 	VisualizationWithThumbsPanel: {
 		browserWarning: "Plots use a feature of HTML 5 that runs in IE via emulation unless you have Chrome Frame installed. "+
 					"Firefox, Chrome, Safari and Opera will be faster too.'>"+
