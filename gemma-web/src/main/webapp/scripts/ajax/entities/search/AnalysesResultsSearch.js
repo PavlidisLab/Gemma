@@ -270,6 +270,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			colspan : 2,			
 			layoutOnTabChange:true,
 			hideMode:'offsets',
+			height: Ext.getBody().getHeight()>500?Ext.getBody().getHeight()-150:500,
 			currentResultsStringency: searchForm.getLastCoexpressionSearchCommand().stringency,
 			initialDisplayStringency: searchForm.getLastCoexpressionSearchCommand().displayStringency
 			
@@ -284,7 +285,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			coexCommand: searchForm.getLastCoexpressionSearchCommand(),
 			coexGridRef: knownGeneGrid,
 			searchPanelRef: searchForm,
-			height: Ext.getBody().getHeight()-200,
+			height: Ext.getBody().getHeight()>500?Ext.getBody().getHeight()-150:500,
 			taxonId: searchForm.getTaxonId(),
 			taxonName: searchForm.getTaxonName(),
 			hideMode:'visibility'
