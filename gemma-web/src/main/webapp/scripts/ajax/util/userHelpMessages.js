@@ -86,6 +86,14 @@ Gemma.HelpText.WidgetDefaults = {
 		successTitle :"Registration Successful",
 		successText : "A confirmation email was sent. Please check your mail and click the link it contains"
 	},
+	AnalysisResultsSearchNonWidget:{
+		Tutorial: {
+			stringencyTitle: 'Stringency',
+			stringencyText: 'Some really awesome info about stringency',
+			nodeDegreeTitle:'node deg',
+			nodeDegreeText:'Some really awesome info about node deg'
+		}
+	},
 	AnalysisResultsSearchForm:{
 		trimmingWarningTitle: "Warning",
 		trimmingWarningText: "You are using {0} for your search. " +
@@ -315,7 +323,19 @@ Gemma.HelpText.WidgetDefaults = {
 								"To select genes, hold down &quot;Ctrl&quot; and click on gene symbols.",
 		noDatasetsSelectedTitle: "No Experiments Selected",
 		noDatasetsSelectedText: "Selection cannot be saved because no experiments have been selected. "+
-								"To select experiments, hold down &quot;Ctrl&quot; and click on condition labels."
+								"To select experiments, hold down &quot;Ctrl&quot; and click on condition labels.",
+		Tutorial: {
+			searchResultsTitle: 'Search Results',
+			searchResultsText: 'Your results are displayed as a heatmap of genes vs conditions. The darker the pink, the smaller the p value. Hover over a cell for more details.',
+			foldChangeTitle: 'Fold Change',
+			foldChangeText: 'Use this button to toggle between p value and fold change.',
+			colourLegendTitle: 'Color Legend',
+			colourLegendText: 'View the color legend for the chart.',
+			sortAndFilterTitle: 'Sort and Filter',
+			sortAndFilterText: 'Change the layout of your data to clarify patterns.',
+			downloadTitle: 'Download your Results',
+			downloadText: 'Save an image of your chart or save a text version of the results.'
+		}
 	},
 	PhenotypeEvidenceGridPanel:{
 		specificallyRelatedTT: 'Marks evidence related specifically to your phenotype search',

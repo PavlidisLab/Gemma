@@ -31,7 +31,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		padding: 5
 	},
 		
-	//stateful: true,
+	stateful: false,
 	// what describes the state of this panel - in this case it is the "hidden" field
 	getState: function(){
 		return {

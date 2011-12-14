@@ -516,7 +516,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 			this.tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
 				renderTo: 'tutorial-control-div',
 				// need id to clear tutorial between searches
-				//id: 'tutorial-cntlPanel-diff-ex',
+				id: 'tutorial-cntlPanel-diff-ex',
 				//stateId: 'diffExVisualiserTutorial'
 			});
 			// hidden is stateful, the panel will be created hidden if the tutorial has already been shown
@@ -524,8 +524,8 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 				var elementToText = [];
 				elementToText.push({
 					element: this.visualizationPanel.variableWidthCol.boxHeatmap,
-					title: 'Search Results',
-					text: 'Your results are displayed as a heatmap of genes vs conditions. The darker the pink, the smaller the p value. Hover over a cell for more details.',
+					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.searchResultsTitle,
+					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.searchResultsText,
 					tipConfig:{
 						anchor: 'bottom',
 						anchorOffset: 130 // offsets the little arrow part only
@@ -536,21 +536,21 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 				});
 				elementToText.push({
 					element: this.visualizationPanel.fixedWidthCol.pnlMiniControl.showFoldChangeToggle,
-					title: 'Fold Change',
-					text: 'Use this button to toggle between p value and fold change.',
+					title:  Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeTitle,
+					text:  Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.foldChangeText,
 					tipConfig:{
 						anchor: 'left'
 					}
 				});
 				elementToText.push({
 					element: this.getTopToolbar().colorLegendButton,
-					title: 'Color Legend',
-					text: 'View the color legend for the chart.'
+					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.colourLegendTitle,
+					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.colourLegendText
 				});
 				elementToText.push({
 					element: this.controlPanel,
-					title: 'Sort and Filter',
-					text: 'Change the layout of your data to clarify patterns.',
+					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.sortAndFilterTitle,
+					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.sortAndFilterText,
 					tipConfig:{
 						anchor: 'right'
 					},
@@ -560,8 +560,8 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 				});
 				elementToText.push({
 					element: this.getTopToolbar().downloadButton,
-					title: 'Download your Results',
-					text: 'Save an image of your chart or save a text version of the results.'
+					title: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.downloadTitle,
+					text: Gemma.HelpText.WidgetDefaults.MetaheatmapApplication.Tutorial.downloadText
 				});
 				
 				this.tutorialControlPanel.addTips(elementToText);

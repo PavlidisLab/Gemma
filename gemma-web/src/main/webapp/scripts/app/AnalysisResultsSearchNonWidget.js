@@ -53,27 +53,40 @@ Ext.onReady(function() {
 	this.diffVisualizer = null;
 
 	searchPanel.render("analysis-results-search-form");
-	
+			
+	// panel to hold all results of searches 
+	this.resultsPanel = new Ext.TabPanel({
+			id:'analysis-results-search-form-results-panel',
+			height: 610,
+			defaults: {
+				autoScroll: true,
+				width: 850
+			},
+			deferredRender: false, // so tutorial works
+			hidden:true
+			
+		});
+		
 	// override actions triggered by nav keys for combo boxes (ie tab should not bring the user to the next box)
 
 		
 	// uncomment this to have results grid resize with window, (panel must have layout: 'fit')
-	//Ext.EventManager.onWindowResize(this.resultsPanel.doLayout, this.resultsPanel); 
+	//Ext.EventManager.onWindowResize(resultsPanel.doLayout, resultsPanel); 
 
 	// get ready to show results
 	searchPanel.on("beforesearch",function(panel){
 		
 		// before every search, clear the results in preparation for new (possibly blank) results 
 		
-		//this.resultsPanel.removeAll() causes CytoscapePanel's afterrender event fire for some reason.  
+		//resultsPanel.removeAll() causes CytoscapePanel's afterrender event fire for some reason.  
 		//Set coexgridref to null so that we can prevent the afterrender listener function from executing in CytoscapePanel.js
 		if (Ext.getCmp("cytoscaperesults")){
 			Ext.getCmp("cytoscaperesults").coexGridRef=null;
 		}
-		if (this.resultsPanel) {
-			this.resultsPanel.removeAll(); 
-			this.resultsPanel.hide();
-		}
+		
+		this.resultsPanel.removeAll(); 
+		this.resultsPanel.hide();
+		
 		
 		panel.clearError();
 		
@@ -103,6 +116,11 @@ Ext.onReady(function() {
 			tut.hideTutorial();
 			this.diffExTutorialAlreadyShown = true;
 		}
+		tut = Ext.getCmp('tutorial-cntlPanel-coex');
+		if (tut) {
+			tut.hideTutorial();
+			this.coexTutorialAlreadyShown = true;
+		}
 		//Ext.DomHelper.overwrite('tutorial-control-div',{html:''});
 		
 		
@@ -114,21 +132,8 @@ Ext.onReady(function() {
 		
 	},this);
 		
-	searchPanel.on("showCoexResults",function(panel,result){
+	searchPanel.on("showCoexResults",function(panel,result, showTutorial){
 		
-
-	// panel to hold all results of searches 
-	var resultsPanel = new Ext.TabPanel({
-		id:'analysis-results-search-form-results-panel',
-		height: 610,
-		defaults: {
-			autoScroll: true,
-			width: 850
-		},
-		deferredRender: false, // so tutorial works
-		hidden:true
-		
-	});
 		/*
 		 * Report any errors.
 		 */
@@ -210,7 +215,7 @@ Ext.onReady(function() {
 					
 				});
 								
-		setupCoexTutorial(resultsPanel, knownGeneGrid, cytoscapePanel);
+		setupCoexTutorial(resultsPanel, knownGeneGrid, cytoscapePanel, showTutorial);
 		
 		panel.collapsePreviews();
 		
@@ -229,28 +234,27 @@ Ext.onReady(function() {
 
 	});
 	
-	var setupCoexTutorial = function(resultsPanel, knownGeneGrid, cytoscapePanel){
-		this.coex = {};
-		if (this.coex.showTutorial && this.coex.tutorialReady && this.coex.tutorialControlPanel) {
-			this.coex.tutorialControlPanel.show();
+	var setupCoexTutorial = function(resultsPanel, knownGeneGrid, cytoscapePanel, showTutorial){
+		if (showTutorial && this.coexTutorialReady && this.coexTutorialControlPanel) {
+			this.coexTutorialControlPanel.show();
 		}
 		else{
-				this.tutorialReady = true;
+			this.coexTutorialReady = true;
 			var tutorialControlPanel = new Gemma.Tutorial.ControlPanel({
 				renderTo: 'tutorial-control-div',
-			// need id to clear tutorial between searches
-			//id: 'tutorial-cntlPanel-coex',
-			//stateId: 'coExVisualiserTutorial'
+				// need id to clear tutorial between searches
+				id: 'tutorial-cntlPanel-coex',
+				//stateId: 'coExVisualiserTutorial'
 			});
-			this.coex.tutorialControlPanel = tutorialControlPanel;
+			this.coexTutorialControlPanel = tutorialControlPanel;
 			// if hidden is stateful, the panel will be created hidden if the tutorial has already been shown
 			if (!tutorialControlPanel.hidden) {
 				knownGeneGrid.getTopToolbar().stringencyfield.on('afterrender', function(){
 					var tipDefs = [];
 					tipDefs.push({
 						element: knownGeneGrid.getTopToolbar().stringencyfield,
-						title: 'Stringency',
-						text: 'Some really awesome info about stringency',
+						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.stringencyTitle,
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.stringencyText,
 						tipConfig: {
 							ownerTabId: knownGeneGrid.id
 						},
@@ -267,8 +271,8 @@ Ext.onReady(function() {
 					var tipDefs = [];
 					tipDefs.push({
 						element: cytoscapePanel.getTopToolbar().nodeDegreeEmphasis,
-						title: 'node deg',
-						text: 'Some really awesome info about node deg',
+						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.nodeDegreeTitle,
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.nodeDegreeText,
 						tipConfig: {
 							anchor: 'top',
 							ownerTabId: cytoscapePanel.id
@@ -331,32 +335,7 @@ Ext.onReady(function() {
 			
 		}
 		else {
-			
-	// panel to hold all results of searches 
-	this.resultsPanel = new Ext.TabPanel({
-		id:'analysis-results-search-form-results-panel',
-		renderTo : 'analysis-results-search-form-results',
-		height: 610,
-		defaults: {
-			autoScroll: true,
-			width: 850
-		},
-		deferredRender: false, // so tutorial works
-		hidden:true,
-		listeners: {
-			'afterrender': function(){
-				console.log('afttter');
-			}
-		}
-				
-		//layout:'fit' //only works with one component per container
-		//border:false,
-		//autoHeight:true,
-		
-		//bodyStyle:'text-align:left;',
-		//style:'text-align:left'
-		
-	});
+
 			this.resultsPanel.removeAll(); 
 			this.resultsPanel.hide(); 
 			var diffExResultsGrid = new Gemma.DiffExpressionGrid({
