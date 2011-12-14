@@ -238,24 +238,56 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			return;
 		}
 		
+		//sometimes when the results get trimmed to the display stringency, the trimmed results are empty, in this case just use retrieved results and reset initial display stringency
+		var displayedResults = result.knownGeneResults;
 		
+		if (searchForm.getLastCoexpressionSearchCommand().displayStringency > searchForm.getLastCoexpressionSearchCommand().stringency){			
+		
+			var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes),
+					searchForm.getLastCoexpressionSearchCommand().displayStringency);
+		
+			if (trimmed.trimmedKnownGeneResults.length != 0){				
+				displayedResults = trimmed.trimmedKnownGeneResults;
+				initialDisplayStringency = searchForm.getLastCoexpressionSearchCommand().displayStringency;
+								
+			}
+			else{
+				//empty trimmed results at initial Display stringency so reset coexCommand.displayStringency
+				searchForm.getLastCoexpressionSearchCommand().displayStringency = searchForm.getLastCoexpressionSearchCommand().stringency;				
+				
+			}
+		
+		
+		}
 		
 		var knownGeneGrid = new Gemma.CoexpressionGrid({
 			title: "Coexpressed genes",
 			user: this.user,
-			tabPanelViewFlag: true
+			tabPanelViewFlag: true,
+			title : "Coexpression Results",
+			ref: 'coexGridResults',
+			id: 'coexGridResults',
+			colspan : 2,			
+			layoutOnTabChange:true,
+			hideMode:'offsets',
+			currentResultsStringency: searchForm.getLastCoexpressionSearchCommand().stringency,
+			initialDisplayStringency: searchForm.getLastCoexpressionSearchCommand().displayStringency
+			
 		});
 		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
 			id : "cytoscaperesults",
-			title: "Cytoscape",
-			queryGenes: result.queryGenes,
-			knownGeneResults: result.knownGeneResults,
+			ref: 'coexCytoscapeResults',
+			title : "Visualization",
+			queryGenes : result.queryGenes,
+			knownGeneResults : result.knownGeneResults,
 			coexCommand: searchForm.getLastCoexpressionSearchCommand(),
 			coexGridRef: knownGeneGrid,
 			searchPanelRef: searchForm,
-			width: 850,
-			hideMode: 'visibility'
+			height: Ext.getBody().getHeight()-200,
+			taxonId: searchForm.getTaxonId(),
+			taxonName: searchForm.getTaxonName(),
+			hideMode:'visibility'
 		
 		});
 
@@ -266,8 +298,9 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		coexResultsTabPanel.show();
 		coexResultsTabPanel.doLayout();
 		
-		knownGeneGrid.cytoscapeRef=cytoscapePanel;
-		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, result.knownGeneResults,
+		knownGeneGrid.cytoscapeRef=cytoscapePanel;	
+		
+		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, displayedResults,
 				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
 			
 		knownGeneGrid.show();
