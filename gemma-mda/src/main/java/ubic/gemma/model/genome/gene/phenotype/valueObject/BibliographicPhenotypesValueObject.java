@@ -1,7 +1,9 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
@@ -21,26 +23,36 @@ public class BibliographicPhenotypesValueObject {
         this.phenotypesValues = phenotypesValues;
     }
 
-    public BibliographicPhenotypesValueObject( PhenotypeAssociation phenotypeAssociation ) {
-        super();
-        this.geneName = phenotypeAssociation.getGene().getName();
-        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-            this.phenotypesValues.add( cha.getValue() );
-        }
-    }
-
     public static Collection<BibliographicPhenotypesValueObject> phenotypeAssociations2BibliographicPhenotypesValueObjects(
             Collection<PhenotypeAssociation> phenotypeAssociations ) {
 
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = new HashSet<BibliographicPhenotypesValueObject>();
+        Map<String, BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObject = new HashMap<String, BibliographicPhenotypesValueObject>();
 
         for ( PhenotypeAssociation phenotypeAssociation : phenotypeAssociations ) {
 
-            BibliographicPhenotypesValueObject bibli = new BibliographicPhenotypesValueObject( phenotypeAssociation );
-            bibliographicPhenotypesValueObjects.add( bibli );
+            String geneName = phenotypeAssociation.getGene().getName();
+
+            Collection<String> phenotypesValues = new HashSet<String>();
+
+            for ( Characteristic characteristic : phenotypeAssociation.getPhenotypes() ) {
+
+                phenotypesValues.add( characteristic.getValue() );
+            }
+
+            if ( bibliographicPhenotypesValueObject.get( geneName ) != null ) {
+
+                bibliographicPhenotypesValueObject.get( geneName ).getPhenotypesValues().addAll( phenotypesValues );
+
+            } else {
+
+                BibliographicPhenotypesValueObject bibli = new BibliographicPhenotypesValueObject( geneName,
+                        phenotypesValues );
+
+                bibliographicPhenotypesValueObject.put( geneName, bibli );
+            }
         }
 
-        return bibliographicPhenotypesValueObjects;
+        return bibliographicPhenotypesValueObject.values();
     }
 
     public String getGeneName() {
@@ -57,6 +69,10 @@ public class BibliographicPhenotypesValueObject {
 
     public void setPhenotypesValues( Collection<String> phenotypesValues ) {
         this.phenotypesValues = phenotypesValues;
+    }
+
+    public void addPhenotypesValues( Collection<String> addedPhenotypesValues ) {
+        this.phenotypesValues.addAll( addedPhenotypesValues );
     }
 
 }
