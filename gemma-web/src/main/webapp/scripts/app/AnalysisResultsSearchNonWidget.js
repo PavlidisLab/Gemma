@@ -126,8 +126,8 @@ Ext.onReady(function() {
 		
 	},this);
 		
-	searchPanel.on("showCoexResults",function(panel,result, showTutorial){
-		this.showCoexTutorial = showTutorial; 
+	searchPanel.on("showCoexResults",function(panel,result, showCoexTutorial){
+		resultsPanel.showCoexTutorial = showCoexTutorial; 
 		/*
 		 * Report any errors.
 		 */
@@ -203,7 +203,7 @@ Ext.onReady(function() {
 					
 				});
 		
-		if (showTutorial) {
+		if (showCoexTutorial) {
 			setupCoexTutorial(resultsPanel, knownGeneGrid, cytoscapePanel);
 		}					
 		
@@ -242,8 +242,8 @@ Ext.onReady(function() {
 					var tipDefs = [];
 					tipDefs.push({
 						element: knownGeneGrid.getTopToolbar().stringencyfield,
-						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.stringencyTitle,
-						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.stringencyText,
+						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.stringencyTitle,
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.stringencyText,
 						tipConfig: {
 							ownerTabId: knownGeneGrid.id
 						},
@@ -252,10 +252,24 @@ Ext.onReady(function() {
 						}.createDelegate(this)
 					});
 					
+					// NOTE want this tip to point to header of column, not sure how to do that yet... the way below doesn't work
+					tipDefs.push({
+						element: knownGeneGrid.getColumnModel().getColumnById('support'),
+						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.supportColumnTitle,
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.supportColumnText,
+						tipConfig: {
+							ownerTabId: knownGeneGrid.id
+						},
+						onShow: function(){
+							resultsPanel.setActiveTab('coexGridResults');
+						}.createDelegate(this)
+					});
+					
+					
 					tipDefs.push({
 						element: cytoscapePanel.getTopToolbar().nodeDegreeEmphasis,
-						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.nodeDegreeTitle,
-						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.Tutorial.nodeDegreeText,
+						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.cytoNodeDegreeTitle,
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.cytoNodeDegreeText,
 						tipConfig: {
 							anchor: 'top',
 							ownerTabId: cytoscapePanel.id
@@ -269,11 +283,8 @@ Ext.onReady(function() {
 			}
 		
 		
-		// render may fire more than once
-		//resultsPanel.tutorialStarted = false;
 		resultsPanel.on('afterlayout', function(){
-			if (!resultsPanel.tutorialStarted && this.showCoexTutorial) {
-				//resultsPanel.tutorialStarted = true;
+			if (!resultsPanel.tutorialStarted && resultsPanel.showCoexTutorial) {
 				this.coexTutorialControlPanel.show();
 				this.coexTutorialControlPanel.playTips(0);
 				

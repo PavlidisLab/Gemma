@@ -20,6 +20,9 @@ Ext.namespace('Gemma.Tutorial');
  * @param {Object[]} tipDefinition
  */
 Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
+	/**
+	 * @cfg text to use as overall tutorial instructions
+	 */
 	instructions: Gemma.HelpText.WidgetDefaults.Tutorial.ControlPanel.instructions,
 	padding: 10,
 	bodyStyle: 'background-color: #FFFDE9;line-height:22px',
@@ -223,7 +226,10 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 				// if the tip is supposed to be shown according to the tutorial's controls, then show it
 				var onId = (topScope.tips[topScope.currIndex])? topScope.tips[topScope.currIndex].id : -1;
 				if ( onId === this.id) {
-					element.addClass('highlightToggleBorderOn');
+					if (element.addClass) {
+						element.addClass('highlightToggleBorderOn');
+					}
+					
 					if (tipDefinition.onShow) {
 						tipDefinition.onShow();
 					}
@@ -245,7 +251,9 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 			closable: true,
 			listeners: {
 				'hide': function(){
-					element.removeClass('highlightToggleBorderOn');
+					if (element.removeClass) {
+						element.removeClass('highlightToggleBorderOn');
+					}
 				},
 				'afterlayout': function(){
 					if (fromLeft && fromLeft !== null && fromTop && fromTop !== null) {

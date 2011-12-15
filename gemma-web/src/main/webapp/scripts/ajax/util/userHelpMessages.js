@@ -87,11 +87,21 @@ Gemma.HelpText.WidgetDefaults = {
 		successText : "A confirmation email was sent. Please check your mail and click the link it contains"
 	},
 	AnalysisResultsSearchNonWidget:{
-		Tutorial: {
+		CoexpressionTutorial: {
+			supportColumnTitle: 'Support',
+			supportColumnText:  'what is support, red vs green',
+			visualiseColumnTitle: 'Visualise',
+			visualiseColumnText: 'what does this do',
+			nodeDegreeColumnTitle:'node deg',
+			nodeDegreeColumnText:'what is it',
 			stringencyTitle: 'Stringency',
 			stringencyText: 'Some really awesome info about stringency',
-			nodeDegreeTitle:'node deg',
-			nodeDegreeText:'Some really awesome info about node deg'
+			cytoNodeDegreeTitle: 'node deg 2nd',
+			cytoNodeDegreeText: 'explain visualisation of node deg',
+			saveTitle: 'Saving your results',
+			saveText: 'explain formats',
+			updateQueryTitle: 'new query from chart',
+			updateQueryText: 'click and drag etc'
 		}
 	},
 	AnalysisResultsSearchForm:{
