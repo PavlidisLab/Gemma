@@ -195,7 +195,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         return experiment;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected void processOptions() {
         super.processOptions();
@@ -234,12 +233,12 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
         } else if ( taxon != null ) {
             if ( !hasOption( "dataFile" ) ) {
                 log.info( "Processing all experiments for " + taxon.getCommonName() );
-                this.expressionExperiments = new HashSet( eeService.findByTaxon( taxon ) );
+                this.expressionExperiments = new HashSet<BioAssaySet>( eeService.findByTaxon( taxon ) );
             }
         } else {
             if ( !hasOption( "dataFile" ) ) {
                 log.info( "Processing all experiments (futher filtering may modify)" );
-                this.expressionExperiments = new HashSet( eeService.loadAll() );
+                this.expressionExperiments = new HashSet<BioAssaySet>( eeService.loadAll() );
             }
         }
 
@@ -433,8 +432,6 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
     }
 
     /**
-     * TODO: replace with call to AuditableUtil.removeTroubledEes.
-     * 
      * @param ees
      */
     private void removeTroubledEes( Collection<BioAssaySet> ees ) {
