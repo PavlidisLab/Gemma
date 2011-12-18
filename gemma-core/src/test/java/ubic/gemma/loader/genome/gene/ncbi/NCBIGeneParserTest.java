@@ -43,7 +43,7 @@ public class NCBIGeneParserTest extends TestCase {
                 "/data/loader/genome/gene/gene2accession.sample.gz" ) );
         NcbiGene2AccessionParser ngip = new NcbiGene2AccessionParser();
         ngip.geneInfo = new HashMap<String, NCBIGeneInfo>();
-        ngip.parse( is, new ArrayBlockingQueue( 10 ) );
+        ngip.parse( is, new ArrayBlockingQueue<NcbiGeneData>( 10 ) );
         assertEquals( 100, ngip.getCount() );
     }
 
