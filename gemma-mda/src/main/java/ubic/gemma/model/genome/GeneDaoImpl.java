@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
@@ -75,7 +76,7 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
     /*
      * FIXME use a regular ehcache so we can use timeouts.
      */
-    private HashMap<Long, Collection<Long>> gene2CsCache = new HashMap<Long, Collection<Long>>();
+    private Map<Long, Collection<Long>> gene2CsCache = new ConcurrentHashMap<Long, Collection<Long>>();
 
     @Autowired
     public GeneDaoImpl( SessionFactory sessionFactory ) {
@@ -102,11 +103,15 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
             if ( results != null ) {
                 if ( results.size() > 1 ) {
 
+                    /*
+                     * As a side-effect, we delete relics. This is a bit ugly, but takes care of the problem! It was put
+                     * in place to help in the cleanup of duplicated genes. But this can happen fairly routinely when
+                     * NCBI information changes in messy ways.
+                     */
                     Collection<Gene> toDelete = new HashSet<Gene>();
                     for ( Gene foundGene : results ) {
                         try {
                             if ( gene.getNcbiGeneId().equals( Integer.parseInt( foundGene.getPreviousNcbiId() ) ) ) {
-                                // okay, we have a relic in the system. Delete it, as a temporary measure.
                                 toDelete.add( foundGene );
                             }
                         } catch ( NumberFormatException e ) {
@@ -114,7 +119,13 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         }
                     }
 
-                    if ( !toDelete.isEmpty() ) this.remove( toDelete );
+                    if ( !toDelete.isEmpty() ) {
+                        assert toDelete.size() < results.size(); // it shouldn't be everything!
+                        log.warn( "Deleting gene(s) that use a deprecated NCBI ID: "
+                                + StringUtils.join( toDelete, " | " ) );
+                        this.remove( toDelete ); // WARNING this might fail due to constraints.
+                    }
+                    results.removeAll( toDelete );
 
                     for ( Gene foundGene : results ) {
                         if ( foundGene.getNcbiGeneId() != null && gene.getNcbiGeneId() != null
@@ -123,27 +134,24 @@ public class GeneDaoImpl extends ubic.gemma.model.genome.GeneDaoBase {
                         }
                     }
 
-                    // if ( results.size() > 1 ) {
-                    // throw new IllegalStateException( "Sorry, " + gene + "found: \n"
-                    // + StringUtils.join( results, "\n" ) );
-                    // }
-
                     /*
-                     * this can happen in semi-rare cases in queries by symbol, where the gene symbol is not unique for
-                     * the taxon and the query did not have the gene name to further restrict the query.
+                     * This should be quite a rare situation if the database is kept tidy.
                      */
+                    if ( results.size() > 1 ) {
+                        log.error( "Multiple genes found for " + gene + ":" );
+                        debug( results );
 
-                    log.error( "Multiple genes found for " + gene + ":" );
-                    debug( results );
-
-                    Collections.sort( results, new Comparator<Gene>() {
-                        @Override
-                        public int compare( Gene arg0, Gene arg1 ) {
-                            return arg0.getId().compareTo( arg1.getId() );
-                        }
-                    } );
-                    result = results.iterator().next();
-                    log.error( "Returning arbitrary gene: " + result );
+                        Collections.sort( results, new Comparator<Gene>() {
+                            @Override
+                            public int compare( Gene arg0, Gene arg1 ) {
+                                return arg0.getId().compareTo( arg1.getId() );
+                            }
+                        } );
+                        result = results.iterator().next();
+                        log.error( "Returning arbitrary gene: " + result );
+                    } else {
+                        result = results.iterator().next();
+                    }
 
                 } else if ( results.size() == 1 ) {
                     result = results.iterator().next();
