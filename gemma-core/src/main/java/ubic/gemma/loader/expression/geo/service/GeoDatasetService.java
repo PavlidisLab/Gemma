@@ -363,7 +363,8 @@ public class GeoDatasetService extends AbstractGeoService {
         GeoDataset result = datasets.iterator().next();
         for ( GeoDataset dataset : datasets ) {
             if ( dataset.equals( result ) ) continue;
-            log.info( "Collapsing " + dataset + " into " + result );
+            assert dataset.getPlatform().equals( lastPlatform );
+            log.info( "Collapsing " + dataset + " into " + result + " Platform=" + dataset.getPlatform() );
             result.setDescription( result.getDescription() + " Note: this dataset " + "includes the samples from "
                     + dataset );
             result.getSubsets().addAll( dataset.getSubsets() );

@@ -282,7 +282,7 @@ public class DatasetCombiner {
                 }
             }
             if ( !ok ) {
-                log.warn( "There were one or more samples missing from the datasets so" );
+                log.warn( "There were one or more samples missing from the datasets" );
             }
             return findGSECorrespondence( datasets );
         }
@@ -654,16 +654,15 @@ public class DatasetCombiner {
                      */
                     if ( bestMatchAcc == null || wasTied ) {
                         if ( log.isDebugEnabled() )
-                            log
-                                    .debug( "No match found in "
-                                            + datasetOrPlatformB
-                                            + " for "
-                                            + targetAcc
-                                            + "\t"
-                                            + targetTitle
-                                            + " ("
-                                            + datasetOrPlatformA
-                                            + ") (This can happen if sample was not run on all the platforms used; or if there were ties that could not be broken; or when we were unable to match)" );
+                            log.debug( "No match found in "
+                                    + datasetOrPlatformB
+                                    + " for "
+                                    + targetAcc
+                                    + "\t"
+                                    + targetTitle
+                                    + " ("
+                                    + datasetOrPlatformA
+                                    + ") (This can happen if sample was not run on all the platforms used; or if there were ties that could not be broken; or when we were unable to match)" );
                         result.addCorrespondence( targetAcc, null );
                         allMatched.add( targetAcc );
                     } else {
