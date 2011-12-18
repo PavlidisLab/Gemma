@@ -54,7 +54,7 @@ import ubic.gemma.security.authentication.ManualAuthenticationService;
 public abstract class AbstractSpringAwareCLI extends AbstractCLI {
 
     protected AuditTrailService auditTrailService;
-    
+
     protected AuditEventService auditEventService;
 
     protected BeanFactory ctx = null;
@@ -118,6 +118,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
      * @return
      */
     protected Object getBean( String name ) {
+        assert ctx != null : "Spring context was not initialized";
         return ctx.getBean( name );
     }
 
