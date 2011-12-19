@@ -229,6 +229,9 @@ public class DatasetCombiner {
         try {
 
             String details = EutilFetch.fetch( "gds", seriesAccession, 100 );
+            if ( details.equalsIgnoreCase( "no results" ) ) {
+                return associatedDatasetAccessions;
+            }
             XPathFactory xf = XPathFactory.newInstance();
             XPath xpath = xf.newXPath();
 

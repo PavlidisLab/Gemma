@@ -44,6 +44,12 @@ public class DatasetCombinerTest {
     private static Log log = LogFactory.getLog( DatasetCombinerTest.class.getName() );
     Collection<GeoDataset> gds;
 
+    @Test
+    public void testFindGSE267() throws Exception {
+        Collection<String> result = DatasetCombiner.findGDSforGSE( "GSE267" );
+        assertEquals( 0, result.size() );
+    }
+
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.DatsetCombiner.findGDSGrouping(String)'
      */
@@ -503,8 +509,8 @@ public class DatasetCombinerTest {
         int numBioMaterials = 0;
         while ( it.hasNext() ) {
             Collection<String> c = it.next();
-            assertTrue( "Unexpected group size: " + c.size(), c.size() == 1 || c.size() == 2 || c.size() == 6
-                    || c.size() == 5 );
+            assertTrue( "Unexpected group size: " + c.size(),
+                    c.size() == 1 || c.size() == 2 || c.size() == 6 || c.size() == 5 );
             numBioMaterials++;
         }
         assertEquals( 30, numBioMaterials );
