@@ -195,6 +195,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
         HashMap<String, Set<String>> phenotypesWithChildren = findChildrenForEachPhenotypes( phenotypesValuesUri );
 
+        Set<String> possibleChildrenPhenotypes = new HashSet<String>();
+
+        for ( String key : phenotypesWithChildren.keySet() ) {
+            possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
+        }
+
         String firstPhenotypesValuesUri = "";
 
         for ( String phenotypeValueUri : phenotypesValuesUri ) {
@@ -223,7 +229,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // put some flags for the Interface indicating witch phenotypes are root for the given query or children
-        flagEvidence( genesVO, phenotypesWithChildren, phenotypesValuesUri );
+        flagEvidence( genesVO, phenotypesValuesUri, possibleChildrenPhenotypes );
 
         return genesVO;
     }
@@ -796,16 +802,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** add flag to Evidence and CharacteristicvalueObjects */
-    private void flagEvidence( Collection<GeneEvidenceValueObject> genesVO,
-            HashMap<String, Set<String>> phenotypesWithChildren, Set<String> phenotypesValuesUri ) {
-        Set<String> possibleChildrenPhenotypes = new HashSet<String>();
-
-        for ( String key : phenotypesWithChildren.keySet() ) {
-            possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
-        }
+    private void flagEvidence( Collection<GeneEvidenceValueObject> genesVO, Set<String> phenotypesValuesUri,
+            Set<String> possibleChildrenPhenotypes ) {
 
         // flag relevant evidence, root phenotypes and children phenotypes
         for ( GeneEvidenceValueObject geneVO : genesVO ) {
+
             for ( EvidenceValueObject evidenceVO : geneVO.getEvidence() ) {
 
                 boolean relevantEvidence = false;
