@@ -138,10 +138,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         gene.getPhenotypeAssociations().add( phenotypeAssociation );
 
         // if the trees are present in the cache, change the tree with the corresponding phenotypes
-        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE )){
+        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
             buildTree( evidence.getPhenotypes() );
         }
-        
 
         return new GeneEvidenceValueObject( gene );
     }
@@ -260,10 +259,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public void remove( Long id ) {
         PhenotypeAssociation loaded = this.associationService.load( id );
 
-        EvidenceValueObject evidenceVo = EvidenceValueObject.convert2ValueObjects(loaded);
+        EvidenceValueObject evidenceVo = EvidenceValueObject.convert2ValueObjects( loaded );
 
         // if the trees are present in the cache, change the tree with the corresponding phenotypes
-        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE )){
+        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
             buildTree( evidenceVo.getPhenotypes() );
         }
 
@@ -868,6 +867,5 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         return allPhenotypesFoundInOntology;
     }
-    
 
 }

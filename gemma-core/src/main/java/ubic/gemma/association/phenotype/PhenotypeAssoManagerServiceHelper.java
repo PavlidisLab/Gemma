@@ -61,6 +61,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueOb
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
+import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
 
 /** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
@@ -81,6 +82,9 @@ public class PhenotypeAssoManagerServiceHelper {
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;
+
+    @Autowired
+    private OntologyService ontologyService;
 
     @Autowired
     private DatabaseEntryDao databaseEntryDao;
@@ -323,10 +327,10 @@ public class PhenotypeAssoManagerServiceHelper {
 
             VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
 
-            myPhenotype.setValue( phenotype.getValue() );
-            myPhenotype.setCategory( phenotype.getCategory() );
             myPhenotype.setValueUri( phenotype.getValueUri() );
-            myPhenotype.setCategoryUri( phenotype.getCategoryUri() );
+            myPhenotype.setValue( this.ontologyService.getTerm( phenotype.getCategoryUri() ).getLabel() );
+            myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
+            myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
 
             myPhenotypes.add( myPhenotype );
         }
@@ -370,7 +374,7 @@ public class PhenotypeAssoManagerServiceHelper {
 
             // primary bibliographic reference
             literatureEvidence.setCitation( findOrCreateBibliographicReference( primaryPubMed ) );
-            
+
             return literatureEvidence;
 
         } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
