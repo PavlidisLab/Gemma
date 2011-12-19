@@ -46,11 +46,15 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     /** root of a query */
     private boolean root = false;
 
+    public CharacteristicValueObject( String valueUri ) {
+        this.valueUri = valueUri;
+    }
+    
     public CharacteristicValueObject( String value, String valueUri ) {
         this.value = value;
         this.valueUri = valueUri;
     }
-
+    
     public CharacteristicValueObject( String value, String category, String valueUri, String categoryUri ) {
         super();
         this.category = category;
