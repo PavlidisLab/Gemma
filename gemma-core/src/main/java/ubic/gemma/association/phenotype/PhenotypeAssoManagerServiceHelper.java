@@ -328,7 +328,7 @@ public class PhenotypeAssoManagerServiceHelper {
             VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
 
             myPhenotype.setValueUri( phenotype.getValueUri() );
-            myPhenotype.setValue( this.ontologyService.getTerm( phenotype.getCategoryUri() ).getLabel() );
+            myPhenotype.setValue( this.ontologyService.getTerm( phenotype.getValueUri() ).getLabel() );
             myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
             myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
 
