@@ -726,10 +726,7 @@ Ext.Panel, {
                                 	this.getBottomToolbar().hide();
                 					this.doLayout();
                                 }
-
-                                // spinner.minValue
-                                // =
-                                // this.currentResultsStringency;
+                                
                                 this.initialCoexSearchCallback(results);
 
                             }
@@ -878,15 +875,23 @@ Ext.Panel, {
 
                         } else { // new
                             // search
-                            Ext.Msg.confirm('New Search', Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (
-                            btn) {
+                            Ext.Msg.show({title:'New Search',
+                            	msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
+                            	buttons: {ok: 'Proceed', cancel: 'Cancel'},
+                            	fn: function (btn) {
 
-                                if (btn == 'yes') {
+                                if (btn == 'ok') {
+                                	
+                                	vis.panelRef.getBottomToolbar().hide();
+                                	vis.panelRef.doLayout();
+                                	vis.panelRef.coexGridRef.getBottomToolbar().hide();
+                                	vis.panelRef.coexGridRef.doLayout();
                                 	
                                 	vis.panelRef.currentSpinnerValue = spinner.getValue();
+                                	
 
                                     var displayStringency = spinner.getValue();
-                                    var resultsStringency = spinner.getValue();
+                                    var resultsStringency = 2;
 
                                     if (displayStringency > 5) {
                                         resultsStringency = displayStringency - Math.round(displayStringency / 4);
@@ -908,9 +913,9 @@ Ext.Panel, {
                                     });
 
                                 } else {
-                                    spinner.setValue(this.currentSpinnerValue);
+                                    spinner.setValue(vis.panelRef.currentSpinnerValue);
                                 }
-                            }, this);
+                            }.createDelegate(this), scope: this});
 
                         }
                     }
@@ -924,16 +929,7 @@ Ext.Panel, {
 
                     var spinner = vis.panelRef.getTopToolbar().getComponent('stringencySpinner');
 
-                    /*
-                     * //prevent spinner
-                     * from going below
-                     * currentResultsStringency
-                     * if
-                     * (spinner.getValue() <
-                     * vis.panelRef.currentResultsStringency){
-                     * spinner.setValue(vis.panelRef.currentResultsStringency); }
-                     */
-
+                   
                     if (spinner.getValue() >= vis.panelRef.currentResultsStringency) {
                     	
                     	vis.panelRef.currentSpinnerValue = spinner.getValue();
@@ -962,13 +958,20 @@ Ext.Panel, {
 
                     } else { // new
                         // search
-                        Ext.Msg.confirm('New Search',Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning, function (
-                        btn) {
+                    	Ext.Msg.show({title:'New Search',
+                        	msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
+                        	buttons: {ok: 'Proceed', cancel: 'Cancel'},
+                        	fn: function (btn) {
 
-                            if (btn == 'yes') {
+                            if (btn == 'ok') {
+                            	
+                            	vis.panelRef.getBottomToolbar().hide();
+                            	vis.panelRef.doLayout();
+                            	vis.panelRef.coexGridRef.getBottomToolbar().hide();
+                            	vis.panelRef.coexGridRef.doLayout();
 
                                 var displayStringency = spinner.getValue();
-                                var resultsStringency = spinner.getValue();
+                                var resultsStringency = 2;
 
                                 if (displayStringency > 5) {
                                     resultsStringency = displayStringency - Math.round(displayStringency / 4);
@@ -992,51 +995,14 @@ Ext.Panel, {
                             } else {
                                 spinner.setValue(spinner.getValue() + 1);
                             }
-                        }, this);
+                        }.createDelegate(this), scope: this});
 
                     }
 
                 }, this);
 
             }
-
-            /*
-             * vis.addContextMenuItem("Export Graph as
-             * graphml", "none", function () {
-             * 
-             * 
-             * var htmlString = vis.graphml();
-             * 
-             * var win = new Ext.Window({ title:
-             * 'graphml', height: 600, width: 800,
-             * plain: true, html: htmlString });
-             * win.show();
-             * 
-             * 
-             * });
-             * 
-             * vis.addContextMenuItem("Export Graph as
-             * sif", "none", function () {
-             * 
-             * var htmlString = vis.sif();
-             * 
-             * var win = new Ext.Window({ title: 'sif',
-             * height: 600, width: 800, plain: true,
-             * html: htmlString }); win.show();
-             * 
-             * 
-             * }); vis.addContextMenuItem("Export Graph
-             * as xgmml", "none", function () {
-             * 
-             * var htmlString = vis.xgmml();
-             * 
-             * var win = new Ext.Window({ title:
-             * 'xgmml', height: 600, width: 800, plain:
-             * true, html: htmlString }); win.show();
-             * 
-             * 
-             * });
-             */
+           
 
             vis.panelRef.ready = true;
 
@@ -1047,13 +1013,7 @@ Ext.Panel, {
                 vis.panelRef.knownGeneResults, vis.panelRef.currentQueryGeneIds, vis.panelRef.initialDisplayStringency);
                 vis.panelRef.stringencyUpdate(
                 vis.panelRef.initialDisplayStringency, trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
-
-                // update the grid with trimmed data
-                // (underlying data in coexGridRef has
-                // already been set)
-                vis.panelRef.coexGridRef.cytoscapeUpdate(
-                vis.panelRef.initialDisplayStringency, vis.panelRef.currentQueryGeneIds.length, trimmed.trimmedKnownGeneResults, this.currentResultsStringency);
-
+                
             }
 
         });
@@ -1214,7 +1174,7 @@ Ext.Panel, {
                 var spinner = this.getTopToolbar().getComponent('stringencySpinner');
 
                 var displayStringency = spinner.getValue();
-                var resultsStringency = spinner.getValue();
+                var resultsStringency = 2;
 
                 if (displayStringency > 5) {
                     resultsStringency = displayStringency - Math.round(displayStringency / 4);
@@ -1281,7 +1241,7 @@ Ext.Panel, {
 
                     var spinner = this.getTopToolbar().getComponent('stringencySpinner');
                     var displayStringency = spinner.getValue();
-                    var resultsStringency = spinner.getValue();
+                    var resultsStringency = 2;
 
                     if (displayStringency > 5) {
                         resultsStringency = displayStringency - Math.round(displayStringency / 4);
@@ -1324,7 +1284,7 @@ Ext.Panel, {
 
                             var spinner = this.getTopToolbar().getComponent('stringencySpinner');
                             var displayStringency = spinner.getValue();
-                            var resultsStringency = spinner.getValue();
+                            var resultsStringency = 2;
 
                             if (displayStringency > 5) {
                                 resultsStringency = displayStringency - Math.round(displayStringency / 4);
@@ -1458,10 +1418,23 @@ Ext.Panel, {
         // update underlying data
         this.coexGridRef.knownGeneResults = this.knownGeneResults;
         this.coexGridRef.currentQueryGeneIds = this.currentQueryGeneIds;
+        this.coexGridRef.currentResultsStringency = this.currentResultsStringency;
 
         // update the grid
-        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
         
+     // filter visable results based on
+        // initialDisplayStringency
+        if (this.initialDisplayStringency > this.currentResultsStringency) {
+            var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.initialDisplayStringency);            
+
+            // update the grid with trimmed data
+            // (underlying data in coexGridRef has
+            // already been set)
+            this.coexGridRef.cytoscapeUpdate(this.initialDisplayStringency, this.currentQueryGeneIds.length, trimmed.trimmedKnownGeneResults);
+
+        }else{
+        	this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults);
+        }
         this.currentSpinnerValue = spinner.getValue();
 
         this.dataJSON = this.constructDataJSON(this.queryGenes, this.knownGeneResults);
@@ -1595,9 +1568,10 @@ Ext.Panel, {
         // update underlying data because of new results
         this.coexGridRef.knownGeneResults = this.knownGeneResults;
         this.coexGridRef.currentQueryGeneIds = this.currentQueryGeneIds;
+        this.coexGridRef.currentResultsStringency = this.currentResultsStringency;
 
         // update the grid
-        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults, this.currentResultsStringency);
+        this.coexGridRef.cytoscapeUpdate(spinner.getValue(), this.queryGenes.length, this.knownGeneResults);
         
         this.currentSpinnerValue = spinner.getValue();
 
@@ -1888,9 +1862,9 @@ Ext.Panel, {
 
     },
 
-    stringencyUpdate: function (stringency, trimmedKnownGeneResults, trimmedNodeIds) {
+    stringencyUpdate: function (stringency, trimmedKnownGeneResults, trimmedNodeIds, updateSpinnerBoolean) {
 
-        if (this.getTopToolbar()) {
+        if (updateSpinnerBoolean && this.getTopToolbar()) {
             this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
 
         }

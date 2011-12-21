@@ -248,7 +248,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 						                	allowBlank: false,
 						                	allowDecimals: false,
 						                	allowNegative: false,
-						                	minValue: this.currentResultsStringency,
+						                	minValue: Gemma.MIN_STRINGENCY,
 						                	maxValue: 999,
 						                	fieldLabel: 'Stringency ',
 						                	value: this.initialDisplayStringency,
@@ -302,11 +302,46 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 								                handler: this.exportData,
 								                scope: this
 								            }]
-								})
+								}),
+					            // end tbar
+					            bbar: [{
+					                xtype: 'tbtext',
+					                text: '',
+					                itemId: 'bbarStatus'
+					            },'->', {
+									xtype : 'button',
+									icon: "/Gemma/images/icons/cross.png",
+									itemId: 'bbarClearButton',
+									handler : function(){					
+										this.currentbbarText="";
+										this.getBottomToolbar().hide();
+										this.doLayout();										
+									},									
+									scope : this
+								}
+					            ]
 					});
 		}
 
 		Gemma.CoexpressionGrid.superclass.initComponent.call(this);
+		
+		this.on('afterrender', function() {
+			if (!this.lite){
+				
+				if (this.coexCommand.displayStringency > Gemma.MIN_STRINGENCY) {                                     
+                    var bbarText = this.getBottomToolbar().getComponent('bbarStatus');                    
+                    this.currentbbarText = "Display Stringency set to "+this.coexCommand.displayStringency+" based on number of experiments chosen.";                    
+                    bbarText.setText(this.currentbbarText);                                                                      
+                                                        
+                }
+                else{                	
+                	this.getBottomToolbar().hide();
+					this.doLayout();
+                }
+				
+			}
+			
+		});
 
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 		
@@ -330,12 +365,46 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     //update cytoscape                 
                     if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
                     	
-                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds, true);
                     	
                     }
+                    this.currentSpinnerValue = spinner.getValue();
                     
 
-                } 
+                } else {
+                	
+                	
+                	Ext.Msg.show({title:'New Search',
+                    	msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
+                    	buttons: {ok: 'Proceed', cancel: 'Cancel'},
+                    	fn: function (
+                            btn) {
+
+                                if (btn == 'ok') {
+                                	
+                                	//different behaviour based on whether visualization has loaded or not
+                                	if (this.cytoscapeRef && this.cytoscapeRef.ready){
+                                		this.getBottomToolbar().hide();
+                                		this.doLayout();
+                                		this.cytoscapeRef.getBottomToolbar().hide();
+                                		//if cytoscape tab has been loaded
+                                		this.cytoscapeLoadedSearch();
+                                	}
+                                	else{
+                                		this.getBottomToolbar().hide();
+                                		this.doLayout();
+                                		//visualization tab has not been activated yet do a regular search
+                                		this.regularSearch();
+                                		                		
+                                	}                                	
+                                	
+
+                                } else {
+                                    spinner.setValue(spinner.getValue()+1);
+                                }
+                            }.createDelegate(this), scope: this});
+                	
+                }
 
             }, this);
 
@@ -349,12 +418,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             	if (e.getKey() == e.ENTER) {
 
                 var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                
-              //prevent spinner from going below currentResultsStringency by manual entry
-            	if (spinner.getValue() < this.currentResultsStringency){
-            		spinner.setValue(this.currentResultsStringency);
-            	}
-
+             
                 if (spinner.getValue() >= this.currentResultsStringency) {
 
                     var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.getTopToolbar().getComponent('stringencySpinner').getValue());
@@ -368,11 +432,46 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     //update cytoscape                 
                     if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
                     	
-                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds);
+                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds, true);
                     	
                     }
                     
+                    this.currentSpinnerValue = spinner.getValue();
+                    
 
+                }else {
+                	
+                	
+                	Ext.Msg.show({title:'New Search',
+                    	msg: Gemma.HelpText.WidgetDefaults.CytoscapePanel.lowStringencyWarning,
+                    	buttons: {ok: 'Proceed', cancel: 'Cancel'},
+                    	fn: function (
+                            btn) {
+
+                                if (btn == 'ok') {
+                                	
+                                	//different behaviour based on whether visualization has loaded or not
+                                	if (this.cytoscapeRef && this.cytoscapeRef.ready){
+                                		this.getBottomToolbar().hide();
+                                		this.doLayout();
+                                		this.cytoscapeRef.getBottomToolbar().hide();
+                                		//if cytoscape tab has been loaded
+                                		this.cytoscapeLoadedSearch();
+                                	}
+                                	else{
+                                		//visualization tab has not been activated yet do a regular search
+                                		this.getBottomToolbar().hide();
+                                		this.doLayout();
+                                		this.regularSearch();
+                                		                		
+                                	}                                	
+                                	
+
+                                } else {
+                                    spinner.setValue(this.currentSpinnerValue);
+                                }
+                            }.createDelegate(this), scope:this});
+                	
                 }
                 
             	}
@@ -390,9 +489,11 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		var supporting = [];
 		var ind = 0;
 		// this is quite inefficient, but probably doesn't matter.
-		for (var i = 0; i < ids.length; ++i) {
+		var i;
+		var j;
+		for (i = 0; i < ids.length; ++i) {
 			var id = ids[i];
-			for (var j = 0; j < grid.datasets.length; j++) {
+			for (j = 0; j < grid.datasets.length; j++) {
 				var index = grid.datasets[j].id;
 				if (index === id) {
 					supporting.push(grid.datasets[j]);
@@ -403,21 +504,21 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		return supporting;
 	},
 	
-	cytoscapeUpdate : function(stringency, numQueryGenes, data, minStringency){ 
+	cytoscapeUpdate : function(stringency, numQueryGenes, data){ 
 		
 		
 		if (this.getTopToolbar()) {
 			this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
-			if (minStringency){
-				this.getTopToolbar().getComponent('stringencySpinner').minValue = minStringency;
-			}
+			
 		}
+		this.currentSpinnerValue = stringency;
 		
 		var filteredData;
 		//filter away non-query genes
 		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, data);
 		
-		this.loadData(false, numQueryGenes, filteredData, null);
+		//always show query and coexpressed genes so set numQueryGenes to >1
+		this.loadData(false, 2, filteredData, null);
 		
 		
 	},
@@ -788,7 +889,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		var s = '';
 		var maxheight = 0;
-		for (var i = 0; i < bits.length; ++i) {
+		var i;
+		for (i = 0; i < bits.length; ++i) {
 			if (i > 0) {
 				s = s + ",";
 			}
@@ -846,8 +948,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		var activeExperimentsString = "";
 		var activeExperimentsSize = record.data.supportingExperiments.size();
-
-		for (var i = 0; i < activeExperimentsSize; i++) {
+		
+		var i;
+		for (i = 0; i < activeExperimentsSize; i++) {
 			if (i === 0) {
 				activeExperimentsString = record.data.supportingExperiments[i];
 			} else {
@@ -1038,6 +1141,103 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
         
         win.convertText(filteredData);
 
+    },
+    
+    cytoscapeLoadedSearch: function(){    
+    	
+    	var spinner = this.getTopToolbar().getComponent('stringencySpinner');
+    	
+    	this.cytoscapeRef.getBottomToolbar().hide();
+    	this.cytoscapeRef.doLayout();
+
+        var displayStringency = spinner.getValue();
+        var resultsStringency = 2;
+
+        if (displayStringency > 5) {
+            resultsStringency = displayStringency - Math.round(displayStringency / 4);
+        }
+        
+        this.cytoscapeRef.currentSpinnerValue = spinner.getValue();
+    	this.cytoscapeRef.getTopToolbar().getComponent('stringencySpinner').setValue(spinner.getValue());
+
+        Ext.apply(
+        	this.cytoscapeRef.coexCommand, {
+            stringency: resultsStringency,
+            displayStringency: displayStringency,
+            geneIds: this.cytoscapeRef.currentQueryGeneIds,
+            queryGenesOnly: false
+        });
+        
+        Ext.apply(this, {
+			loadMask : new Ext.LoadMask(this.getEl(), {
+						msg : "Loading ..."
+					})
+		});
+    	
+        this.loadMask.show();
+
+        this.cytoscapeRef.loadMask.show();
+        
+        ExtCoexpressionSearchController.doSearchQuick2(
+        		this.cytoscapeRef.coexCommand, {
+            callback: this.cytoscapeRef.initialCoexSearchCallback.createDelegate(this.cytoscapeRef)
+
+        });
+    	
+    	
+    },
+    
+    regularSearch: function (){
+ 
+    	//this stuff to 
+    	/*
+    	vis.panelRef.getBottomToolbar().hide();
+    	vis.panelRef.doLayout();
+    	
+    	vis.panelRef.currentSpinnerValue = spinner.getValue();
+    	*/
+
+        var displayStringency = this.getTopToolbar().getComponent('stringencySpinner').getValue();
+        var resultsStringency = 2;
+
+        if (displayStringency > 5) {
+            resultsStringency = displayStringency - Math.round(displayStringency / 4);
+        }
+        
+        this.currentResultsStringency = resultsStringency;
+		this.initialDisplayStringency= displayStringency
+
+        Ext.apply(
+        this.coexCommand, {
+            stringency: resultsStringency,
+            displayStringency: displayStringency,            
+            queryGenesOnly: false
+        });
+  
+		Ext.apply(this, {
+			loadMask : new Ext.LoadMask(this.getEl(), {
+						msg : "Loading ..."
+					})
+		});
+    	this.loadMask.show();
+    	
+    	ExtCoexpressionSearchController.doSearchQuick2(
+                this.coexCommand, {
+                    callback: this.coexSearchCallback.createDelegate(this)
+
+                });    	
+    	
+    },
+    
+    coexSearchCallback: function (result) {
+    	
+    	var displayedResults = Gemma.CoexValueObjectUtil.trimKnownGeneResults(result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes), this.initialDisplayStringency);
+		    	
+    	this.loadData(result.isCannedAnalysis, 2, displayedResults.trimmedKnownGeneResults,
+				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
+    	
+        this.loadMask.hide();
+
     }
 
 
@@ -1198,7 +1398,8 @@ Gemma.CoexpressionGrid.DownloadWindow = Ext.extend (Ext.Window, {
 		
 		var kglength = data.length;
         // populate node data plus populate edge data
-        for (var i = 0; i < kglength; i++) {        	
+		var i;
+        for (i = 0; i < kglength; i++) {        	
         	
         	text += this.makeResultsRow(data[i]); 
         	

@@ -182,9 +182,13 @@ Ext.onReady(function() {
 				layoutOnTabChange: true,
 				hideMode: 'offsets',
 				currentResultsStringency: searchPanel.getLastCoexpressionSearchCommand().stringency,
-				initialDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency
-			//hidden:true
+				initialDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency,
+				coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
+				currentSpinnerValue: searchPanel.getLastCoexpressionSearchCommand().displayStringency
+			
 			});
+			
+			
 		}
 		
 		var cytoscapePanel = new Gemma.CytoscapePanel({
@@ -218,7 +222,7 @@ Ext.onReady(function() {
 		resultsPanel.show();
 		resultsPanel.doLayout();
 		knownGeneGrid.cytoscapeRef=cytoscapePanel;
-		knownGeneGrid.loadData(result.isCannedAnalysis, result.queryGenes.length, displayedResults,
+		knownGeneGrid.loadData(result.isCannedAnalysis, 2, displayedResults,
 				result.knownGeneDatasets, result.knownGeneResults, Gemma.CoexValueObjectUtil.getCurrentQueryGeneIds(result.queryGenes));
 		
 		knownGeneGrid.show();
@@ -265,7 +269,7 @@ Ext.onReady(function() {
 						}.createDelegate(this)
 					});
 					
-					
+					/*
 					tipDefs.push({
 						element: cytoscapePanel.getTopToolbar().nodeDegreeEmphasis,
 						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.cytoNodeDegreeTitle,
@@ -278,6 +282,8 @@ Ext.onReady(function() {
 							resultsPanel.setActiveTab('cytoscaperesults');
 						}.createDelegate(this)
 					});
+					
+					*/
 					tutorialControlPanel.addTips(tipDefs);
 				
 			}

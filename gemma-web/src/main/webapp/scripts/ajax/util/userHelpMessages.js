@@ -171,7 +171,7 @@ Gemma.HelpText.WidgetDefaults = {
 		nodeDegreeEmphasisTT: 'Node degree is represented by the darkness of a gene node. The closer the node degree of a gene is'+
 								' to 1, the lighter it is and the more that gene shows coexpression with all other genes in that taxon',
 		lowStringencyWarning: 'Lowering the stringency to this level will run a new search to retrieve low stringency results. '+
-							'Low stringency results may not be meaningful for the number of datasets your are searching in. Click Yes to Continue.',
+							'Low stringency results may not be meaningful for the number of datasets your are searching in.',
 		exportPNGWindowTitle: 'Right-click the image and save the image as file.',
 		exportGraphMLWindowTitle: 'GraphML data',
 		exportXGMMLWindowTitle: 'XGMML data',

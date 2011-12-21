@@ -272,7 +272,9 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			hideMode:'offsets',
 			height: Ext.getBody().getHeight()>500?Ext.getBody().getHeight()-150:500,
 			currentResultsStringency: searchForm.getLastCoexpressionSearchCommand().stringency,
-			initialDisplayStringency: searchForm.getLastCoexpressionSearchCommand().displayStringency
+			initialDisplayStringency: searchForm.getLastCoexpressionSearchCommand().displayStringency,
+			coexCommand: searchForm.getLastCoexpressionSearchCommand(),
+			currentSpinnerValue: searchForm.getLastCoexpressionSearchCommand().displayStringency
 			
 		});
 		
