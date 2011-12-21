@@ -327,8 +327,15 @@ public class PhenotypeAssoManagerServiceHelper {
 
             VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
 
-            myPhenotype.setValueUri( phenotype.getValueUri() );
-            myPhenotype.setValue( this.ontologyService.getTerm( phenotype.getValueUri() ).getLabel() );
+            OntologyTerm ontologyTerm = this.ontologyService.getTerm( phenotype.getValueUri() );
+
+            if ( ontologyTerm == null ) {
+                throw new EntityNotFoundException( "Could not locate ontology term with uri: "
+                        + phenotype.getValueUri() );
+            }
+
+            myPhenotype.setValueUri( ontologyTerm.getUri() );
+            myPhenotype.setValue( ontologyTerm.getLabel() );
             myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
             myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
 

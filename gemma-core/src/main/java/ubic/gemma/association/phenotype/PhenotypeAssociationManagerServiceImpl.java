@@ -118,6 +118,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public GeneEvidenceValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
+        if ( evidence.getPhenotypes().size() < 1 ) {
+            throw new IllegalArgumentException();
+        }
+
         Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
 
         Collection<EvidenceValueObject> evidenceValueObjects = EvidenceValueObject.convert2ValueObjects( gene
@@ -127,7 +131,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
             if ( evidenceFound.equals( evidence ) ) {
                 // the evidence already exists, no need to create it again
-                return new GeneEvidenceValueObject( gene );
+                return null;
             }
         }
 
@@ -477,7 +481,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         Cache phenoCountCache = this.cacheManager.getCache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE );
 
-        Collection<TreeCharacteristicValueObject> finalTree = new HashSet<TreeCharacteristicValueObject>();
+        Collection<TreeCharacteristicValueObject> finalTree = new TreeSet<TreeCharacteristicValueObject>();
 
         for ( TreeCharacteristicValueObject tc : treesPhenotypes ) {
 
