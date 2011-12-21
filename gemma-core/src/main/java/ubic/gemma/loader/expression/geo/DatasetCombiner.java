@@ -276,16 +276,17 @@ public class DatasetCombiner {
         Collection<GeoDataset> datasets = series.getDatasets();
         if ( datasets != null && datasets.size() > 0 ) {
             fillAccessionMaps( datasets );
+
             // make sure all samples are accounted for - just informative
-            boolean ok = true;
+            Collection<GeoSample> missed = new HashSet<GeoSample>();
             for ( GeoSample sample : series.getSamples() ) {
                 if ( !this.accToDataset.containsKey( sample.getGeoAccession() ) ) {
-                    ok = false;
-                    break;
+                    missed.add( sample );
                 }
             }
-            if ( !ok ) {
-                log.warn( "There were one or more samples missing from the datasets" );
+            if ( !missed.isEmpty() ) {
+                log.warn( "There were one or more samples missing from the datasets: "
+                        + StringUtils.join( missed, " | " ) );
             }
             return findGSECorrespondence( datasets );
         }

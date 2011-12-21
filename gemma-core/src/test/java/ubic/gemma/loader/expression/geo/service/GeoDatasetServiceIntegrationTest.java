@@ -120,7 +120,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
             return;
         }
         ee = eeService.thawLite( ee );
-        Collection qts = eeService.getQuantitationTypes( ee );
+        Collection<QuantitationType> qts = eeService.getQuantitationTypes( ee );
         assertEquals( 17, qts.size() );
 
     }
@@ -344,7 +344,7 @@ public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
     //
     // @Test
     // public void test() throws Exception {
-    // fetchASeries( "GSE29014" );
+    // fetchASeries( "GSE18" );
     // }
 
 }

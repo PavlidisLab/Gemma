@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
+import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -53,6 +54,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.testing.BaseSpringContextTest;
+import ubic.gemma.util.ConfigUtils;
 
 /**
  * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called
@@ -188,6 +190,81 @@ public class GeoConverterTest extends BaseSpringContextTest {
         series.setSampleCorrespondence( correspondence );
         Object result = this.gc.convert( series );
         assertNotNull( result );
+    }
+
+    @Test
+    public void testConvertGSE18Stress() throws Exception {
+        InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GSE18.soft.gz" ) );
+
+        GeoFamilyParser parser = new GeoFamilyParser();
+
+        parser.parse( is );
+
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS15.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS16.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS17.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS18.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS19.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS20.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS21.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS30.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS31.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS33.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS34.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS35.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS36.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS108.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS111.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS112.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS113.soft.gz" ) );
+        parser.parse( is );
+        is = new GZIPInputStream( this.getClass().getResourceAsStream(
+                "/data/loader/expression/geo/gse18short/GDS115.soft.gz" ) );
+        parser.parse( is );
+
+        GeoSeries series = ( ( GeoParseResult ) parser.getResults().iterator().next() ).getSeriesMap().get( "GSE18" );
+        DatasetCombiner datasetCombiner = new DatasetCombiner( false );
+        GeoSampleCorrespondence correspondence = datasetCombiner.findGSECorrespondence( series );
+        series.setSampleCorrespondence( correspondence );
+        ExpressionExperiment result = ( ExpressionExperiment ) ( ( Set<?> ) this.gc.convert( series ) ).iterator()
+                .next();
+
+        assertEquals( 156, result.getBioAssays().size() );
+
     }
 
     /**

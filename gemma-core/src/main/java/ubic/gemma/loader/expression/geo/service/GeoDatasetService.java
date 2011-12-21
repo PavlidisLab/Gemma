@@ -377,8 +377,8 @@ public class GeoDatasetService extends AbstractGeoService {
     }
 
     /**
-     * Check if all the data sets are on different platforms. This is a rare case in GEO. When it happens we merge the
-     * datasets.
+     * Check if all the data sets are on different platforms. This is a rare case in GEO (example: GSE18). When it
+     * happens we merge the datasets.
      */
     private void confirmPlatformUniqueness( GeoSeries series, boolean doSampleMatching ) {
         Set<GeoPlatform> platforms = getPlatforms( series );
@@ -679,9 +679,12 @@ public class GeoDatasetService extends AbstractGeoService {
 
         Collection<GeoDataset> finishedDatasets = new HashSet<GeoDataset>();
         for ( GeoPlatform platform : seenPlatforms.keySet() ) {
-            if ( seenPlatforms.get( platform ).size() > 1 ) {
-                GeoDataset combined = combineDatasets( seenPlatforms.get( platform ) );
+            Collection<GeoDataset> datasetsForPlatform = seenPlatforms.get( platform );
+            if ( datasetsForPlatform.size() > 1 ) {
+                GeoDataset combined = combineDatasets( datasetsForPlatform );
                 finishedDatasets.add( combined );
+            } else {
+                finishedDatasets.add( datasetsForPlatform.iterator().next() );
             }
         }
         return finishedDatasets;
