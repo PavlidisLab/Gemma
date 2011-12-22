@@ -219,18 +219,6 @@ public abstract class EvidenceValueObject {
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         EvidenceValueObject other = ( EvidenceValueObject ) obj;
-        if ( this.associationType == null ) {
-            if ( other.associationType != null ) return false;
-        } else if ( !this.associationType.equals( other.associationType ) ) return false;
-        if ( this.description == null ) {
-            if ( other.description != null ) return false;
-        } else if ( !this.description.equals( other.description ) ) return false;
-        if ( this.evidenceCode == null ) {
-            if ( other.evidenceCode != null ) return false;
-        } else if ( !this.evidenceCode.equals( other.evidenceCode ) ) return false;
-        if ( this.isNegativeEvidence == null ) {
-            if ( other.isNegativeEvidence != null ) return false;
-        } else if ( !this.isNegativeEvidence.equals( other.isNegativeEvidence ) ) return false;
         if ( this.phenotypes == null ) {
             if ( other.phenotypes != null ) return false;
         } else if ( !this.phenotypes.equals( other.phenotypes ) ) return false;
