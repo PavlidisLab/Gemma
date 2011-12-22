@@ -96,7 +96,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
-    
+
     @Autowired
     private DatabaseEntryDao databaseEntryDao;
 
@@ -282,12 +282,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         if ( loaded != null ) {
-            
+
             // We should also delete the databaseEntry for ExternalDatabaseEvidence
-            if(loaded instanceof ExternalDatabaseEvidence){
-                this.databaseEntryDao.remove(((ExternalDatabaseEvidence) loaded).getEvidenceSource().getId());
+            if ( loaded instanceof ExternalDatabaseEvidence ) {
+                this.databaseEntryDao.remove( ( ( ExternalDatabaseEvidence ) loaded ).getEvidenceSource().getId() );
             }
-            
+
             this.associationService.remove( loaded );
         }
     }
@@ -569,40 +569,43 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId ) {
 
-        Collection<ExpressionExperiment> experiments = null;
-
-        // check if already in the database
+        // check if the given pubmedID is already in the database
         BibliographicReference bibliographicReference = this.bibliographicReferenceService.findByExternalId( pubMedId );
 
-        if ( bibliographicReference == null ) {
-            // find the Bibliographic on PubMed
-            bibliographicReference = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
+        // already in the database
+        if ( bibliographicReference != null ) {
 
-            // the pudmedId doesn't exists in PudMed
-            if ( bibliographicReference == null ) {
-                return null;
+            BibliographicReferenceValueObject bibliographicReferenceVO = new BibliographicReferenceValueObject(
+                    bibliographicReference );
+
+            Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
+                    .findPhenotypesForBibliographicReference( pubMedId );
+
+            Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
+                    .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
+
+            bibliographicReferenceVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
+
+            Collection<ExpressionExperiment> experiments = this.bibliographicReferenceService
+                    .getRelatedExperiments( bibliographicReference );
+
+            if ( experiments != null && experiments.size() > 0 ) {
+                bibliographicReferenceVO.setExperiments( ExpressionExperimentValueObject
+                        .convert2ValueObjects( experiments ) );
             }
-        } else {
-            experiments = this.bibliographicReferenceService.getRelatedExperiments( bibliographicReference );
+
+            return bibliographicReferenceVO;
         }
 
-        BibliographicReferenceValueObject bibliographicReferenceVO = new BibliographicReferenceValueObject(
-                bibliographicReference );
+        // find the Bibliographic on PubMed
+        bibliographicReference = this.pubMedXmlFetcher.retrieveByHTTP( Integer.parseInt( pubMedId ) );
 
-        Collection<PhenotypeAssociation> phenotypeAssociations = this.associationService
-                .findPhenotypesForBibliographicReference( pubMedId );
-
-        Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
-                .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
-
-        bibliographicReferenceVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
-
-        if ( experiments != null && experiments.size() > 0 ) {
-            bibliographicReferenceVO
-                    .setExperiments( ExpressionExperimentValueObject.convert2ValueObjects( experiments ) );
+        // the pudmedId doesn't exists in PudMed
+        if ( bibliographicReference == null ) {
+            return null;
         }
 
-        return bibliographicReferenceVO;
+        return new BibliographicReferenceValueObject( bibliographicReference );
     }
 
     /** counts gene on a TreeCharacteristicValueObject */
@@ -885,6 +888,18 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 PhenotypeAssociationConstants.HUMAN_PHENOTYPE ) );
 
         return allPhenotypesFoundInOntology;
+    }
+
+    public int validateEvidence( String geneNCBI, EvidenceValueObject evidence ) {
+
+        // 1 ok
+        // 2 warning
+        // 3 not ok
+
+        // evidenceValueObject.get
+
+        return 1;
+
     }
 
 }
