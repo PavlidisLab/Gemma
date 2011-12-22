@@ -53,6 +53,9 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     public CharacteristicValueObject( String value, String valueUri ) {
         this.value = value;
         this.valueUri = valueUri;
+        if ( valueUri != null && !valueUri.equals( "" ) && valueUri.indexOf( "#" ) > 0 ) {
+            this.urlId = valueUri.substring( valueUri.indexOf( "#" ) + 1, valueUri.length() );
+        }
     }
     
     public CharacteristicValueObject( String value, String category, String valueUri, String categoryUri ) {

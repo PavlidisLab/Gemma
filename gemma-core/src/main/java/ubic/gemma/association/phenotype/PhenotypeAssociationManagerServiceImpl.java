@@ -39,6 +39,7 @@ import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
+import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -46,6 +47,7 @@ import ubic.gemma.model.common.description.BibliographicReferenceService;
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.CharacteristicService;
+import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -94,6 +96,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
     @Autowired
     private BibliographicReferenceService bibliographicReferenceService;
+    
+    @Autowired
+    private DatabaseEntryDao databaseEntryDao;
 
     private DiseaseOntologyService diseaseOntologyService = null;
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
@@ -276,7 +281,15 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             buildTree( evidenceVo.getPhenotypes() );
         }
 
-        if ( loaded != null ) this.associationService.remove( loaded );
+        if ( loaded != null ) {
+            
+            // We should also delete the databaseEntry for ExternalDatabaseEvidence
+            if(loaded instanceof ExternalDatabaseEvidence){
+                this.databaseEntryDao.remove(((ExternalDatabaseEvidence) loaded).getEvidenceSource().getId());
+            }
+            
+            this.associationService.remove( loaded );
+        }
     }
 
     /**
@@ -471,7 +484,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         // init the cache if it is not
         if ( !this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
             this.cacheManager.addCache( new Cache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE, 1500, false,
-                    false, 24 * 3600, 24 * 3600 ) );
+                    false, 72 * 3600, 72 * 3600 ) );
         }
         // the phenotypes in the database correspond to many trees not linked to each other, each of those tree are keep
         // in the cache separately, when a change is detected we only need to reconstruct the specific tree the
