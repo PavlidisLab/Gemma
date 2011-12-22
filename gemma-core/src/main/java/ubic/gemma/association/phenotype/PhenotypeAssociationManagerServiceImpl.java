@@ -890,16 +890,4 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return allPhenotypesFoundInOntology;
     }
 
-    public int validateEvidence( String geneNCBI, EvidenceValueObject evidence ) {
-
-        // 1 ok
-        // 2 warning
-        // 3 not ok
-
-        // evidenceValueObject.get
-
-        return 1;
-
-    }
-
 }
