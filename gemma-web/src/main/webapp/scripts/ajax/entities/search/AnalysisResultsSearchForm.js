@@ -1684,7 +1684,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
-						msg : "Searching for analysis results ...",
+						msg : "Processing request...",
 						msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
 					});
 		}

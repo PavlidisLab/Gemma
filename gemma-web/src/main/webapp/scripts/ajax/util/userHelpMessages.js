@@ -17,8 +17,8 @@ Gemma.StatusText = {
 	saving: "Saving...",
 	deleting: "Deleting...",
 	Searching: {
-		generic: "Searching...",
-		analysisResults: "Searching for analysis results..."
+		generic: "Processing request...",
+		analysisResults: "Processing request..."
 	}
 };
 Gemma.HelpText.CommonWarnings = {
@@ -338,9 +338,9 @@ Gemma.HelpText.WidgetDefaults = {
 								"To select experiments, hold down &quot;Ctrl&quot; and click on condition labels.",
 		Tutorial: {
 			searchResultsTitle: 'Search Results',
-			searchResultsText: 'Your results are displayed as a heatmap of genes vs conditions. The darker the pink, the smaller the p value. Hover over a cell for more details.',
-			foldChangeTitle: 'Fold Change',
-			foldChangeText: 'Use this button to toggle between p value and fold change.',
+			searchResultsText: 'Your results are displayed as a heatmap of genes vs conditions. Fold change is shown with cell color and p values are encoded by opacity of the black inner rectangle. Hover over a cell for more details.',
+			foldChangeTitle: 'Fold change and p value',
+			foldChangeText: 'Use this button to show or hide p value.',
 			colourLegendTitle: 'Color Legend',
 			colourLegendText: 'View the color legend for the chart.',
 			sortAndFilterTitle: 'Sort and Filter',
