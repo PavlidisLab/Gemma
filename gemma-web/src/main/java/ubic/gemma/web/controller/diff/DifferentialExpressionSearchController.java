@@ -99,8 +99,15 @@ public class DifferentialExpressionSearchController extends BaseFormController {
     @Autowired
     private DifferentialExpressionGeneConditionSearchService geneConditionSearchService;
     
-        
-    public DifferentialExpressionGenesConditionsValueObject geneConditionSearch (
+    public DifferentialExpressionGenesConditionsValueObject getDiffExpSearchResult (String taskId) {
+        return this.geneConditionSearchService.getDiffExpSearchResult( taskId );
+    }
+
+    public ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService.TaskProgress getDiffExpSearchTaskProgress(String taskId) {
+        return this.geneConditionSearchService.getDiffExpSearchTaskProgress( taskId );
+    }
+    
+    public String scheduleDiffExpSearchTask (
             Long taxonId,
             Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
             Collection<GeneSetValueObject> geneValueObjects,
@@ -108,8 +115,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             List<String> experimentSessionGroupQueries ) {
 
         log.info("Starting gene x condition search...");
-        org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch("geneConditionSearch");
-        watch.start("Loading "+ datasetValueObjects.size() +" experiment sets.");
         // Load experiments
         List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
         List<String> datasetGroupNames = new ArrayList<String>();
@@ -120,11 +125,6 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             }
         }
         
-        watch.stop();
-        watch.start("Loading "+ geneValueObjects.size() +" gene sets.");
-        // updates param
-        //recreateSessionBoundEEGroupsFromBookmark( experimentSessionGroupQueries, experiments, datasetGroupNames );
-
         // Load genes
         List<List<Gene>> genes = new ArrayList<List<Gene>>();
         List<String> geneGroupNames = new ArrayList<String>();
@@ -136,19 +136,60 @@ public class DifferentialExpressionSearchController extends BaseFormController {
             }
         }
 
-        // note: this method makes changes to params
-//        recreateSessionBoundGeneGroupsFromBookmark( geneSessionGroupQueries, genes, geneNames, geneFullNames, geneIds,
-//                geneGroupNames );
-
-        watch.stop();
-        watch.start("Pupulate heatmap object.");        
-        DifferentialExpressionGenesConditionsValueObject result = geneConditionSearchService.createGenesConditionsValueObject( genes, experiments, geneGroupNames, datasetGroupNames );
-        watch.stop();
-
-        log.info( watch.prettyPrint() );
-        
-        return result;
+        String taskId = geneConditionSearchService.scheduleDiffExpSearchTask ( genes, experiments, geneGroupNames, datasetGroupNames );
+        return taskId;
     }
+
+        
+//    public DifferentialExpressionGenesConditionsValueObject geneConditionSearch (
+//            Long taxonId,
+//            Collection<ExpressionExperimentSetValueObject> datasetValueObjects,
+//            Collection<GeneSetValueObject> geneValueObjects,
+//            List<String> geneSessionGroupQueries,
+//            List<String> experimentSessionGroupQueries ) {
+//
+//        log.info("Starting gene x condition search...");
+//        org.springframework.util.StopWatch watch = new org.springframework.util.StopWatch("geneConditionSearch");
+//        watch.start("Loading "+ datasetValueObjects.size() +" experiment sets.");
+//        // Load experiments
+//        List<Collection<ExpressionExperiment>> experiments = new ArrayList<Collection<ExpressionExperiment>>();
+//        List<String> datasetGroupNames = new ArrayList<String>();
+//        for ( ExpressionExperimentSetValueObject eevo : datasetValueObjects ) {
+//            if ( eevo != null ) {
+//                experiments.add( loadExperimentsByIds( eevo.getExpressionExperimentIds() ) );
+//                datasetGroupNames.add( eevo.getName() );
+//            }
+//        }
+//        
+//        watch.stop();
+//        watch.start("Loading "+ geneValueObjects.size() +" gene sets.");
+//        // updates param
+//        //recreateSessionBoundEEGroupsFromBookmark( experimentSessionGroupQueries, experiments, datasetGroupNames );
+//
+//        // Load genes
+//        List<List<Gene>> genes = new ArrayList<List<Gene>>();
+//        List<String> geneGroupNames = new ArrayList<String>();
+//
+//        for ( GeneSetValueObject gsvo : geneValueObjects ) {
+//            if ( gsvo != null ) {
+//                geneGroupNames.add( gsvo.getName() );
+//                genes.add( new ArrayList<Gene>( geneService.loadMultiple( gsvo.getGeneIds() ) ) );
+//            }
+//        }
+//
+//        // note: this method makes changes to params
+////        recreateSessionBoundGeneGroupsFromBookmark( geneSessionGroupQueries, genes, geneNames, geneFullNames, geneIds,
+////                geneGroupNames );
+//
+//        watch.stop();
+//        watch.start("Pupulate heatmap object.");        
+//        DifferentialExpressionGenesConditionsValueObject result = geneConditionSearchService.createGenesConditionsValueObject( genes, experiments, geneGroupNames, datasetGroupNames );
+//        watch.stop();
+//
+//        log.info( watch.prettyPrint() );
+//        
+//        return result;
+//    }
         
     /**
      * Session-bound gene groups are encoded in bookmarkable URLs as the query that made them (minus modifications) here

@@ -73,7 +73,6 @@
 		<property name="order" value="4" />
 	</bean>
 
-
 	<!-- ==================================================== -->
 	<!--
 		Mapping urls to views. List views here that are just jsps and that don't need a controller.
@@ -1098,6 +1097,9 @@ gemma.max.fileupload.size.bytes=
 								<value>getFactors</value>
 								<value>differentialExpressionAnalysisVisualizationSearch</value>
 								<value>geneConditionSearch</value>
+								<value>scheduleDiffExpSearchTask</value>
+								<value>getDiffExpSearchTaskProgress</value>
+								<value>getDiffExpSearchResult</value>
 								<value>differentialExpressionAnalysisVisualizationSearchIdBased</value>
 								<value>differentialExpressionAnalysisVisualizationLoadContrastsInfo</value>
 							</list>
@@ -1524,6 +1526,11 @@ gemma.max.fileupload.size.bytes=
 					</bean>
 				</entry>
 				<entry key="ubic.gemma.web.visualization.DifferentialExpressionGenesConditionsValueObject$Cell">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>				
+				<entry key="ubic.gemma.web.visualization.DifferentialExpressionGeneConditionSearchService$TaskProgress">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />
 					</bean>

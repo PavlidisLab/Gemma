@@ -276,6 +276,21 @@ DifferentialExpressionSearchController.geneConditionSearch = function(p0, p1, p2
 			'geneConditionSearch', p0, p1, p2, p3, p4, callback);
 }
 
+DifferentialExpressionSearchController.scheduleDiffExpSearchTask = function(p0, p1, p2, p3, p4, callback) {
+	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
+			'scheduleDiffExpSearchTask', p0, p1, p2, p3, p4, callback);
+}
+
+DifferentialExpressionSearchController.getDiffExpSearchResult = function(p0, callback) {
+	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
+			'getDiffExpSearchResult', p0, callback);
+}
+
+DifferentialExpressionSearchController.getDiffExpSearchTaskProgress = function(p0, callback) {
+	dwr.engine._execute(DifferentialExpressionSearchController._path, 'DifferentialExpressionSearchController',
+			'getDiffExpSearchTaskProgress', p0, callback);
+}
+
 // ====================================================================================
 if (ExperimentalDesignController == null)
 	var ExperimentalDesignController = {};
@@ -820,11 +835,11 @@ SystemMonitorController.getSpaceStatus = function(callback) {
 SystemMonitorController.getCacheStatus = function(callback) {
 	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'getCacheStatus', callback);
 }
-SystemMonitorController.flushCache = function(p0, callback) {
-	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'flushCache', p0, callback);
+SystemMonitorController.clearCache = function(p0, callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'clearCache', p0, callback);
 }
-SystemMonitorController.flushAllCaches = function(callback) {
-	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'flushAllCaches', callback);
+SystemMonitorController.clearAllCaches = function(callback) {
+	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'clearAllCaches', callback);
 }
 SystemMonitorController.resetHibernateStatus = function(callback) {
 	dwr.engine._execute(SystemMonitorController._path, 'SystemMonitorController', 'resetHibernateStatus', callback);
