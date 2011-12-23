@@ -247,43 +247,38 @@ Ext.onReady(function() {
 					tipDefs.push({
 						element: knownGeneGrid.getTopToolbar().stringencyfield,
 						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.stringencyTitle,
-						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.stringencyText,
-						tipConfig: {
-							ownerTabId: knownGeneGrid.id
-						},
-						onShow: function(){
-							resultsPanel.setActiveTab('coexGridResults');
-						}.createDelegate(this)
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.stringencyText
+						
 					});
 					
 					// NOTE want this tip to point to header of column, not sure how to do that yet... the way below doesn't work
+					// NOTE added arbitrary tbspacers with refs to jury rig this to work
 					tipDefs.push({
-						element: knownGeneGrid.getColumnModel().getColumnById('support'),
+						element: knownGeneGrid.getTopToolbar().arbitraryTutorialTooltip2,
 						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.supportColumnTitle,
-						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.supportColumnText,
-						tipConfig: {
-							ownerTabId: knownGeneGrid.id
-						},
-						onShow: function(){
-							resultsPanel.setActiveTab('coexGridResults');
-						}.createDelegate(this)
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.supportColumnText
+						
 					});
 					
-					/*
 					tipDefs.push({
-						element: cytoscapePanel.getTopToolbar().nodeDegreeEmphasis,
-						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.cytoNodeDegreeTitle,
-						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.cytoNodeDegreeText,
-						tipConfig: {
-							anchor: 'top',
-							ownerTabId: cytoscapePanel.id
-						},
-						onShow: function(){
-							resultsPanel.setActiveTab('cytoscaperesults');
-						}.createDelegate(this)
+						element: knownGeneGrid.getTopToolbar().arbitraryTutorialTooltip3,
+						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.nodeDegreeColumnTitle,
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.nodeDegreeColumnText
+						
 					});
 					
-					*/
+					tipDefs.push({
+						element: knownGeneGrid.getTopToolbar().searchInGrid,						
+						title: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.visualizeTabTitle,
+						text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchNonWidget.CoexpressionTutorial.visualizeTabText,
+						position: {
+							moveDown: -25
+						}											
+						
+						
+					});
+					
+					
 					tutorialControlPanel.addTips(tipDefs);
 				
 			}
@@ -294,20 +289,22 @@ Ext.onReady(function() {
 				this.coexTutorialControlPanel.show();
 				this.coexTutorialControlPanel.playTips(0);
 				
+				
 				resultsPanel.on('beforetabchange', function(tabPanel, newTab, currTab){
-					// don't hide first showing of tab
-					if (tabPanel.getActiveTab()) {
-						var tabTips = this.coexTutorialControlPanel.getTipsBy(function(tip){
-							return (tip.ownerTabId === currTab.id);
-						}.createDelegate(this));
-						this.coexTutorialControlPanel.hideTips(tabTips);
-					}
+						
+						this.coexTutorialControlPanel.hideTips(this.coexTutorialControlPanel.tips);
+						this.coexTutorialControlPanel.hide();
+						if (newTab && newTab.id == 'cytoscaperesults'){
+							resultsPanel.showCoexTutorial = false;
+						}
 				}, this);
+				
 			}
 		}, this);
 		
 		this.coexTutorialControlPanel.on('tutorialHidden', function(){
 			this.coexTutorialControlPanel.hide();
+			this.coexTutorialControlPanel.hidden= true;
 		}, this);
 		
 	};

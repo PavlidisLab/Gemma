@@ -279,6 +279,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 												toggleHandler : this.toggleMyData.createDelegate(this)
 											}, ' ', ' ', {
 												xtype : 'textfield',
+												ref: 'searchInGrid',
 												id : this.id + '-search-in-grid',
 												tabIndex : 1,
 												enableKeyEvents : true,
@@ -292,7 +293,23 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 														}
 													}
 												}
-											},'->', '-',
+											},
+									        {
+									        	 xtype: 'tbspacer',
+									        	 width: '180',
+									        	 ref: 'arbitraryTutorialTooltip1'
+									        },
+									        {
+									        	 xtype: 'tbspacer',
+									        	 width: '180',
+									        	 ref: 'arbitraryTutorialTooltip2'
+									        		 
+									        },
+									        {
+									        	 xtype: 'tbspacer',									        	
+									        	 ref: 'arbitraryTutorialTooltip3'
+									        		 
+									        },'->', '-',
 								            {
 								                xtype: 'button',
 								                // icon:

@@ -89,19 +89,21 @@ Gemma.HelpText.WidgetDefaults = {
 	AnalysisResultsSearchNonWidget:{
 		CoexpressionTutorial: {
 			supportColumnTitle: 'Support',
-			supportColumnText:  'what is support, red vs green',
+			supportColumnText:  'The number in the support column corresponds to the amount of dataset support.  Positive support is denoted by green text. Negative support is denoted by red text',
 			visualiseColumnTitle: 'Visualise',
 			visualiseColumnText: 'what does this do',
-			nodeDegreeColumnTitle:'node deg',
-			nodeDegreeColumnText:'what is it',
+			nodeDegreeColumnTitle:'Node Degree',
+			nodeDegreeColumnText:'The more a gene shows coexpression with other genes in their taxon the closer the node degree value is to 1. The node degree value displayed belongs to the gene that has the highest node degree.',
 			stringencyTitle: 'Stringency',
-			stringencyText: 'Some really awesome info about stringency',
+			stringencyText: 'Use the stringency control to add/remove genes with more/less dataset support that confirms coexpression',
 			cytoNodeDegreeTitle: 'node deg 2nd',
 			cytoNodeDegreeText: 'explain visualisation of node deg',
 			saveTitle: 'Saving your results',
 			saveText: 'explain formats',
 			updateQueryTitle: 'new query from chart',
-			updateQueryText: 'click and drag etc'
+			updateQueryText: 'click and drag etc',
+			visualizeTabTitle: 'Visualization Tab',
+			visualizeTabText: 'Click the visualization tab to view your coexpression results as a gene network, click the Help button after the visualization has loaded for information on its features.'
 		}
 	},
 	AnalysisResultsSearchForm:{
