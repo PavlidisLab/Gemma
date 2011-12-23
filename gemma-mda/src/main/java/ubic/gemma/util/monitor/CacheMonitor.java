@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Statistics;
+
 import net.sf.ehcache.config.CacheConfiguration;
 
 /**
@@ -56,7 +57,7 @@ public class CacheMonitor {
      * 
      * @param cacheName
      */
-    public void flushCache( String cacheName ) {
+    public void clearCache( String cacheName ) {
         Cache cache = this.cacheManager.getCache( cacheName );
         if ( cache != null ) {
             cache.removeAll();
@@ -71,11 +72,8 @@ public class CacheMonitor {
      * 
      * @param cacheName
      */
-    public void flushAllCaches() {
-        String[] cacheNames = cacheManager.getCacheNames();
-        for ( String string : cacheNames ) {
-            cacheManager.getCache( string ).removeAll();
-        }
+    public void clearAllCaches() {
+        cacheManager.clearAll();
     }
 
     /**
@@ -88,10 +86,7 @@ public class CacheMonitor {
         Arrays.sort( cacheNames );
 
         buf.append( cacheNames.length + " caches; only non-empty caches listed below." );
-
-        buf
-                .append( "&nbsp;To flush all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"flushAllCaches()\" alt='Flush caches' title='Flush caches' />&nbsp;&nbsp;" );
-
+        buf.append( "&nbsp;To clear all caches click here: <img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearAllCaches()\" alt='Flush caches' title='Clear caches' />&nbsp;&nbsp;" );
         buf.append( "<table style='font-size:small'  ><tr>" );
         String header = "<th>Name</th><th>Hits</th><th>Misses</th><th>Count</th><th>MemHits</th><th>DiskHits</th><th>Evicted</th> <th>Eternal?</th><th>UseDisk?</th> <th>MaxInMem</th><th>LifeTime</th><th>IdleTime</th>";
         buf.append( header );
@@ -111,7 +106,7 @@ public class CacheMonitor {
             // a little shorter...
             String cacheName = rawCacheName.replaceFirst( "ubic.gemma.model.", "[entity] " );
 
-            buf.append( "<tr><td>" + getCacheFlushHtml( rawCacheName ) + cacheName + "</td>" );
+            buf.append( "<tr><td>" + getClearCacheHtml( rawCacheName ) + cacheName + "</td>" );
             long hits = statistics.getCacheHits();
             long misses = statistics.getCacheMisses();
             long inMemoryHits = statistics.getInMemoryHits();
@@ -150,9 +145,9 @@ public class CacheMonitor {
 
     }
 
-    private String getCacheFlushHtml( String cacheName ) {
-        return "<img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"flushCache('" + cacheName
-                + "')\" alt='Flush cache' title='Flush cache' />&nbsp;&nbsp;";
+    private String getClearCacheHtml( String cacheName ) {
+        return "<img src='/Gemma/images/icons/arrow_rotate_anticlockwise.png' onClick=\"clearCache('" + cacheName
+                + "')\" alt='Clear cache' title='Clear cache' />&nbsp;&nbsp;";
     }
 
 }
