@@ -293,7 +293,6 @@ public class DifferentialExpressionGenesConditionsValueObject {
     public void addProbeMissingCell( Long geneId, String conditionId ) {
         Cell cell = new Cell();
         cell.isProbeMissing = true;
-        cell.pValue = 1;
 
         addCell( geneId, conditionId, cell );
     }
