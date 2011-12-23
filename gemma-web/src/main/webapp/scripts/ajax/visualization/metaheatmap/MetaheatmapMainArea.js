@@ -144,13 +144,17 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		var foldChange, isProbeMissing;
 		var isGeneOnTop = this.isGeneOnTop;
 		var cell  = this.cells.getCell (gene, condition); 		
-		var color = this.getVisualizationValue (gene, condition);
+		var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cell.logFoldChange);
 		
-		
+		var transparency = 0;
+
 		if (cell !== null ) {			
 			pValue = cell.pValue;
 			foldChange = cell.logFoldChange;
 			isProbeMissing = cell.isProbeMissing;
+			if (this.isShowPvalue) {
+				transparency = this.calculateVisualizationValueBasedOnPvalue(cell.pValue) / 10;			
+			}
 		} 
 		
 		var x, y, width, height;
@@ -166,7 +170,9 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			width  = condition.display.pxlSize;
 			height = gene.display.pxlSize;
 		}
+
 		var drawCellFunction = this.drawCell_;
+		
 		return {
 			'gene' 		 : gene,
 			'condition'  : condition,
@@ -178,7 +184,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			drawCell_ : drawCellFunction,
 			
 			highlight : function (ctx) {
-				this.drawCell_ (ctx, gene, condition, color, isProbeMissing, isGeneOnTop);				
+				this.drawCell_ (ctx, gene, condition, color, isProbeMissing, isGeneOnTop, transparency);				
 
 				if (width > 4 && height > 4) {
 					ctx.strokeStyle = 'black';
@@ -190,7 +196,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			},
 			
 			draw : function (ctx) {
-				this.drawCell_ (ctx, gene, condition, color, isProbeMissing, isGeneOnTop);				
+				this.drawCell_ (ctx, gene, condition, color, isProbeMissing, isGeneOnTop, transparency);				
 			}			
 		};
 	},
@@ -238,39 +244,97 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
     },
 	
 	drawCell : function (gene, condition) {
-		var color = this.getVisualizationValue (gene, condition);		
 		var cellData = this.cells.getCell (gene,condition);		
+
+    	var transparency = 0;
+		var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
 		
-		this.drawCell_( this.ctx, gene, condition, color, cellData.isProbeMissing, this.isGeneOnTop )		
+		if (this.isShowPvalue) {
+			transparency = this.calculateVisualizationValueBasedOnPvalue(cellData.pValue) / 10;			
+		}
+
+		this.drawCell_( this.ctx, gene, condition, color, cellData.isProbeMissing, this.isGeneOnTop, transparency )		
 	},
 
-	drawCell_ : function (ctx, gene, condition, color, isProbeMissing, isGeneOnTop) {
+	drawCell_ : function (ctx, gene, condition, color, isProbeMissing, isGeneOnTop, transparency) {
 		if (isProbeMissing) {
+			//this.drawMissingCell_(ctx, gene, condition, isGeneOnTop);
 			if (isGeneOnTop) {
-				ctx.clearRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
+//				ctx.clearRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
 				ctx.fillStyle = 'white';
 				ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
 				
-				ctx.fillStyle = color;		
-				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);			
+				ctx.fillStyle = "gray";
+				
+				ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);
+				
+				ctx.restore();
 			} else {
-				ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
+//				ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 				ctx.fillStyle = 'white';
 				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
 
-				ctx.fillStyle = color;		
-				ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2 - 1, gene.display.pxlStart + gene.display.pxlSize/2 - 1, 2, 2);						
-			}			
+				var innerBoxWidth = Math.floor(0.6*condition.display.pxlSize);
+				var innerBoxHeight = Math.floor(0.6*gene.display.pxlSize) 
+
+				ctx.save();
+				ctx.strokeStyle = "gray";
+				ctx.translate (condition.display.pxlStart, gene.display.pxlStart);
+				ctx.beginPath();
+				ctx.moveTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
+				ctx.lineTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
+				ctx.moveTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
+				ctx.lineTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
+				ctx.stroke();
+				ctx.restore();
+			}					
+			
 		} else {
 			ctx.fillStyle = color;		
 			if (isGeneOnTop) {
 				ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);			
 			} else {
-				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);						
+				var innerBoxWidth = Math.floor(0.5*condition.display.pxlSize);
+				var innerBoxHeight = Math.floor(0.5*gene.display.pxlSize) 
+				ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
+				ctx.fillStyle = "rgba(0,0,0,"+transparency+")";
+				ctx.fillRect (condition.display.pxlStart + condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlStart + gene.display.pxlSize/2 - innerBoxHeight/2, innerBoxWidth, innerBoxHeight);				
 			}
 		}
 	},		
 		
+	drawMissingCell_ : function (ctx, gene, condition, isGeneOnTop) {
+		if (isGeneOnTop) {
+//			ctx.clearRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
+			ctx.fillStyle = 'white';
+			ctx.fillRect (gene.display.pxlStart, condition.display.pxlStart, gene.display.pxlSize, condition.display.pxlSize);
+			
+			ctx.fillStyle = "gray";
+			
+			ctx.fillRect (gene.display.pxlStart + gene.display.pxlSize/2 - 1, condition.display.pxlStart + condition.display.pxlSize/2 - 1, 2, 2);
+			
+			ctx.restore();
+		} else {
+//			ctx.clearRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
+			ctx.fillStyle = 'white';
+			ctx.fillRect (condition.display.pxlStart, gene.display.pxlStart, condition.display.pxlSize, gene.display.pxlSize);
+
+			var innerBoxWidth = Math.floor(0.6*condition.display.pxlSize);
+			var innerBoxHeight = Math.floor(0.6*gene.display.pxlSize) 
+
+			ctx.save();
+			ctx.strokeStyle = "gray";
+			ctx.translate (condition.display.pxlStart, gene.display.pxlStart);
+			ctx.beginPath();
+			ctx.moveTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
+			ctx.lineTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
+			ctx.moveTo (condition.display.pxlSize/2 + innerBoxWidth/2, gene.display.pxlSize/2 - innerBoxHeight/2);
+			ctx.lineTo (condition.display.pxlSize/2 - innerBoxWidth/2, gene.display.pxlSize/2 + innerBoxHeight/2);
+			ctx.stroke();
+			ctx.restore();
+		}					
+	},	
+	
 	onRender : function() {
 		Gemma.Metaheatmap.HeatmapBox.superclass.onRender.apply (this, arguments);		
 		

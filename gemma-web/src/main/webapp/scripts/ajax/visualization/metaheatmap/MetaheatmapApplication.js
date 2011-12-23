@@ -170,19 +170,9 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 					  	tooltip : 'Show/hide the color legend',
 						toggleHandler: function(btn, pressed){
 									if (pressed) {
-										this.visualizationPanel.isLegendShown = true;
-										
-										if (this.visualizationPanel.variableWidthCol.boxHeatmap.isShowPvalue) {
-											this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
-											this.visualizationPanel.variableWidthCol.colorLegendPvalue.show();
-										} else {
-											this.visualizationPanel.variableWidthCol.colorLegendFoldChange.show();
-											this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();
-										}
+										this.visualizationPanel.variableWidthCol.colorLegend.show();
 									} else {
-										this.visualizationPanel.isLegendShown = false;
-										this.visualizationPanel.variableWidthCol.colorLegendFoldChange.hide();
-										this.visualizationPanel.variableWidthCol.colorLegendPvalue.hide();
+										this.visualizationPanel.variableWidthCol.colorLegend.hide();
 									}
 								},
 								scope: this
@@ -345,7 +335,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 						
 			this.geneTree 	   = new Gemma.Metaheatmap.SortedFilteredTree (this.genes, geneSort, geneFilter); 			
 			this.conditionTree = new Gemma.Metaheatmap.SortedFilteredTree (this.conditions, conditionSort, conditionFilter);		
-
+			
 			this.controlPanel.updateGenesTitle (this.geneTree.numFiltered, this.genes.length);
 			this.controlPanel.updateConditionsTitle (this.conditionTree.numFiltered, this.conditions.length);
 

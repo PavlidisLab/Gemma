@@ -120,23 +120,23 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					}, {
 						xtype: 'button',
 						ref: 'showFoldChangeToggle',
-						text: 'Show fold change',
+						text: 'Hide p-value',
 						width: 95,
 						handler: function(btn, e){
 							this.variableWidthCol.boxHeatmap.isShowPvalue = !this.variableWidthCol.boxHeatmap.isShowPvalue;
 							
 							if (this.variableWidthCol.boxHeatmap.isShowPvalue) {
-								btn.setText("Show fold change");
-								if (this.isLegendShown) {
-									this.variableWidthCol.colorLegendFoldChange.hide();
-									this.variableWidthCol.colorLegendPvalue.show();
-								}
+								btn.setText("Hide p-value");
+//								if (this.isLegendShown) {
+//									this.variableWidthCol.colorLegendFoldChange.hide();
+//									this.variableWidthCol.colorLegendPvalue.show();
+//								}
 							} else {
 								btn.setText("Show p-value");
-								if (this.isLegendShown) {
-									this.variableWidthCol.colorLegendFoldChange.show();
-									this.variableWidthCol.colorLegendPvalue.hide();
-								}
+//								if (this.isLegendShown) {
+//									this.variableWidthCol.colorLegendFoldChange.show();
+//									this.variableWidthCol.colorLegendPvalue.hide();
+//								}
 							}
 							this.variableWidthCol.boxHeatmap.draw();
 						},
@@ -190,36 +190,26 @@ Gemma.Metaheatmap.VisualizationPanel = Ext.extend ( Ext.Panel, {
 					geneTree: this.geneTree,
 					conditionTree: this.conditionTree,
 					cells: this.cells
-				}, {
+				}, 
+				{
 					xtype: 'Metaheatmap.ColorLegend',
-					ref: 'colorLegendPvalue',
-					constrain: true,
-					x: 440,
+					ref: 'colorLegend',
+					x: 200,
 					y: 0,
-					title: 'P-value',
-					cellSize: 10,
-					scaleLabels: ["No Data", "1~0.1", "0.05", "0.01", "0.001", "0.0001", "0.00001", "< 0.00001"],
-					scaleValues: [null, 0, 2, 3, 5, 8, 9, 10],
-					
-					discreteColorRangeObject: Gemma.Metaheatmap.Config.basicColourRange,
-					orientation: 'vertical',
-					fontSize: 12
-				}, {
-					xtype: 'Metaheatmap.ColorLegend',
-					ref: 'colorLegendFoldChange',
-					constrain: true,
-					x: 440,
-					y: 0,
-					title: 'Log fold change',
+					title: 'Log fold change & p-value',
 					cellSize: 10,
 					
-					scaleLabels: ["No Data", "-3", "-2", "-1", "0", "1", "2", "3"],
-					scaleValues: [null, -3, -2, -1, 0, 1, 2, 3],
+					foldChangeLabels: ["No Data", "-3", "-2", "-1", "0", "1", "2", "3"],
+					foldChangeValues: [null, -3, -2, -1, 0, 1, 2, 3],
 					
 					discreteColorRangeObject: Gemma.Metaheatmap.Config.contrastsColourRange,
-					orientation: 'vertical',
+					
+					pValueLabels: ["1~0.1", "0.05", "0.01", "0.001", "0.0001", "0.00001", "< 0.00001"],
+					pValueValues: [0, 2, 3, 5, 8, 9, 10],
+					
 					fontSize: 12
-				}]
+				}
+				]
 			}]
 		});
 

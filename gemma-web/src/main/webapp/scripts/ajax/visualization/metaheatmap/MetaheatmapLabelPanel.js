@@ -31,8 +31,8 @@ Ext.namespace('Gemma.Metaheatmap');
  */
 Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 	colors : {
-		groupLabelA : 'rgb(179,226,205)', 
-		groupLabelB : 'rgb(253,205,172)',
+		groupLabelA : 'rgb(204, 236, 230)', 
+		groupLabelB : 'rgb(153, 216, 201)',
 		itemLabelA  : 'rgba(203,213,232, 0.5)',
 		itemLabelB  : 'rgba(203,213,232, 0.9)'
 	},
@@ -156,7 +156,8 @@ Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 			item = this.tree.findItemByCoordinate (x);
 		}
 		if (item === null) {return null;}
-		
+		if (typeof item === "undefined") {return null;} 
+			
 		var labelItemObj = {
 			'item' : item // gene or condition			
 		};

@@ -2,9 +2,9 @@ Ext.namespace('Gemma.Metaheatmap');
 
 Gemma.Metaheatmap.ColorLegend = Ext.extend ( Ext.Window, {
 	
-	height : 160,
-	width  : 100,
-
+	height : 150,
+	width  : 270,
+	constrain : true,
 	closeAction : 'hide',
 	closable    : false,
 	shadow 	    : false,
@@ -21,9 +21,12 @@ Gemma.Metaheatmap.ColorLegend = Ext.extend ( Ext.Window, {
 		
     	Ext.apply (this, {
     		cellSize	: this.cellSize, 
-    		orientation : this.orientation,
-    		scaleLabels	: this.scaleLabels,
-    		scaleValues : this.scaleValues,
+    		
+    		foldChangeLabels : this.foldChangeLabels,
+			foldChangeValues : this.foldChangeValues,
+						
+			pValueLabels : this.pValueLabels,
+			pValueValues : this.pValueValues,
     		
     		discreteColorRange : this.discreteColorRangeObject,
 
@@ -53,33 +56,70 @@ Gemma.Metaheatmap.ColorLegend = Ext.extend ( Ext.Window, {
 	
 	drawVertical : function () {
 		this.ctx.font = this.fontSize + "px sans-serif";
-		var y = 1;				
-		for (var i = 0; i < this.scaleLabels.length; i++) {
+		var y = 1;
+		var x = 1;
+		
+		for (var i = 0; i < this.foldChangeLabels.length; i++) {
 			
-			if (this.scaleLabels[i] === "No Data") {
-				this.drawMissingData_ (1, y, this.cellSize);
+			if (this.foldChangeLabels[i] === "No Data") {
+				this.drawMissingCell_ (1, y, this.cellSize);
 			} else {
-				var color = this.discreteColorRange.getCellColorString (this.scaleValues[i]);
-				this.drawCell_ (1, y, this.cellSize, color);
+				var color = this.discreteColorRange.getCellColorString (this.foldChangeValues[i]);
+				this.drawCell_ (1, y, this.cellSize, color, 0);
 			}
 			
 			this.ctx.fillStyle = "black";
-			this.ctx.fillText (this.scaleLabels[i], this.cellSize + 3, y + this.cellSize);
+			this.ctx.fillText (this.foldChangeLabels[i], this.cellSize + 3, y + this.cellSize);
 			
 			y += this.cellSize;
-		}				
+		}
+		
+		x = 60;
+		y = 1;
+		
+		for (var i = 0; i < this.pValueLabels.length; i++) {
+			
+			var color = "white";
+			var transparency = this.pValueValues[i] / 10;			
+			this.drawCell_ (x, y, this.cellSize, color, transparency);
+			
+			this.ctx.fillStyle = "black";
+			this.ctx.fillText (this.pValueLabels[i], x + this.cellSize + 3, y + this.cellSize);
+			
+			y += this.cellSize;
+		}
+				
 	},
 	
-	drawMissingData_ : function (x, y, size) {
-		this.ctx.fillStyle = 'gray';				
-		this.ctx.fillRect (x + size / 2, y + size / 2, 1, 1);				
-	},
-	
-	drawCell_ : function (x, y, size, color) {
-		this.ctx.fillStyle = color;				
-		this.ctx.fillRect (x, y, size, size);			
-	}		
+	drawCell_ : function (x, y, size, color, transparency) {
+		this.ctx.fillStyle = color;		
+		var innerBoxSize = Math.floor(0.5*size);
+		this.ctx.fillRect (x, y, size, size);
+		this.ctx.fillStyle = "rgba(0,0,0,"+transparency+")";
+		this.ctx.fillRect (x + size/2 - innerBoxSize/2, y + size/2 - innerBoxSize/2, innerBoxSize, innerBoxSize);				
+	},		
+		
+	drawMissingCell_ : function (x, y, size) {		
+		this.ctx.fillStyle = 'white';
+		this.ctx.fillRect (x, y, size, size);
 
+		var innerBoxSize = Math.floor(0.6*size);
+
+		this.ctx.save();
+		this.ctx.strokeStyle = "gray";
+		this.ctx.translate (x, y);
+		this.ctx.beginPath();
+		this.ctx.moveTo (size/2 - innerBoxSize/2, size/2 - innerBoxSize/2);
+		this.ctx.lineTo (size/2 + innerBoxSize/2, size/2 + innerBoxSize/2);
+		this.ctx.moveTo (size/2 + innerBoxSize/2, size/2 - innerBoxSize/2);
+		this.ctx.lineTo (size/2 - innerBoxSize/2, size/2 + innerBoxSize/2);
+		this.ctx.stroke();
+		this.ctx.restore();
+	},	
+
+	
+	
+	
 });
 
 Ext.reg('Metaheatmap.ColorLegend', Gemma.Metaheatmap.ColorLegend);
