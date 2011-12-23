@@ -1,6 +1,8 @@
 Ext.namespace('Gemma');
 
 Gemma.MetaVisualizationPopups = {};
+Gemma.MetaVisualizationPopups.openWindows = [];
+Gemma.MetaVisualizationPopups.cascadeLayoutCounter = 0;
 
 Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function ( geneName, geneId ) {
 	
@@ -12,6 +14,7 @@ Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function ( geneName, geneId )
 			{  width: 600,
 			   height: 350,
 				autoScroll: true,
+				closeAction   : 'hide',
 				bodyStyle: 'padding: 7px; font-size: 12px; line-height: 18px; ',
 				title: "Details for gene: "+geneName,
 				html:'<br><h4><a target="_blank" href="/Gemma/gene/showGene.html?id='+gene.id+'">'+gene.officialSymbol+'</a> '+gene.officialName+'</h4>'+
@@ -25,6 +28,13 @@ Gemma.MetaVisualizationPopups.makeGeneInfoWindow = function ( geneName, geneId )
 			});
 		}
 			popup.show();
+			
+			var xy = popup.getPosition();
+			popup.setPosition (xy[0] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20, xy[1] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20);
+			Gemma.MetaVisualizationPopups.cascadeLayoutCounter++;
+			if (Gemma.MetaVisualizationPopups.cascadeLayoutCounter > 4) {
+				Gemma.MetaVisualizationPopups.cascadeLayoutCounter = 0;
+			}
 	});
 			
 };
@@ -35,6 +45,7 @@ Gemma.MetaVisualizationPopups.makeDatasetInfoWindow = function ( datasetName, da
 		bodyStyle: 'padding: 7px; font-size: 12px; line-height: 18px; ',
 		//bodyBorder: true,
 		border:true,
+		closeAction   : 'hide',
 		frame:true, // gives blue background
 		tpl:new Ext.XTemplate('<br><h4>',
 					'<a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id={datasetId}"',
@@ -55,7 +66,14 @@ Gemma.MetaVisualizationPopups.makeDatasetInfoWindow = function ( datasetName, da
 
 	
 	popup.show();
-	
+
+	var xy = popup.getPosition();
+	popup.setPosition (xy[0] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20, xy[1] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20);
+	Gemma.MetaVisualizationPopups.cascadeLayoutCounter++;
+	if (Gemma.MetaVisualizationPopups.cascadeLayoutCounter > 4) {
+		Gemma.MetaVisualizationPopups.cascadeLayoutCounter = 0;
+	}
+
 	popup.loadMask = new Ext.LoadMask(popup.getEl(), {
 			msg: "Loading ..."
 		});
@@ -91,6 +109,14 @@ Gemma.MetaVisualizationPopups.makeMinipieInfoWindow = function ( numberOfProbesT
 						'<b>&nbsp;&nbsp;&nbsp;Up Regulated</b>: '+numberOfProbesUpRegulated+'  ('+percentProbesUpRegulated+' of total)<br><br> '+
 						'<b>&nbsp;&nbsp;&nbsp;Down Regulated</b>: '+numberOfProbesDownRegulated+'  ('+percentProbesDownRegulated+' of total)<br>'							      	  
 			});
+	
 	popup.show();
-			
+	
+	var xy = popup.getPosition();
+	popup.setPosition (xy[0] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20, xy[1] + Gemma.MetaVisualizationPopups.cascadeLayoutCounter * 20);
+	Gemma.MetaVisualizationPopups.cascadeLayoutCounter++;
+	if (Gemma.MetaVisualizationPopups.cascadeLayoutCounter > 4) {
+		Gemma.MetaVisualizationPopups.cascadeLayoutCounter = 0;
+	}
+
 };
