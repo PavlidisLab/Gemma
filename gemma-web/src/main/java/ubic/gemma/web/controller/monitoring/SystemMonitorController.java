@@ -56,8 +56,8 @@ public class SystemMonitorController {
     /**
      * Flush (clear) all caches. Expose to AJAX
      */
-    public void flushAllCaches() {
-        this.cacheMonitor.flushAllCaches();
+    public void clearAllCaches() {
+        this.cacheMonitor.clearAllCaches();
     }
     
     /**
@@ -72,8 +72,8 @@ public class SystemMonitorController {
      * 
      * @param cache name Expose to AJAX
      */
-    public void flushCache( String name ) {
-        this.cacheMonitor.flushCache( name );
+    public void clearCache( String name ) {
+        this.cacheMonitor.clearCache( name );
     }
 
     public String getCacheStatus() {
