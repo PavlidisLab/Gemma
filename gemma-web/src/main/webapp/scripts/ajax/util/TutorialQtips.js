@@ -224,7 +224,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 			// we don't want its show/hide state to be effected by hovering on the target element	
 			onShow: function(){
 				// if the tip is supposed to be shown according to the tutorial's controls, then show it
-				var onId = (topScope.tips[topScope.currIndex])? topScope.tips[topScope.currIndex].id : -1;
+				var onId = (topScope.tips[topScope.currIndex]) ? topScope.tips[topScope.currIndex].id : -1;
 				if ( onId === this.id) {
 					if (element.addClass) {
 						element.addClass('highlightToggleBorderOn');
@@ -241,6 +241,16 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 				// in any other case, don't show it
 				return false;
 			},
+			//Override (removing mouseover behaviour)
+		    initTarget : function(target){
+		        var t;
+		        if((t = Ext.get(target))){
+		            this.target = t;
+		        }
+		        if(this.anchor){
+		            this.anchorTarget = this.target;
+		        }
+		    },
 			hidden: true,
 			padding: 10,
 			shadow: 'frame',
