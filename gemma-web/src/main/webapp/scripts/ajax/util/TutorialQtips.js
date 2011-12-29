@@ -25,7 +25,7 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 	 */
 	instructions: Gemma.HelpText.WidgetDefaults.Tutorial.ControlPanel.instructions,
 	padding: 10,
-	bodyStyle: 'background-color: #FFFDE9;line-height:22px',
+	bodyStyle: 'background-color: #FFD700;line-height:22px', //FFFDE9
 	defaults: {
 		bodyStyle: 'background: transparent;margin-left:auto;margin-right:auto;width:600px;',
 		border: false,
@@ -214,7 +214,8 @@ Gemma.Tutorial.ControlPanel = Ext.extend(Ext.Panel, {
 		// need this for override of onShow
 		var topScope = this;
 		var defaultConfigs = {
-			cls: 'x-tip-yellow',
+			cls: 'x-tip-gold',
+			bodyStyle: 'background-color: #FFD700',
 			anchorToTarget: true,
 			anchor: 'right',
 			trackMouse: false,
