@@ -264,7 +264,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			title: "Coexpressed genes",
 			user: this.user,
 			tabPanelViewFlag: true,
-			title : "Coexpression Results",
+			title : "Table",
 			ref: 'coexGridResults',
 			id: 'coexGridResults',
 			colspan : 2,			
