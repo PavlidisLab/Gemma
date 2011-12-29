@@ -55,6 +55,15 @@ a.helpLink:hover {
 	background: none;
 }
 
+
+.x-tip-gold .x-tip-tc, .x-tip-gold .x-tip-tl, .x-tip-gold .x-tip-tr, .x-tip-gold .x-tip-bc, .x-tip-gold .x-tip-bl, .x-tip-gold .x-tip-br, .x-tip-gold .x-tip-ml, .x-tip-gold .x-tip-mr {
+	background-image: url(/Gemma/images/documentation/tip-sprite-gold.gif);
+}
+
+.x-tip-gold .x-tip-anchor {
+    background-image:url(/Gemma/images/documentation/tip-anchor-sprite-gold.gif);
+}
+
 /** Added by Thea**/
 .x-tip-yellow .x-tip-tc, .x-tip-yellow .x-tip-tl, .x-tip-yellow .x-tip-tr, .x-tip-yellow .x-tip-bc, .x-tip-yellow .x-tip-bl, .x-tip-yellow .x-tip-br, .x-tip-yellow .x-tip-ml, .x-tip-yellow .x-tip-mr {
 	background-image: url(/Gemma/images/documentation/tip-sprite-yellow.gif);
