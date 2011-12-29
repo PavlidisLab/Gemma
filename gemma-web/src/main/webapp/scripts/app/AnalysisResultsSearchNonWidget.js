@@ -173,7 +173,7 @@ Ext.onReady(function() {
 			var knownGeneGrid = new Gemma.CoexpressionGrid({
 				width: 900,
 				height: 400,
-				title: "Coexpression Results",
+				title: "Table",
 				ref: 'coexGridResults',
 				id: 'coexGridResults',
 				colspan: 2,

@@ -1166,7 +1166,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						
 					},
 					items : [{
-								html : 'Search for ',
+								html : 'Test for ',
 								style : 'white-space: nowrap;text-align:center;vertical-align:middle;font-size:1.7em;margin-top:7px'
 							}, this.coexToggle, {
 								html : 'or',
@@ -1351,7 +1351,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						},
 						items: [this.theseExperimentsPanel, this.experimentChoosers]
 					}, {
-						html: ' based on ',
+						html: ' for ',
 						style: 'white-space: nowrap;font-size:1.7em;padding-top: 32px;'
 					}, {
 						defaults: {

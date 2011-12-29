@@ -92,8 +92,8 @@ Gemma.HelpText.WidgetDefaults = {
 			supportColumnText:  'The number in the support column corresponds to the amount of dataset support.  Positive support is denoted by green text. Negative support is denoted by red text',
 			visualiseColumnTitle: 'Visualise',
 			visualiseColumnText: 'what does this do',
-			nodeDegreeColumnTitle:'Node Degree',
-			nodeDegreeColumnText:'The more a gene shows coexpression with other genes in their taxon the closer the node degree value is to 1. The node degree value displayed belongs to the gene that has the highest node degree.',
+			nodeDegreeColumnTitle: 'Node Degree',
+			nodeDegreeColumnText: 'Node degree measures the specificity of the coexpression of the gene. Genes with non-specific coexpression have higher node degrees.',
 			stringencyTitle: 'Stringency',
 			stringencyText: 'Use the stringency control to add/remove genes with more/less dataset support that confirms coexpression',
 			cytoNodeDegreeTitle: 'node deg 2nd',
@@ -347,7 +347,7 @@ Gemma.HelpText.WidgetDefaults = {
 			sortAndFilterText: 'Change the layout of your data to clarify patterns.',
 			downloadTitle: 'Download your Results',
 			downloadText: 'Save an image of your chart or save a text version of the results.',
-			instructions: 'This tutorial will point out some features of your differential expression search results. Click the "next" and "previous" buttons to navigate between tips and click the "X" to close the tutorial.'
+			instructions: 'This tutorial will point out some features of the differential expression search interface.' //TODO // Click the "next" and "previous" buttons to navigate between tips and click the "X" to close the tutorial.'
 		}
 	},
 	PhenotypeEvidenceGridPanel:{

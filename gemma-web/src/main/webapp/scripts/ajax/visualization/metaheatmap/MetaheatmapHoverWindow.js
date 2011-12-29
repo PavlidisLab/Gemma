@@ -30,8 +30,8 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<tpl for=".">',
 				'<tpl if="type==\'condition\'">',   //condition
 				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
-				'<b>Factor</b>: {factorCategory} - {factorDescription}<br><br> ',
-				'<b>Contrast</b>: {contrastFactorValue} vs {baselineFactorValue}<br><br> ',				
+				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br><br> ',				
+				'<b>Baseline</b>: {baselineFactorValue} <br><br> ',				
 				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({numberDiffExpressedProbes} out of {numberOfProbesOnArray})<br><br> ',
 				'</tpl>',
 				'<tpl if="type==\'minipie\'">',     //minipie
@@ -51,8 +51,8 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<tpl if="type==\'cell\'">',		 //cell
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
 				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
-				'<b>Factor</b>: {factorCategory} - {factorDescription}<br><br> ',
-				'<b>Contrast</b>: {contrastFactorValue} vs {baselineFactorValue}<br><br> ',				
+				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br><br> ',				
+				'<b>Baseline</b>: {baselineFactorValue} <br><br> ',				
 				'<b>p-value</b>: {pvalue:sciNotation}<br><br>',
 				'<b>log fold change</b>: {foldChange:sciNotation}',
 				'</tpl>', '</tpl></span>');
