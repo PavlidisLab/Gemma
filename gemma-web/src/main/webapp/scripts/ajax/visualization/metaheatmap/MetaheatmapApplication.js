@@ -101,6 +101,9 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		var sortByDatasetNameFn = this.createSortByPropertyFunction_ ('datasetShortName');
 
 		var sortByPvaluesFn = this.createSortByPropertyFunction_('inverseSumPvalue', 'DESC');
+		var sortByMetaPvalueFn = this.createSortByPropertyFunction_('metaPvalue', 'ASC');
+		var sortByEnrichmentFn = this.createSortByPropertyFunction_('ora', 'ASC');
+		
 
 		var sortByGeneNameFn = this.createSortByPropertyFunction_ ('name'); 
 		var sortGeneByGroupFn = this.createSortByPropertyFunction_ ('groupName');
@@ -114,7 +117,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		                       {'sortFn' : sortByGeneNameFn, 'groupBy' : null}];
 		
 		var geneSortPreset2 = [{'sortFn' : sortGeneByGroupFn , 'groupBy' : 'groupName'},
-		                       {'sortFn' : sortByPvaluesFn, 'groupBy' : null}];
+		                       {'sortFn' : sortByMetaPvalueFn, 'groupBy' : null}];
 		
 		var conditionSortPreset1 = [{'sortFn' : sortByExperimentGroupFn , 'groupBy' : 'experimentGroupName'},
 		                            {'sortFn' : sortByDatasetNameFn , 'groupBy' : 'datasetShortName'},
@@ -124,11 +127,11 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		                            {'sortFn' : sortBySpecificityFn, 'groupBy' : null}]; 
 
 		var conditionSortPreset3 = [{'sortFn' : sortByFactorCategoryFn , 'groupBy' : 'factorCategory'},
-		                            {'sortFn' : sortByPvaluesFn, 'groupBy' : null}]; 
+		                            {'sortFn' : sortByEnrichmentFn, 'groupBy' : null}]; 
 		
 		this.genePresets = [
 		                    {'name' : 'sort alphabetically', 'sort' : geneSortPreset1, 'filter' : []},
-		                   	{'name' : 'sort by average p-value', 'sort' : geneSortPreset2, 'filter' : []}
+		                   	{'name' : 'sort by meta p-value', 'sort' : geneSortPreset2, 'filter' : []}
 		                   ];
 		
 		this.genePresetNames = [];
@@ -140,7 +143,7 @@ Gemma.Metaheatmap.Application = Ext.extend ( Ext.Panel, {
 		this.conditionPresets = [            
 		                  {'name' : 'sort by experiment', 'sort' : conditionSortPreset1, 'filter' : []},         
 		                  {'name' : 'sort by specificity (group by factor)', 'sort' : conditionSortPreset2, 'filter' : []},
-		                  {'name' : 'sort by average p-value (group by factor)', 'sort' : conditionSortPreset3, 'filter' : []}
+		                  {'name' : 'sort by enrichment (group by factor)', 'sort' : conditionSortPreset3, 'filter' : []}
 		                ];		
 		
 		this.conditionPresetNames = [];		
