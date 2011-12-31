@@ -320,7 +320,7 @@ Gemma.Metaheatmap.ConditionLabel.constructDrawLabelFunction = function (ctx, ite
 
 Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx, item, text, x, y, width, height, highlightBox, backgroundColor) {				
 	var isSelected   = item.isSelected;
-	var miniPieValue = item.miniPieValue;
+	var metaPvalueBarChart = item.metaPvalueBarChart;
 	
 	var yCenter = y + height/2;	
 	var fontSize = 9;
@@ -340,34 +340,27 @@ Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx
 				}
 				if (tinyScale) {
 					// We stop drawing text since small text is not distinguishable.
-					// Draw barchart instead of pie. 
-					ctx.fillStyle = 'gray';
-					if (miniPieValue !== null) {
-						ctx.moveTo(x+width - 1,y);
-						ctx.lineTo(x+width - 1,y);
-						ctx.stroke();
-						ctx.fillRect ( x + width - 1 - 15 * miniPieValue / 360.0, yCenter, 15 * miniPieValue / 360.0, height);
-					}
 				} else {
 					ctx.beginPath();
 					ctx.rect (x, y+0.5, width, height-1);				
 					ctx.clip();			
 					ctx.strokeStyle = 'black';
 					ctx.drawTextRight ('', fontSize, x + width - miniPieSize, yCenter + fontSize/2, text);
-
-					ctx.fillStyle = 'gray';
-					if (miniPieValue !== null) {
-						ctx.moveTo(x+width - 1,y);
-						ctx.lineTo(x+width - 1,y);
-						ctx.stroke();
-						ctx.fillRect ( x + width - 1 - 15 * miniPieValue / 360.0, yCenter, 15 * miniPieValue / 360.0, height);
-					}
+				}
+				
+				ctx.fillStyle = 'black';
+				if (metaPvalueBarChart !== null) {
+					ctx.moveTo(x + width - miniPieSize + 1.5, y);
+					ctx.lineTo(x + width - miniPieSize + 1.5, y + height);
+					ctx.stroke();
+					ctx.fillRect ( x + width - miniPieSize + (miniPieSize - metaPvalueBarChart), y, metaPvalueBarChart, height);
+				}
 					
 					
 //					if (miniPieValue !== null) {
 //						MiniPieLib.drawMiniPie (ctx, x + width + 5, yCenter, miniPieSize, 'gray', miniPieValue);
 //					}
-				}
+				
 				ctx.restore();											
 			} else {
 				// Restore non-highlighted label if it was previously drawn.
@@ -388,15 +381,11 @@ Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx
 			ctx.fillRect (highlightBox.x, highlightBox.y, highlightBox.width, highlightBox.height);
 			ctx.strokeStyle = 'black';		
 			ctx.drawTextRight ('', highlightBox.fontSize, x+width-miniPieSize-1, yCenter+highlightBox.fontSize/2, text);
-			if (miniPieValue !== null) {
-//				MiniPieLib.drawMiniPie (ctx, x+width+5, yCenter, miniPieSize, 'gray', miniPieValue);
-
-				ctx.moveTo(x+width - 1,y);
-				ctx.lineTo(x+width - 1,y);
+			if (metaPvalueBarChart !== null) {
+				ctx.moveTo(x + width - miniPieSize + 1.5, y);
+				ctx.lineTo(x + width - miniPieSize + 1.5, y + height);
 				ctx.stroke();
-				ctx.fillRect ( x + width - 1 - 15 * miniPieValue / 360.0, yCenter, 15 * miniPieValue / 360.0, height);
-
-			
+				ctx.fillRect ( x + width - miniPieSize + (miniPieSize - metaPvalueBarChart), y, metaPvalueBarChart, height);
 			}
 			ctx.restore();
 		}

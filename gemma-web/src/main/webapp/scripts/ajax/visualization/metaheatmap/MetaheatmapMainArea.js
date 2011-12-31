@@ -141,7 +141,7 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		if ( !gene || !condition || gene === null || condition === null) return null;
 		
 		var pValue = 1;
-		var foldChange, isProbeMissing;
+		var foldChange, isProbeMissing, numberOfProbes, numberOfProbesDiffExpressed;
 		var isGeneOnTop = this.isGeneOnTop;
 		var cell  = this.cells.getCell (gene, condition); 		
 		var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cell.logFoldChange);
@@ -152,6 +152,8 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			pValue = cell.pValue;
 			foldChange = cell.logFoldChange;
 			isProbeMissing = cell.isProbeMissing;
+			numberOfProbes = cell.numberOfProbes;
+			numberOfProbesDiffExpressed = cell.numberOfProbesDiffExpressed;
 			if (this.isShowPvalue) {
 				transparency = this.calculateVisualizationValueBasedOnPvalue(cell.pValue) / 10;			
 			}
@@ -180,6 +182,8 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 			'foldChange' : foldChange,
 			'visualizationValue' : color,
 			'isProbeMissing' : isProbeMissing,
+			'numberOfProbes' : numberOfProbes,
+			'numberOfProbesDiffExpressed' : numberOfProbesDiffExpressed,
 			
 			drawCell_ : drawCellFunction,
 			
