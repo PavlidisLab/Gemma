@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -484,13 +485,39 @@ public class DifferentialExpressionResultDaoImpl extends
         return results;
     }
 
-    public Map<Long, Long> findProbeAnalysisResultIdsInResultSet( Long resultSetId, Collection<Long> geneIds,
+    public static class DiffExprGeneSearchResult {
+        private long probeAnalysisResultId;
+        private int numberOfProbes = 0;
+        private int numberOfProbesDiffExpressed = 0;
+        
+        public int getNumberOfProbesDiffExpressed() {
+            return numberOfProbesDiffExpressed;
+        }
+        public void setNumberOfProbesDiffExpressed( int numberOfProbesDiffExpressed ) {
+            this.numberOfProbesDiffExpressed = numberOfProbesDiffExpressed;
+        }
+        public long getProbeAnalysisResultId() {
+            return probeAnalysisResultId;
+        }
+        public void setProbeAnalysisResultId( long probeAnalysisResultId ) {
+            this.probeAnalysisResultId = probeAnalysisResultId;
+        }
+        public int getNumberOfProbes() {
+            return numberOfProbes;
+        }
+        public void setNumberOfProbes( int numberOfProbes ) {
+            this.numberOfProbes = numberOfProbes;
+        }
+    }
+    
+    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet( Long resultSetId, Collection<Long> geneIds,
             Collection<Long> adUsed ) {
 
         StopWatch timer = new StopWatch();
         timer.start();
 
-        Map<Long, Long> results = new HashMap<Long, Long>();
+        Map<Long,DiffExprGeneSearchResult> results = new HashMap<Long,DiffExprGeneSearchResult>();
+
         Map<Long, Integer> best_p_value = new HashMap<Long, Integer>();
 
         Session session = super.getSession();
@@ -508,20 +535,41 @@ public class DifferentialExpressionResultDaoImpl extends
 
             if ( queryResult.isEmpty() ) return results;
 
-            // Get probe result with the best pValue.
+            // Get probe result with the best pValue.            
             for ( Object o : queryResult ) {
                 Object[] row = ( Object[] ) o;
                 BigInteger geneId = ( BigInteger ) row[0];
                 Integer p_value_bin = ( Integer ) row[1];
                 BigInteger probe_analysis_id = ( BigInteger ) row[2];
+
+                // Count diff expressed probes per gene.
+                if (results.get( geneId.longValue() ) != null) {
+                    DiffExprGeneSearchResult r = results.get( geneId.longValue() );
+                    r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
+                    if (p_value_bin != null && p_value_bin > 0) {
+                        r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );                        
+                    }                    
+                }
+                
                 if ( best_p_value.get( geneId.longValue() ) == null ) { // first encounter
                     best_p_value.put( geneId.longValue(), p_value_bin );
-                    results.put( geneId.longValue(), probe_analysis_id.longValue() );                    
+                    
+                    DiffExprGeneSearchResult r =  new DiffExprGeneSearchResult();
+                    r.setProbeAnalysisResultId( probe_analysis_id.longValue() );
+                    r.setNumberOfProbes( r.getNumberOfProbes() + 1 );
+                    if (p_value_bin != null && p_value_bin > 0) {
+                        r.setNumberOfProbesDiffExpressed( r.getNumberOfProbesDiffExpressed() + 1 );                        
+                    }                    
+                    
+                    results.put( geneId.longValue(), r );                    
                 } else {
                     if ( p_value_bin != null && best_p_value.get( geneId.longValue() ) < p_value_bin) {
                         // replace   
                         best_p_value.put( geneId.longValue(), p_value_bin );
-                        results.put( geneId.longValue(), probe_analysis_id.longValue() );                    
+                        
+                        DiffExprGeneSearchResult r = results.get( geneId.longValue() );
+                        r.setProbeAnalysisResultId( probe_analysis_id.longValue() );
+                        //results.put( geneId.longValue(),r );                    
                     }                    
                 }                
             }

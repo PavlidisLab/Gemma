@@ -26,6 +26,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.ProbeAnalysisResult;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.persistence.BaseDao;
@@ -94,7 +95,7 @@ public interface DifferentialExpressionResultDao extends BaseDao<ProbeAnalysisRe
     
     public List<Double> findGeneInResultSets(Gene gene, ExpressionAnalysisResultSet resultSet, Collection<Long> arrayDesignIds, Integer limit );
 
-    public Map<Long, Long> findProbeAnalysisResultIdsInResultSet(  Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed );
+    public Map<Long, DiffExprGeneSearchResult> findProbeAnalysisResultIdsInResultSet(  Long resultSetId, Collection<Long> geneIds, Collection<Long> adUsed );
     
     public Integer countNumberOfDifferentiallyExpressedProbes ( long resultSetId, double threshold );
     

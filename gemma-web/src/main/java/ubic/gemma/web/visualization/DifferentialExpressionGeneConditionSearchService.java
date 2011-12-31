@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -51,6 +52,7 @@ import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisS
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultService;
 import ubic.gemma.model.analysis.expression.diff.ExpressionAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.HitListSize;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionResultDaoImpl.DiffExprGeneSearchResult;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
@@ -248,14 +250,13 @@ public class DifferentialExpressionGeneConditionSearchService {
                                 // }
                                 if ( total == -1 ) {                                
                                     total = differentialExpressionAnalysisService.countProbesMeetingThreshold( resultSet,
-                                            0.01 );
-                                }
-
+                                            0.05 );
+                                }                                
+                                
                                 watch.start( "getProcessedExpressionVectorCount" );
                                 condition.numberOfProbesOnArray = expressionExperimentDao
                                         .getProcessedExpressionVectorCount( experiment );
                                 watch.stop();
-
                                 condition.numberDiffExpressedProbes = total;
                                 condition.numberDiffExpressedProbesUp = up;
                                 condition.numberDiffExpressedProbesDown = down;
@@ -396,18 +397,27 @@ public class DifferentialExpressionGeneConditionSearchService {
             watch.stop();
 
             watch.start( "Batched call" );
-            Map<Long, Long> geneToProbeResult = differentialExpressionResultService.findProbeAnalysisResultIdsInResultSet(
-                    resultSet.getId(), geneIdBatch, getADIds( arrayDesignsUsed ) );
+            Map<Long, DiffExprGeneSearchResult> geneToProbeResult = differentialExpressionResultService.findProbeAnalysisResultIdsInResultSet(
+                                                                                                                resultSet.getId(),
+                                                                                                                geneIdBatch,
+                                                                                                                getADIds( arrayDesignsUsed ) );
             watch.stop();
-
+            
+            List<Long> probeAnalysisResultIds = new LinkedList<Long>();
+            for (DiffExprGeneSearchResult r : geneToProbeResult.values()) {
+                probeAnalysisResultIds.add( r.getProbeAnalysisResultId() );
+            }
+            
             watch.start( "Loading contrasts" );
             Map<Long, DifferentialExpressionAnalysisResult> probeAnalysisResults = differentialExpressionAnalysisResultDao
-                    .loadMultiple( geneToProbeResult.values() );
+                    .loadMultiple(probeAnalysisResultIds);
             watch.stop();
 
             for ( Long geneId : geneIdBatch ) {
-                Long probeResultId = geneToProbeResult.get( geneId );
-
+                Long probeResultId = null;
+                if (geneToProbeResult.get( geneId )!= null) {
+                    probeResultId = geneToProbeResult.get( geneId ).getProbeAnalysisResultId();
+                }
                 DifferentialExpressionAnalysisResult deaResult = probeAnalysisResults.get( probeResultId );
                 if ( deaResult == null ) continue;
 
@@ -415,8 +425,9 @@ public class DifferentialExpressionGeneConditionSearchService {
 
                 for ( ContrastResult cr : deaResult.getContrasts() ) {
                     // double visualizationValue = calculateVisualizationValueBasedOnPvalue ( cr.getPvalue() );
+                    
                     String conditionId = constructConditionId( resultSet.getId(), cr.getFactorValue().getId() );
-                    searchResult.addCell( geneId, conditionId, cr.getPvalue(), cr.getLogFoldChange() );
+                    searchResult.addCell( geneId, conditionId, deaResult.getPvalue(), cr.getLogFoldChange(), geneToProbeResult.get(geneId).getNumberOfProbes(), geneToProbeResult.get(geneId).getNumberOfProbesDiffExpressed());
                 }
             }
             log.info( watch.prettyPrint() );
