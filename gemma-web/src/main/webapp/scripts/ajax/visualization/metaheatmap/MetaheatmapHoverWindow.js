@@ -29,17 +29,19 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 				'<span style="font-size: 12px ">',
 				'<tpl for=".">',
 				'<tpl if="type==\'condition\'">',   //condition
-				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
-				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br><br> ',				
-				'<b>Baseline</b>: {baselineFactorValue} <br><br> ',				
+				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
+				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br> ',				
+				'<b>Baseline</b>: {baselineFactorValue} <br> ',				
+				'<b>Enrichment</b>: {ora:sciNotation} <br> ',				
 				'<b>Specificity</b>: {specificityPercent}% of probes were differentially expressed under this condition ({numberDiffExpressedProbes} out of {numberOfProbesOnArray})<br><br> ',
 				'</tpl>',
 				'<tpl if="type==\'minipie\'">',     //minipie
-				'{percentProbesDiffExpressed} of probes are differentially expressed.<br><br>',
+				'{percentProbesDiffExpressed} of probes are differentially expressed.<br>',
 				'({numberOfProbesDiffExpressed} of {numberOfProbesTotal}) Click for details.',
 				'</tpl>',
 				'<tpl if="type==\'gene\'">',		//gene
 				'<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
+				'<b>Meta P value</b>: {geneMetaPvalue:sciNotation}<br>',
 				'</tpl>',
 //				'<tpl if="type==\'contrastCell\'">',  //contrast
 //				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
@@ -49,12 +51,13 @@ Gemma.Metaheatmap.HoverWindow = Ext.extend ( Ext.Window, {
 //				'<b>pValue</b>: {contrastPvalue:sciNotation} <br>',
 //				'</tpl>',
 				'<tpl if="type==\'cell\'">',		 //cell
-				'<b>Gene</b>: {geneSymbol} {geneFullName}<br><br> ',
-				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br><br>',
-				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br><br> ',				
-				'<b>Baseline</b>: {baselineFactorValue} <br><br> ',				
-				'<b>p-value</b>: {pvalue:sciNotation}<br><br>',
-				'<b>log fold change</b>: {foldChange:sciNotation}',
+				'<b>Gene</b>: {geneSymbol} {geneFullName}<br>',
+				'<b>Experiment</b>: {datasetShortName}, {datasetName}<br>',
+				'<b>Condition</b>: {contrastFactorValue} vs {baselineFactorValue} ({factorCategory})<br>',				
+				'<b>Baseline</b>: {baselineFactorValue} <br>',
+				'<b>Number of probes</b>: {numberOfProbesDiffExpressed} / {numberOfProbes} <br>',				
+				'<b>p-value</b>: {pvalue:sciNotation}<br>',
+				'<b>log fold change</b>: {foldChange:sciNotation}',				
 				'</tpl>', '</tpl></span>');
 	},
 
