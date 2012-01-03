@@ -63,6 +63,7 @@ import ubic.gemma.analysis.report.WhatsNew;
 import ubic.gemma.analysis.report.WhatsNewService;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.analysis.util.ExperimentalDesignUtils;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.FreeTextExpressionExperimentResultsValueObject;
@@ -739,24 +740,26 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         String efUri = "&nbsp;<a target='_blank' href='/Gemma/experimentalDesign/showExperimentalDesign.html?eeid="
                 + ee.getId() + "'>(details)</a >";
-        int MAX_TAGS_TO_SHOW = 10;
+        int MAX_TAGS_TO_SHOW = 15;
         Collection<Characteristic> tags = ee.getCharacteristics();
         if ( tags.size() > 0 ) {
             descriptive.append( "</br>&nbsp;<b>Tags:</b>&nbsp;" );
             int i = 0;
             for ( Characteristic tag : tags ) {
                 descriptive.append( tag.getValue() + ", " );
-
                 if ( ++i > MAX_TAGS_TO_SHOW ) {
                     descriptive.append( " [more tags not shown]" );
                     break;
                 }
             }
+            
         }
 
         descriptive.append( "</br>&nbsp;<b>Factors:</b>&nbsp;" );
         for ( ExperimentalFactor ef : efs ) {
-            descriptive.append( ef.getName() + ", " );
+            if(!ExperimentalDesignUtils.isBatch( ef )){
+                descriptive.append( ef.getName() + " ("+ ef.getDescription() +"), " );
+            }
         }
 
         // remove trailing "," and return as a string
