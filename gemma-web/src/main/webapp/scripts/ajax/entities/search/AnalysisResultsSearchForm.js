@@ -303,8 +303,13 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			gsvo = geneSetValueObjects[i];
 			if (typeof gsvo !== 'undefined' && (gsvo.id === null || gsvo.id === -1)) {
 				// addNonModificationBasedSessionBoundGroups() takes a
-				// genesetvalueobject			
-				geneSetValObjsToRegister.push(gsvo);
+				// geneSetValueObject
+				var gsvoClone = Object.clone(gsvo);	
+				delete gsvoClone.memberIds;
+				// no memberIds field in a geneSetValueObject 
+				// but this object would have the field if it was a GO group object
+				// (this is a short cut fix, a better fix would be to make a new GSVO from the fields)
+				geneSetValObjsToRegister.push(gsvoClone);
 
 			} else {
 				geneSetValObjsAlreadyRegistered.push(gsvo);
