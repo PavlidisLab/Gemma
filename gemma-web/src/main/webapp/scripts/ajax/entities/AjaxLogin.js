@@ -151,9 +151,11 @@ Gemma.AjaxLogin.AjaxLoginWindow = Ext.extend(Ext.Window, {
 		},
 		"hide": function(){
 			Ext.getCmp("_loginForm").getForm().reset();
+			Ext.getBody().unmask();
 		},
 		"close": function(){
 			Ext.getCmp("_loginForm").getForm().reset();
+			Ext.getBody().unmask();
 		}
 	},
 	launch : function(){
