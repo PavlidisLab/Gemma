@@ -362,6 +362,7 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 	factorValuesDeleted : function(fvIds) {
 		// don't reload store, caching issues can cause an error (bug 2553)
+		// remove deleted records from store instead
 		var ct = this.getTopToolbar().characteristicToolbar;
 		var i;	
 		var matchIds = function(record, id){
@@ -372,10 +373,18 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 			var fvId = fvIds[i];
 			// combo and grid are not using the same store
 			// store.findExact doesn't work
-			var indexToRemove = ct.factorValueCombo.getStore().findBy(matchIds);
-			ct.factorValueCombo.getStore().removeAt(indexToRemove);
-			indexToRemove = this.store.findBy(matchIds);
-			this.store.removeAt(indexToRemove);
+			// will be >1 record per factor value if a factor value has >1 category
+			var indexToRemove;
+			while (ct.factorValueCombo.getStore().findBy(matchIds) > -1) {
+				indexToRemove = ct.factorValueCombo.getStore().findBy(matchIds);
+				ct.factorValueCombo.getStore().removeAt(indexToRemove);
+			}
+			
+			while (this.store.findBy(matchIds) > -1) {
+				indexToRemove = this.store.findBy(matchIds);
+				this.store.removeAt(indexToRemove);
+			}
+			
 		}
 		this.getEl().unmask();
 		this.fireEvent('factorvaluedelete', this, fvIds);
