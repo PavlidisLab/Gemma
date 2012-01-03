@@ -30,6 +30,8 @@ import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
 import net.sf.ehcache.Element;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -53,6 +55,7 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
+import ubic.gemma.model.genome.GeneDaoImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -61,6 +64,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
@@ -104,6 +108,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
     private PubMedXMLFetcher pubMedXmlFetcher = null;
+    
+    private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -136,6 +142,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         for ( EvidenceValueObject evidenceFound : evidenceValueObjects ) {
             if ( evidenceFound.equals( evidence ) ) {
                 // the evidence already exists, no need to create it again
+                log.warn( "Trying to create an Evidence already present in the database" );
                 return null;
             }
         }
@@ -606,6 +613,67 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         return new BibliographicReferenceValueObject( bibliographicReference );
+    }
+
+    /**
+     * Validate an Evidence for creation, checks for a pubmed id, if the gene is already annotated
+     * 
+     * @param geneNCBI the gene chosen by the user
+     * @param phenotypes, the phenotpes chosen by the user
+     * @param bibliographicReferenceValueObject, for a given pubmed, the phenotypeAssociation for that pubmed
+     * @return ValidateEvidenceValueObject flags of information to show user messages
+     */
+    @Override
+    public ValidateEvidenceValueObject validateEvidence( String geneNCBI, Set<CharacteristicValueObject> phenotypes,
+            BibliographicReferenceValueObject bibliographicReferenceValueObject ) {
+
+        ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
+
+        for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
+                .getBibliographicPhenotypes() ) {
+
+            // look if the gene have already been annotated
+            if ( geneNCBI.equalsIgnoreCase( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
+
+                validateEvidenceValueObject.setSameGeneAnnotated( true );
+
+                // if one of the phenotype is already on the gene
+                for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
+                        .getPhenotypesValues() ) {
+
+                    if ( phenotypes.contains( phenotypeAlreadyPresent ) ) {
+                        validateEvidenceValueObject.setSameGeneAndPhenotypeAnnotated( true );
+                        return validateEvidenceValueObject;
+                    }
+                }
+
+                Set<String> parentOrChildTerm = new HashSet<String>();
+
+                // for the phenotype already present we add his children and direct parents, and check that the
+                // phenotype we want to add is not in that subset
+                for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
+                        .getPhenotypesValues() ) {
+
+                    OntologyTerm ontologyTerm = this.ontologyService.getTerm( phenotypeAlreadyPresent.getValueUri() );
+
+                    for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
+                        parentOrChildTerm.add( ot.getUri() );
+                    }
+
+                    for ( OntologyTerm ot : ontologyTerm.getChildren( false ) ) {
+                        parentOrChildTerm.add( ot.getUri() );
+                    }
+                }
+
+                for ( CharacteristicValueObject characteristicValueObject : phenotypes ) {
+
+                    if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
+                        validateEvidenceValueObject.setSameGeneAndChildOrParent( true );
+                    }
+                }
+            }
+        }
+        return validateEvidenceValueObject;
     }
 
     /** counts gene on a TreeCharacteristicValueObject */

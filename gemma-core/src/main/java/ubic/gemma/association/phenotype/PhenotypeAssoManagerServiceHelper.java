@@ -540,8 +540,8 @@ public class PhenotypeAssoManagerServiceHelper {
 
         for ( OntologyTerm ontologyTerm : ontologyTerms ) {
 
-            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel(), null,
-                    ontologyTerm.getUri(), null );
+            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel(),
+                    ontologyTerm.getUri() );
             phenotype.setOntologyUsed( ontologyUsed );
             characteristicsVO.add( phenotype );
 

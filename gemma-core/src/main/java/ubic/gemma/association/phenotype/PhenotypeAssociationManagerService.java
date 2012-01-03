@@ -22,6 +22,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ValidateEvidenceValueObject;
 
 /**
  * High Level Service used to add Candidate Gene Management System capabilities
@@ -62,7 +63,7 @@ public interface PhenotypeAssociationManagerService {
      * @param phenotypesValuesUri the roots phenotype of the query
      * @return A collection of the genes found
      */
-    public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesUri);
+    public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesUri );
 
     /**
      * Get all phenotypes linked to genes and count how many genes are link to each phenotype
@@ -116,13 +117,24 @@ public interface PhenotypeAssociationManagerService {
      * @return Collection<GeneEvidenceValueObject> list of Genes
      */
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId );
-    
+
     /**
      * Find all phenotypes associated to a pubmedID
      * 
      * @param pubMedId
-     * @return BibliographicReferenceValueObject 
+     * @return BibliographicReferenceValueObject
      */
-    public BibliographicReferenceValueObject findBibliographicReference(String pubMedId);
+    public BibliographicReferenceValueObject findBibliographicReference( String pubMedId );
+
+    /**
+     * Validate an Evidence for creation, checks for a pubmed id, if the gene is already annotated
+     * 
+     * @param geneNCBI the gene chosen by the user
+     * @param phenotypes, the phenotpes chosen by the user
+     * @param bibliographicReferenceValueObject, for a given pubmed, the phenotypeAssociation for that pubmed
+     * @return ValidateEvidenceValueObject flags of information to show user messages
+     */
+    public ValidateEvidenceValueObject validateEvidence( String string, Set<CharacteristicValueObject> phenotypes,
+            BibliographicReferenceValueObject bibliographicReferenceValueObject );
 
 }

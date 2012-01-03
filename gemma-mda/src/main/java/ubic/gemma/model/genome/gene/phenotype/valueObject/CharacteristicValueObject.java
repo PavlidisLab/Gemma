@@ -14,6 +14,8 @@
  */
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
+import ubic.gemma.model.common.description.VocabCharacteristic;
+
 /**
  * CharacteristicValueObject containing a category to a value
  * 
@@ -23,7 +25,7 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 public class CharacteristicValueObject implements Comparable<CharacteristicValueObject> {
 
     private Long id = null;
-    /** id used by url */
+    /** id used by url on the client side */
     private String urlId = "";
 
     private String category = "";
@@ -46,27 +48,35 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     /** root of a query */
     private boolean root = false;
 
-    public CharacteristicValueObject( String valueUri ) {
-        this.valueUri = valueUri;
+    public CharacteristicValueObject() {
+        super();
     }
-    
-    public CharacteristicValueObject( String value, String valueUri ) {
-        this.value = value;
+
+    public CharacteristicValueObject( String valueUri ) {
+        super();
         this.valueUri = valueUri;
-        if ( valueUri != null && !valueUri.equals( "" ) && valueUri.indexOf( "#" ) > 0 ) {
-            this.urlId = valueUri.substring( valueUri.indexOf( "#" ) + 1, valueUri.length() );
+        if ( this.valueUri != null && !this.valueUri.equals( "" ) && this.valueUri.indexOf( "#" ) > 0 ) {
+            this.urlId = this.valueUri.substring( this.valueUri.indexOf( "#" ) + 1, this.valueUri.length() );
         }
     }
-    
+
+    public CharacteristicValueObject( String value, String valueUri ) {
+        this( valueUri );
+        this.value = value;
+    }
+
     public CharacteristicValueObject( String value, String category, String valueUri, String categoryUri ) {
-        super();
+        this( valueUri );
         this.category = category;
         this.categoryUri = categoryUri;
         this.value = value;
-        this.valueUri = valueUri;
-        if ( valueUri != null && !valueUri.equals( "" ) && valueUri.indexOf( "#" ) > 0 ) {
-            this.urlId = valueUri.substring( valueUri.indexOf( "#" ) + 1, valueUri.length() );
-        }
+    }
+
+    public CharacteristicValueObject( VocabCharacteristic vocabCharacteristic ) {
+        this( vocabCharacteristic.getValueUri() );
+        this.category = vocabCharacteristic.getCategory();
+        this.categoryUri = vocabCharacteristic.getCategoryUri();
+        this.value = vocabCharacteristic.getValue();
     }
 
     public String getCategoryUri() {
@@ -169,9 +179,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( this.category == null ) ? 0 : this.category.hashCode() );
-        result = prime * result + ( ( this.categoryUri == null ) ? 0 : this.categoryUri.hashCode() );
-        result = prime * result + ( ( this.value == null ) ? 0 : this.value.hashCode() );
         result = prime * result + ( ( this.valueUri == null ) ? 0 : this.valueUri.hashCode() );
         return result;
     }
@@ -190,7 +197,6 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
 
     @Override
     public int compareTo( CharacteristicValueObject o ) {
-
         return this.value.compareToIgnoreCase( o.value );
     }
 

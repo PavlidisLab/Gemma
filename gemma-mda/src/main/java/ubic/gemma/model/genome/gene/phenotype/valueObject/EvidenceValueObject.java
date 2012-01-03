@@ -114,23 +114,17 @@ public abstract class EvidenceValueObject {
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
         if ( phenotypeAssociation.getAssociationType() != null ) {
 
-            String category = phenotypeAssociation.getAssociationType().getCategory();
-            String value = phenotypeAssociation.getAssociationType().getValue();
-
-            this.associationType = new CharacteristicValueObject( value, category, null, null );
+            this.associationType = new CharacteristicValueObject();
+            this.associationType.setValue( phenotypeAssociation.getAssociationType().getValue() );
+            this.associationType.setCategory( phenotypeAssociation.getAssociationType().getCategory() );
         }
         this.phenotypes = new TreeSet<CharacteristicValueObject>();
 
         for ( Characteristic c : phenotypeAssociation.getPhenotypes() ) {
 
             CharacteristicValueObject characteristicVO = null;
-
-            VocabCharacteristicImpl voCha = ( VocabCharacteristicImpl ) c;
-            characteristicVO = new CharacteristicValueObject( voCha.getValue().toLowerCase(), voCha.getCategory(),
-                    voCha.getValueUri(), voCha.getCategoryUri() );
-
-            characteristicVO.setId( voCha.getId() );
-
+            characteristicVO = new CharacteristicValueObject( ( VocabCharacteristicImpl ) c );
+            characteristicVO.setId( c.getId() );
             this.phenotypes.add( characteristicVO );
         }
     }
@@ -205,10 +199,6 @@ public abstract class EvidenceValueObject {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( this.associationType == null ) ? 0 : this.associationType.hashCode() );
-        result = prime * result + ( ( this.description == null ) ? 0 : this.description.hashCode() );
-        result = prime * result + ( ( this.evidenceCode == null ) ? 0 : this.evidenceCode.hashCode() );
-        result = prime * result + ( ( this.isNegativeEvidence == null ) ? 0 : this.isNegativeEvidence.hashCode() );
         result = prime * result + ( ( this.phenotypes == null ) ? 0 : this.phenotypes.hashCode() );
         return result;
     }

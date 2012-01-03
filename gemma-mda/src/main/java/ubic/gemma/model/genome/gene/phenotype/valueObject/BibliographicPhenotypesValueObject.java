@@ -2,30 +2,36 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.common.description.Characteristic;
+import ubic.gemma.model.common.description.VocabCharacteristic;
 
 public class BibliographicPhenotypesValueObject {
 
+    private String geneNCBI = "";
     private String geneName = "";
-    private Collection<String> phenotypesValues = new HashSet<String>();
+    private Set<CharacteristicValueObject> phenotypesValues = new HashSet<CharacteristicValueObject>();
 
     public BibliographicPhenotypesValueObject() {
         super();
     }
 
-    public BibliographicPhenotypesValueObject( String geneName, Collection<String> phenotypesValues ) {
+    public BibliographicPhenotypesValueObject( String geneName, String geneNCBI,
+            Set<CharacteristicValueObject> phenotypesValues ) {
         super();
         this.geneName = geneName;
+        this.geneNCBI = geneNCBI;
         this.phenotypesValues = phenotypesValues;
     }
 
     public BibliographicPhenotypesValueObject( PhenotypeAssociation phenotypeAssociation ) {
         super();
+        this.geneNCBI = phenotypeAssociation.getGene().getNcbiId();
         this.geneName = phenotypeAssociation.getGene().getName();
         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
-            this.phenotypesValues.add( cha.getValue() );
+            this.phenotypesValues.add( new CharacteristicValueObject( ( VocabCharacteristic ) cha ) );
         }
     }
 
@@ -51,12 +57,20 @@ public class BibliographicPhenotypesValueObject {
         this.geneName = geneName;
     }
 
-    public Collection<String> getPhenotypesValues() {
+    public Collection<CharacteristicValueObject> getPhenotypesValues() {
         return this.phenotypesValues;
     }
 
-    public void setPhenotypesValues( Collection<String> phenotypesValues ) {
+    public void setPhenotypesValues( Set<CharacteristicValueObject> phenotypesValues ) {
         this.phenotypesValues = phenotypesValues;
+    }
+
+    public String getGeneNCBI() {
+        return this.geneNCBI;
+    }
+
+    public void setGeneNCBI( String geneNCBI ) {
+        this.geneNCBI = geneNCBI;
     }
 
 }
