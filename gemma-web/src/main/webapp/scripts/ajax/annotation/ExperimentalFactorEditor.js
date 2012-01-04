@@ -180,7 +180,7 @@ Gemma.ExperimentalFactorGrid = Ext.extend(Gemma.GemmaGridPanel, {
 					this.getTopToolbar().on("delete", function() {
 								var selected = this.getSelectedIds();
 								var oldmsg = this.loadMask.msg;
-								this.loadMask.msg = String.format(Gemma.StatusText.deleteing, 'experimental factor');
+								this.loadMask.msg = String.format(Gemma.StatusText.deletingSpecific, 'experimental factor');
 								this.loadMask.show();
 
 								var callback = function() {

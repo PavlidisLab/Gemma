@@ -260,8 +260,8 @@ Gemma.FactorValueGrid = Ext.extend(Gemma.GemmaGridPanel, {
 
 					Ext.Msg
 							.confirm(
-								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorValueWarningTitle,
-								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorValueWarningText,
+								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorWarningTitle,
+								Gemma.HelpText.WidgetDefaults.ExperimentalFactorToolbar.deleteFactorWarningText,
 									function(but) {
 										if (but == 'yes') {
 											Ext.getCmp('factor-value-delete-button').disable();

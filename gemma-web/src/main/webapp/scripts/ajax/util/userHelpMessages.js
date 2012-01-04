@@ -16,6 +16,7 @@ Gemma.StatusText = {
 	creating: "Creating new {0}",
 	saving: "Saving...",
 	deleting: "Deleting...",
+	deletingSpecific: "Deleting {0}...",
 	Searching: {
 		generic: "Processing request...",
 		analysisResults: "Processing request..."
@@ -255,8 +256,8 @@ Gemma.HelpText.WidgetDefaults = {
 		noResultsText: "Sorry, there are no differential expression analyses for the data sets you selected."
 	},
 	ExperimentalFactorToolbar:{
-		deleteFactorValueWarningTitle: "Deleting Factor(s)",
-		deleteFactorValueWarningText: 'Are you sure? This cannot be undone. Any associated differential expression analyses will be deleted as well.'
+		deleteFactorWarningTitle: "Deleting Factor(s)",
+		deleteFactorWarningText: 'Are you sure? This cannot be undone. Any associated differential expression analyses will be deleted as well.'
 	},
 	ExperimentPagingGrid:{
 		emptyText: 'Either you didn\'t select any experiments, or you don\'t have permissions to view the ones you chose.'
