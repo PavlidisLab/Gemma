@@ -1592,7 +1592,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					this.searchExamples.diffExExamples.diffExExample1.setVisible(h);
 					this.searchExamples.diffExExamples.diffExExample2.setVisible(h);
 					this.searchExamples.coexExamples.coexExample1.setVisible(h);
-					this.searchExamples.coexExamples.coexExample2.setVisible(h);
+					//this.searchExamples.coexExamples.coexExample2.setVisible(h);
 					if (h) {
 						this.searchExamples.examplesTitle.update({
 							sign: '-'
