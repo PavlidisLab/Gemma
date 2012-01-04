@@ -1285,22 +1285,24 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 								scope: this
 							}
 						
-						}, {
-							xtype: 'button',
-							ref: 'coexExample2',
-							text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex2Text,
-							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex2TT,
-							listeners: {
-								click: function(){
-									var goName = "GO_0035418";
-									var eeSetId = '737';
-									var taxonId = '1';
-									this.runExampleQuery(eeSetId, goName, taxonId);
-								},
-								scope: this
-							}
+						}
+//						,{
+//							xtype: 'button',
+//							ref: 'coexExample2',
+//							text: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex2Text,
+//							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex2TT,
+//							listeners: {
+//								click: function(){
+//									var goName = "GO_0035418";
+//									var eeSetId = '737';
+//									var taxonId = '1';
+//									this.runExampleQuery(eeSetId, goName, taxonId);
+//								},
+//								scope: this
+//							}
 						
-						}]
+//						}
+					]
 					}]
 				});
 				
