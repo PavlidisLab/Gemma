@@ -1871,9 +1871,13 @@ public class ExpressionExperimentController extends AbstractTaskService {
     
      */
     private String batchConfound( ExpressionExperiment ee ) {
-
-        Collection<BatchConfoundValueObject> confounds = BatchConfound.test( ee );
-
+        Collection<BatchConfoundValueObject> confounds;
+        try{
+            confounds = BatchConfound.test( ee );
+        }
+        catch (Exception e){
+            return null;
+        }
         StringBuilder buf = new StringBuilder();
         buf.append( "" );
 

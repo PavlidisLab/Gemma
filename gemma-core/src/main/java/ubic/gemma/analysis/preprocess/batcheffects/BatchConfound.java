@@ -100,7 +100,7 @@ public class BatchConfound {
      * @param svdo
      */
     private static Collection<BatchConfoundValueObject> factorBatchConfoundTest( ExpressionExperiment ee,
-            Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) {
+            Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap ) throws IllegalArgumentException {
 
         Map<Long, Long> batchMembership = new HashMap<Long, Long>();
         ExperimentalFactor batchFactor = null;
@@ -200,7 +200,14 @@ public class BatchConfound {
                 }
 
                 ChiSquareTest cst = new ChiSquareTestImpl();
-                chiSquare = cst.chiSquare( counts );
+                try{
+                    chiSquare = cst.chiSquare( counts );
+                }
+                catch (IllegalArgumentException e){
+                    log.warn( "IllegalArgumentException exception computing ChiSq : " + e.getMessage() );
+                    throw e;
+                }
+                
                 df = ( counts.length - 1 ) * ( counts[0].length - 1 );
                 ChiSquaredDistribution distribution = new ChiSquaredDistributionImpl( df );
 
