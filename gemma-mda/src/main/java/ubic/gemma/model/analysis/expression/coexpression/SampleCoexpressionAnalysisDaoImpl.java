@@ -149,12 +149,12 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         try{
             result.setRowNames( bioAssays );
         }catch (IllegalArgumentException e){
-            log.warn( e.getLocalizedMessage() );
+            log.error( e.getLocalizedMessage() );
         }
         try{
             result.setColumnNames( bioAssays );
         }catch (IllegalArgumentException e){
-            log.warn( e.getLocalizedMessage() );
+            log.error( e.getLocalizedMessage() );
         }
         
         return result;
