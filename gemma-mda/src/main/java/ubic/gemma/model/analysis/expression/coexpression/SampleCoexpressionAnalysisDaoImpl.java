@@ -146,9 +146,17 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         double[][] rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );
 
         DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<BioAssay, BioAssay>( rawMatrix );
-        result.setRowNames( bioAssays );
-        result.setColumnNames( bioAssays );
-
+        try{
+            result.setRowNames( bioAssays );
+        }catch (IllegalArgumentException e){
+            log.warn( e.getLocalizedMessage() );
+        }
+        try{
+            result.setColumnNames( bioAssays );
+        }catch (IllegalArgumentException e){
+            log.warn( e.getLocalizedMessage() );
+        }
+        
         return result;
     }
 
