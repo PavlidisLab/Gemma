@@ -609,9 +609,10 @@ public class ExpressionDataFileService {
                         String[] annotationStrings = geneAnnotations.get( csid );
                         probeBuffer.append( "\t" + annotationStrings[1] + "\t" + annotationStrings[2] );
 
-                        if ( annotationStrings.length > 3 ) {
+                        // leaving out Gemma ID, which is annotationStrings[3]
+                        if ( annotationStrings.length > 4 ) {
                             // ncbi id.
-                            probeBuffer.append( "\t" + annotationStrings[3] );
+                            probeBuffer.append( "\t" + annotationStrings[4] );
                         }
                     }
 
