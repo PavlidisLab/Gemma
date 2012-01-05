@@ -51,7 +51,7 @@ public class VectorMergingCli extends ExpressionExperimentManipulatingCLI {
     @Override
     protected void buildOptions() {
         super.buildOptions();
-
+        super.addForceOption();
     }
 
     @Override
