@@ -250,7 +250,7 @@ public class DifferentialExpressionGeneConditionSearchService {
                                 // }
                                 if ( total == -1 ) {                                
                                     total = differentialExpressionAnalysisService.countProbesMeetingThreshold( resultSet,
-                                            0.05 );
+                                            0.5 );
                                 }                                
                                 
                                 watch.start( "getProcessedExpressionVectorCount" );
@@ -420,24 +420,31 @@ public class DifferentialExpressionGeneConditionSearchService {
                 }
                 DifferentialExpressionAnalysisResult deaResult = probeAnalysisResults.get( probeResultId );
                 if ( deaResult == null ) continue;
-
-                markCellsBlack( resultSet, geneId, searchResult );
+                
+                Double pValue = deaResult.getCorrectedPvalue();
+                if (pValue == null) {
+                    pValue = 1.0;
+                }
+                if (pValue.doubleValue() == 0.0) {
+                    pValue = 0.000000001;
+                }
+                markCellsBlack( resultSet, geneId, searchResult, pValue, geneToProbeResult.get(geneId).getNumberOfProbes(), geneToProbeResult.get(geneId).getNumberOfProbesDiffExpressed() );
 
                 for ( ContrastResult cr : deaResult.getContrasts() ) {
                     // double visualizationValue = calculateVisualizationValueBasedOnPvalue ( cr.getPvalue() );
                     
                     String conditionId = constructConditionId( resultSet.getId(), cr.getFactorValue().getId() );
-                    searchResult.addCell( geneId, conditionId, deaResult.getPvalue(), cr.getLogFoldChange(), geneToProbeResult.get(geneId).getNumberOfProbes(), geneToProbeResult.get(geneId).getNumberOfProbesDiffExpressed());
+                    searchResult.addCell( geneId, conditionId, pValue, cr.getLogFoldChange(), geneToProbeResult.get(geneId).getNumberOfProbes(), geneToProbeResult.get(geneId).getNumberOfProbesDiffExpressed());
                 }
             }
             log.info( watch.prettyPrint() );
         }
 
         private void markCellsBlack( ExpressionAnalysisResultSet resultSet, Long geneId,
-                DifferentialExpressionGenesConditionsValueObject searchResult ) {
+                DifferentialExpressionGenesConditionsValueObject searchResult, double pValue, int numProbes, int numProbesDiffExpressed ) {
             for ( FactorValue factorValue : resultSet.getExperimentalFactors().iterator().next().getFactorValues() ) {
                 String conditionId = constructConditionId( resultSet.getId(), factorValue.getId() );
-                searchResult.addBlackCell( geneId, conditionId );
+                searchResult.addBlackCell( geneId, conditionId, pValue, numProbes, numProbesDiffExpressed );
             }
         }
 

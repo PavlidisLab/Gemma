@@ -148,16 +148,19 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 		
 		var transparency = 0;
 
-		if (cell !== null ) {			
-			pValue = cell.pValue;
-			foldChange = cell.logFoldChange;
-			isProbeMissing = cell.isProbeMissing;
-			numberOfProbes = cell.numberOfProbes;
-			numberOfProbesDiffExpressed = cell.numberOfProbesDiffExpressed;
-			if (this.isShowPvalue) {
-				transparency = this.calculateVisualizationValueBasedOnPvalue(cell.pValue) / 10;			
-			}
-		} 
+		if (cell.pValue > 0.1) {
+			color = 'white';
+		}
+
+		pValue = cell.pValue;
+		foldChange = cell.logFoldChange;
+		isProbeMissing = cell.isProbeMissing;
+		numberOfProbes = cell.numberOfProbes;
+		numberOfProbesDiffExpressed = cell.numberOfProbesDiffExpressed;
+		
+		if (this.isShowPvalue) {
+			transparency = this.calculateVisualizationValueBasedOnPvalue(cell.pValue) / 10;			
+		}
 		
 		var x, y, width, height;
 		
@@ -230,15 +233,15 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
     calculateVisualizationValueBasedOnPvalue : function ( pValue ) {
         var visualizationValue = 0;
         if ( pValue < 0.5 && pValue >= 0.25 )
-            visualizationValue = 0.5;
+            visualizationValue = 0;
         else if ( pValue < 0.25 && pValue >= 0.1 )
-            visualizationValue = 1;
+            visualizationValue = 0;
         else if ( pValue < 0.1 && pValue >= 0.05 )
-            visualizationValue = 2;
+            visualizationValue = 1;
         else if ( pValue < 0.05 && pValue >= 0.01 )
             visualizationValue = 3;
         else if ( pValue < 0.01 && pValue >= 0.001 )
-            visualizationValue = 4;
+            visualizationValue = 5;
         else if ( pValue < 0.001 && pValue >= 0.0001 )
             visualizationValue = 7;
         else if ( pValue < 0.0001 && pValue >= 0.00001 )
@@ -252,6 +255,10 @@ Gemma.Metaheatmap.HeatmapBox = Ext.extend ( Ext.Panel, {
 
     	var transparency = 0;
 		var color = Gemma.Metaheatmap.Config.contrastsColourRange.getCellColorString (cellData.logFoldChange);
+		
+		if (cellData.pValue > 0.1) {
+			color = 'white';
+		}
 		
 		if (this.isShowPvalue) {
 			transparency = this.calculateVisualizationValueBasedOnPvalue(cellData.pValue) / 10;			

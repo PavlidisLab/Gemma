@@ -310,12 +310,14 @@ public class DifferentialExpressionGenesConditionsValueObject {
         addCell( geneId, conditionId, cell );
     }
 
-    public void addBlackCell( Long geneId, String conditionId ) {
+    public void addBlackCell( Long geneId, String conditionId, double pValue, int numProbes, int numProbesDiffExpressed ) {
         Cell cell = new Cell();
         cell.isProbeMissing = false;
-        cell.pValue = 1;
+        cell.pValue = pValue;
         cell.visualizationValue = 0;
         cell.logFoldChange = 0;
+        cell.numberOfProbes = numProbes;
+        cell.numberOfProbesDiffExpressed = numProbesDiffExpressed;
 
         addCell( geneId, conditionId, cell );
     }
