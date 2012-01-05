@@ -86,14 +86,14 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        if ( !needToRun( ee, null ) && !force ) {
+        if ( !force && !needToRun( ee, null ) ) {
             return;
         }
 
         SampleCoexpressionMatrixService sampleCoexpressionMatrixService = ( SampleCoexpressionMatrixService ) this
                 .getBean( "sampleCoexpressionMatrixService" );
 
-        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee, this.force );
         audit( ee, null );
 
     }
