@@ -1,10 +1,7 @@
-// TODO: Should also listen for events from mainarea to highlight label when cell is highlighted			
-
-
 Ext.namespace('Gemma.Metaheatmap');
 /**
  * Class to display labels for genes/conditions. It uses provided tree and orientation to draw the labels.
- * Currently, the group labels reflect tree structure and are drawn as coloured bars. The gene/condtion labels are drawn at the right angle to the group labels.  
+ * Currently, the group labels reflect tree structure and are drawn as coloured bars. The gene/condition labels are drawn at the right angle to the group labels.  
  * We may support dendrograms in the future.
  * 
  * Methods:
@@ -31,8 +28,10 @@ Ext.namespace('Gemma.Metaheatmap');
  */
 Gemma.Metaheatmap.LabelBox = Ext.extend (Ext.Panel, {
 	colors : {
+		// Alternate these colors for group labels.
 		groupLabelA : 'rgb(204, 236, 230)', 
 		groupLabelB : 'rgb(153, 216, 201)',
+		// Alternate these colors for item labels.		
 		itemLabelA  : 'rgba(203,213,232, 0.5)',
 		itemLabelB  : 'rgba(203,213,232, 0.9)'
 	},
@@ -319,12 +318,13 @@ Gemma.Metaheatmap.ConditionLabel.constructDrawLabelFunction = function (ctx, ite
 };
 
 Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx, item, text, x, y, width, height, highlightBox, backgroundColor) {				
-	var isSelected   = item.isSelected;
+	var isSelected   	   = item.isSelected;
 	var metaPvalueBarChart = item.metaPvalueBarChart;
+	var barChartSize = 8;
+	var margin = 3;
 	
 	var yCenter = y + height/2;	
 	var fontSize = 9;
-	var miniPieSize = 8;
 
 	var tinyScale = (height < fontSize);	
 					
@@ -345,20 +345,20 @@ Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx
 					ctx.rect (x, y+0.5, width, height-1);				
 					ctx.clip();			
 					ctx.strokeStyle = 'black';
-					ctx.drawTextRight ('', fontSize, x + width - miniPieSize, yCenter + fontSize/2, text);
+					ctx.drawTextRight ('', fontSize, x + width - margin - barChartSize, yCenter + fontSize/2, text);
 				}
 				
-				ctx.fillStyle = 'black';
 				if (metaPvalueBarChart !== null) {
-					ctx.moveTo(x + width - miniPieSize + 1.5, y);
-					ctx.lineTo(x + width - miniPieSize + 1.5, y + height);
-					ctx.stroke();
-					ctx.fillRect ( x + width - miniPieSize + (miniPieSize - metaPvalueBarChart), y, metaPvalueBarChart, height);
+//					ctx.moveTo(x + width - barChartSize + 1.5, y);
+//					ctx.lineTo(x + width - barChartSize + 1.5, y + height);
+//					ctx.stroke();
+					ctx.fillStyle = 'black';
+					ctx.fillRect ( x + width - barChartSize, y, metaPvalueBarChart, height);
 				}
 					
 					
 //					if (miniPieValue !== null) {
-//						MiniPieLib.drawMiniPie (ctx, x + width + 5, yCenter, miniPieSize, 'gray', miniPieValue);
+//						MiniPieLib.drawMiniPie (ctx, x + width + 5, yCenter, barChartSize, 'gray', miniPieValue);
 //					}
 				
 				ctx.restore();											
@@ -380,12 +380,13 @@ Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx
 			ctx.fillStyle = highlightBox.color; 
 			ctx.fillRect (highlightBox.x, highlightBox.y, highlightBox.width, highlightBox.height);
 			ctx.strokeStyle = 'black';		
-			ctx.drawTextRight ('', highlightBox.fontSize, x+width-miniPieSize-1, yCenter+highlightBox.fontSize/2, text);
+			ctx.drawTextRight ('', highlightBox.fontSize, x+width-barChartSize-margin, yCenter+highlightBox.fontSize/2, text);
 			if (metaPvalueBarChart !== null) {
-				ctx.moveTo(x + width - miniPieSize + 1.5, y);
-				ctx.lineTo(x + width - miniPieSize + 1.5, y + height);
-				ctx.stroke();
-				ctx.fillRect ( x + width - miniPieSize + (miniPieSize - metaPvalueBarChart), y, metaPvalueBarChart, height);
+//				ctx.moveTo(x + width - barChartSize + 1.5, y);
+//				ctx.lineTo(x + width - barChartSize + 1.5, y + height);
+//				ctx.stroke();
+				ctx.fillStyle = 'black';
+				ctx.fillRect ( x + width - barChartSize, y, metaPvalueBarChart, height);
 			}
 			ctx.restore();
 		}
@@ -393,10 +394,9 @@ Gemma.Metaheatmap.ConditionLabel.makeHorizontalLabelDrawFunction = function (ctx
 };	
 
 Gemma.Metaheatmap.ConditionLabel.makeVerticalLabelDrawFunction = function (ctx, item, text, x, y, width, height, highlightBox, backgroundColor) {				
-	//var text 	   = condition.contrastFactorValue;
-	var isSelected = item.isSelected;
-	var miniPieValue = item.miniPieValue;
-	var miniBarValue = item.miniBarValue;
+	var isSelected   = item.isSelected;
+	var miniPieValue = item.oraDisplayValue;
+	var miniBarValue = item.oraDisplayValue;
 	
 	var xCenter = x + width/2;	
 	var fontSize = 9;
@@ -418,24 +418,24 @@ Gemma.Metaheatmap.ConditionLabel.makeVerticalLabelDrawFunction = function (ctx, 
 					// We stop drawing label since small text is not distinguishable.
 					ctx.strokeStyle = 'black';		
 					if (miniBarValue !== null) {
-						ctx.moveTo(x, y + height - 8.5);
-						ctx.lineTo(x + width,y + height - 8.5);
-						ctx.stroke();
+//						ctx.moveTo(x, y + height - 8.5);
+//						ctx.lineTo(x + width,y + height - 8.5);
+//						ctx.stroke();
 						ctx.fillStyle = 'black';
-						ctx.fillRect (x, y + height - 0.5 - miniBarValue, width, miniBarValue);
+						ctx.fillRect (x, y + height - 8.5, width, miniBarValue);
 					}
 				} else {
 					ctx.beginPath();
 					ctx.rect (x+0.5, y, width-1, height);				
 					ctx.clip();			
 					ctx.strokeStyle = 'black';		
-					ctx.drawRotatedText (xCenter + fontSize/2, y + height - miniPieSize - 2, 270, fontSize, 'black', text);
+					ctx.drawRotatedText (xCenter + fontSize/2, y + height - miniPieSize - 3, 270, fontSize, 'black', text);
 					if (miniBarValue !== null) {
-						ctx.moveTo(x, y + height - 8.5);
-						ctx.lineTo(x + width,y + height - 8.5);
-						ctx.stroke();
+//						ctx.moveTo(x, y + height - 8.5);
+//						ctx.lineTo(x + width,y + height - 8.5);
+//						ctx.stroke();
 						ctx.fillStyle = 'black';
-						ctx.fillRect (x, y + height - 0.5 - miniBarValue, width, miniBarValue);
+						ctx.fillRect (x, y + height - 8.5, width, miniBarValue);
 					}
 				}
 				ctx.restore();											
@@ -456,9 +456,14 @@ Gemma.Metaheatmap.ConditionLabel.makeVerticalLabelDrawFunction = function (ctx, 
 			ctx.fillStyle = highlightBox.color; 
 			ctx.fillRect (highlightBox.x, highlightBox.y, highlightBox.width, highlightBox.height);
 			ctx.strokeStyle = 'black';		
-			ctx.drawRotatedText (xCenter + highlightBox.fontSize/2, y + height - miniPieSize - 2, 270, highlightBox.fontSize, 'black', text);
+			ctx.drawRotatedText (xCenter + highlightBox.fontSize/2, y + height - miniPieSize - 3, 270, highlightBox.fontSize, 'black', text);
 			if (miniPieValue !== null) {
-				MiniPieLib.drawMiniPie (ctx, xCenter, y + height - 5, miniPieSize, 'black', miniPieValue);
+//				MiniPieLib.drawMiniPie (ctx, xCenter, y + height - 5, miniPieSize, 'black', miniPieValue);
+//				ctx.moveTo(x, y + height - 8.5);
+//				ctx.lineTo(x + width,y + height - 8.5);
+//				ctx.stroke();
+				ctx.fillStyle = 'black';
+				ctx.fillRect (x, y + height - 8.5, width, miniBarValue);
 			}
 			ctx.restore();								
 		}
