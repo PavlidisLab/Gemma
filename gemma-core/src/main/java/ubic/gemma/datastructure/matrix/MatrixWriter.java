@@ -223,7 +223,7 @@ public class MatrixWriter<T> {
         if ( writeGeneInfo && geneAnnotations != null && !geneAnnotations.isEmpty() ) {
             buf.append( "\tGeneSymbol\tGeneName" );
             Object o = geneAnnotations.values().iterator().next();
-            if ( o instanceof Collection /* genes */|| ( ( String[] ) o ).length > 3 ) {
+            if ( o instanceof Collection /* genes */|| ( ( String[] ) o ).length > 4 ) {
                 buf.append( "\tGemmaId\tNCBIid" );
             }
         }
@@ -250,12 +250,12 @@ public class MatrixWriter<T> {
     private void addGeneInfoFromStrings( StringBuffer buf, CompositeSequence probe,
             Map<CompositeSequence, String[]> geneAnnotations ) {
         if ( geneAnnotations == null || geneAnnotations.isEmpty() ) return;
-        if ( geneAnnotations.containsKey( probe ) ) {
+        if ( geneAnnotations.containsKey( probe.getId() ) ) {
 
-            String[] geneStrings = geneAnnotations.get( probe );
+            String[] geneStrings = geneAnnotations.get( probe.getId() );
 
             if ( geneStrings.length == 0 ) {
-                buf.append( "\t\t" );
+                buf.append( "\t\t\t\t" );
                 return;
             }
 
@@ -270,14 +270,24 @@ public class MatrixWriter<T> {
                 names = geneStrings[2];
             }
 
+            String gemmaID = "";
+            if ( geneStrings.length > 3 && geneStrings[3] != null ) {
+                gemmaID = geneStrings[3];
+            }
+
+            String ncbiID = "";
+            if ( geneStrings.length > 4 && geneStrings[4] != null ) {
+                ncbiID = geneStrings[4];
+            }
+
             // Improve compatibility with third-party programs like R. See bug 1851. Annotation file should already be
             // cleaned, this is just to make sure.
             names = names.replaceAll( "#", "_" );
 
             // initial tab has already been added before
-            buf.append( symbols + "\t" + names + "\t" );
+            buf.append( symbols + "\t" + names + "\t" + gemmaID + "\t" + ncbiID + "\t");
         } else {
-            buf.append( "\t\t" );
+            buf.append( "\t\t\t\t" );
         }
     }
 
