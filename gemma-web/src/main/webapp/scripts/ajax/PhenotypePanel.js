@@ -100,6 +100,7 @@ Gemma.PhenotypeGrid = Ext.extend(Ext.grid.GridPanel, {
     initComponent: function() {
     	phenotypeGrid = this;
     	var checkboxSelectionModel = new Gemma.PhenotypeCheckboxSelectionModel();
+    	var phenotypeAssociationFormWindow;
 		Ext.apply(this, {
 			title: "Phenotypes",
 		    autoScroll: true,
@@ -143,6 +144,29 @@ height: 300,
 		    		}
 		    	}
 		    },
+		    showPhenotypeAssociationFormWindow: function() {
+		    	if (phenotypeAssociationFormWindow == null) {
+						phenotypeAssociationFormWindow = new Gemma.PhenotypeAssociationForm.Window({
+							listeners: {
+								hide: function(thisWindow) {
+									if (phenotypeAssociationFormWindow.phenotypeAssociationCreated) {
+										var phenotypeGridStore = phenotypeGrid.getStore();  
+										phenotypeGridStore.reload(phenotypeGridStore.lastOptions);
+									}
+								}
+							}
+						});
+		    	}
+				phenotypeAssociationFormWindow.show();
+		    },
+		    promptLoginForOpeningCreatePhenotypeAssociationWindow: function() {
+				Gemma.AjaxLogin.showLoginWindowFn();
+		
+				Gemma.Application.currentUser.on("logIn", function(userName, isAdmin){	
+					Ext.getBody().unmask();
+					this.showPhenotypeAssociationFormWindow();
+				}, this);
+		    },
 			tbar: [
 				new Gemma.PhenotypePanelSearchField({
 					getSelectionModel: function() { return phenotypeGrid.getSelectionModel(); },
@@ -150,6 +174,34 @@ height: 300,
 					filterFields: [ 'value' ],
 					emptyText: 'Search Phenotypes'
 				})
+// NEW create phenotype button
+//				{
+//					handler: function() {
+//						Ext.Ajax.request({
+//				         	url : '/Gemma/ajaxLoginCheck.html',
+//				            method: 'GET',                  
+//				            success: function ( response, options ) {			
+//									
+//				                    var dataMsg = Ext.util.JSON.decode(response.responseText); 
+//				                    
+//				                    if (dataMsg.success){
+//										this.showPhenotypeAssociationFormWindow();
+//									}
+//				                    else{
+//										this.promptLoginForOpeningCreatePhenotypeAssociationWindow();                      	
+//				                    }
+//				            },
+//				            failure: function ( response, options ) {   
+//								this.promptLoginForOpeningCreatePhenotypeAssociationWindow();                      	
+//				            },
+//				            scope: this,
+//				            disableCaching: true
+//				       });
+//					},
+//					scope: this,
+//					icon: "/Gemma/images/icons/add.png",
+//					tooltip: "Create phenotype association"
+//				}
 			]
 		});
 		Gemma.PhenotypeGrid.superclass.initComponent.call(this);
@@ -230,6 +282,7 @@ evidenceGrid.removeAll(false);
 				geneGrid.setTitle("<div style='height: 15px; overflow: hidden;' " +  // Make the header one line only.
 					"ext:qtitle='" + selectedPhenotypePrefix + "' " +
 					"ext:qtip='" + selectedPhenotypeTooltip + "'>" + selectedPhenotypeHeader + "</div>");
+geneGrid.titleText = selectedPhenotypeHeader;
 			} else {
 				geneGrid.setTitle("Genes");						
 				geneGrid.getStore().removeAll(false);
@@ -241,8 +294,52 @@ evidenceGrid.removeAll(false);
 
 Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
     initComponent: function() {
+    	var downloadButton = new Ext.Button({
+			text: '<b>Download</b>',
+			disabled: true,
+			icon: '/Gemma/images/download.gif',
+			handler: function() {
+				var columnConfig = geneGrid.getColumnModel().config;
+				var downloadData = [];
+			    var downloadDataRow = [];
+				
+			    for (var i = 0; i < columnConfig.length; i++) {
+			        downloadDataRow.push(columnConfig[i].header);
+			    }
+			    downloadData.push(downloadDataRow);
+			    
+				geneGrid.getStore().each(function(record) {
+				    downloadDataRow = [];
+				    for (var i = 0; i < columnConfig.length; i++) {
+				        downloadDataRow.push(record.get(columnConfig[i].dataIndex));
+				    }
+				    downloadData.push(downloadDataRow);
+				});
+		
+				var downloadDataHeader = geneGrid.titleText;
+				if (searchField.getValue() !== '') {
+					downloadDataHeader += ' AND matching pattern "' + searchField.getValue() + '"';
+				}
+		  		var textWindow = new Gemma.DownloadWindow({
+		  			windowTitleSuffix: 'Genes associated with selected Phenotype(s)',
+		  			downloadDataHeader: downloadDataHeader, 
+		  			downloadData: downloadData,
+		  			modal: true
+		  		});
+		  		textWindow.convertToText ();
+		  		textWindow.show();
+			}
+    	});
+    	var searchField = new Gemma.PhenotypePanelSearchField({
+			getSelectionModel: function() { return geneGrid.getSelectionModel(); },
+			getStore: function() { return geneGrid.getStore(); },
+			filterFields: [ 'officialSymbol', 'officialName' ],
+			emptyText: 'Search Genes'
+		});
+
 		Ext.apply(this, {
 			title: "Genes",
+			titleText: this.title,	
 		    autoScroll: true,
 		    stripeRows: true,
 			region: "center",
@@ -288,17 +385,23 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 				}
 			}),
 			tbar: [
-				new Gemma.PhenotypePanelSearchField({
-					getSelectionModel: function() { return geneGrid.getSelectionModel(); },
-					getStore: function() { return geneGrid.getStore(); },
-					filterFields: [ 'officialSymbol', 'officialName' ],
-					emptyText: 'Search Genes'
-				})
-			]
+				searchField,
+				downloadButton
+			],
+			onStoreRecordChange: function() {
+				downloadButton.setDisabled(this.getStore().getCount() <= 0);
+			}
 		});
 		Gemma.GeneGrid.superclass.initComponent.call(this);
 		
 		this.getStore().setDefaultSort('officialSymbol', 'asc');
+		
+		// TODO: should disable download button if users filter too!
+		this.getStore().addListener({
+			load: this.onStoreRecordChange,
+			clear: this.onStoreRecordChange,
+            scope: this
+		});
     }
 });
 
