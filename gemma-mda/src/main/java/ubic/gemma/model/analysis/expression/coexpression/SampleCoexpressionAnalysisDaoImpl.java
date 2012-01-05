@@ -112,10 +112,8 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
      * expression.experiment.ExpressionExperiment)
      */
     public boolean hasAnalysis( ExpressionExperiment ee ) {
-        return !this
-                .getHibernateTemplate()
-                .findByNamedParam( " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee",
-                        ee ).isEmpty();
+        return !this.getHibernateTemplate().findByNamedParam(
+                " from SampleCoexpressionAnalysisImpl sa where sa.experimentAnalyzed = :ee", "ee", ee ).isEmpty();
     }
 
     /*
@@ -143,20 +141,26 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         final List<BioAssay> bioAssays = ( List<BioAssay> ) matObj.getBioAssayDimension().getBioAssays();
         int numBa = bioAssays.size();
 
-        double[][] rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );
+        double[][] rawMatrix;
+        try {
+            rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );
+        } catch ( IllegalArgumentException e ) {
+            log.error( e.getMessage() );
+            return null;
+        }
 
         DoubleMatrix<BioAssay, BioAssay> result = new DenseDoubleMatrix<BioAssay, BioAssay>( rawMatrix );
-        try{
+        try {
             result.setRowNames( bioAssays );
-        }catch (IllegalArgumentException e){
+        } catch ( IllegalArgumentException e ) {
             log.error( e.getLocalizedMessage() );
         }
-        try{
+        try {
             result.setColumnNames( bioAssays );
-        }catch (IllegalArgumentException e){
+        } catch ( IllegalArgumentException e ) {
             log.error( e.getLocalizedMessage() );
         }
-        
+
         return result;
     }
 
