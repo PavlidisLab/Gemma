@@ -49,6 +49,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
     @Override
     protected void buildOptions() {
         super.buildOptions();
+        super.addForceOption();
     }
 
     @Override
