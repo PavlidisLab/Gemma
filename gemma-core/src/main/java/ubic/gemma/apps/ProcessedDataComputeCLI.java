@@ -114,7 +114,7 @@ public class ProcessedDataComputeCLI extends ExpressionExperimentManipulatingCLI
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        if ( isTroubled( ee ) ) {
+        if ( isTroubled( ee ) && !force ) {
             log.info( "Skipping troubled experiment " + ee.getShortName() );
             return;
         }

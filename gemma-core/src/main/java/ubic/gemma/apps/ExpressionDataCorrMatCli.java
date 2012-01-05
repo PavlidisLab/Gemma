@@ -86,7 +86,7 @@ public class ExpressionDataCorrMatCli extends ExpressionExperimentManipulatingCL
      * @param ee
      */
     private void processExperiment( ExpressionExperiment ee ) {
-        if ( !needToRun( ee, null ) ) {
+        if ( !needToRun( ee, null ) && !force ) {
             return;
         }
 

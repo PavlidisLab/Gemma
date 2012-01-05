@@ -246,7 +246,7 @@ public abstract class ExpressionExperimentManipulatingCLI extends AbstractSpring
             excludeFromFile();
         }
 
-        if ( expressionExperiments != null && expressionExperiments.size() > 0 && !hasOption( "force" ) ) {
+        if ( expressionExperiments != null && expressionExperiments.size() > 0 && !force ) {
 
             if ( hasOption( AUTO_OPTION_NAME ) ) {
                 this.autoSeek = true;
