@@ -89,7 +89,7 @@ Gemma.GeneDetails =  Ext.extend(Ext.Panel, {
 							html: this.renderHomologues(geneDetails.homologues, geneDetails.name)
 						}, {
 							fieldLabel: 'Gene Groups',
-							html: this.renderGeneSets(geneDetails.geneSets).join(',')
+							html: this.renderGeneSets(geneDetails.geneSets).join(', ')
 						}, {
 							fieldLabel: 'Probes' + '<a class="helpLink" href="javascript: void(0)" onclick="showHelpTip(event, ' +
 								'\''+Gemma.HelpText.WidgetDefaults.GeneDetails.probesTT+'\'); return false">' +
