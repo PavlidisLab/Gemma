@@ -102,12 +102,16 @@ public class SVDValueObject implements Serializable {
     /**
      * @param pca
      */
-    public SVDValueObject( PrincipalComponentAnalysis pca ) {
+    public SVDValueObject( PrincipalComponentAnalysis pca ) throws Exception{
         this.id = pca.getExperimentAnalyzed().getId();
 
         this.variances = pca.getVarianceFractions();
-        List<Double[]> eigenvectorArrays = pca.getEigenvectorArrays();
-
+        List<Double[]> eigenvectorArrays;
+        try{
+            eigenvectorArrays = pca.getEigenvectorArrays();
+        }catch ( Exception e ){
+            throw e;
+        }
         List<Long> bmids = new ArrayList<Long>();
         for ( BioAssay ba : pca.getBioAssayDimension().getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {

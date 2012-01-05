@@ -23,6 +23,7 @@
 package ubic.gemma.model.analysis.expression.pca;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -30,7 +31,7 @@ import org.apache.commons.collections.Predicate;
 import org.apache.commons.lang.ArrayUtils;
 
 import ubic.basecode.io.ByteArrayConverter;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
+import ubic.gemma.model.expression.bioAssay.BioAssay;
 
 /**
  * @see ubic.gemma.model.analysis.expression.pca.PrincipalComponentAnalysis
@@ -47,18 +48,27 @@ public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
      * @see ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis#getEigenvectorArrays()
      */
     @Override
-    public List<Double[]> getEigenvectorArrays() {
+    public List<Double[]> getEigenvectorArrays() throws IllegalArgumentException{
         ByteArrayConverter bac = new ByteArrayConverter();
+
         List<Double[]> result = new ArrayList<Double[]>( this.getNumComponentsStored() );
 
-        BioAssayDimension bioAssayDimension = this.getBioAssayDimension();
-        for ( int i = 0; i < bioAssayDimension.getBioAssays().size(); i++ ) {
+        Collection<BioAssay> bioAssays = this.getBioAssayDimension().getBioAssays();
+
+        if ( bioAssays.size() != this.getNumComponentsStored() ) {
+           throw new IllegalArgumentException( "PCA: Number of components stored (" + this.getNumComponentsStored()
+                    + ") does not match the number of bioAssays (" + bioAssays.size() + ")" );
+        }
+        for ( int i = 0; i < bioAssays.size(); i++ ) {
             result.add( null );
         }
+
         for ( Eigenvector ev : this.getEigenVectors() ) {
             int index = ev.getComponentNumber() - 1;
             if ( index >= this.getNumComponentsStored() ) continue;
-            result.set( index, ArrayUtils.toObject( bac.byteArrayToDoubles( ev.getVector() ) ) );
+            double[] doubleArr = bac.byteArrayToDoubles( ev.getVector() );
+            Double[] dA = ArrayUtils.toObject( doubleArr );
+            result.set( index, dA );
         }
         CollectionUtils.filter( result, new Predicate() {
             @Override

@@ -181,7 +181,12 @@ public class SVDServiceImpl implements SVDService {
         PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) return null;
         pca.setBioAssayDimension( bioAssayDimensionService.thaw( pca.getBioAssayDimension() ) );
-        return new SVDValueObject( pca );
+        try {
+            return new SVDValueObject( pca );
+        } catch ( Exception e ) {
+            log.error( e.getLocalizedMessage() );
+            return null;
+        }
     }
 
     /*
@@ -268,7 +273,13 @@ public class SVDServiceImpl implements SVDService {
         bad = bioAssayDimensionService.thaw( bad );
         List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
 
-        SVDValueObject svo = new SVDValueObject( pca );
+        SVDValueObject svo;
+        try {
+            svo = new SVDValueObject( pca );
+        } catch ( Exception e ) {
+            log.error( e.getLocalizedMessage() );
+            return null;
+        }
 
         Map<Long, Date> bioMaterialDates = new HashMap<Long, Date>();
         Map<ExperimentalFactor, Map<Long, Double>> bioMaterialFactorMap = new HashMap<ExperimentalFactor, Map<Long, Double>>();
