@@ -179,7 +179,11 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( this.valueUri == null ) ? 0 : this.valueUri.hashCode() );
+        if ( this.valueUri != null ) {
+            result = prime * result + this.valueUri.hashCode();
+        } else {
+            result = prime * result + this.value.hashCode();
+        }
         return result;
     }
 
@@ -192,6 +196,12 @@ public class CharacteristicValueObject implements Comparable<CharacteristicValue
         if ( this.valueUri == null ) {
             if ( other.valueUri != null ) return false;
         } else if ( !this.valueUri.equals( other.valueUri ) ) return false;
+
+        if ( this.valueUri == null && other.valueUri == null ) {
+            if ( this.value == null ) {
+                if ( other.value != null ) return false;
+            } else if ( !this.value.equals( other.value ) ) return false;
+        }
         return true;
     }
 

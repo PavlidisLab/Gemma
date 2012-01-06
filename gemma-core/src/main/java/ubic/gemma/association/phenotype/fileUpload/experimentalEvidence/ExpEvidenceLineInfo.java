@@ -17,6 +17,7 @@ package ubic.gemma.association.phenotype.fileUpload.experimentalEvidence;
 import java.util.HashSet;
 import java.util.Set;
 
+import ubic.gemma.association.phenotype.fileUpload.EvidenceLineInfo;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 
 /**
@@ -25,7 +26,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
  * @version $Id$
  * @author nicolas
  */
-public class ExpEvidenceLineInfo {
+public class ExpEvidenceLineInfo extends EvidenceLineInfo {
 
     // used the mgedOntologyService to get those values (defined structure)
     public final static String DEVELOPMENTAL_STAGE = "DevelopmentalStage";
@@ -34,7 +35,6 @@ public class ExpEvidenceLineInfo {
     public final static String EXPERIMENT_DESIGN = "ExperimentDesign";
     public final static String TREATMENT = "Treatment";
     public final static String EXPERIMENT = "Experiment";
-    public final static String PHENOTYPE = "Phenotype";
 
     public final static String DEVELOPMENTAL_STAGE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#DevelopmentalStage";
     public final static String BIOSOURCE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#BioSource";
@@ -42,16 +42,9 @@ public class ExpEvidenceLineInfo {
     public final static String EXPERIMENT_DESIGN_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#ExperimentDesign";
     public final static String TREATMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Treatment";
     public final static String EXPERIMENT_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Experiment";
-    public final static String PHENOTYPE_ONTOLOGY = "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Phenotype";
 
-    private String geneName = "";
-    private String geneID = "";
     private String primaryReferencePubmed = null;
     private String reviewReferencePubmed = null;
-    private String evidenceCode = "";
-    private String comment = "";
-    private String associationType = null;
-    private boolean isEdivenceNegative = false;
 
     // All characteristics taken from file
     private String[] developmentStage = null;
@@ -60,11 +53,9 @@ public class ExpEvidenceLineInfo {
     private String[] experimentDesign = null;
     private String[] treatment = null;
     private String[] experimentOBI = null;
-    private String[] phenotype = null;
 
     // What will populate the Evidence
     private Set<CharacteristicValueObject> experimentCharacteristics = new HashSet<CharacteristicValueObject>();
-    private Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
 
     public ExpEvidenceLineInfo( String line ) {
 
@@ -90,25 +81,6 @@ public class ExpEvidenceLineInfo {
         this.phenotype = trimArray( tokens[14].split( ";" ) );
     }
 
-    private String[] trimArray( String[] array ) {
-
-        String[] trimmedArray = new String[array.length];
-
-        for ( int i = 0; i < trimmedArray.length; i++ ) {
-            trimmedArray[i] = array[i].trim();
-        }
-
-        return trimmedArray;
-    }
-
-    public String getGeneID() {
-        return this.geneID;
-    }
-
-    public void setGeneID( String geneID ) {
-        this.geneID = geneID;
-    }
-
     public String getPrimaryReferencePubmed() {
         return this.primaryReferencePubmed;
     }
@@ -123,38 +95,6 @@ public class ExpEvidenceLineInfo {
 
     public void setReviewReferencePubmed( String reviewReferencePubmed ) {
         this.reviewReferencePubmed = reviewReferencePubmed;
-    }
-
-    public String getEvidenceCode() {
-        return this.evidenceCode;
-    }
-
-    public void setEvidenceCode( String evidenceCode ) {
-        this.evidenceCode = evidenceCode;
-    }
-
-    public String getComment() {
-        return this.comment;
-    }
-
-    public void setComment( String comment ) {
-        this.comment = comment;
-    }
-
-    public String[] getPhenotype() {
-        return this.phenotype;
-    }
-
-    public void setPhenotype( String[] phenotype ) {
-        this.phenotype = phenotype;
-    }
-
-    public String getAssociationType() {
-        return this.associationType;
-    }
-
-    public void setAssociationType( String associationType ) {
-        this.associationType = associationType;
     }
 
     public String[] getDevelopmentStage() {
@@ -215,34 +155,6 @@ public class ExpEvidenceLineInfo {
 
     public void addExperimentCharacteristic( CharacteristicValueObject experimentCharacteristic ) {
         this.experimentCharacteristics.add( experimentCharacteristic );
-    }
-
-    public Set<CharacteristicValueObject> getPhenotypes() {
-        return this.phenotypes;
-    }
-
-    public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
-        this.phenotypes = phenotypes;
-    }
-
-    public void addPhenotype( CharacteristicValueObject phenotypeToAdd ) {
-        this.phenotypes.add( phenotypeToAdd );
-    }
-
-    public String getGeneName() {
-        return this.geneName;
-    }
-
-    public void setGeneName( String geneName ) {
-        this.geneName = geneName;
-    }
-
-    public boolean getIsEdivenceNegative() {
-        return this.isEdivenceNegative;
-    }
-
-    public void setIsEdivenceNegative( boolean isEdivenceNegative ) {
-        this.isEdivenceNegative = isEdivenceNegative;
     }
 
 }

@@ -213,9 +213,16 @@ public abstract class EvidenceValueObject {
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         EvidenceValueObject other = ( EvidenceValueObject ) obj;
-        if ( this.phenotypes == null ) {
-            if ( other.phenotypes != null ) return false;
-        } else if ( !this.phenotypes.equals( other.phenotypes ) ) return false;
+
+        if ( this.phenotypes.size() != other.phenotypes.size() ) {
+            return false;
+        }
+
+        for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
+            if ( !other.phenotypes.contains( characteristicValueObject ) ) {
+                return false;
+            }
+        }
         return true;
     }
 

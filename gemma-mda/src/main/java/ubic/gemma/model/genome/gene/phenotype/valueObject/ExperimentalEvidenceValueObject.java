@@ -103,8 +103,9 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result
-                + ( ( this.experimentCharacteristics == null ) ? 0 : this.experimentCharacteristics.hashCode() );
+        for ( CharacteristicValueObject phenotype : this.experimentCharacteristics ) {
+            result = result + phenotype.hashCode();
+        }
         result = prime
                 * result
                 + ( ( this.primaryPublicationCitationValueObject == null ) ? 0
@@ -133,6 +134,14 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
             if ( other.relevantPublicationsCitationValueObjects != null ) return false;
         } else if ( !this.relevantPublicationsCitationValueObjects
                 .equals( other.relevantPublicationsCitationValueObjects ) ) return false;
+        if ( this.experimentCharacteristics.size() != other.experimentCharacteristics.size() ) {
+            return false;
+        }
+        for ( CharacteristicValueObject characteristicValueObject : this.experimentCharacteristics ) {
+            if ( !other.experimentCharacteristics.contains( characteristicValueObject ) ) {
+                return false;
+            }
+        }
         return true;
     }
 

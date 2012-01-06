@@ -24,24 +24,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.FMAOntologyService;
-import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
-import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
-import ubic.gemma.association.phenotype.PhenotypeAssociationManagerService;
-import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.gene.GeneService;
+import ubic.gemma.association.phenotype.fileUpload.EvidenceLoaderCLI;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
-import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
  * take a tsv file for the CGMS and creates experimental evidence objects
@@ -49,70 +39,29 @@ import ubic.gemma.util.AbstractSpringAwareCLI;
  * @version $Id$
  * @author nicolas
  */
-public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
+public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
-    // input file path
-    private String inputFile = "";
-    // flag to decided if the data is ready to be imported
-    private boolean createInDatabase = false;
-
-    private OntologyService ontologyService = null;
-    private PhenotypeAssociationManagerService phenotypeAssociationService = null;
-    private GeneService geneService = null;
-
-    // Ontology services used
-    private DiseaseOntologyService diseaseOntologyService = null;
-    private MammalianPhenotypeOntologyService mammalianPhenotypeOntologyService = null;
-    private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
+    // specific service used by ExperimentalEvidence
     private NIFSTDOntologyService nifstdOntologyService = null;
     private ObiService obiService = null;
     private FMAOntologyService fmaOntologyService = null;
 
     public static void main( String[] args ) {
 
-        // example of parameters
-        args = new String[7];
-        args[0] = "-u";
-        args[1] = "administrator";
-        args[2] = "-p";
-        args[3] = "administrator";
-        args[4] = "-f";
-        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/experimentalEvidence/Willie.tsv";
-        args[6] = "-create";
-
         ExperimentalEvidenceLoaderCLI p = new ExperimentalEvidenceLoaderCLI();
 
         try {
-            Exception ex = p.doWork( args );
+            // to pass args by the command line dont use the initArguments method
+            // Exception ex = p.doWork( args );
+
+            // arguments were hardcoded to make it more easy
+            Exception ex = p.doWork( initArguments() );
+
             if ( ex != null ) {
                 ex.printStackTrace();
             }
         } catch ( Exception e ) {
             throw new RuntimeException( e );
-        }
-    }
-
-    @Override
-    protected void buildOptions() {
-
-        @SuppressWarnings("static-access")
-        Option fileOption = OptionBuilder.withDescription( "The file" ).hasArg().withArgName( "file path" )
-                .isRequired().create( "f" );
-        addOption( fileOption );
-
-        @SuppressWarnings("static-access")
-        Option optionCreateInDatabase = OptionBuilder.withDescription( "Create in database" ).create( "create" );
-        addOption( optionCreateInDatabase );
-
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        this.inputFile = getOptionValue( 'f' );
-
-        if ( hasOption( "create" ) ) {
-            this.createInDatabase = true;
         }
     }
 
@@ -131,7 +80,7 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
             Collection<ExpEvidenceLineInfo> linesFromFile = file2Objects();
 
             System.out.println( "STEP 3 : Convert file to Ontology terms" );
-            convertOntologiesTerms( linesFromFile );
+            convertExperimentalOntologiesTerms( linesFromFile );
 
             // make a intermediate tsv file to check is Ontology correctly mapped (used by students to verify data)
             System.out.println( "STEP 4 : Create intermediate file with uri from ontology" );
@@ -155,37 +104,14 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         return null;
     }
 
-    /** load services and verify that Ontology are loaded */
-    private synchronized void loadServices() throws Exception {
+    @Override
+    protected synchronized void loadServices() throws Exception {
+        super.loadServices();
 
-        this.phenotypeAssociationService = ( PhenotypeAssociationManagerService ) this
-                .getBean( "phenotypeAssociationManagerService" );
-
-        this.geneService = ( GeneService ) this.getBean( "geneService" );
-
-        this.ontologyService = ( OntologyService ) this.getBean( "ontologyService" );
-
-        this.diseaseOntologyService = this.ontologyService.getDiseaseOntologyService();
-        this.mammalianPhenotypeOntologyService = this.ontologyService.getMammalianPhenotypeOntologyService();
-        this.humanPhenotypeOntologyService = this.ontologyService.getHumanPhenotypeOntologyService();
+        // those services are specific to this type of evidence
         this.nifstdOntologyService = this.ontologyService.getNifstfOntologyService();
         this.obiService = this.ontologyService.getObiService();
         this.fmaOntologyService = this.ontologyService.getFmaOntologyService();
-
-        while ( this.diseaseOntologyService.isOntologyLoaded() == false ) {
-            wait( 1000 );
-            System.out.println( "waiting for Disease Ontology to load" );
-        }
-
-        while ( this.mammalianPhenotypeOntologyService.isOntologyLoaded() == false ) {
-            wait( 1000 );
-            System.out.println( "waiting for MP Ontology to load" );
-        }
-
-        while ( this.humanPhenotypeOntologyService.isOntologyLoaded() == false ) {
-            wait( 1000 );
-            System.out.println( "waiting for HP Ontology to load" );
-        }
 
         while ( this.obiService.isOntologyLoaded() == false ) {
             wait( 1000 );
@@ -197,184 +123,22 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
             System.out.println( "waiting for NIF Ontology to load" );
         }
 
-        while ( this.ontologyService.getFmaOntologyService().isOntologyLoaded() == false ) {
+        while ( this.fmaOntologyService.isOntologyLoaded() == false ) {
             wait( 1000 );
             System.out.println( "waiting for FMA Ontology to load" );
         }
     }
 
-    /** Take the file and transform it into an object structure for each line */
-    private Collection<ExpEvidenceLineInfo> file2Objects() throws IOException {
-
-        Collection<ExpEvidenceLineInfo> ExpEvidenceLineInfos = new ArrayList<ExpEvidenceLineInfo>();
-
-        BufferedReader br = new BufferedReader( new FileReader( this.inputFile ) );
-
-        String line;
-        int lineNumber = 0;
-
-        // for each line of the file
-        while ( ( line = br.readLine() ) != null ) {
-            lineNumber++;
-
-            if ( lineNumber != 1 ) {
-
-                System.out.println( "Creating object for line: " + lineNumber );
-                ExpEvidenceLineInfos.add( new ExpEvidenceLineInfo( line ) );
-            }
-        }
-
-        br.close();
-
-        return ExpEvidenceLineInfos;
-    }
-
     /**
-     * find the exact term of a search term in a Collection of Ontology terms
+     * search term in the obi Ontology
      * 
-     * @param ontologyTerms Collection of ontologyTerms
-     * @param search The value we are interested in finding
-     * @return OntologyTerm the exact match value found
+     * @throws Exception
      */
-    // TODO we dont need this part just use "" to find exact terms...
-    private OntologyTerm findExactTerm( Collection<OntologyTerm> ontologyTerms, String search ) {
-
-        // list of OntologyTerms found
-        Collection<OntologyTerm> ontologyKept = new HashSet<OntologyTerm>();
-        OntologyTerm termFound = null;
-
-        for ( OntologyTerm ot : ontologyTerms ) {
-            if ( ot.getLabel() != null ) {
-                if ( ot.getLabel().equalsIgnoreCase( search ) ) {
-                    ontologyKept.add( ot );
-                    termFound = ot;
-                }
-            }
-        }
-
-        // if we have more than 1 result, hardcode the one to choose
-        if ( ontologyKept.size() > 1 ) {
-
-            if ( search.equalsIgnoreCase( "juvenile" ) ) {
-
-                for ( OntologyTerm ontologyTerm : ontologyKept ) {
-                    if ( ontologyTerm.getUri().equalsIgnoreCase( "http://purl.org/obo/owl/PATO#PATO_0001190" ) ) {
-                        return ontologyTerm;
-                    }
-                }
-            } else if ( search.equalsIgnoreCase( "adult" ) ) {
-
-                for ( OntologyTerm ontologyTerm : ontologyKept ) {
-
-                    if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_681" ) ) {
-                        return ontologyTerm;
-                    }
-                }
-            } else if ( search.equalsIgnoreCase( "newborn" ) ) {
-
-                for ( OntologyTerm ontologyTerm : ontologyKept ) {
-
-                    if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_699" ) ) {
-                        return ontologyTerm;
-                    }
-                }
-            } else if ( search.equalsIgnoreCase( "prenatal" ) ) {
-
-                for ( OntologyTerm ontologyTerm : ontologyKept ) {
-
-                    if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_7014" ) ) {
-                        return ontologyTerm;
-                    }
-                }
-            } else if ( search.equalsIgnoreCase( "infant" ) ) {
-
-                for ( OntologyTerm ontologyTerm : ontologyKept ) {
-
-                    if ( ontologyTerm.getUri().equalsIgnoreCase(
-                            "http://ontology.neuinfo.org/NIF/BiomaterialEntities/NIF-Organism.owl#birnlex_695" ) ) {
-                        return ontologyTerm;
-                    }
-                }
-            }
-        }
-
-        if ( ontologyKept.size() > 1 ) {
-
-            System.err.println( "More than 1 term found for : " + search + "   " + ontologyKept.size() );
-        }
-
-        return termFound;
-    }
-
-    /** search phenotype term the diseaseOntology then hp, then mp */
-    private String phenotype2Ontology( ExpEvidenceLineInfo lineInfo, int index ) throws Exception {
-
-        String search = lineInfo.getPhenotype()[index];
-
-        // search disease
-        Collection<OntologyTerm> ontologyTerms = this.diseaseOntologyService.findTerm( "\"" + search + "\"" );
-
-        OntologyTerm ot = findExactTerm( ontologyTerms, search );
-
-        if ( ot != null ) {
-            lineInfo.getPhenotype()[index] = ot.getLabel();
-            return ot.getUri();
-        }
-
-        // search hp
-        ontologyTerms = this.humanPhenotypeOntologyService.findTerm( "\"" + search + "\"" );
-
-        ot = findExactTerm( ontologyTerms, search );
-
-        if ( ot != null ) {
-            lineInfo.getPhenotype()[index] = ot.getLabel();
-            return ot.getUri();
-        }
-
-        // search mamalian
-        ontologyTerms = this.mammalianPhenotypeOntologyService.findTerm( "\"" + search + "\"" );
-
-        ot = findExactTerm( ontologyTerms, search );
-
-        if ( ot != null ) {
-            lineInfo.getPhenotype()[index] = ot.getLabel();
-            return ot.getUri();
-        }
-
-        // all phenotypes must be find
-        System.err.println( "phenotype not found in disease, hp and mp Ontology : " + search );
-        return null;
-    }
-
-    /** search term in the obi Ontology */
-    private String obi2OntologyExperimentDesign( ExpEvidenceLineInfo lineInfo, int index ) {
-
-        String search = lineInfo.getExperimentDesign()[index];
-
-        // search disease
-        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( "\"" + search + "\"" );
-
-        OntologyTerm ot = findExactTerm( ontologyTerms, search );
-
-        if ( ot != null ) {
-            lineInfo.getExperimentDesign()[index] = ot.getLabel();
-            return ot.getUri();
-        }
-        System.out.println( "term not found in obi Ontology : " + search );
-        return null;
-
-    }
-
-    /** search term in the obi Ontology */
-    private String obi2OntologyExperimentOBI( ExpEvidenceLineInfo lineInfo, int index ) {
+    private String obi2OntologyExperimentOBI( ExpEvidenceLineInfo lineInfo, int index ) throws Exception {
 
         String search = lineInfo.getExperimentOBI()[index];
 
-        // search disease
-        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( "\"" + search + "\"" );
+        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( search );
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -384,15 +148,18 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         }
         System.out.println( "term not found in obi Ontology : " + search );
         return null;
-
     }
 
-    /** search term in the nifstd Ontology */
-    private String nifstd2Ontology( ExpEvidenceLineInfo lineInfo, int index ) {
+    /**
+     * search term in the nifstd Ontology
+     * 
+     * @throws Exception
+     */
+    private String nifstd2Ontology( ExpEvidenceLineInfo lineInfo, int index ) throws Exception {
 
         String search = lineInfo.getDevelopmentStage()[index];
 
-        Collection<OntologyTerm> ontologyTerms = this.nifstdOntologyService.findTerm( "\"" + search + "\"" );
+        Collection<OntologyTerm> ontologyTerms = this.nifstdOntologyService.findTerm( search );
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -405,12 +172,16 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
     }
 
-    /** search term in the fma Ontology */
-    private String fma2Ontology( ExpEvidenceLineInfo lineInfo, int index ) {
+    /**
+     * search term in the fma Ontology
+     * 
+     * @throws Exception
+     */
+    private String fma2Ontology( ExpEvidenceLineInfo lineInfo, int index ) throws Exception {
 
         String search = lineInfo.getOrganismPart()[index];
 
-        Collection<OntologyTerm> ontologyTerms = this.fmaOntologyService.findTerm( "\"" + search + "\"" );
+        Collection<OntologyTerm> ontologyTerms = this.fmaOntologyService.findTerm( search );
 
         OntologyTerm ot = findExactTerm( ontologyTerms, search );
 
@@ -423,16 +194,45 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
 
     }
 
+    /**
+     * search term in the obi Ontology
+     * 
+     * @throws Exception
+     */
+    private String obi2OntologyExperimentDesign( ExpEvidenceLineInfo lineInfo, int index ) throws Exception {
+
+        String search = lineInfo.getExperimentDesign()[index];
+
+        // search disease
+        Collection<OntologyTerm> ontologyTerms = this.obiService.findTerm( search );
+
+        OntologyTerm ot = findExactTerm( ontologyTerms, search );
+
+        if ( ot != null ) {
+            lineInfo.getExperimentDesign()[index] = ot.getLabel();
+            return ot.getUri();
+        }
+        System.out.println( "term not found in obi Ontology : " + search );
+        return null;
+
+    }
+
     /** change each line of the file by Ontology terms */
-    private void convertOntologiesTerms( Collection<ExpEvidenceLineInfo> ExpEvidenceLineInfos ) throws Exception {
+    private void convertExperimentalOntologiesTerms( Collection<ExpEvidenceLineInfo> expEvidenceLineInfos )
+            throws Exception {
+
+        // take care of the phenotype
+        super.convertOntologiesTerms( expEvidenceLineInfos );
+
+        // othr value are specific to this type of evidence
 
         int line = 1;
 
-        for ( ExpEvidenceLineInfo lineInfo : ExpEvidenceLineInfos ) {
+        for ( ExpEvidenceLineInfo lineInfo : expEvidenceLineInfos ) {
 
             line++;
 
-            System.out.println( "Treating Ontology terms for line: " + line );
+            System.out.println( "Treating Ontology terms for line (Not Phenotype): " + line );
 
             // The DevelopmentStage column get converted
             for ( int i = 0; i < lineInfo.getDevelopmentStage().length; i++ ) {
@@ -505,19 +305,59 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
                     lineInfo.addExperimentCharacteristic( characteristic );
                 }
             }
-
-            // The phenotype column
-            for ( int i = 0; i < lineInfo.getPhenotype().length; i++ ) {
-                if ( !lineInfo.getPhenotype()[i].equalsIgnoreCase( "" ) ) {
-
-                    String valueURI = phenotype2Ontology( lineInfo, i );
-
-                    CharacteristicValueObject phenotype = new CharacteristicValueObject( lineInfo.getPhenotype()[i],
-                            ExpEvidenceLineInfo.PHENOTYPE, valueURI, ExpEvidenceLineInfo.PHENOTYPE_ONTOLOGY );
-                    lineInfo.addPhenotype( phenotype );
-                }
-            }
         }
+    }
+
+    /**
+     * Step 6 populate the evidence and save it to the database calling the service
+     * 
+     * @throws Exception
+     */
+    private void createEvidenceInDatabase( Collection<ExpEvidenceLineInfo> linesFromFile ) throws Exception {
+
+        int evidenceNumber = 1;
+
+        // for each evidence found, we need to populate its evidenceObject and to call the service to save it
+        for ( ExpEvidenceLineInfo phenoAss : linesFromFile ) {
+
+            String description = phenoAss.getComment();
+            CharacteristicValueObject associationType = null;
+
+            if ( !phenoAss.getAssociationType().equalsIgnoreCase( "" ) ) {
+                // associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
+            }
+            String evidenceCode = phenoAss.getEvidenceCode();
+            String primaryPublicationPubmed = phenoAss.getPrimaryReferencePubmed();
+            String relevantPublicationPubmed = phenoAss.getReviewReferencePubmed();
+            Set<String> relevantPublicationsPubmed = new HashSet<String>();
+
+            if ( !relevantPublicationPubmed.equalsIgnoreCase( "" ) ) {
+
+                relevantPublicationsPubmed.add( relevantPublicationPubmed );
+            }
+
+            Set<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
+
+            Set<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
+
+            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType,
+                    new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
+                    relevantPublicationsPubmed, characteristics );
+
+            String geneId = phenoAss.getGeneID();
+
+            try {
+
+                this.phenotypeAssociationService.create( geneId, evidence );
+                System.out.println( "Evidence " + evidenceNumber + " created" );
+
+            } catch ( Exception e ) {
+                System.out.println( "Evidence " + evidenceNumber + " was NOT Created: " + e.getMessage() );
+                throw e;
+            }
+            evidenceNumber++;
+        }
+
     }
 
     /**
@@ -555,83 +395,30 @@ public class ExperimentalEvidenceLoaderCLI extends AbstractSpringAwareCLI {
         out.close();
     }
 
-    /**
-     * Step 5 check that all gene exists in Gemma
-     * 
-     * @throws Exception
-     */
-    private void verifyGeneIdExist( Collection<ExpEvidenceLineInfo> linesFromFile ) throws Exception {
+    /** Take the file and transform it into an object structure for each line */
+    private Collection<ExpEvidenceLineInfo> file2Objects() throws IOException {
 
-        int i = 0;
+        Collection<ExpEvidenceLineInfo> ExpEvidenceLineInfos = new ArrayList<ExpEvidenceLineInfo>();
 
-        for ( ExpEvidenceLineInfo lineInfo : linesFromFile ) {
+        BufferedReader br = new BufferedReader( new FileReader( this.inputFile ) );
 
-            i++;
+        String line;
+        int lineNumber = 0;
 
-            Gene gene = this.geneService.findByNCBIId( new Integer( lineInfo.getGeneID() ) );
+        // for each line of the file
+        while ( ( line = br.readLine() ) != null ) {
+            lineNumber++;
 
-            if ( gene == null ) {
-                System.err.println( "Gene not found in Gemma: " + lineInfo.getGeneID() + " Description: "
-                        + lineInfo.getComment() );
-            } else if ( !gene.getName().equalsIgnoreCase( lineInfo.getGeneName() ) ) {
-                System.err.println( "************Different Gene name found************" );
-                System.err.println( "LINE: " + i );
-                System.err.println( "Gene name in File: " + lineInfo.getGeneName() );
-                System.err.println( "Gene name in Gemma: " + gene.getName() );
-                System.err.println( "*************************************************" );
+            if ( lineNumber != 1 ) {
+
+                System.out.println( "Creating object for line: " + lineNumber );
+                ExpEvidenceLineInfos.add( new ExpEvidenceLineInfo( line ) );
             }
         }
+
+        br.close();
+
+        return ExpEvidenceLineInfos;
     }
 
-    /**
-     * Step 6 populate the evidence and save it to the database calling the service
-     * 
-     * @throws Exception
-     */
-    private void createEvidenceInDatabase( Collection<ExpEvidenceLineInfo> linesFromFile ) throws Exception {
-
-        int evidenceNumber = 1;
-
-        // for each evidence found, we need to populate its evidenceObject and to call the service to save it
-        for ( ExpEvidenceLineInfo phenoAss : linesFromFile ) {
-
-            String description = phenoAss.getComment();
-            CharacteristicValueObject associationType = null;
-
-            if ( !phenoAss.getAssociationType().equalsIgnoreCase( "" ) ) {
-                // associationType = new CharacteristicValueObject( "Association Type", phenoAss.getAssociationType() );
-            }
-            String evidenceCode = phenoAss.getEvidenceCode();
-            String primaryPublicationPubmed = phenoAss.getPrimaryReferencePubmed();
-            String relevantPublicationPubmed = phenoAss.getReviewReferencePubmed();
-            Set<String> relevantPublicationsPubmed = new HashSet<String>();
-
-            if ( !relevantPublicationPubmed.equalsIgnoreCase( "" ) ) {
-
-                relevantPublicationsPubmed.add( relevantPublicationPubmed );
-            }
-
-            Set<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
-
-            Set<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
-
-            EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType,
-                    new Boolean( phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes,
-                    primaryPublicationPubmed, relevantPublicationsPubmed, characteristics );
-
-            String geneId = phenoAss.getGeneID();
-
-            try {
-
-                this.phenotypeAssociationService.create( geneId, evidence );
-                System.out.println( "Evidence " + evidenceNumber + " created" );
-
-            } catch ( Exception e ) {
-                System.out.println( "Evidence " + evidenceNumber + " was NOT Created: " + e.getMessage() );
-                throw e;
-            }
-            evidenceNumber++;
-        }
-
-    }
 }

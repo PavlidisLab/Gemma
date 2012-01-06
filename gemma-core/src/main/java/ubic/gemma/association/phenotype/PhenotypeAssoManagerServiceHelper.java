@@ -250,13 +250,21 @@ public class PhenotypeAssoManagerServiceHelper {
                 values.add( characteristic.getValue() );
             }
 
-            for ( Characteristic cha : genericExp.getCharacteristics() ) {
-                if ( !values.contains( cha.getValue() ) ) {
-                    sameFound = false;
+            if ( values.size() != genericExp.getCharacteristics().size() ) {
+                sameFound = false;
+            } else {
+
+                for ( Characteristic cha : genericExp.getCharacteristics() ) {
+                    if ( !values.contains( cha.getValue() ) ) {
+                        sameFound = false;
+                    }
                 }
             }
 
+            // the Investigation is already present in the database so we can reuse it
             if ( sameFound ) {
+                System.out
+                        .println( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
                 genericExperiment = genericExp;
             }
         }
