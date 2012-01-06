@@ -48,7 +48,7 @@ public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
      * @see ubic.gemma.model.analysis.expression.PrincipalComponentAnalysis#getEigenvectorArrays()
      */
     @Override
-    public List<Double[]> getEigenvectorArrays() throws IllegalArgumentException{
+    public List<Double[]> getEigenvectorArrays() throws IllegalArgumentException {
         ByteArrayConverter bac = new ByteArrayConverter();
 
         List<Double[]> result = new ArrayList<Double[]>( this.getNumComponentsStored() );
@@ -56,7 +56,8 @@ public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
         Collection<BioAssay> bioAssays = this.getBioAssayDimension().getBioAssays();
 
         if ( bioAssays.size() != this.getNumComponentsStored() ) {
-           throw new IllegalArgumentException( "PCA: Number of components stored (" + this.getNumComponentsStored()
+            throw new IllegalArgumentException( "EE id = " + this.getExperimentAnalyzed().getId()
+                    + ", PCA: Number of components stored (" + this.getNumComponentsStored()
                     + ") does not match the number of bioAssays (" + bioAssays.size() + ")" );
         }
         for ( int i = 0; i < bioAssays.size(); i++ ) {

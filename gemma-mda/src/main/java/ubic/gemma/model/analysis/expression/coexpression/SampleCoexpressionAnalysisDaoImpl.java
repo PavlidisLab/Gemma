@@ -145,7 +145,7 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         try {
             rawMatrix = bac.byteArrayToDoubleMatrix( matrixBytes, numBa );
         } catch ( IllegalArgumentException e ) {
-            log.error( e.getMessage() );
+            log.error( "EE id = "+ee.getId()+": "+ e.getMessage() );
             return null;
         }
 
@@ -153,12 +153,12 @@ public class SampleCoexpressionAnalysisDaoImpl extends AbstractDao<SampleCoexpre
         try {
             result.setRowNames( bioAssays );
         } catch ( IllegalArgumentException e ) {
-            log.error( e.getLocalizedMessage() );
+            log.error( "EE id = "+ee.getId()+": "+ e.getLocalizedMessage() );
         }
         try {
             result.setColumnNames( bioAssays );
         } catch ( IllegalArgumentException e ) {
-            log.error( e.getLocalizedMessage() );
+            log.error( "EE id = "+ee.getId()+": "+ e.getLocalizedMessage() );
         }
 
         return result;

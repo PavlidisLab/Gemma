@@ -102,14 +102,14 @@ public class SVDValueObject implements Serializable {
     /**
      * @param pca
      */
-    public SVDValueObject( PrincipalComponentAnalysis pca ) throws Exception{
+    public SVDValueObject( PrincipalComponentAnalysis pca ) throws Exception {
         this.id = pca.getExperimentAnalyzed().getId();
 
         this.variances = pca.getVarianceFractions();
         List<Double[]> eigenvectorArrays;
-        try{
+        try {
             eigenvectorArrays = pca.getEigenvectorArrays();
-        }catch ( Exception e ){
+        } catch ( Exception e ) {
             throw e;
         }
         List<Long> bmids = new ArrayList<Long>();
@@ -125,7 +125,8 @@ public class SVDValueObject implements Serializable {
                 .size() );
 
         if ( this.bioMaterialIds.length != eigenvectorArrays.get( 0 ).length ) {
-            log.warn( "Biomaterials and eigenvectors are of different length: " + this.bioMaterialIds.length
+            log.warn( "EE id = " + pca.getExperimentAnalyzed().getId()
+                    + ": Biomaterials and eigenvectors are of different length: " + this.bioMaterialIds.length
                     + " != eigenvector len = " + eigenvectorArrays.get( 0 ).length );
         } else {
             this.vMatrix.setRowNames( Arrays.asList( getBioMaterialIds() ) );
