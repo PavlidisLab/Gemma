@@ -142,16 +142,13 @@ public class BioAssayServiceImpl extends ubic.gemma.model.expression.bioAssay.Bi
         currentBioAssays.remove( bioAssay );
         bioMaterial.setBioAssaysUsedIn( currentBioAssays );
 
+        this.getBioMaterialDao().update( bioMaterial );
         this.update( bioAssay );
 
         // check to see if the bioMaterial is now orphaned.
-        // if it is, delete it
-        // if not, update it
+        // if it is, delete it; if not, update it
         if ( currentBioAssays.size() == 0 ) {
             this.getBioMaterialDao().remove( bioMaterial );
-        } else {
-            // update bioMaterial
-            this.getBioMaterialDao().update( bioMaterial );
         }
 
     }

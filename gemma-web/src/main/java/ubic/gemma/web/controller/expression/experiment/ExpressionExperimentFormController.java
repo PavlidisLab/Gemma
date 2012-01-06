@@ -414,6 +414,9 @@ public class ExpressionExperimentFormController extends BaseFormController {
         // remove unnecessary biomaterial associations
         Collection<BioAssay> deleteKeys = deleteAssociations.keySet();
         for ( BioAssay assay : deleteKeys ) {
+            /*
+             * BUG: if this fails, we end up with a useless extra biomaterial associated with the bioassay.
+             */
             bioAssayService.removeBioMaterialAssociation( assay, deleteAssociations.get( assay ) );
         }
 
