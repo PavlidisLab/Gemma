@@ -134,6 +134,7 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 	makeHeaderRow : function () {
 		var row = [];		
 		row.push ("Gene");
+		row.push ("Meta p-value")
 		for (var i = 0; i < this.conditions.items.length; i++) {		
 			var condition = this.conditions.items[0];
 				row.push ("'"+condition.contrastFactorValue + " vs " + condition.baselineFactorValue + " : " + condition.datasetShortName+"'");				
@@ -141,20 +142,45 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 		return row.join('\t')+"\n";		
 	},
 	
+	makeOraRow : function () {
+		var row = [];		
+		row.push ("ORA p-value");
+		row.push ("NA")
+		for (var i = 0; i < this.conditions.items.length; i++) {		
+			var condition = this.conditions.items[0];
+				row.push (condition.ora);				
+		}
+		return row.join('\t')+"\n";				
+	},
+
 	makeGeneRow : function (gene) {
 		var row = [];		
 		row.push (gene.name);
+		row.push (gene.metaPvalue);
 		for (var i = 0; i < this.conditions.items.length; i++) {		
 			var condition = this.conditions.items[i];
 			var cell = this.cells.getCell (gene, condition);
-			if (cell === null) {				
+			if (cell === null || cell.isProbeMissing) {				
 				row.push ("NA");
 			} else {
-				if (this.isPvalue) {
-					row.push (cell.pValue);
-				} else {
-					row.push (cell.logFoldChange);
-				}
+				row.push (cell.pValue);
+			}
+		}
+		return row.join('\t')+"\n";
+	},
+
+	
+	makeGeneRowFoldChange : function (gene) {
+		var row = [];		
+		row.push (gene.name);
+		row.push (gene.metaPvalue);
+		for (var i = 0; i < this.conditions.items.length; i++) {		
+			var condition = this.conditions.items[i];
+			var cell = this.cells.getCell (gene, condition);
+			if (cell === null || cell.isProbeMissing) {				
+				row.push ("NA");
+			} else {
+				row.push (cell.logFoldChange);
 			}
 		}
 		return row.join('\t')+"\n";
@@ -171,13 +197,24 @@ Gemma.Metaheatmap.DownloadWindow = Ext.extend (Ext.Window, {
 				   '# Fields are separated by tabs and delimited with double quotes\n'+
 				   '# \n';
 		
+		text += "P values. \n\n";
 		text += this.makeHeaderRow ();
+		text += this.makeOraRow ();
 		
 		for (var i = 0; i < this.genes.items.length; i++) {		
 			var gene = this.genes.items[i];
 			text += this.makeGeneRow (gene);
 		}
 
+		text += "\n\n\n";
+		text += "Log fold change values. \n\n";
+		
+		text += this.makeHeaderRow ();
+		for (var i = 0; i < this.genes.items.length; i++) {		
+			var gene = this.genes.items[i];
+			text += this.makeGeneRowFoldChange (gene);
+		}
+		
 		this.show();
 		this.textAreaPanel.update({
 			text: text
