@@ -620,17 +620,16 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      * 
      * @param geneNCBI the gene chosen by the user
      * @param phenotypes, the phenotpes chosen by the user
-     * @param bibliographicReferenceValueObject, for a given pubmed, the phenotypeAssociation for that pubmed
+     * @param bibliographicReferences, The gene to phenotype association for a given pubmed
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
     @Override
     public ValidateEvidenceValueObject validateEvidence( String geneNCBI, Set<CharacteristicValueObject> phenotypes,
-            BibliographicReferenceValueObject bibliographicReferenceValueObject ) {
+            Collection<BibliographicPhenotypesValueObject> bibliographicReferences ) {
 
         ValidateEvidenceValueObject validateEvidenceValueObject = new ValidateEvidenceValueObject();
 
-        for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
-                .getBibliographicPhenotypes() ) {
+        for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferences ) {
 
             // look if the gene have already been annotated
             if ( geneNCBI.equalsIgnoreCase( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {

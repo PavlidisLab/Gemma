@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
@@ -131,10 +132,10 @@ public interface PhenotypeAssociationManagerService {
      * 
      * @param geneNCBI the gene chosen by the user
      * @param phenotypes, the phenotpes chosen by the user
-     * @param bibliographicReferenceValueObject, for a given pubmed, the phenotypeAssociation for that pubmed
+     * @param bibliographicReferences, The gene to phenotype association for a given pubmed
      * @return ValidateEvidenceValueObject flags of information to show user messages
      */
-    public ValidateEvidenceValueObject validateEvidence( String string, Set<CharacteristicValueObject> phenotypes,
-            BibliographicReferenceValueObject bibliographicReferenceValueObject );
+    public ValidateEvidenceValueObject validateEvidence( String geneNCBI, Set<CharacteristicValueObject> phenotypes,
+            Collection<BibliographicPhenotypesValueObject> bibliographicReferences );
 
 }
