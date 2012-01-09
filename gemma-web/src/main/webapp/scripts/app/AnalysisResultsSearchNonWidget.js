@@ -184,7 +184,7 @@ Ext.onReady(function() {
 				currentResultsStringency: searchPanel.getLastCoexpressionSearchCommand().stringency,
 				initialDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency,
 				coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
-				currentSpinnerValue: searchPanel.getLastCoexpressionSearchCommand().displayStringency
+				lastSpinnerValue: searchPanel.getLastCoexpressionSearchCommand().displayStringency
 			
 			});
 			
