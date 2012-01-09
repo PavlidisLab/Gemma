@@ -149,7 +149,8 @@ public class GenePickerController {
             } else {
                 GeneSet goSet = this.geneSetSearch.findByGoId( goId, taxon );
                 if ( goSet == null ) {
-                    throw new IllegalArgumentException( "No matching gene set found for: " + goId );
+                    log.warn( "No matching gene set found for: " + goId );
+                    return null;
                 }
                 GOGroupValueObject ggvo = new GOGroupValueObject( goSet, goId, goId );
                 ggvo.setTaxonId( taxon.getId() );
