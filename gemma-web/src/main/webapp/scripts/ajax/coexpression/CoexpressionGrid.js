@@ -385,7 +385,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds, true);
                     	
                     }
-                    this.currentSpinnerValue = spinner.getValue();
+                    this.lastSpinnerValue = spinner.getValue();
                     
 
                 } else {
@@ -453,7 +453,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     	
                     }
                     
-                    this.currentSpinnerValue = spinner.getValue();
+                    this.lastSpinnerValue = spinner.getValue();
                     
 
                 }else {
@@ -485,7 +485,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                                 	
 
                                 } else {
-                                    spinner.setValue(this.currentSpinnerValue);
+                                    spinner.setValue(this.lastSpinnerValue);
                                 }
                             }.createDelegate(this), scope:this});
                 	
@@ -528,7 +528,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 			this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
 			
 		}
-		this.currentSpinnerValue = stringency;
+		this.lastSpinnerValue = stringency;
 		
 		var filteredData;
 		//filter away non-query genes
@@ -1174,7 +1174,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             resultsStringency = displayStringency - Math.round(displayStringency / 4);
         }
         
-        this.cytoscapeRef.currentSpinnerValue = spinner.getValue();
+        this.cytoscapeRef.lastSpinnerValue = spinner.getValue();
     	this.cytoscapeRef.getTopToolbar().getComponent('stringencySpinner').setValue(spinner.getValue());
 
         Ext.apply(
@@ -1205,14 +1205,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
     },
     
     regularSearch: function (){
- 
-    	//this stuff to 
-    	/*
-    	vis.panelRef.getBottomToolbar().hide();
-    	vis.panelRef.doLayout();
-    	
-    	vis.panelRef.currentSpinnerValue = spinner.getValue();
-    	*/
 
         var displayStringency = this.getTopToolbar().getComponent('stringencySpinner').getValue();
         var resultsStringency = 2;

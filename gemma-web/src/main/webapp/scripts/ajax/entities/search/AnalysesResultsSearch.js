@@ -274,7 +274,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			currentResultsStringency: searchForm.getLastCoexpressionSearchCommand().stringency,
 			initialDisplayStringency: searchForm.getLastCoexpressionSearchCommand().displayStringency,
 			coexCommand: searchForm.getLastCoexpressionSearchCommand(),
-			currentSpinnerValue: searchForm.getLastCoexpressionSearchCommand().displayStringency
+			lastSpinnerValue: searchForm.getLastCoexpressionSearchCommand().displayStringency
 			
 		});
 		
