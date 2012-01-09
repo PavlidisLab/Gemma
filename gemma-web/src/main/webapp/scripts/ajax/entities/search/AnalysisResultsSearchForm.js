@@ -23,6 +23,32 @@ Gemma.MAX_EXPERIMENTS_CO_DIFF_EX_VIZ_QUERY = 100000; // effectively no limit
  */
 Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 
+
+	exampleQueries:{
+		diffEx: [{
+			goId: "GO_0021766",
+			eeSetId: '6112',
+			taxonId: '1',
+			backupGeneIds : [175764, 57412, 33449, 22652, 172517, 365527, 154351, 164380, 163012, 36178, 258329, 325340, 119501, 161166, 169774, 43145, 12948, 74699, 203063, 120960, 33479, 322804, 88959, 12966, 7187, 136503, 33369, 57883, 73088, 174546, 74174, 57397, 36158]
+		},{
+			goId: "GO_0021879",
+			eeSetId: '6110',
+			taxonId: '2',
+			backupGeneIds : [500611, 534025, 574982, 633950, 550316, 534368, 537487, 574759, 556740, 583115, 634211, 534401, 500595]
+		}],
+		coex:[{
+			goId: "GO_0051302",
+			eeSetId: '6115',
+			taxonId: '11',
+			backupGeneIds : [7678763, 7678783, 7676882, 7694443, 7685764, 7667629, 7672893, 7673265, 7686100, 7697083, 7670169, 7692953]
+		},{
+			goId: "GO_0035418",
+			eeSetId: '737',
+			taxonId: '1',
+			backupGeneIds : [269935, 194669, 232747, 36104, 316763]
+			}]
+	},
+
 	// collapsible:true,
 	layout : 'table',
 	layoutConfig : {
@@ -1241,11 +1267,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx1TT,
 							listeners: {
 								click: function(){
-									var goName = "GO_0021766";
-									//var goName = "GO_0045208";
-									var eeSetId = '6112';
-									var taxonId = '1';
-									this.runExampleQuery(eeSetId, goName, taxonId);
+									this.runExampleQuery(this.exampleQueries.diffEx[0]);
 								},
 								scope: this
 							}
@@ -1257,10 +1279,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.diffEx2TT,
 							listeners: {
 								click: function(){
-									var goName = "GO_0021879";
-									var eeSetId = '6110';
-									var taxonId = '2';
-									this.runExampleQuery(eeSetId, goName, taxonId);
+									this.runExampleQuery(this.exampleQueries.diffEx[1]);
 								},
 								scope: this
 							}
@@ -1277,10 +1296,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex1TT,
 							listeners: {
 								click: function(){
-									var goName = "GO_0051302";
-									var eeSetId = '6115';
-									var taxonId = '11';
-									this.runExampleQuery(eeSetId, goName, taxonId);
+									this.runExampleQuery(this.exampleQueries.coex[0]);
 								},
 								scope: this
 							}
@@ -1293,10 +1309,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 //							tooltip: Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.Examples.coex2TT,
 //							listeners: {
 //								click: function(){
-//									var goName = "GO_0035418";
-//									var eeSetId = '737';
-//									var taxonId = '1';
-//									this.runExampleQuery(eeSetId, goName, taxonId);
+//									this.runExampleQuery(this.exampleQueries.coex[1]);
 //								},
 //								scope: this
 //							}
@@ -1654,40 +1667,50 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	 * set the gene chooser to have chosen a go group and show its preview
 	 * @param geneSetId must be a valid id for a database-backed gene set
 	 */
-	addGOGeneSet: function( goName, taxonId ){
-
+	addGOGeneSet: function(goName, taxonId, backupGeneIds){
+	
 		// get the chooser to inject
 		var chooser = this.geneChoosers.getComponent(0);
 		this.addGeneChooser();
 		var myscope = this;
-					
+		
 		// make a gene combo record for the db-backed experimentSetValueObject
-		GenePickerController.getGeneSetByGOId( goName, taxonId , function(geneSet){
+		GenePickerController.getGeneSetByGOId(goName, taxonId, function(geneSet){
+		
+			// if the GO id failed to match a set, use the hard coded back up list of genes
+			// (this might happen if Berkeleybop is down, see bug 2534)
+			if ( geneSet === null) {
+				geneSet = chooser.makeSessionBoundGeneSet(backupGeneIds, taxonId, 'Backup gene list for '+goName, 'GO database unavailable, using backup list');
+			}
 			
 			var record = new Gemma.GeneAndGeneGroupComboRecord({
-				name : geneSet.name,
+				name: geneSet.name,
 				description: geneSet.descrption,
-				isGroup : true,
+				isGroup: true,
 				size: geneSet.geneIds.length,
-				taxonId : geneSet.taxonId,
-				taxonName :geneSet.taxonName,
-				memberIds : geneSet.geneIds,
-				resultValueObject : geneSet,
+				taxonId: geneSet.taxonId,
+				taxonName: geneSet.taxonName,
+				memberIds: geneSet.geneIds,
+				resultValueObject: geneSet,
 				comboText: geneSet.name + ": " + geneSet.description,
-				userOwned : false
+				userOwned: false
 			});
-		
 			// get the chooser's gene combo
 			var geneCombo = chooser.geneCombo;
 			
 			// tell gene combo the GO group was selected
 			geneCombo.fireEvent('select', geneCombo, record, 0);
-			
 			myscope.fireEvent('geneExampleReady');
+			
 		});
 	},
 	
-	runExampleQuery: function(eeSetId, goName, taxonId){
+	runExampleQuery: function(exampleConfig){
+		
+		var goName = exampleConfig.goId;
+		var eeSetId = exampleConfig.eeSetId;
+		var taxonId = exampleConfig.taxonId;
+		var backupGeneIds = exampleConfig.backupGeneIds;
 		
 		if (!this.loadMask) {
 			this.loadMask = new Ext.LoadMask(this.getEl(), {
@@ -1704,7 +1727,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		this.addExperimentSet(eeSetId);
 		// set the gene chooser
-		this.addGOGeneSet(goName, taxonId);
+		this.addGOGeneSet(goName, taxonId, backupGeneIds);
 		
 		var queryRun = false;
 		var geneExampleReady = false;

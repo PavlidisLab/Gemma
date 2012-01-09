@@ -67,7 +67,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			var queryToGetSelected = "";
 			if (this.isGeneSet && this.selectedGeneSetValueObject instanceof GOGroupValueObject && this.name.match(/^GO_\d+/)) {
 				queryToGetSelected = "taxon:"+taxonId+";GO:"+name;
-			}else if(this.isGeneSet && resultValueObject instanceof FreeTextGeneResultsValueObject && name.indexOf(query)!=-1){
+			}else if(this.isGeneSet && this.selectedGeneSetValueObject instanceof FreeTextGeneResultsValueObject && name.indexOf(query)!=-1){
 				queryToGetSelected = "taxon:"+taxonId+";query:"+query;
 			}
 			this.queryUsedToGetSessionGroup = queryToGetSelected;
@@ -103,7 +103,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 	 * @param geneIds
 	 *            an array of geneIds to use
 	 */
-	loadGenes : function(ids) {
+	loadGenes : function(ids, taxonId) {
 
 		this.preview.mask();
 
@@ -112,7 +112,28 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.searchForm.geneIds = ids;
 		// load the preview
 		this.preview.loadGenePreviewFromIds(ids);
+		this.preview.on('previewLoaded', function(genes){
+			var geneSet = this.makeSessionBoundGeneSet(ids, taxonId, 'Backup GO group', 'GO database unavailable, using backup list');
+			this.fireEvent('previewLoaded', geneSet);
+		},this);
 
+	},
+	
+	makeSessionBoundGeneSet: function(geneIds, taxonId, name, description){
+		this.searchForm.geneIds = geneIds;
+		this.geneIds = geneIds;
+		var newGeneSet = new SessionBoundGeneSetValueObject();
+		newGeneSet.modified = false;
+		newGeneSet.geneIds = geneIds;
+		newGeneSet.taxonId = taxonId;
+		newGeneSet.name = name,//'From Symbol List';
+		newGeneSet.description = description, // 'Group made from gene symbols entered.';
+		newGeneSet.size = geneIds.length;
+		newGeneSet.id = null;
+		this.selectedGeneOrGroup = newGeneSet;
+		this.selectedGeneOrGroup.memberIds = geneIds;
+		this.selectedGeneOrGroup.resultValueObject = newGeneSet;
+		return newGeneSet;
 	},
 
 	/**
@@ -188,17 +209,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 
 				this.searchForm.geneIds = geneIds;
 				this.geneIds = geneIds;
-				var newGeneSet = new SessionBoundGeneSetValueObject();
-				newGeneSet.modified = false;
-				newGeneSet.geneIds = geneIds;
-				newGeneSet.taxonId = taxonId;
-				newGeneSet.name = 'From Symbol List';
-				newGeneSet.description = 'Group made from gene symbols entered.';
-				newGeneSet.size = geneIds.length;
-				newGeneSet.id = null;
-				this.selectedGeneOrGroup = newGeneSet;
-				this.selectedGeneOrGroup.memberIds = geneIds;
-				this.selectedGeneOrGroup.resultValueObject = newGeneSet;
+				
+				this.makeSessionBoundGeneSet(geneIds, taxonId, 'From Symbol List', 'Group made from gene symbols entered.');
 
 				// if some genes weren't found or some gene matches were
 				// inexact,

@@ -30,6 +30,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 		GenePickerController.getGenes(previewIds, function(genes){
 			//this.unmask();
 			this.loadPreview(genes, ids.length);
+			this.fireEvent('previewLoaded', genes);
 		}.createDelegate(this));
 	},
 	
