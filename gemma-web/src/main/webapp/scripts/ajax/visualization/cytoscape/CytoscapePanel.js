@@ -464,9 +464,7 @@ Ext.Panel, {
                     var displayStringency = spinner.getValue();
                     var resultsStringency = 2;
 
-                    if (displayStringency > 5) {
-                        resultsStringency = displayStringency - Math.round(displayStringency / 4);
-                    }
+                    resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);
 
                     Ext.apply(
                     this.coexCommand, {
@@ -511,9 +509,7 @@ Ext.Panel, {
                 var displayStringency = spinner.getValue();
                 var resultsStringency = 2;
 
-                if (displayStringency > 5) {
-                    resultsStringency = displayStringency - Math.round(displayStringency / 4);
-                }
+                resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);
 
                 var selectedNodesGeneIdArray = [];
                 var sNodesLength = selectedNodes.length;
@@ -559,13 +555,10 @@ Ext.Panel, {
 
                 if (this.currentQueryGeneIds.length + selectedNodes.length <= Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY) {
 
-                    var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                    var displayStringency = spinner.getValue();
+                    var displayStringency = this.getTopToolbar().getComponent('stringencySpinner');
                     var resultsStringency = 2;
 
-                    if (displayStringency > 5) {
-                        resultsStringency = displayStringency - Math.round(displayStringency / 4);
-                    }
+                    resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);                   
 
                     var extendedNodesGeneIdArray = [];
                     var sNodesLength = selectedNodes.length;
@@ -598,14 +591,11 @@ Ext.Panel, {
 
                     Ext.Msg.confirm(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTitle, String.format(Gemma.HelpText.WidgetDefaults.CytoscapePanel.searchStatusTooManyReduce, Gemma.MAX_GENES_PER_CO_EX_VIZ_QUERY), function (btn) {
 
-                        if (btn == 'yes') {
-                            var spinner = this.getTopToolbar().getComponent('stringencySpinner');
-                            var displayStringency = spinner.getValue();
+                        if (btn == 'yes') {                            
+                            var displayStringency = this.getTopToolbar().getComponent('stringencySpinner');
                             var resultsStringency = 2;
 
-                            if (displayStringency > 5) {
-                                resultsStringency = displayStringency - Math.round(displayStringency / 4);
-                            }
+                            resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency); 
 
                             var extendedNodesGeneIdArray = [];
                             var sNodesLength = selectedNodes.length;

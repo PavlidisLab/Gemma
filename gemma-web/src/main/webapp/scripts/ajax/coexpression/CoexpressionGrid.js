@@ -362,7 +362,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 		
-		if (this.getTopToolbar() && !this.getTopToolbar().getComponent('stringencySpinner').hasListener('spin')) {
+		
 
             this.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
 
@@ -426,9 +426,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             }, this);
 
 
-        }
+        
 		
-		if (this.getTopToolbar() && !this.getTopToolbar().getComponent('stringencySpinner').hasListener('specialkey')) {
+		
 
             this.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
             	
@@ -496,7 +496,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             }, this);
 
             
-        }
+        
 		
 		
 	},
@@ -1170,9 +1170,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
         var displayStringency = spinner.getValue();
         var resultsStringency = 2;
 
-        if (displayStringency > 5) {
-            resultsStringency = displayStringency - Math.round(displayStringency / 4);
-        }
+        resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);
         
         this.cytoscapeRef.lastSpinnerValue = spinner.getValue();
     	this.cytoscapeRef.getTopToolbar().getComponent('stringencySpinner').setValue(spinner.getValue());
@@ -1209,9 +1207,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
         var displayStringency = this.getTopToolbar().getComponent('stringencySpinner').getValue();
         var resultsStringency = 2;
 
-        if (displayStringency > 5) {
-            resultsStringency = displayStringency - Math.round(displayStringency / 4);
-        }
+        resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency); 
         
         this.currentResultsStringency = resultsStringency;
 		this.initialDisplayStringency= displayStringency

@@ -65,3 +65,14 @@ Gemma.CytoscapePanelUtil.nodeDegreeBinMapper = function (nodeDegree) {
      * 
      */
 };
+
+Gemma.CytoscapePanelUtil.restrictResultsStringency = function (displayStringency) {
+	
+	 if (displayStringency > 5) {
+         return displayStringency - Math.round(displayStringency / 4);
+     }
+	 
+	 return 2;
+	
+	
+};
