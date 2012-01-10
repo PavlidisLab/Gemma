@@ -28,7 +28,7 @@ public class BibliographicPhenotypesValueObject {
 
     public BibliographicPhenotypesValueObject( PhenotypeAssociation phenotypeAssociation ) {
         super();
-        this.geneNCBI = phenotypeAssociation.getGene().getNcbiId();
+        this.geneNCBI = phenotypeAssociation.getGene().getNcbiGeneId().toString();
         this.geneName = phenotypeAssociation.getGene().getName();
         for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
             this.phenotypesValues.add( new CharacteristicValueObject( ( VocabCharacteristic ) cha ) );
