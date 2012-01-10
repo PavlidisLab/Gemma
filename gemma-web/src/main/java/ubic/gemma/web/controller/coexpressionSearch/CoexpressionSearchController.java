@@ -171,7 +171,7 @@ public class CoexpressionSearchController extends BaseFormController {
             stringencyTrimLimit=1400;
         }
 
-        int resultsLimit = 700;
+        int resultsLimit = 850;
         
         boolean displayInfo = false;
         int displayTrimmedStringency = 0;
