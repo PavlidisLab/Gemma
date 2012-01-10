@@ -675,7 +675,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     for ( CharacteristicValueObject characteristicValueObject : evidence.getPhenotypes() ) {
 
                         if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
-                            validateEvidenceValueObject.setSameGeneAndChildOrParent( true );
+                            validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
                         }
                     }
                 }
