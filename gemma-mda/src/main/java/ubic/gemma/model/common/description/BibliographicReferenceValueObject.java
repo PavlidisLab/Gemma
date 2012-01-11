@@ -83,7 +83,7 @@ public class BibliographicReferenceValueObject {
     private Collection<String> meshTerms;
     private Collection<String> chemicalsTerms;
     
-    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes;
+    private Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes = new HashSet<BibliographicPhenotypesValueObject>();
 
     public BibliographicReferenceValueObject() {
         super();
@@ -357,7 +357,7 @@ public class BibliographicReferenceValueObject {
     }
 
     public Collection<BibliographicPhenotypesValueObject> getBibliographicPhenotypes() {
-        return bibliographicPhenotypes;
+        return this.bibliographicPhenotypes;
     }
 
     public void setBibliographicPhenotypes( Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypes ) {
