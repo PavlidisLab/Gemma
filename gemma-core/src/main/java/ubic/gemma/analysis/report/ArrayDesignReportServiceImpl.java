@@ -320,8 +320,15 @@ public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
         adVo.setNumGenes( Long.toString( numGenes ) );
         adVo.setDateCached( timestamp );
 
-        String reportFileName = HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR + File.separatorChar
-                + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "." + adVo.getId();
+        // check the directory exists.
+        String reportDir = HOME_DIR + File.separatorChar + ARRAY_DESIGN_REPORT_DIR;
+        File reportDirF = new File( reportDir );
+        if ( !reportDirF.exists() ) {
+            reportDirF.mkdirs();
+        }
+
+        String reportFileName = reportDir + File.separatorChar + ARRAY_DESIGN_REPORT_FILE_NAME_PREFIX + "."
+                + adVo.getId();
 
         try {
             // remove old file first (possible todo: don't do this until after new file is okayed - maybe this delete
