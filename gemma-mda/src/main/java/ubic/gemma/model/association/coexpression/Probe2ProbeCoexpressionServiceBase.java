@@ -23,12 +23,11 @@ import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEventDao;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
- * <p>
- * Spring Service base class for <code>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService</code>,
+ * Service base class for <code>ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService</code>,
  * provides access to all services and entities referenced by this service.
- * </p>
  * 
  * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService
  * @version $Id$
@@ -70,7 +69,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
         }
     }
 
-    public void delete( final java.util.Collection p2pExpressions ) {
+    public void delete( final java.util.Collection<? extends Probe2ProbeCoexpression> p2pExpressions ) {
         try {
             this.handleRemove( p2pExpressions );
         } catch ( Throwable th ) {
@@ -114,8 +113,9 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, boolean)
      */
-    public java.util.Collection getExpressionExperimentsLinkTestedIn( final ubic.gemma.model.genome.Gene gene,
-            final java.util.Collection expressionExperiments, final boolean filterNonSpecific ) {
+    public java.util.Collection<BioAssaySet> getExpressionExperimentsLinkTestedIn(
+            final ubic.gemma.model.genome.Gene gene,
+            final java.util.Collection<? extends BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
         try {
             return this.handleGetExpressionExperimentsLinkTestedIn( gene, expressionExperiments, filterNonSpecific );
         } catch ( Throwable th ) {
@@ -129,9 +129,9 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene,
      *      java.util.Collection, java.util.Collection, boolean)
      */
-    public java.util.Map getExpressionExperimentsLinkTestedIn( final ubic.gemma.model.genome.Gene geneA,
-            final java.util.Collection genesB, final java.util.Collection expressionExperiments,
-            final boolean filterNonSpecific ) {
+    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsLinkTestedIn(
+            final ubic.gemma.model.genome.Gene geneA, final java.util.Collection<Long> genesB,
+            final java.util.Collection<? extends BioAssaySet> expressionExperiments, final boolean filterNonSpecific ) {
         try {
             return this.handleGetExpressionExperimentsLinkTestedIn( geneA, genesB, expressionExperiments,
                     filterNonSpecific );
@@ -146,8 +146,9 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getExpressionExperimentsTestedIn(java.util.Collection,
      *      java.util.Collection, boolean)
      */
-    public java.util.Map getExpressionExperimentsTestedIn( final java.util.Collection geneIds,
-            final java.util.Collection experiments, final boolean filterNonSpecific ) {
+    public java.util.Map<Long, Collection<BioAssaySet>> getExpressionExperimentsTestedIn(
+            final java.util.Collection<Long> geneIds, final java.util.Collection<? extends BioAssaySet> experiments,
+            final boolean filterNonSpecific ) {
         try {
             return this.handleGetExpressionExperimentsTestedIn( geneIds, experiments, filterNonSpecific );
         } catch ( Throwable th ) {
@@ -177,7 +178,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#getProbeCoExpression(ubic.gemma.model.expression.experiment.ExpressionExperiment,
      *      java.lang.String, boolean)
      */
-    public java.util.Collection getProbeCoExpression(
+    public java.util.Collection<ProbeLink> getProbeCoExpression(
             final ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment,
             final java.lang.String taxon, final boolean useWorkingTable ) {
         try {
@@ -193,7 +194,7 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * @see ubic.gemma.model.association.coexpression.Probe2ProbeCoexpressionService#prepareForShuffling(java.util.Collection,
      *      java.lang.String, boolean)
      */
-    public void prepareForShuffling( final java.util.Collection ees, final java.lang.String taxon,
+    public void prepareForShuffling( final java.util.Collection<BioAssaySet> ees, final java.lang.String taxon,
             final boolean filterNonSpecific ) {
         try {
             this.handlePrepareForShuffling( ees, taxon, filterNonSpecific );
@@ -242,24 +243,26 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * Performs the core logic for
      * {@link #getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene, java.util.Collection, boolean)}
      */
-    protected abstract java.util.Collection handleGetExpressionExperimentsLinkTestedIn(
-            ubic.gemma.model.genome.Gene gene, java.util.Collection expressionExperiments, boolean filterNonSpecific )
-            throws java.lang.Exception;
+    protected abstract java.util.Collection<BioAssaySet> handleGetExpressionExperimentsLinkTestedIn(
+            ubic.gemma.model.genome.Gene gene, java.util.Collection<? extends BioAssaySet> expressionExperiments,
+            boolean filterNonSpecific ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getExpressionExperimentsLinkTestedIn(ubic.gemma.model.genome.Gene, java.util.Collection, java.util.Collection, boolean)}
      */
-    protected abstract java.util.Map handleGetExpressionExperimentsLinkTestedIn( ubic.gemma.model.genome.Gene geneA,
-            java.util.Collection genesB, java.util.Collection expressionExperiments, boolean filterNonSpecific )
+    protected abstract java.util.Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsLinkTestedIn(
+            ubic.gemma.model.genome.Gene geneA, java.util.Collection<Long> genesB,
+            java.util.Collection<? extends BioAssaySet> expressionExperiments, boolean filterNonSpecific )
             throws java.lang.Exception;
 
     /**
      * Performs the core logic for
      * {@link #getExpressionExperimentsTestedIn(java.util.Collection, java.util.Collection, boolean)}
      */
-    protected abstract java.util.Map handleGetExpressionExperimentsTestedIn( java.util.Collection geneIds,
-            java.util.Collection experiments, boolean filterNonSpecific ) throws java.lang.Exception;
+    protected abstract java.util.Map<Long, Collection<BioAssaySet>> handleGetExpressionExperimentsTestedIn(
+            java.util.Collection<Long> geneIds, java.util.Collection<? extends BioAssaySet> experiments,
+            boolean filterNonSpecific ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for
@@ -273,17 +276,17 @@ public abstract class Probe2ProbeCoexpressionServiceBase implements
      * Performs the core logic for
      * {@link #getProbeCoExpression(ubic.gemma.model.expression.experiment.ExpressionExperiment, java.lang.String, boolean)}
      */
-    protected abstract java.util.Collection handleGetProbeCoExpression(
+    protected abstract java.util.Collection<ProbeLink> handleGetProbeCoExpression(
             ubic.gemma.model.expression.experiment.ExpressionExperiment expressionExperiment, java.lang.String taxon,
             boolean useWorkingTable ) throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #prepareForShuffling(java.util.Collection, java.lang.String, boolean)}
      */
-    protected abstract void handlePrepareForShuffling( java.util.Collection ees, java.lang.String taxon,
+    protected abstract void handlePrepareForShuffling( java.util.Collection<BioAssaySet> ees, java.lang.String taxon,
             boolean filterNonSpecific ) throws java.lang.Exception;
 
-    protected abstract void handleRemove( Collection expressions );
+    protected abstract void handleRemove( Collection<? extends Probe2ProbeCoexpression> expressions );
 
     protected abstract void handleRemove( Probe2ProbeCoexpression p2p );
 

@@ -362,7 +362,7 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
         if ( associationName.equals( "CompositeGroups" ) ) {
             assert associatedObject instanceof List;
-            specialConvertCompositeGroups( ( List ) associatedObject, gemmaObj );
+            specialConvertCompositeGroups( ( List<CompositeGroup> ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "DesignProviders" ) ) {
             assert associatedObject instanceof List;
         } else if ( associationName.equals( "FeatureGroups" ) ) {
@@ -454,7 +454,7 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "Accessions" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "PubAccession" );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "PubAccession" );
         } else if ( associationName.equals( "Parameters" ) ) {
             // no-op, we don't support.
         } else {
@@ -683,9 +683,7 @@ public class MageMLConverterHelper {
 
         }
         if ( log.isDebugEnabled() )
-            log
-                    .debug( resultBioAssayDimension.getBioAssays().size() + " bioassays in dimension "
-                            + bad.getIdentifier() );
+            log.debug( resultBioAssayDimension.getBioAssays().size() + " bioassays in dimension " + bad.getIdentifier() );
         return resultBioAssayDimension;
     }
 
@@ -809,7 +807,7 @@ public class MageMLConverterHelper {
         assert mageObj != null;
         if ( associationName.equals( "Characteristics" ) ) {
             // specialConvertBioMaterialBioCharacteristics( mageObj, gemmaObj );
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "MaterialType" ) ) { // characteristic
             simpleFillIn( associatedObject, gemmaObj, getter, "MaterialType", Characteristic.class );
         } else if ( associationName.equals( "QualityControlStatistics" ) ) {
@@ -819,7 +817,7 @@ public class MageMLConverterHelper {
             assert associatedObject instanceof List;
             // specialConvertBioMaterialTreatmentAssociations(
             // ( List<org.biomage.BioMaterial.Treatment> ) associatedObject, gemmaObj );
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else {
             log.debug( "Unsupported or unknown association, or from subclass: " + associationName );
         }
@@ -901,7 +899,8 @@ public class MageMLConverterHelper {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "SequenceDatabases" ) ) { // list of DatabaseEntries, we use one
             assert ( associatedObject instanceof List );
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "SequenceDatabaseEntry" );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY,
+                    "SequenceDatabaseEntry" );
         } else if ( associationName.equals( "Type" ) ) { // ontology entry, we map to a enumerated type.
             assert associatedObject instanceof OntologyEntry;
             specialConvertSequenceType( ( OntologyEntry ) associatedObject, gemmaObj );
@@ -1011,9 +1010,10 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "BiologicalCharacteristics" ) ) {
-            if ( ( ( List ) associatedObject ).size() > 1 )
+            if ( ( ( List<Object> ) associatedObject ).size() > 1 )
                 log.warn( "*** More than one BiologicalCharacteristic for a MAGE CompositeSequence!" );
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "BiologicalCharacteristic" );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY,
+                    "BiologicalCharacteristic" );
         } else if ( associationName.equals( "CompositeCompositeMaps" ) ) {
             // we don't support.
         } else if ( associationName.equals( "ReporterCompositeMaps" ) ) {
@@ -1141,7 +1141,7 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "Contacts" ) )
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Contact" );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Contact" );
         else
             log.debug( "Unsupported or unknown association: " + associationName );
     }
@@ -1304,8 +1304,8 @@ public class MageMLConverterHelper {
                 return null;
             }
 
-            for ( Iterator iter = bioAssays.iterator(); iter.hasNext(); ) {
-                BioAssay bioAssay = ( BioAssay ) iter.next();
+            for ( Iterator<BioAssay> iter = bioAssays.iterator(); iter.hasNext(); ) {
+                BioAssay bioAssay = iter.next();
                 if ( bioAssay instanceof MeasuredBioAssay ) {
                     PhysicalBioAssay physicalBioAssaySource = ( ( MeasuredBioAssay ) bioAssay ).getFeatureExtraction()
                             .getPhysicalBioAssaySource();
@@ -1344,7 +1344,7 @@ public class MageMLConverterHelper {
         if ( associationName.equals( "DerivedBioAssayMap" ) ) {
             // if ( ( ( List ) associatedObject ).size() > 0 ) log.warn( "Missing out on DerivedBioAssayMap" );
         } else if ( associationName.equals( "DerivedBioAssayData" ) ) {
-            specialConvertBioAssayBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
+            specialConvertBioAssayBioAssayDataAssociations( ( List<BioAssayData> ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "Type" ) ) {
             // simpleFillIn( associatedObject, gemmaObj, getter, "Type" );
         } else if ( associationName.equals( "Channels" ) ) {
@@ -1552,10 +1552,10 @@ public class MageMLConverterHelper {
         if ( associationName.equals( "Category" ) )
             simpleFillIn( associatedObject, gemmaObj, getter, "Category", Characteristic.class );
         else if ( associationName.equals( "Annotations" ) )
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, false );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, false );
         else if ( associationName.equals( "FactorValues" ) ) {
             // Note that these should be the same factorvalues as referred to by the bioassays.
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, false );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, false );
             for ( FactorValue factorValue : gemmaObj.getFactorValues() ) {
                 if ( factorValue.getMeasurement() != null ) {
                     gemmaObj.setType( FactorType.CONTINUOUS );
@@ -1579,19 +1579,19 @@ public class MageMLConverterHelper {
 
         if ( associationName.equals( "AnalysisResults" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "BioAssays" ) ) {
             assert associatedObject instanceof List;
-            if ( ( ( List ) associatedObject ).size() > 0 && log.isDebugEnabled() ) {
+            if ( ( ( List<Object> ) associatedObject ).size() > 0 && log.isDebugEnabled() ) {
                 log.debug( "Converting Experiment-->BioAssays" );
             }
 
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
 
             log.info( "Added " + gemmaObj.getBioAssays().size() + " bioassays via direct association" );
         } else if ( associationName.equals( "Providers" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Provider" );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Provider" );
         } else if ( associationName.equals( "BioAssayData" ) ) {
             // we get this directly through the bioassay->bioassay data association.
             // assert associatedObject instanceof List;
@@ -1602,11 +1602,12 @@ public class MageMLConverterHelper {
             // specialConvertExperimentBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "ExperimentDesigns" ) ) {
             assert associatedObject instanceof List;
-            List list = ( List ) associatedObject;
+            List<Object> list = ( List<Object> ) associatedObject;
             if ( list.size() > 1 ) {
                 log.warn( "****** Multiple experimental designs - we only take one *******" );
             }
-            simpleFillIn( ( ( List ) associatedObject ).iterator().next(), gemmaObj, getter, "ExperimentalDesign" );
+            simpleFillIn( ( ( List<Object> ) associatedObject ).iterator().next(), gemmaObj, getter,
+                    "ExperimentalDesign" );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -1638,7 +1639,7 @@ public class MageMLConverterHelper {
 
         if ( associationName.equals( "ExperimentalFactors" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "NormalizationDescription" ) ) {
             // not supported as an association
         } else if ( associationName.equals( "QualityControlDescription" ) ) {
@@ -1653,7 +1654,7 @@ public class MageMLConverterHelper {
              * design, really, but it can help us figure out which bioassays we should be paying attention to (measured
              * vs. derived etc).
              */
-            Collection c = mageObj.getTopLevelBioAssays();
+            Collection<Object> c = mageObj.getTopLevelBioAssays();
             for ( Object o : c ) {
                 BioAssay ba = ( BioAssay ) o;
                 topLevelBioAssayIdentifiers.add( ba.getIdentifier() );
@@ -1661,7 +1662,7 @@ public class MageMLConverterHelper {
 
         } else if ( associationName.equals( "Types" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else {
             log.warn( "Unsupported or unknown association: " + associationName );
         }
@@ -1700,7 +1701,7 @@ public class MageMLConverterHelper {
         if ( associatedObject == null ) return;
 
         if ( associationName.equals( "Contacts" ) )
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Contact" );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_FIRST_ONLY, "Contact" );
         else
             log.debug( "Unsupported or unknown association: " + associationName );
 
@@ -1921,7 +1922,7 @@ public class MageMLConverterHelper {
         if ( associationName.equals( "FeatureExtraction" ) ) {
             specialConvertFeatureExtraction( ( FeatureExtraction ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "MeasuredBioAssayData" ) ) {
-            specialConvertBioAssayBioAssayDataAssociations( ( List ) associatedObject, gemmaObj );
+            specialConvertBioAssayBioAssayDataAssociations( ( List<BioAssayData> ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "BioAssayFactorValues" ) ) {
             if ( !bioAssayFactors.containsKey( gemmaObj.getName() ) )
                 bioAssayFactors.put( gemmaObj.getName(), new HashSet<FactorValue>( 0 ) );
@@ -2177,7 +2178,7 @@ public class MageMLConverterHelper {
         String associationName = getterToPropertyName( getter );
         if ( associatedObject == null ) return;
         if ( associationName.equals( "Associations" ) ) {
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
             // specialConvertOntologyEntryAssociations( ( List ) associatedObject, gemmaObj );
         } else if ( associationName.equals( "OntologyReference" ) ) {
             // // No-op we don't maintain a link to the Ontology.
@@ -2411,7 +2412,7 @@ public class MageMLConverterHelper {
             simpleFillIn( associatedObject, gemmaObj, getter );
         } else if ( associationName.equals( "Performers" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -2517,8 +2518,8 @@ public class MageMLConverterHelper {
             result.setRepresentation( null );
         }
 
-        QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( result, result.getName(), result
-                .getDescription() );
+        QuantitationTypeParameterGuesser.guessQuantitationTypeParameters( result, result.getName(),
+                result.getDescription() );
 
         if ( result.getIsRatio() == null ) result.setIsRatio( false );
         if ( result.getIsBackground() == null ) result.setIsBackground( false ); // OK
@@ -2619,7 +2620,7 @@ public class MageMLConverterHelper {
         } else if ( associationName.equals( "ImmobilizedCharacteristics" ) ) {
             // no-op
         } else if ( associationName.equals( "WarningType" ) ) {
-            specialConvertFeatureReporterMaps( ( List ) associatedObject, gemmaObj );
+            specialConvertFeatureReporterMaps( ( List<Object> ) associatedObject, gemmaObj );
         } else {
             log.debug( "Unsupported or unknown association: " + associationName );
         }
@@ -2769,7 +2770,7 @@ public class MageMLConverterHelper {
             // no-op
         } else if ( associationName.equals( "ProtocolApplications" ) ) {
             assert associatedObject instanceof List;
-            simpleFillIn( ( List ) associatedObject, gemmaObj, getter, CONVERT_ALL );
+            simpleFillIn( ( List<Object> ) associatedObject, gemmaObj, getter, CONVERT_ALL );
         } else if ( associationName.equals( "SourceBioMaterialMeasurements" ) ) {
             // deal with separately.
             // assert associatedObject instanceof List;
@@ -2892,14 +2893,14 @@ public class MageMLConverterHelper {
      * @param reporterCompositeMaps
      * @return Collection of Gemma Reporters.
      */
-    public void specialConvertFeatureReporterMaps( List featureReporterMaps, Reporter rep ) {
+    public void specialConvertFeatureReporterMaps( List<Object> featureReporterMaps, Reporter rep ) {
 
         if ( featureReporterMaps.size() > 1 ) log.warn( "**** More than one FeatureReporterMap for a Reporter!" );
 
-        for ( Iterator iter = featureReporterMaps.iterator(); iter.hasNext(); ) {
+        for ( Iterator<Object> iter = featureReporterMaps.iterator(); iter.hasNext(); ) {
             FeatureReporterMap rcp = ( FeatureReporterMap ) iter.next();
-            List rcpps = rcp.getFeatureInformationSources();
-            for ( Iterator iterator = rcpps.iterator(); iterator.hasNext(); ) {
+            List<Object> rcpps = rcp.getFeatureInformationSources();
+            for ( Iterator<Object> iterator = rcpps.iterator(); iterator.hasNext(); ) {
                 log.debug( "Found feature information for reporter: " + rep.getName() );
                 FeatureInformation rps = ( FeatureInformation ) iterator.next();
                 org.biomage.DesignElement.Feature repr = rps.getFeature();
@@ -2994,20 +2995,20 @@ public class MageMLConverterHelper {
      * @param mageObj The MAGE object to be converted.
      * @param gemmaObj The Gemma object whose associations need to be filled in.
      */
-    private void convertAssociations( Class mageClass, Object mageObj, Object gemmaObj ) {
+    private void convertAssociations( Class<?> mageClass, Object mageObj, Object gemmaObj ) {
 
         if ( mageObj == null || gemmaObj == null ) return;
 
-        Class classToSeek = ReflectionUtil.getBaseForImpl( gemmaObj );
+        Class<?> classToSeek = ReflectionUtil.getBaseForImpl( gemmaObj );
         String gemmaObjName = classToSeek.getSimpleName();
 
         try {
-            Class[] interfaces = mageClass.getInterfaces();
+            Class<?>[] interfaces = mageClass.getInterfaces();
 
             if ( interfaces.length == 0 ) return;
 
             for ( int i = 0; i < interfaces.length; i++ ) {
-                Class infc = interfaces[i];
+                Class<?> infc = interfaces[i];
                 String infcName = infc.getSimpleName();
 
                 if ( !infcName.startsWith( "Has" ) ) continue;
@@ -3036,7 +3037,7 @@ public class MageMLConverterHelper {
 
             }
 
-            Class superclazz = mageClass.getSuperclass();
+            Class<?> superclazz = mageClass.getSuperclass();
             if ( superclazz == null ) return;
 
             String superclassName = superclazz.getName();
@@ -3074,8 +3075,9 @@ public class MageMLConverterHelper {
         } catch ( IllegalAccessException e ) {
             log.error( e, e );
         } catch ( InvocationTargetException e ) {
-            log.error( "InvocationTargetException caused by " + e.getCause() + " when invoking "
-                    + gemmaConverter.getName() + " on a " + mageObj.getClass().getName(), e );
+            log.error(
+                    "InvocationTargetException caused by " + e.getCause() + " when invoking "
+                            + gemmaConverter.getName() + " on a " + mageObj.getClass().getName(), e );
             throw new RuntimeException( e );
         }
         return convertedGemmaObj;
@@ -3089,7 +3091,7 @@ public class MageMLConverterHelper {
      * @param mageTypeToConvert
      * @return Converted object. If the input mageObj is null, the return value is null.
      */
-    private Object findAndInvokeConverter( Object mageObj, String converterBaseName, Class mageTypeToConvert ) {
+    private Object findAndInvokeConverter( Object mageObj, String converterBaseName, Class<?> mageTypeToConvert ) {
 
         if ( mageObj == null ) return null;
 
@@ -3104,8 +3106,9 @@ public class MageMLConverterHelper {
         } catch ( IllegalAccessException e ) {
             log.error( e, e );
         } catch ( InvocationTargetException e ) {
-            log.error( "InvocationTargetException caused by " + e.getCause() + " when invoking  "
-                    + gemmaConverter.getName() + " on a " + mageObj.getClass().getName(), e );
+            log.error(
+                    "InvocationTargetException caused by " + e.getCause() + " when invoking  "
+                            + gemmaConverter.getName() + " on a " + mageObj.getClass().getName(), e );
             throw new RuntimeException( e );
         }
         return convertedGemmaObj;
@@ -3140,7 +3143,7 @@ public class MageMLConverterHelper {
      *        DatabaseEntry vs. DatabaseEntryImpl)
      * @param propertyName The property name corresponding to the setteeClass
      */
-    private void findAndInvokeSetter( Object setterObj, Object settee, Class setteeClass, String propertyName ) {
+    private void findAndInvokeSetter( Object setterObj, Object settee, Class<?> setteeClass, String propertyName ) {
 
         Method gemmaSetter = findSetter( setterObj, propertyName, setteeClass );
         if ( gemmaSetter == null ) return;
@@ -3187,7 +3190,7 @@ public class MageMLConverterHelper {
      * @param mageAssociatedType
      * @return
      */
-    private Method findConverter( String associationName, Class mageAssociatedType ) {
+    private Method findConverter( String associationName, Class<?> mageAssociatedType ) {
         Method gemmaConverter = null;
         try {
             gemmaConverter = this.getClass()
@@ -3259,7 +3262,7 @@ public class MageMLConverterHelper {
      * @param setee - The object which we want to enter as an argument to the setter.
      * @return
      */
-    private Method findSetter( Object setter, String propertyName, Class setee ) {
+    private Method findSetter( Object setter, String propertyName, Class<?> setee ) {
         Method gemmaSetter = null;
         try {
             gemmaSetter = ReflectionUtil.getBaseForImpl( setter ).getMethod( "set" + propertyName,
@@ -3289,7 +3292,7 @@ public class MageMLConverterHelper {
      * @return
      */
     private Collection<BioAssay> getAssociatedSourceBioAssays( DerivedBioAssay mageObj ) {
-        List map = mageObj.getDerivedBioAssayMap();
+        List<Object> map = mageObj.getDerivedBioAssayMap();
         Collection<BioAssay> bioAssays = new HashSet<BioAssay>();
 
         if ( map.size() > 0 ) {
@@ -3383,8 +3386,7 @@ public class MageMLConverterHelper {
         if ( !p.canRead() ) {
             log.warn( "Cannot read from " + path + ", creating." );
             if ( !p.mkdirs() ) {
-                log
-                        .error( "Could not make directories, bailing from path initialization; ArryExpress loading will fail." );
+                log.error( "Could not make directories, bailing from path initialization; ArryExpress loading will fail." );
                 return;
             }
 
@@ -3606,7 +3608,7 @@ public class MageMLConverterHelper {
      *        Characteristic. Only used if onlyTakeOne = true.
      */
     private void simpleFillIn( List<Object> associatedList, Object gemmaObj, Method getter, boolean onlyTakeOne,
-            String actualGemmaAssociationName, Class actualArgumentClass ) {
+            String actualGemmaAssociationName, Class<?> actualArgumentClass ) {
 
         if ( associatedList == null || gemmaObj == null || getter == null )
             throw new IllegalArgumentException( "Null objects" );
@@ -3625,7 +3627,7 @@ public class MageMLConverterHelper {
                 Object mageObj = associatedList.get( 0 );
                 Object convertedGemmaObj = findAndInvokeConverter( mageObj );
                 if ( convertedGemmaObj == null ) return; // not supported.
-                Class convertedGemmaClass;
+                Class<?> convertedGemmaClass;
                 if ( actualArgumentClass != null ) {
                     convertedGemmaClass = actualArgumentClass;
                 } else {
@@ -3635,7 +3637,7 @@ public class MageMLConverterHelper {
                 findAndInvokeSetter( gemmaObj, convertedGemmaObj, convertedGemmaClass, associationName );
             } else {
                 // Collection
-                Class gemmaClass = ReflectionUtil.getBaseForImpl( gemmaObj );
+                Class<?> gemmaClass = ReflectionUtil.getBaseForImpl( gemmaObj );
                 log.debug( "Converting a MAGE list to a Gemma list associated with a " + gemmaClass.getSimpleName() );
                 Collection<Object> gemmaObjList = ( Collection<Object> ) findAndInvokeGetter( gemmaObj, associationName );
                 if ( gemmaObjList == null ) {
@@ -3655,7 +3657,7 @@ public class MageMLConverterHelper {
                                     + ")" );
                         }
                         if ( convertedGemmaObj instanceof Collection ) {
-                            gemmaObjList.addAll( ( Collection ) convertedGemmaObj );
+                            gemmaObjList.addAll( ( Collection<Object> ) convertedGemmaObj );
                         } else {
                             gemmaObjList.add( convertedGemmaObj );
                         }
@@ -3712,7 +3714,7 @@ public class MageMLConverterHelper {
      *      )
      */
     private void simpleFillIn( Object associatedMageObject, Object gemmaObj, Method getter,
-            String actualGemmaAssociationName, Class actualArgumentClass ) {
+            String actualGemmaAssociationName, Class<?> actualArgumentClass ) {
 
         if ( associatedMageObject == null ) return;
         String associationName = getterToPropertyName( getter );
@@ -3720,12 +3722,12 @@ public class MageMLConverterHelper {
                 : actualGemmaAssociationName;
 
         try {
-            Class mageAssociatedType = associatedMageObject.getClass();
+            Class<?> mageAssociatedType = associatedMageObject.getClass();
             Object gemmaAssociatedObj = findAndInvokeConverter( associatedMageObject, associationName,
                     mageAssociatedType );
             if ( gemmaAssociatedObj == null ) return;
 
-            Class gemmaClass;
+            Class<?> gemmaClass;
             if ( actualArgumentClass != null ) {
                 gemmaClass = actualArgumentClass;
             } else {
@@ -3871,7 +3873,7 @@ public class MageMLConverterHelper {
 
             if ( bioAssayDatum instanceof DerivedBioAssayData ) {
                 DerivedBioAssayData derivedBioAssayData = ( DerivedBioAssayData ) bioAssayDatum;
-                if ( gemmaObj.getDerivedDataFiles() == null ) gemmaObj.setDerivedDataFiles( new HashSet() );
+                if ( gemmaObj.getDerivedDataFiles() == null ) gemmaObj.setDerivedDataFiles( new HashSet<LocalFile>() );
 
                 gemmaObj.getDerivedDataFiles().add( lf );
 

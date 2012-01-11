@@ -41,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.model.GeoPlatform;
 import ubic.gemma.loader.expression.geo.model.GeoSeries;
-import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.common.quantitationtype.PrimitiveType;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -54,7 +53,6 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.testing.BaseSpringContextTest;
-import ubic.gemma.util.ConfigUtils;
 
 /**
  * Unit test for GeoConversion Added extension BaseSpringContextTest as want Taxon Service to be called

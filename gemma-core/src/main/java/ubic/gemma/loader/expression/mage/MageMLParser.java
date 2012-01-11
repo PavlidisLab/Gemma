@@ -219,7 +219,7 @@ public class MageMLParser extends AbstractMageTool implements Parser<Object> {
      * @param type
      * @return Collection of MAGE domain objects.
      */
-    private Collection<Object> getDomainObjectsForClass( Class type ) {
+    private Collection<Object> getDomainObjectsForClass( Class<?> type ) {
 
         if ( !isParsed() ) throw new IllegalStateException( "Need to parse first" );
 
