@@ -519,6 +519,8 @@ public class ExpressionExperimentAnnotator implements InitializingBean {
      */
     private void writeModel( Model model, ExpressionExperiment experiment ) {
         try {
+            File f = new File( MODEL_OUTPUT_PATH );
+            if ( !f.exists() ) f.mkdirs();
             FileWriter fout = new FileWriter( MODEL_OUTPUT_PATH + File.separator + experiment.getId() + ".rdf" );
             model.write( fout );
             fout.close();
