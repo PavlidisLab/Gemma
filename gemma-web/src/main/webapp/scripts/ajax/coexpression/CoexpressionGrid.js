@@ -362,7 +362,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 		
-		
+		if (!this.lite) {
 
             this.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
 
@@ -494,6 +494,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
             	}
 
             }, this);
+            
+		}
 
             
         
