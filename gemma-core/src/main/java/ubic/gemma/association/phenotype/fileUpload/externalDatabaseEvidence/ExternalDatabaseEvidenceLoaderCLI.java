@@ -17,7 +17,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseEvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 
 public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
@@ -161,8 +161,9 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
             databaseEntryValueObject.setAccession( phenoAss.getDatabaseID() );
             databaseEntryValueObject.setExternalDatabase( externalDatabase );
 
-            EvidenceValueObject evidence = new ExternalDatabaseEvidenceValueObject( description, associationType,
-                    new Boolean( phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes, databaseEntryValueObject );
+            EvidenceValueObject evidence = new GenericEvidenceValueObject( description, associationType, new Boolean(
+                    phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes, null );
+            evidence.setEvidenceSource( databaseEntryValueObject );
 
             String geneId = phenoAss.getGeneID();
 
