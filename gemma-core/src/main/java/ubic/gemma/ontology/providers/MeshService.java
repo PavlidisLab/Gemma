@@ -83,7 +83,7 @@ public class MeshService {
             .synchronizedMap( new HashMap<String, Collection<OntologyTerm>>() );
 
     /**
-     * Locate OntologyTerm for given plain text
+     * Locate OntologyTerm for given plain text; obsolete terms are filtered out.
      * 
      * @param plainText such as "Microsatellite Repeats"
      * @return term that exactly matches the given text, or null if nothing is found that matches exactly. If multiple
