@@ -20,7 +20,6 @@ import java.util.Set;
 import org.springframework.security.access.annotation.Secured;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
@@ -89,10 +88,6 @@ public interface PhenotypeAssociationService {
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ExperimentalEvidence loadExperimentalEvidence( Long id );
-
-    /** load an ExternalDatabaseEvidence given an ID */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ExternalDatabaseEvidence loadExternalDatabaseEvidence( Long id );
 
     /** load an GenericEvidence given an ID */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })

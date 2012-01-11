@@ -41,7 +41,6 @@ import ubic.basecode.ontology.providers.DiseaseOntologyService;
 import ubic.basecode.ontology.providers.HumanPhenotypeOntologyService;
 import ubic.basecode.ontology.providers.MammalianPhenotypeOntologyService;
 import ubic.gemma.loader.entrez.pubmed.PubMedXMLFetcher;
-import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
 import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 import ubic.gemma.model.common.description.BibliographicReference;
@@ -292,8 +291,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         if ( loaded != null ) {
 
             // We should also delete the databaseEntry for ExternalDatabaseEvidence
-            if ( loaded instanceof ExternalDatabaseEvidence ) {
-                this.databaseEntryDao.remove( ( ( ExternalDatabaseEvidence ) loaded ).getEvidenceSource().getId() );
+            if ( loaded.getEvidenceSource() != null ) {
+                this.databaseEntryDao.remove( loaded.getEvidenceSource().getId() );
             }
 
             this.associationService.remove( loaded );

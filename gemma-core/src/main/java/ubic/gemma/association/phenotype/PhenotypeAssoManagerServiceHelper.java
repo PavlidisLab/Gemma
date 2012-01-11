@@ -35,7 +35,6 @@ import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.analysis.Investigation;
 import ubic.gemma.model.association.GOEvidenceCode;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
@@ -56,7 +55,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObj
 import ubic.gemma.model.genome.gene.phenotype.valueObject.DiffExpressionEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.ExternalDatabaseEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
@@ -110,47 +108,10 @@ public class PhenotypeAssoManagerServiceHelper {
         } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
             // TODO
             // return conversion2DifferentialExpressionEvidence (( DiffExpressionEvidenceValueObject ) evidence );
-        } else if ( evidence instanceof ExternalDatabaseEvidenceValueObject ) {
-            return conversion2ExternalDatabaseEvidence( ( ExternalDatabaseEvidenceValueObject ) evidence );
         }
 
         return null;
 
-    }
-
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
-     */
-    private PhenotypeAssociation conversion2ExternalDatabaseEvidence(
-            ExternalDatabaseEvidenceValueObject evidenceValueObject ) {
-
-        // create the entity to populate
-        ExternalDatabaseEvidence externalDatabaseEvidence = ExternalDatabaseEvidence.Factory.newInstance();
-
-        // populate common field to all evidence
-        populatePhenotypeAssociation( externalDatabaseEvidence, evidenceValueObject );
-
-        // populate specific fields for this evidence
-        DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getDatabaseEntryValueObject();
-
-        // find the correct database
-        ExternalDatabase externalDatabase = this.externalDatabaseService.find( databaseEntryValueObject
-                .getExternalDatabase().getName() );
-
-        if ( externalDatabase == null ) {
-            throw new EntityNotFoundException( "Could not locate External Database: "
-                    + databaseEntryValueObject.getExternalDatabase().getName() );
-        }
-
-        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( externalDatabase );
-        databaseEntry.setAccession( databaseEntryValueObject.getAccession() );
-
-        this.databaseEntryDao.create( databaseEntry );
-
-        externalDatabaseEvidence.setEvidenceSource( databaseEntry );
-
-        return externalDatabaseEvidence;
     }
 
     /**
@@ -374,15 +335,46 @@ public class PhenotypeAssoManagerServiceHelper {
 
             phe.setAssociationType( associationType );
         }
+
+        if ( evidenceValueObject.getEvidenceSource() != null ) {
+            populateEvidenceSource( phe, evidenceValueObject );
+        }
+
     }
 
-    public PhenotypeAssociation populateTypePheAsso( EvidenceValueObject evidence ) {
+    /**
+     * @param phe
+     * @param evidenceValueObject
+     */
+    protected void populateEvidenceSource( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+        DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getEvidenceSource();
 
-        Long id = evidence.getDatabaseId();
+        // find the correct database
+        ExternalDatabase externalDatabase = this.externalDatabaseService.find( databaseEntryValueObject
+                .getExternalDatabase().getName() );
 
-        if ( evidence instanceof LiteratureEvidenceValueObject ) {
+        if ( externalDatabase == null ) {
+            throw new EntityNotFoundException( "Could not locate External Database: "
+                    + databaseEntryValueObject.getExternalDatabase().getName() );
+        }
 
-            LiteratureEvidenceValueObject literatureVO = ( LiteratureEvidenceValueObject ) evidence;
+        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( externalDatabase );
+        databaseEntry.setAccession( databaseEntryValueObject.getAccession() );
+
+        databaseEntry = this.databaseEntryDao.create( databaseEntry );
+
+        phe.setEvidenceSource( databaseEntry );
+    }
+
+    public PhenotypeAssociation populateTypePheAsso( EvidenceValueObject evidenceValueObject ) {
+
+        Long id = evidenceValueObject.getDatabaseId();
+
+        PhenotypeAssociation result = null;
+
+        if ( evidenceValueObject instanceof LiteratureEvidenceValueObject ) {
+
+            LiteratureEvidenceValueObject literatureVO = ( LiteratureEvidenceValueObject ) evidenceValueObject;
             LiteratureEvidence literatureEvidence = this.phenotypeAssociationService.loadLiteratureEvidence( id );
 
             String primaryPubMed = literatureVO.getCitationValueObject().getPubmedAccession();
@@ -390,11 +382,11 @@ public class PhenotypeAssoManagerServiceHelper {
             // primary bibliographic reference
             literatureEvidence.setCitation( findOrCreateBibliographicReference( primaryPubMed ) );
 
-            return literatureEvidence;
+            result = literatureEvidence;
 
-        } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
+        } else if ( evidenceValueObject instanceof ExperimentalEvidenceValueObject ) {
 
-            ExperimentalEvidenceValueObject experimentalVO = ( ExperimentalEvidenceValueObject ) evidence;
+            ExperimentalEvidenceValueObject experimentalVO = ( ExperimentalEvidenceValueObject ) evidenceValueObject;
             ExperimentalEvidence experimentalEvidence = this.phenotypeAssociationService.loadExperimentalEvidence( id );
             Investigation experiment = experimentalEvidence.getExperiment();
 
@@ -473,25 +465,25 @@ public class PhenotypeAssoManagerServiceHelper {
             // relevant bibliographic references
             experiment.setOtherRelevantPublications( findOrCreateBibliographicReference( otherRelevantPubMed ) );
 
-            return experimentalEvidence;
+            result = experimentalEvidence;
 
-        } else if ( evidence instanceof GenericEvidenceValueObject ) {
+        } else if ( evidenceValueObject instanceof GenericEvidenceValueObject ) {
             // nothing special to do
-            return this.phenotypeAssociationService.loadGenericEvidence( id );
-        } else if ( evidence instanceof UrlEvidenceValueObject ) {
+            result = this.phenotypeAssociationService.loadGenericEvidence( id );
+        } else if ( evidenceValueObject instanceof UrlEvidenceValueObject ) {
             // nothing special to do
-            return this.phenotypeAssociationService.loadUrlEvidence( id );
-        } else if ( evidence instanceof DiffExpressionEvidenceValueObject ) {
+            result = this.phenotypeAssociationService.loadUrlEvidence( id );
+        } else if ( evidenceValueObject instanceof DiffExpressionEvidenceValueObject ) {
             // TODO
-        } else if ( evidence instanceof ExternalDatabaseEvidenceValueObject ) {
-            ExternalDatabaseEvidenceValueObject externalDatabaseVO = ( ExternalDatabaseEvidenceValueObject ) evidence;
-            ExternalDatabaseEvidence externalDatabaseEvidence = this.phenotypeAssociationService
-                    .loadExternalDatabaseEvidence( id );
-            externalDatabaseEvidence.getEvidenceSource().setAccession(
-                    externalDatabaseVO.getDatabaseEntryValueObject().getAccession() );
-            return externalDatabaseEvidence;
         }
-        return null;
+
+        if ( result == null ) return null;
+
+        if ( evidenceValueObject.getEvidenceSource() != null ) {
+            result.getEvidenceSource().setAccession( evidenceValueObject.getEvidenceSource().getAccession() );
+        }
+
+        return result;
     }
 
     /** calls findOrCreateBibliographicReference for a Collection */

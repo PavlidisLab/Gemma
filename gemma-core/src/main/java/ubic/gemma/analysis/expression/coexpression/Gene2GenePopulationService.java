@@ -362,7 +362,6 @@ public class Gene2GenePopulationService {
          * The values we get are the Fisher's p-values for the node degrees of the individual probe-level data. High
          * values mean high node degree.
          */
-
         GeneCoexpressionNodeDegree n = GeneCoexpressionNodeDegree.Factory.newInstance();
         n.setGene( queryGene );
         n.setNumTests( nodeDegrees.size() );

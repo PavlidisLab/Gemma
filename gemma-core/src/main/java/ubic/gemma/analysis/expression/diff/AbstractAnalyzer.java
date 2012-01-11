@@ -24,6 +24,7 @@ import ubic.basecode.util.r.RClient;
 import ubic.basecode.util.r.RConnectionFactory;
 import ubic.basecode.util.r.RServeClient;
 import ubic.gemma.analysis.service.ExpressionDataMatrixService;
+import ubic.gemma.model.expression.designElement.CompositeSequenceService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -38,6 +39,9 @@ public abstract class AbstractAnalyzer {
 
     @Autowired
     protected ExpressionDataMatrixService expressionDataMatrixService = null;
+    
+    @Autowired
+    protected CompositeSequenceService compositeSequenceService;
 
     /**
      * Connect to R.

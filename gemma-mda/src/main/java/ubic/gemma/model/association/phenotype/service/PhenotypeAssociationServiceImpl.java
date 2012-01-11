@@ -22,8 +22,6 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidenceDao;
-import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
-import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidenceDao;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidenceDao;
 import ubic.gemma.model.association.phenotype.GenericExperiment;
@@ -48,9 +46,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     @Autowired
     private ExperimentalEvidenceDao experimentalEvidenceDao;
-
-    @Autowired
-    private ExternalDatabaseEvidenceDao externalDatabaseEvidenceDao;
 
     @Autowired
     private GenericEvidenceDao genericEvidenceDao;
@@ -80,7 +75,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     }
 
     /** find all phenotypes */
-    @SuppressWarnings("unchecked")
     @Override
     public Set<PhenotypeAssociation> loadAll() {
         return ( Set<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();
@@ -102,12 +96,6 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     @Override
     public PhenotypeAssociation load( Long id ) {
         return this.phenotypeAssociationDao.load( id );
-    }
-
-    /** load an ExternalDatabaseEvidence given an ID */
-    @Override
-    public ExternalDatabaseEvidence loadExternalDatabaseEvidence( Long id ) {
-        return this.externalDatabaseEvidenceDao.load( id );
     }
 
     /** load an GenericEvidence given an ID */
@@ -153,11 +141,11 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
     public Set<String> loadAllPhenotypesUri() {
         return this.phenotypeAssociationDao.loadAllPhenotypesUri();
     }
-    
+
     @Override
     /** find PhenotypeAssociations associated with a BibliographicReference */
-    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference(String pubMedId){
-        return this.phenotypeAssociationDao.findPhenotypesForBibliographicReference(pubMedId);
+    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedId ) {
+        return this.phenotypeAssociationDao.findPhenotypesForBibliographicReference( pubMedId );
     }
 
     @Override

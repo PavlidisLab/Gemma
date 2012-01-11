@@ -23,9 +23,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.association.phenotype.DifferentialExpressionEvidence;
 import ubic.gemma.model.association.phenotype.ExperimentalEvidence;
-import ubic.gemma.model.association.phenotype.ExternalDatabaseEvidence;
 import ubic.gemma.model.association.phenotype.GenericEvidence;
 import ubic.gemma.model.association.phenotype.LiteratureEvidence;
 import ubic.gemma.model.association.phenotype.PhenotypeAssociation;
@@ -33,20 +33,13 @@ import ubic.gemma.model.association.phenotype.UrlEvidence;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 
-/** Parent class of all evidence value objects */
+/**
+ * Parent class of all evidence value objects
+ * 
+ * @version $Id$
+ * @author nicolas
+ */
 public abstract class EvidenceValueObject {
-
-    private Long databaseId = null;
-
-    private String description = "";
-    private CharacteristicValueObject associationType = null;
-    private String evidenceCode = null;
-    private Boolean isNegativeEvidence = new Boolean( false );
-    private String className = "";
-    /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
-    private Double relevance = new Double( 0 );
-
-    private Set<CharacteristicValueObject> phenotypes = null;
 
     /**
      * Convert an collection of evidence entities to their corresponding value objects
@@ -91,14 +84,40 @@ public abstract class EvidenceValueObject {
             evidence = new GenericEvidenceValueObject( ( GenericEvidence ) phe );
         } else if ( phe instanceof LiteratureEvidence ) {
             evidence = new LiteratureEvidenceValueObject( ( LiteratureEvidence ) phe );
-        } else if ( phe instanceof ExternalDatabaseEvidence ) {
-            evidence = new ExternalDatabaseEvidenceValueObject( ( ExternalDatabaseEvidence ) phe );
         } else if ( phe instanceof DifferentialExpressionEvidence ) {
             // TODO
         }
 
         return evidence;
     }
+
+    public void setEvidenceSource( DatabaseEntryValueObject evidenceSource ) {
+        this.evidenceSource = evidenceSource;
+    }
+
+    private Long databaseId = null;
+    private String description = "";
+    private CharacteristicValueObject associationType = null;
+    private String evidenceCode = null;
+    private Boolean isNegativeEvidence = new Boolean( false );
+
+    private String className = "";
+    /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
+    private Double relevance = new Double( 0 );
+
+    public DatabaseEntryValueObject getEvidenceSource() {
+        return evidenceSource;
+    }
+
+    private DatabaseEntryValueObject evidenceSource = null;
+
+    private String externalUrl = "";
+
+    public String getExternalUrl() {
+        return externalUrl;
+    }
+
+    private Set<CharacteristicValueObject> phenotypes = null;
 
     public EvidenceValueObject() {
         super();
@@ -112,8 +131,14 @@ public abstract class EvidenceValueObject {
         this.description = phenotypeAssociation.getDescription();
         this.evidenceCode = phenotypeAssociation.getEvidenceCode().getValue();
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
-        if ( phenotypeAssociation.getAssociationType() != null ) {
 
+        if ( phenotypeAssociation.getEvidenceSource() != null ) {
+            /*
+             * FIXME
+             */
+        }
+
+        if ( phenotypeAssociation.getAssociationType() != null ) {
             this.associationType = new CharacteristicValueObject();
             this.associationType.setValue( phenotypeAssociation.getAssociationType().getValue() );
             this.associationType.setCategory( phenotypeAssociation.getAssociationType().getCategory() );

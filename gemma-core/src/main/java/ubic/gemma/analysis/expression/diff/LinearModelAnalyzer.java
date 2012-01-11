@@ -77,6 +77,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 import ubic.gemma.model.expression.experiment.FactorType;
 import ubic.gemma.model.expression.experiment.FactorValue;
+import ubic.gemma.model.genome.Gene;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -376,6 +377,96 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
+     * @param experimentalFactor
+     * @param quantitationType
+     * @return boolean true if we need the intercept.
+     */
+    protected boolean checkIfNeedToTreatAsIntercept( ExperimentalFactor experimentalFactor,
+            QuantitationType quantitationType ) {
+        if ( experimentalFactor.getFactorValues().size() == 1 ) {
+            if ( quantitationType.getIsRatio() ) {
+                return true;
+            }
+            throw new IllegalArgumentException(
+                    "Cannot deal with constant factors unless the data are ratiometric non-reference design" );
+        }
+        return false;
+    }
+
+    /**
+     * Create files that can be used in R to check the results.
+     * 
+     * @param dmatrix
+     * @param designMatrix
+     */
+    protected void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
+            ObjectMatrix<String, String, Object> designMatrix ) {
+        MatrixWriter<Double> mw = new MatrixWriter<Double>();
+        try {
+            mw.write( new FileWriter( File.createTempFile( "data.", ".txt" ) ), dmatrix, null, true, false );
+            ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<String, String>(
+                    new FileWriter( File.createTempFile( "design.", ".txt" ) ) );
+            dem.writeMatrix( designMatrix, true );
+
+        } catch ( IOException e ) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Assigns the design matrix columns as factors, defines contrasts. We use treatment contrasts, comparing to a
+     * baseline condition.
+     * 
+     * @param designMatrix
+     * @param baselineConditions
+     */
+    protected void setupFactors( ObjectMatrix<String, String, Object> designMatrix,
+            Map<ExperimentalFactor, FactorValue> baselineConditions ) {
+
+        for ( ExperimentalFactor factor : baselineConditions.keySet() ) {
+
+            if ( factor.getFactorValues().size() < 2 ) {
+                continue;
+            }
+
+            String factorName = ExperimentalDesignUtils.nameForR( factor );
+            Object[] column = designMatrix.getColumn( designMatrix.getColIndexByName( factorName ) );
+
+            if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
+                double[] colD = new double[column.length];
+                for ( int i = 0; i < column.length; i++ ) {
+                    colD[i] = ( Double ) column[i];
+                }
+                if ( USE_R ) rc.assign( factorName, colD );
+            } else {
+                String[] colS = new String[column.length];
+                for ( int i = 0; i < column.length; i++ ) {
+                    colS[i] = ( String ) column[i];
+                }
+
+                FactorValue baseLineFV = baselineConditions.get( factor );
+
+                String baselineFvName = ExperimentalDesignUtils.nameForR( baseLineFV, true );
+
+                if ( USE_R ) {
+                    rc.assignFactor( factorName, Arrays.asList( colS ) );
+                    List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );
+
+                    /*
+                     * The 'base' is the index of the baseline group in the list of levels: the result of
+                     * 'levels(factor)'. Default base is 1.
+                     */
+
+                    int indexOfBaseline = stringListEval.indexOf( baselineFvName ) + 1; // R is 1-based.
+
+                    rc.voidEval( "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
+                            + indexOfBaseline + ")" );
+                }
+            }
+        }
+    }
+
+    /**
      * Build the formula, omitting the factor taking the place of the intercept, if need be. (Mostly for R but with side
      * effect of populating the interactionFactorLists and label2Factors)
      * 
@@ -436,7 +527,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param results
      * @return
      */
-    private Collection<HitListSize> computeHitListSizes( List<DifferentialExpressionAnalysisResult> results ) {
+    private Collection<HitListSize> computeHitListSizes( List<DifferentialExpressionAnalysisResult> results,
+            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
         Collection<HitListSize> hitListSizes = new HashSet<HitListSize>();
 
         // maps from Doubles are a bit dodgy...
@@ -444,10 +536,20 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         Map<Double, Integer> downCounts = new HashMap<Double, Integer>();
         Map<Double, Integer> eitherCounts = new HashMap<Double, Integer>();
 
+        Map<Double, Integer> upCountGenes = new HashMap<Double, Integer>();
+        Map<Double, Integer> downCountGenes = new HashMap<Double, Integer>();
+        Map<Double, Integer> eitherCountGenes = new HashMap<Double, Integer>();
+
         for ( DifferentialExpressionAnalysisResult r : results ) {
 
             Double corrP = r.getCorrectedPvalue();
             if ( corrP == null ) continue;
+
+            int numGenes = 0;
+            if ( r instanceof ProbeAnalysisResult ) {
+                CompositeSequence probe = ( ( ProbeAnalysisResult ) r ).getProbe();
+                numGenes = probeToGeneMap.get( probe ).size();
+            }
 
             Collection<ContrastResult> crs = r.getContrasts();
             boolean up = false;
@@ -465,22 +567,29 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
                 if ( !upCounts.containsKey( thresh ) ) {
                     upCounts.put( thresh, 0 );
+                    upCountGenes.put( thresh, 0 );
                 }
                 if ( !downCounts.containsKey( thresh ) ) {
                     downCounts.put( thresh, 0 );
+                    downCountGenes.put( thresh, 0 );
                 }
                 if ( !eitherCounts.containsKey( thresh ) ) {
                     eitherCounts.put( thresh, 0 );
+                    eitherCountGenes.put( thresh, 0 );
                 }
 
                 if ( corrP < thresh ) {
                     if ( up ) {
                         upCounts.put( thresh, upCounts.get( thresh ) + 1 );
+                        upCountGenes.put( thresh, upCountGenes.get( thresh ) + numGenes );
                     }
                     if ( down ) {
                         downCounts.put( thresh, downCounts.get( thresh ) + 1 );
+                        downCountGenes.put( thresh, downCountGenes.get( thresh ) + numGenes );
                     }
+
                     eitherCounts.put( thresh, eitherCounts.get( thresh ) + 1 );
+                    eitherCountGenes.put( thresh, eitherCountGenes.get( thresh ) + numGenes );
                 }
             }
 
@@ -491,9 +600,13 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             Integer down = downCounts.get( thresh );
             Integer either = eitherCounts.get( thresh );
 
-            HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP );
-            HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN );
-            HitListSize eitherS = HitListSize.Factory.newInstance( thresh, either, Direction.EITHER );
+            Integer upGenes = upCountGenes.get( thresh );
+            Integer downGenes = downCountGenes.get( thresh );
+            Integer eitherGenes = eitherCountGenes.get( thresh );
+
+            HitListSize upS = HitListSize.Factory.newInstance( thresh, up, Direction.UP, upGenes );
+            HitListSize downS = HitListSize.Factory.newInstance( thresh, down, Direction.DOWN, downGenes );
+            HitListSize eitherS = HitListSize.Factory.newInstance( thresh, either, Direction.EITHER, eitherGenes );
 
             hitListSizes.add( upS );
             hitListSizes.add( downS );
@@ -723,6 +836,39 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 baselineConditions, interceptFactor, interactionFactorLists, oneSampleTtest, resultLists,
                 subsetFactorValue );
         return expressionAnalysis;
+    }
+
+    /**
+     * @param resultList
+     * @param probeToGeneMap
+     * @return
+     */
+    private int getNumberOfGenesTested( List<DifferentialExpressionAnalysisResult> resultList,
+            Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
+        Collection<Gene> gs = new HashSet<Gene>();
+        for ( DifferentialExpressionAnalysisResult d : resultList ) {
+            gs.addAll( probeToGeneMap.get( ( ( ProbeAnalysisResult ) d ).getProbe() ) );
+        }
+        return gs.size();
+    }
+
+    /**
+     * @param resultLists
+     * @return
+     */
+    private Map<CompositeSequence, Collection<Gene>> getProbeToGeneMap(
+            Map<String, List<DifferentialExpressionAnalysisResult>> resultLists ) {
+        Map<CompositeSequence, Collection<Gene>> result = new HashMap<CompositeSequence, Collection<Gene>>();
+
+        for ( List<DifferentialExpressionAnalysisResult> resultList : resultLists.values() ) {
+            for ( DifferentialExpressionAnalysisResult d : resultList ) {
+                CompositeSequence probe = ( ( ProbeAnalysisResult ) d ).getProbe();
+                result.put( probe, new HashSet<Gene>() );
+            }
+        }
+
+        return compositeSequenceService.getGenes( result.keySet() );
+
     }
 
     /**
@@ -989,6 +1135,9 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             Map<ExperimentalFactor, FactorValue> baselineConditions, boolean oneSampleTtest,
             DifferentialExpressionAnalysis expressionAnalysis,
             Map<String, List<DifferentialExpressionAnalysisResult>> resultLists ) {
+
+        Map<CompositeSequence, Collection<Gene>> probeToGeneMap = getProbeToGeneMap( resultLists );
+
         /*
          * Result sets
          */
@@ -1004,10 +1153,15 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 baselineGroup = baselineConditions.get( factorsUsed.iterator().next() );
             }
 
-            Collection<HitListSize> hitListSizes = computeHitListSizes( results );
+            Collection<HitListSize> hitListSizes = computeHitListSizes( results, probeToGeneMap );
 
-            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory.newInstance( factorsUsed,
-                    baselineGroup, expressionAnalysis, results, hitListSizes );
+            int numberOfProbesTested = results.size();
+
+            int numberOfGenesTested = getNumberOfGenesTested( results, probeToGeneMap );
+
+            ExpressionAnalysisResultSet resultSet = ExpressionAnalysisResultSet.Factory
+                    .newInstance( factorsUsed, numberOfProbesTested, numberOfGenesTested, baselineGroup,
+                            expressionAnalysis, results, hitListSizes );
             resultSets.add( resultSet );
 
         }
@@ -1231,95 +1385,5 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
 
         service.shutdown();
         return f;
-    }
-
-    /**
-     * @param experimentalFactor
-     * @param quantitationType
-     * @return boolean true if we need the intercept.
-     */
-    protected boolean checkIfNeedToTreatAsIntercept( ExperimentalFactor experimentalFactor,
-            QuantitationType quantitationType ) {
-        if ( experimentalFactor.getFactorValues().size() == 1 ) {
-            if ( quantitationType.getIsRatio() ) {
-                return true;
-            }
-            throw new IllegalArgumentException(
-                    "Cannot deal with constant factors unless the data are ratiometric non-reference design" );
-        }
-        return false;
-    }
-
-    /**
-     * Create files that can be used in R to check the results.
-     * 
-     * @param dmatrix
-     * @param designMatrix
-     */
-    protected void outputForDebugging( ExpressionDataDoubleMatrix dmatrix,
-            ObjectMatrix<String, String, Object> designMatrix ) {
-        MatrixWriter<Double> mw = new MatrixWriter<Double>();
-        try {
-            mw.write( new FileWriter( File.createTempFile( "data.", ".txt" ) ), dmatrix, null, true, false );
-            ubic.basecode.io.writer.MatrixWriter<String, String> dem = new ubic.basecode.io.writer.MatrixWriter<String, String>(
-                    new FileWriter( File.createTempFile( "design.", ".txt" ) ) );
-            dem.writeMatrix( designMatrix, true );
-
-        } catch ( IOException e ) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Assigns the design matrix columns as factors, defines contrasts. We use treatment contrasts, comparing to a
-     * baseline condition.
-     * 
-     * @param designMatrix
-     * @param baselineConditions
-     */
-    protected void setupFactors( ObjectMatrix<String, String, Object> designMatrix,
-            Map<ExperimentalFactor, FactorValue> baselineConditions ) {
-
-        for ( ExperimentalFactor factor : baselineConditions.keySet() ) {
-
-            if ( factor.getFactorValues().size() < 2 ) {
-                continue;
-            }
-
-            String factorName = ExperimentalDesignUtils.nameForR( factor );
-            Object[] column = designMatrix.getColumn( designMatrix.getColIndexByName( factorName ) );
-
-            if ( ExperimentalDesignUtils.isContinuous( factor ) ) {
-                double[] colD = new double[column.length];
-                for ( int i = 0; i < column.length; i++ ) {
-                    colD[i] = ( Double ) column[i];
-                }
-                if ( USE_R ) rc.assign( factorName, colD );
-            } else {
-                String[] colS = new String[column.length];
-                for ( int i = 0; i < column.length; i++ ) {
-                    colS[i] = ( String ) column[i];
-                }
-
-                FactorValue baseLineFV = baselineConditions.get( factor );
-
-                String baselineFvName = ExperimentalDesignUtils.nameForR( baseLineFV, true );
-
-                if ( USE_R ) {
-                    rc.assignFactor( factorName, Arrays.asList( colS ) );
-                    List<String> stringListEval = rc.stringListEval( ( "levels(" + factorName + ")" ) );
-
-                    /*
-                     * The 'base' is the index of the baseline group in the list of levels: the result of
-                     * 'levels(factor)'. Default base is 1.
-                     */
-
-                    int indexOfBaseline = stringListEval.indexOf( baselineFvName ) + 1; // R is 1-based.
-
-                    rc.voidEval( "contrasts(" + factorName + ")<-contr.treatment(levels(" + factorName + "), base="
-                            + indexOfBaseline + ")" );
-                }
-            }
-        }
     }
 }
