@@ -55,11 +55,15 @@ public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
 
         Collection<BioAssay> bioAssays = this.getBioAssayDimension().getBioAssays();
 
-        if ( bioAssays.size() != this.getNumComponentsStored() ) {
+        if ( bioAssays.size() < this.getNumComponentsStored() ) {
+            /*
+             * This is a sanity check. The number of components stored is fixed at some lower value
+             */
             throw new IllegalArgumentException( "EE id = " + this.getExperimentAnalyzed().getId()
                     + ", PCA: Number of components stored (" + this.getNumComponentsStored()
-                    + ") does not match the number of bioAssays (" + bioAssays.size() + ")" );
+                    + ") is less than the number of bioAssays (" + bioAssays.size() + ")" );
         }
+
         for ( int i = 0; i < bioAssays.size(); i++ ) {
             result.add( null );
         }
@@ -71,6 +75,7 @@ public class PrincipalComponentAnalysisImpl extends PrincipalComponentAnalysis {
             Double[] dA = ArrayUtils.toObject( doubleArr );
             result.set( index, dA );
         }
+
         CollectionUtils.filter( result, new Predicate() {
             @Override
             public boolean evaluate( Object object ) {

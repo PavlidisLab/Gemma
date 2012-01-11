@@ -60,6 +60,8 @@ public class SVDServiceImplTest extends AbstractGeoServiceTest {
         ee = eeService.thaw( ee );
         SVDValueObject svd = svdService.svd( ee );
 
+        assertNotNull( svd );
+
         assertNotNull( svd.getvMatrix() );
         assertEquals( 5, svd.getFactorCorrelations().size() );
     }

@@ -107,11 +107,9 @@ public class SVDValueObject implements Serializable {
 
         this.variances = pca.getVarianceFractions();
         List<Double[]> eigenvectorArrays;
-        try {
-            eigenvectorArrays = pca.getEigenvectorArrays();
-        } catch ( Exception e ) {
-            throw e;
-        }
+
+        eigenvectorArrays = pca.getEigenvectorArrays();
+
         List<Long> bmids = new ArrayList<Long>();
         for ( BioAssay ba : pca.getBioAssayDimension().getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
@@ -121,8 +119,8 @@ public class SVDValueObject implements Serializable {
         }
         this.bioMaterialIds = bmids.toArray( new Long[] {} );
 
-        this.vMatrix = new DenseDoubleMatrix<Long, Integer>( eigenvectorArrays.get( 0 ).length, eigenvectorArrays
-                .size() );
+        this.vMatrix = new DenseDoubleMatrix<Long, Integer>( eigenvectorArrays.get( 0 ).length,
+                eigenvectorArrays.size() );
 
         if ( this.bioMaterialIds.length != eigenvectorArrays.get( 0 ).length ) {
             log.warn( "EE id = " + pca.getExperimentAnalyzed().getId()
