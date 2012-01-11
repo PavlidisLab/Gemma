@@ -531,6 +531,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
         Collection<HitListSize> hitListSizes = new HashSet<HitListSize>();
 
+        assert probeToGeneMap != null;
+
         // maps from Doubles are a bit dodgy...
         Map<Double, Integer> upCounts = new HashMap<Double, Integer>();
         Map<Double, Integer> downCounts = new HashMap<Double, Integer>();
@@ -548,7 +550,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             int numGenes = 0;
             if ( r instanceof ProbeAnalysisResult ) {
                 CompositeSequence probe = ( ( ProbeAnalysisResult ) r ).getProbe();
-                numGenes = probeToGeneMap.get( probe ).size();
+                if ( probeToGeneMap.containsKey( probe ) ) {
+                    Collection<Gene> genes = probeToGeneMap.get( probe );
+                    numGenes = genes.size();
+                }
             }
 
             Collection<ContrastResult> crs = r.getContrasts();
@@ -845,14 +850,20 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      */
     private int getNumberOfGenesTested( List<DifferentialExpressionAnalysisResult> resultList,
             Map<CompositeSequence, Collection<Gene>> probeToGeneMap ) {
+
         Collection<Gene> gs = new HashSet<Gene>();
         for ( DifferentialExpressionAnalysisResult d : resultList ) {
-            gs.addAll( probeToGeneMap.get( ( ( ProbeAnalysisResult ) d ).getProbe() ) );
+            CompositeSequence probe = ( ( ProbeAnalysisResult ) d ).getProbe();
+            if ( probeToGeneMap.containsKey( probe ) ) {
+                gs.addAll( probeToGeneMap.get( probe ) );
+            }
         }
         return gs.size();
     }
 
     /**
+     * Needed to compute the number of genes tested/detected.
+     * 
      * @param resultLists
      * @return
      */
@@ -867,6 +878,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             }
         }
 
+        assert !result.isEmpty();
         return compositeSequenceService.getGenes( result.keySet() );
 
     }

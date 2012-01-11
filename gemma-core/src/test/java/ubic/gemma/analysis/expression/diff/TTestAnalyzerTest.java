@@ -83,7 +83,8 @@ public class TTestAnalyzerTest extends BaseAnalyzerConfigurationTest {
         // for ( HitListSize hitListSize : hitListSizes ) {
         // // TODO explicitly check these counts.
         // log.info( hitListSize.getDirection() + " " + hitListSize.getThresholdQvalue() + " "
-        // + hitListSize.getNumberOfProbes() );
+        // + hitListSize.getNumberOfProbes() )
+        // + hitListSize.getNumberOfGenes());
         // }
 
         // check
