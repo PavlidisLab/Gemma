@@ -444,16 +444,6 @@ public class ArrayDesignServiceImpl extends ubic.gemma.model.expression.arrayDes
         return this.getArrayDesignDao().loadCompositeSequences( arrayDesign.getId() );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceBase#handleLoadFully(java.lang.Long)
-     */
-    @Override
-    protected ArrayDesign handleLoadFully( Long id ) throws Exception {
-        return this.getArrayDesignDao().loadFully( id );
-    }
-
     @Override
     protected Collection<ArrayDesign> handleLoadMultiple( Collection<Long> ids ) throws Exception {
         return this.getArrayDesignDao().load( ids );

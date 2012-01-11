@@ -711,38 +711,7 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDaoBase#handleLoadFully(java.lang.Long)
-     */
-    @Override
-    @Deprecated
-    protected ArrayDesign handleLoadFully( Long id ) throws Exception {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        log.info( "Thawing array design ..." );
-        String queryString = "select ad from ArrayDesignImpl ad inner join "
-                + " fetch ad.compositeSequences cs left join fetch cs.biologicalCharacteristic bs "
-                + " inner join fetch bs.taxon "
-                + " inner join fetch ad.auditTrail auditTrail "
-                + " left join fetch auditTrail.events "
-                + " left join fetch ad.localFiles "
-                + " left join fetch ad.externalReferences "
-                + " left join fetch ad.subsumedArrayDesigns left join fetch ad.mergees "
-                + " left join fetch bs.bioSequence2GeneProduct bs2gp "
-                + " left join fetch bs2gp.geneProduct gp "
-                + " left join fetch ad.designProvider dp inner join fetch dp.auditTrail dpat inner join fetch dpat.events "
-                + " left join fetch gp.gene gene " + " left join fetch gene.aliases " + " where  " + " ad.id = :id";
-
-        Session session = getSession();
-        session.setCacheMode( CacheMode.IGNORE );
-        List<?> list = getHibernateTemplate().findByNamedParam( queryString, "id", id );
-        if ( list.size() == 0 ) return null;
-        ArrayDesign arrayDesign = ( ArrayDesign ) list.iterator().next();
-        log.info( "Thaw done (" + timer.getTime() / 1000 + " s elapsed)" );
-        return arrayDesign;
-    }
+ 
 
     /*
      * (non-Javadoc)

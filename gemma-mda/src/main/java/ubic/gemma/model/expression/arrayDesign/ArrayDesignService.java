@@ -37,19 +37,19 @@ public interface ArrayDesignService {
     /**
      * @return all compositeSequences for the given arrayDesign that do not have any bioSequence associations.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public java.util.Collection<CompositeSequence> compositeSequenceWithoutBioSequences( ArrayDesign arrayDesign );
 
     /**
      * @return all compositeSequences for the given arrayDesign that do not have BLAT result associations.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public java.util.Collection<CompositeSequence> compositeSequenceWithoutBlatResults( ArrayDesign arrayDesign );
 
     /**
      * @return all compositeSequences for the given arrayDesign that do not have gene associations.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public java.util.Collection<CompositeSequence> compositeSequenceWithoutGenes( ArrayDesign arrayDesign );
 
     /**
@@ -60,43 +60,43 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured( { "GROUP_USER" })
+    @Secured({ "GROUP_USER" })
     public ArrayDesign create( ArrayDesign arrayDesign );
 
     /**
      * delete sequence alignment results associated with the bioSequences for this array design.
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void deleteAlignmentData( ArrayDesign arrayDesign );
 
     /**
      * deletes the gene product associations on the specified array design F
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void deleteGeneProductAssociations( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ArrayDesign find( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ArrayDesign> findByAlternateName( String queryString );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ArrayDesign findByName( String name );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ArrayDesign findByShortName( String shortName );
 
     /**
@@ -105,31 +105,31 @@ public interface ArrayDesignService {
      * @param taxon
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ArrayDesign> findByTaxon( Taxon taxon );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<BioAssay> getAllAssociatedBioAssays( Long id );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Integer getCompositeSequenceCount( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ExpressionExperiment> getExpressionExperiments( ArrayDesign arrayDesign );
 
     /**
@@ -228,13 +228,13 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
     public ArrayDesign load( long id );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ArrayDesign> loadAll();
 
     /**
@@ -247,21 +247,15 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<CompositeSequence> loadCompositeSequences( ArrayDesign arrayDesign );
-
-    /**
-     * Does a 'thaw' of an arrayDesign given an id. Returns the thawed arrayDesign.
-     */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
-    public ArrayDesign loadFully( Long id );
 
     /**
      * <p>
      * Given a collection of ID (longs) will return a collection of ArrayDesigns
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public java.util.Collection<ArrayDesign> loadMultiple( java.util.Collection<Long> ids );
 
     /**
@@ -332,7 +326,7 @@ public interface ArrayDesignService {
      * returns the number of bioSequences associated with this ArrayDesign id
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numBioSequences( ArrayDesign arrayDesign );
 
     /**
@@ -340,25 +334,25 @@ public interface ArrayDesignService {
      * returns the number of BlatResults (BioSequence2GeneProduct) entries associated with this ArrayDesign id.
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numBlatResults( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numCompositeSequenceWithBioSequences( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numCompositeSequenceWithBlatResults( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numCompositeSequenceWithGenes( ArrayDesign arrayDesign );
 
     /**
@@ -366,7 +360,7 @@ public interface ArrayDesignService {
      * function to get the number of composite sequences that are aligned to a predicted gene
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numCompositeSequenceWithPredictedGenes( ArrayDesign arrayDesign );
 
     /**
@@ -374,19 +368,19 @@ public interface ArrayDesignService {
      * function to get the number of composite sequences that are aligned to a probe-mapped region.
      * </p>
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numCompositeSequenceWithProbeAlignedRegion( ArrayDesign arrayDesign );
 
     /**
      * Returns the number of unique Genes associated with this ArrayDesign id
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public long numGenes( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void remove( ArrayDesign arrayDesign );
 
     /**
@@ -396,42 +390,42 @@ public interface ArrayDesignService {
      * method can be used to clear those until the "right" sequences can be identified and filled in. Note that this
      * does not delete the BioSequences, it just nulls the BiologicalCharacteristics of the CompositeSequences.
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void removeBiologicalCharacteristics( ArrayDesign arrayDesign );
 
     /**
      * 
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ArrayDesign thaw( ArrayDesign arrayDesign );
 
     /**
      * Perform a less intensive thaw of an array design: not the compositesequences.
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public ArrayDesign thawLite( ArrayDesign arrayDesign );
 
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns );
 
     /**
      * 
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public void update( ArrayDesign arrayDesign );
 
     /**
      * Test whether the candidateSubsumer subsumes the candidateSubsumee. If so, the array designs are updated to
      * reflect this fact. The boolean value returned indicates whether there was indeed a subsuming relationship found.
      */
-    @Secured( { "GROUP_USER", "ACL_SECURABLE_EDIT" })
+    @Secured({ "GROUP_USER", "ACL_SECURABLE_EDIT" })
     public Boolean updateSubsumingStatus( ArrayDesign candidateSubsumer, ArrayDesign candidateSubsumee );
 
     /**
      * @param searchString
      * @return
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ArrayDesign> findByManufacturer( String searchString );
 
 }

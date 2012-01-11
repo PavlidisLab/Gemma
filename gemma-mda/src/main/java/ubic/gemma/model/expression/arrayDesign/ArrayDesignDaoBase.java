@@ -492,19 +492,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadFully(java.lang.Long)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign loadFully( final java.lang.Long id ) {
-        try {
-            return this.handleLoadFully( id );
-        } catch ( Throwable th ) {
-            throw new java.lang.RuntimeException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignDao.loadFully(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignDao#loadValueObjects(java.util.Collection)
      */
     public java.util.Collection<ArrayDesignValueObject> loadValueObjects( final java.util.Collection<Long> ids ) {
@@ -956,12 +943,6 @@ public abstract class ArrayDesignDaoBase extends HibernateDaoSupport implements 
      * Performs the core logic for {@link #loadCompositeSequences(java.lang.Long)}
      */
     protected abstract java.util.Collection<CompositeSequence> handleLoadCompositeSequences( java.lang.Long id )
-            throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #loadFully(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleLoadFully( java.lang.Long id )
             throws java.lang.Exception;
 
     /**

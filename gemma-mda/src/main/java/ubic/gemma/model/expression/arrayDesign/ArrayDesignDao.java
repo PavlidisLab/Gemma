@@ -171,13 +171,6 @@ public interface ArrayDesignDao extends BaseDao<ArrayDesign> {
 
     /**
      * <p>
-     * does a 'thaw' of the given arrayDesign id, and returns the thawed arrayDesign.
-     * </p>
-     */
-    public ArrayDesign loadFully( Long id );
-
-    /**
-     * <p>
      * loads the Value Objects for the Array Designs specified by the input ids.
      * </p>
      */

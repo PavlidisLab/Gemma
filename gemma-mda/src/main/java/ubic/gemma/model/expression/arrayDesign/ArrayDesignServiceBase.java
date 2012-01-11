@@ -475,19 +475,6 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
     }
 
     /**
-     * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadFully(java.lang.Long)
-     */
-    public ubic.gemma.model.expression.arrayDesign.ArrayDesign loadFully( final java.lang.Long id ) {
-        try {
-            return this.handleLoadFully( id );
-        } catch ( Throwable th ) {
-            throw new ubic.gemma.model.expression.arrayDesign.ArrayDesignServiceException(
-                    "Error performing 'ubic.gemma.model.expression.arrayDesign.ArrayDesignService.loadFully(java.lang.Long id)' --> "
-                            + th, th );
-        }
-    }
-
-    /**
      * @see ubic.gemma.model.expression.arrayDesign.ArrayDesignService#loadMultiple(java.util.Collection)
      */
     public java.util.Collection<ArrayDesign> loadMultiple( final java.util.Collection<Long> ids ) {
@@ -1022,12 +1009,6 @@ public abstract class ArrayDesignServiceBase implements ubic.gemma.model.express
      */
     protected abstract java.util.Collection<CompositeSequence> handleLoadCompositeSequences(
             ubic.gemma.model.expression.arrayDesign.ArrayDesign arrayDesign ) throws java.lang.Exception;
-
-    /**
-     * Performs the core logic for {@link #loadFully(java.lang.Long)}
-     */
-    protected abstract ubic.gemma.model.expression.arrayDesign.ArrayDesign handleLoadFully( java.lang.Long id )
-            throws java.lang.Exception;
 
     /**
      * Performs the core logic for {@link #loadMultiple(java.util.Collection)}
