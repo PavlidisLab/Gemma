@@ -105,12 +105,71 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 	
 	initComponent: function(){
 	
+		var withinSetExperimentCombo = new Gemma.ExperimentAndExperimentGroupCombo({
+			width: 300,
+			style:'margin:10px',
+			hideTrigger: true,
+			emptyText: 'Add experiments to your set'
+		});
+		withinSetExperimentCombo.setTaxonId(this.taxonId);
+		withinSetExperimentCombo.on('select', function(combo, record, index){
+		
+			var allIds = this.entityIds;
+			var newIds = record.get('memberIds');
+			var i;
+			// don't add duplicates
+			for (i = 0; i < newIds.length; i++) {
+				if (allIds.indexOf(newIds[i]) < 0) {
+					allIds.push(newIds[i]);
+				}
+			}
+			var currentTime = new Date();
+			var hours = currentTime.getHours();
+			var minutes = currentTime.getMinutes();
+			if (minutes < 10) {
+				minutes = "0" + minutes;
+			}
+			var time = '(' + hours + ':' + minutes + ') ';
+			
+			var editedGroup;
+			editedGroup = new SessionBoundExpressionExperimentSetValueObject();
+			editedGroup.id = null;
+			editedGroup.name = time+" Custom Experiment Set";
+			editedGroup.description = "Temporary experiment group created " + currentTime.toString();
+			editedGroup.expressionExperimentIds = allIds;
+			editedGroup.taxonId = record.get('taxonId');
+			editedGroup.taxonName = record.get('taxonName');
+			editedGroup.numExperiments = editedGroup.expressionExperimentIds.length;
+			editedGroup.modified = true;
+			editedGroup.publik = false;
+			
+			
+			ExpressionExperimentSetController.addSessionGroups([editedGroup], // returns datasets added
+ 				function(newValueObjects){
+				// should be at least one datasetSet
+				if (newValueObjects === null || newValueObjects.length === 0) {
+					// TODO error message
+					return;
+				} else {
+					
+					withinSetExperimentCombo.reset();
+					this.focus(); // want combo to lose focus
+					this.loadExperimentPreviewFromIds(newValueObjects[0].expressionExperimentIds);
+					this.setSelectedSetValueObject(newValueObjects[0]);
+					this.updateTitle();
+					this.fireEvent('experimentListModified', newValueObjects);
+					this.fireEvent('doneModification');
+				}
+			}.createDelegate(this));
+			
+		},this);
+
 		Ext.apply(this, {
 			selectionEditor: new Gemma.ExpressionExperimentMembersGrid({
 					name : 'selectionEditor',
 					hideHeaders : true,
 					frame : false,
-					//queryText : this.experimentCombo.getValue(),
+					//queryText : this.withinSetExperimentCombo.getValue(),
 					width : 500,
 					height : 500
 				}),
@@ -118,7 +177,9 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 				'<a target="_blank" href="/Gemma/expressionExperiment/showExpressionExperiment.html?id=',
 				'{id}"', ' ext:qtip="{shortName}">{shortName}</a>&nbsp; {name} <span style="color:grey">({taxon})</span></div></tpl>'),
 			
-			defaultPreviewTitle: "Experiment Selection Preview"
+			defaultPreviewTitle: "Experiment Selection Preview",
+			
+			addingCombo: withinSetExperimentCombo
 		
 		});
 		Gemma.ExperimentSetPreview.superclass.initComponent.call(this);

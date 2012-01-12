@@ -675,6 +675,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 
 	/**
 	 * Sets ups name and description for new group
+	 * TODO refactor out, some duplicated code with ExpressionExperimentMembersGrid.createDetails
 	 */
 	createDetails : function() {
 
@@ -694,14 +695,30 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			if (minutes < 10) {
 				minutes = "0" + minutes;
 			}
-			this.newGroupName = '(' + hours + ':' + minutes + ')';
-			this.newGroupName += ' Edited \'' + groupName + '\' group';
+			var time = '(' + hours + ':' + minutes + ') ';
+			
+			// Use simple, non descriptive naming for now
+			this.newGroupName  = time + "Custom Gene Set";
+			
+			// if group name was already made in this way, just change root
+			//var prefix = "Edited \''";
+			//var suffix = '\' group';
+			
+			//var matches = groupName.match(/^\(\d+:\d+\)\s*/);
+			//if ( matches !== null) {
+			//	groupName = groupName.substring(matches[0].length, groupName.length);
+			//	if (groupName.substring(0, prefix.length) === prefix &&
+			//			groupName.substring(groupName.length - suffix.length, groupName.length) === suffix) {
+			//		groupName = groupName.substring(prefix.length, groupName.length - suffix.length);
+			//	}
+			//}
+			//this.newGroupName = time + prefix + groupName + suffix;
 		}
 
 		// if description for new group wasn't passed from parent component,
 		// make one up
 		if (!this.newGroupDescription || this.newGroupDescription === null) {
-			this.newGroupDescription = "Temporary experiment group created " + (new Date()).toString();
+			this.newGroupDescription = "Temporary gene group created " + (new Date()).toString();
 		}
 	},
 

@@ -78,6 +78,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		// load preview of group if group was selected
 		if (this.isGeneSet) {
 			
+			this.preview.setTaxonId(taxonId);
 			this.preview.loadGenePreviewFromGeneSet(this.getSelectedGeneSetValueObject());
 
 		}
@@ -92,6 +93,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 			// reset the gene preview panel content
 			this.resetGenePreview();
 
+			this.preview.setTaxonId(taxonId);
 			this.preview.loadGenePreviewFromGenes([this.selectedGeneOrGroup.resultValueObject]);
 		}
 	},
@@ -111,6 +113,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneIds = ids;
 		this.searchForm.geneIds = ids;
 		// load the preview
+		this.preview.setTaxonId(this.taxonId);
 		this.preview.loadGenePreviewFromIds(ids);
 		this.preview.on('previewLoaded', function(genes){
 			var geneSet = this.makeSessionBoundGeneSet(ids, taxonId, 'Backup GO group', 'GO database unavailable, using backup list');
@@ -255,8 +258,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 				this.resetGenePreview();
 
 
-				this.preview.loadGenePreviewFromGenes(allGenes);
 				this.preview.setTaxonId(taxonId);
+				this.preview.loadGenePreviewFromGenes(allGenes);
 				
 				
 				if (queriesWithMoreThanOneResult.length > 0 || queriesWithNoResults.length > 0) {
@@ -310,6 +313,7 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.doLayout();
 		
 		
+		this.preview.setTaxonId(taxonId);
 		this.preview.loadGenePreviewFromGenes(genesToPreview);
 		this.preview.show();
 		
@@ -343,7 +347,8 @@ Gemma.GeneSearchAndPreview = Ext.extend(Ext.Panel, {
 		this.geneCombo = new Gemma.GeneAndGeneGroupCombo({
 			width: 282,
 			hideTrigger: true,
-			taxonId: this.taxonId
+			taxonId: this.taxonId,
+			emptyText: 'Add genes to your set'
 		});
 		
 		this.geneCombo.on('select', function(combo, record, index) {

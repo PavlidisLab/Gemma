@@ -108,6 +108,66 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 	
 	initComponent: function(){
 	
+		var withinSetGeneCombo = new Gemma.GeneAndGeneGroupCombo({
+			width: 300,
+			style:'margin:10px',
+			hideTrigger: true,
+			taxonId: this.taxonId,
+			emptyText: 'Add genes to your set'
+		});
+		withinSetGeneCombo.setTaxonId(this.taxonId);
+		withinSetGeneCombo.on('select', function(combo, record, index){
+					
+			var allIds = this.entityIds;
+			var newIds = record.get('memberIds');
+			var i;
+			// don't add duplicates
+			for (i = 0; i < newIds.length; i++) {
+				if (allIds.indexOf(newIds[i]) < 0) {
+					allIds.push(newIds[i]);
+				}
+			}
+		
+			var currentTime = new Date();
+			var hours = currentTime.getHours();
+			var minutes = currentTime.getMinutes();
+			if (minutes < 10) {
+				minutes = "0" + minutes;
+			}
+			var time = '(' + hours + ':' + minutes + ') ';
+		
+			var editedGroup;
+			editedGroup = new SessionBoundGeneSetValueObject();
+			editedGroup.id = null;
+			editedGroup.name = time+" Custom Gene Set";
+			editedGroup.description = "Temporary gene group created " + currentTime.toString();
+			editedGroup.geneIds = allIds;
+			editedGroup.taxonId = record.get('taxonId');
+			editedGroup.taxonName = record.get('taxonName');
+			editedGroup.size = editedGroup.geneIds.length;
+			editedGroup.modified = true;
+			editedGroup.publik = false;
+			
+			
+			GeneSetController.addSessionGroups([editedGroup], // returns datasets added
+ 				function(geneSets){
+					// should be at least one datasetSet
+					if (geneSets === null || geneSets.length === 0) {
+						// TODO error message
+						return;
+					} else {
+									
+						withinSetGeneCombo.reset();
+						this.focus(); // want combo to lose focus
+						this.loadGenePreviewFromIds(geneSets[0].geneIds);
+						this.setSelectedSetValueObject(geneSets[0]);
+						this.updateTitle();
+						this.fireEvent('geneListModified', geneSets, geneSets[0].geneIds);
+						this.fireEvent('doneModification');
+					}
+				}.createDelegate(this));
+		},this);
+
 		Ext.apply(this, {
 			selectionEditor: new Gemma.GeneMembersSaveGrid({
 				name: 'geneSelectionEditor',
@@ -120,7 +180,9 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 			'<a target="_blank" href="/Gemma/gene/showGene.html?id={id}">{officialSymbol}</a> {officialName} ' +
 			'<span style="color:grey">({taxonCommonName})</span></div>'),
 			
-			defaultPreviewTitle: "Gene Selection Preview"
+			defaultPreviewTitle: "Gene Selection Preview",
+			
+			addingCombo: withinSetGeneCombo
 		
 		});
 		Gemma.GeneSetPreview.superclass.initComponent.call(this);

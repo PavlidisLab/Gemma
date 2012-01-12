@@ -469,14 +469,26 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			
 			// adding time to end of session-bound group titles in case it's not
 			// unique
-			var currentTime = new Date();
+						var currentTime = new Date();
 			var hours = currentTime.getHours();
 			var minutes = currentTime.getMinutes();
 			if (minutes < 10) {
 				minutes = "0" + minutes;
 			}
-			this.newGroupName = '(' + hours + ':' + minutes + ')';
-			this.newGroupName += ' Edited \'' + groupName + '\' group';
+			var time = '(' + hours + ':' + minutes + ') ';
+			
+			// Use simple, non descriptive naming for now
+			this.newGroupName  = time + "Custom Experiment Set";
+			
+			//var matches = groupName.match(/^\(\d+:\d+\)\s*/);
+			//if ( matches !== null) {
+			//	groupName = groupName.substring(matches[0].length, groupName.length);
+			//	if (groupName.substring(0, prefix.length) === prefix &&
+			//			groupName.substring(groupName.length - suffix.length, groupName.length) === suffix) {
+			//		groupName = groupName.substring(prefix.length, groupName.length - suffix.length);
+			//	}
+			//}
+			//this.newGroupName = time + ' Edited \'' + groupName + '\' group';
 		}
 
 		// if description for new group wasn't passed from parent component,

@@ -52,7 +52,7 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 			cn: ''
 		});
 		// this.genePreviewExpandBtn.disable().hide();
-		// this.selectionEditorBtn.disable().hide();
+		// this.moreIndicator.disable().hide();
 	},
 	/**
 	 * insert a message into the preview
@@ -71,6 +71,9 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 	setTaxonId: function(taxonId){
 		this.taxonId = taxonId;
 		this.selectionEditor.setTaxonId(taxonId);
+		if (this.addingCombo) {
+			this.addingCombo.setTaxonId(taxonId);
+		}
 	},
 	/**
 	 * get the taxon id for the preview
@@ -100,17 +103,12 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 		this.updateTitle();
 		
 		if (entities.length >= total) {
-			this.moreIndicator.update('');
+			this.moreIndicator.setText('');
+			this.moreIndicator.disable().hide();
 		} else {
-			this.moreIndicator.update('[...]');
+			this.moreIndicator.enable().show();
+			this.moreIndicator.setText('['+(total - entities.size()) + ' more...]');
 		}
-		
-		if (entities.size() === 1) {
-			this.selectionEditorBtn.setText('0 more - Edit');
-		} else {
-			this.selectionEditorBtn.setText((total - entities.size()) + ' more - Edit');
-		}
-		this.selectionEditorBtn.enable().show();
 		this.previewContent.expand();
 	},
 
@@ -143,7 +141,7 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 	 * collapse the preview text
 	 */
 	collapsePreview: function(){
-		this.selectionEditorBtn.hide();
+		this.moreIndicator.hide();
 		if (typeof this.previewContent !== 'undefined') {
 			this.previewContent.collapse(true);
 		}
@@ -152,7 +150,7 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 	 * expand the preview text
 	 */
 	expandPreview: function(){
-		this.selectionEditorBtn.show();
+		this.moreIndicator.show();
 		if (typeof this.previewContent !== 'undefined') {
 			this.previewContent.expand(true);
 		}
@@ -206,14 +204,15 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 			Ext.getBody().unmask();
 		}, this);
 		
-		this.selectionEditorBtn = new Ext.Button({
+		this.moreIndicator = new Ext.Button({
 			handler: this.launchSelectionEditor,
 			scope: this,
-			style: 'float:right;text-align:right; padding-right:10px; padding-bottom:5px',
+			//style: 'float:right;text-align:right; padding-right:10px',
+			style: 'margin-left:10px; padding-bottom:5px;',
 			tooltip: "Edit your selection",
-			hidden: true,
+			//hidden: true,
 			//disabled : true, // enabling later is buggy in IE
-			ctCls: 'right-align-btn transparent-btn transparent-btn-link'
+			ctCls: 'transparent-btn transparent-btn-link'
 		});
 		
 		this.selectionEditorWindow = new Ext.Window({
@@ -222,7 +221,7 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 			width: 500,
 			height: 500,
 			items: this.selectionEditor,
-			title: 'Edit Your Gene Selection'
+			title: 'Edit Your Selection'
 		});
 		this.selectionEditor.on('titlechange', function(panel, newTitle){
 			this.selectionEditorWindow.setTitle(newTitle);
@@ -238,8 +237,7 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 		 */
 		'doneModification');
 		
-		Ext.apply(this,{
-			items: [{
+		var itemsForCmp = [{
 				ref: 'previewContent',
 				title: this.defaultPreviewTitle,
 				collapsible: true,
@@ -255,30 +253,30 @@ Gemma.SetPreview = Ext.extend(Ext.Panel, {
 				tpl: this.defaultTpl,
 				
 				tools: [{
-					id: 'delete',
-					handler: function(event, toolEl, panel, toolConfig){
-						this.fireEvent('removeMe');
-					}.createDelegate(this, [], true),
-					qtip: 'Remove this parameter from your search'
+					id: 'saveEdit',
+					handler: this.launchSelectionEditor,
+					scope: this,
+					qtip: 'Edit or save your set'
 				}],
 				listeners: {
 					collapse: function(){
 						this.moreIndicator.hide();
-						this.selectionEditorBtn.hide();
 					},
 					expand: function(){
-						this.selectionEditorBtn.show();
 						this.moreIndicator.show();
 					},
 					scope: this
 				}
-			}, {
-				xtype: 'box',
-				ref: 'moreIndicator',
-				html: '[...]',
-				hidden: false,
-				style: 'margin-left:10px; background-color:transparent',
-			}, this.selectionEditorBtn]
+			}];	
+		if (this.moreIndicator) {
+			itemsForCmp.push(this.moreIndicator);
+		}
+		if(this.addingCombo){
+			itemsForCmp.push(this.addingCombo);
+		}
+		
+		Ext.apply(this,{
+			items: itemsForCmp
 		});
 		
 		Gemma.SetPreview.superclass.initComponent.call(this);

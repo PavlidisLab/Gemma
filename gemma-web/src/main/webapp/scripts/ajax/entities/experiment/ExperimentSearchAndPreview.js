@@ -84,6 +84,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 				return;
 			}
 
+			this.preview.setTaxonId(taxonId);
 			this.preview.loadExperimentPreviewFromExperimentSet(this.selectedExperimentOrGroup.resultValueObject);
 
 		}
@@ -94,6 +95,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			// reset the experiment preview panel content
 			this.resetExperimentPreview();
 
+			this.preview.setTaxondId(taxonId);
 			this.preview.loadExperimentPreviewFromExperiments([this.selectedExperimentOrGroup.resultValueObject]);
 			
 		}
@@ -155,14 +157,12 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 
 
 
-		this.preview = new Gemma.ExperimentSetPreview({
-			taxonId: this.taxonId
-		});
+		this.preview = new Gemma.ExperimentSetPreview();
 							
 		this.preview.on('experimentListModified', function(newSets) {
 			var i;
 			for (i = 0; i < newSets.length; i++) { // should only be one
-				if (typeof newSets[i].geneIds !== 'undefined' && typeof newSets[i].name !== 'undefined') {
+				if (typeof newSets[i].expressionExperimentIds !== 'undefined' && typeof newSets[i].name !== 'undefined') {
 					// update record
 					this.selectedExperimentOrGroup.resultValueObject = newSets[i];
 					this.setSelectedExpressionExperimentSetValueObject(newSets[i]);

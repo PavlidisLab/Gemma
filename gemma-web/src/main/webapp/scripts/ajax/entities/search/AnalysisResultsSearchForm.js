@@ -1147,7 +1147,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 					defaults : {
 						border : false
 					},
-					style : 'padding-bottom: 10px',
+					style : 'padding-bottom: 10px;',
 					autoDestroy : true
 				});
 		this.geneChooserIndex = -1;
@@ -1203,7 +1203,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 								html : 'or',
 								style : 'white-space: nowrap;text-align:center;vertical-align:middle;font-size:1.7em;margin-top:7px'
 							}, this.diffExToggle, {
-								html : 'in:',//'in&hellip;',
+								html : 'of:',
 								style : 'white-space: nowrap;text-align:center;vertical-align:middle;font-size:1.7em;margin-top:7px'
 							}]
 
@@ -1223,7 +1223,7 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				});
 				this.theseGenesPanel = new Ext.Panel({
 					html: 'these genes',
-					style: 'text-align:center;font-size:1.4em;padding:0px',
+					style: 'text-align:center;font-size:1.4em;',
 					tpl: new Ext.XTemplate('these <span class="blue-text-not-link" style="font-weight:bold " ', 
 						'ext:qtip="'+Gemma.HelpText.WidgetDefaults.AnalysisResultsSearchForm.taxonModeTT+'">', 
 						'{taxonCommonName}</span> genes ', 
@@ -1369,15 +1369,15 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 						defaults: {
 							border: false
 						},
-						items: [this.theseExperimentsPanel, this.experimentChoosers]
+						items: [this.theseGenesPanel, this.geneChoosers]
 					}, {
-						html: ' for ',
-						style: 'white-space: nowrap;font-size:1.7em;padding-top: 32px;'
+						html: 'in ',
+						style: 'white-space: nowrap;font-size:1.7em;padding-top: 32px;padding-right:5px;'
 					}, {
 						defaults: {
 							border: false
 						},
-						items: [this.theseGenesPanel, this.geneChoosers]
+						items: [this.theseExperimentsPanel, this.experimentChoosers]
 					}, {
 						style:'padding:20 0 0 0px;margin:0px;',
 						items: [{
@@ -1529,8 +1529,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 				taxonId: this.taxonId,
 				listeners: {
 					madeFirstSelection: function(){
-						// Ext.getCmp(this.getId()+'Button').enable();
-						this.searchForm.addGeneChooser();
+						// allows multiple set selections,
+						// functionality removed for now
+						// this.searchForm.addGeneChooser();
 					},
 					removeGene: function(){
 						this.searchForm.removeGeneChooser(this.getId());
@@ -1572,8 +1573,9 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 			id: 'experimentChooser' + this.experimentChooserIndex,
 			listeners: {
 				madeFirstSelection: function(){
-					// Ext.getCmp(this.getId()+'Button').enable();
-					this.searchForm.addExperimentChooser();
+					// allows multiple set selections,
+					// functionality removed for now
+					// this.searchForm.addExperimentChooser();
 				},
 				removeExperiment: function(){
 					this.searchForm.removeExperimentChooser(this.getId());
@@ -1632,7 +1634,10 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		
 		// get the chooser to inject
 		var chooser = this.experimentChoosers.getComponent(0);
-		this.addExperimentChooser();
+		
+		// allows multiple set selections,
+		// functionality removed for now
+		//this.addExperimentChooser();
 		var myscope = this;	
 			
 		// make a gene combo record for the db-backed experimentSetValueObject
@@ -1671,7 +1676,11 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 	
 		// get the chooser to inject
 		var chooser = this.geneChoosers.getComponent(0);
-		this.addGeneChooser();
+		
+		
+		// allows multiple set selections,
+		// functionality removed for now
+		//this.addGeneChooser();
 		var myscope = this;
 		
 		// make a gene combo record for the db-backed experimentSetValueObject
