@@ -119,6 +119,53 @@ public class OntologyService implements InitializingBean {
         }
     }
 
+    private class CharacteristicComparator implements Comparator<Characteristic> {
+
+        /*
+         * (non-Javadoc)
+         * 
+         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         */
+        @Override
+        public int compare( Characteristic o1, Characteristic o2 ) {
+
+            if ( o1.getValue().length() == o2.getValue().length() ) {
+                if ( o1.getDescription().startsWith( USED ) ) {
+                    if ( o2.getDescription().startsWith( USED ) ) {
+                        return compareByUri( o1, o2 );
+                    }
+                    // o1 is used, o2 is not
+                    return -1;
+
+                } else if ( o2.getDescription().startsWith( USED ) ) {
+                    // o2 is used and o1 is not.
+                    return -1;
+                } else {
+                    // neither is used.
+                    return compareByUri( o1, o2 );
+                }
+            }
+            return o1.getValue().length() < o2.getValue().length() ? -1 : 1;
+        }
+
+        private int compareByUri( Characteristic o1, Characteristic o2 ) {
+            // both are used. Break tie based on whether it has a URI
+            if ( o1 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o1 ).getValueUri() != null ) {
+                if ( !( o2 instanceof VocabCharacteristic ) || ( ( VocabCharacteristic ) o2 ).getValueUri() == null ) {
+                    return -1;
+                }
+                // both have URIs
+                return ( ( VocabCharacteristic ) o1 ).getValueUri().compareTo(
+                        ( ( VocabCharacteristic ) o2 ).getValueUri() );
+            } else if ( o2 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o2 ).getValueUri() != null ) {
+                // we know o1 does not have a uri.
+                return 1;
+            }
+            // both not having uris
+            return o1.getValue().toLowerCase().compareTo( o2.getValue().toLowerCase() );
+        }
+    }
+
     private static Log log = LogFactory.getLog( OntologyService.class.getName() );
 
     private static final String USED = " -USED- ";
@@ -386,20 +433,6 @@ public class OntologyService implements InitializingBean {
     }
 
     /**
-     * @return the NIFSTDOntologyService
-     */
-    public NIFSTDOntologyService getNifstfOntologyService() {
-        return nifstdOntologyService;
-    }
-
-    /**
-     * @return the HumanPhenotypeOntologyService
-     */
-    public HumanPhenotypeOntologyService getHumanPhenotypeOntologyService() {
-        return humanPhenotypeOntologyService;
-    }
-
-    /**
      * @return the chebiOntologyService
      */
     public ChebiOntologyService getChebiOntologyService() {
@@ -421,10 +454,10 @@ public class OntologyService implements InitializingBean {
     }
 
     /**
-     * @return the mgedOntologyService
+     * @return the HumanPhenotypeOntologyService
      */
-    public MgedOntologyService getMgedOntologyService() {
-        return mgedOntologyService;
+    public HumanPhenotypeOntologyService getHumanPhenotypeOntologyService() {
+        return humanPhenotypeOntologyService;
     }
 
     /**
@@ -432,6 +465,20 @@ public class OntologyService implements InitializingBean {
      */
     public MammalianPhenotypeOntologyService getMammalianPhenotypeOntologyService() {
         return mammalianPhenotypeOntologyService;
+    }
+
+    /**
+     * @return the mgedOntologyService
+     */
+    public MgedOntologyService getMgedOntologyService() {
+        return mgedOntologyService;
+    }
+
+    /**
+     * @return the NIFSTDOntologyService
+     */
+    public NIFSTDOntologyService getNifstfOntologyService() {
+        return nifstdOntologyService;
     }
 
     /**
@@ -461,6 +508,16 @@ public class OntologyService implements InitializingBean {
             if ( term != null ) return term;
         }
         return null;
+    }
+
+    /**
+     * Reinitialize all the ontologies "from scratch". This is necessary if indices are old etc. This should be
+     * admin-only.
+     */
+    public void reinitializeAllOntologies() {
+        for ( AbstractOntologyService serv : this.ontologyServices ) {
+            serv.startInitializationThread( true );
+        }
     }
 
     /**
@@ -861,53 +918,6 @@ public class OntologyService implements InitializingBean {
         sortedTerms.addAll( sortedResultsBottom );
 
         return sortedTerms;
-    }
-
-    private class CharacteristicComparator implements Comparator<Characteristic> {
-
-        /*
-         * (non-Javadoc)
-         * 
-         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-         */
-        @Override
-        public int compare( Characteristic o1, Characteristic o2 ) {
-
-            if ( o1.getValue().length() == o2.getValue().length() ) {
-                if ( o1.getDescription().startsWith( USED ) ) {
-                    if ( o2.getDescription().startsWith( USED ) ) {
-                        return compareByUri( o1, o2 );
-                    }
-                    // o1 is used, o2 is not
-                    return -1;
-
-                } else if ( o2.getDescription().startsWith( USED ) ) {
-                    // o2 is used and o1 is not.
-                    return -1;
-                } else {
-                    // neither is used.
-                    return compareByUri( o1, o2 );
-                }
-            }
-            return o1.getValue().length() < o2.getValue().length() ? -1 : 1;
-        }
-
-        private int compareByUri( Characteristic o1, Characteristic o2 ) {
-            // both are used. Break tie based on whether it has a URI
-            if ( o1 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o1 ).getValueUri() != null ) {
-                if ( !( o2 instanceof VocabCharacteristic ) || ( ( VocabCharacteristic ) o2 ).getValueUri() == null ) {
-                    return -1;
-                }
-                // both have URIs
-                return ( ( VocabCharacteristic ) o1 ).getValueUri().compareTo(
-                        ( ( VocabCharacteristic ) o2 ).getValueUri() );
-            } else if ( o2 instanceof VocabCharacteristic && ( ( VocabCharacteristic ) o2 ).getValueUri() != null ) {
-                // we know o1 does not have a uri.
-                return 1;
-            }
-            // both not having uris
-            return o1.getValue().toLowerCase().compareTo( o2.getValue().toLowerCase() );
-        }
     }
 
 }

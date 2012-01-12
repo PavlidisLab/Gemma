@@ -35,6 +35,9 @@ AnnotationController.createBioMaterialTag = function(p0, p1, callback) {
 AnnotationController.removeBioMaterialTag = function(p0, p1, callback) {
 	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'removeBioMaterialTag', p0, p1, callback);
 }
+AnnotationController.reinitializeOntologyIndices = function(callback) {
+	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'reinitializeOntologyIndices', callback);
+}
 AnnotationController.validateTags = function(p0, callback) {
 	dwr.engine._execute(AnnotationController._path, 'AnnotationController', 'validateTags', p0, callback);
 }

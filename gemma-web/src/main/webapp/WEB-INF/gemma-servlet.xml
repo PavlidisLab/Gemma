@@ -766,6 +766,7 @@ gemma.max.fileupload.size.bytes=
 								<value>removeExperimentTag</value>
 								<value>createBioMaterialTag</value>
 								<value>removeBioMaterialTag</value>
+								<value>reinitializeOntologyIndices</value>
 								<value>validateTags</value>
 							</list>
 						</property>
