@@ -144,8 +144,8 @@ public class BatchConfound {
             Map<Long, Double> bmToFv = bioMaterialFactorMap.get( ef );
             int numBioMaterials = bmToFv.keySet().size();
 
-            double p;
-            double chiSquare;
+            double p = Double.NaN;
+            double chiSquare = Double.NaN;
             int df;
             int numBatches = batchFactor.getFactorValues().size();
             if ( ExperimentalDesignUtils.isContinuous( ef ) ) {
@@ -200,28 +200,32 @@ public class BatchConfound {
                 }
 
                 ChiSquareTest cst = new ChiSquareTestImpl();
-                try{
+
+                try {
                     chiSquare = cst.chiSquare( counts );
+                } catch ( IllegalArgumentException e ) {
+                    log.warn( "IllegalArgumentException exception computing ChiSq for : " + ef + "; Error was: "
+                            + e.getMessage() );
+                    chiSquare = Double.NaN;
                 }
-                catch (IllegalArgumentException e){
-                    log.warn( "IllegalArgumentException exception computing ChiSq : " + e.getMessage() );
-                    throw e;
-                }
-                
+
                 df = ( counts.length - 1 ) * ( counts[0].length - 1 );
                 ChiSquaredDistribution distribution = new ChiSquaredDistributionImpl( df );
 
-                try {
-                    p = 1.0 - distribution.cumulativeProbability( chiSquare );
-                } catch ( MathException e ) {
-                    log.warn( "Math exception computing ChiSq probability for " + chiSquare + ": " + e.getMessage() );
-                    p = Double.NaN;
+                if ( !Double.isNaN( chiSquare ) ) {
+                    try {
+                        p = 1.0 - distribution.cumulativeProbability( chiSquare );
+                    } catch ( MathException e ) {
+                        log.warn( "Math exception computing ChiSq probability for " + chiSquare + ": " + e.getMessage() );
+                        p = Double.NaN;
+                    }
                 }
 
                 log.debug( "ChiSq\t" + ee.getId() + "\t" + ee.getShortName() + "\t" + ef.getId() + "\t" + ef.getName()
                         + "\t" + String.format( "%.2f", chiSquare ) + "\t" + df + "\t" + String.format( "%.2g", p )
                         + "\t" + numBatches );
             }
+
             BatchConfoundValueObject summary = new BatchConfoundValueObject( ee, ef, chiSquare, df, p, numBatches );
 
             result.add( summary );
