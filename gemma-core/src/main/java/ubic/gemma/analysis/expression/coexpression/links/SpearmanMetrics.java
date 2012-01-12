@@ -346,6 +346,7 @@ public class SpearmanMetrics extends MatrixRowPairPearsonAnalysis {
             }
 
             DoubleArrayList ranksIA = Rank.rankTransform( new DoubleArrayList( r ) );
+            assert ranksIA != null;
             double ri[] = new double[ranksIA.size()];
             for ( int n = 0, w = ranksIA.size(); n < w; n++ ) {
                 ri[n] = ranksIA.get( n );

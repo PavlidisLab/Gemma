@@ -290,7 +290,9 @@ public class ProcessedExpressionDataVectorCreateService {
             Collection<ProcessedExpressionDataVector> processedDataVectors, ExpressionDataDoubleMatrix intensities ) {
 
         DoubleArrayList ranksByMean = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.mean );
+        assert ranksByMean != null;
         DoubleArrayList ranksByMax = getRanks( intensities, ProcessedExpressionDataVectorDao.RankMethod.max );
+        assert ranksByMax != null;
 
         for ( ProcessedExpressionDataVector vector : processedDataVectors ) {
             CompositeSequence de = vector.getDesignElement();

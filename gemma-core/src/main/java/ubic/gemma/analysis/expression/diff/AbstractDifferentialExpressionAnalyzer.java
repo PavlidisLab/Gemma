@@ -114,13 +114,25 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
     /**
      * @param pvalues
-     * @return normalized ranks of the pvalues.
+     * @return normalized ranks of the pvalues, or null if they were invalid/unusable.
      */
     protected double[] computeRanks( double[] pvalues ) {
-        if ( pvalues == null ) throw new IllegalArgumentException( "Null pvalues" );
-        if ( pvalues.length == 0 ) throw new IllegalArgumentException( "Empty pvalues array" );
-        DoubleArrayList pvalDal = new DoubleArrayList( pvalues );
-        DoubleArrayList ranks = Rank.rankTransform( pvalDal );
+        if ( pvalues == null ) {
+            log.error( "Null pvalues" );
+            return null;
+        }
+        if ( pvalues.length == 0 ) {
+            log.error( "Empty pvalues array" );
+            return null;
+        }
+
+        DoubleArrayList ranks = Rank.rankTransform( new DoubleArrayList( pvalues ) );
+
+        if ( ranks == null ) {
+            log.error( "Pvalue ranks could not be computed" );
+            return null;
+        }
+
         double[] normalizedRanks = new double[ranks.size()];
         for ( int i = 0; i < ranks.size(); i++ ) {
             normalizedRanks[i] = ranks.get( i ) / ranks.size();
@@ -130,11 +142,14 @@ public abstract class AbstractDifferentialExpressionAnalyzer extends AbstractAna
 
     /**
      * @param pvalues
-     * @return
+     * @return Qvalues, or null if they could not be computed.
      */
     protected double[] benjaminiHochberg( Double[] pvalues ) {
         DoubleMatrix1D benjaminiHochberg = MultipleTestCorrection.benjaminiHochberg( new DenseDoubleMatrix1D(
                 ArrayUtils.toPrimitive( pvalues ) ) );
+        if ( benjaminiHochberg == null ) {
+            return null;
+        }
         return benjaminiHochberg.toArray();
     }
 

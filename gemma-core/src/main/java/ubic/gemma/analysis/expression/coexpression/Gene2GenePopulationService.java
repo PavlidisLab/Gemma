@@ -288,20 +288,24 @@ public class Gene2GenePopulationService {
      */
     private void completeNodeDegreeComputations( boolean useDB ) {
 
-        DoubleArrayList l = new DoubleArrayList();
+        DoubleArrayList vals = new DoubleArrayList();
 
         for ( GeneCoexpressionNodeDegree n : this.allGeneNodeDegrees ) {
             // l.add( n.getMedian() );
             /*
              * The final ranks are based on the pvalues, not the medians.
              */
-            l.add( n.getPvalue() );
+            vals.add( n.getPvalue() );
         }
 
-        DoubleArrayList ranks = Rank.rankTransform( l );
+        DoubleArrayList ranks = Rank.rankTransform( vals );
 
-        QuantileBin1D f = new QuantileBin1D( true, l.size(), 0.0, 0.0, l.size(), randomNumberGenerator );
-        f.addAllOf( l );
+        if ( ranks == null ) {
+            // FIXME
+        }
+
+        QuantileBin1D f = new QuantileBin1D( true, vals.size(), 0.0, 0.0, vals.size(), randomNumberGenerator );
+        f.addAllOf( vals );
         log.info( "Finalizing node degree computation" );
 
         for ( int i = 0; i < this.allGeneNodeDegrees.size(); i++ ) {

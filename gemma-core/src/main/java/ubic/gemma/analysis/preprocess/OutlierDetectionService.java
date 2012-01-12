@@ -157,6 +157,7 @@ public class OutlierDetectionService {
          */
 
         DoubleArrayList ranks = Rank.rankTransform( cors );
+        assert ranks != null;
         int desiredQuantileIndex = ( int ) Math.ceil( cors.size() * ( quantileThreshold / 100.0 ) );
         double valueAtDesiredQuantile = Double.MIN_VALUE;
         for ( int i = 0; i < ranks.size(); i++ ) {

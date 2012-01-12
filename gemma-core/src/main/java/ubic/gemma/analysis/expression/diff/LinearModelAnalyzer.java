@@ -322,7 +322,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
             if ( subsetFactor != null ) {
 
                 if ( factors.contains( subsetFactor ) ) {
-                    throw new IllegalArgumentException( "Subset factor cannot also be included in the analysis" );
+                    throw new IllegalStateException(
+                            "Subset factor cannot also be included in the analysis [ Factor was: " + subsetFactor + "]" );
                 }
 
                 Map<FactorValue, ExpressionDataDoubleMatrix> subsets = makeSubSets( config, dmatrix, samplesUsed,
@@ -351,10 +352,25 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     eesubSet.getBioAssays().addAll( bioAssays );
 
                     /*
+                     * Check that the data is valid for analysis.
+                     */
+                    boolean ok = DifferentialExpressionAnalysisHelperService.checkValidForLm( eesubSet, factors );
+
+                    if ( !ok ) {
+                        log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );
+                        continue;
+                    }
+
+                    /*
                      * Run analysis on the subset.
                      */
                     DifferentialExpressionAnalysis analysis = doAnalysis( eesubSet, config,
                             subsets.get( subsetFactorValue ), bioMaterials, factors, subsetFactorValue );
+
+                    if ( analysis == null ) {
+                        log.warn( "No analysis results were obtained for subset: " + subsetFactorValue );
+                        continue;
+                    }
 
                     results.add( analysis );
 
@@ -367,7 +383,11 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                  */
                 DifferentialExpressionAnalysis analysis = doAnalysis( expressionExperiment, config, dmatrix,
                         samplesUsed, factors, null );
-                results.add( analysis );
+                if ( analysis == null ) {
+                    log.warn( "No analysis results were obtained" );
+                } else {
+                    results.add( analysis );
+                }
             }
             return results;
 
@@ -626,19 +646,21 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * @param dmatrix data
      * @param samplesUsed analyzed
      * @param factors included in the model
-     * @param subsetFactorValue null unless analyzing a subset
-     * @return
+     * @param subsetFactorValue null unless analyzing a subset (only used for book-keeping)
+     * @return analysis, or null if there was a problem.
      */
     private DifferentialExpressionAnalysis doAnalysis( BioAssaySet bioAssaySet,
             DifferentialExpressionAnalysisConfig config, ExpressionDataDoubleMatrix dmatrix,
             List<BioMaterial> samplesUsed, List<ExperimentalFactor> factors, FactorValue subsetFactorValue ) {
 
         if ( factors.isEmpty() ) {
-            throw new IllegalArgumentException( "Must provide at least one factor" );
+            log.error( "Must provide at least one factor" );
+            return null;
         }
 
         if ( samplesUsed.size() <= factors.size() ) {
-            throw new IllegalArgumentException( "Must have more samples than factors" );
+            log.error( "Must have more samples than factors" );
+            return null;
         }
 
         final Map<String, Collection<ExperimentalFactor>> label2Factors = getRNames( factors );
@@ -692,7 +714,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 modelFormula, properDesignMatrix, interceptFactor, interactionFactorLists, baselineConditions );
 
         if ( rawResults.size() == 0 ) {
-            throw new IllegalStateException( "Got no results from the analysis" );
+            log.error( "Got no results from the analysis" );
+            return null;
         }
 
         /*
@@ -751,8 +774,8 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                      * Interactions
                      */
                     if ( factorsForName.size() > 2 ) {
-                        throw new UnsupportedOperationException(
-                                "Handling more than two-way interactions is not implemented" );
+                        log.error( "Handling more than two-way interactions is not implemented" );
+                        return null;
                     }
 
                     assert factorName.contains( ":" );
@@ -884,8 +907,10 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
     }
 
     /**
+     * Fill in the ranks and qvalues in the results.
+     * 
      * @param resultLists
-     * @param pvaluesForQvalue
+     * @param pvaluesForQvalue Map of factorName to results.
      */
     private void getRanksAndQvalues( Map<String, List<DifferentialExpressionAnalysisResult>> resultLists,
             Map<String, List<Double>> pvaluesForQvalue ) {
@@ -900,10 +925,20 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                 if ( pvalArray[i] == null ) pvalArray[i] = Double.NaN;
             }
 
-            // savePvaluesForDebugging( ArrayUtils.toPrimitive( pvalArray ) );
-            // double[] qvalues = super.getQValues( pvalArray );
-            double[] qvalues = super.benjaminiHochberg( pvalArray );
             double[] ranks = super.computeRanks( ArrayUtils.toPrimitive( pvalArray ) );
+
+            if ( ranks == null ) {
+                log.error( "Ranks could not be computed " + fName );
+                // savePvaluesForDebugging( ArrayUtils.toPrimitive( pvalArray ) );
+                continue;
+            }
+
+            double[] qvalues = super.benjaminiHochberg( pvalArray );
+
+            if ( qvalues == null ) {
+                log.warn( "Corrected pvalues could not be computed for " + fName );
+                continue;
+            }
 
             int i = 0;
             for ( DifferentialExpressionAnalysisResult pr : resultLists.get( fName ) ) {

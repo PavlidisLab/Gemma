@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrix;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
+import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.FactorType;
@@ -413,6 +414,23 @@ public class DifferentialExpressionAnalysisHelperService {
     }
 
     /**
+     * Check that at least one of the given factors is valid: the factorvalues are measurements, or that there are at
+     * least two assays for at least one factor value.
+     * 
+     * @param expressionExperiment
+     * @param experimentalFactors
+     * @return
+     */
+    public static boolean checkValidForLm( BioAssaySet expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
+        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+            boolean ok = checkValidForLm( expressionExperiment, experimentalFactor );
+            if ( ok ) return true;
+        }
+        return false;
+    }
+
+    /**
      * Check that the factorvalues are measurements, or that there are at least two assays for at least one factor
      * value. Otherwise the model fit will be perfect and pvalues will not be returned.
      * 
@@ -420,7 +438,7 @@ public class DifferentialExpressionAnalysisHelperService {
      * @param experimentalFactor
      * @return true if it's okay, false otherwise.
      */
-    public boolean checkValidForLm( ExpressionExperiment expressionExperiment, ExperimentalFactor experimentalFactor ) {
+    public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
 
         if ( experimentalFactor.getFactorValues().size() < 2 ) {
             return false;
@@ -441,7 +459,7 @@ public class DifferentialExpressionAnalysisHelperService {
          * Assuming fixed levels; we'll need at least two replicates for at least one factor value.
          */
         Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
-        for ( BioAssay ba : expressionExperiment.getBioAssays() ) {
+        for ( BioAssay ba : ( Collection<BioAssay> ) expressionExperiment.getBioAssays() ) {
             for ( BioMaterial bm : ba.getSamplesUsed() ) {
                 for ( FactorValue fv : bm.getFactorValues() ) {
                     if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
