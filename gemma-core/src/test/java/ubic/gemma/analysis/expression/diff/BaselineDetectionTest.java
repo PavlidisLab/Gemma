@@ -71,10 +71,12 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
     @Before
     public void setUp() throws Exception {
         // setup
-        os.getMgedOntologyService().startInitializationThread( true );
-        while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting for Ontology to load" );
+        if ( !os.getMgedOntologyService().isOntologyLoaded() ) {
+            os.getMgedOntologyService().startInitializationThread( true );
+            while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
+                Thread.sleep( 1000 );
+                log.info( "Waiting for Ontology to load" );
+            }
         }
 
         String path = ConfigUtils.getString( "gemma.home" );

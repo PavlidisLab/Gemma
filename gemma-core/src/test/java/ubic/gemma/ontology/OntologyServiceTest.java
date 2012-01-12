@@ -43,10 +43,12 @@ public class OntologyServiceTest extends BaseSpringContextTest {
      */
     @Test
     public final void testFindExactMatch() throws Exception {
-        os.getMgedOntologyService().startInitializationThread( true );
-        while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
-            Thread.sleep( 1000 );
-            log.info( "Waiting for Ontology to load" );
+        if ( !os.getMgedOntologyService().isOntologyLoaded() ) {
+            os.getMgedOntologyService().startInitializationThread( true );
+            while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
+                Thread.sleep( 1000 );
+                log.info( "Waiting for Ontology to load" );
+            }
         }
         Collection<Characteristic> name = os.findExactTerm( "male",
                 "http://mged.sourceforge.net/ontologies/MGEDOntology.owl#Sex", null );
@@ -55,6 +57,5 @@ public class OntologyServiceTest extends BaseSpringContextTest {
         }
         assertTrue( name.size() > 0 );
     }
- 
 
 }
