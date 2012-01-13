@@ -70,11 +70,12 @@ public class PhenotypeAssociationServiceImpl implements PhenotypeAssociationServ
 
     /** find Genes link to a phenotype */
     @Override
-    public Collection<Gene> findPhenotypeAssociations( Set<String> phenotypesValueUri ) {
-        return this.phenotypeAssociationDao.findByPhenotype( phenotypesValueUri );
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri ) {
+        return this.phenotypeAssociationDao.findGeneWithPhenotypes( phenotypesValueUri );
     }
 
     /** find all phenotypes */
+    @SuppressWarnings("unchecked")
     @Override
     public Set<PhenotypeAssociation> loadAll() {
         return ( Set<PhenotypeAssociation> ) this.phenotypeAssociationDao.loadAll();

@@ -30,8 +30,9 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
     private CitationValueObject citationValueObject = null;
 
     public LiteratureEvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes, String pubmedID ) {
-        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes );
+            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
+            String pubmedID, EvidenceSourceValueObject evidenceSource ) {
+        super( description, associationType, isNegativeEvidence, evidenceCode, phenotypes, evidenceSource );
 
         this.citationValueObject = new CitationValueObject();
         this.citationValueObject.setPubmedAccession( pubmedID );
@@ -44,13 +45,17 @@ public class LiteratureEvidenceValueObject extends EvidenceValueObject {
         this.citationValueObject = BibliographicReferenceValueObject.constructCitation( literatureEvidence
                 .getCitation() );
     }
-    
+
     public LiteratureEvidenceValueObject() {
         super();
     }
 
     public CitationValueObject getCitationValueObject() {
         return this.citationValueObject;
+    }
+
+    public void setCitationValueObject( CitationValueObject citationValueObject ) {
+        this.citationValueObject = citationValueObject;
     }
 
     @Override

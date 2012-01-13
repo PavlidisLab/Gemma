@@ -54,7 +54,6 @@ import ubic.gemma.model.common.description.VocabCharacteristicImpl;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Gene;
-import ubic.gemma.model.genome.GeneDaoImpl;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
@@ -109,7 +108,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     private HumanPhenotypeOntologyService humanPhenotypeOntologyService = null;
     private PubMedXMLFetcher pubMedXmlFetcher = null;
 
-    private static Log log = LogFactory.getLog( GeneDaoImpl.class.getName() );
+    private static Log log = LogFactory.getLog( PhenotypeAssociationManagerServiceImpl.class.getName() );
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -129,8 +128,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public GeneEvidenceValueObject create( String geneNCBI, EvidenceValueObject evidence ) {
 
-        if ( evidence.getPhenotypes().size() < 1 ) {
-            throw new IllegalArgumentException();
+        if ( evidence.getPhenotypes().isEmpty() ) {
+            throw new IllegalArgumentException( "Cannot create an Evidence with no Phenotype" );
         }
 
         Gene gene = this.geneService.findByNCBIId( new Integer( geneNCBI ) );
@@ -204,8 +203,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     @Override
     public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesUri ) {
 
-        if ( phenotypesValuesUri == null || phenotypesValuesUri.size() == 0 ) {
-            throw new IllegalArgumentException();
+        if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
+            throw new IllegalArgumentException( "No phenotypes value uri provided" );
         }
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
@@ -217,15 +216,10 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             possibleChildrenPhenotypes.addAll( phenotypesWithChildren.get( key ) );
         }
 
-        String firstPhenotypesValuesUri = "";
-
-        for ( String phenotypeValueUri : phenotypesValuesUri ) {
-            firstPhenotypesValuesUri = phenotypeValueUri;
-            break;
-        }
+        String firstPhenotypesValuesUri = phenotypesValuesUri.iterator().next();
 
         // find all Genes containing the first phenotypeValueUri
-        Collection<Gene> genes = this.associationService.findPhenotypeAssociations( phenotypesWithChildren
+        Collection<Gene> genes = this.associationService.findGeneWithPhenotypes( phenotypesWithChildren
                 .get( firstPhenotypesValuesUri ) );
         phenotypesWithChildren.remove( firstPhenotypesValuesUri );
 
@@ -279,23 +273,23 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     public void remove( Long id ) {
-        PhenotypeAssociation loaded = this.associationService.load( id );
+        PhenotypeAssociation evidence = this.associationService.load( id );
 
-        EvidenceValueObject evidenceVo = EvidenceValueObject.convert2ValueObjects( loaded );
+        EvidenceValueObject evidenceVO = EvidenceValueObject.convert2ValueObjects( evidence );
 
         // if the trees are present in the cache, change the tree with the corresponding phenotypes
         if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-            buildTree( evidenceVo.getPhenotypes() );
+            buildTree( evidenceVO.getPhenotypes() );
         }
 
-        if ( loaded != null ) {
+        if ( evidence != null ) {
 
             // We should also delete the databaseEntry for ExternalDatabaseEvidence
-            if ( loaded.getEvidenceSource() != null ) {
-                this.databaseEntryDao.remove( loaded.getEvidenceSource().getId() );
+            if ( evidence.getEvidenceSource() != null ) {
+                this.databaseEntryDao.remove( evidence.getEvidenceSource().getId() );
             }
 
-            this.associationService.remove( loaded );
+            this.associationService.remove( evidence );
         }
     }
 
@@ -327,7 +321,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         // an evidenceValueObject always has at least 1 phenotype
         if ( newPhenotypesValuesUri.size() == 0 ) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException( "An Envidence cannot have no phenotype" );
         }
 
         // replace specific values for this type of evidence
@@ -405,7 +399,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         Set<CharacteristicValueObject> phenotypesOnCurrentGene = null;
 
         if ( geneProvided ) {
-            phenotypesOnCurrentGene = findUniquePhenotpyesForGeneId( geneId );
+            phenotypesOnCurrentGene = findUniquePhenotypesForGeneId( geneId );
         }
 
         // all phenotypes currently in the database
@@ -531,7 +525,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<GeneEvidenceValueObject> findGenesWithEvidence( String query, Long taxonId ) {
 
         if ( query == null || query.length() == 0 ) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException( "No search query provided" );
         }
 
         // make sure it does an inexact search
@@ -724,7 +718,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /** Given a geneId finds all phenotypes for that gene */
-    private Set<CharacteristicValueObject> findUniquePhenotpyesForGeneId( Long geneId ) {
+    private Set<CharacteristicValueObject> findUniquePhenotypesForGeneId( Long geneId ) {
 
         Set<CharacteristicValueObject> phenotypes = new TreeSet<CharacteristicValueObject>();
 

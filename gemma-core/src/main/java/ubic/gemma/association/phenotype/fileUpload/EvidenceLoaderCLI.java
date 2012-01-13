@@ -22,6 +22,7 @@ public abstract class EvidenceLoaderCLI extends AbstractSpringAwareCLI {
     // flag to decided if the data is ready to be imported
     protected boolean createInDatabase = false;
     protected boolean testEnvironment = false;
+    protected String testMessage = "";
 
     // input file path
     protected String inputFile = "";
@@ -59,9 +60,9 @@ public abstract class EvidenceLoaderCLI extends AbstractSpringAwareCLI {
         args[2] = "-p";
         args[3] = "administrator";
         args[4] = "-f";
-        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/experimentalEvidence/Artemis-MarkExperimental.tsv";
-        args[6] = "-create";
-        args[7] = "-test";
+        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/genericEvidence/OMIM.tsv";
+        args[6] = "-test";
+        args[7] = "-create";
 
         return args;
     }
@@ -183,15 +184,31 @@ public abstract class EvidenceLoaderCLI extends AbstractSpringAwareCLI {
             }
             if ( ot == null ) {
 
-                // all phenotypes must be find
-                throw new Exception( "phenotype not found in disease, hp and mp Ontology : " + search );
-            }
-
-            if ( ot.isTermObsolete() ) {
-                throw new Exception( "TERM IS OBSOLETE: " + ot.getLabel() );
+                if ( this.testEnvironment ) {
+                    this.testMessage = this.testMessage + "phenotype not found in disease, hp and mp Ontology : "
+                            + search + "\n";
+                    System.err.println( "phenotype not found in disease, hp and mp Ontology : " + search );
+                } else {
+                    // all phenotypes must be find
+                    throw new Exception( "phenotype not found in disease, hp and mp Ontology : " + search );
+                }
             }
         }
-        return ot.getUri();
+
+        if ( ot != null ) {
+
+            if ( ot.isTermObsolete() ) {
+                if ( this.testEnvironment ) {
+                    this.testMessage = this.testMessage + "TERM IS OBSOLETE: " + ot.getLabel() + "\n";
+                    System.err.println( "TERM IS OBSOLETE: " + ot.getLabel() );
+                } else {
+                    throw new Exception( "TERM IS OBSOLETE: " + ot.getLabel() );
+                }
+            }
+            return ot.getUri();
+        }
+
+        return null;
     }
 
     /**

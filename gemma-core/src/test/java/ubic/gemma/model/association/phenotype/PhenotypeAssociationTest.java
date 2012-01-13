@@ -56,7 +56,7 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
     private GeneEvidenceValueObject geneValue = null;
     private String primaryPubmed = "17699851";
 
-   // @Before
+    // @Before
     public void setup() {
 
         // Evidence
@@ -75,13 +75,13 @@ public class PhenotypeAssociationTest extends BaseSpringContextTest {
         characteristics.add( caracteristic );
 
         this.evidence = new ExperimentalEvidenceValueObject( "test Description", null, new Boolean( true ), "IC",
-                phenotypes, this.primaryPubmed, relevantPublication, characteristics );
+                phenotypes, this.primaryPubmed, relevantPublication, characteristics, null );
 
         // Make sure a Gene exist in the database with the NCBI id
         this.gene = makeGene( this.geneNCBI );
     }
 
-    //@After
+    // @After
     public void tearDown() {
         if ( this.gene != null ) {
             this.gene.getPhenotypeAssociations().clear();

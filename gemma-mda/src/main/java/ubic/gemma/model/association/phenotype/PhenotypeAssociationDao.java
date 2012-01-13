@@ -28,7 +28,7 @@ import ubic.gemma.persistence.BaseDao;
 public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** find Genes link to a phenotype */
-    public Collection<Gene> findByPhenotype( Set<String> phenotypesValueUri );
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri );
 
     /** find all phenotypes */
     public Set<CharacteristicValueObject> loadAllPhenotypes();
@@ -38,7 +38,7 @@ public interface PhenotypeAssociationDao extends BaseDao<PhenotypeAssociation> {
 
     /** load all valueURI of Phenotype in the database */
     public Set<String> loadAllPhenotypesUri();
-    
+
     /** find PhenotypeAssociations associated with a BibliographicReference */
-    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference(String pubMedID);
+    public Collection<PhenotypeAssociation> findPhenotypesForBibliographicReference( String pubMedID );
 }

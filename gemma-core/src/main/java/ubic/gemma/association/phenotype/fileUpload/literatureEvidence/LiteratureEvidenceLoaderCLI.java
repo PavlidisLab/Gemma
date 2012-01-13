@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.association.phenotype.fileUpload.EvidenceLoaderCLI;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
@@ -37,30 +34,6 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
         }
     }
 
-    @Override
-    protected void buildOptions() {
-
-        @SuppressWarnings("static-access")
-        Option fileOption = OptionBuilder.withDescription( "The file" ).hasArg().withArgName( "file path" )
-                .isRequired().create( "f" );
-        addOption( fileOption );
-
-        @SuppressWarnings("static-access")
-        Option createInDatabaseOption = OptionBuilder.withDescription( "Create in database" ).create( "create" );
-        addOption( createInDatabaseOption );
-
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        this.inputFile = getOptionValue( 'f' );
-
-        if ( hasOption( "create" ) ) {
-            this.createInDatabase = true;
-        }
-    }
-
     /** There are 6 Steps in the process of creating the evidence */
     @Override
     protected Exception doWork( String[] args ) {
@@ -77,6 +50,10 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
             System.out.println( "STEP 3 : Convert file to Ontology terms" );
             convertOntologiesTerms( linesFromFile );
+
+            if ( this.testEnvironment ) {
+                System.err.println( this.testMessage );
+            }
 
             // check if all Gene ID can be found in Gemma
             System.out.println( "STEP 4 : Verify is all Gene ID exist in Gemma" );
@@ -146,7 +123,8 @@ public class LiteratureEvidenceLoaderCLI extends EvidenceLoaderCLI {
             Set<CharacteristicValueObject> phenotypes = phenoAss.getPhenotypes();
 
             EvidenceValueObject evidence = new LiteratureEvidenceValueObject( description, associationType,
-                    new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed );
+                    new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
+                    null );
 
             String geneId = phenoAss.getGeneID();
 

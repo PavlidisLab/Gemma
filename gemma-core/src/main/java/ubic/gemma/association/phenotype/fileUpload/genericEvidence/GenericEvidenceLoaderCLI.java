@@ -1,4 +1,4 @@
-package ubic.gemma.association.phenotype.fileUpload.externalDatabaseEvidence;
+package ubic.gemma.association.phenotype.fileUpload.genericEvidence;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -7,19 +7,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Set;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionBuilder;
-
 import ubic.gemma.association.phenotype.fileUpload.EvidenceLoaderCLI;
 import ubic.gemma.model.DatabaseEntryValueObject;
 import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 
-public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
+public class GenericEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
     private TaxonService taxonService = null;
 
@@ -27,7 +25,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
     public static void main( String[] args ) {
 
-        ExternalDatabaseEvidenceLoaderCLI p = new ExternalDatabaseEvidenceLoaderCLI();
+        GenericEvidenceLoaderCLI p = new GenericEvidenceLoaderCLI();
 
         try {
             // to pass args by the command line dont use the initArguments method
@@ -44,30 +42,6 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
         }
     }
 
-    @Override
-    protected void buildOptions() {
-
-        @SuppressWarnings("static-access")
-        Option fileOption = OptionBuilder.withDescription( "The file" ).hasArg().withArgName( "file path" )
-                .isRequired().create( "f" );
-        addOption( fileOption );
-
-        @SuppressWarnings("static-access")
-        Option createInDatabaseOption = OptionBuilder.withDescription( "Create in database" ).create( "create" );
-        addOption( createInDatabaseOption );
-
-    }
-
-    @Override
-    protected void processOptions() {
-        super.processOptions();
-        this.inputFile = getOptionValue( 'f' );
-
-        if ( hasOption( "create" ) ) {
-            this.createInDatabase = true;
-        }
-    }
-
     /** There are 6 Steps in the process of creating the evidence */
     @Override
     protected Exception doWork( String[] args ) {
@@ -80,7 +54,7 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
             loadServices();
 
             System.out.println( "STEP 2 : Extract the data from the file" );
-            Collection<DatabaseEvidenceLineInfo> linesFromFile = file2Objects();
+            Collection<GenericEvidenceLineInfo> linesFromFile = file2Objects();
 
             // Optional
             if ( this.findGeneId ) {
@@ -109,9 +83,9 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
     }
 
     /** Take the file and transform it into an object structure for each line */
-    private Collection<DatabaseEvidenceLineInfo> file2Objects() throws IOException {
+    private Collection<GenericEvidenceLineInfo> file2Objects() throws IOException {
 
-        Collection<DatabaseEvidenceLineInfo> DatabaseEvidenceLineInfos = new ArrayList<DatabaseEvidenceLineInfo>();
+        Collection<GenericEvidenceLineInfo> genericLineInfos = new ArrayList<GenericEvidenceLineInfo>();
 
         BufferedReader br = new BufferedReader( new FileReader( this.inputFile ) );
 
@@ -125,13 +99,13 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
             if ( lineNumber != 1 ) {
 
                 System.out.println( "Creating object for line: " + lineNumber );
-                DatabaseEvidenceLineInfos.add( new DatabaseEvidenceLineInfo( line ) );
+                genericLineInfos.add( new GenericEvidenceLineInfo( line ) );
             }
         }
 
         br.close();
 
-        return DatabaseEvidenceLineInfos;
+        return genericLineInfos;
     }
 
     /**
@@ -139,12 +113,12 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
      * 
      * @throws Exception
      */
-    private void createEvidenceInDatabase( Collection<DatabaseEvidenceLineInfo> linesFromFile ) throws Exception {
+    private void createEvidenceInDatabase( Collection<GenericEvidenceLineInfo> linesFromFile ) throws Exception {
 
         int evidenceNumber = 1;
 
         // for each evidence found, we need to populate its evidenceObject and to call the service to save it
-        for ( DatabaseEvidenceLineInfo phenoAss : linesFromFile ) {
+        for ( GenericEvidenceLineInfo phenoAss : linesFromFile ) {
 
             String description = phenoAss.getComment();
             CharacteristicValueObject associationType = null;
@@ -161,9 +135,11 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
             databaseEntryValueObject.setAccession( phenoAss.getDatabaseID() );
             databaseEntryValueObject.setExternalDatabase( externalDatabase );
 
+            EvidenceSourceValueObject evidenceSource = new EvidenceSourceValueObject( phenoAss.getDatabaseID(),
+                    externalDatabase );
+
             EvidenceValueObject evidence = new GenericEvidenceValueObject( description, associationType, new Boolean(
-                    phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes, null );
-            evidence.setEvidenceSource( databaseEntryValueObject );
+                    phenoAss.getIsEdivenceNegative() ), evidenceCode, phenotypes, evidenceSource );
 
             String geneId = phenoAss.getGeneID();
 
@@ -182,50 +158,50 @@ public class ExternalDatabaseEvidenceLoaderCLI extends EvidenceLoaderCLI {
     }
 
     // Optional can be useful when we dont have the NCBI id
-    private void findGenesId( Collection<DatabaseEvidenceLineInfo> linesFromFile ) {
+    private void findGenesId( Collection<GenericEvidenceLineInfo> linesFromFile ) {
         int y = 1;
 
-        for ( DatabaseEvidenceLineInfo d : linesFromFile ) {
+        for ( GenericEvidenceLineInfo g : linesFromFile ) {
 
             y++;
             Gene gene = null;
 
-            if ( d.getGeneName().equals( "HLA-DRB1" ) ) {
+            if ( g.getGeneName().equals( "HLA-DRB1" ) ) {
 
-                d.setGeneID( "3123" );
+                g.setGeneID( "3123" );
 
-            } else if ( d.getGeneName().equals( "CCR2" ) ) {
+            } else if ( g.getGeneName().equals( "CCR2" ) ) {
 
-                d.setGeneID( "729230" );
+                g.setGeneID( "729230" );
 
-            } else if ( d.getGeneName().equals( "NPC1" ) ) {
+            } else if ( g.getGeneName().equals( "NPC1" ) ) {
 
-                d.setGeneID( "4864" );
+                g.setGeneID( "4864" );
             }
 
-            else if ( d.getGeneName().equals( "PRG4" ) ) {
+            else if ( g.getGeneName().equals( "PRG4" ) ) {
 
-                d.setGeneID( "10216" );
+                g.setGeneID( "10216" );
 
             } else {
 
-                gene = this.geneService.findByOfficialSymbol( d.getGeneName(),
+                gene = this.geneService.findByOfficialSymbol( g.getGeneName(),
                         this.taxonService.findByCommonName( "human" ) );
 
                 if ( gene == null ) {
 
                     System.err.println( y );
-                    System.err.println( d.getGeneName() );
-                    d.setGeneID( "1" );
+                    System.err.println( g.getGeneName() );
+                    g.setGeneID( "1" );
                     // System.exit( -1 );
 
                 } else if ( gene.getNcbiGeneId() == null ) {
                     System.err.println( "not Supposed to go there" );
                     System.err.println( y );
-                    System.err.println( d.getGeneName() );
-                    d.setGeneID( "1" );
+                    System.err.println( g.getGeneName() );
+                    g.setGeneID( "1" );
                 } else {
-                    d.setGeneID( gene.getNcbiGeneId().toString() );
+                    g.setGeneID( gene.getNcbiGeneId().toString() );
                 }
             }
         }

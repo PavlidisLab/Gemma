@@ -1481,6 +1481,11 @@ gemma.max.fileupload.size.bytes=
 						<property name="type" value="bean" />
 					</bean>
 				</entry>
+				<entry key="ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject">
+					<bean class="org.directwebremoting.spring.ConverterConfig">
+						<property name="type" value="bean" />
+					</bean>
+				</entry>
 				<entry key="ubic.gemma.model.common.description.BibliographicReferenceValueObject">
 					<bean class="org.directwebremoting.spring.ConverterConfig">
 						<property name="type" value="bean" />

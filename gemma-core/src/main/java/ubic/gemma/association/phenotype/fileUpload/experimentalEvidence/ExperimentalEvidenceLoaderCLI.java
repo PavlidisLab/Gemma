@@ -82,6 +82,10 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
             System.out.println( "STEP 3 : Convert file to Ontology terms" );
             convertExperimentalOntologiesTerms( linesFromFile );
 
+            if ( this.testEnvironment ) {
+                System.err.println( this.testMessage );
+            }
+
             // make a intermediate tsv file to check is Ontology correctly mapped (used by students to verify data)
             System.out.println( "STEP 4 : Create intermediate file with uri from ontology" );
             writeFileWithOntology( linesFromFile );
@@ -342,7 +346,7 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
             EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType,
                     new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
-                    relevantPublicationsPubmed, characteristics );
+                    relevantPublicationsPubmed, characteristics, null );
 
             String geneId = phenoAss.getGeneID();
 

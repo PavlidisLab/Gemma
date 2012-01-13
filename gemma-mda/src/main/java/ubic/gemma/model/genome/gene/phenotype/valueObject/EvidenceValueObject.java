@@ -91,10 +91,6 @@ public abstract class EvidenceValueObject {
         return evidence;
     }
 
-    public void setEvidenceSource( DatabaseEntryValueObject evidenceSource ) {
-        this.evidenceSource = evidenceSource;
-    }
-
     private Long databaseId = null;
     private String description = "";
     private CharacteristicValueObject associationType = null;
@@ -105,17 +101,9 @@ public abstract class EvidenceValueObject {
     /** If this evidence has the chosen Phenotypes, used by the service called findCandidateGenes */
     private Double relevance = new Double( 0 );
 
-    public DatabaseEntryValueObject getEvidenceSource() {
-        return evidenceSource;
-    }
-
-    private DatabaseEntryValueObject evidenceSource = null;
+    private EvidenceSourceValueObject evidenceSource = null;
 
     private String externalUrl = "";
-
-    public String getExternalUrl() {
-        return externalUrl;
-    }
 
     private Set<CharacteristicValueObject> phenotypes = null;
 
@@ -133,9 +121,7 @@ public abstract class EvidenceValueObject {
         this.isNegativeEvidence = phenotypeAssociation.getIsNegativeEvidence();
 
         if ( phenotypeAssociation.getEvidenceSource() != null ) {
-            /*
-             * FIXME
-             */
+            this.evidenceSource = new EvidenceSourceValueObject( phenotypeAssociation.getEvidenceSource() );
         }
 
         if ( phenotypeAssociation.getAssociationType() != null ) {
@@ -155,13 +141,19 @@ public abstract class EvidenceValueObject {
     }
 
     protected EvidenceValueObject( String description, CharacteristicValueObject associationType,
-            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes ) {
+            Boolean isNegativeEvidence, String evidenceCode, Set<CharacteristicValueObject> phenotypes,
+            EvidenceSourceValueObject evidenceSource ) {
         super();
         this.description = description;
         this.associationType = associationType;
         this.evidenceCode = evidenceCode;
         this.isNegativeEvidence = isNegativeEvidence;
         this.phenotypes = phenotypes;
+        this.evidenceSource = evidenceSource;
+    }
+
+    public String getExternalUrl() {
+        return this.externalUrl;
     }
 
     public Long getDatabaseId() {
@@ -218,6 +210,14 @@ public abstract class EvidenceValueObject {
 
     public void setPhenotypes( Set<CharacteristicValueObject> phenotypes ) {
         this.phenotypes = phenotypes;
+    }
+
+    public void setEvidenceSource( EvidenceSourceValueObject evidenceSource ) {
+        this.evidenceSource = evidenceSource;
+    }
+
+    public DatabaseEntryValueObject getEvidenceSource() {
+        return this.evidenceSource;
     }
 
     @Override

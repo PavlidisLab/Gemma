@@ -1,13 +1,13 @@
-package ubic.gemma.association.phenotype.fileUpload.externalDatabaseEvidence;
+package ubic.gemma.association.phenotype.fileUpload.genericEvidence;
 
 import ubic.gemma.association.phenotype.fileUpload.EvidenceLineInfo;
 
-public class DatabaseEvidenceLineInfo extends EvidenceLineInfo {
+public class GenericEvidenceLineInfo extends EvidenceLineInfo {
 
     private String externalDatabaseName = "";
     private String databaseID = "";
 
-    public DatabaseEvidenceLineInfo( String line ) {
+    public GenericEvidenceLineInfo( String line ) {
 
         String[] tokens = line.split( "\t" );
         this.geneName = tokens[0].trim();

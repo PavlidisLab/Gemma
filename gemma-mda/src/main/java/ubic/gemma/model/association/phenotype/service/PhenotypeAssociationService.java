@@ -49,7 +49,7 @@ public interface PhenotypeAssociationService {
      * @param phenotypesValueUri The Ontology valueURI of the phenotype
      */
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
-    public Collection<Gene> findPhenotypeAssociations( Set<String> phenotypesValueUri );
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri );
 
     /**
      * create a GenericExperiment

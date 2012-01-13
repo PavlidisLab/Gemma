@@ -26,7 +26,7 @@ public class DatabaseEntryValueObject {
     private ExternalDatabaseValueObject externalDatabase;
 
     public String getAccession() {
-        return accession;
+        return this.accession;
     }
 
     public void setAccession( String accession ) {
@@ -34,7 +34,7 @@ public class DatabaseEntryValueObject {
     }
 
     public ExternalDatabaseValueObject getExternalDatabase() {
-        return externalDatabase;
+        return this.externalDatabase;
     }
 
     public void setExternalDatabase( ExternalDatabaseValueObject externalDatabase ) {
@@ -49,12 +49,20 @@ public class DatabaseEntryValueObject {
         return vo;
     }
 
+    public DatabaseEntryValueObject() {
+    }
+
+    public DatabaseEntryValueObject( DatabaseEntry de ) {
+        this.accession = de.getAccession();
+        this.externalDatabase = ExternalDatabaseValueObject.fromEntity( de.getExternalDatabase() );
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ( ( accession == null ) ? 0 : accession.hashCode() );
-        result = prime * result + ( ( externalDatabase == null ) ? 0 : externalDatabase.hashCode() );
+        result = prime * result + ( ( this.accession == null ) ? 0 : this.accession.hashCode() );
+        result = prime * result + ( ( this.externalDatabase == null ) ? 0 : this.externalDatabase.hashCode() );
         return result;
     }
 
@@ -64,12 +72,12 @@ public class DatabaseEntryValueObject {
         if ( obj == null ) return false;
         if ( getClass() != obj.getClass() ) return false;
         DatabaseEntryValueObject other = ( DatabaseEntryValueObject ) obj;
-        if ( accession == null ) {
+        if ( this.accession == null ) {
             if ( other.accession != null ) return false;
-        } else if ( !accession.equals( other.accession ) ) return false;
-        if ( externalDatabase == null ) {
+        } else if ( !this.accession.equals( other.accession ) ) return false;
+        if ( this.externalDatabase == null ) {
             if ( other.externalDatabase != null ) return false;
-        } else if ( !externalDatabase.equals( other.externalDatabase ) ) return false;
+        } else if ( !this.externalDatabase.equals( other.externalDatabase ) ) return false;
         return true;
     }
 

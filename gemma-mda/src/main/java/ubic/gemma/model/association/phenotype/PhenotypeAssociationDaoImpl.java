@@ -44,7 +44,7 @@ public class PhenotypeAssociationDaoImpl extends AbstractDao<PhenotypeAssociatio
     /** find Genes link to a phenotype */
     @SuppressWarnings("unchecked")
     @Override
-    public Collection<Gene> findByPhenotype( Set<String> phenotypesValueUri ) {
+    public Collection<Gene> findGeneWithPhenotypes( Set<String> phenotypesValueUri ) {
 
         Criteria geneQueryCriteria = super.getSession().createCriteria( Gene.class )
                 .setResultTransformer( CriteriaSpecification.DISTINCT_ROOT_ENTITY )
