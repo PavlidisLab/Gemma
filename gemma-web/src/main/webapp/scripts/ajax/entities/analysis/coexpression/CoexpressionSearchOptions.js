@@ -6,9 +6,6 @@ Ext.namespace('Gemma');
  * 
  * you must implement handling for 'Re-run search' button 
  * click: an event is fired with param: stringency, probe-level query, coex among query genes only
- * @author thea
- * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
- *          Exp $
  */
 Gemma.CoexpressionSearchOptions = Ext.extend(Ext.Window,{
 	title: 'Coexpression search refinements',

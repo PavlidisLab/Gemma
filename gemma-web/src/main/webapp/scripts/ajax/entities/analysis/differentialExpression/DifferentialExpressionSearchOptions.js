@@ -1,8 +1,3 @@
-/**
- * @author thea
- * @version $Id: AnalysisResultsSearchForm.js,v 1.34 2011/05/06 04:02:25 paul
- *          Exp $
- */
 Ext.namespace('Gemma');
 
 /**
