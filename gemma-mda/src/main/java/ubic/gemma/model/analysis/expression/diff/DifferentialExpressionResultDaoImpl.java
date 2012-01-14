@@ -531,7 +531,7 @@ public class DifferentialExpressionResultDaoImpl extends
 
             List<?> queryResult = queryObject.list();
 
-            log.warn( "Got " + queryResult.size() + " results" );
+            log.info( "Got " + queryResult.size() + " results" );
 
             if ( queryResult.isEmpty() ) return results;
 
