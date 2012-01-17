@@ -307,12 +307,12 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 			disabled: true
 		});
 		this.exportButton = new Ext.Button({
-			text: "Export",
-			qtip: 'Get a plain text version of this list',
+			icon: "/Gemma/images/download.gif",
+			tooltip: "Export to text",
 			handler: this.exportToTxt,
 			scope: this,
 			disabled: false
-		});
+		});	
 		this.cancelButton = new Ext.Button({
 			text: "Cancel",
 			handler: this.cancel,
@@ -333,7 +333,8 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 					this.doneButton.hide();
 				}				
 			},
-			buttons: [this.saveButton, this.saveAsButton, this.doneButton, this.exportButton, this.cancelButton]
+			buttonAlign: 'left',
+			buttons: [this.exportButton, '->',this.saveButton, this.saveAsButton, this.doneButton, this.cancelButton]
 		});
 		this.setButtonVisibilities();
 

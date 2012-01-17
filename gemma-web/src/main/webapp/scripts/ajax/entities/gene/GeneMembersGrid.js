@@ -544,8 +544,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 			hidden: !this.allowSaveToSession
 		});
 		this.exportButton = new Ext.Button({
-			text: "Export",
-			qtip:  Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.exportTT,
+			icon: "/Gemma/images/download.gif",
+			tooltip:  Gemma.HelpText.WidgetDefaults.GeneMembersSaveGrid.exportTT,
 			handler: this.exportToTxt,
 			scope: this,
 			disabled: false
@@ -559,7 +559,8 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		});
 		
 		Ext.apply(this, {
-			buttons : [this.saveButton, this.saveAsButton, this.doneButton, this.exportButton, this.cancelButton]
+			buttonAlign: 'left',
+			fbar : [this.exportButton,'->',this.saveButton, this.saveAsButton, this.doneButton, this.cancelButton]
 		});
 		
 		// note: using initComponent of super's super!! (otherwise buttons don't work)
