@@ -229,6 +229,8 @@ public abstract class EvidenceValueObject {
             result = result + phenotype.hashCode();
         }
 
+        result = result + ( ( this.evidenceSource == null ) ? 0 : this.evidenceSource.hashCode() );
+
         return prime * result;
     }
 
@@ -248,6 +250,11 @@ public abstract class EvidenceValueObject {
                 return false;
             }
         }
+
+        if ( this.evidenceSource == null ) {
+            if ( other.evidenceSource != null ) return false;
+        } else if ( !this.evidenceSource.equals( other.evidenceSource ) ) return false;
+
         return true;
     }
 

@@ -284,7 +284,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
         if ( evidence != null ) {
 
-            // We should also delete the databaseEntry for ExternalDatabaseEvidence
             if ( evidence.getEvidenceSource() != null ) {
                 this.databaseEntryDao.remove( evidence.getEvidenceSource().getId() );
             }
@@ -628,47 +627,52 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             BibliographicReferenceValueObject bibliographicReferenceValueObject = findBibliographicReference( pubmedId );
 
-            for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
-                    .getBibliographicPhenotypes() ) {
+            if ( bibliographicReferenceValueObject == null ) {
+                validateEvidenceValueObject.setInvalidPubmedId( true );
+            } else {
 
-                // look if the gene have already been annotated
-                if ( geneNCBI.equalsIgnoreCase( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
+                for ( BibliographicPhenotypesValueObject bibliographicPhenotypesValueObject : bibliographicReferenceValueObject
+                        .getBibliographicPhenotypes() ) {
 
-                    validateEvidenceValueObject.setSameGeneAnnotated( true );
+                    // look if the gene have already been annotated
+                    if ( geneNCBI.equalsIgnoreCase( bibliographicPhenotypesValueObject.getGeneNCBI() ) ) {
 
-                    // if one of the phenotype is already on the gene
-                    for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
-                            .getPhenotypesValues() ) {
+                        validateEvidenceValueObject.setSameGeneAnnotated( true );
 
-                        if ( evidence.getPhenotypes().contains( phenotypeAlreadyPresent ) ) {
-                            validateEvidenceValueObject.setSameGeneAndPhenotypeAnnotated( true );
-                            return validateEvidenceValueObject;
-                        }
-                    }
+                        // if one of the phenotype is already on the gene
+                        for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
+                                .getPhenotypesValues() ) {
 
-                    Set<String> parentOrChildTerm = new HashSet<String>();
-
-                    // for the phenotype already present we add his children and direct parents, and check that the
-                    // phenotype we want to add is not in that subset
-                    for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
-                            .getPhenotypesValues() ) {
-
-                        OntologyTerm ontologyTerm = this.ontologyService
-                                .getTerm( phenotypeAlreadyPresent.getValueUri() );
-
-                        for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
-                            parentOrChildTerm.add( ot.getUri() );
+                            if ( evidence.getPhenotypes().contains( phenotypeAlreadyPresent ) ) {
+                                validateEvidenceValueObject.setSameGeneAndPhenotypeAnnotated( true );
+                                return validateEvidenceValueObject;
+                            }
                         }
 
-                        for ( OntologyTerm ot : ontologyTerm.getChildren( false ) ) {
-                            parentOrChildTerm.add( ot.getUri() );
+                        Set<String> parentOrChildTerm = new HashSet<String>();
+
+                        // for the phenotype already present we add his children and direct parents, and check that the
+                        // phenotype we want to add is not in that subset
+                        for ( CharacteristicValueObject phenotypeAlreadyPresent : bibliographicPhenotypesValueObject
+                                .getPhenotypesValues() ) {
+
+                            OntologyTerm ontologyTerm = this.ontologyService.getTerm( phenotypeAlreadyPresent
+                                    .getValueUri() );
+
+                            for ( OntologyTerm ot : ontologyTerm.getParents( true ) ) {
+                                parentOrChildTerm.add( ot.getUri() );
+                            }
+
+                            for ( OntologyTerm ot : ontologyTerm.getChildren( false ) ) {
+                                parentOrChildTerm.add( ot.getUri() );
+                            }
                         }
-                    }
 
-                    for ( CharacteristicValueObject characteristicValueObject : evidence.getPhenotypes() ) {
+                        for ( CharacteristicValueObject characteristicValueObject : evidence.getPhenotypes() ) {
 
-                        if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
-                            validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
+                            if ( parentOrChildTerm.contains( characteristicValueObject.getValueUri() ) ) {
+                                validateEvidenceValueObject.setSameGeneAndPhenotypeChildOrParentAnnotated( true );
+                            }
                         }
                     }
                 }

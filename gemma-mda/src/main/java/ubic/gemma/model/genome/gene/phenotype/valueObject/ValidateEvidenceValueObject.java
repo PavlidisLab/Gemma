@@ -5,6 +5,7 @@ public class ValidateEvidenceValueObject {
     boolean sameGeneAnnotated = false;
     boolean sameGeneAndPhenotypeAnnotated = false;
     boolean sameGeneAndPhenotypeChildOrParentAnnotated = false;
+    boolean invalidPubmedId = false;
 
     public boolean isSameGeneAnnotated() {
         return this.sameGeneAnnotated;
@@ -30,4 +31,11 @@ public class ValidateEvidenceValueObject {
         this.sameGeneAndPhenotypeChildOrParentAnnotated = sameGeneAndPhenotypeChildOrParentAnnotated;
     }
 
+    public boolean isInvalidPubmedId() {
+        return this.invalidPubmedId;
+    }
+
+    public void setInvalidPubmedId( boolean invalidPubmedId ) {
+        this.invalidPubmedId = invalidPubmedId;
+    }
 }
