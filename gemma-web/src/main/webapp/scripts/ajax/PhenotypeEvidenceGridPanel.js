@@ -22,31 +22,33 @@ function getExternalDatabaseAnchor(databaseName, url, useDatabaseIcon) {
 }
 
 function getRowExpanderHtml(record) {
+	var rowExpanderHtml = '';
+	
 	switch (record.className) {
 		case 'DiffExpressionEvidenceValueObject' :
-			return record.description;
+			break;
 		
 		case 'ExperimentalEvidenceValueObject' :
-			var html = '';
+			var rowExpanderHtml = '';
 
         	if (record.primaryPublicationCitationValueObject != null) {
-        		html += '<p><b>Primary Publication</b>: ' +
+        		rowExpanderHtml += '<p><b>Primary Publication</b>: ' +
         			record.primaryPublicationCitationValueObject.citation + ' ' +
         			getPudmedAnchor(record.primaryPublicationCitationValueObject.pubmedURL) + '</p>';
         	}
 
 			var relPub = record.relevantPublicationsValueObjects;
         	if (relPub != null && relPub.length > 0) {
-        		html += '<p><b>Relevant Publication</b>: ';
+        		rowExpanderHtml += '<p><b>Relevant Publication</b>: ';
         		
 				for (var i = 0; i < relPub.length; i++) {
-					html += relPub[i].citation + ' ' + getPudmedAnchor(relPub[i].pubmedURL);
+					rowExpanderHtml += relPub[i].citation + ' ' + getPudmedAnchor(relPub[i].pubmedURL);
 					
 					if (i < relPub.length - 1) {
-						html += " | ";
+						rowExpanderHtml += " | ";
 					}
 				}
-				html += '</p>';
+				rowExpanderHtml += '</p>';
         	}
         	
 			var expChar = record.experimentCharacteristics;
@@ -61,65 +63,53 @@ function getRowExpanderHtml(record) {
 					  
 				}
 
-				html += '<p>';
+				rowExpanderHtml += '<p>';
 				Ext.iterate(expCharMap, function(key, value) {
-				  html += '<b>' + key + "</b>: " + value + '<br />';
+				  rowExpanderHtml += '<b>' + key + "</b>: " + value + '<br />';
 				});
-				html += '</p>';
+				rowExpanderHtml += '</p>';
         	}
 			
-			return html + '<p><b>Note</b>: ' + record.description + '</p>';
-
-		case 'ExternalDatabaseEvidenceValueObject' : 
-			var html = '';
-
-        	if (record.databaseEntryValueObject != null) {
-        		var databaseName = record.databaseEntryValueObject.externalDatabase.name; 
-        		
-        		html += '<p><b>Database Name</b>: ' + databaseName + '<br />';
-        			
-        		html += '<b>Link</b>: ' + getExternalDatabaseAnchor(record.databaseEntryValueObject.externalDatabase.name, record.externalUrl, false) + '</p>';
-        	}
-
-			return html + '<p><b>Note</b>: ' + record.description + '</p>';
+			break;
 
 		case 'GenericEvidenceValueObject' : 
-			return record.description;
+			break;
 
 		case 'LiteratureEvidenceValueObject' : 
-			var html = '';
-
         	if (record.citationValueObject != null) {
-        		html += '<p><b>Publication</b>: ' +
+        		rowExpanderHtml += '<p><b>Publication</b>: ' +
         			record.citationValueObject.citation + ' ' +
         			getPudmedAnchor(record.citationValueObject.pubmedURL) + '</p>';
         	}
-
-			return html + '<p><b>Note</b>: ' + record.description + '</p>';
+			break;
 
 		case 'UrlEvidenceValueObject' : 
-			return record.description;
-
-		default :
-			return ''; 
+			break;
 	}
+	
+	if (record.evidenceSource != null && record.evidenceSource.externalDatabase.name != null && record.evidenceSource.externalUrl != null) {
+		var databaseName = record.evidenceSource.externalDatabase.name;
+		rowExpanderHtml += '<p><b>Evidence Source</b>: ' + databaseName + ' ' + getExternalDatabaseAnchor(databaseName, record.evidenceSource.externalUrl, false) + '</p>'; 
+	}
+
+	if (record.description != null && record.description !== '') {
+		rowExpanderHtml += '<p><b>Note</b>: ' + record.description + '</p>';
+	}
+	
+	return rowExpanderHtml;
 }
 
 function getLinkOutHtml(record) {
+	var linkOutHtml = '';
+
 	switch (record.className) {
 		case 'DiffExpressionEvidenceValueObject' :
 			break;
 		
 		case 'ExperimentalEvidenceValueObject' :
         	if (record.primaryPublicationCitationValueObject != null) {
-				return getPudmedAnchor(record.primaryPublicationCitationValueObject.pubmedURL);
+				linkOutHtml += getPudmedAnchor(record.primaryPublicationCitationValueObject.pubmedURL);
 			}
-			break;
-
-		case 'ExternalDatabaseEvidenceValueObject' :
-        	if (record.databaseEntryValueObject != null) {
-        		return getExternalDatabaseAnchor(record.databaseEntryValueObject.externalDatabase.name, record.externalUrl, true);
-        	}
 			break;
 
 		case 'GenericEvidenceValueObject' : 
@@ -127,21 +117,37 @@ function getLinkOutHtml(record) {
 
 		case 'LiteratureEvidenceValueObject' : 
         	if (record.citationValueObject != null) {
-        		return getPudmedAnchor(record.citationValueObject.pubmedURL);
+        		linkOutHtml += getPudmedAnchor(record.citationValueObject.pubmedURL);
         	}
 			break;
 
 		case 'UrlEvidenceValueObject' : 
 			break;
-
-		return ''; 
 	}
+
+	if (record.evidenceSource != null && record.evidenceSource.externalDatabase.name != null && record.evidenceSource.externalUrl != null) {
+		if (linkOutHtml !== '') {
+			linkOutHtml += ' ';
+		}
+		linkOutHtml += getExternalDatabaseAnchor(record.evidenceSource.externalDatabase.name, record.evidenceSource.externalUrl, true);
+	}
+	
+	return linkOutHtml;
 }
 
 function getTypeColumnHtml(record) {
+	var externalSource = '';
+
+	if (record.evidenceSource != null && record.evidenceSource.externalDatabase != null) {
+		externalSource = 'External Source [' + record.evidenceSource.externalDatabase.name + ']';
+	}
+	
+	var typeColumnHtml = '';
+	
 	switch (record.className) {
 		case 'DiffExpressionEvidenceValueObject' :
-			return 'Differential Expression';
+			typeColumnHtml = 'Differential Expression';
+			break;
 		
 		case 'ExperimentalEvidenceValueObject' :
 			var experimentValues = '';
@@ -158,28 +164,31 @@ function getTypeColumnHtml(record) {
 				}
         	}
 		
-        	return 'Experimental' + experimentValues;
+        	typeColumnHtml = 'Experimental' + experimentValues;
+			break;
 
-		case 'ExternalDatabaseEvidenceValueObject' :
-			var databaseName = '';
-        	if (record.databaseEntryValueObject != null) {
-        		databaseName += ' [ ' + record.databaseEntryValueObject.externalDatabase.name + ' ] ';
-        	}
-
-			return 'External Database' + databaseName;
-
-		case 'GenericEvidenceValueObject' : 
-			return 'Comment';
+		case 'GenericEvidenceValueObject' :
+			if (record.evidenceSource == null) {
+				typeColumnHtml = 'Note';
+			} else {
+				typeColumnHtml = externalSource;
+			}
+			break;
 
 		case 'LiteratureEvidenceValueObject' : 
-			return 'Literature';
+			typeColumnHtml = 'Literature';
+			break;
 
 		case 'UrlEvidenceValueObject' : 
-			return 'Url';
-
-		default :
-			return ''; 
+			typeColumnHtml = 'Url';
+			break;
 	}
+
+	if (record.className !== 'GenericEvidenceValueObject' && externalSource !== '') {
+		typeColumnHtml += ' from ' + externalSource;
+	}
+
+	return typeColumnHtml;
 }
 
 
@@ -306,6 +315,9 @@ Gemma.PhenotypeEvidenceGridPanel = Ext.extend(Ext.grid.GridPanel, {
 					header: "Link Out",
 					dataIndex: 'linkOut',
 					width: 0.2,
+					renderer: function(value) {
+						return '<span style="white-space: normal;">' + value +'</span>'					
+					},	
 					sortable: false
 				}
 			]
