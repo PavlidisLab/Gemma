@@ -95,7 +95,7 @@ Gemma.ExperimentSearchAndPreview = Ext.extend(Ext.Panel, {
 			// reset the experiment preview panel content
 			this.resetExperimentPreview();
 
-			this.preview.setTaxondId(taxonId);
+			this.preview.setTaxonId(taxonId);
 			this.preview.loadExperimentPreviewFromExperiments([this.selectedExperimentOrGroup.resultValueObject]);
 			
 		}
