@@ -132,6 +132,7 @@ Gemma.GeneMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		}.createDelegate(this));
 	},
 
+
 	addGenes : function(searchResultValObj) { // for adding from combo
 				if (!searchResultValObj) {
 					return;
@@ -1095,7 +1096,7 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
 			}
 		});
 	},
-	
+
 	reset: function(){
 		this.getTopToolbar().taxonCombo.reset();
 		this.getTopToolbar().geneCombo.reset();
@@ -1152,14 +1153,12 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
 		
 			this.currentGroupSize = geneValueObjs.size();
 			
-			var geneIds = [];
 			var taxonId = geneValueObjs[0].taxonId;
 			for (var i = 0; i < geneValueObjs.length; i++) {
 				if (taxonId !== geneValueObjs[0].taxonId) {
 					Ext.Msg.alert('Sorry', 'Gene groups do not support mixed taxa. Please remove this gene group');
 					break;
 				}
-				geneIds.push(geneValueObjs[i].id);
 			}
 			
 			var groupTaxon = {
@@ -1167,7 +1166,7 @@ Gemma.GeneGroupMemberPanelClassic = Ext.extend(Gemma.GeneGrid, {
 				commonName: geneValueObjs[0].taxonName
 			};
 			this.lockInTaxon(groupTaxon);
-			this.loadGenes(geneIds);
+			this.addGeneValueObjects(geneValueObjs);
 		}
 		
 		this.getEl().unmask();

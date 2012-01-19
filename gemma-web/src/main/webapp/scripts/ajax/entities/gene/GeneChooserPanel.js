@@ -80,12 +80,35 @@ Gemma.GeneGrid = Ext.extend(Ext.grid.GridPanel, {
 							 * side but looks funny.
 							 */
 							this.getStore().loadData(geneData);
+							
 							if (callback) {
 								callback(args);
 							}
 						}.createDelegate(this));
 			},
 
+			/**
+			 * Add geneValueObjects to grid.
+			 * 
+			 * @param {Object} gvos must have fields for id, taxonScientificName, officialSymbol & officialName
+			 */
+			addGeneValueObjects: function(gvos){
+				if (!gvos || gvos.length === 0) {
+					return;
+				}
+				if (this.getEl()) {
+					this.loadMask = new Ext.LoadMask(this.getEl(), {
+						msg: Gemma.StatusText.Loading.genes,
+						msgCls: 'absolute-position-loading-mask ext-el-mask-msg x-mask-loading'
+					});
+					this.loadMask.show();
+				}
+				var geneData = [];
+				for (var i = 0; i < gvos.length; ++i) {
+					geneData.push([gvos[i].id, gvos[i].taxonScientificName, gvos[i].officialSymbol, gvos[i].officialName]);
+				}
+				this.getStore().loadData(geneData);
+			},
 			initComponent : function() {
 				Ext.apply(this, {
 							tbar : new Gemma.GeneChooserToolBar({
