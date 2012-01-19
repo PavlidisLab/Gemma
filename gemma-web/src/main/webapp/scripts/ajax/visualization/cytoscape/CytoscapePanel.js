@@ -9,12 +9,7 @@ Ext.Panel, {
     initialDisplayStringency: 2,
 
     currentNodeGeneIds: [],
-    currentQueryGeneIds: [],
-
-    dataJSON: {
-        nodes: [],
-        edges: []
-    },
+    currentQueryGeneIds: [],    
 
     initComponent: function () {
         var controlBar = new Gemma.CytoscapeControlBar();
@@ -69,7 +64,6 @@ Ext.Panel, {
 
             //do initial filtering of graph if necessary
             if (this.initialDisplayStringency > this.currentResultsStringency) {
-
                 var trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(this.knownGeneResults, this.currentQueryGeneIds, this.initialDisplayStringency);
                 this.display.filter(this.initialDisplayStringency, trimmed.trimmedNodeIds, true);
             } else if (!this.display.initialZoomLevel) {
@@ -218,9 +212,7 @@ Ext.Panel, {
     },
 
     extendNodesStepTwo: function (selectedNodes) {
-
-        var displayStringency = this.display.getStringency();
-        var resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);
+        
         var extendedNodesGeneIdArray = [];
         var sNodesLength = selectedNodes.length;
         var i;
@@ -239,8 +231,8 @@ Ext.Panel, {
         this.updateSearchFormGenes(this.currentQueryGeneIds);
 
         Ext.apply(this.coexCommand, {
-            stringency: resultsStringency,
-            displayStringency: displayStringency,
+            stringency: Gemma.CytoscapePanelUtil.restrictResultsStringency(this.display.getStringency()),
+            displayStringency: this.display.getStringency(),
             geneIds: extendedNodesGeneIdArray,
             queryGenesOnly: false
         });
@@ -365,10 +357,9 @@ Ext.Panel, {
     completeCoexSearchCallback: function (result) {
         this.queryGenes = result.queryGenes;
         this.knownGeneResults = Gemma.CoexValueObjectUtil.removeDuplicates(result.knownGeneResults);
-        this.fireEvent('dataUpdateFromCoexpressionViz', this.knownGeneResults, this.currentQueryGeneIds, this.currentResultsStringency, this.initialDisplayStringency);
-        this.dataJSON = this.constructDataJSON(this.queryGenes, this.knownGeneResults);
+        this.fireEvent('dataUpdateFromCoexpressionViz', this.knownGeneResults, this.currentQueryGeneIds, this.currentResultsStringency, this.initialDisplayStringency);        
         this.display.initialZoomLevel = null;
-        this.display.drawGraph(this.dataJSON);
+        this.display.drawGraph(this.constructDataJSON(this.queryGenes, this.knownGeneResults));
         this.showUserMessageBar(result.displayInfo);
         this.loadMask.hide();
     },
