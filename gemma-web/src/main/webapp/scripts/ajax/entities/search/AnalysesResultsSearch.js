@@ -274,7 +274,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			currentResultsStringency: searchForm.getLastCoexpressionSearchCommand().stringency,
 			initialDisplayStringency: searchForm.getLastCoexpressionSearchCommand().displayStringency,
 			coexCommand: searchForm.getLastCoexpressionSearchCommand(),
-			lastSpinnerValue: searchForm.getLastCoexpressionSearchCommand().displayStringency
+			currentDisplayStringency: searchForm.getLastCoexpressionSearchCommand().displayStringency
 			
 		});
 		
@@ -284,9 +284,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 			title : "Visualization",
 			queryGenes : result.queryGenes,
 			knownGeneResults : result.knownGeneResults,
-			coexCommand: searchForm.getLastCoexpressionSearchCommand(),
-			coexGridRef: knownGeneGrid,
-			searchPanelRef: searchForm,
+			coexCommand: searchForm.getLastCoexpressionSearchCommand(),	
 			height: Ext.getBody().getHeight()>500?Ext.getBody().getHeight()-150:500,
 			taxonId: searchForm.getTaxonId(),
 			taxonName: searchForm.getTaxonName(),
@@ -295,6 +293,9 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		});
 
 		searchPanel.collapse();
+		
+		knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz']);	    
+	    searchForm.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz']);
 		
 		coexResultsTabPanel.add(knownGeneGrid);
 		coexResultsTabPanel.add(cytoscapePanel);

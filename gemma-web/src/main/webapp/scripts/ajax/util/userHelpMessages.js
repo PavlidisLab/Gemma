@@ -190,7 +190,8 @@ Gemma.HelpText.WidgetDefaults = {
 		unCompressGraphText: 'Uncompress Graph',
 		nodeLabelsTT: 'Turn node labels on/off',
 		nodeLabelsText: 'Node Labels On',
-		noNodeLabelsText: 'Node Labels Off'
+		noNodeLabelsText: 'Node Labels Off',
+		invalidStringencyWarning: 'You cannot lower the stringency below 2. Please select a different stringency'
 		
 	},
 	DatasetGroupEditor:{

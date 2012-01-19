@@ -184,7 +184,7 @@ Ext.onReady(function() {
 				currentResultsStringency: searchPanel.getLastCoexpressionSearchCommand().stringency,
 				initialDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency,
 				coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
-				lastSpinnerValue: searchPanel.getLastCoexpressionSearchCommand().displayStringency
+				currentDisplayStringency: searchPanel.getLastCoexpressionSearchCommand().displayStringency
 			
 			});
 			
@@ -197,9 +197,7 @@ Ext.onReady(function() {
 					title : "Visualization",
 					queryGenes : result.queryGenes,
 					knownGeneResults : result.knownGeneResults,
-					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),
-					coexGridRef: knownGeneGrid,
-					searchPanelRef: searchPanel,
+					coexCommand: searchPanel.getLastCoexpressionSearchCommand(),					
 					width:850,
 					taxonId: searchPanel.getTaxonId(),
 					taxonName: searchPanel.getTaxonName(),
@@ -215,7 +213,10 @@ Ext.onReady(function() {
 		
 		resultsPanel.add(knownGeneGrid);
 		resultsPanel.add(cytoscapePanel);	
-		
+	        
+	    knownGeneGrid.relayEvents(cytoscapePanel, ['stringencyUpdateFromCoexpressionViz', 'dataUpdateFromCoexpressionViz']);	    
+	    searchPanel.relayEvents(cytoscapePanel, ['queryUpdateFromCoexpressionViz']);
+	    
 		// won't fire the render event if it's already rendered
 		resultsPanel.render('analysis-results-search-form-results');
 		

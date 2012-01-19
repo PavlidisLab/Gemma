@@ -362,6 +362,20 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
 		this.on("cellclick", this.rowClickHandler.createDelegate(this), this);
 		
+		this.on('stringencyUpdateFromCoexpressionViz', function (trimmedData, displayStringency) {
+			
+			this.coexStringencyUpdate(trimmedData, displayStringency);
+					
+		}, this);	
+		
+		this.on('dataUpdateFromCoexpressionViz', function (knownGeneResults, currentQueryGeneIds, currentResultsStringency, displayStringency) {
+			
+			this.coexDataUpdate(knownGeneResults, currentQueryGeneIds, currentResultsStringency, displayStringency);
+			this.getBottomToolbar().hide();
+    		this.doLayout();
+			
+		}, this);	
+		
 		if (!this.lite) {
 
             this.getTopToolbar().getComponent('stringencySpinner').addListener('spin', function (ev) {
@@ -380,13 +394,12 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     this.loadData(false, 2,filteredData, null);
                     
                     //update cytoscape                 
-                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
+                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.display.ready){
                     	
-                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds, true);
+                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed);
                     	
                     }
-                    this.lastSpinnerValue = spinner.getValue();
-                    
+                    this.lastSpinnerValue = spinner.getValue();                    
 
                 } else {
                 	
@@ -400,7 +413,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                                 if (btn == 'ok') {
                                 	
                                 	//different behaviour based on whether visualization has loaded or not
-                                	if (this.cytoscapeRef && this.cytoscapeRef.ready){
+                                	if (this.cytoscapeRef && this.cytoscapeRef.display.ready){
                                 		this.getBottomToolbar().hide();
                                 		this.doLayout();
                                 		this.cytoscapeRef.getBottomToolbar().hide();
@@ -425,11 +438,6 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
             }, this);
 
-
-        
-		
-		
-
             this.getTopToolbar().getComponent('stringencySpinner').addListener('specialkey', function (field, e) {
             	
             	if (e.getKey() == e.ENTER) {
@@ -447,9 +455,9 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                     this.loadData(false, 2, filteredData, null);
                     
                     //update cytoscape                 
-                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.ready){
+                    if (this.tabPanelViewFlag && this.cytoscapeRef && this.cytoscapeRef.display.ready){
                     	
-                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed.trimmedKnownGeneResults, trimmed.trimmedNodeIds, true);
+                    	this.cytoscapeRef.stringencyUpdate(spinner.getValue(), trimmed);
                     	
                     }
                     
@@ -468,7 +476,7 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
                                 if (btn == 'ok') {
                                 	
                                 	//different behaviour based on whether visualization has loaded or not
-                                	if (this.cytoscapeRef && this.cytoscapeRef.ready){
+                                	if (this.cytoscapeRef && this.cytoscapeRef.display.ready){
                                 		this.getBottomToolbar().hide();
                                 		this.doLayout();
                                 		this.cytoscapeRef.getBottomToolbar().hide();
@@ -523,21 +531,55 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 		return supporting;
 	},
 	
-	cytoscapeUpdate : function(stringency, numQueryGenes, data){ 
+	//called when data changes ("coexpressionVizDataUpdate" event)
+	coexDataUpdate : function(knownGeneResults, currentQueryGeneIds, currentResultsStringency, displayStringency){ 
 		
+		//this.fireEvent("coexpressionVizDataUpdate", this.knownGeneResults, this.currentQueryGeneIds, this.currentResultsStringency, this.initialdisplaystringency);
 		
-		if (this.getTopToolbar()) {
-			this.getTopToolbar().getComponent('stringencySpinner').setValue(stringency);
+		this.knownGeneResults = knownGeneResults;
+        this.currentQueryGeneIds = currentQueryGeneIds;
+        this.currentResultsStringency = currentResultsStringency;
+		
+        var displayData = knownGeneResults;
+        
+		var trimmed;
+		
+		if (displayStringency > currentResultsStringency) {
+	            trimmed = Gemma.CoexValueObjectUtil.trimKnownGeneResults(knownGeneResults, currentQueryGeneIds, displayStringency);
+	            displayData = trimmed.trimmedKnownGeneResults; 
+		}		
+        
+        if (this.getTopToolbar()) {
+			this.getTopToolbar().getComponent('stringencySpinner').setValue(displayStringency);
 			
 		}
-		this.lastSpinnerValue = stringency;
+		this.lastSpinnerValue = displayStringency;    		
 		
-		var filteredData;
 		//filter away non-query genes
-		filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, data);
+		var filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, displayData);
 		
 		//always show query and coexpressed genes so set numQueryGenes to >1
 		this.loadData(false, 2, filteredData, null);
+		
+		
+	},
+	
+	//called when stringency changes but data stays the same ("coexpressionVizStringencyUpdate" event)
+	//similar to coexDataUpdate but a seperate function because some data trimming(a potentially expensive operation) has already been done in widget firing event
+	coexStringencyUpdate : function(trimmedData, displayStringency){
+		
+		 if (this.getTopToolbar()) {
+				this.getTopToolbar().getComponent('stringencySpinner').setValue(displayStringency);
+				
+			}
+			this.lastSpinnerValue = displayStringency;    		
+			
+			//filter away non-query genes
+			var filteredData = Gemma.CoexValueObjectUtil.filterGeneResultsByGeneIds(this.currentQueryGeneIds, trimmedData);
+			
+			//always show query and coexpressed genes so set numQueryGenes to >1
+			this.loadData(false, 2, filteredData, null);
+			
 		
 		
 	},
@@ -1174,8 +1216,8 @@ Gemma.CoexpressionGrid = Ext.extend(Ext.grid.GridPanel, {
 
         resultsStringency = Gemma.CytoscapePanelUtil.restrictResultsStringency(displayStringency);
         
-        this.cytoscapeRef.lastSpinnerValue = spinner.getValue();
-    	this.cytoscapeRef.getTopToolbar().getComponent('stringencySpinner').setValue(spinner.getValue());
+        
+        this.cytoscapeRef.display.updateStringency(spinner.getValue());
 
         Ext.apply(
         	this.cytoscapeRef.coexCommand, {

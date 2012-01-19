@@ -542,6 +542,17 @@ Gemma.AnalysisResultsSearchForm = Ext.extend(Ext.FormPanel, {
 		});
 
 		Gemma.AnalysisResultsSearchForm.superclass.initComponent.call(this);
+		
+		this.on('queryUpdateFromCoexpressionViz', function (genesToPreview, genesToPreviewIds, taxonId, taxonName) {			
+			
+			this.geneChoosers.removeAll();
+	        // add new genesearchandpreview
+	        var geneChooser = this.addGeneChooser();
+	        
+	        geneChooser.getGenesFromGeneValueObjects(
+	        genesToPreview, genesToPreviewIds, taxonId, taxonName);
+					
+		}, this);	
 
 		this.addEvents('beforesearch', 'aftersearch', 'showDiffExResults', 'showCoexResults');
 
