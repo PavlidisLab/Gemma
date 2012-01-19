@@ -623,6 +623,16 @@ a.tooltip:hover .tooltiptext {
 	margin-left:10px;
 }
 
+.x-tool-saveEdit {
+    background-image:url('/Gemma/images/icons/diskEdit2.png');
+	margin-left:10px;
+	
+}
+.x-tool-saveEdit-over {
+    background-image:url('/Gemma/images/icons/diskEdit2.png');
+	margin-left:10px;
+}
+
 /* hover thumbnails */
 /*Credits: Dynamic Drive CSS Library */
 /*URL: http://www.dynamicdrive.com/style/ */
