@@ -97,59 +97,16 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
             }.createDelegate(this));
 
-
-            this.visualization.addListener("filter", function (evt) {
-
-                if (this.doZoomAfterFilter) {
-                    this.visualization.zoomToFit();
-                }
-                this.doZoomAfterFilter = false;
-
-
-            }.createDelegate(this));
-            
+ 
             this.visualization.addListener("layout", function (evt) {
-            	this.initialZoomLevel = null
-            	this.visualization.zoomToFit();
+            	this.scaleFont(this.visualization.zoom());
             }.createDelegate(this));
 
 
             this.visualization.addListener("zoom", function (evt) {
 
-                if (this.ready) {
-                    var zoom = evt.value;
-
-                    if (this.initialZoomLevel) {
-
-                        var newFontSize = Math.floor(this.initialFontSize / zoom);
-
-                        this.visualStyleRegular.nodes.labelFontSize = newFontSize;
-                        this.visualStyleNodeDegree.nodes.labelFontSize = newFontSize;
-
-                        if (this.nodeDegreeVisualStyleFlag) {
-                            this.visualization.visualStyle(this.visualStyleNodeDegree);
-                        } else {
-                            this.visualization.visualStyle(this.visualStyleRegular);
-                        }
-
-                    } else {
-                    	//first time in zoom handler after new search, need to set/reset some settings 
-                        this.initialZoomLevel = zoom;
-
-                        this.initialFontSize = Gemma.CytoscapeSettings.labelFontSize;
-                        var newFontSize = Math.floor(this.initialFontSize / zoom);
-
-                        this.visualStyleRegular.nodes.labelFontSize = newFontSize;
-                        this.visualStyleNodeDegree.nodes.labelFontSize = newFontSize;
-
-                        if (this.nodeDegreeVisualStyleFlag) {
-                            this.visualization.visualStyle(this.visualStyleNodeDegree);
-                        } else {
-                            this.visualization.visualStyle(this.visualStyleRegular);
-                        }
-                    }
-
-                }
+            	var zoom = evt.value;
+            	this.scaleFont(zoom);
 
             }.createDelegate(this));
 
@@ -165,12 +122,13 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
 
     },
 
-    drawGraph: function (dataJSON) {
+    drawGraph: function (currentQueryGeneIds, queryGenes, knownGeneResults) {
+    	    	
         var dataMsg = {
             dataSchema: this.dataSchemaJSON,
-            data: dataJSON
+            data: this.constructDataJSON(currentQueryGeneIds, queryGenes, knownGeneResults)
         };
-
+        this.initialZoomLevel = null;        
         // init and draw
         this.visualization.draw({
             network: dataMsg,
@@ -178,8 +136,226 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
             layout: this.currentLayout
         });
     },
+    
+    constructDataJSON: function (currentQueryGeneIds, qgenes, knowngenes) {
+        return this.constructDataJSONWithStringencyFiltering(currentQueryGeneIds, qgenes, knowngenes, false, null);
+    },
 
-    filter: function (stringency, trimmedNodeIds, doZoom) {
+    //This is only called from constructDataJSON(qgenes, knowngenes, false, null) above so filterCurrentResults=false and filterStringency=null
+    //this means no filtering will be done.
+    constructDataJSONWithStringencyFiltering: function (currentQueryGeneIds, qgenes, knowngenes, filterCurrentResults, filterStringency) {
+        var data = {
+            nodes: [],
+            edges: []
+        }
+        // helper array to prevent duplicate nodes from being
+        // entered
+        var graphNodeIds = [];
+        var edgeSet = [];
+        var kglength = knowngenes.length;
+        // populate node data plus populate edge data
+        for (i = 0; i < kglength; i++) {
+
+            // if not filtering go in, or if filtering: go in
+            // only if the query or known gene is contained in
+            // the original query geneids AND the stringency is
+            // >= the filter stringency
+            if (!filterCurrentResults || ((currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) !== -1 || (currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) !== -1)) && (knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency))
+
+            ) {
+                if (graphNodeIds.indexOf(knowngenes[i].foundGene.id) === -1) {
+                    isQueryGene = false;
+
+                    if (currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) !== -1) {
+                        isQueryGene = true;
+                    }
+
+                    data.nodes.push({
+                        id: knowngenes[i].foundGene.officialSymbol,
+                        label: knowngenes[i].foundGene.officialSymbol,
+                        geneid: knowngenes[i].foundGene.id,
+                        queryflag: isQueryGene,
+                        officialName: Gemma.CytoscapePanelUtil.ttSubstring(knowngenes[i].foundGene.officialName),
+                        ncbiId: knowngenes[i].foundGene.ncbiId,
+                        nodeDegreeBin: Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(knowngenes[i].foundGeneNodeDegree),
+                        nodeDegree: Gemma.CytoscapePanelUtil.decimalPlaceRounder(knowngenes[i].foundGeneNodeDegree)
+                    });
+
+                    graphNodeIds.push(knowngenes[i].foundGene.id);
+                }
+
+                if (graphNodeIds.indexOf(knowngenes[i].queryGene.id) === -1) {
+                    isQueryGene = false;
+
+                    if (currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) !== -1) {
+                        isQueryGene = true;
+                    }
+
+                    data.nodes.push({
+                        id: knowngenes[i].queryGene.officialSymbol,
+                        label: knowngenes[i].queryGene.officialSymbol,
+                        geneid: knowngenes[i].queryGene.id,
+                        queryflag: isQueryGene,
+                        officialName: Gemma.CytoscapePanelUtil.ttSubstring(knowngenes[i].queryGene.officialName),
+                        ncbiId: knowngenes[i].queryGene.ncbiId,
+                        nodeDegreeBin: Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(knowngenes[i].queryGeneNodeDegree),
+                        nodeDegree: Gemma.CytoscapePanelUtil.decimalPlaceRounder(knowngenes[i].queryGeneNodeDegree)
+                    });
+                    graphNodeIds.push(knowngenes[i].queryGene.id);
+                }
+
+                var support;
+                var supportsign;
+                if (knowngenes[i].posSupp > 0 && knowngenes[i].negSupp > 0) {
+                    support = Math.max(knowngenes[i].posSupp, knowngenes[i].negSupp);
+                    supportsign = "both";
+
+                } else if (knowngenes[i].posSupp > 0) {
+                    support = knowngenes[i].posSupp;
+                    supportsign = "positive";
+                } else if (knowngenes[i].negSupp > 0) {
+                    support = knowngenes[i].negSupp;
+                    supportsign = "negative";
+                }
+                // double edge check
+                if (edgeSet.indexOf(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol) == -1 && edgeSet.indexOf(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol) == -1) {
+
+                    data.edges.push({
+                        id: knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol,
+                        target: knowngenes[i].foundGene.officialSymbol,
+                        source: knowngenes[i].queryGene.officialSymbol,
+                        positivesupport: knowngenes[i].posSupp,
+                        negativesupport: knowngenes[i].negSupp,
+                        support: support,
+                        supportsign: supportsign,
+                        nodeDegreeBin: Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(Gemma.CytoscapePanelUtil.getMaxWithNull(
+                        knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
+                    });
+                    edgeSet.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
+                    edgeSet.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol);
+                }
+            } // end if(!filterResults
+        } // end for (<kglength)
+        // if we are filtering, we need to loop through again to
+        // add edges that we missed the first time (because we
+        // were unsure whether both nodes would be in the graph)
+        if (filterCurrentResults) {
+            var completeGraphEdges = [];
+
+            for (i = 0; i < kglength; i++) {
+                // if both nodes of the edge are in the graph,
+                // and it meets the stringency threshold, and
+                // neither of the nodes are query genes(because
+                // there edges have already been added)
+                if (graphNodeIds.indexOf(knowngenes[i].foundGene.id) !== -1 && graphNodeIds.indexOf(knowngenes[i].queryGene.id) !== -1 && (knowngenes[i].posSupp >= filterStringency || knowngenes[i].negSupp >= filterStringency) && currentQueryGeneIds.indexOf(knowngenes[i].foundGene.id) === -1 && currentQueryGeneIds.indexOf(knowngenes[i].queryGene.id) === -1) {
+
+                    var support;
+                    var supportsign;
+                    if (knowngenes[i].posSupp >= filterStringency && knowngenes[i].negSupp >= filterStringency) {
+                        support = Math.max(
+                        knowngenes[i].posSupp, knowngenes[i].negSupp);
+                        supportsign = "both";
+
+                    } else if (knowngenes[i].posSupp >= filterStringency) {
+                        support = knowngenes[i].posSupp;
+                        supportsign = "positive";
+                    } else if (knowngenes[i].negSupp >= filterStringency) {
+                        support = knowngenes[i].negSupp;
+                        supportsign = "negative";
+                    }
+
+                    data.edges.push({
+                        id: knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol,
+                        target: knowngenes[i].foundGene.officialSymbol,
+                        source: knowngenes[i].queryGene.officialSymbol,
+                        positivesupport: knowngenes[i].posSupp,
+                        negativesupport: knowngenes[i].negSupp,
+                        support: support,
+                        supportsign: supportsign,
+                        nodeDegreeBin: Gemma.CytoscapePanelUtil.nodeDegreeBinMapper(Gemma.CytoscapePanelUtil.getMaxWithNull(
+                        knowngenes[i].queryGeneNodeDegree, knowngenes[i].foundGeneNodeDegree))
+                    });
+
+                    completeGraphEdges.push(knowngenes[i].foundGene.officialSymbol + "to" + knowngenes[i].queryGene.officialSymbol);
+                    completeGraphEdges.push(knowngenes[i].queryGene.officialSymbol + "to" + knowngenes[i].foundGene.officialSymbol);
+                }
+            } // end for (<kglength)
+        }
+
+        /*
+         * //take this out for now, it just makes the graph look
+         * bad to have these orphaned nodes sitting around //add
+         * query gene nodes NOT in knowngenes, node degree set
+         * to zero 
+         *var qlength = qgenes.length;
+         *var isQueryGene = false;        
+         *var i; for (i = 0; i < qlength; i++) {
+         * 
+         * if (graphNodeIds.indexOf(qgenes[i].id) === -1) {
+         * 
+         * //check if this gene was part of current/previous
+         * query if
+         * (currentQueryGeneIds.indexOf(qgenes[i].id) !==
+         * -1) { isQueryGene = true; }
+         * 
+         * if (!filterCurrentResults ||
+         * currentQueryGeneIds.indexOf(qgenes[i].id) !==
+         * -1) {
+         * 
+         * data.nodes.push({ id: qgenes[i].officialSymbol,
+         * label: qgenes[i].officialSymbol, geneid:
+         * qgenes[i].id, queryflag: isQueryGene, officialName:
+         * this.ttSubstring(qgenes[i].officialName), ncbiId:
+         * qgenes[i].ncbiId, nodeDegreeBin: 0, nodeDegree: 0 });
+         * 
+         * graphNodeIds.push(qgenes[i].id);
+         *  }
+         * 
+         * isQueryGene = false; } }
+         */
+        //this.currentNodeGeneIds = graphNodeIds;
+
+        return data;
+    },
+    
+    scaleFont: function(zoom){
+    	if (this.ready) {            
+
+            if (this.initialZoomLevel) {
+
+                var newFontSize = Math.floor(this.initialFontSize / zoom);
+
+                this.visualStyleRegular.nodes.labelFontSize = newFontSize;
+                this.visualStyleNodeDegree.nodes.labelFontSize = newFontSize;
+
+                if (this.nodeDegreeVisualStyleFlag) {
+                    this.visualization.visualStyle(this.visualStyleNodeDegree);
+                } else {
+                    this.visualization.visualStyle(this.visualStyleRegular);
+                }
+
+            } else {
+            	//first time in zoom handler after new search, need to set/reset some settings 
+                this.initialZoomLevel = zoom;
+
+                this.initialFontSize = Gemma.CytoscapeSettings.labelFontSize;
+                var newFontSize = Math.floor(this.initialFontSize / zoom);
+
+                this.visualStyleRegular.nodes.labelFontSize = newFontSize;
+                this.visualStyleNodeDegree.nodes.labelFontSize = newFontSize;
+
+                if (this.nodeDegreeVisualStyleFlag) {
+                    this.visualization.visualStyle(this.visualStyleNodeDegree);
+                } else {
+                    this.visualization.visualStyle(this.visualStyleRegular);
+                }
+            }
+
+        }
+    	
+    },
+
+    filter: function (stringency, trimmedNodeIds, doZoom){
 
         filterFunctionNodes = function (node) {
             return trimmedNodeIds.indexOf(node.data.geneid) !== -1;
@@ -190,9 +366,9 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         filterFunctionEdges = function (edge) {
             return edge.data.support >= stringency;
         };
-
-        if (doZoom) {
-            this.doZoomAfterFilter = true;
+        
+        if (doZoom){
+        	this.visualization.zoomToFit();
         }
 
         this.visualization.filter("edges", filterFunctionEdges.createDelegate(this));
@@ -208,18 +384,7 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
         if (this.ready) {
             this.controller.reRunSearchWithSelectedNodes(this.visualization.selected("nodes"));
         }
-    },
-
-    changeFontSize: function (fontSize) {
-        this.visualStyleRegular.nodes.labelFontSize = fontSize;
-        this.visualStyleNodeDegree.nodes.labelFontSize = fontSize;
-
-        if (this.nodeDegreeVisualStyleFlag) {
-            this.visualization.visualStyle(this.visualStyleNodeDegree);
-        } else {
-            this.visualization.visualStyle(this.visualStyleRegular);
-        }
-    },
+    },    
 
     exportPNG: function () {
         var htmlString = '<img src="data:image/png;base64,' + this.visualization.png() + '"/>';
