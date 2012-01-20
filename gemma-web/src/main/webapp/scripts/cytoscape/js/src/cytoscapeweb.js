@@ -2570,6 +2570,9 @@
      *                                                Any lesser distances will be treated as the minimum.</li>
      *         <li><code>maxDistance</code> {Number}: The maximum distance over which forces are exerted. 
      *                                                Any greater distances will be ignored.</li>
+     *         <li><code>seed</code> {Number}: Optional positive integer which is used to set the random seed for generating the initial node positions.
+     *                                         Force-directed layouts are non-deterministic by nature, but this option can be used to reproduce the same topology.
+     *                                         Just leave this property <code>undefined</code> or set <code>0</code> if you want to keep the layout non-deterministic (i.e. a random seed is used).</li>
      *         <li><code>autoStabilize</code> {Boolean}: A common problem with force-directed layouts is that they can be highly unstable.
      *                                                   If this parameter is <code>true</code> and the edges are being stretched too much
      *                                                   between each iteration, Cytoscape Web automatically tries to stabilize 

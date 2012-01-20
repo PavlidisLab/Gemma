@@ -60,9 +60,9 @@ Gemma.CytoscapeDisplay = Ext.extend(Ext.FlashComponent, {
     },
     options: {
         // where you have the Cytoscape Web SWF
-        swfPath: "/Gemma/scripts/cytoscapev8/swf/CytoscapeWeb",
+        swfPath: "/Gemma/scripts/cytoscape/swf/CytoscapeWeb",
         // where you have the Flash installer SWF
-        flashInstallerPath: "/Gemma/scripts/cytoscapev8/swf/playerProductInstall"
+        flashInstallerPath: "/Gemma/scripts/cytoscape/swf/playerProductInstall"
     },
 
 
