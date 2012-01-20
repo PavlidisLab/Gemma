@@ -62,7 +62,7 @@ Ext.onReady(function() {
 				autoScroll: true,
 				width: 850
 			},
-			deferredRender: true,
+			//deferredRender: true,
 			hidden:true
 			
 		});
@@ -76,13 +76,7 @@ Ext.onReady(function() {
 	// get ready to show results
 	searchPanel.on("beforesearch",function(panel){
 		
-		// before every search, clear the results in preparation for new (possibly blank) results 
-		
-		//resultsPanel.removeAll() causes CytoscapePanel's afterrender event fire for some reason.  
-		//Set coexgridref to null so that we can prevent the afterrender listener function from executing in CytoscapePanel.js
-		if (Ext.getCmp("cytoscaperesults")){
-			Ext.getCmp("cytoscaperesults").coexGridRef=null;
-		}
+		// before every search, clear the results in preparation for new (possibly blank) results		
 		
 		this.resultsPanel.removeAll(); 
 		this.resultsPanel.hide();

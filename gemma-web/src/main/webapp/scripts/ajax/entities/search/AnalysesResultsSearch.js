@@ -92,13 +92,7 @@ Gemma.AnalysisResultsSearch = Ext.extend(Ext.Panel, {
 		
 		// get ready to show results
 		searchForm.on("beforesearch", function(panel){
-		
-			//this.resultsPanel.removeAll() causes CytoscapePanel's afterrender event fire for some reason.  
-			//Set coexgridref to null so that we can prevent the afterrender listener function from executing in CytoscapePanel.js
-			if (Ext.getCmp("cytoscaperesults")){
-				Ext.getCmp("cytoscaperesults").coexGridRef=null;
-			}
-			
+					
 			// before every search, clear the results in preparation for new (possibly blank) results 
 			coexResultsTabPanel.removeAll();
 			panel.clearError();
