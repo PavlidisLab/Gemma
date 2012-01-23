@@ -133,6 +133,7 @@ Ext.onReady(function() {
 				title : "No Coexpression Search Results"
 			});
 			
+			resultsPanel.render('analysis-results-search-form-results');
 			
 			resultsPanel.add(errorPanel);
 			//Ext.DomHelper.overwrite('analysis-results-search-form-messages', result.errorState);
