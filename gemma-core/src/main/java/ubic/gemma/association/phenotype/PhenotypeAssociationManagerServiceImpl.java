@@ -284,12 +284,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public void remove( Long id ) {
         PhenotypeAssociation evidence = this.associationService.load( id );
 
-        // if the trees are present in the cache, change the tree with the corresponding phenotypes
-        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-            EvidenceValueObject evidenceVO = EvidenceValueObject.convert2ValueObjects( evidence );
-            buildTree( evidenceVO.getPhenotypesValueUri() );
-        }
-
         if ( evidence != null ) {
 
             if ( evidence.getEvidenceSource() != null ) {
@@ -297,6 +291,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             }
 
             this.associationService.remove( evidence );
+
+            // if the trees are present in the cache, change the tree with the corresponding phenotypes
+            if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
+                EvidenceValueObject evidenceVO = EvidenceValueObject.convert2ValueObjects( evidence );
+                buildTree( evidenceVO.getPhenotypesValueUri() );
+            }
         }
     }
 
@@ -652,9 +652,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                                 .getPhenotypesValues() ) {
 
                             if ( evidence.getPhenotypes().contains( phenotypeAlreadyPresent ) ) {
-                                validateEvidenceValueObject.setSameGeneAndPhenotypeAnnotated( true );
+                                validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
                                 return validateEvidenceValueObject;
                             }
+                        }
+
+                        if ( evidence.getPhenotypes().containsAll(
+                                bibliographicPhenotypesValueObject.getPhenotypesValues() ) ) {
+                            validateEvidenceValueObject.setSameGeneAndPhenotypesAnnotated( true );
                         }
 
                         Set<String> parentOrChildTerm = new HashSet<String>();

@@ -3,7 +3,10 @@ package ubic.gemma.model.genome.gene.phenotype.valueObject;
 public class ValidateEvidenceValueObject {
 
     boolean sameGeneAnnotated = false;
-    boolean sameGeneAndPhenotypeAnnotated = false;
+    
+    
+    boolean sameGeneAndOnePhenotypeAnnotated = false;
+    boolean sameGeneAndPhenotypesAnnotated = false;
     boolean sameGeneAndPhenotypeChildOrParentAnnotated = false;
     boolean invalidPubmedId = false;
 
@@ -15,12 +18,12 @@ public class ValidateEvidenceValueObject {
         this.sameGeneAnnotated = sameGeneAnnotated;
     }
 
-    public boolean isSameGeneAndPhenotypeAnnotated() {
-        return this.sameGeneAndPhenotypeAnnotated;
+    public boolean isSameGeneAndPhenotypesAnnotated() {
+        return this.sameGeneAndPhenotypesAnnotated;
     }
 
-    public void setSameGeneAndPhenotypeAnnotated( boolean sameGeneAndPhenotypeAnnotated ) {
-        this.sameGeneAndPhenotypeAnnotated = sameGeneAndPhenotypeAnnotated;
+    public void setSameGeneAndPhenotypesAnnotated( boolean sameGeneAndPhenotypesAnnotated ) {
+        this.sameGeneAndPhenotypesAnnotated = sameGeneAndPhenotypesAnnotated;
     }
 
     public boolean isSameGeneAndPhenotypeChildOrParentAnnotated() {
@@ -38,4 +41,14 @@ public class ValidateEvidenceValueObject {
     public void setInvalidPubmedId( boolean invalidPubmedId ) {
         this.invalidPubmedId = invalidPubmedId;
     }
+
+    public boolean isSameGeneAndOnePhenotypeAnnotated() {
+        return this.sameGeneAndOnePhenotypeAnnotated;
+    }
+
+    public void setSameGeneAndOnePhenotypeAnnotated( boolean sameGeneAndOnePhenotypeAnnotated ) {
+        this.sameGeneAndOnePhenotypeAnnotated = sameGeneAndOnePhenotypeAnnotated;
+    }
+    
+    
 }
