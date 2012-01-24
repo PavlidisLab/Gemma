@@ -134,7 +134,7 @@ Gemma.GenePage =  Ext.extend(Ext.TabPanel, {
 	    	})
 		);
 		phenotypeEvidenceGridPanel.load();		
-		phenotypeEvidenceGridPanel.setColumnHidden(1, true);
+		phenotypeEvidenceGridPanel.setColumnHidden(1, true); // Make the Relevance column hidden in the Gene page.
 
 		this.add(phenotypeEvidenceGridPanel);
 		
