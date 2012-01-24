@@ -60,9 +60,11 @@ public abstract class EvidenceLoaderCLI extends AbstractSpringAwareCLI {
         args[2] = "-p";
         args[3] = "administrator";
         args[4] = "-f";
-        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/genericEvidence/OMIM.tsv";
-        args[6] = "-test";
-        args[7] = "-create";
+
+        args[5] = "./gemma-core/src/main/java/ubic/gemma/association/phenotype/fileUpload/experimentalEvidence/CathyExperimental.tsv";
+
+        args[6] = "-create";
+        args[7] = "-test";
 
         return args;
     }

@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -57,7 +56,6 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
-import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.PersisterHelper;
@@ -366,7 +364,8 @@ public class PhenotypeAssoManagerServiceHelper {
         phe.setEvidenceSource( databaseEntry );
     }
 
-    public PhenotypeAssociation populateTypePheAsso( EvidenceValueObject evidenceValueObject ) {
+    // load evidence from the database and populate it with the updated information
+    public PhenotypeAssociation loadEvidenceAndPopulate( EvidenceValueObject evidenceValueObject ) {
 
         Long id = evidenceValueObject.getDatabaseId();
 
@@ -547,35 +546,6 @@ public class PhenotypeAssoManagerServiceHelper {
 
         }
         return characteristicsVO;
-    }
-
-    /** Ontology term to TreeCharacteristicValueObject */
-    public TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
-            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree,
-            TreeSet<TreeCharacteristicValueObject> treesPhenotypes ) {
-
-        Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
-
-        Collection<TreeCharacteristicValueObject> childs = new HashSet<TreeCharacteristicValueObject>();
-
-        for ( OntologyTerm ot : ontologyTerms ) {
-
-            if ( phenotypeFoundInTree.get( ot.getUri() ) != null ) {
-
-                childs.add( phenotypeFoundInTree.get( ot.getUri() ) );
-                treesPhenotypes.remove( phenotypeFoundInTree.get( ot.getUri() ) );
-            } else {
-                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot, phenotypeFoundInTree,
-                        treesPhenotypes );
-                phenotypeFoundInTree.put( tree.getValueUri(), tree );
-                childs.add( tree );
-            }
-        }
-
-        TreeCharacteristicValueObject treeCharacteristicVO = new TreeCharacteristicValueObject(
-                ontologyTerm.getLabel(), ontologyTerm.getUri(), childs );
-
-        return treeCharacteristicVO;
     }
 
 }

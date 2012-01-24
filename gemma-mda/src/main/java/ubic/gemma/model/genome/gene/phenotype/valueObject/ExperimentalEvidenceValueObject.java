@@ -110,10 +110,11 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
                 * result
                 + ( ( this.primaryPublicationCitationValueObject == null ) ? 0
                         : this.primaryPublicationCitationValueObject.hashCode() );
-        result = prime
-                * result
-                + ( ( this.relevantPublicationsCitationValueObjects == null ) ? 0
-                        : this.relevantPublicationsCitationValueObjects.hashCode() );
+
+        for ( CitationValueObject relevantPublicationsCitationValueObject : this.relevantPublicationsCitationValueObjects ) {
+            result = result + relevantPublicationsCitationValueObject.hashCode();
+        }
+
         return result;
     }
 
@@ -123,22 +124,24 @@ public class ExperimentalEvidenceValueObject extends EvidenceValueObject {
         if ( !super.equals( obj ) ) return false;
         if ( getClass() != obj.getClass() ) return false;
         ExperimentalEvidenceValueObject other = ( ExperimentalEvidenceValueObject ) obj;
-        if ( this.experimentCharacteristics == null ) {
-            if ( other.experimentCharacteristics != null ) return false;
-        } else if ( !this.experimentCharacteristics.equals( other.experimentCharacteristics ) ) return false;
         if ( this.primaryPublicationCitationValueObject == null ) {
             if ( other.primaryPublicationCitationValueObject != null ) return false;
         } else if ( !this.primaryPublicationCitationValueObject.equals( other.primaryPublicationCitationValueObject ) )
             return false;
-        if ( this.relevantPublicationsCitationValueObjects == null ) {
-            if ( other.relevantPublicationsCitationValueObjects != null ) return false;
-        } else if ( !this.relevantPublicationsCitationValueObjects
-                .equals( other.relevantPublicationsCitationValueObjects ) ) return false;
         if ( this.experimentCharacteristics.size() != other.experimentCharacteristics.size() ) {
             return false;
         }
         for ( CharacteristicValueObject characteristicValueObject : this.experimentCharacteristics ) {
             if ( !other.experimentCharacteristics.contains( characteristicValueObject ) ) {
+                return false;
+            }
+        }
+        if ( this.relevantPublicationsCitationValueObjects.size() != other.relevantPublicationsCitationValueObjects
+                .size() ) {
+            return false;
+        }
+        for ( CitationValueObject relevantPublicationsCitationValueObject : this.relevantPublicationsCitationValueObjects ) {
+            if ( !other.relevantPublicationsCitationValueObjects.contains( relevantPublicationsCitationValueObject ) ) {
                 return false;
             }
         }

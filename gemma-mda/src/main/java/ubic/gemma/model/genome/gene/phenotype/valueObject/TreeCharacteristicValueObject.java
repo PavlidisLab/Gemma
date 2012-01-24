@@ -20,7 +20,12 @@
 package ubic.gemma.model.genome.gene.phenotype.valueObject;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.TreeSet;
+
+import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.model.association.phenotype.service.PhenotypeAssociationService;
 
 public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
@@ -99,17 +104,7 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
         return childrenURI;
     }
 
-    /** step into the tree and keep tracks of all valueURI */
-    private void findAllChildPhenotypeURI( Collection<String> phenotypesToFind ) {
-
-        phenotypesToFind.add( this.getValueUri() );
-
-        for ( TreeCharacteristicValueObject tree : this.getChildren() ) {
-            tree.findAllChildPhenotypeURI( phenotypesToFind );
-        }
-    }
-
-    /** the tree is built with many terms in the Ontology, this method removes all nodes not found in the database*/
+    /** the tree is built with many terms in the Ontology, this method removes all nodes not found in the database */
     public void removeUnusedPhenotypes( String rootValueUri ) {
 
         Collection<TreeCharacteristicValueObject> newRealChilds = new HashSet<TreeCharacteristicValueObject>();
@@ -122,6 +117,17 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
 
     }
 
+    /** counts gene on a TreeCharacteristicValueObject */
+    public void countGeneOccurence( PhenotypeAssociationService associationService ) {
+
+        setOccurence( associationService.countGenesWithPhenotype( getAllChildrenUri() ) );
+
+        // count for each node of the tree
+        for ( TreeCharacteristicValueObject tree : getChildren() ) {
+            countGeneOccurence( associationService, tree );
+        }
+    }
+
     private void findRealChild( Collection<TreeCharacteristicValueObject> newRealChilds, String rootValueUri ) {
 
         for ( TreeCharacteristicValueObject t : this.children ) {
@@ -132,6 +138,56 @@ public class TreeCharacteristicValueObject extends CharacteristicValueObject {
                 t.findRealChild( newRealChilds, rootValueUri );
             }
         }
+    }
+
+    /** counts gene on a TreeCharacteristicValueObject */
+    private void countGeneOccurence( PhenotypeAssociationService associationService, TreeCharacteristicValueObject tc ) {
+
+        tc.setOccurence( associationService.countGenesWithPhenotype( tc.getAllChildrenUri() ) );
+
+        // count for each node of the tree
+        for ( TreeCharacteristicValueObject tree : tc.getChildren() ) {
+            countGeneOccurence( associationService, tree );
+        }
+    }
+
+    /** step into the tree and keep tracks of all valueURI */
+    private void findAllChildPhenotypeURI( Collection<String> phenotypesToFind ) {
+
+        phenotypesToFind.add( this.getValueUri() );
+
+        for ( TreeCharacteristicValueObject tree : this.getChildren() ) {
+            tree.findAllChildPhenotypeURI( phenotypesToFind );
+        }
+    }
+
+    /** Ontology term to TreeCharacteristicValueObject */
+    public static TreeCharacteristicValueObject ontology2TreeCharacteristicValueObjects( OntologyTerm ontologyTerm,
+            HashMap<String, TreeCharacteristicValueObject> phenotypeFoundInTree,
+            TreeSet<TreeCharacteristicValueObject> treesPhenotypes ) {
+
+        Collection<OntologyTerm> ontologyTerms = ontologyTerm.getChildren( true );
+
+        Collection<TreeCharacteristicValueObject> childs = new HashSet<TreeCharacteristicValueObject>();
+
+        for ( OntologyTerm ot : ontologyTerms ) {
+
+            if ( phenotypeFoundInTree.get( ot.getUri() ) != null ) {
+
+                childs.add( phenotypeFoundInTree.get( ot.getUri() ) );
+                treesPhenotypes.remove( phenotypeFoundInTree.get( ot.getUri() ) );
+            } else {
+                TreeCharacteristicValueObject tree = ontology2TreeCharacteristicValueObjects( ot, phenotypeFoundInTree,
+                        treesPhenotypes );
+                phenotypeFoundInTree.put( tree.getValueUri(), tree );
+                childs.add( tree );
+            }
+        }
+
+        TreeCharacteristicValueObject treeCharacteristicVO = new TreeCharacteristicValueObject(
+                ontologyTerm.getLabel(), ontologyTerm.getUri(), childs );
+
+        return treeCharacteristicVO;
     }
 
 }

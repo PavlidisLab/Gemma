@@ -78,7 +78,12 @@ public class ExpEvidenceLineInfo extends EvidenceLineInfo {
         this.experimentDesign = trimArray( tokens[11].split( ";" ) );
         this.treatment = trimArray( tokens[12].split( ";" ) );
         this.experimentOBI = trimArray( tokens[13].split( ";" ) );
-        this.phenotype = trimArray( tokens[14].split( ";" ) );
+        
+        // added to represent externalDatabase
+        this.externalDatabaseName = tokens[14].trim();
+        this.databaseID = tokens[15].trim();
+        
+        this.phenotype = trimArray( tokens[16].split( ";" ) );
     }
 
     public String getPrimaryReferencePubmed() {

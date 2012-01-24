@@ -4,9 +4,6 @@ import ubic.gemma.association.phenotype.fileUpload.EvidenceLineInfo;
 
 public class GenericEvidenceLineInfo extends EvidenceLineInfo {
 
-    private String externalDatabaseName = "";
-    private String databaseID = "";
-
     public GenericEvidenceLineInfo( String line ) {
 
         String[] tokens = line.split( "\t" );
@@ -32,21 +29,4 @@ public class GenericEvidenceLineInfo extends EvidenceLineInfo {
     public void setIsEdivenceNegative( boolean isEdivenceNegative ) {
         this.isEdivenceNegative = isEdivenceNegative;
     }
-
-    public String getExternalDatabaseName() {
-        return this.externalDatabaseName;
-    }
-
-    public void setExternalDatabaseName( String externalDatabaseName ) {
-        this.externalDatabaseName = externalDatabaseName;
-    }
-
-    public String getDatabaseID() {
-        return this.databaseID;
-    }
-
-    public void setDatabaseID( String databaseID ) {
-        this.databaseID = databaseID;
-    }
-
 }

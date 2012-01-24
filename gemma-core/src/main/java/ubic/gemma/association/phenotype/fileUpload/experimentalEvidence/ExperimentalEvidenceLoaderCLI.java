@@ -29,7 +29,10 @@ import ubic.basecode.ontology.providers.FMAOntologyService;
 import ubic.basecode.ontology.providers.NIFSTDOntologyService;
 import ubic.basecode.ontology.providers.ObiService;
 import ubic.gemma.association.phenotype.fileUpload.EvidenceLoaderCLI;
+import ubic.gemma.model.DatabaseEntryValueObject;
+import ubic.gemma.model.ExternalDatabaseValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceSourceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 
@@ -344,9 +347,25 @@ public class ExperimentalEvidenceLoaderCLI extends EvidenceLoaderCLI {
 
             Set<CharacteristicValueObject> characteristics = phenoAss.getExperimentCharacteristics();
 
+            EvidenceSourceValueObject evidenceSource = null;
+
+            if ( phenoAss.getExternalDatabaseName() != null
+                    && !phenoAss.getExternalDatabaseName().trim().equalsIgnoreCase( "" ) ) {
+
+                ExternalDatabaseValueObject externalDatabase = new ExternalDatabaseValueObject();
+                externalDatabase.setName( phenoAss.getExternalDatabaseName() );
+
+                DatabaseEntryValueObject databaseEntryValueObject = new DatabaseEntryValueObject();
+
+                databaseEntryValueObject.setAccession( phenoAss.getDatabaseID() );
+                databaseEntryValueObject.setExternalDatabase( externalDatabase );
+
+                evidenceSource = new EvidenceSourceValueObject( phenoAss.getDatabaseID(), externalDatabase );
+            }
+
             EvidenceValueObject evidence = new ExperimentalEvidenceValueObject( description, associationType,
                     new Boolean( phenoAss.isEdivenceNegative() ), evidenceCode, phenotypes, primaryPublicationPubmed,
-                    relevantPublicationsPubmed, characteristics, null );
+                    relevantPublicationsPubmed, characteristics, evidenceSource );
 
             String geneId = phenoAss.getGeneID();
 

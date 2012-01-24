@@ -20,7 +20,10 @@ public class LitEvidenceLineInfo extends EvidenceLineInfo {
             this.isEdivenceNegative = true;
         }
 
-        this.phenotype = trimArray( tokens[7].split( ";" ) );
+        this.externalDatabaseName = tokens[7].trim();
+        this.databaseID = tokens[8].trim();
+
+        this.phenotype = trimArray( tokens[9].split( ";" ) );
     }
 
     public String getPrimaryReferencePubmed() {

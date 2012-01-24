@@ -176,8 +176,19 @@ public abstract class EvidenceValueObject {
         return this.isNegativeEvidence;
     }
 
-    public Collection<CharacteristicValueObject> getPhenotypes() {
+    public Set<CharacteristicValueObject> getPhenotypes() {
         return this.phenotypes;
+    }
+
+    public Set<String> getPhenotypesValueUri() {
+
+        Set<String> phenotypesValueUri = new HashSet<String>();
+
+        for ( CharacteristicValueObject characteristicValueObject : this.phenotypes ) {
+            phenotypesValueUri.add( characteristicValueObject.getValueUri() );
+        }
+
+        return phenotypesValueUri;
     }
 
     public String getClassName() {

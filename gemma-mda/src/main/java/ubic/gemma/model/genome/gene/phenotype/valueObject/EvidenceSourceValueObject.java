@@ -26,5 +26,5 @@ public class EvidenceSourceValueObject extends DatabaseEntryValueObject {
         setAccession( accession );
         setExternalDatabase( externalDatabase );
     }
-
+    
 }

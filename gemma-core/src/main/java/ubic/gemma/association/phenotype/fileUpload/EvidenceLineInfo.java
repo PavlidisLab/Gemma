@@ -15,6 +15,9 @@ public class EvidenceLineInfo {
     protected boolean isEdivenceNegative = false;
     protected String[] phenotype = null;
     protected Set<CharacteristicValueObject> phenotypes = new HashSet<CharacteristicValueObject>();
+    
+    protected String externalDatabaseName = "";
+    protected String databaseID = "";
 
     protected String[] trimArray( String[] array ) {
 
@@ -94,4 +97,22 @@ public class EvidenceLineInfo {
     public void addPhenotype( CharacteristicValueObject phenotypeToAdd ) {
         this.phenotypes.add( phenotypeToAdd );
     }
+
+    public String getExternalDatabaseName() {
+        return this.externalDatabaseName;
+    }
+
+    public void setExternalDatabaseName( String externalDatabaseName ) {
+        this.externalDatabaseName = externalDatabaseName;
+    }
+
+    public String getDatabaseID() {
+        return this.databaseID;
+    }
+
+    public void setDatabaseID( String databaseID ) {
+        this.databaseID = databaseID;
+    }
+    
+    
 }
