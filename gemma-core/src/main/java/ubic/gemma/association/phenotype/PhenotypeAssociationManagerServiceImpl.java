@@ -63,6 +63,7 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.CharacteristicValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.EvidenceValueObject;
+import ubic.gemma.model.genome.gene.phenotype.valueObject.ExperimentalEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.GeneEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.TreeCharacteristicValueObject;
@@ -121,6 +122,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         this.pubMedXmlFetcher = new PubMedXMLFetcher();
     }
 
+    // set the cache that keeps count of how many genes in gemma for each phenotype found, cache reset each 3 days
     @PostConstruct
     protected void init() {
         this.cacheManager.addCache( new Cache( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE, 1500, false,
@@ -204,7 +206,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Given an set of phenotypes returns the genes that have all those phenotypes or children phenotypes
+     * Given a set of phenotypes returns the genes that have all those phenotypes or children phenotypes
      * 
      * @param phenotypesValuesUri the roots phenotype of the query
      * @return A collection of the genes found
@@ -213,7 +215,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     public Collection<GeneEvidenceValueObject> findCandidateGenes( Set<String> phenotypesValuesUri ) {
 
         if ( phenotypesValuesUri == null || phenotypesValuesUri.isEmpty() ) {
-            throw new IllegalArgumentException( "No phenotypes value uri provided" );
+            throw new IllegalArgumentException( "No phenotypes values uri provided" );
         }
 
         // map query phenotypes given to the set of possible children phenotypes in the database + query phenotype
@@ -254,8 +256,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future Get all
-     * phenotypes linked to genes and count how many genes are link to each phenotype
+     * This method is a temporary solution, we will be using findAllPhenotypesByTree() directly in the future
      * 
      * @return A collection of the phenotypes with the gene occurence
      */
@@ -317,77 +318,79 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
      */
     @Override
     // TODO to test and to be modified
-    public void update( EvidenceValueObject evidenceValueObject ) {
+    public void update( EvidenceValueObject modifedEvidenceValueObject ) {
 
-        if ( evidenceValueObject.getPhenotypes().size() == 0 ) {
-            throw new IllegalArgumentException( "An Evidence cannot have no phenotype" );
+        if ( modifedEvidenceValueObject.getPhenotypes() == null || modifedEvidenceValueObject.getPhenotypes().isEmpty() ) {
+            throw new IllegalArgumentException( "An evidence cannot have no phenotype" );
         }
 
-        // new phenotypes found on the evidence (the difference will be what is added or removed)
-        Set<String> updatedPhenotypesValuesUri = evidenceValueObject.getPhenotypesValueUri();
+        if ( modifedEvidenceValueObject.getDatabaseId() == null ) {
+            throw new IllegalArgumentException( "No database id provided" );
+        }
 
-        // keeps track of deleted or added phenotypes to remake the Hashmap
-        Set<String> changedPhenotypesValuesUri = new HashSet<String>();
+        // new phenotypes found on the evidence that will be comapred to current phenotypes in the database
+        Set<String> updatedPhenotypesValuesUri = modifedEvidenceValueObject.getPhenotypesValueUri();
 
-        // load evidence from the database and populate it with the updated information
+        // keeps track of deleted or added phenotypes to remake the HashMap present in the cache
+        Set<String> detectChangedPhenotypesValuesUri = new HashSet<String>();
+
+        // 1- load the evidence from the database and populate specific information for the type of evidence
         PhenotypeAssociation phenotypeAssociation = this.phenotypeAssoManagerServiceHelper
-                .loadEvidenceAndPopulate( evidenceValueObject );
+                .loadEvidenceAndPopulate( modifedEvidenceValueObject );
 
-        // populate simple values common to all evidences
+        // 2- populate simple values common to all evidences
         this.phenotypeAssoManagerServiceHelper.populatePheAssoWithoutPhenotypes( phenotypeAssociation,
-                evidenceValueObject );
+                modifedEvidenceValueObject );
 
-        // the final characteristics to update the evidence with
-        Collection<Characteristic> updatedCharacteristics = new HashSet<Characteristic>();
+        // 3 - populate the new phenotypes
+        // the final phenotypes to update the evidence with
+        Collection<Characteristic> updatedPhenotypes = new HashSet<Characteristic>();
 
-        if ( evidenceValueObject.getDatabaseId() != null ) {
+        // for each phenotypes determine if it is new or delete
+        for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
 
-            // for each phenotypes determine if there is new or delete ones
-            for ( Characteristic cha : phenotypeAssociation.getPhenotypes() ) {
+            if ( cha instanceof VocabCharacteristicImpl ) {
+                String valueUri = ( ( VocabCharacteristicImpl ) cha ).getValueUri();
 
-                if ( cha instanceof VocabCharacteristicImpl ) {
-                    String valueUri = ( ( VocabCharacteristicImpl ) cha ).getValueUri();
-
-                    // this phenotype been deleted
-                    if ( !updatedPhenotypesValuesUri.contains( valueUri ) ) {
-                        // delete phenotype from the database
-                        this.characteristicService.delete( cha.getId() );
-                        changedPhenotypesValuesUri.add( ( ( VocabCharacteristicImpl ) cha ).getValueUri() );
-                    }
-                    // this phenotype is already on the evidence
-                    else {
-                        updatedCharacteristics.add( cha );
-                        updatedPhenotypesValuesUri.remove( valueUri );
-                    }
+                // this phenotype been deleted
+                if ( !updatedPhenotypesValuesUri.contains( valueUri ) ) {
+                    // delete phenotype from the database
+                    this.characteristicService.delete( cha.getId() );
+                    detectChangedPhenotypesValuesUri.add( ( ( VocabCharacteristicImpl ) cha ).getValueUri() );
+                }
+                // this phenotype is already on the evidence
+                else {
+                    updatedPhenotypes.add( cha );
+                    updatedPhenotypesValuesUri.remove( valueUri );
                 }
             }
+        }
 
-            // all phenotypes left in newPhenotypesValuesUri represent new phenotypes that were not there before
-            for ( String valueUri : updatedPhenotypesValuesUri ) {
-                Characteristic cha = valueUri2Characteristic( valueUri );
-                updatedCharacteristics.add( cha );
-                changedPhenotypesValuesUri.add( valueUri );
-            }
+        // all phenotypes left in newPhenotypesValuesUri represent new phenotypes that were not there before
+        for ( String valueUri : updatedPhenotypesValuesUri ) {
+            Characteristic cha = valueUri2Characteristic( valueUri );
+            updatedPhenotypes.add( cha );
+            detectChangedPhenotypesValuesUri.add( valueUri );
+        }
 
-            // set the correct new phenotypes
-            phenotypeAssociation.getPhenotypes().clear();
-            phenotypeAssociation.getPhenotypes().addAll( updatedCharacteristics );
+        // set the correct new phenotypes
+        phenotypeAssociation.getPhenotypes().clear();
+        phenotypeAssociation.getPhenotypes().addAll( updatedPhenotypes );
 
-            // update changes to database
-            this.associationService.update( phenotypeAssociation );
+        // update all changes to database
+        this.associationService.update( phenotypeAssociation );
 
-            // remake part of the tree (added or removed phenotypes)
-            if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
-                buildTree( changedPhenotypesValuesUri );
-            }
+        // remake part of the tree (added or removed phenotypes)
+        if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
+            buildTree( detectChangedPhenotypesValuesUri );
         }
     }
 
     /**
      * Giving a phenotype searchQuery, returns a selection choice to the user
      * 
-     * @param termUsed is what the user typed
-     * @param geneId the id of the gene chosen
+     * @param searchQuery query typed by the user
+     * @param geneId the id of the chosen gene
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     @Override
@@ -508,11 +511,12 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
             // the branch is not in the cache ( it was removed or expired)
             if ( phenoCountCache.get( tc.getValueUri() ) == null ) {
-                // count occurence for each phenotype in the branch
+                // count occurrence recursively for each phenotype in the branch
                 tc.countGeneOccurence( this.associationService );
                 phenoCountCache.put( new Element( tc.getValueUri(), tc ) );
                 finalTree.add( tc );
             } else {
+                // found in the cache use this tree
                 tc = ( TreeCharacteristicValueObject ) phenoCountCache.get( tc.getValueUri() ).getObjectValue();
                 finalTree.add( tc );
             }
@@ -592,12 +596,14 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
             Collection<BibliographicPhenotypesValueObject> bibliographicPhenotypesValueObjects = BibliographicPhenotypesValueObject
                     .phenotypeAssociations2BibliographicPhenotypesValueObjects( phenotypeAssociations );
 
+            // set phenotypes associated with this bibliographic reference
             bibliographicReferenceVO.setBibliographicPhenotypes( bibliographicPhenotypesValueObjects );
 
+            // set experiments associated with this bibliographic reference
             Collection<ExpressionExperiment> experiments = this.bibliographicReferenceService
                     .getRelatedExperiments( bibliographicReference );
 
-            if ( experiments != null && experiments.size() > 0 ) {
+            if ( experiments != null && !experiments.isEmpty() ) {
                 bibliographicReferenceVO.setExperiments( ExpressionExperimentValueObject
                         .convert2ValueObjects( experiments ) );
             }
@@ -617,7 +623,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
     }
 
     /**
-     * Validate an Evidence for creation, checks for a pubmed id, if the gene is already annotated
+     * Validate an Evidence before we create it
      * 
      * @param geneNCBI The Gene NCBI we want to add the evidence
      * @param evidence The evidence
@@ -653,7 +659,6 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
 
                             if ( evidence.getPhenotypes().contains( phenotypeAlreadyPresent ) ) {
                                 validateEvidenceValueObject.setSameGeneAndOnePhenotypeAnnotated( true );
-                                return validateEvidenceValueObject;
                             }
                         }
 
@@ -690,6 +695,8 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                     }
                 }
             }
+        } else if ( evidence instanceof ExperimentalEvidenceValueObject ) {
+            // TODO
         }
         return validateEvidenceValueObject;
     }
@@ -751,8 +758,9 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** built the tree, the valueUriUpdate is used when a new phenotype is created or deleted to reset cache */
+    /** built the tree, the phenotypesValueUri represents change made to the trees of cached phenotypes */
     private Collection<TreeCharacteristicValueObject> buildTree( Collection<String> phenotypesValueUri ) {
+
         // represents each phenotype and childs found in the Ontology, TreeSet used to order trees
         TreeSet<TreeCharacteristicValueObject> treesPhenotypes = new TreeSet<TreeCharacteristicValueObject>();
 
@@ -799,7 +807,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
 
         // used to update the tree in cache when there is a new phenotype or deleted phenotype
-        if ( phenotypesValueUri != null && phenotypesValueUri.size() > 0 ) {
+        if ( phenotypesValueUri != null && !phenotypesValueUri.isEmpty() ) {
             if ( this.cacheManager.cacheExists( PhenotypeAssociationConstants.PHENOTYPES_COUNT_CACHE ) ) {
 
                 Cache phenoCountCache = this.cacheManager
@@ -814,7 +822,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                         // determine the root of the tree this phenotype is in
                         String rootParent = treeCharacteristicValueObject.getRootOfTree();
 
-                        // remove the root from the cache has the gene counts changed
+                        // remove the root from the cache has the gene counts changed for this tree
                         phenoCountCache.remove( rootParent );
                     }
                 }
@@ -883,7 +891,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
                 }
 
                 if ( foundSpecificPheno == false ) {
-                    // dont keep gene since a root phenotype + children was not found for all evidence of that gene
+                    // dont keep the gene since a root phenotype + children was not found for all evidence of that gene
                     keepGene = false;
                     break;
                 }
@@ -896,7 +904,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         return genesVO;
     }
 
-    /** add flag to Evidence and CharacteristicvalueObjects */
+    /** add flags to Evidence and CharacteristicvalueObjects */
     private void flagEvidence( Collection<GeneEvidenceValueObject> genesVO, Set<String> phenotypesValuesUri,
             Set<String> possibleChildrenPhenotypes ) {
 
@@ -927,7 +935,7 @@ public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociat
         }
     }
 
-    /** change a seachQuery to make it seach in the Ontology using * and AND */
+    /** change a searchQuery to make it search in the Ontology using * and AND */
     private String prepareOntologyQuery( String searchQuery ) {
         String newSearchQuery = searchQuery.trim().replaceAll( "\\s+", "* " ) + "*";
         return StringUtils.join( newSearchQuery.split( " " ), " AND " );

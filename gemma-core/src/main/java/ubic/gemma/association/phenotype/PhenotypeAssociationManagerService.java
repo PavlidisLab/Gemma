@@ -94,10 +94,10 @@ public interface PhenotypeAssociationManagerService {
     public void update( EvidenceValueObject evidenceValueObject );
 
     /**
-     * Giving a phenotype searchQuery, return a selection choice to the user
+     * Giving a phenotype searchQuery, returns a selection choice to the user
      * 
-     * @param termUsed is what the user typed
-     * @param geneId the id of the gene chosen
+     * @param searchQuery query typed by the user
+     * @param geneId the id of the chosen gene 
      * @return Collection<CharacteristicValueObject> list of choices returned
      */
     public Collection<CharacteristicValueObject> searchOntologyForPhenotypes( String searchQuery, Long geneId );
@@ -127,7 +127,7 @@ public interface PhenotypeAssociationManagerService {
     public BibliographicReferenceValueObject findBibliographicReference( String pubMedId );
 
     /**
-     * Validate an Evidence for creation, checks for a pubmed id, if the gene is already annotated
+     * Validate an Evidence before we create it
      * 
      * @param geneNCBI The Gene NCBI we want to add the evidence
      * @param evidence The evidence
