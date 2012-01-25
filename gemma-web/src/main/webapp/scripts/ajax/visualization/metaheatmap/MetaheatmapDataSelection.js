@@ -199,8 +199,17 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 				Ext.TaskMgr.stop (progressUpdateTask);
 				progressWindow.hide();
 
+//				if data is null, there was an error
+				if (!data || data === null) {
+					if(this.applyToParam){
+						Ext.DomHelper.overwrite(this.applyToParam, {
+							html : '<img src="/Gemma/images/icons/warning.png"/> Sorry, there was an error performing your search.'
+						});
+					}	
+				}
+
 //				if no experiments were returned, don't show visualizer
-				if (data.conditions.length === 0) {
+				else if (data.conditions.length === 0) {
 //					Ext.Msg.alert('<img src="/Gemma/images/icons/warning.png"/> Sorry, no data available for your search.');
 					if(this.applyToParam){
 						Ext.DomHelper.overwrite(this.applyToParam, {
