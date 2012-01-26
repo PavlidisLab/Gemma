@@ -37,7 +37,7 @@ import ubic.basecode.io.reader.DoubleMatrixReader;
 import ubic.gemma.analysis.service.ExpressionDataFileService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -65,7 +65,7 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     ExpressionDataFileService expressionDataFileService;
 
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     @Autowired
     GenericAncovaAnalyzer analyzer;
@@ -83,19 +83,16 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
         ee = expressionExperimentService.findByShortName( "GSE1611" );
 
         if ( ee == null ) {
-
             String path = getTestFileBasePath();
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                     + "gds994Short" ) );
             Collection<?> results = geoService.fetchAndLoad( "GSE1611", false, true, false, false );
-
             ee = ( ExpressionExperiment ) results.iterator().next();
-            processedDataVectorService.createProcessedDataVectors( ee );
-
         }
 
         ee = expressionExperimentService.findByShortName( "GSE1611" );
         ee = expressionExperimentService.thawLite( ee );
+        processedDataVectorService.createProcessedDataVectors( ee );
         differentialExpressionAnalyzerService.deleteOldAnalyses( ee );
 
         assertEquals( 2, ee.getExperimentalDesign().getExperimentalFactors().size() );
@@ -112,6 +109,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
      */
     @Test
     public void testAnalyzeAndDelete() throws Exception {
+
+        assert ee.getId() != null;
 
         Collection<DifferentialExpressionAnalysis> analyses = differentialExpressionAnalyzerService
                 .runDifferentialExpressionAnalyses( ee );
@@ -159,8 +158,8 @@ public class DifferentialExpressionAnalyzerServiceTest extends AbstractGeoServic
     @Test
     public void testAnalyzeAndDeleteSpecificAnalysisWithSubset() throws Exception {
 
-        ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors().toArray(
-                new ExperimentalFactor[] {} );
+        ExperimentalFactor[] factors = ee.getExperimentalDesign().getExperimentalFactors()
+                .toArray( new ExperimentalFactor[] {} );
 
         List<ExperimentalFactor> factorsToUse = Arrays.asList( new ExperimentalFactor[] { factors[0] } );
         ExperimentalFactor subsetFactor = factors[1];

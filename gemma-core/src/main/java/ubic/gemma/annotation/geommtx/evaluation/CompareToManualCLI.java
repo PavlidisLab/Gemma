@@ -45,7 +45,7 @@ import ubic.GEOMMTx.mappers.NIFSTDMapper;
 import ubic.GEOMMTx.mappers.DiseaseOntologyMapper;
 import ubic.GEOMMTx.mappers.FMALiteMapper;
 import ubic.GEOMMTx.util.SetupParameters;
-import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
+import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -966,7 +966,7 @@ public class CompareToManualCLI extends AbstractSpringAwareCLI {
 
             experiment = ees.thawLite( experiment );
 
-            String GEOObjectURI = ExpressionExperimentAnnotator.gemmaNamespace + "experiment/" + ID;
+            String GEOObjectURI = ExpressionExperimentAnnotatorImpl.gemmaNamespace + "experiment/" + ID;
             Resource expNode = model.createResource( GEOObjectURI );
             expNode.addProperty( DC.title, experiment.getName() );
         }

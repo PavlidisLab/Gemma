@@ -19,8 +19,7 @@
 package ubic.gemma.tasks.analysis.coexp;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.expression.coexpression.links.LinkAnalysisService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
@@ -31,7 +30,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class LinkAnalysisTaskImpl implements LinkAnalysisTask {
 
     @Autowired

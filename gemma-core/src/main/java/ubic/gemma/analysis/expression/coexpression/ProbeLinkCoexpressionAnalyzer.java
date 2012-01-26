@@ -30,8 +30,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.BitUtil;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
@@ -51,7 +50,7 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class ProbeLinkCoexpressionAnalyzer {
 
     private static Log log = LogFactory.getLog( ProbeLinkCoexpressionAnalyzer.class.getName() );

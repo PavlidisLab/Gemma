@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Manage the loading of large numbers of pubmed entries into the database. Assumes that the XML files are locally
@@ -46,9 +46,9 @@ public class PubMedService {
     private static Log log = LogFactory.getLog( PubMedService.class.getName() );
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

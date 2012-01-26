@@ -632,7 +632,7 @@ public class GeneCoexpressionService {
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
         expressionExperimentSetService.thaw( baseSet );
-        List<Long> positionToIDMap = Gene2GenePopulationService.getPositionToIdMap( EntityUtils.getIds( baseSet
+        List<Long> positionToIDMap = Gene2GenePopulationServiceImpl.getPositionToIdMap( EntityUtils.getIds( baseSet
                 .getExperiments() ) );
 
         /*
@@ -734,7 +734,7 @@ public class GeneCoexpressionService {
                 timer2.reset();
                 timer2.start();
                 
-                List<Long> supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g, positionToIDMap );
+                List<Long> supportingDatasets = Gene2GenePopulationServiceImpl.getSupportingExperimentIds( g2g, positionToIDMap );
                 // necessary in case any were filtered out.
                 supportingDatasets.retainAll( filteredEeIds );
                 cvo.setSupportingExperiments( supportingDatasets );
@@ -743,7 +743,7 @@ public class GeneCoexpressionService {
                 List<Long> specificDatasets;
                 if ( !skipDetails ) {
 
-                    testingDatasets = Gene2GenePopulationService.getTestedExperimentIds( g2g, positionToIDMap );
+                    testingDatasets = Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g, positionToIDMap );
                     testingDatasets.retainAll( filteredEeIds );
 
                     /*
@@ -753,7 +753,7 @@ public class GeneCoexpressionService {
                      */
                     
 
-                    specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g, positionToIDMap );
+                    specificDatasets = Gene2GenePopulationServiceImpl.getSpecificExperimentIds( g2g, positionToIDMap );
 
                     /*
                      * Specific probe EEids contains 1 even if the data set wasn't supporting.
@@ -890,7 +890,7 @@ public class GeneCoexpressionService {
          * We get this prior to filtering so it matches the vectors stored with the analysis.
          */
         expressionExperimentSetService.thaw( baseSet );
-        List<Long> positionToIDMap = Gene2GenePopulationService.getPositionToIdMap( EntityUtils.getIds( baseSet
+        List<Long> positionToIDMap = Gene2GenePopulationServiceImpl.getPositionToIdMap( EntityUtils.getIds( baseSet
                 .getExperiments() ) );
 
         /*
@@ -999,7 +999,7 @@ public class GeneCoexpressionService {
 
                 populateInteractions( proteinInteractionMap, regulatedBy, regulates, foundGene, cvo );
 
-                Collection<Long> testingDatasets = Gene2GenePopulationService.getTestedExperimentIds( g2g,
+                Collection<Long> testingDatasets = Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g,
                         positionToIDMap );
                 testingDatasets.retainAll( filteredEeIds );
 
@@ -1007,7 +1007,7 @@ public class GeneCoexpressionService {
                  * necesssary in case any were filtered out (for example, if this is a virtual analysis; or there were
                  * 'troubled' ees. Note that 'supporting' includes 'non-specific' if they were recorded by the analyzer.
                  */
-                Collection<Long> supportingDatasets = Gene2GenePopulationService.getSupportingExperimentIds( g2g,
+                Collection<Long> supportingDatasets = Gene2GenePopulationServiceImpl.getSupportingExperimentIds( g2g,
                         positionToIDMap );
 
                 // necessary in case any were filtered out.
@@ -1015,7 +1015,7 @@ public class GeneCoexpressionService {
 
                 cvo.setSupportingExperiments( supportingDatasets );
 
-                Collection<Long> specificDatasets = Gene2GenePopulationService.getSpecificExperimentIds( g2g,
+                Collection<Long> specificDatasets = Gene2GenePopulationServiceImpl.getSpecificExperimentIds( g2g,
                         positionToIDMap );
 
                 /*
@@ -1337,7 +1337,7 @@ public class GeneCoexpressionService {
         Collection<Long> relevantEEIds = new HashSet<Long>();
         List<Long> relevantEEIdList = new ArrayList<Long>();
         for ( Gene2GeneCoexpression g2g : g2gs ) {
-            relevantEEIds.addAll( Gene2GenePopulationService.getTestedExperimentIds( g2g, positionToIDMap ) );
+            relevantEEIds.addAll( Gene2GenePopulationServiceImpl.getTestedExperimentIds( g2g, positionToIDMap ) );
         }
         relevantEEIdList.addAll( relevantEEIds );
         Collections.sort( relevantEEIdList );

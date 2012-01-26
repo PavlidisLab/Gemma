@@ -229,7 +229,7 @@ public interface ExpressionExperimentService {
      * Returns a collection of ArrayDesigns referenced by any of the BioAssays that make up the given
      * ExpressionExperiment.
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "ACL_SECURABLE_READ" })
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment );
 
     /**
@@ -408,7 +408,7 @@ public interface ExpressionExperimentService {
     public Collection<Long> getUntroubled( Collection<Long> ids );
 
     @Monitored
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     public ExpressionExperiment load( java.lang.Long id );
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
@@ -422,7 +422,7 @@ public interface ExpressionExperimentService {
 
     @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_COLLECTION_READ" })
     List<ExpressionExperiment> loadAllTaxon( Taxon taxon );
-    
+
     @Secured({ "GROUP_USER", "AFTER_ACL_COLLECTION_READ" })
     public Collection<ExpressionExperiment> loadLackingFactors();
 

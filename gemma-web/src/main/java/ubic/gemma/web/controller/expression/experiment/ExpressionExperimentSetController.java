@@ -44,7 +44,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.SecurityService;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
@@ -67,7 +67,7 @@ public class ExpressionExperimentSetController extends BaseController {
     @Autowired
     private ExpressionExperimentService expressionExperimentService;
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
     @Autowired
     private SecurityService securityService;
     @Autowired
@@ -379,7 +379,7 @@ public class ExpressionExperimentSetController extends BaseController {
         this.expressionExperimentSetService = expressionExperimentSetService;
     }
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

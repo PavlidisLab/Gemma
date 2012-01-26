@@ -22,37 +22,35 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateTemplate;
 
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
-import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrailDao;
 import ubic.gemma.model.common.auditAndSecurity.Contact;
-import ubic.gemma.model.common.auditAndSecurity.ContactService;
+import ubic.gemma.model.common.auditAndSecurity.ContactDao;
 import ubic.gemma.model.common.auditAndSecurity.Person;
-import ubic.gemma.model.common.auditAndSecurity.PersonService;
+import ubic.gemma.model.common.auditAndSecurity.PersonDao;
 import ubic.gemma.model.common.auditAndSecurity.User;
 import ubic.gemma.model.common.description.BibliographicReference;
-import ubic.gemma.model.common.description.BibliographicReferenceService;
+import ubic.gemma.model.common.description.BibliographicReferenceDao;
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.DatabaseEntry;
-import ubic.gemma.model.common.description.DatabaseEntryService;
+import ubic.gemma.model.common.description.DatabaseEntryDao;
 import ubic.gemma.model.common.description.ExternalDatabase;
-import ubic.gemma.model.common.description.ExternalDatabaseService;
+import ubic.gemma.model.common.description.ExternalDatabaseDao;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.model.common.description.LocalFileService;
+import ubic.gemma.model.common.description.LocalFileDao;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.measurement.Measurement;
-import ubic.gemma.model.common.measurement.MeasurementService;
+import ubic.gemma.model.common.measurement.MeasurementDao;
 import ubic.gemma.model.common.measurement.Unit;
-import ubic.gemma.model.common.measurement.UnitService;
+import ubic.gemma.model.common.measurement.UnitDao;
 import ubic.gemma.model.common.protocol.Protocol;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
-import ubic.gemma.model.common.protocol.ProtocolService;
+import ubic.gemma.model.common.protocol.ProtocolDao;
 import ubic.gemma.model.common.quantitationtype.QuantitationType;
-import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
+import ubic.gemma.model.common.quantitationtype.QuantitationTypeDao;
 
 /**
  * Persister for ubic.gemma.model.common package classes.
@@ -63,50 +61,46 @@ import ubic.gemma.model.common.quantitationtype.QuantitationTypeService;
 abstract public class CommonPersister extends AbstractPersister {
 
     @Autowired
-    protected AuditTrailService auditTrailService;
+    protected AuditTrailDao auditTrailDao;
 
     @Autowired
-    protected BibliographicReferenceService bibliographicReferenceService;
+    protected BibliographicReferenceDao bibliographicReferenceDao;
 
     @Autowired
-    protected ContactService contactService;
+    protected ContactDao contactDao;
 
     @Autowired
-    protected DatabaseEntryService databaseEntryService;
+    protected DatabaseEntryDao databaseEntryDao;
 
     protected Person defaultOwner;
 
     @Autowired
-    protected ExternalDatabaseService externalDatabaseService;
+    protected ExternalDatabaseDao externalDatabaseDao;
 
     @Autowired
-    protected LocalFileService localFileService;
+    protected LocalFileDao localFileDao;
 
     @Autowired
-    protected MeasurementService measurementService;
+    protected MeasurementDao measurementDao;
     @Autowired
-    protected PersonService personService;
+    protected PersonDao personDao;
 
-    // protected OntologyEntryService ontologyEntryService;
-
-    @Autowired
-    protected ProtocolService protocolService;
+    // protected OntologyEntryDao ontologyEntryDao;
 
     @Autowired
-    protected QuantitationTypeService quantitationTypeService;
+    protected ProtocolDao protocolDao;
+
+    @Autowired
+    protected QuantitationTypeDao quantitationTypeDao;
 
     protected Map<Object, ExternalDatabase> seenDatabases = new HashMap<Object, ExternalDatabase>();
 
     @Autowired
-    protected UnitService unitService;
+    protected UnitDao unitDao;
 
     Map<Object, QuantitationType> quantitationTypeCache = new HashMap<Object, QuantitationType>();
 
-    public CommonPersister( SessionFactory sessionFactory ) {
-        super( sessionFactory );
-    }
-
-    // protected TermRelationshipService termRelationshipService;
+    // protected TermRelationshipDao termRelationshipDao;
 
     /*
      * (non-Javadoc)
@@ -154,31 +148,31 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param auditTrailService The auditTrailService to set.
+     * @param auditTrailDao The auditTrailDao to set.
      */
-    public void setAuditTrailService( AuditTrailService auditTrailService ) {
-        this.auditTrailService = auditTrailService;
+    public void setAuditTrailDao( AuditTrailDao auditTrailDao ) {
+        this.auditTrailDao = auditTrailDao;
     }
 
     /**
-     * @param bibliographicReferenceService the bibliographicReferenceService to set
+     * @param bibliographicReferenceDao the bibliographicReferenceDao to set
      */
-    public void setBibliographicReferenceService( BibliographicReferenceService bibliographicReferenceService ) {
-        this.bibliographicReferenceService = bibliographicReferenceService;
+    public void setBibliographicReferenceDao( BibliographicReferenceDao bibliographicReferenceDao ) {
+        this.bibliographicReferenceDao = bibliographicReferenceDao;
     }
 
     /**
-     * @param contactService The contactService to set.
+     * @param contactDao The contactDao to set.
      */
-    public void setContactService( ContactService contactService ) {
-        this.contactService = contactService;
+    public void setContactDao( ContactDao contactDao ) {
+        this.contactDao = contactDao;
     }
 
     /**
-     * @param databaseEntryService The databaseEntryService to set.
+     * @param databaseEntryDao The databaseEntryDao to set.
      */
-    public void setDatabaseEntryService( DatabaseEntryService databaseEntryService ) {
-        this.databaseEntryService = databaseEntryService;
+    public void setDatabaseEntryDao( DatabaseEntryDao databaseEntryDao ) {
+        this.databaseEntryDao = databaseEntryDao;
     }
 
     /**
@@ -189,52 +183,52 @@ abstract public class CommonPersister extends AbstractPersister {
     }
 
     /**
-     * @param externalDatabaseService The externalDatabaseService to set.
+     * @param externalDatabaseDao The externalDatabaseDao to set.
      */
-    public void setExternalDatabaseService( ExternalDatabaseService externalDatabaseService ) {
-        this.externalDatabaseService = externalDatabaseService;
+    public void setExternalDatabaseDao( ExternalDatabaseDao externalDatabaseDao ) {
+        this.externalDatabaseDao = externalDatabaseDao;
     }
 
     /**
-     * @param localFileService The localFileService to set.
+     * @param localFileDao The localFileDao to set.
      */
-    public void setLocalFileService( LocalFileService localFileService ) {
-        this.localFileService = localFileService;
+    public void setLocalFileDao( LocalFileDao localFileDao ) {
+        this.localFileDao = localFileDao;
     }
 
     /**
-     * @param measurementService The measurementService to set.
+     * @param measurementDao The measurementDao to set.
      */
-    public void setMeasurementService( MeasurementService measurementService ) {
-        this.measurementService = measurementService;
+    public void setMeasurementDao( MeasurementDao measurementDao ) {
+        this.measurementDao = measurementDao;
     }
 
     /**
-     * @param personService The personService to set.
+     * @param personDao The personDao to set.
      */
-    public void setPersonService( PersonService personService ) {
-        this.personService = personService;
+    public void setPersonDao( PersonDao personDao ) {
+        this.personDao = personDao;
     }
 
     /**
-     * @param protocolService The protocolService to set.
+     * @param protocolDao The protocolDao to set.
      */
-    public void setProtocolService( ProtocolService protocolService ) {
-        this.protocolService = protocolService;
+    public void setProtocolDao( ProtocolDao protocolDao ) {
+        this.protocolDao = protocolDao;
     }
 
     /**
-     * @param quantitationTypeService The quantitationTypeService to set.
+     * @param quantitationTypeDao The quantitationTypeDao to set.
      */
-    public void setQuantitationTypeService( QuantitationTypeService quantitationTypeService ) {
-        this.quantitationTypeService = quantitationTypeService;
+    public void setQuantitationTypeDao( QuantitationTypeDao quantitationTypeDao ) {
+        this.quantitationTypeDao = quantitationTypeDao;
     }
 
     /**
-     * @param unitService the unitService to set
+     * @param unitDao the unitDao to set
      */
-    public void setUnitService( UnitService unitService ) {
-        this.unitService = unitService;
+    public void setUnitDao( UnitDao unitDao ) {
+        this.unitDao = unitDao;
     }
 
     /**
@@ -289,7 +283,7 @@ abstract public class CommonPersister extends AbstractPersister {
 
         for ( Person performer : protocolApplication.getPerformers() ) {
             log.debug( "Filling in performer" );
-            performer = personService.findOrCreate( performer );
+            performer = personDao.findOrCreate( performer );
         }
 
     }
@@ -298,7 +292,7 @@ abstract public class CommonPersister extends AbstractPersister {
      * Fetch the fallback owner to use for newly-imported data.
      */
     protected void initializeDefaultOwner() {
-        Collection<Person> matchingPersons = personService.findByFullName( "nobody", "nobody" );
+        Collection<Person> matchingPersons = personDao.findByFullName( "nobody", "nobody" );
 
         assert matchingPersons.size() == 1 : "Found " + matchingPersons.size() + " contacts matching 'nobody'";
 
@@ -321,8 +315,8 @@ abstract public class CommonPersister extends AbstractPersister {
             event.setPerformer( ( User ) persistPerson( event.getPerformer() ) );
         }
 
-        // events are persisted by composition. 
-        return auditTrailService.create( entity );
+        // events are persisted by composition.
+        return auditTrailDao.create( entity );
     }
 
     /**
@@ -331,16 +325,16 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected Object persistBibliographicReference( BibliographicReference reference ) {
         fillInDatabaseEntry( reference.getPubAccession() );
-        final BibliographicReference perReference = this.bibliographicReferenceService.findOrCreate( reference );
+        final BibliographicReference perReference = this.bibliographicReferenceDao.findOrCreate( reference );
 
-        // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
-        HibernateTemplate templ = this.getHibernateTemplate();
-        templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
-                session.update( perReference );
-                return null;
-            }
-        } );
+        // // thaw - this is necessary to avoid lazy exceptions later, but perhaps could be done more elegantly!
+        // HibernateTemplate templ = this.getHibernateTemplate();
+        // templ.execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+        // public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+        // session.update( perReference );
+        // return null;
+        // }
+        // } );
 
         return perReference;
     }
@@ -350,7 +344,7 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected Contact persistContact( Contact contact ) {
         if ( contact == null ) return null;
-        return this.contactService.findOrCreate( contact );
+        return this.contactDao.findOrCreate( contact );
     }
 
     /**
@@ -367,7 +361,7 @@ abstract public class CommonPersister extends AbstractPersister {
             return seenDatabases.get( name );
         }
 
-        database = externalDatabaseService.findOrCreate( database );
+        database = externalDatabaseDao.findOrCreate( database );
         seenDatabases.put( database.getName(), database );
         return database;
     }
@@ -378,7 +372,7 @@ abstract public class CommonPersister extends AbstractPersister {
     protected LocalFile persistLocalFile( LocalFile file ) {
         if ( file == null ) return null;
         if ( !isTransient( file ) ) return file;
-        return localFileService.findOrCreate( file );
+        return localFileDao.findOrCreate( file );
     }
 
     /**
@@ -393,7 +387,7 @@ abstract public class CommonPersister extends AbstractPersister {
             measurement.setUnit( persistUnit( measurement.getUnit() ) );
         }
 
-        return measurementService.create( measurement );
+        return measurementDao.create( measurement );
     }
 
     /**
@@ -401,13 +395,13 @@ abstract public class CommonPersister extends AbstractPersister {
      */
     protected Person persistPerson( Person person ) {
         if ( person == null ) return null;
-        return this.personService.findOrCreate( person );
+        return this.personDao.findOrCreate( person );
     }
 
     protected Protocol persistProtocol( Protocol protocol ) {
         if ( protocol == null ) return protocol;
         fillInProtocol( protocol );
-        return protocolService.findOrCreate( protocol );
+        return protocolDao.findOrCreate( protocol );
     }
 
     /**
@@ -430,7 +424,7 @@ abstract public class CommonPersister extends AbstractPersister {
          * Note: we use 'create' here instead of 'findOrCreate' because we don't want quantitation types shared across
          * experiments.
          */
-        QuantitationType qt = quantitationTypeService.create( qType );
+        QuantitationType qt = quantitationTypeDao.create( qType );
         quantitationTypeCache.put( key, qt );
         return qt;
     }
@@ -438,7 +432,7 @@ abstract public class CommonPersister extends AbstractPersister {
     protected Unit persistUnit( Unit unit ) {
         if ( unit == null ) return null;
         if ( !isTransient( unit ) ) return unit;
-        return this.unitService.findOrCreate( unit );
+        return this.unitDao.findOrCreate( unit );
     }
 
 }

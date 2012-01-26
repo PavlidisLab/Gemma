@@ -18,8 +18,6 @@
  */
 package ubic.gemma.model.analysis.expression.coexpression;
 
-import java.util.Collection;
-
 import ubic.gemma.model.analysis.AnalysisDaoImpl;
 
 /**

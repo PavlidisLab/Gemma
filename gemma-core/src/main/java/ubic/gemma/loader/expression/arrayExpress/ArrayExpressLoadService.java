@@ -29,8 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
@@ -51,7 +50,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Puts together the workflow to load a data set from ArrayExpress
@@ -59,7 +58,7 @@ import ubic.gemma.persistence.PersisterHelper;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayExpressLoadService {
 
     private static Log log = LogFactory.getLog( ArrayExpressLoadService.class.getName() );
@@ -80,7 +79,7 @@ public class ArrayExpressLoadService {
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
 
     /**
      * Load an AE dataset into the db. NOTE this currently will not handle data sets that have multiple array designs.
@@ -380,7 +379,7 @@ public class ArrayExpressLoadService {
     /**
      * @param persisterHelper
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

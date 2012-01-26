@@ -22,9 +22,9 @@ package ubic.gemma.tasks.analysis.expression;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
+import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
@@ -36,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class AutoTaggerTaskImpl implements AutoTaggerTask {
 
     @Autowired
@@ -53,7 +53,7 @@ public class AutoTaggerTaskImpl implements AutoTaggerTask {
     @TaskMethod
     public TaskResult execute( TaskCommand command ) {
 
-        if ( !ExpressionExperimentAnnotator.ready() ) {
+        if ( !ExpressionExperimentAnnotatorImpl.ready() ) {
             throw new RuntimeException( "Sorry, the auto-tagger is not available." );
         }
 

@@ -24,8 +24,7 @@ import java.util.HashSet;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyResource;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.association.Gene2GOAssociationService;
@@ -35,12 +34,13 @@ import ubic.gemma.model.genome.gene.GeneSet;
 import ubic.gemma.model.genome.gene.GeneSetMember;
 import ubic.gemma.model.genome.gene.GeneSetService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 
 /**
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class GeneSetSearch {
 
     @Autowired
@@ -69,7 +69,7 @@ public class GeneSetSearch {
      * @return a GeneSet or null if nothing is found
      */
     public GeneSet findByGoId( String goId, Taxon taxon ) {
-        OntologyTerm goTerm = GeneOntologyService.getTermForId( StringUtils.strip( goId ) );
+        OntologyTerm goTerm = GeneOntologyServiceImpl.getTermForId( StringUtils.strip( goId ) );
 
         if ( goTerm == null ) {
             return null;

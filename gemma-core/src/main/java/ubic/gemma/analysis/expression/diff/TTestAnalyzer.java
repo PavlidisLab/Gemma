@@ -21,8 +21,7 @@ package ubic.gemma.analysis.expression.diff;
 import java.util.Collection;
 
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -34,7 +33,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 @Scope(value = "prototype")
 public class TTestAnalyzer extends LinearModelAnalyzer {
 

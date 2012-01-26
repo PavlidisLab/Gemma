@@ -61,7 +61,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.AnnotationAssociationService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * For an array design, generate gene product mappings for the sequences.
@@ -98,7 +98,7 @@ public class ArrayDesignProbeMapperService {
     private GeneProductService geneProductService;
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
 
     @Autowired
     private ProbeMapper probeMapper;

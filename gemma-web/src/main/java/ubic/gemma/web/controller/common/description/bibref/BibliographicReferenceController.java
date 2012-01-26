@@ -41,7 +41,7 @@ import ubic.gemma.model.common.description.BibliographicReferenceValueObject;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.BibliographicPhenotypesValueObject;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.web.controller.BaseController;
 import ubic.gemma.web.remote.JsonReaderResponse;
 import ubic.gemma.web.remote.ListBatchCommand;
@@ -61,7 +61,7 @@ public class BibliographicReferenceController extends BaseController {
     private BibliographicReferenceService bibliographicReferenceService = null;
     private final String messagePrefix = "Reference with PubMed Id";
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
     private PubMedXMLFetcher pubMedXmlFetcher = new PubMedXMLFetcher();
 
     @Autowired
@@ -127,7 +127,7 @@ public class BibliographicReferenceController extends BaseController {
             valueObjects.add( vo );
 
             // adding phenotype informations to the Bibliographic Reference
-            
+
             Collection<PhenotypeAssociation> phenotypeAssociations = this.phenotypeAssociationService
                     .findPhenotypesForBibliographicReference( vo.getPubAccession() );
 
@@ -173,7 +173,7 @@ public class BibliographicReferenceController extends BaseController {
         this.bibliographicReferenceService = bibliographicReferenceService;
     }
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

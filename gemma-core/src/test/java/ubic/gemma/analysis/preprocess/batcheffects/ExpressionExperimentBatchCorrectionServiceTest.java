@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -50,7 +51,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     @Autowired
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
@@ -70,7 +71,7 @@ public class ExpressionExperimentBatchCorrectionServiceTest extends AbstractGeoS
             newee = ( ExpressionExperiment ) results.iterator().next();
 
         } catch ( AlreadyExistsInSystemException e ) {
-            newee = ( ExpressionExperiment ) e.getData();
+            newee = ( ExpressionExperiment ) ( ( List<?> ) e.getData() ).iterator().next();
         }
 
         assertNotNull( newee );

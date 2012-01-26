@@ -29,8 +29,7 @@ import java.util.Map;
 
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.SparseDoubleMatrix;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -38,13 +37,14 @@ import ubic.gemma.model.association.Gene2GOAssociationService;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.ontology.providers.GeneOntologyService;
-import ubic.gemma.ontology.providers.GeneOntologyService.GOAspect;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 
 /**
  * @author meeta
  * @version $Id$
  */
-@Service
+@Component
 public class GoMetric {
 
     public enum Metric {
@@ -226,7 +226,7 @@ public class GoMetric {
              * aspect filtering.
              */
             if ( goAspect != null ) {
-                if ( GeneOntologyService.getTermAspect( goTerm1 ).equals( goAspect ) ) {
+                if ( GeneOntologyServiceImpl.getTermAspect( goTerm1 ).equals( goAspect ) ) {
                     continue;
                 }
             }
@@ -236,7 +236,7 @@ public class GoMetric {
             for ( String goTerm2 : mergedGoTerms2 ) {
 
                 if ( goAspect != null ) {
-                    if ( GeneOntologyService.getTermAspect( goTerm2 ).equals( goAspect ) ) {
+                    if ( GeneOntologyServiceImpl.getTermAspect( goTerm2 ).equals( goAspect ) ) {
                         continue;
                     }
                 }
@@ -398,7 +398,7 @@ public class GoMetric {
     public Integer getChildrenOccurrence( Map<String, Integer> termCountMap, String term ) {
 
         int termCount = termCountMap.get( term );
-        OntologyTerm ont = GeneOntologyService.getTermForURI( term );
+        OntologyTerm ont = GeneOntologyServiceImpl.getTermForURI( term );
 
         Collection<OntologyTerm> children = geneOntologyService.getAllChildren( ont, partOf );
 
@@ -702,7 +702,7 @@ public class GoMetric {
         HashSet<OntologyTerm> termsGO = new HashSet<OntologyTerm>();
 
         for ( VocabCharacteristic characteristic : termsVoc ) {
-            OntologyTerm term = GeneOntologyService.getTermForId( characteristic.getValue() );
+            OntologyTerm term = GeneOntologyServiceImpl.getTermForId( characteristic.getValue() );
             if ( ( term != null ) ) termsGO.add( term );
         }
         return termsGO;
@@ -732,7 +732,7 @@ public class GoMetric {
      */
     private boolean isRoot( OntologyTerm term ) {
 
-        String id = GeneOntologyService.asRegularGoId( term );
+        String id = GeneOntologyServiceImpl.asRegularGoId( term );
         boolean root = false;
         if ( ( id.equalsIgnoreCase( "GO:0008150" ) ) || ( id.equalsIgnoreCase( "GO:0003674" ) )
                 || ( id.equalsIgnoreCase( "GO:0005575" ) ) ) root = true;

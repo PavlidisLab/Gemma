@@ -76,8 +76,8 @@ public class SampleCoexpressionMatrixService {
     /**
      * @param expressionExperiment
      */
-    public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment expressionExperiment ) {
-        return getSampleCorrelationMatrix( expressionExperiment, false );
+    public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment expressionExperiment ) {
+        return create( expressionExperiment, false );
     }
 
     /**
@@ -86,7 +86,7 @@ public class SampleCoexpressionMatrixService {
      * @param ee
      * @return Matrix, sorted by experimental design
      */
-    public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment ee, boolean forceRecompute ) {
+    public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee, boolean forceRecompute ) {
         DoubleMatrix<BioAssay, BioAssay> mat = sampleCoexpressionMatrixDao.load( ee );
 
         if ( forceRecompute || mat == null ) {
@@ -98,7 +98,7 @@ public class SampleCoexpressionMatrixService {
                 throw new IllegalArgumentException( "Must have processed vectors created first" );
             }
 
-            mat = getSampleCorrelationMatrix( ee, processedVectors );
+            mat = create( ee, processedVectors );
         }
 
         mat = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( mat );
@@ -111,7 +111,7 @@ public class SampleCoexpressionMatrixService {
      * @param processedVectors
      * @return correlation matrix. The matrix is NOT sorted by the experimental design.
      */
-    public DoubleMatrix<BioAssay, BioAssay> getSampleCorrelationMatrix( ExpressionExperiment ee,
+    public DoubleMatrix<BioAssay, BioAssay> create( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
         FilterConfig fconfig = new FilterConfig();
         fconfig.setIgnoreMinimumRowsThreshold( true );
@@ -122,8 +122,9 @@ public class SampleCoexpressionMatrixService {
         DoubleMatrix<BioAssay, BioAssay> mat = getMatrix( datamatrix );
         assert mat != null;
 
-        sampleCoexpressionMatrixDao.create( mat, datamatrix.getBioAssayDimension( datamatrix.getRowElement( 0 )
-                .getDesignElement() ), datamatrix.getExpressionExperiment() );
+        sampleCoexpressionMatrixDao.create( mat,
+                datamatrix.getBioAssayDimension( datamatrix.getRowElement( 0 ).getDesignElement() ),
+                datamatrix.getExpressionExperiment() );
 
         return mat;
     }

@@ -18,7 +18,6 @@
  */
 package ubic.gemma.model.expression.arrayDesign;
 
-
 /**
  * @see ubic.gemma.model.expression.arrayDesign.ArrayDesign
  * @author pavlidis
@@ -53,7 +52,7 @@ public class ArrayDesignImpl extends ubic.gemma.model.expression.arrayDesign.Arr
 
     @Override
     public java.lang.String toString() {
-        return super.toString() + " (" + this.getShortName() + ")";
+        return super.toString() + ( this.getShortName() == null ? "" : " (" + this.getShortName() + ")" );
     }
 
 }

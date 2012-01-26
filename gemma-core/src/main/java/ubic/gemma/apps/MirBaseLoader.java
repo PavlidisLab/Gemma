@@ -30,7 +30,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 
 /**
@@ -55,7 +55,7 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
         }
     }
 
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
     private String fileName;
 
     private TaxonService taxonService;
@@ -136,7 +136,7 @@ public class MirBaseLoader extends AbstractSpringAwareCLI {
             this.taxonName = this.getOptionValue( 't' );
         }
         this.taxonService = ( TaxonService ) this.getBean( "taxonService" );
-        persisterHelper = ( PersisterHelper ) this.getBean( "persisterHelper" );
+        persisterHelper = ( Persister ) this.getBean( "persisterHelper" );
     }
 
 }

@@ -46,9 +46,146 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author keshav
  * @version $Id$
  */
-public class DifferentialExpressionAnalysisHelperService {
+public class DifferentialExpressionAnalysisUtil {
 
-    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisHelperService.class );
+    private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisUtil.class );
+
+    /**
+     * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
+     * false otherwise. When determining completeness, a biomaterial's factor values are only considered if they are
+     * equivalent to one of the input experimental factors.
+     * 
+     * @param expressionExperiment
+     * @param factors to consider completeness for.
+     * @return boolean
+     */
+    public static boolean blockComplete( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors ) {
+
+        Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
+
+        /*
+         * Get biomaterials with only those factor values equal to the factor values in the input factors. Only these
+         * factor values in each biomaterial will be used to determine completeness.
+         */
+        Collection<BioMaterial> biomaterialsWithGivenFactorValues = filterFactorValuesFromBiomaterials( factors,
+                biomaterials );
+
+        boolean completeBlock = checkBlockDesign( biomaterialsWithGivenFactorValues, factors );
+
+        boolean hasAllReps = checkBiologicalReplicates( expressionExperiment, factors );
+
+        return completeBlock && hasAllReps;
+    }
+
+    /**
+     * See if there are at least two samples for each factor value combination.
+     * 
+     * @param expressionExperiment
+     * @param factors
+     * @return
+     */
+    protected static boolean checkBiologicalReplicates( ExpressionExperiment expressionExperiment,
+            Collection<ExperimentalFactor> factors ) {
+
+        Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
+
+        for ( BioMaterial firstBm : biomaterials ) {
+
+            Collection<FactorValue> factorValuesToCheck = getRelevantFactorValues( factors, firstBm );
+
+            boolean match = false;
+            for ( BioMaterial secondBm : biomaterials ) {
+
+                if ( firstBm.equals( secondBm ) ) continue;
+
+                Collection<FactorValue> factorValuesToCompareTo = getRelevantFactorValues( factors, secondBm );
+
+                if ( factorValuesToCheck.size() == factorValuesToCompareTo.size()
+                        && factorValuesToCheck.containsAll( factorValuesToCompareTo ) ) {
+                    log.debug( "Replicate found for biomaterial " + firstBm + "." );
+                    match = true;
+                    break;
+                }
+            }
+            if ( !match ) {
+                log.warn( "No replicate found for biomaterial " + firstBm + "." );
+                return false;
+            }
+        }
+
+        return true;
+
+    }
+
+    /**
+     * Check that at least one of the given factors is valid: the factorvalues are measurements, or that there are at
+     * least two assays for at least one factor value.
+     * 
+     * @param expressionExperiment
+     * @param experimentalFactors
+     * @return
+     */
+    public static boolean checkValidForLm( BioAssaySet expressionExperiment,
+            Collection<ExperimentalFactor> experimentalFactors ) {
+        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+            boolean ok = checkValidForLm( expressionExperiment, experimentalFactor );
+            if ( ok ) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Check that the factorvalues are measurements, or that there are at least two assays for at least one factor
+     * value. Otherwise the model fit will be perfect and pvalues will not be returned.
+     * 
+     * @param expressionExperiment
+     * @param experimentalFactor
+     * @return true if it's okay, false otherwise.
+     */
+    public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
+
+        if ( experimentalFactor.getFactorValues().size() < 2 ) {
+            return false;
+        }
+
+        if ( experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
+            return true;
+        }
+
+        // redundant check.
+        // for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
+        // if ( fv.getMeasurement() != null ) {
+        // return true; // assume it's all like this.
+        // }
+        // }
+
+        /*
+         * Assuming fixed levels; we'll need at least two replicates for at least one factor value.
+         */
+        Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
+        for ( BioAssay ba : ( Collection<BioAssay> ) expressionExperiment.getBioAssays() ) {
+            for ( BioMaterial bm : ba.getSamplesUsed() ) {
+                for ( FactorValue fv : bm.getFactorValues() ) {
+                    if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
+
+                        if ( !counts.containsKey( fv ) ) {
+                            counts.put( fv, 0 );
+                        }
+
+                        counts.put( fv, counts.get( fv ) + 1 );
+                        if ( counts.get( fv ) > 1 ) {
+                            return true;
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return false;
+
+    }
 
     /**
      * Returns a List of all the different types of biomaterials across all bioassays in the experiment. If there is
@@ -176,139 +313,6 @@ public class DifferentialExpressionAnalysisHelperService {
     }
 
     /**
-     * Generates all possible factor value pairings for the given experimental factors.
-     * 
-     * @param experimentalFactors
-     * @return A collection of hashsets, where each hashset is a pairing.
-     */
-    protected static Collection<Set<FactorValue>> generateFactorValuePairings(
-            Collection<ExperimentalFactor> experimentalFactors ) {
-        /* set up the possible pairings */
-        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
-        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
-            allFactorValues.addAll( experimentalFactor.getFactorValues() );
-        }
-
-        Collection<FactorValue> allFactorValuesCopy = allFactorValues;
-
-        Collection<Set<FactorValue>> factorValuePairings = new HashSet<Set<FactorValue>>();
-
-        for ( FactorValue factorValue : allFactorValues ) {
-            for ( FactorValue f : allFactorValuesCopy ) {
-                if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) continue;
-
-                HashSet<FactorValue> factorValuePairing = new HashSet<FactorValue>();
-                factorValuePairing.add( factorValue );
-                factorValuePairing.add( f );
-
-                if ( !factorValuePairings.contains( factorValuePairing ) ) {
-                    factorValuePairings.add( factorValuePairing );
-                }
-            }
-        }
-        return factorValuePairings;
-    }
-
-    /**
-     * Returns true if the block design is complete and there are at least 2 biological replicates for each "group",
-     * false otherwise. When determining completeness, a biomaterial's factor values are only considered if they are
-     * equivalent to one of the input experimental factors.
-     * 
-     * @param expressionExperiment
-     * @param factors to consider completeness for.
-     * @return boolean
-     */
-    public boolean blockComplete( ExpressionExperiment expressionExperiment, Collection<ExperimentalFactor> factors ) {
-
-        Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
-
-        /*
-         * Get biomaterials with only those factor values equal to the factor values in the input factors. Only these
-         * factor values in each biomaterial will be used to determine completeness.
-         */
-        Collection<BioMaterial> biomaterialsWithGivenFactorValues = filterFactorValuesFromBiomaterials( factors,
-                biomaterials );
-
-        boolean completeBlock = checkBlockDesign( biomaterialsWithGivenFactorValues, factors );
-
-        boolean hasAllReps = checkBiologicalReplicates( expressionExperiment, factors );
-
-        return completeBlock && hasAllReps;
-    }
-
-    /**
-     * Returns biomaterials with 'filtered' factor values. That is, each biomaterial will only contain those factor
-     * values equivalent to a factor value from one of the input experimental factors.
-     * 
-     * @param factors
-     * @param biomaterials
-     * @return Collection<BioMaterial>
-     */
-    private Collection<BioMaterial> filterFactorValuesFromBiomaterials( Collection<ExperimentalFactor> factors,
-            Collection<BioMaterial> biomaterials ) {
-        Collection<FactorValue> allFactorValuesFromGivenFactors = new HashSet<FactorValue>();
-        for ( ExperimentalFactor ef : factors ) {
-            allFactorValuesFromGivenFactors.addAll( ef.getFactorValues() );
-        }
-
-        Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<BioMaterial>();
-        for ( BioMaterial b : biomaterials ) {
-            Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
-            Collection<FactorValue> factorValuesToConsider = new HashSet<FactorValue>();
-            factorValuesToConsider.addAll( biomaterialFactorValues );
-            for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
-                if ( !allFactorValuesFromGivenFactors.contains( biomaterialFactorValue ) ) {
-                    factorValuesToConsider.remove( biomaterialFactorValue );
-                }
-            }
-            b.setFactorValues( factorValuesToConsider );
-            biomaterialsWithGivenFactorValues.add( b );
-        }
-
-        return biomaterialsWithGivenFactorValues;
-    }
-
-    /**
-     * See if there are at least two samples for each factor value combination.
-     * 
-     * @param expressionExperiment
-     * @param factors
-     * @return
-     */
-    protected boolean checkBiologicalReplicates( ExpressionExperiment expressionExperiment,
-            Collection<ExperimentalFactor> factors ) {
-
-        Collection<BioMaterial> biomaterials = getBioMaterials( expressionExperiment );
-
-        for ( BioMaterial firstBm : biomaterials ) {
-
-            Collection<FactorValue> factorValuesToCheck = getRelevantFactorValues( factors, firstBm );
-
-            boolean match = false;
-            for ( BioMaterial secondBm : biomaterials ) {
-
-                if ( firstBm.equals( secondBm ) ) continue;
-
-                Collection<FactorValue> factorValuesToCompareTo = getRelevantFactorValues( factors, secondBm );
-
-                if ( factorValuesToCheck.size() == factorValuesToCompareTo.size()
-                        && factorValuesToCheck.containsAll( factorValuesToCompareTo ) ) {
-                    log.debug( "Replicate found for biomaterial " + firstBm + "." );
-                    match = true;
-                    break;
-                }
-            }
-            if ( !match ) {
-                log.warn( "No replicate found for biomaterial " + firstBm + "." );
-                return false;
-            }
-        }
-
-        return true;
-
-    }
-
-    /**
      * Returns true if all of the following conditions hold true: each biomaterial has more than 2 factor values, each
      * biomaterial has a factor value from one of the input factors paired with a factor value from the other input
      * factors, and all factor values from 1 factor have been paired with all factor values from the other factors,
@@ -318,7 +322,7 @@ public class DifferentialExpressionAnalysisHelperService {
      * @param factorValues
      * @return false if not a complete block design.
      */
-    protected boolean checkBlockDesign( Collection<BioMaterial> biomaterials,
+    protected static boolean checkBlockDesign( Collection<BioMaterial> biomaterials,
             Collection<ExperimentalFactor> experimentalFactors ) {
 
         Collection<Set<FactorValue>> factorValuePairings = generateFactorValuePairings( experimentalFactors );
@@ -368,6 +372,72 @@ public class DifferentialExpressionAnalysisHelperService {
     }
 
     /**
+     * Generates all possible factor value pairings for the given experimental factors.
+     * 
+     * @param experimentalFactors
+     * @return A collection of hashsets, where each hashset is a pairing.
+     */
+    protected static Collection<Set<FactorValue>> generateFactorValuePairings(
+            Collection<ExperimentalFactor> experimentalFactors ) {
+        /* set up the possible pairings */
+        Collection<FactorValue> allFactorValues = new HashSet<FactorValue>();
+        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
+            allFactorValues.addAll( experimentalFactor.getFactorValues() );
+        }
+
+        Collection<FactorValue> allFactorValuesCopy = allFactorValues;
+
+        Collection<Set<FactorValue>> factorValuePairings = new HashSet<Set<FactorValue>>();
+
+        for ( FactorValue factorValue : allFactorValues ) {
+            for ( FactorValue f : allFactorValuesCopy ) {
+                if ( f.getExperimentalFactor().equals( factorValue.getExperimentalFactor() ) ) continue;
+
+                HashSet<FactorValue> factorValuePairing = new HashSet<FactorValue>();
+                factorValuePairing.add( factorValue );
+                factorValuePairing.add( f );
+
+                if ( !factorValuePairings.contains( factorValuePairing ) ) {
+                    factorValuePairings.add( factorValuePairing );
+                }
+            }
+        }
+        return factorValuePairings;
+    }
+
+    /**
+     * Returns biomaterials with 'filtered' factor values. That is, each biomaterial will only contain those factor
+     * values equivalent to a factor value from one of the input experimental factors.
+     * 
+     * @param factors
+     * @param biomaterials
+     * @return Collection<BioMaterial>
+     */
+    private static Collection<BioMaterial> filterFactorValuesFromBiomaterials( Collection<ExperimentalFactor> factors,
+            Collection<BioMaterial> biomaterials ) {
+        Collection<FactorValue> allFactorValuesFromGivenFactors = new HashSet<FactorValue>();
+        for ( ExperimentalFactor ef : factors ) {
+            allFactorValuesFromGivenFactors.addAll( ef.getFactorValues() );
+        }
+
+        Collection<BioMaterial> biomaterialsWithGivenFactorValues = new HashSet<BioMaterial>();
+        for ( BioMaterial b : biomaterials ) {
+            Collection<FactorValue> biomaterialFactorValues = b.getFactorValues();
+            Collection<FactorValue> factorValuesToConsider = new HashSet<FactorValue>();
+            factorValuesToConsider.addAll( biomaterialFactorValues );
+            for ( FactorValue biomaterialFactorValue : biomaterialFactorValues ) {
+                if ( !allFactorValuesFromGivenFactors.contains( biomaterialFactorValue ) ) {
+                    factorValuesToConsider.remove( biomaterialFactorValue );
+                }
+            }
+            b.setFactorValues( factorValuesToConsider );
+            biomaterialsWithGivenFactorValues.add( b );
+        }
+
+        return biomaterialsWithGivenFactorValues;
+    }
+
+    /**
      * Returns a collection of all the different types of biomaterials across all bioassays in the experiment. If there
      * is more than one biomaterial per bioassay, a {@link RuntimeException} is thrown.
      * 
@@ -375,7 +445,7 @@ public class DifferentialExpressionAnalysisHelperService {
      * @return
      * @throws Exception
      */
-    private List<BioMaterial> getBioMaterials( ExpressionExperiment ee ) {
+    private static List<BioMaterial> getBioMaterials( ExpressionExperiment ee ) {
 
         List<BioMaterial> biomaterials = new ArrayList<BioMaterial>();
 
@@ -400,7 +470,7 @@ public class DifferentialExpressionAnalysisHelperService {
      * @param biomaterial
      * @return the factor values the biomaterial has for the given factors.
      */
-    private Collection<FactorValue> getRelevantFactorValues( Collection<ExperimentalFactor> factors,
+    private static Collection<FactorValue> getRelevantFactorValues( Collection<ExperimentalFactor> factors,
             BioMaterial biomaterial ) {
         Collection<FactorValue> factorValues = biomaterial.getFactorValues();
 
@@ -411,75 +481,6 @@ public class DifferentialExpressionAnalysisHelperService {
             }
         }
         return factorValuesToCheck;
-    }
-
-    /**
-     * Check that at least one of the given factors is valid: the factorvalues are measurements, or that there are at
-     * least two assays for at least one factor value.
-     * 
-     * @param expressionExperiment
-     * @param experimentalFactors
-     * @return
-     */
-    public static boolean checkValidForLm( BioAssaySet expressionExperiment,
-            Collection<ExperimentalFactor> experimentalFactors ) {
-        for ( ExperimentalFactor experimentalFactor : experimentalFactors ) {
-            boolean ok = checkValidForLm( expressionExperiment, experimentalFactor );
-            if ( ok ) return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check that the factorvalues are measurements, or that there are at least two assays for at least one factor
-     * value. Otherwise the model fit will be perfect and pvalues will not be returned.
-     * 
-     * @param expressionExperiment
-     * @param experimentalFactor
-     * @return true if it's okay, false otherwise.
-     */
-    public static boolean checkValidForLm( BioAssaySet expressionExperiment, ExperimentalFactor experimentalFactor ) {
-
-        if ( experimentalFactor.getFactorValues().size() < 2 ) {
-            return false;
-        }
-
-        if ( experimentalFactor.getType().equals( FactorType.CONTINUOUS ) ) {
-            return true;
-        }
-
-        // redundant check.
-        // for ( FactorValue fv : experimentalFactor.getFactorValues() ) {
-        // if ( fv.getMeasurement() != null ) {
-        // return true; // assume it's all like this.
-        // }
-        // }
-
-        /*
-         * Assuming fixed levels; we'll need at least two replicates for at least one factor value.
-         */
-        Map<FactorValue, Integer> counts = new HashMap<FactorValue, Integer>();
-        for ( BioAssay ba : ( Collection<BioAssay> ) expressionExperiment.getBioAssays() ) {
-            for ( BioMaterial bm : ba.getSamplesUsed() ) {
-                for ( FactorValue fv : bm.getFactorValues() ) {
-                    if ( fv.getExperimentalFactor().equals( experimentalFactor ) ) {
-
-                        if ( !counts.containsKey( fv ) ) {
-                            counts.put( fv, 0 );
-                        }
-
-                        counts.put( fv, counts.get( fv ) + 1 );
-                        if ( counts.get( fv ) > 1 ) {
-                            return true;
-                        }
-
-                    }
-                }
-            }
-        }
-
-        return false;
-
     }
 
 }

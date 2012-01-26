@@ -35,7 +35,7 @@ import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.common.Describable;
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
@@ -137,7 +137,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
 
         processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
 
-        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+        sampleCoexpressionMatrixService.create( ee );
     }
 
     /**
@@ -167,17 +167,19 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
     @SuppressWarnings("static-access")
     @Override
     protected void buildOptions() {
-        Option fileOption = OptionBuilder.hasArg().withArgName( "Input file" ).withDescription(
-                "Optional path to file with list of experiment accessions to load" ).withLongOpt( "file" ).create( 'f' );
+        Option fileOption = OptionBuilder.hasArg().withArgName( "Input file" )
+                .withDescription( "Optional path to file with list of experiment accessions to load" )
+                .withLongOpt( "file" ).create( 'f' );
 
         addOption( fileOption );
 
-        Option accessionOption = OptionBuilder.hasArg().withArgName( "Accession(s)" ).withDescription(
-                "Optional comma-delimited list of accessions (GSE or GDS) to load" ).withLongOpt( "acc" ).create( 'e' );
+        Option accessionOption = OptionBuilder.hasArg().withArgName( "Accession(s)" )
+                .withDescription( "Optional comma-delimited list of accessions (GSE or GDS) to load" )
+                .withLongOpt( "acc" ).create( 'e' );
         addOption( accessionOption );
 
-        Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" ).withDescription(
-                "Load platforms (array designs) only" ).withLongOpt( "platforms" ).create( 'y' );
+        Option platformOnlyOption = OptionBuilder.withArgName( "Platforms only" )
+                .withDescription( "Load platforms (array designs) only" ).withLongOpt( "platforms" ).create( 'y' );
         addOption( platformOnlyOption );
 
         Option noBioAssayMatching = OptionBuilder.withDescription( "Do not try to match samples across platforms" )
@@ -193,21 +195,24 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         Option forceOption = OptionBuilder.withDescription( "Reload data set if it already exists in system" )
                 .withLongOpt( "force" ).create( "force" );
         addOption( forceOption );
-        Option aggressiveQtRemoval = OptionBuilder.withDescription(
-                "Aggressively remove all unneeded quantitation types" ).withLongOpt( "aggressive" ).create(
-                "aggressive" );
+        Option aggressiveQtRemoval = OptionBuilder
+                .withDescription( "Aggressively remove all unneeded quantitation types" ).withLongOpt( "aggressive" )
+                .create( "aggressive" );
 
         addOption( aggressiveQtRemoval );
 
-        Option fileFormatOpt = OptionBuilder.hasArg().withArgName( "File Format" ).withDescription(
-                "Either AE or GEO; defaults to GEO (using batch file does not work with Array Express)" ).withLongOpt(
-                "format" ).create( 'm' );
+        Option fileFormatOpt = OptionBuilder
+                .hasArg()
+                .withArgName( "File Format" )
+                .withDescription(
+                        "Either AE or GEO; defaults to GEO (using batch file does not work with Array Express)" )
+                .withLongOpt( "format" ).create( 'm' );
 
         addOption( fileFormatOpt );
 
-        Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" ).withDescription(
-                "Specify the name or short name of the platform the experiment uses (AE only)" ).withLongOpt( "array" )
-                .create( 'a' );
+        Option arrayDesign = OptionBuilder.hasArg().withArgName( "array design name" )
+                .withDescription( "Specify the name or short name of the platform the experiment uses (AE only)" )
+                .withLongOpt( "array" ).create( 'a' );
 
         addOption( arrayDesign );
 
@@ -232,7 +237,7 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         }
         try {
 
-            GeoDatasetService geoService = ( GeoDatasetService ) this.getBean( "geoDatasetService" );
+            GeoService geoService = ( GeoService ) this.getBean( "geoService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             ArrayExpressLoadService aeService = ( ArrayExpressLoadService ) this.getBean( "arrayExpressLoadService" );
@@ -320,15 +325,16 @@ public class LoadExpressionDataCli extends AbstractSpringAwareCLI {
         return null;
     }
 
-    protected void processAccession( GeoDatasetService geoService, String accession ) {
+    protected void processAccession( GeoService geoService, String accession ) {
         try {
 
             if ( force ) {
                 removeIfExists( accession );
             }
 
-            Collection<ExpressionExperiment> ees = geoService.fetchAndLoad( accession, false, doMatching,
-                    this.aggressive, this.splitByPlatform, this.allowSuperSeriesLoad, this.allowSubSeriesLoad );
+            Collection<ExpressionExperiment> ees = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                    accession, false, doMatching, this.aggressive, this.splitByPlatform, this.allowSuperSeriesLoad,
+                    this.allowSubSeriesLoad );
 
             if ( !suppressPostProcessing ) {
                 postProcess( ees );

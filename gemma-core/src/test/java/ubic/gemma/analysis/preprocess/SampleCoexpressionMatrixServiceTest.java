@@ -46,16 +46,16 @@ public class SampleCoexpressionMatrixServiceTest extends BaseSpringContextTest {
         Collection<ProcessedExpressionDataVector> vecs = processedExpressionDataVectorCreateService
                 .computeProcessedExpressionData( ee );
 
-        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee, vecs );
+        DoubleMatrix<BioAssay, BioAssay> matrix = sampleCoexpressionMatrixService.create( ee, vecs );
 
         check( matrix );
 
         // recompute ...
-        matrix = sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee, true );
+        matrix = sampleCoexpressionMatrixService.create( ee, true );
         // log.info( matrix );
         check( matrix );
 
-        matrix = sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+        matrix = sampleCoexpressionMatrixService.create( ee );
 
         check( matrix );
     }

@@ -64,6 +64,7 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.search.GeneSetSearch;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.ontology.providers.GeneOntologyService;
 
 /**
@@ -391,7 +392,7 @@ public class GenePickerController {
 
         // if a geneSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)
-        if ( SecurityService.isUserLoggedIn() ) {
+        if ( SecurityServiceImpl.isUserLoggedIn() ) {
             for ( SearchResultDisplayObject srdo : geneSets ) {
                 Long id = ( srdo.getResultValueObject() instanceof DatabaseBackedGeneSetValueObject ) ? ( ( GeneSetValueObject ) srdo
                         .getResultValueObject() ).getId() : new Long( -1 );
@@ -554,13 +555,13 @@ public class GenePickerController {
         // get all public sets (if user is admin, these were already loaded with geneSetService.loadMySets() )
         // filtered by security.
         Collection<GeneSet> sets = new ArrayList<GeneSet>();
-        if ( promptPublicSets &&  !SecurityService.isUserLoggedIn() ) {
+        if ( promptPublicSets &&  !SecurityServiceImpl.isUserLoggedIn() ) {
             try {
                 sets = geneSetService.loadAll( taxon );
             } catch ( AccessDeniedException e ) {
                 // okay, they just aren't allowed to see those.
             }
-        } else if ( SecurityService.isUserLoggedIn() ) {
+        } else if ( SecurityServiceImpl.isUserLoggedIn() ) {
             /*
              * actually, loadMyGeneSets and loadAll point to the same method 
              * (they just use  different spring security filters) 

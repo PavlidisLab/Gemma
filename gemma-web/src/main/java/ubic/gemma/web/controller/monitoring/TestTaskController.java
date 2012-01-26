@@ -19,8 +19,7 @@
 package ubic.gemma.web.controller.monitoring;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.TaskCommand;
@@ -34,7 +33,7 @@ import ubic.gemma.job.grid.util.MonitorTaskCommand;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class TestTaskController extends AbstractTaskService {
 
     @Autowired

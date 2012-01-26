@@ -26,7 +26,7 @@ import java.util.Collection;
  * @author pavlidis
  * @version $Id$
  */
-public interface Converter<S,T> {
+public interface Converter<S, T> {
 
     /**
      * Given a collection of source domain objects, conver them into Gemma domain objects.
@@ -34,7 +34,7 @@ public interface Converter<S,T> {
      * @param sourceDomainObjects
      * @return
      */
-    public Collection<T> convert( Collection<S> sourceDomainObjects );
+    public Collection<T> convert( Collection<? extends S> sourceDomainObjects );
 
     /**
      * Convert a single object.

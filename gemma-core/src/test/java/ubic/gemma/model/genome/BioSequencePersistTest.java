@@ -24,13 +24,11 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.springframework.transaction.annotation.Transactional;
 
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.ExternalDatabase;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -70,10 +68,8 @@ public class BioSequencePersistTest extends BaseSpringContextTest {
     }
 
     @Test
-    @Transactional
     public final void testPersistBioSequence() throws Exception {
-        PersisterHelper ph = ( PersisterHelper ) this.getBean( "persisterHelper" );
-        bs = ( BioSequence ) ph.persist( bs );
+        bs = ( BioSequence ) persisterHelper.persist( bs );
         assertNotNull( bs.getId() );
     }
 

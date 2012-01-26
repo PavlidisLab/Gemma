@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 /**
  * A one way anova implementation as described by P. Pavlidis, Methods 31 (2003) 282-289.
@@ -29,7 +29,7 @@ import org.springframework.stereotype.Service;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 @Scope(value = "prototype")
 public class OneWayAnovaAnalyzer extends LinearModelAnalyzer {
 

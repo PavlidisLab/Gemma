@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.description.VocabCharacteristic;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
@@ -80,7 +80,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
     SimpleExpressionDataLoaderService simpleExpressionDataLoaderService;
 
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     @Autowired
     ExpressionExperimentService expressionExperimentService;
@@ -153,7 +153,7 @@ public class ExperimentalDesignImporterTestC extends AbstractGeoServiceTest {
 
         metaData.getArrayDesigns().add( ad );
 
-        ee = simpleExpressionDataLoaderService.load( metaData, data );
+        ee = simpleExpressionDataLoaderService.create( metaData, data );
 
         // eeService.thawLite( ee );
     }

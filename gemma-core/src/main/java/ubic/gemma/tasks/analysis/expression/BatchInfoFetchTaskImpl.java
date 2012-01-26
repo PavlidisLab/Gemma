@@ -17,8 +17,7 @@ package ubic.gemma.tasks.analysis.expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
@@ -28,7 +27,7 @@ import ubic.gemma.tasks.maintenance.ExpressionExperimentReportTaskCommand;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class BatchInfoFetchTaskImpl implements BatchInfoFetchTask {
 
     private Log log = LogFactory.getLog( BatchInfoFetchTaskImpl.class.getName() );

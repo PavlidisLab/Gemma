@@ -29,7 +29,7 @@ import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Load taxa into the system.
@@ -41,9 +41,9 @@ public class TaxonLoader {
 
     private static Log log = LogFactory.getLog( TaxonLoader.class.getName() );
 
-    PersisterHelper persisterHelper;
+    Persister persisterHelper;
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

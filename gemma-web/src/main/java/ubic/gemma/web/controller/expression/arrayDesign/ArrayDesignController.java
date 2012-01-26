@@ -69,7 +69,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditableUtil;
 import ubic.gemma.util.EntityUtils;
 import ubic.gemma.web.remote.EntityDelegator;
@@ -196,7 +196,7 @@ public class ArrayDesignController extends AbstractTaskService {
 
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( ids, showMerged, showOrphans );
 
-        if ( !SecurityService.isUserAdmin() ) {
+        if ( !SecurityServiceImpl.isUserAdmin() ) {
             auditableUtil.removeTroubledArrayDesigns( valueObjects );
         }
         int count = valueObjects.size();
@@ -517,7 +517,7 @@ public class ArrayDesignController extends AbstractTaskService {
 
         Collection<ArrayDesignValueObject> valueObjects = getArrayDesigns( arrayDesignIds, true, true );
 
-        if ( SecurityService.isUserAdmin() ) {
+        if ( SecurityServiceImpl.isUserAdmin() ) {
             arrayDesignReportService.fillEventInformation( valueObjects );
         } else {
             auditableUtil.removeTroubledArrayDesigns( valueObjects );

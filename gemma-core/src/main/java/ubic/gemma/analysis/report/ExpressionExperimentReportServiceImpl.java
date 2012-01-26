@@ -46,8 +46,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
@@ -87,7 +86,7 @@ import ubic.gemma.util.EntityUtils;
  * @author klc
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionExperimentReportServiceImpl implements ExpressionExperimentReportService, InitializingBean {
     private static final double CUT_OFF = 0.05;
     @Autowired
@@ -486,6 +485,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @see ubic.gemma.analysis.report.ExpressionExperimentReportService#generateSummaryObject(java.lang.Long)
      */
     public ExpressionExperimentValueObject generateSummary( Long id ) {
+        assert id != null;
         Collection<Long> ids = new ArrayList<Long>();
         ids.add( id );
         Collection<ExpressionExperimentValueObject> results = generateSummaryObjects( ids );
@@ -841,6 +841,7 @@ public class ExpressionExperimentReportServiceImpl implements ExpressionExperime
      * @param object
      */
     private void updateStats( ExpressionExperimentValueObject eeVo ) {
+        assert eeVo.getId() != null;
         ExpressionExperiment tempEe = expressionExperimentService.load( eeVo.getId() );
 
         eeVo.setBioMaterialCount( expressionExperimentService.getBioMaterialCount( tempEe ) );

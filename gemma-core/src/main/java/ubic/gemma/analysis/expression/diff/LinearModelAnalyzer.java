@@ -125,7 +125,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
         for ( ExperimentalFactor experimentalFactor : factors ) {
 
             /*
-             * Check if we need to treat the intercept as a fator.
+             * Check if we need to treat the intercept as a factor.
              */
             boolean useI = checkIfNeedToTreatAsIntercept( experimentalFactor, quantitationType );
 
@@ -200,7 +200,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * .ExpressionExperiment)
      */
     @Override
-    public final Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment ) {
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment ) {
         return run( expressionExperiment, expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
     }
 
@@ -212,7 +212,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
      * .ExpressionExperiment, java.util.Collection)
      */
     @Override
-    public final Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
+    public Collection<DifferentialExpressionAnalysis> run( ExpressionExperiment expressionExperiment,
             Collection<ExperimentalFactor> factors ) {
 
         DifferentialExpressionAnalysisConfig config = new DifferentialExpressionAnalysisConfig();
@@ -354,7 +354,7 @@ public abstract class LinearModelAnalyzer extends AbstractDifferentialExpression
                     /*
                      * Check that the data is valid for analysis.
                      */
-                    boolean ok = DifferentialExpressionAnalysisHelperService.checkValidForLm( eesubSet, factors );
+                    boolean ok = DifferentialExpressionAnalysisUtil.checkValidForLm( eesubSet, factors );
 
                     if ( !ok ) {
                         log.warn( "Experimental design is not valid for subset: " + subsetFactorValue + "; skipping" );

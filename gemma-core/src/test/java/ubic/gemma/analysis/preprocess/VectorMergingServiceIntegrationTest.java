@@ -28,7 +28,7 @@ import ubic.gemma.loader.expression.ExpressionExperimentPlatformSwitchService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignMergeService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService; 
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
@@ -54,7 +54,7 @@ public class VectorMergingServiceIntegrationTest extends AbstractGeoServiceTest 
     ExpressionExperimentPlatformSwitchService eePlatformSwitchService;
 
     @Autowired
-    GeoDatasetService geoService;
+    GeoService geoService;
 
     @Autowired
     ExpressionExperimentService eeService;

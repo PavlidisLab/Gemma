@@ -21,17 +21,15 @@ package ubic.gemma.model.genome;
 import java.util.Collection;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.genome.Taxon</code>.
- * </p>
  * 
  * @see ubic.gemma.model.genome.Taxon
  */
-public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.support.HibernateDaoSupport implements
-        ubic.gemma.model.genome.TaxonDao {
+public abstract class TaxonDaoBase extends HibernateDaoSupport implements TaxonDao {
 
     /**
      * @see ubic.gemma.model.genome.TaxonDao#create(int, java.util.Collection)
@@ -40,22 +38,22 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.create - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            create( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
+                        .hasNext(); ) {
+                    create( entityIterator.next() );
+                }
+                return null;
+            }
+        } );
         return entities;
     }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#create(int transform, ubic.gemma.model.genome.Taxon)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
     public Taxon create( final ubic.gemma.model.genome.Taxon taxon ) {
         if ( taxon == null ) {
@@ -70,8 +68,10 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
         return taxon;
     }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(java.lang.String abbreviation)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.TaxonDao#findByAbbreviation(java.lang.String)
      */
     public Taxon findByAbbreviation( final java.lang.String abbreviation ) {
         try {
@@ -83,17 +83,20 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
         }
     }
 
-    /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String)
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(java.lang.String)
      */
     public Taxon findByCommonName( final java.lang.String commonName ) {
         return this.findByCommonName( "from TaxonImpl t where t.commonName=:commonName", commonName );
     }
 
     /**
-     * @see ubic.gemma.model.genome.TaxonDao#findByCommonName(int, java.lang.String, java.lang.String)
+     * @param queryString
+     * @param commonName
+     * @return
      */
-
     public Taxon findByCommonName( final java.lang.String queryString, final java.lang.String commonName ) {
         java.util.List<String> argNames = new java.util.ArrayList<String>();
         java.util.List<Object> args = new java.util.ArrayList<Object>();
@@ -231,17 +234,15 @@ public abstract class TaxonDaoBase extends org.springframework.orm.hibernate3.su
         if ( entities == null ) {
             throw new IllegalArgumentException( "Taxon.update - 'entities' can not be null" );
         }
-        this.getHibernateTemplate().executeWithNativeSession(
-                new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
-                    public Object doInHibernate( org.hibernate.Session session )
-                            throws org.hibernate.HibernateException {
-                        for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
-                                .hasNext(); ) {
-                            update( entityIterator.next() );
-                        }
-                        return null;
-                    }
-                } );
+        this.getHibernateTemplate().execute( new org.springframework.orm.hibernate3.HibernateCallback<Object>() {
+            public Object doInHibernate( org.hibernate.Session session ) throws org.hibernate.HibernateException {
+                for ( java.util.Iterator<? extends Taxon> entityIterator = entities.iterator(); entityIterator
+                        .hasNext(); ) {
+                    update( entityIterator.next() );
+                }
+                return null;
+            }
+        } );
     }
 
     /**

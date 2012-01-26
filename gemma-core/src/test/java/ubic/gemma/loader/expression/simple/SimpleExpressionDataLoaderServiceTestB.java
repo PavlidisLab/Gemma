@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.model.common.quantitationtype.ScaleType;
 import ubic.gemma.model.common.quantitationtype.StandardQuantitationType;
@@ -26,7 +26,7 @@ import ubic.gemma.ontology.providers.MgedOntologyService;
 public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTest {
 
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     @Autowired
     ExpressionExperimentService eeService;
@@ -97,7 +97,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
 
         makeMetaData( salmon, ad, metaData );
 
-        ee = simpleExpressionDataLoaderService.load( metaData, data );
+        ee = simpleExpressionDataLoaderService.create( metaData, data );
 
         /*
          * Do second one that has overlapping bioassay names.
@@ -110,7 +110,7 @@ public class SimpleExpressionDataLoaderServiceTestB extends AbstractGeoServiceTe
 
         makeMetaData( salmon, ad, metaData );
 
-        ExpressionExperiment a = simpleExpressionDataLoaderService.load( metaData, data );
+        ExpressionExperiment a = simpleExpressionDataLoaderService.create( metaData, data );
 
         // ugly, but try to clean up .
         eeService.delete( a );

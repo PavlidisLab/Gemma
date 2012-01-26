@@ -23,8 +23,7 @@ import java.util.List;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.job.AbstractTaskService;
 import ubic.gemma.job.BackgroundJob;
 import ubic.gemma.job.ConflictingTaskException;
@@ -41,7 +40,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class SpaceMonitor extends AbstractTaskService {
 
     private final static long TIMEOUT_MILLIS = 15000;
@@ -132,7 +131,7 @@ public class SpaceMonitor extends AbstractTaskService {
         if ( !ConfigUtils.isGridEnabled() ) {
             // This is okay. We're not expecting the grid.
             status = "Space is not configured";
-        } else if ( !SpacesUtil.isSpaceRunning() ) {
+        } else if ( !SpacesUtilImpl.isSpaceRunning() ) {
             status = "Space is not running, but it is supposed to be.";
             allIsWell = false;
         } else {

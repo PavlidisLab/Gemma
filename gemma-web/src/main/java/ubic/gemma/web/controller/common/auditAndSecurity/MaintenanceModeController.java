@@ -32,7 +32,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.view.RedirectView;
 
 import ubic.gemma.Constants;
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.web.controller.WebConstants;
 
 /**
@@ -58,7 +58,7 @@ public class MaintenanceModeController extends WebApplicationObjectSupport {
         /*
          * check that the user is admin!
          */
-        boolean isAdmin = SecurityService.isUserAdmin();
+        boolean isAdmin = SecurityServiceImpl.isUserAdmin();
 
         if ( !isAdmin ) {
             throw new AccessDeniedException( "Attempt by non-admin to alter system maintenance mode status!" );

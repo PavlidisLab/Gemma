@@ -30,10 +30,8 @@ import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysi
 import ubic.gemma.model.genome.Gene;
 
 /**
- * <p>
  * Base Spring DAO Class: is able to create, update, remove, load, and find objects of type
  * <code>ubic.gemma.model.association.coexpression.Gene2GeneCoexpression</code>.
- * </p>
  * 
  * @see ubic.gemma.model.association.coexpression.Gene2GeneCoexpression
  */
@@ -45,6 +43,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.util.Collection)
      */
     public Collection<? extends Gene2GeneCoexpression> create(
@@ -76,6 +75,7 @@ public abstract class Gene2GeneCoexpressionDaoBase extends HibernateDaoSupport i
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.persistence.BaseDao#create(java.lang.Object)
      */
     public Gene2GeneCoexpression create( Gene2GeneCoexpression entity ) {

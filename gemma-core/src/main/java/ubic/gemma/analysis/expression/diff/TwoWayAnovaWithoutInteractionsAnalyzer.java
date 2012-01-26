@@ -19,7 +19,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 /**
  * A two way anova implementation without interactions as described by P. Pavlidis, Methods 31 (2003) 282-289.
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
  * @version $Id$
  * @see AbstractTwoWayAnovaAnalyzer
  */
-@Service
+@Component
 @Scope(value = "prototype")
 public class TwoWayAnovaWithoutInteractionsAnalyzer extends LinearModelAnalyzer {
 

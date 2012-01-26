@@ -74,7 +74,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * @param msgKey
      * @param locale
      * @return
-     * @see ubic.gemma.web.util.MessageUtil#getText(java.lang.String, java.util.Locale)
+     * @see ubic.gemma.web.util.MessageUtilImpl#getText(java.lang.String, java.util.Locale)
      */
     public String getText( String msgKey, Locale locale ) {
         return this.messageUtil.getText( msgKey, locale );
@@ -83,7 +83,7 @@ public abstract class BaseFormController extends SimpleFormController {
     /**
      * @param request
      * @param msg
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String)
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String)
      */
     public void saveMessage( HttpServletRequest request, String msg ) {
         this.messageUtil.saveMessage( request, msg );
@@ -94,7 +94,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * @param key
      * @param parameter
      * @param defaultMessage
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
      *      java.lang.Object, java.lang.String)
      */
     public void saveMessage( HttpServletRequest request, String key, Object parameter, String defaultMessage ) {
@@ -106,7 +106,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * @param key
      * @param parameters
      * @param defaultMessage
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
      *      java.lang.Object[], java.lang.String)
      */
     public void saveMessage( HttpServletRequest request, String key, Object[] parameters, String defaultMessage ) {
@@ -117,7 +117,7 @@ public abstract class BaseFormController extends SimpleFormController {
      * @param request
      * @param key
      * @param defaultMessage
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpServletRequest, java.lang.String,
      *      java.lang.String)
      */
     public void saveMessage( HttpServletRequest request, String key, String defaultMessage ) {
@@ -127,7 +127,7 @@ public abstract class BaseFormController extends SimpleFormController {
     /**
      * @param session
      * @param msg
-     * @see ubic.gemma.web.util.MessageUtil#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
+     * @see ubic.gemma.web.util.MessageUtilImpl#saveMessage(javax.servlet.http.HttpSession, java.lang.String)
      */
     public void saveMessage( HttpSession session, String msg ) {
         this.messageUtil.saveMessage( session, msg );

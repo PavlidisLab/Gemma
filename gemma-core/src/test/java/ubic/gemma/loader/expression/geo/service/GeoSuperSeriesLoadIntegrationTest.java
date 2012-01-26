@@ -49,7 +49,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
 
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     @Autowired
     ArrayDesignMergeService adms;
@@ -82,7 +82,7 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "GSE11897SuperSeriesShort" ) );
         try {
-            Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE11897", false, true, false, false,
+            Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad( "GSE11897", false, true, false, false,
                     true, false );
             assertEquals( 1, results.size() );
             ee = results.iterator().next();
@@ -104,8 +104,8 @@ public class GeoSuperSeriesLoadIntegrationTest extends AbstractGeoServiceTest {
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "gse14618superser" ) );
 
-        Collection<ExpressionExperiment> results = geoService.fetchAndLoad( "GSE14618", false, true, false, false,
-                true, false );
+        Collection<ExpressionExperiment> results = ( Collection<ExpressionExperiment> ) geoService.fetchAndLoad(
+                "GSE14618", false, true, false, false, true, false );
         assertEquals( 1, results.size() );
 
         ee = results.iterator().next();

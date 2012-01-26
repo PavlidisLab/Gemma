@@ -20,10 +20,15 @@ package ubic.gemma.model.analysis.expression;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +37,7 @@ import org.springframework.stereotype.Repository;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
  * @see ubic.gemma.model.analysis.ExpressionExperimentSet
@@ -102,7 +108,7 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
 
             @Override
             public Object doInHibernate( Session session ) throws HibernateException, SQLException {
-                session.lock( expressionExperimentSet, LockMode.NONE );
+                session.buildLockRequest( LockOptions.NONE ).lock( expressionExperimentSet );
                 Hibernate.initialize( expressionExperimentSet );
                 Hibernate.initialize( expressionExperimentSet.getTaxon() );
                 Hibernate.initialize( expressionExperimentSet.getExperiments() );
@@ -138,6 +144,37 @@ public class ExpressionExperimentSetDaoImpl extends ubic.gemma.model.analysis.ex
                 .findByNamedParam(
                         "select a from ExpressionAnalysisImpl a inner join a.expressionExperimentSetAnalyzed ees where ees = :eeset ",
                         "eeset", expressionExperimentSet );
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao#loadValueObjects(java.util.Collection)
+     */
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> ids ) {
+        Collection<ExpressionExperimentSetValueObject> result = new HashSet<ExpressionExperimentSetValueObject>();
+
+        Collection<? extends ExpressionExperimentSet> entities = this.load( ids );
+
+        List<?> o = this.getHibernateTemplate().findByNamedParam(
+                "select e.id, count(e.experiments) from ExpressionExperimentSet e where e.id in (:ids)", "ids", ids );
+
+        Map<Long, Integer> sizes = new HashMap<Long, Integer>();
+        for ( Object object : o ) {
+            Object[] oa = ( Object[] ) object;
+            sizes.put( ( Long ) oa[0], ( Integer ) oa[1] );
+        }
+
+        for ( ExpressionExperimentSet eeSet : entities ) {
+            ExpressionExperimentSetValueObject vo = new ExpressionExperimentSetValueObject();
+            vo.setNumExperiments( sizes.get( eeSet.getId() ) );
+            vo.setName( eeSet.getName() );
+            vo.setTaxonId( eeSet.getTaxon().getId() );
+            vo.setDescription( eeSet.getDescription() );
+            result.add( vo );
+        }
+        return result;
     }
 
 }

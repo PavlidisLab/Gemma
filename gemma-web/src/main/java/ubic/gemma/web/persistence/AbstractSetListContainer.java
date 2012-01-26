@@ -21,28 +21,29 @@ package ubic.gemma.web.persistence;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 import ubic.gemma.session.GemmaSessionBackedValueObject;
 
+/**
+ * TODO Document Me
+ * 
+ * @author thea
+ * @version $Id$
+ */
 public abstract class AbstractSetListContainer implements Serializable {
 
-    /**
-	 * 
-	 */
     private static final long serialVersionUID = -7207696842986893748L;
 
     static final int MAX_MODIFIED_GROUPS = 3;
 
     static final int MAX_TOTAL = 1000;
 
-
     Long largestSessionId = 0l;
 
-    ArrayList<GemmaSessionBackedValueObject> allSessionBoundGroups;
+    List<GemmaSessionBackedValueObject> allSessionBoundGroups;
 
-    ArrayList<GemmaSessionBackedValueObject> sessionBoundModifiedGroups;
-
+    List<GemmaSessionBackedValueObject> sessionBoundModifiedGroups;
 
     public AbstractSetListContainer() {
         allSessionBoundGroups = new ArrayList<GemmaSessionBackedValueObject>();
@@ -52,7 +53,8 @@ public abstract class AbstractSetListContainer implements Serializable {
     public Long incrementAndGetLargestSessionId() {
         largestSessionId = largestSessionId + 1;
 
-        // unique session bound Id for each entry in the user's session(doubt that a user will have over 100000 set session
+        // unique session bound Id for each entry in the user's session(doubt that a user will have over 100000 set
+        // session
         // entries
         // so I believe 100000 provides a large enough range to avoid conflicts
         //
@@ -86,25 +88,24 @@ public abstract class AbstractSetListContainer implements Serializable {
             }
         }
 
-            Long newId = incrementAndGetLargestSessionId();
-            vo.setModified(modified);
-            vo.setId( newId );
+        Long newId = incrementAndGetLargestSessionId();
+        vo.setModified( modified );
+        vo.setId( newId );
 
-            // add it to the special list of groups the user has modified
-            if ( modified ) {
-                sessionBoundModifiedGroups.add( vo );
-                if ( sessionBoundModifiedGroups.size() > MAX_MODIFIED_GROUPS ) {
-                    sessionBoundModifiedGroups.remove( 0 );
-                }
+        // add it to the special list of groups the user has modified
+        if ( modified ) {
+            sessionBoundModifiedGroups.add( vo );
+            if ( sessionBoundModifiedGroups.size() > MAX_MODIFIED_GROUPS ) {
+                sessionBoundModifiedGroups.remove( 0 );
             }
-            allSessionBoundGroups.add( vo );
-            if ( allSessionBoundGroups.size() > MAX_TOTAL ) {
-                allSessionBoundGroups.remove( 0 );
-            }
+        }
+        allSessionBoundGroups.add( vo );
+        if ( allSessionBoundGroups.size() > MAX_TOTAL ) {
+            allSessionBoundGroups.remove( 0 );
+        }
 
         return vo;
     }
-
 
     public void removeSet( GemmaSessionBackedValueObject vo ) {
 
@@ -166,18 +167,16 @@ public abstract class AbstractSetListContainer implements Serializable {
 
     }
 
-    public Collection<GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
+    public List<GemmaSessionBackedValueObject> getAllSessionBoundGroups() {
 
         return allSessionBoundGroups;
-        
 
     }
-    
-    public Collection<GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
+
+    public List<GemmaSessionBackedValueObject> getSessionBoundModifiedGroups() {
 
         return sessionBoundModifiedGroups;
 
     }
-
 
 }

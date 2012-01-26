@@ -26,8 +26,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.classic.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -186,7 +186,7 @@ public class Gene2GOAssociationDaoImpl extends ubic.gemma.model.association.Gene
         // this.getHibernateTemplate().bulkUpdate( queryString );
 
         int total = 0;
-        Session sess = this.getSessionFactory().getCurrentSession();
+        Session sess = getSession();
 
         // this should do the deletion, right? -- Confirmed. (PP)
         while ( true ) {

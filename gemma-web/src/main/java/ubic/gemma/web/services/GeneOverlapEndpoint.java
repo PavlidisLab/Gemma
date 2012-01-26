@@ -34,6 +34,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 
 /**
  *given a query gene id & collection of target gene ids will determine the overlapping Go terms (intersection) between
@@ -127,7 +128,7 @@ public class GeneOverlapEndpoint extends AbstractGemmaEndpoint {
             // get the labels and store them
             Collection<String> goTerms = new HashSet<String>();
             for ( OntologyTerm ot : gene2Ot.get( geneId ) ) {
-                goTerms.add( GeneOntologyService.asRegularGoId( ot ) );
+                goTerms.add( GeneOntologyServiceImpl.asRegularGoId( ot ) );
             }
 
             String elementString1 = geneId.toString();

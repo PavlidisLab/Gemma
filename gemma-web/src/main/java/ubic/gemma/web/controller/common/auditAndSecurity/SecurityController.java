@@ -142,7 +142,7 @@ public class SecurityController {
     }
 
     /**
-     *AJAX
+     * AJAX
      * 
      * @param groupName
      * @return
@@ -175,7 +175,7 @@ public class SecurityController {
 
     /**
      * @return
-     * @see ubic.gemma.security.SecurityService#getAuthenticatedUserCount()
+     * @see ubic.gemma.security.SecurityServiceImpl#getAuthenticatedUserCount()
      */
     public Integer getAuthenticatedUserCount() {
         return securityService.getAuthenticatedUserCount();
@@ -183,7 +183,7 @@ public class SecurityController {
 
     /**
      * @return
-     * @see ubic.gemma.security.SecurityService#getAuthenticatedUserNames()
+     * @see ubic.gemma.security.SecurityServiceImpl#getAuthenticatedUserNames()
      */
     public Collection<String> getAuthenticatedUserNames() {
         return securityService.getAuthenticatedUserNames();

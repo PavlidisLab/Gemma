@@ -289,7 +289,7 @@
 		timeToIdleSeconds="1200" timeToLiveSeconds="1200" overflowToDisk="false" />
 
 	<!--  we would disable this entirely, not so easy with AndroMDA -->
-	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="-1" eternal="false"
+	<cache name="ubic.gemma.model.common.auditAndSecurity.AuditTrailImpl.events" maxElementsInMemory="1" eternal="false"
 		timeToIdleSeconds="1" timeToLiveSeconds="1" overflowToDisk="false" />
 
 	<cache name="ubic.gemma.model.common.auditAndSecurity.UserRoleImpl" maxElementsInMemory="10000" eternal="false"

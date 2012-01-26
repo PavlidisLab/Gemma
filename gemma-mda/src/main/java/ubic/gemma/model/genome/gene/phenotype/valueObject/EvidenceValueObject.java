@@ -236,8 +236,10 @@ public abstract class EvidenceValueObject {
         final int prime = 31;
         int result = 1;
 
-        for ( CharacteristicValueObject phenotype : this.phenotypes ) {
-            result = result + phenotype.hashCode();
+        if ( this.phenotypes != null ) {
+            for ( CharacteristicValueObject phenotype : this.phenotypes ) {
+                result = result + phenotype.hashCode();
+            }
         }
 
         result = result + ( ( this.evidenceSource == null ) ? 0 : this.evidenceSource.hashCode() );

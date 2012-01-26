@@ -88,7 +88,7 @@ import cern.colt.list.DoubleArrayList;
  * @author kelsey
  * @version $Id$
  */
-@Controller(value = "dedvController")
+@Controller
 @RequestMapping("/dedv")
 public class DEDVController {
     protected static Log log = LogFactory.getLog( DEDVController.class.getName() );

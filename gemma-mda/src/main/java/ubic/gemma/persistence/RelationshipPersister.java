@@ -21,23 +21,22 @@ package ubic.gemma.persistence;
 import java.util.Collection;
 import java.util.HashSet;
 
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSetDao;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysisDao;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;
+import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisDao;
 import ubic.gemma.model.association.Gene2GOAssociation;
-import ubic.gemma.model.association.Gene2GOAssociationService;
+import ubic.gemma.model.association.Gene2GOAssociationDao;
 import ubic.gemma.model.association.Gene2GeneProteinAssociation;
-import ubic.gemma.model.association.Gene2GeneProteinAssociationService;
+import ubic.gemma.model.association.Gene2GeneProteinAssociationDao;
 import ubic.gemma.model.association.TfGeneAssociation;
-import ubic.gemma.model.association.TfGeneAssociationService;
+import ubic.gemma.model.association.TfGeneAssociationDao;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 
@@ -50,29 +49,29 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
 public abstract class RelationshipPersister extends ExpressionPersister {
 
     @Autowired
-    private Gene2GOAssociationService gene2GoAssociationService;
+    private Gene2GOAssociationDao gene2GoAssociationDao;
 
     @Autowired
-    private ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService;
+    private ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao;
 
     @Autowired
-    private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
+    private DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao;
 
     @Autowired
-    private GeneCoexpressionAnalysisService geneCoexpressionAnalysisService;
+    private GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao;
 
     @Autowired
-    private TfGeneAssociationService tfGeneAssociationService;
+    private TfGeneAssociationDao tfGeneAssociationDao;
 
     @Autowired
-    private ExpressionExperimentSetService expressionExperimentSetService;
+    private ExpressionExperimentSetDao expressionExperimentSetDao;
 
     @Autowired
-    private Gene2GeneProteinAssociationService gene2GeneProteinAssociationService;
+    private Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao;
 
-    public RelationshipPersister( SessionFactory sessionFactory ) {
-        super( sessionFactory );
-    }
+    // public RelationshipPersister( SessionFactory sessionFactory ) {
+    // super( sessionFactory );
+    // }
 
     /*
      * (non-Javadoc)
@@ -113,33 +112,32 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         return super.persistOrUpdate( entity );
     }
 
-    public void setDifferentialExpressionAnalysisService(
-            DifferentialExpressionAnalysisService differentialExpressionAnalysisService ) {
-        this.differentialExpressionAnalysisService = differentialExpressionAnalysisService;
+    public void setDifferentialExpressionAnalysisDao(
+            DifferentialExpressionAnalysisDao differentialExpressionAnalysisDao ) {
+        this.differentialExpressionAnalysisDao = differentialExpressionAnalysisDao;
     }
 
-    public void setExpressionExperimentSetService( ExpressionExperimentSetService expressionExperimentSetService ) {
-        this.expressionExperimentSetService = expressionExperimentSetService;
+    public void setExpressionExperimentSetDao( ExpressionExperimentSetDao expressionExperimentSetDao ) {
+        this.expressionExperimentSetDao = expressionExperimentSetDao;
     }
 
     /**
-     * @param gene2GoAssociationService the gene2GoAssociationService to set
+     * @param gene2GoAssociationDao the gene2GoAssociationDao to set
      */
-    public void setGene2GoAssociationService( Gene2GOAssociationService gene2GoAssociationService ) {
-        this.gene2GoAssociationService = gene2GoAssociationService;
+    public void setGene2GoAssociationDao( Gene2GOAssociationDao gene2GoAssociationDao ) {
+        this.gene2GoAssociationDao = gene2GoAssociationDao;
     }
 
-    public void setGeneCoexpressionAnalysisService( GeneCoexpressionAnalysisService geneCoexpressionAnalysisService ) {
-        this.geneCoexpressionAnalysisService = geneCoexpressionAnalysisService;
+    public void setGeneCoexpressionAnalysisDao( GeneCoexpressionAnalysisDao geneCoexpressionAnalysisDao ) {
+        this.geneCoexpressionAnalysisDao = geneCoexpressionAnalysisDao;
     }
 
-    public void setProbeCoexpressionAnalysisService( ProbeCoexpressionAnalysisService probeCoexpressionAnalysisService ) {
-        this.probeCoexpressionAnalysisService = probeCoexpressionAnalysisService;
+    public void setProbeCoexpressionAnalysisDao( ProbeCoexpressionAnalysisDao probeCoexpressionAnalysisDao ) {
+        this.probeCoexpressionAnalysisDao = probeCoexpressionAnalysisDao;
     }
 
-    public void setGene2GeneProteinAssociationService(
-            Gene2GeneProteinAssociationService gene2GeneProteinAssociationService ) {
-        this.gene2GeneProteinAssociationService = gene2GeneProteinAssociationService;
+    public void setGene2GeneProteinAssociationDao( Gene2GeneProteinAssociationDao gene2GeneProteinAssociationDao ) {
+        this.gene2GeneProteinAssociationDao = gene2GeneProteinAssociationDao;
     }
 
     /**
@@ -158,12 +156,16 @@ public abstract class RelationshipPersister extends ExpressionPersister {
                 throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
             }
         }
-        return differentialExpressionAnalysisService.create( entity );
+        return differentialExpressionAnalysisDao.create( entity );
     }
 
+    /**
+     * @param entity
+     * @return
+     */
     protected ExpressionExperimentSet persistExpressionExperimentSet( ExpressionExperimentSet entity ) {
         if ( !isTransient( entity ) ) return entity;
-        
+
         Collection<BioAssaySet> setMembers = new HashSet<BioAssaySet>();
 
         for ( BioAssaySet baSet : entity.getExperiments() ) {
@@ -175,7 +177,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         entity.getExperiments().clear();
         entity.getExperiments().addAll( setMembers );
 
-        return expressionExperimentSetService.create( entity );
+        return expressionExperimentSetDao.create( entity );
     }
 
     /**
@@ -187,7 +189,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( !isTransient( association ) ) return association;
 
         association.setGene( persistGene( association.getGene() ) );
-        return gene2GoAssociationService.findOrCreate( association );
+        return gene2GoAssociationDao.findOrCreate( association );
     }
 
     private TfGeneAssociation persistTfGeneAssociation( TfGeneAssociation entity ) {
@@ -199,7 +201,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
                     "Associations can only be made between genes that already exist in the system" );
         }
 
-        return tfGeneAssociationService.create( entity );
+        return tfGeneAssociationDao.create( entity );
 
     }
 
@@ -214,7 +216,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         entity.setExpressionExperimentSetAnalyzed( persistExpressionExperimentSet( entity
                 .getExpressionExperimentSetAnalyzed() ) );
 
-        return geneCoexpressionAnalysisService.create( entity );
+        return geneCoexpressionAnalysisDao.create( entity );
     }
 
     /**
@@ -229,7 +231,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
             throw new IllegalArgumentException( "Persist the experiment before running analyses on it" );
         }
 
-        return probeCoexpressionAnalysisService.create( entity );
+        return probeCoexpressionAnalysisDao.create( entity );
     }
 
     /**
@@ -244,7 +246,7 @@ public abstract class RelationshipPersister extends ExpressionPersister {
         if ( gene2GeneProteinAssociation == null ) return null;
         if ( !isTransient( gene2GeneProteinAssociation ) ) return gene2GeneProteinAssociation;
 
-        return gene2GeneProteinAssociationService.createOrUpdate( gene2GeneProteinAssociation );
+        return gene2GeneProteinAssociationDao.createOrUpdate( gene2GeneProteinAssociation );
     }
 
 }

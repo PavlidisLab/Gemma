@@ -22,6 +22,7 @@ import java.util.Collection;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.persistence.BaseDao;
 
 /**
@@ -54,7 +55,7 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @see ExpressionExperimentSetService.getExperimentsInSet
      */
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id );
-    
+
     /**
      * @return ExpressionExperimentSets that have more than 1 experiment in them.
      */
@@ -69,5 +70,14 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * @param expressionExperimentSet
      */
     public void thaw( ExpressionExperimentSet expressionExperimentSet );
+
+    /**
+     * Load a light-weight representation of the value objects for the given IDs (the IDs must be filtered for security
+     * _first_). The sizes of the set, but not the set members, are loaded.
+     * 
+     * @param ids
+     * @return
+     */
+    Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> ids );
 
 }

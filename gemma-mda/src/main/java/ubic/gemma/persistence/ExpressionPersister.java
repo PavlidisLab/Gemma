@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.model.common.auditAndSecurity.Contact;
@@ -36,26 +35,26 @@ import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.common.protocol.ProtocolApplication;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
-import ubic.gemma.model.expression.bioAssay.BioAssayService;
+import ubic.gemma.model.expression.bioAssay.BioAssayDao;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
+import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionDao;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
-import ubic.gemma.model.expression.biomaterial.BioMaterialService;
+import ubic.gemma.model.expression.biomaterial.BioMaterialDao;
 import ubic.gemma.model.expression.biomaterial.Compound;
-import ubic.gemma.model.expression.biomaterial.CompoundService;
+import ubic.gemma.model.expression.biomaterial.CompoundDao;
 import ubic.gemma.model.expression.biomaterial.Treatment;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
 import ubic.gemma.model.expression.experiment.ExperimentalDesign;
-import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
+import ubic.gemma.model.expression.experiment.ExperimentalDesignDao;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
-import ubic.gemma.model.expression.experiment.ExperimentalFactorService;
+import ubic.gemma.model.expression.experiment.ExperimentalFactorDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentDao;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSet;
-import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetService;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSubSetDao;
 import ubic.gemma.model.expression.experiment.FactorValue;
-import ubic.gemma.model.expression.experiment.FactorValueService;
+import ubic.gemma.model.expression.experiment.FactorValueDao;
 
 /**
  * @author pavlidis
@@ -64,37 +63,33 @@ import ubic.gemma.model.expression.experiment.FactorValueService;
 abstract public class ExpressionPersister extends ArrayDesignPersister {
 
     @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
+    private BioAssayDimensionDao bioAssayDimensionDao;
 
     @Autowired
-    private BioAssayService bioAssayService;
+    private BioAssayDao bioAssayDao;
 
     @Autowired
-    private BioMaterialService bioMaterialService;
+    private BioMaterialDao bioMaterialDao;
 
     @Autowired
-    private CompoundService compoundService;
+    private CompoundDao compoundDao;
 
     @Autowired
-    private ExperimentalDesignService experimentalDesignService;
+    private ExperimentalDesignDao experimentalDesignDao;
 
     @Autowired
-    private ExperimentalFactorService experimentalFactorService;
+    private ExperimentalFactorDao experimentalFactorDao;
 
     @Autowired
-    private ExpressionExperimentService expressionExperimentService;
+    private ExpressionExperimentDao expressionExperimentDao;
 
     @Autowired
-    private ExpressionExperimentSubSetService expressionExperimentSubSetService;
+    private ExpressionExperimentSubSetDao expressionExperimentSubSetDao;
 
     @Autowired
-    private FactorValueService factorValueService;
+    private FactorValueDao factorValueDao;
 
     Map<String, BioAssayDimension> bioAssayDimensionCache = new HashMap<String, BioAssayDimension>();
-
-    public ExpressionPersister( SessionFactory sessionFactory ) {
-        super( sessionFactory );
-    }
 
     /*
      * (non-Javadoc)
@@ -138,56 +133,56 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
     }
 
     /**
-     * @param bioAssayDimensionService The bioAssayDimensionService to set.
+     * @param bioAssayDimensionDao The bioAssayDimensionDao to set.
      */
-    public void setBioAssayDimensionService( BioAssayDimensionService bioAssayDimensionService ) {
-        this.bioAssayDimensionService = bioAssayDimensionService;
+    public void setBioAssayDimensionDao( BioAssayDimensionDao bioAssayDimensionDao ) {
+        this.bioAssayDimensionDao = bioAssayDimensionDao;
     }
 
     /**
-     * @param bioAssayService The bioAssayService to set.
+     * @param bioAssayDao The bioAssayDao to set.
      */
-    public void setBioAssayService( BioAssayService bioAssayService ) {
-        this.bioAssayService = bioAssayService;
+    public void setBioAssayDao( BioAssayDao bioAssayDao ) {
+        this.bioAssayDao = bioAssayDao;
     }
 
     /**
-     * @param bioMaterialService The bioMaterialService to set.
+     * @param bioMaterialDao The bioMaterialDao to set.
      */
-    public void setBioMaterialService( BioMaterialService bioMaterialService ) {
-        this.bioMaterialService = bioMaterialService;
+    public void setBioMaterialDao( BioMaterialDao bioMaterialDao ) {
+        this.bioMaterialDao = bioMaterialDao;
     }
 
     /**
-     * @param compoundService The compoundService to set.
+     * @param compoundDao The compoundDao to set.
      */
-    public void setCompoundService( CompoundService compoundService ) {
-        this.compoundService = compoundService;
+    public void setCompoundDao( CompoundDao compoundDao ) {
+        this.compoundDao = compoundDao;
     }
 
     /**
-     * @param experimentalDesignService the experimentalDesignService to set
+     * @param experimentalDesignDao the experimentalDesignDao to set
      */
-    public void setExperimentalDesignService( ExperimentalDesignService experimentalDesignService ) {
-        this.experimentalDesignService = experimentalDesignService;
+    public void setExperimentalDesignDao( ExperimentalDesignDao experimentalDesignDao ) {
+        this.experimentalDesignDao = experimentalDesignDao;
     }
 
-    public void setExperimentalFactorService( ExperimentalFactorService experimentalFactorService ) {
-        this.experimentalFactorService = experimentalFactorService;
-    }
-
-    /**
-     * @param expressionExperimentService The expressionExperimentService to set.
-     */
-    public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {
-        this.expressionExperimentService = expressionExperimentService;
+    public void setExperimentalFactorDao( ExperimentalFactorDao experimentalFactorDao ) {
+        this.experimentalFactorDao = experimentalFactorDao;
     }
 
     /**
-     * @param factorValueService The factorValueService to set.
+     * @param expressionExperimentDao The expressionExperimentDao to set.
      */
-    public void setFactorValueService( FactorValueService factorValueService ) {
-        this.factorValueService = factorValueService;
+    public void setExpressionExperimentDao( ExpressionExperimentDao expressionExperimentDao ) {
+        this.expressionExperimentDao = expressionExperimentDao;
+    }
+
+    /**
+     * @param factorValueDao The factorValueDao to set.
+     */
+    public void setFactorValueDao( FactorValueDao factorValueDao ) {
+        this.factorValueDao = factorValueDao;
     }
 
     /**
@@ -466,7 +461,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
          * BioAssays don't exist on their own so this wouldn't get called in any conceivable situation where
          * findOrCreate would be appropriate (?)
          */
-        return bioAssayService.create( assay );
+        return bioAssayDao.create( assay );
     }
 
     /**
@@ -483,7 +478,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
         assert persistedBioAssays.size() > 0;
         bioAssayDimension.setBioAssays( persistedBioAssays );
-        return bioAssayDimensionService.findOrCreate( bioAssayDimension );
+        return bioAssayDimensionDao.findOrCreate( bioAssayDimension );
     }
 
     /**
@@ -508,7 +503,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                 fillInProtocolApplication( protocolApplication );
             }
         }
-        return bioMaterialService.findOrCreate( entity );
+        return bioMaterialDao.findOrCreate( entity );
     }
 
     /**
@@ -519,7 +514,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         if ( compound == null ) return null;
         if ( compound.getIsSolvent() == null )
             throw new IllegalArgumentException( "Compound must have 'isSolvent' value set." );
-        return compoundService.findOrCreate( compound );
+        return compoundDao.findOrCreate( compound );
     }
 
     /**
@@ -533,7 +528,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         assert experimentalFactor.getType() != null;
         fillInExperimentalFactorAssociations( experimentalFactor );
         assert ( !isTransient( experimentalFactor.getExperimentalDesign() ) );
-        return experimentalFactorService.create( experimentalFactor );
+        return experimentalFactorDao.create( experimentalFactor );
     }
 
     /**
@@ -547,7 +542,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         log.info( "Persisting " + expExp );
 
-        ExpressionExperiment existing = expressionExperimentService.findByShortName( expExp.getShortName() );
+        ExpressionExperiment existing = expressionExperimentDao.findByShortName( expExp.getShortName() );
         if ( existing != null ) {
             log.warn( "Expression experiment with same short name exists (" + existing
                     + "), returning it (this method does not handle updates)" );
@@ -581,17 +576,17 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
         // this does most of the preparatory work.
         processBioAssays( expExp );
-        expExp = expressionExperimentService.create( expExp );
-        this.getSession().flush(); // Yes, this is important.
+        expExp = expressionExperimentDao.create( expExp );
+        // this.getSession().flush(); // Yes, this is important.
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
-            expressionExperimentService.delete( expExp );
+            expressionExperimentDao.remove( expExp );
             throw new java.util.concurrent.CancellationException( "Thread canceled during EE persisting. "
                     + this.getClass() );
         }
 
-        expressionExperimentService.update( expExp ); // help fix up ACLs. Yes, this is a good idea. See AclAdviceTest
+        expressionExperimentDao.update( expExp ); // help fix up ACLs. Yes, this is a good idea. See AclAdviceTest
 
         return expExp;
     }
@@ -610,7 +605,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
                     "Subsets are only supported for expressionexperiments that are already persistent" );
         }
 
-        return expressionExperimentSubSetService.findOrCreate( entity );
+        return expressionExperimentSubSetDao.findOrCreate( entity );
     }
 
     /**
@@ -628,7 +623,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         }
         fillInFactorValueAssociations( factorValue );
 
-        return factorValueService.findOrCreate( factorValue );
+        return factorValueDao.findOrCreate( factorValue );
 
     }
 
@@ -703,7 +698,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
         experimentalDesign.setExperimentalFactors( null );
 
         // note we use create because this is specific to the instance. (we're overriding a cascade)
-        experimentalDesign = experimentalDesignService.create( experimentalDesign );
+        experimentalDesign = experimentalDesignDao.create( experimentalDesign );
 
         // put back.
         experimentalDesign.setExperimentalFactors( factors );
@@ -724,7 +719,7 @@ abstract public class ExpressionPersister extends ArrayDesignPersister {
 
             // factorvalue is cascaded.
             experimentalFactor.setFactorValues( factorValues );
-            experimentalFactorService.update( experimentalFactor );
+            experimentalFactorDao.update( experimentalFactor );
         }
     }
 

@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -53,7 +53,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
      * (non-Javadoc)
      * 
      * @see ubic.gemma.testing.BaseSpringContextTest#onSetUp()
-     */ 
+     */
     @Before
     public void setupArrayDesign() throws Exception {
         ad = arrayDesignService.findByShortName( ACCESSION );
@@ -61,7 +61,7 @@ public abstract class AbstractArrayDesignProcessingTest extends BaseSpringContex
         if ( ad == null ) {
 
             // first load small twoc-color
-            AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+            GeoService geoService = ( GeoService ) this.getBean( "geoService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
 
             try {

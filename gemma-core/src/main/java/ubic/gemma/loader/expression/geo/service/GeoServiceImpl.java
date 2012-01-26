@@ -27,7 +27,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.report.ArrayDesignReportService;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
@@ -59,8 +59,8 @@ import ubic.gemma.security.SecurityService;
  * @author pavlidis
  * @version $Id$
  */
-@Service
-public class GeoDatasetService extends AbstractGeoService {
+@Component
+public class GeoServiceImpl extends AbstractGeoService {
 
     private static final String GEO_DB_NAME = "GEO";
 
@@ -133,7 +133,7 @@ public class GeoDatasetService extends AbstractGeoService {
                 log.warn( "Got no results" );
                 return null;
             }
-            Collection<Object> arrayDesigns = geoConverter.convert( platforms );
+            Collection<Object> arrayDesigns = ( Collection<Object> ) geoConverter.convert( platforms );
             return persisterHelper.persist( arrayDesigns );
         }
 
@@ -195,11 +195,13 @@ public class GeoDatasetService extends AbstractGeoService {
 
         log.debug( "Converted " + seriesAccession );
         assert persisterHelper != null;
+        @SuppressWarnings("rawtypes")
         Collection persistedResult = persisterHelper.persist( result );
         log.debug( "Persisted " + seriesAccession );
-        updateReports( persistedResult );
 
         securityService.makePrivate( persistedResult ); // TODO make this optional?
+
+        updateReports( persistedResult );
 
         return persistedResult;
     }

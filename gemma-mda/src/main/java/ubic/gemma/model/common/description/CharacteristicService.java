@@ -125,7 +125,7 @@ public interface CharacteristicService {
      * object.
      * 
      * @param c
-     * @see SecurityService.isEditable
+     * @see SecurityServiceImpl.isEditable
      */
     @Secured({ "GROUP_USER" })
     public void update( Characteristic c );

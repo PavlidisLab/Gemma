@@ -98,7 +98,7 @@ public abstract class BaseController {
      * @param msgKey
      * @param locale
      * @return
-     * @see ubic.gemma.web.util.MessageUtil#getText(java.lang.String, java.util.Locale)
+     * @see ubic.gemma.web.util.MessageUtilImpl#getText(java.lang.String, java.util.Locale)
      */
     protected String getText( String msgKey, Locale locale ) {
         return this.messageUtil.getText( msgKey, locale );

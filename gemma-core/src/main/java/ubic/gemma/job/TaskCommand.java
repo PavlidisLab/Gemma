@@ -255,7 +255,7 @@ public class TaskCommand implements Serializable {
      * How long we will allow this task to be queued before giving up. Default = TaskRunningService.MAX_QUEUING_MINUTES
      * 
      * @param maxQueueMinutes
-     * @see ubic.gemma.job.TaskRunningService.MAX_QUEUING_MINUTES
+     * @see ubic.gemma.job.TaskRunningServiceImpl.MAX_QUEUING_MINUTES
      */
     public void setMaxQueueMinutes( Integer maxQueueMinutes ) {
         this.maxQueueMinutes = maxQueueMinutes;

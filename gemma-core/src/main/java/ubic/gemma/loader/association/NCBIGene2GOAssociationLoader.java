@@ -35,7 +35,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.Gene2GOAssociation;
 import ubic.gemma.model.common.description.LocalFile;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * @author keshav
@@ -48,7 +48,7 @@ public class NCBIGene2GOAssociationLoader {
     private static final int QUEUE_SIZE = 60000;
     private static final int BATCH_SIZE = 12000;
 
-    private PersisterHelper persisterHelper;
+    private Persister  persisterHelper;
 
     private NCBIGene2GOAssociationParser parser = null;
 
@@ -188,7 +188,7 @@ public class NCBIGene2GOAssociationLoader {
     /**
      * @param persisterHelper The persisterHelper to set.
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister  persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

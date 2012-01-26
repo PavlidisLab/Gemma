@@ -25,8 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import cern.colt.list.DoubleArrayList;
 import cern.jet.stat.Descriptive;
 
@@ -50,7 +49,7 @@ import ubic.gemma.model.genome.Gene;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionDataMatrixService {
 
     @Autowired

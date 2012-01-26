@@ -60,8 +60,10 @@ public class GeoBrowserServiceTest extends BaseSpringContextTest {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }
-            if ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
-                    || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage().contains( "503" ) ) {
+            if ( e.getCause() != null
+                    && ( e.getCause() instanceof UnknownHostException || e.getCause().getMessage().contains( "500" )
+                            || e.getCause().getMessage().contains( "502" ) || e.getCause().getMessage()
+                            .contains( "503" ) ) ) {
                 log.warn( "NCBI returned error, skipping test" );
                 return;
             }

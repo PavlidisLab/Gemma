@@ -30,7 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.ExperimentalDesignImporter;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExperimentalDesignService;
@@ -40,6 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.expression.experiment.FactorValue;
 import ubic.gemma.ontology.OntologyService;
+import ubic.gemma.ontology.providers.MgedOntologyService;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -49,7 +50,7 @@ import ubic.gemma.util.ConfigUtils;
 public class BaselineDetectionTest extends AbstractGeoServiceTest {
 
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     @Autowired
     ExpressionExperimentService eeService;
@@ -70,10 +71,11 @@ public class BaselineDetectionTest extends AbstractGeoServiceTest {
 
     @Before
     public void setUp() throws Exception {
-        // setup
-        if ( !os.getMgedOntologyService().isOntologyLoaded() ) {
-            os.getMgedOntologyService().startInitializationThread( true );
-            while ( !os.getMgedOntologyService().isOntologyLoaded() ) {
+        MgedOntologyService mgedOntologyService = os.getMgedOntologyService();
+        if ( !mgedOntologyService.isOntologyLoaded() ) {
+            log.warn( "Need to load MGED!!!" );
+            mgedOntologyService.startInitializationThread( true );
+            while ( !mgedOntologyService.isOntologyLoaded() ) {
                 Thread.sleep( 1000 );
                 log.info( "Waiting for Ontology to load" );
             }

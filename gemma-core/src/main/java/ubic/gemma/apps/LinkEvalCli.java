@@ -65,7 +65,8 @@ import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.GoMetric;
 import ubic.gemma.ontology.GoMetric.Metric;
 import ubic.gemma.ontology.providers.GeneOntologyService;
-import ubic.gemma.ontology.providers.GeneOntologyService.GOAspect;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl.GOAspect;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.ConfigUtils;
 import cern.colt.list.DoubleArrayList;
@@ -933,9 +934,9 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         for ( OntologyTerm oe : goTerms ) {
             if ( oe == null ) continue;
             if ( wrote )
-                writer.write( "|" + GeneOntologyService.asRegularGoId( oe ) );
+                writer.write( "|" + GeneOntologyServiceImpl.asRegularGoId( oe ) );
             else
-                writer.write( GeneOntologyService.asRegularGoId( oe ) );
+                writer.write( GeneOntologyServiceImpl.asRegularGoId( oe ) );
             wrote = true;
         }
 
@@ -1090,7 +1091,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                         || goTerm2.equalsIgnoreCase( component ) ) continue;
 
                 if ( goTerm1.equalsIgnoreCase( goTerm2 ) )
-                    overlapTerms.add( GeneOntologyService.getTermForURI( goTerm1 ) );
+                    overlapTerms.add( GeneOntologyServiceImpl.getTermForURI( goTerm1 ) );
             }
         }
 
@@ -1240,7 +1241,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
                         || ontologyEntryC.equalsIgnoreCase( component ) ) continue;
 
                 if ( ontologyEntry.equalsIgnoreCase( ontologyEntryC ) )
-                    overlapTerms.add( GeneOntologyService.getTermForURI( ontologyEntry ) );
+                    overlapTerms.add( GeneOntologyServiceImpl.getTermForURI( ontologyEntry ) );
             }
         }
 
@@ -1455,7 +1456,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
         Collection<String> remove = new HashSet<String>();
 
         for ( String t : terms ) {
-            Collection<OntologyTerm> parents = goService.getAllParents( GeneOntologyService.getTermForURI( t ), partOf );
+            Collection<OntologyTerm> parents = goService.getAllParents( GeneOntologyServiceImpl.getTermForURI( t ), partOf );
 
             for ( OntologyTerm p : parents ) {
                 if ( p.getUri().equalsIgnoreCase( process ) ) {
@@ -1716,7 +1717,7 @@ public class LinkEvalCli extends AbstractSpringAwareCLI {
             for ( Gene gene : genes ) {
                 if ( geneGoMap.containsKey( gene.getId() ) ) {
                     for ( String go : geneGoMap.get( gene.getId() ) ) {
-                        goTerms.add( GeneOntologyService.asRegularGoId( go ) );
+                        goTerms.add( GeneOntologyServiceImpl.asRegularGoId( go ) );
                     }
                 }
                 geneSymbs.add( gene.getOfficialSymbol() );

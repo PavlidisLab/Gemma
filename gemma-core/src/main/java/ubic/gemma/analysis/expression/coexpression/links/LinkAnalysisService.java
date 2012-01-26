@@ -42,8 +42,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.Link;
 import ubic.basecode.math.CorrelationStats;
 import ubic.basecode.math.Rank;
@@ -81,7 +80,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.model.genome.Taxon;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.TaxonUtility;
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.ObjectArrayList;
@@ -93,7 +92,7 @@ import cern.colt.list.ObjectArrayList;
  * @author Paul
  * @version $Id$
  */
-@Service
+@Component
 public class LinkAnalysisService {
 
     private static class Creator {
@@ -147,7 +146,7 @@ public class LinkAnalysisService {
     @Autowired
     private ExpressionExperimentReportService expressionExperimentReportService;
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
     @Autowired
     private Probe2ProbeCoexpressionService ppService = null;
     @Autowired
@@ -246,7 +245,7 @@ public class LinkAnalysisService {
         this.expressionExperimentReportService = expressionExperimentReportService;
     }
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

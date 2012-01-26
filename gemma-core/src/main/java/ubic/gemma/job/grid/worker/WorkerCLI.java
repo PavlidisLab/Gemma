@@ -43,8 +43,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springmodules.javaspaces.gigaspaces.GigaSpacesTemplate;
 
 import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotator;
+import ubic.gemma.annotation.geommtx.ExpressionExperimentAnnotatorImpl;
 import ubic.gemma.job.grid.util.SpacesCancellationEntry;
 import ubic.gemma.job.grid.util.SpacesUtil;
+import ubic.gemma.job.grid.util.SpacesUtilImpl;
 import ubic.gemma.util.AbstractSpringAwareCLI;
 import ubic.gemma.util.ConfigUtils;
 
@@ -232,7 +234,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
 
         if ( this.hasOption( "mmtx" ) ) {
             if ( !ConfigUtils.getBoolean( ExpressionExperimentAnnotator.MMTX_ACTIVATION_PROPERTY_KEY ) ) {
-                ( ( ExpressionExperimentAnnotator ) this.getBean( "expressionExperimentAnnotator" ) ).init();
+                ( ( ExpressionExperimentAnnotatorImpl ) this.getBean( "expressionExperimentAnnotator" ) ).init();
             }
         }
 
@@ -320,7 +322,7 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
         /*
          * In case we need a refresh of connection
          */
-        while ( !SpacesUtil.isSpaceRunning() ) {
+        while ( !SpacesUtilImpl.isSpaceRunning() ) {
             log.warn( "No space, waiting for it before trying to start " + workerName );
             try {
                 Thread.sleep( 10000 );
@@ -482,11 +484,11 @@ public class WorkerCLI extends AbstractSpringAwareCLI implements RemoteEventList
                      * Try to reconnect to the space.
                      */
 
-                    if ( !SpacesUtil.isSpaceRunning() ) {
+                    if ( !SpacesUtilImpl.isSpaceRunning() ) {
                         log.info( "Space is gone. Will try to restart the worker when it comes back." );
                     }
 
-                    while ( !SpacesUtil.isSpaceRunning() ) {
+                    while ( !SpacesUtilImpl.isSpaceRunning() ) {
                         Thread.sleep( 10000 ); // could have maxretries.
                         log.info( "Still no space, waiting  ..." );
                     }

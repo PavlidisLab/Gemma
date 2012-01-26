@@ -20,13 +20,45 @@ package ubic.gemma.session;
 
 import java.util.Collection;
 
+/**
+ * TODO Document M
+ * 
+ * @author ?
+ * @version $Id$
+ */
 public interface GemmaSessionBackedValueObject {
-	    
+
+    /**
+     * @return
+     */
     public Collection<Long> getMemberIds();
+
+    /**
+     * @return
+     */
     public Long getId();
-    public void setId(Long id);
+
+    /**
+     * @param id
+     */
+    public void setId( Long id );
+
+    /**
+     * FIXME should this not override Object.equals()?
+     * 
+     * @param ervo
+     * @return
+     */
     public boolean equals( GemmaSessionBackedValueObject ervo );
+
+    /**
+     * @return
+     */
     public boolean isModified();
-    public void setModified(boolean modified);
+
+    /**
+     * @param modified
+     */
+    public void setModified( boolean modified );
 
 }

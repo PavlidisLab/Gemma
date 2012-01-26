@@ -29,6 +29,7 @@ import org.apache.commons.lang.time.DateUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
@@ -44,7 +45,6 @@ import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.eventType.PCAAnalysisEvent;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.BioAssayDimension;
-import ubic.gemma.model.expression.bioAssayData.BioAssayDimensionService;
 import ubic.gemma.model.expression.bioAssayData.DoubleVectorValueObject;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVector;
 import ubic.gemma.model.expression.bioAssayData.ProcessedExpressionDataVectorService;
@@ -64,7 +64,7 @@ import cern.colt.list.IntArrayList;
  * @version $Id$
  * @see PrincipalComponentAnalysisService
  */
-@Service
+@Component
 public class SVDServiceImpl implements SVDService {
 
     /**
@@ -88,9 +88,6 @@ public class SVDServiceImpl implements SVDService {
 
     @Autowired
     private AuditTrailService auditTrailService;
-
-    @Autowired
-    private BioAssayDimensionService bioAssayDimensionService;
 
     @Autowired
     private PrincipalComponentAnalysisService principalComponentAnalysisService;
@@ -180,7 +177,7 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject retrieveSvd( ExpressionExperiment ee ) {
         PrincipalComponentAnalysis pca = this.principalComponentAnalysisService.loadForExperiment( ee );
         if ( pca == null ) return null;
-        pca.setBioAssayDimension( bioAssayDimensionService.thaw( pca.getBioAssayDimension() ) );
+        // pca.setBioAssayDimension( bioAssayDimensionService.thaw( pca.getBioAssayDimension() ) );
         try {
             return new SVDValueObject( pca );
         } catch ( Exception e ) {
@@ -270,7 +267,7 @@ public class SVDServiceImpl implements SVDService {
     public SVDValueObject svdFactorAnalysis( PrincipalComponentAnalysis pca ) {
 
         BioAssayDimension bad = pca.getBioAssayDimension();
-        bad = bioAssayDimensionService.thaw( bad );
+        // bad = bioAssayDimensionService.thaw( bad );
         List<BioAssay> bioAssays = ( List<BioAssay> ) bad.getBioAssays();
 
         SVDValueObject svo;
@@ -359,8 +356,8 @@ public class SVDServiceImpl implements SVDService {
             double dateCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( dates ) );
 
             svo.setPCDateCorrelation( componentNumber, dateCorrelation );
-            svo.setPCDateCorrelationPval( componentNumber, CorrelationStats.spearmanPvalue( dateCorrelation, eigenGene
-                    .size() ) );
+            svo.setPCDateCorrelationPval( componentNumber,
+                    CorrelationStats.spearmanPvalue( dateCorrelation, eigenGene.size() ) );
         }
 
         /*
@@ -441,8 +438,8 @@ public class SVDServiceImpl implements SVDService {
                     // use the one that still has missing values.
                     double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
                     svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
-                    svo.setPCFactorCorrelationPval( componentNumber, ef, CorrelationStats.spearmanPvalue(
-                            factorCorrelation, eigenGeneWithoutMissing.size() ) );
+                    svo.setPCFactorCorrelationPval( componentNumber, ef,
+                            CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing.size() ) );
                 } else {
                     // one-way ANOVA on ranks.
                     double kwpval = KruskalWallis.test( eigenGeneWithoutMissing, groupings );
@@ -450,8 +447,8 @@ public class SVDServiceImpl implements SVDService {
                     svo.setPCFactorCorrelationPval( componentNumber, ef, kwpval );
 
                     double factorCorrelation = Distance.spearmanRankCorrelation( eigenGene, new DoubleArrayList( fvs ) );
-                    double corrPvalue = CorrelationStats.spearmanPvalue( factorCorrelation, eigenGeneWithoutMissing
-                            .size() );
+                    double corrPvalue = CorrelationStats.spearmanPvalue( factorCorrelation,
+                            eigenGeneWithoutMissing.size() );
                     assert Math.abs( factorCorrelation ) < 1.0 + 1e-2; // sanity.
                     /*
                      * Avoid storing a pvalue, as it's hard to compare. If the regular linear correlation is strong,
@@ -462,8 +459,8 @@ public class SVDServiceImpl implements SVDService {
                         svo.setPCFactorCorrelation( componentNumber, ef, factorCorrelation );
                     } else {
                         // hack. A bit like turning pvalues into probit
-                        double approxCorr = CorrelationStats.correlationForPvalue( kwpval, eigenGeneWithoutMissing
-                                .size() );
+                        double approxCorr = CorrelationStats.correlationForPvalue( kwpval,
+                                eigenGeneWithoutMissing.size() );
                         svo.setPCFactorCorrelation( componentNumber, ef, approxCorr );
 
                     }

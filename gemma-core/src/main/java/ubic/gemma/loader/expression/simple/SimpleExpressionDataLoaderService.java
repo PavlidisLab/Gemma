@@ -59,7 +59,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Convert a simple matrix and some meta-data into an ExpressionExperiment. Used to handle flat file conversion.
@@ -92,7 +92,7 @@ public class SimpleExpressionDataLoaderService {
     BioMaterialService bioMaterialService;
 
     @Autowired
-    PersisterHelper persisterHelper;
+    Persister persisterHelper;
 
     @Autowired
     PreprocessorService preprocessorService;
@@ -236,12 +236,12 @@ public class SimpleExpressionDataLoaderService {
      * @return
      * @throws IOException
      */
-    public ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData, InputStream data )
+    public ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData, InputStream data )
             throws IOException {
 
         DoubleMatrix<String, String> matrix = parse( data );
 
-        return load( metaData, matrix );
+        return create( metaData, matrix );
     }
 
     /**
@@ -264,7 +264,7 @@ public class SimpleExpressionDataLoaderService {
     /**
      * @param persisterHelper the persisterHelper to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
@@ -282,7 +282,7 @@ public class SimpleExpressionDataLoaderService {
      * @param matrix
      * @return
      */
-    protected ExpressionExperiment load( SimpleExpressionExperimentMetaData metaData,
+    protected ExpressionExperiment create( SimpleExpressionExperimentMetaData metaData,
             DoubleMatrix<String, String> matrix ) {
         ExpressionExperiment experiment = convert( metaData, matrix );
 

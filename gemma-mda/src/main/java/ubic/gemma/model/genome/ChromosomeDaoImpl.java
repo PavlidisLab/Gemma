@@ -38,14 +38,24 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         super.setSessionFactory( sessionFactory );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.ChromosomeDao#find(java.lang.String, ubic.gemma.model.genome.Taxon)
+     */
     public Collection<Chromosome> find( String name, Taxon taxon ) {
         if ( StringUtils.isBlank( name ) ) {
             throw new IllegalArgumentException( "Name cannot be blank" );
 
         }
         if ( taxon == null ) {
-            throw new IllegalArgumentException( "Taxon cannot be blank" );
+            throw new IllegalArgumentException( "Taxon cannot be null" );
         }
+
+        if ( taxon.getId() == null ) {
+            throw new IllegalArgumentException( "Taxon must be a persistent entity" );
+        }
+
         String q = "from ChromosomeImpl c where c.name=:n and c.taxon=:t";
         List<Chromosome> results = this.getHibernateTemplate().findByNamedParam( q, new String[] { "n", "t" },
                 new Object[] { name, taxon } );
@@ -55,6 +65,11 @@ public class ChromosomeDaoImpl extends ubic.gemma.model.genome.ChromosomeDaoBase
         return results;
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.genome.ChromosomeDao#findOrCreate(java.lang.String, ubic.gemma.model.genome.Taxon)
+     */
     public Chromosome findOrCreate( String name, Taxon taxon ) {
         Collection<Chromosome> hits = this.find( name, taxon );
 

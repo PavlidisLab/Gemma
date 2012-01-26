@@ -30,6 +30,11 @@ import org.aspectj.lang.annotation.Pointcut;
 @Aspect
 public class SystemArchitectureAspect {
 
+    /*
+     * 
+     * For help with expressions see http://static.springsource.org/spring/docs/2.5.x/reference/aop.html#6.2.3.4
+     */
+
     /**
      * Encompasses the 'web' packages
      */
@@ -45,16 +50,23 @@ public class SystemArchitectureAspect {
     }
 
     /**
-     * A entity service method.
+     * A entity service method: a public method in a \@Service.
      */
-    @Pointcut("execution(public * ubic.gemma.model..*.*Service.*(..)) || execution(public * ubic.gemma.association..*.*Service.*(..)) || execution(public * ubic.gemma.web.services.rest.*Service.*(..))")
+    @Pointcut("@target(org.springframework.stereotype.Service) && execution(public * ubic.gemma..*.*(..))")
     public void serviceMethod() {
+        /*
+         * Important document:
+         * http://forum.springsource.org/showthread.php?28525-Difference-between-target-and-within-in-Spring-AOP
+         * 
+         * Using @target makes a proxy out of everything, which causes problems if services aren't implementing
+         * interfaces -- seems for InitializingBeans in particular. @within doesn't work, at least for the ACLs.
+         */
     }
 
     /**
      * Methods that create new objects in the persistent store
      */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && (execution(* save(..)) || execution(* create(..)) || execution(* findOrCreate(..)))")
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && ( execution(* save(..)) || execution(* create*(..)) || execution(* findOrCreate(..)) || execution(* persist*(..))   )")
     public void creator() {
     }
 
@@ -68,7 +80,7 @@ public class SystemArchitectureAspect {
     /**
      * Methods that delete items in the persistent store
      */
-    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && (execution(* remove(..)) || execution(* delete(..)))")
+    @Pointcut("ubic.gemma.util.SystemArchitectureAspect.serviceMethod() && (execution(* remove(..)) || execution(* delete*(..)))")
     public void deleter() {
     }
 

@@ -64,7 +64,7 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.CompassUtils;
 
@@ -97,7 +97,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     protected Log log = LogFactory.getLog( getClass() );
 
     @Autowired
-    protected PersisterHelper persisterHelper;
+    protected Persister persisterHelper;
 
     /**
      * The SimpleJdbcTemplate that this base class manages, available to subclasses. (Datasource; autowired at setteer)
@@ -173,7 +173,7 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     /**
      * @param persisterHelper the persisterHelper to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
@@ -379,8 +379,9 @@ public abstract class BaseSpringContextTest extends AbstractJUnit4SpringContextT
     }
 
     /**
-     * Change the number of elements created in collections (basically controls the size of test data sets). This needn't be called unless the test needs larger data sets. FCall
-     * {@link resetTestCollectionSize} after you are done. 
+     * Change the number of elements created in collections (basically controls the size of test data sets). This
+     * needn't be called unless the test needs larger data sets. FCall {@link resetTestCollectionSize} after you are
+     * done.
      * 
      * @param size
      */

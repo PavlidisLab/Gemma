@@ -146,12 +146,12 @@ public class GeoBrowserServiceParseTest {
                 + " <Item Name=\"PlatformTitle\" Type=\"String\"></Item>    <Item Name=\"PlatformTaxa\" Type=\"String\"></Item>  "
                 + "   <Item Name=\"SamplesTaxa\" Type=\"String\"></Item>  <Item Name=\"PubMedIds\" Type=\"List\"></Item>"
                 + "  <Item Name=\"Projects\" Type=\"List\"></Item> </DocSum>  </eSummaryResult>";
-        GeoBrowserService serv = new GeoBrowserService();
+        GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
         serv.afterPropertiesSet();
         ArrayDesignService ads = createMock( ArrayDesignService.class );
         ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
-        serv.setArrayDesignService( ads );
-        serv.setExpressionExperimentService( ees );
+        serv.arrayDesignService = ads;
+        serv.expressionExperimentService = ees;
         expect( ads.findByShortName( "GPL1708" ) ).andReturn( null );
         expect( ees.findByShortName( "GSE4595" ) ).andReturn( null );
         replay( ads );
@@ -175,13 +175,13 @@ public class GeoBrowserServiceParseTest {
         r.close();
         String response = buf.toString();
 
-        GeoBrowserService serv = new GeoBrowserService();
+        GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
         serv.afterPropertiesSet();
 
         ArrayDesignService ads = createMock( ArrayDesignService.class );
         ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
-        serv.setArrayDesignService( ads );
-        serv.setExpressionExperimentService( ees );
+        serv.arrayDesignService = ads;
+        serv.expressionExperimentService = ees;
         expect( ads.findByShortName( "GPL570" ) ).andReturn( null );
         expect( ees.findByShortName( "GSE27128" ) ).andReturn( null );
         replay( ads );
@@ -205,13 +205,13 @@ public class GeoBrowserServiceParseTest {
         r.close();
         String response = buf.toString();
 
-        GeoBrowserService serv = new GeoBrowserService();
+        GeoBrowserServiceImpl serv = new GeoBrowserServiceImpl();
         serv.afterPropertiesSet();
 
         ArrayDesignService ads = createMock( ArrayDesignService.class );
         ExpressionExperimentService ees = createMock( ExpressionExperimentService.class );
-        serv.setArrayDesignService( ads );
-        serv.setExpressionExperimentService( ees );
+        serv.arrayDesignService = ads;
+        serv.expressionExperimentService = ees;
         expect( ads.findByShortName( "GPL3829" ) ).andReturn( null );
         expect( ees.findByShortName( "GSE21230" ) ).andReturn( null );
         replay( ads );

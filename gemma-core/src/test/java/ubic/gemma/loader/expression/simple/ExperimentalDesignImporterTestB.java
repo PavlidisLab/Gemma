@@ -134,7 +134,7 @@ public class ExperimentalDesignImporterTestB extends BaseSpringContextTest {
 
         metaData.getArrayDesigns().add( ad );
 
-        ee = simpleExpressionDataLoaderService.load( metaData, data );
+        ee = simpleExpressionDataLoaderService.create( metaData, data );
 
         // eeService.thawLite( ee );
     }

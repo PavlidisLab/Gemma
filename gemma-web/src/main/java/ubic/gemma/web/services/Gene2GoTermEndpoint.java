@@ -34,6 +34,7 @@ import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 
 /**
  * Given a collection of Gene IDs, will return a collection of Gene Ontology URIs for each gene.
@@ -109,7 +110,7 @@ public class Gene2GoTermEndpoint extends AbstractGemmaEndpoint {
             Collection<String> goTerms = new HashSet<String>();
             if ( terms != null ) {
                 for ( OntologyTerm ot : terms ) {
-                    goTerms.add( GeneOntologyService.asRegularGoId( ot ) );
+                    goTerms.add( GeneOntologyServiceImpl.asRegularGoId( ot ) );
                 }
             } else
                 goTerms.add( "NaN" );

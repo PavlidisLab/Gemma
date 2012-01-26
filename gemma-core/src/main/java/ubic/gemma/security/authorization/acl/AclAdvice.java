@@ -59,8 +59,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import ubic.gemma.model.analysis.expression.coexpression.ProbeCoexpressionAnalysis;
-import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
+import ubic.gemma.model.analysis.SingleExperimentAnalysis;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.Securable;
 import ubic.gemma.model.common.auditAndSecurity.SecuredChild;
@@ -72,7 +71,8 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.CrudUtils;
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.persistence.CrudUtilsImpl;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.audit.AuditAdvice;
 import ubic.gemma.util.AuthorityConstants;
 import ubic.gemma.util.ReflectionUtil;
@@ -128,8 +128,8 @@ public class AclAdvice extends HibernateDaoSupport {
 
         if ( persistentObject == null ) return;
 
-        final boolean isUpdate = CrudUtils.methodIsUpdate( methodName );
-        final boolean isDelete = CrudUtils.methodIsDelete( methodName );
+        final boolean isUpdate = CrudUtilsImpl.methodIsUpdate( methodName );
+        final boolean isDelete = CrudUtilsImpl.methodIsDelete( methodName );
 
         // Case 1: collection of securables.
         if ( Collection.class.isAssignableFrom( persistentObject.getClass() ) ) {
@@ -296,6 +296,11 @@ public class AclAdvice extends HibernateDaoSupport {
      * @return true if an ACL was created, false otherwise.
      */
     private AuditableAcl addOrUpdateAcl( Securable object, Acl parentAcl ) {
+
+        if ( object.getId() == null ) {
+            log.warn( "ACLs cannot be added or updated on non-persistent object" );
+        }
+
         // Flow
         // exists vs doesn't exist
         // updateAcl addAcl
@@ -308,15 +313,7 @@ public class AclAdvice extends HibernateDaoSupport {
         // Root (top_parent) of acl inheritance tree
         // Enforce SecuredChild, SecuredNotChild rules
 
-        // FIXME: Maybe getObjectIdentity? since the method is addOrUpdate object identity may already exist
-        // and this method doesn't create a new one.
         ObjectIdentity oi = makeObjectIdentity( object );
-
-        // FIXME: Maybe through exception? since there's no way to recover from this.
-        if ( oi == null ) {
-            log.warn( "Null object identity for : " + object );
-            return null;
-        }
 
         AuditableAcl acl = null;
 
@@ -355,11 +352,11 @@ public class AclAdvice extends HibernateDaoSupport {
 
         Sid sid = new PrincipalSid( p.toString() );
 
-        boolean isAdmin = SecurityService.isUserAdmin();
+        boolean isAdmin = SecurityServiceImpl.isUserAdmin();
 
-        boolean isRunningAsAdmin = SecurityService.isRunningAsAdmin();
+        boolean isRunningAsAdmin = SecurityServiceImpl.isRunningAsAdmin();
 
-        boolean isAnonymous = SecurityService.isUserAnonymous();
+        boolean isAnonymous = SecurityServiceImpl.isUserAnonymous();
 
         boolean objectIsAUser = User.class.isAssignableFrom( object.getClass() );
 
@@ -465,25 +462,21 @@ public class AclAdvice extends HibernateDaoSupport {
 
         // Treating Analyses as special case. It'll inherit ACL from ExpressionExperiment
         // If aclParent is passed to this method we overwrite it.
-        if ( DifferentialExpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
 
-            DifferentialExpressionAnalysis dea = ( DifferentialExpressionAnalysis ) object;
-
-            BioAssaySet e = dea.getExperimentAnalyzed();
+        if ( SingleExperimentAnalysis.class.isAssignableFrom( object.getClass() ) ) {
+            SingleExperimentAnalysis a = ( SingleExperimentAnalysis ) object;
+            BioAssaySet e = a.getExperimentAnalyzed();
             ObjectIdentity oi_temp = makeObjectIdentity( e );
-            acl.setEntriesInheriting( true );
-            parentAcl = aclService.readAclById( oi_temp );
-            // Owner of the experiment owns analyses even if administrator ran them.
-            sid = parentAcl.getOwner();
-        } else if ( ProbeCoexpressionAnalysis.class.isAssignableFrom( object.getClass() ) ) {
 
-            ProbeCoexpressionAnalysis pcea = ( ProbeCoexpressionAnalysis ) object;
+            try {
+                parentAcl = aclService.readAclById( oi_temp );
+            } catch ( NotFoundException nfe ) {
+                // This is possible if making an EESubSet is part of the transaction.
+                parentAcl = aclService.createAcl( oi_temp );
+            }
 
-            BioAssaySet e = pcea.getExperimentAnalyzed();
-            ObjectIdentity oi_temp = makeObjectIdentity( e );
-            acl.setEntriesInheriting( true );
-            parentAcl = aclService.readAclById( oi_temp );
             // Owner of the experiment owns analyses even if administrator ran them.
+            acl.setEntriesInheriting( true );
             sid = parentAcl.getOwner();
         }
 
@@ -491,7 +484,7 @@ public class AclAdvice extends HibernateDaoSupport {
 
         assert !acl.equals( parentAcl );
 
-        if ( parentAcl != null ) {
+        if ( parentAcl != null && inheritFromParent ) {
             if ( log.isTraceEnabled() ) log.trace( "Setting parent to: " + parentAcl + " <--- " + acl );
             acl.setParent( parentAcl );
         }
@@ -599,7 +592,7 @@ public class AclAdvice extends HibernateDaoSupport {
      * @return
      */
     private Object getPersistentObject( Object retValue, String methodName, Object[] args ) {
-        if ( CrudUtils.methodIsDelete( methodName ) || CrudUtils.methodIsUpdate( methodName ) ) {
+        if ( CrudUtilsImpl.methodIsDelete( methodName ) || CrudUtilsImpl.methodIsUpdate( methodName ) ) {
 
             /*
              * Only deal with single-argument update methods.
@@ -645,16 +638,15 @@ public class AclAdvice extends HibernateDaoSupport {
     }
 
     /**
-     * Forms the object identity to be inserted in acl_object_identity table.
+     * Forms the object identity to be inserted in acl_object_identity table. Note that this does not add an
+     * ObjectIdentity to the database; it just calls 'new'.
      * 
-     * @param object
+     * @param object A persistent object
      * @return object identity.
      */
     private ObjectIdentity makeObjectIdentity( Securable object ) {
 
-        if ( object.getId() == null ) {
-            return null;
-        }
+        assert object.getId() != null;
 
         return objectIdentityRetrievalStrategy.getObjectIdentity( object );
     }
@@ -777,7 +769,7 @@ public class AclAdvice extends HibernateDaoSupport {
                 /*
                  * See AuditAdvice.process for a discussion of how difficult this is.
                  */
-                if ( !CrudUtils.methodIsDelete( methodName ) ) {
+                if ( !CrudUtilsImpl.methodIsDelete( methodName ) ) {
                     session.buildLockRequest( LockOptions.NONE ).lock( s );
                 }
 
@@ -826,8 +818,15 @@ public class AclAdvice extends HibernateDaoSupport {
             CascadeStyle cs = cascadeStyles[j];
             String propertyName = propertyNames[j];
 
-            if ( ( canSkipAssociationCheck( object, propertyName ) || !crudUtils.needCascade( methodName, cs ) )
-                    && !specialCaseForAssociationFollow( object, propertyName ) ) {
+            // log.warn( propertyName );
+
+            /*
+             * The goal here is to avoid following associations that don't need to be checked. Unfortunately, this can
+             * be a bit tricky because there are exceptions. This is kind of inelegant, but the alternative is to check
+             * _every_ association, which will often not be reachable.
+             */
+            if ( !specialCaseForAssociationFollow( object, propertyName )
+                    && ( canSkipAssociationCheck( object, propertyName ) || !crudUtils.needCascade( methodName, cs ) ) ) {
                 continue;
             }
 
@@ -861,6 +860,7 @@ public class AclAdvice extends HibernateDaoSupport {
                      * This is not a problem. If this was reached via a create, the associated objects must not be new
                      * so they should already have acls.
                      */
+                    // log.warn( "oops" );
                 }
 
             } else {
@@ -875,9 +875,8 @@ public class AclAdvice extends HibernateDaoSupport {
 
     /**
      * For cases where don't have a cascade but the other end is securable, so we <em>must</em> check the association.
-     * <p>
-     * Implementation note. This is kind of inelegant, but the alternative is to check _every_ association, which will
-     * often not be reachable.
+     * For example, when we persist an EE we also persist any new ADs in the same transaction. Thus the ADs need ACL
+     * attention at the same time (via the BioAssays).
      * 
      * @param object we are checking
      * @param property of the object
@@ -886,7 +885,8 @@ public class AclAdvice extends HibernateDaoSupport {
      */
     private boolean specialCaseForAssociationFollow( Object object, String property ) {
 
-        if ( BioAssay.class.isAssignableFrom( object.getClass() ) && property.equals( "samplesUsed" ) ) {
+        if ( BioAssay.class.isAssignableFrom( object.getClass() )
+                && ( property.equals( "samplesUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
             return true;
         }
 

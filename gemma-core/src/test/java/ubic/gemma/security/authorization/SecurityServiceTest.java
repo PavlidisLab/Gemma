@@ -19,6 +19,7 @@
 package ubic.gemma.security.authorization;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -191,25 +192,24 @@ public class SecurityServiceTest extends BaseSpringContextTest {
             userManager.loadUserByUsername( username );
         } catch ( UsernameNotFoundException e ) {
             userManager.createUser( new UserDetailsImpl( "foo", username, true, null, RandomStringUtils
-                    .randomAlphabetic( 10 )
-                    + "@gmail.com", "key", new Date() ) );
+                    .randomAlphabetic( 10 ) + "@gmail.com", "key", new Date() ) );
         }
     }
 
     @Test
     public void testMakeEEGroupReadWrite() throws Exception {
 
-        ArrayDesign ee = super.getTestPersistentArrayDesign( 2, true );
-        securityService.makePrivate( ee );
+        ArrayDesign entity = super.getTestPersistentArrayDesign( 2, true );
+        securityService.makePrivate( entity );
 
         String username = "first_" + randomName();
         String usertwo = "second_" + randomName();
         makeUser( username );
         makeUser( usertwo );
 
-        securityService.makeOwnedByUser( ee, username );
+        securityService.makeOwnedByUser( entity, username );
 
-        assertTrue( securityService.isEditableByUser( ee, username ) );
+        assertTrue( securityService.isEditableByUser( entity, username ) );
 
         this.runAsUser( username );
 
@@ -218,7 +218,7 @@ public class SecurityServiceTest extends BaseSpringContextTest {
          */
         String groupName = randomName();
         securityService.createGroup( groupName );
-        securityService.makeWriteableByGroup( ee, groupName );
+        securityService.makeWriteableByGroup( entity, groupName );
 
         /*
          * Add another user to the group.
@@ -231,24 +231,22 @@ public class SecurityServiceTest extends BaseSpringContextTest {
          */
         this.runAsUser( usertwo );
 
-        ee = arrayDesignService.load( ee.getId() );
-        ee.setDescription( "woohoo, I can edit" );
-        arrayDesignService.update( ee );
+        entity = arrayDesignService.load( entity.getId() );
+        entity.setDescription( "woohoo, I can edit" );
+        arrayDesignService.update( entity );
         // no exception == happy.
 
         this.runAsUser( username );
-        securityService.makeUnreadableByGroup( ee, groupName );
+        securityService.makeUnreadableByGroup( entity, groupName );
         // should still work.
-        ee = arrayDesignService.load( ee.getId() );
+        entity = arrayDesignService.load( entity.getId() );
 
         this.runAsUser( usertwo );
         // should be locked out.
-        try {
-            ee = arrayDesignService.load( ee.getId() );
-            fail( "Should have gotten 'access denied'" );
-        } catch ( AccessDeniedException ok ) {
 
-        }
+        entity = arrayDesignService.load( entity.getId() );
+        assertNull( entity );
+
         try {
             securityService.deleteGroup( groupName );
             fail( "Should have gotten 'access denied'" );

@@ -23,7 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.common.Auditable;
-import ubic.gemma.model.common.auditAndSecurity.StatusService;
+import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
+import ubic.gemma.model.common.auditAndSecurity.StatusDao;
 
 /**
  * A service that knows how to persist Gemma-domain objects. Associations are checked and persisted in turn if needed.
@@ -38,11 +39,11 @@ import ubic.gemma.model.common.auditAndSecurity.StatusService;
 public class PersisterHelper extends RelationshipPersister {
 
     @Autowired
-    StatusService statusService;
+    private StatusDao statusDao;
 
     @Autowired
     public PersisterHelper( SessionFactory sessionFactory ) {
-        super( sessionFactory );
+        super.setSessionFactory( sessionFactory );
     }
 
     /*
@@ -55,13 +56,13 @@ public class PersisterHelper extends RelationshipPersister {
 
         if ( entity instanceof Auditable ) {
             Auditable a = ( Auditable ) entity;
+
+            if ( a.getAuditTrail() == null ) a.setAuditTrail( AuditTrail.Factory.newInstance() );
+
             a.setAuditTrail( persistAuditTrail( a.getAuditTrail() ) );
-
-            a.setStatus( statusService.create() );
-
-            return super.persist( a );
+            a.setStatus( statusDao.create() );
         }
-        this.getSession().flush();
+
         return super.persist( entity );
     }
 

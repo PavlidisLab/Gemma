@@ -20,8 +20,7 @@
 package ubic.gemma.tasks.analysis.expression;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.service.SampleRemoveService;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskMethod;
@@ -33,7 +32,7 @@ import ubic.gemma.model.expression.bioAssay.BioAssayService;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class BioAssayOutlierProcessingTaskImpl implements BioAssayOutlierProcessingTask {
 
     @Autowired

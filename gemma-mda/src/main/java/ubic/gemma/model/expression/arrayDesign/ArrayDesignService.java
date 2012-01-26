@@ -78,7 +78,7 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     public ArrayDesign find( ArrayDesign arrayDesign );
 
     /**
@@ -90,13 +90,13 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     public ArrayDesign findByName( String name );
 
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     public ArrayDesign findByShortName( String shortName );
 
     /**
@@ -111,7 +111,7 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured({ "GROUP_USER", "AFTER_ACL_READ" })
+    @Secured({ "GROUP_USER", "AFTER_ACL_READ_QUIET" })
     public ArrayDesign findOrCreate( ArrayDesign arrayDesign );
 
     /**
@@ -228,7 +228,7 @@ public interface ArrayDesignService {
     /**
      * 
      */
-    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "AFTER_ACL_READ_QUIET" })
     public ArrayDesign load( long id );
 
     /**

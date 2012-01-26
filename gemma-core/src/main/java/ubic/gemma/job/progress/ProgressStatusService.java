@@ -24,8 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.job.TaskRunningService;
@@ -36,7 +35,7 @@ import ubic.gemma.job.TaskRunningService;
  * @author klc
  * @version $Id$
  */
-@Service
+@Component
 public class ProgressStatusService {
 
     private static Log log = LogFactory.getLog( ProgressStatusService.class.getName() );
@@ -73,7 +72,7 @@ public class ProgressStatusService {
 
     /**
      * @return
-     * @see ubic.gemma.job.TaskRunningService#getCancelledTasks()
+     * @see ubic.gemma.job.TaskRunningServiceImpl#getCancelledTasks()
      */
     @Secured( { "GROUP_ADMIN" })
     public Collection<TaskCommand> getCancelledTasks() {
@@ -82,7 +81,7 @@ public class ProgressStatusService {
 
     /**
      * @return
-     * @see ubic.gemma.job.TaskRunningService#getFailedTasks()
+     * @see ubic.gemma.job.TaskRunningServiceImpl#getFailedTasks()
      */
     @Secured( { "GROUP_ADMIN" })
     public Collection<TaskResult> getFailedTasks() {
@@ -91,7 +90,7 @@ public class ProgressStatusService {
 
     /**
      * @return
-     * @see ubic.gemma.job.TaskRunningService#getFinishedTasks()
+     * @see ubic.gemma.job.TaskRunningServiceImpl#getFinishedTasks()
      */
     @Secured( { "GROUP_ADMIN" })
     public Collection<TaskResult> getFinishedTasks() {
@@ -153,7 +152,7 @@ public class ProgressStatusService {
 
     /**
      * @return
-     * @see ubic.gemma.job.TaskRunningService#getSubmittedTasks()
+     * @see ubic.gemma.job.TaskRunningServiceImpl#getSubmittedTasks()
      */
     @Secured( { "GROUP_ADMIN" })
     public Collection<TaskCommand> getSubmittedTasks() {

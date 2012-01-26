@@ -46,8 +46,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEventService; 
@@ -66,7 +65,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author pavlidis
  * @version $Id$
  */
-@Service
+@Component
 public class WhatsNewServiceImpl implements InitializingBean, WhatsNewService {
 
     private static Log log = LogFactory.getLog( WhatsNewServiceImpl.class.getName() );

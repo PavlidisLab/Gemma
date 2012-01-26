@@ -57,7 +57,7 @@ import ubic.gemma.model.expression.biomaterial.BioMaterial;
 import ubic.gemma.model.expression.biomaterial.BioMaterialService;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.web.controller.BaseFormController;
 import antlr.RecognitionException;
 import antlr.TokenStreamException;
@@ -82,7 +82,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     BioAssayService bioAssayService = null;
     BioMaterialService bioMaterialService = null;
     BibliographicReferenceService bibliographicReferenceService = null;
-    PersisterHelper persisterHelper = null;
+    Persister persisterHelper = null;
     QuantitationTypeService quantitationTypeService;
     AuditTrailService auditTrailService;
 
@@ -219,7 +219,7 @@ public class ExpressionExperimentFormController extends BaseFormController {
     /**
      * @param persisterHelper the persisterHelper to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

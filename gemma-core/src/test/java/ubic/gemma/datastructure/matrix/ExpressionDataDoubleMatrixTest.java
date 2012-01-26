@@ -37,7 +37,7 @@ import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.expression.simple.SimpleExpressionDataLoaderService;
 import ubic.gemma.loader.expression.simple.model.SimpleExpressionExperimentMetaData;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
@@ -87,7 +87,7 @@ public class ExpressionDataDoubleMatrixTest extends BaseSpringContextTest {
     ArrayDesignService adService;
 
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     /*
      * (non-Javadoc)

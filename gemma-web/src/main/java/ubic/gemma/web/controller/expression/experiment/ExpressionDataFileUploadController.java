@@ -84,7 +84,7 @@ public class ExpressionDataFileUploadController extends AbstractTaskService {
                  * Main action here!
                  */
                 scrub( command );
-                ExpressionExperiment result = simpleExpressionDataLoaderService.load( command, stream );
+                ExpressionExperiment result = simpleExpressionDataLoaderService.create( command, stream );
                 stream.close();
 
                 log.info( "Preprocessing the data for analysis" );

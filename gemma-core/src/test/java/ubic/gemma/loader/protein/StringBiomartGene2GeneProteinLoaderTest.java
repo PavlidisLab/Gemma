@@ -30,8 +30,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +50,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  * <ul>
  * <li>Local biomart file, local string file, one taxon
  * <li>Remote biomart file, local string file one taxon
- * <li>Remote bimart file, local string file multi taxon
+ * <li>Remote biomart file, local string file multi taxon
  * </ul>
  * The only scenario not tested is downloading from string website simply too long recommended usage is to use local
  * file. As is downloads a file from biomart any changes in biomart interface will be picked up. Should add some more
@@ -115,15 +115,15 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
 
         genesRat = new ArrayList<Gene>();
 
-        Gene geneRatOne = makeGene( rat, "RAT1", "679739" );
+        Gene geneRatOne = makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "679739" );
         genesRat.add( geneRatOne );
 
-        Gene geneRatTwo = makeGene( rat, "RAT2", "297433" );
+        Gene geneRatTwo = makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "297433" );
         genesRat.add( geneRatTwo );
-        Gene geneRatThree = makeGene( rat, "RAT3", "399475" );
+        Gene geneRatThree = makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "399475" );
         genesRat.add( geneRatThree );
 
-        genesRat.add( makeGene( rat, "RFOO1", "123445" ) );
+        genesRat.add( makeGene( rat, RandomStringUtils.randomAlphabetic( 4 ).toUpperCase(), "123445" ) );
 
         Gene2GeneProteinAssociation existingGene2GeneProteinAssociationOne = Gene2GeneProteinAssociation.Factory
                 .newInstance();
@@ -176,9 +176,9 @@ public class StringBiomartGene2GeneProteinLoaderTest extends BaseSpringContextTe
         g.setOfficialSymbol( name );
         g.setNcbiGeneId( Integer.parseInt( ncbiId ) );
         g.setTaxon( t );
-        List<GeneProduct> ggg = new ArrayList<GeneProduct>();
-        ggg.add( super.getTestPersistentGeneProduct( g ) );
-        g.setProducts( ggg );
+        Collection<GeneProduct> ggg = new HashSet<GeneProduct>();
+        ggg.add( testHelper.getTestNonPersistentGeneProduct( g ) );
+        g.getProducts().addAll( ggg );
         g = ( Gene ) persisterHelper.persist( g );
         return g;
     }

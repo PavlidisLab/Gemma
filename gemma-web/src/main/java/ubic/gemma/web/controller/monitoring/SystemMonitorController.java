@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.job.grid.util.SpaceMonitor;
-import ubic.gemma.job.grid.util.SpacesUtil;
+import ubic.gemma.job.grid.util.SpacesUtilImpl;
 import ubic.gemma.job.grid.worker.SpacesRegistrationEntry;
 import ubic.gemma.util.monitor.CacheMonitor;
 import ubic.gemma.util.monitor.HibernateMonitor;
@@ -97,7 +97,7 @@ public class SystemMonitorController {
     public String getSpaceStatus() {
         StringBuilder buf = new StringBuilder();
 
-        List<SpacesRegistrationEntry> registeredWorkers = SpacesUtil.getRegisteredWorkers();
+        List<SpacesRegistrationEntry> registeredWorkers = SpacesUtilImpl.getRegisteredWorkers();
 
         String lastStatusMessage = spaceMonitor.getLastStatusMessage();
         Boolean lastStatusWasOK = spaceMonitor.getLastStatusWasOK();
@@ -124,7 +124,7 @@ public class SystemMonitorController {
         }
 
         buf.append( "\n<h2>Statistics</h2>" );
-        buf.append( "<pre>" + SpacesUtil.logSpaceStatistics() + "</pre>" );
+        buf.append( "<pre>" + SpacesUtilImpl.logSpaceStatistics() + "</pre>" );
 
         return buf.toString();
     }

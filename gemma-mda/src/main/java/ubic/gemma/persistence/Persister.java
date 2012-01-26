@@ -20,6 +20,8 @@ package ubic.gemma.persistence;
 
 import java.util.Collection;
 
+import org.springframework.security.access.annotation.Secured;
+
 /**
  * Interface defining the ability to create domain objects in bulk or singly. Classes that implement this interface
  * should expect:
@@ -42,6 +44,7 @@ public interface Persister {
      * @param col
      * @return The persistent versions of the objects.
      */
+    @Secured({ "GROUP_USER" })
     public Collection<?> persist( Collection<?> col );
 
     /**
@@ -52,6 +55,7 @@ public interface Persister {
      * @param obj
      * @resutln the persistent version of the object.
      */
+    @Secured({ "GROUP_USER" })
     public Object persist( Object obj );
 
     /**
@@ -66,6 +70,7 @@ public interface Persister {
      * @param obj
      * @return the persistent version of the object.
      */
+    @Secured({ "GROUP_USER" })
     public Object persistOrUpdate( Object obj );
 
 }

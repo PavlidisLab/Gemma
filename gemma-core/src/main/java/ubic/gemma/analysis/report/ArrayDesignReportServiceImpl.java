@@ -37,8 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.annotation.Secured;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
@@ -58,7 +57,7 @@ import ubic.gemma.util.EntityUtils;
  * @author jsantos
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignReportServiceImpl implements ArrayDesignReportService {
     private String ARRAY_DESIGN_REPORT_DIR = "ArrayDesignReports";
 

@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
@@ -40,7 +40,13 @@ import ubic.gemma.model.genome.gene.GeneValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.genome.gene.SessionBoundGeneSetValueObject;
 
-@Service
+/**
+ * TODO Document Me
+ * 
+ * @author thea
+ * @version $Id$
+ */
+@Component
 public class SessionListManager {
 
     @Autowired
@@ -125,7 +131,7 @@ public class SessionListManager {
     }
 
     /**
-     * Get the session-bound group using the group's id 
+     * Get the session-bound group using the group's id
      * 
      * @param reference
      * @return
@@ -142,7 +148,6 @@ public class SessionListManager {
         return null;
 
     }
-
 
     /**
      * Get the session-bound group using the group's id
@@ -254,14 +259,14 @@ public class SessionListManager {
         return castedCollection;
 
     }
-    
 
     public Collection<SessionBoundExpressionExperimentSetValueObject> getModifiedExperimentSets( Long taxonId ) {
 
         // We know that geneSetList will only contain SessionBoundGeneSetValueObjects (via
         // SessionListManager.addGeneSet(SessionBoundGeneSetValueObject) so this cast is okay
         @SuppressWarnings("unchecked")
-        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList.getSessionBoundModifiedGroups();
+        List<SessionBoundExpressionExperimentSetValueObject> castedCollection = ( List ) experimentSetList
+                .getSessionBoundModifiedGroups();
 
         // filter collection if taxonId is specified
         if ( taxonId != null ) {
@@ -279,14 +284,15 @@ public class SessionListManager {
         return castedCollection;
     }
 
-    public SessionBoundExpressionExperimentSetValueObject addExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo ) {
+    public SessionBoundExpressionExperimentSetValueObject addExperimentSet(
+            SessionBoundExpressionExperimentSetValueObject eesvo ) {
 
         return ( SessionBoundExpressionExperimentSetValueObject ) experimentSetList.addSet( eesvo, true );
 
     }
 
-    public SessionBoundExpressionExperimentSetValueObject addExperimentSet( SessionBoundExpressionExperimentSetValueObject eesvo,
-            boolean modified ) {
+    public SessionBoundExpressionExperimentSetValueObject addExperimentSet(
+            SessionBoundExpressionExperimentSetValueObject eesvo, boolean modified ) {
 
         return ( SessionBoundExpressionExperimentSetValueObject ) experimentSetList.addSet( eesvo, modified );
 

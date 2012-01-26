@@ -66,7 +66,7 @@ public class BioSequenceDaoImpl extends ubic.gemma.model.genome.biosequence.BioS
 
         try {
 
-            Criteria queryObject = BusinessKey.createQueryObject( this.getSession( false ), bioSequence );
+            Criteria queryObject = BusinessKey.createQueryObject( this.getSession(), bioSequence );
 
             /*
              * this initially matches on name and taxon only.

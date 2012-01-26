@@ -75,138 +75,241 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         super.setSessionFactory( sessionFactory );
     }
 
-    /**
-     * Note that this only returns selected classes of auditables.
+    /*
+     * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
-     * @return Collection of Auditables
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastEvents(java.util.Collection,
+     * java.util.Collection)
      */
-    @Override
-    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
-        Collection<Auditable> result = new HashSet<Auditable>();
-        for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
-            String queryString = "select distinct adb from "
-                    + clazz
-                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
-            try {
-                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-                queryObject.setParameter( "date", date );
-                result.addAll( queryObject.list() );
-            } catch ( org.hibernate.HibernateException ex ) {
-                throw super.convertHibernateAccessException( ex );
-            }
-        }
-        return result;
-    }
+    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
+            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
 
-    /**
-     * Note that this only returns selected classes of auditables.
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
-     * @return Collection of Auditables
-     */
-    @Override
-    protected java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
-        Collection<Auditable> result = new HashSet<Auditable>();
-        for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
-            String queryString = "select distinct adb from "
-                    + clazz
-                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
-            try {
-                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-                queryObject.setParameter( "date", date );
-                result.addAll( queryObject.list() );
-            } catch ( org.hibernate.HibernateException ex ) {
-                throw super.convertHibernateAccessException( ex );
-            }
-        }
-        return result;
-    }
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> results = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
+        if ( auditables.size() == 0 ) return results;
 
-    @Deprecated
-    @Override
-    protected void handleThaw( AuditEvent auditEvent ) throws Exception {
-        if ( auditEvent == null ) return;
-
-        auditEvent = ( AuditEvent ) this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select a from AuditEventImpl a fetch all properties join fetch a.performer fetch all properties where a = :ae ",
-                        "ae", auditEvent ).iterator().next();
-
-        // this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
-        // public Object doInHibernate( Session session ) throws HibernateException {
-        // /*
-        // * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already
-        // * associated with the session.
-        // */
-        // if ( session.get( AuditEventImpl.class, auditEvent.getId() ) == null ) {
-        // session.lock( auditEvent, LockMode.NONE );
-        // }
-        // Hibernate.initialize( auditEvent );
-        // Hibernate.initialize( auditEvent.getPerformer() );
-        // return null;
-        // }
-        // } );
-
-    }
-
-    /**
-     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given classes)
-     * 
-     * @param types
-     * @return
-     */
-    private List<String> getClassHierarchy( Collection<Class<? extends AuditEventType>> types ) {
-        List<String> classes = new ArrayList<String>();
         for ( Class<? extends AuditEventType> t : types ) {
-            classes.addAll( getClassHierarchy( t ) );
+            results.put( t, new HashMap<Auditable, AuditEvent>() );
         }
-        return classes;
-    }
 
-    /**
-     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
-     * 
-     * @param type Class
-     * @return A List of class names, including the given type.
-     */
-    private List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
-        List<String> classes = new ArrayList<String>();
-        classes.add( getImplClass( type ) );
+        final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
 
-        // how to determine subclasses? There is no way to do this but the hibernate way.
-        SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
-                .getClassMetadata( getImplClass( type ) );
-        if ( classMetadata == null ) return classes;
+        List<String> classes = getClassHierarchy( types );
 
-        if ( classMetadata.hasSubclasses() ) {
-            String[] subclasses = classMetadata.getSubclassClosure(); // this includes the superclass, fully qualified
-            // names.
-            classes.clear();
-            for ( String string : subclasses ) {
-                // strip qualification to leave BlabablImpl
-                string = string.replaceFirst( ".+\\.", "" );
-                classes.add( string );
+        final String queryString = "select et, trail, event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
+                + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
+                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
+
+        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+        queryObject.setParameterList( "trails", atmap.keySet() );
+
+        List<?> qr = queryObject.list();
+
+        for ( Object o : qr ) {
+            Object[] ar = ( Object[] ) o;
+            AuditEventType ty = ( AuditEventType ) ar[0];
+            AuditTrail t = ( AuditTrail ) ar[1];
+            AuditEvent e = ( AuditEvent ) ar[2];
+
+            /*
+             * This is a bit inefficient. Loop needed because returned type is Impl (and probably a proxy). But probably
+             * query is the bottleneck.
+             */
+            for ( Class<? extends AuditEventType> ti : types ) {
+                if ( ti.isAssignableFrom( ty.getClass() ) ) {
+                    // FIXME we need to distinguish subclasses of validation events, for example.
+                    Map<Auditable, AuditEvent> innerMap = results.get( ti );
+
+                    assert innerMap != null;
+
+                    // only one event per type
+                    if ( !innerMap.containsKey( atmap.get( t ) ) ) {
+                        innerMap.put( atmap.get( t ), e );
+                    }
+                    break;
+                }
             }
         }
-        return classes;
+
+        timer.stop();
+        if ( timer.getTime() > 1000 ) {
+            log.info( "Last events retrieved for  " + types.size() + " different types for " + auditables.size()
+                    + " items in " + timer.getTime() + "ms" );
+        }
+
+        return results;
     }
 
-    private String getImplClass( Class<? extends AuditEventType> type ) {
-        String canonicalName = type.getName();
-        return canonicalName.endsWith( "Impl" ) ? type.getName() : type.getName() + "Impl";
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvent(java.util.Collection)
+     */
+    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
+        return getLastOutstandingTroubleEventNoSort( events );
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvents(java.util.Collection)
+     */
+    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables ) {
+        Collection<Class<? extends AuditEventType>> types = new HashSet<Class<? extends AuditEventType>>();
+        types.add( TroubleStatusFlagEvent.class );
+        types.add( OKStatusFlagEvent.class );
+        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> lastEvents = this.getLastEvents( auditables,
+                types );
+
+        Map<Auditable, AuditEvent> results = new HashMap<Auditable, AuditEvent>();
+
+        if ( !lastEvents.containsKey( TroubleStatusFlagEvent.class ) ) {
+            return results;
+        }
+
+        /*
+         * Common case: check if auditables are EEs.
+         */
+
+        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
+
+        for ( Auditable a : auditables ) {
+
+            Map<Auditable, AuditEvent> trouble = lastEvents.get( TroubleStatusFlagEvent.class );
+
+            if ( !trouble.containsKey( a ) ) {
+                // no trouble! but we should check the array designs later.
+                if ( a instanceof ExpressionExperiment ) {
+                    ees.add( ( ExpressionExperiment ) a );
+                }
+                continue;
+            }
+
+            AuditEvent t = trouble.get( a );
+
+            Map<Auditable, AuditEvent> ok = lastEvents.get( OKStatusFlagEvent.class );
+
+            if ( ok.containsKey( a ) ) {
+                // do we have a more recent ok event?
+                AuditEvent o = ok.get( a );
+                if ( o.getDate().after( t.getDate() ) ) {
+                    continue;
+                }
+
+                results.put( a, t );
+
+            } else {
+                results.put( a, t );
+            }
+
+        }
+
+        if ( !ees.isEmpty() ) {
+            Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
+            Map<ArrayDesign, Collection<Long>> ads = CommonQueries.getArrayDesignsUsed( eemap.keySet(),
+                    this.getSession() );
+
+            Map<Auditable, AuditEvent> arrayDesignTrouble = getLastOutstandingTroubleEvents( ads.keySet() );
+
+            for ( Entry<Auditable, AuditEvent> e : arrayDesignTrouble.entrySet() ) {
+                for ( Long ee : ads.get( e.getKey() ) ) {
+                    results.put( eemap.get( ee ), e.getValue() );
+                }
+            }
+            results.putAll( arrayDesignTrouble );
+
+        }
+
+        return results;
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#hasEvent(ubic.gemma.model.common.Auditable,
+     * java.lang.Class)
+     */
+    @Override
+    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
+        return this.getLastEvent( a, type ) != null;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#retainHavingEvent(java.util.Collection,
+     * java.lang.Class)
+     */
+    @Override
+    public void retainHavingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
+
+        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
+
+        CollectionUtils.filter( a, new Predicate() {
+            @Override
+            public boolean evaluate( Object arg0 ) {
+                return events.containsKey( arg0 );
+            }
+        } );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#retainLackingEvent(java.util.Collection,
+     * java.lang.Class)
+     */
+    @Override
+    public void retainLackingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
+        StopWatch timer = new StopWatch();
+        timer.start();
+        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
+        log.info( "Phase I: " + timer.getTime() + "ms" );
+
+        CollectionUtils.filter( a, new Predicate() {
+            @Override
+            public boolean evaluate( Object arg0 ) {
+                return !events.containsKey( arg0 );
+            }
+        } );
+
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetEvents(ubic.gemma.model.common.Auditable)
+     */
     @Override
     protected List<AuditEvent> handleGetEvents( final Auditable auditable ) {
         if ( auditable == null ) throw new IllegalArgumentException( "Auditable cannot be null" );
 
         Hibernate.initialize( auditable );
+
+        if ( auditable.getAuditTrail() == null ) {
+            throw new IllegalStateException( "Auditable did not have an audit trail: " + auditable );
+        }
+
         Long id = auditable.getAuditTrail().getId();
         return this.getHibernateTemplate().findByNamedParam(
                 "select e from AuditTrailImpl t join t.events e where t.id = :id order by e.date ", "id", id );
 
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetLastEvent(ubic.gemma.model.common.Auditable,
+     * java.lang.Class)
+     */
+    @Override
+    protected AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
+        return this.handleGetLastEvent( auditable.getAuditTrail(), type );
     }
 
     /**
@@ -346,72 +449,6 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastEvents(java.util.Collection,
-     * java.util.Collection)
-     */
-    public Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> getLastEvents(
-            Collection<? extends Auditable> auditables, Collection<Class<? extends AuditEventType>> types ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> results = new HashMap<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>>();
-        if ( auditables.size() == 0 ) return results;
-
-        for ( Class<? extends AuditEventType> t : types ) {
-            results.put( t, new HashMap<Auditable, AuditEvent>() );
-        }
-
-        final Map<AuditTrail, Auditable> atmap = getAuditTrailMap( auditables );
-
-        List<String> classes = getClassHierarchy( types );
-
-        final String queryString = "select et, trail, event from ubic.gemma.model.common.auditAndSecurity.AuditTrail trail "
-                + "inner join trail.events event inner join event.eventType et inner join fetch event.performer where trail in (:trails) "
-                + "and et.class in (" + StringUtils.join( classes, "," ) + ") order by event.date desc ";
-
-        org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
-        queryObject.setParameterList( "trails", atmap.keySet() );
-
-        List<?> qr = queryObject.list();
-
-        for ( Object o : qr ) {
-            Object[] ar = ( Object[] ) o;
-            AuditEventType ty = ( AuditEventType ) ar[0];
-            AuditTrail t = ( AuditTrail ) ar[1];
-            AuditEvent e = ( AuditEvent ) ar[2];
-
-            /*
-             * This is a bit inefficient. Loop needed because returned type is Impl (and probably a proxy). But probably
-             * query is the bottleneck.
-             */
-            for ( Class<? extends AuditEventType> ti : types ) {
-                if ( ti.isAssignableFrom( ty.getClass() ) ) {
-                    // FIXME we need to distinguish subclasses of validation events, for example.
-                    Map<Auditable, AuditEvent> innerMap = results.get( ti );
-
-                    assert innerMap != null;
-
-                    // only one event per type
-                    if ( !innerMap.containsKey( atmap.get( t ) ) ) {
-                        innerMap.put( atmap.get( t ), e );
-                    }
-                    break;
-                }
-            }
-        }
-
-        timer.stop();
-        if ( timer.getTime() > 1000 ) {
-            log.info( "Last events retrieved for  " + types.size() + " different types for " + auditables.size()
-                    + " items in " + timer.getTime() + "ms" );
-        }
-
-        return results;
-    }
-
     @SuppressWarnings("unchecked")
     @Override
     protected Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> handleGetLastTypedAuditEvents(
@@ -462,111 +499,80 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         return result;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Note that this only returns selected classes of auditables.
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvent(java.util.Collection)
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getNewSinceDate(java.util.Date)
+     * @return Collection of Auditables
      */
-    public AuditEvent getLastOutstandingTroubleEvent( Collection<AuditEvent> events ) {
-        return getLastOutstandingTroubleEventNoSort( events );
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getLastOutstandingTroubleEvents(java.util.Collection)
-     */
-    public Map<Auditable, AuditEvent> getLastOutstandingTroubleEvents( Collection<? extends Auditable> auditables ) {
-        Collection<Class<? extends AuditEventType>> types = new HashSet<Class<? extends AuditEventType>>();
-        types.add( TroubleStatusFlagEvent.class );
-        types.add( OKStatusFlagEvent.class );
-        Map<Class<? extends AuditEventType>, Map<Auditable, AuditEvent>> lastEvents = this.getLastEvents( auditables,
-                types );
-
-        Map<Auditable, AuditEvent> results = new HashMap<Auditable, AuditEvent>();
-
-        if ( !lastEvents.containsKey( TroubleStatusFlagEvent.class ) ) {
-            return results;
-        }
-
-        /*
-         * Common case: check if auditables are EEs.
-         */
-
-        Collection<ExpressionExperiment> ees = new HashSet<ExpressionExperiment>();
-
-        for ( Auditable a : auditables ) {
-
-            Map<Auditable, AuditEvent> trouble = lastEvents.get( TroubleStatusFlagEvent.class );
-
-            if ( !trouble.containsKey( a ) ) {
-                // no trouble! but we should check the array designs later.
-                if ( a instanceof ExpressionExperiment ) {
-                    ees.add( ( ExpressionExperiment ) a );
-                }
-                continue;
+    @Override
+    protected java.util.Collection<Auditable> handleGetNewSinceDate( java.util.Date date ) {
+        Collection<Auditable> result = new HashSet<Auditable>();
+        for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
+            String queryString = "select distinct adb from "
+                    + clazz
+                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='C'";
+            try {
+                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+                queryObject.setParameter( "date", date );
+                result.addAll( queryObject.list() );
+            } catch ( org.hibernate.HibernateException ex ) {
+                throw super.convertHibernateAccessException( ex );
             }
-
-            AuditEvent t = trouble.get( a );
-
-            Map<Auditable, AuditEvent> ok = lastEvents.get( OKStatusFlagEvent.class );
-
-            if ( ok.containsKey( a ) ) {
-                // do we have a more recent ok event?
-                AuditEvent o = ok.get( a );
-                if ( o.getDate().after( t.getDate() ) ) {
-                    continue;
-                }
-
-                results.put( a, t );
-
-            } else {
-                results.put( a, t );
-            }
-
         }
-
-        if ( !ees.isEmpty() ) {
-            Map<Long, ExpressionExperiment> eemap = EntityUtils.getIdMap( ees );
-            Map<ArrayDesign, Collection<Long>> ads = CommonQueries.getArrayDesignsUsed( eemap.keySet(),
-                    this.getSession() );
-
-            Map<Auditable, AuditEvent> arrayDesignTrouble = getLastOutstandingTroubleEvents( ads.keySet() );
-
-            for ( Entry<Auditable, AuditEvent> e : arrayDesignTrouble.entrySet() ) {
-                for ( Long ee : ads.get( e.getKey() ) ) {
-                    results.put( eemap.get( ee ), e.getValue() );
-                }
-            }
-            results.putAll( arrayDesignTrouble );
-
-        }
-
-        return results;
-
+        return result;
     }
 
     /**
-     * @param events
-     * @return
+     * Note that this only returns selected classes of auditables.
+     * 
+     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#getUpdatedSinceDate(java.util.Date)
+     * @return Collection of Auditables
      */
-    private AuditEvent getLastOutstandingTroubleEventNoSort( Collection<AuditEvent> events ) {
-        AuditEvent lastTroubleEvent = null;
-        AuditEvent lastOKEvent = null;
-        for ( AuditEvent event : events ) {
-            if ( event.getEventType() == null ) {
-                continue;
-            } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
-                if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) ) lastOKEvent = event;
-            } else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
-                if ( lastTroubleEvent == null || lastTroubleEvent.getDate().before( event.getDate() ) )
-                    lastTroubleEvent = event;
+    @Override
+    protected java.util.Collection<Auditable> handleGetUpdatedSinceDate( java.util.Date date ) {
+        Collection<Auditable> result = new HashSet<Auditable>();
+        for ( String clazz : AUDITABLES_TO_TRACK_FOR_WHATSNEW ) {
+            String queryString = "select distinct adb from "
+                    + clazz
+                    + " adb inner join adb.auditTrail atr inner join atr.events as ae where ae.date > :date and ae.action='U'";
+            try {
+                org.hibernate.Query queryObject = super.getSession().createQuery( queryString );
+                queryObject.setParameter( "date", date );
+                result.addAll( queryObject.list() );
+            } catch ( org.hibernate.HibernateException ex ) {
+                throw super.convertHibernateAccessException( ex );
             }
         }
-        if ( lastTroubleEvent != null )
-            if ( lastOKEvent == null || lastOKEvent.getDate().before( lastTroubleEvent.getDate() ) )
-                return lastTroubleEvent;
-        return null;
+        return result;
+    }
+
+    @Deprecated
+    @Override
+    protected void handleThaw( AuditEvent auditEvent ) throws Exception {
+        if ( auditEvent == null ) return;
+
+        auditEvent = ( AuditEvent ) this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select a from AuditEventImpl a fetch all properties join fetch a.performer fetch all properties where a = :ae ",
+                        "ae", auditEvent ).iterator().next();
+
+        // this.getHibernateTemplate().execute( new HibernateCallback<Object>() {
+        // public Object doInHibernate( Session session ) throws HibernateException {
+        // /*
+        // * FIXME this check really won't work. This thaw will not operate correctly if the event isn't already
+        // * associated with the session.
+        // */
+        // if ( session.get( AuditEventImpl.class, auditEvent.getId() ) == null ) {
+        // session.lock( auditEvent, LockMode.NONE );
+        // }
+        // Hibernate.initialize( auditEvent );
+        // Hibernate.initialize( auditEvent.getPerformer() );
+        // return null;
+        // }
+        // } );
+
     }
 
     /**
@@ -631,69 +637,78 @@ public class AuditEventDaoImpl extends ubic.gemma.model.common.auditAndSecurity.
         return atmap;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given class)
      * 
-     * @see
-     * ubic.gemma.model.common.auditAndSecurity.AuditEventDaoBase#handleGetLastEvent(ubic.gemma.model.common.Auditable,
-     * java.lang.Class)
+     * @param type Class
+     * @return A List of class names, including the given type.
      */
-    @Override
-    protected AuditEvent handleGetLastEvent( Auditable auditable, Class<? extends AuditEventType> type ) {
-        return this.handleGetLastEvent( auditable.getAuditTrail(), type );
-    }
+    private List<String> getClassHierarchy( Class<? extends AuditEventType> type ) {
+        List<String> classes = new ArrayList<String>();
+        classes.add( getImplClass( type ) );
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#hasEvent(ubic.gemma.model.common.Auditable,
-     * java.lang.Class)
-     */
-    @Override
-    public boolean hasEvent( Auditable a, Class<? extends AuditEventType> type ) {
-        return this.getLastEvent( a, type ) != null;
-    }
+        // how to determine subclasses? There is no way to do this but the hibernate way.
+        SingleTableEntityPersister classMetadata = ( SingleTableEntityPersister ) this.getSessionFactory()
+                .getClassMetadata( getImplClass( type ) );
+        if ( classMetadata == null ) return classes;
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#retainHavingEvent(java.util.Collection,
-     * java.lang.Class)
-     */
-    @Override
-    public void retainHavingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
-
-        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
-
-        CollectionUtils.filter( a, new Predicate() {
-            @Override
-            public boolean evaluate( Object arg0 ) {
-                return events.containsKey( arg0 );
+        if ( classMetadata.hasSubclasses() ) {
+            String[] subclasses = classMetadata.getSubclassClosure(); // this includes the superclass, fully qualified
+            // names.
+            classes.clear();
+            for ( String string : subclasses ) {
+                // strip qualification to leave BlabablImpl
+                string = string.replaceFirst( ".+\\.", "" );
+                classes.add( string );
             }
-        } );
-
+        }
+        return classes;
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * Determine the full set of AuditEventTypes that are needed (that is, subclasses of the given classes)
      * 
-     * @see ubic.gemma.model.common.auditAndSecurity.AuditEventDao#retainLackingEvent(java.util.Collection,
-     * java.lang.Class)
+     * @param types
+     * @return
      */
-    @Override
-    public void retainLackingEvent( final Collection<? extends Auditable> a, final Class<? extends AuditEventType> type ) {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        final Map<Auditable, AuditEvent> events = this.getLastEvent( a, type );
-        log.info( "Phase I: " + timer.getTime() + "ms" );
+    private List<String> getClassHierarchy( Collection<Class<? extends AuditEventType>> types ) {
+        List<String> classes = new ArrayList<String>();
+        for ( Class<? extends AuditEventType> t : types ) {
+            classes.addAll( getClassHierarchy( t ) );
+        }
+        return classes;
+    }
 
-        CollectionUtils.filter( a, new Predicate() {
-            @Override
-            public boolean evaluate( Object arg0 ) {
-                return !events.containsKey( arg0 );
+    /**
+     * @param type
+     * @return
+     */
+    private String getImplClass( Class<? extends AuditEventType> type ) {
+        String canonicalName = type.getName();
+        return canonicalName.endsWith( "Impl" ) ? type.getName() : type.getName() + "Impl";
+    }
+
+    /**
+     * @param events
+     * @return
+     */
+    private AuditEvent getLastOutstandingTroubleEventNoSort( Collection<AuditEvent> events ) {
+        AuditEvent lastTroubleEvent = null;
+        AuditEvent lastOKEvent = null;
+        for ( AuditEvent event : events ) {
+            if ( event.getEventType() == null ) {
+                continue;
+            } else if ( OKStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
+                if ( lastOKEvent == null || lastOKEvent.getDate().before( event.getDate() ) ) lastOKEvent = event;
+            } else if ( TroubleStatusFlagEvent.class.isAssignableFrom( event.getEventType().getClass() ) ) {
+                if ( lastTroubleEvent == null || lastTroubleEvent.getDate().before( event.getDate() ) )
+                    lastTroubleEvent = event;
             }
-        } );
-
+        }
+        if ( lastTroubleEvent != null )
+            if ( lastOKEvent == null || lastOKEvent.getDate().before( lastTroubleEvent.getDate() ) )
+                return lastTroubleEvent;
+        return null;
     }
 
 }

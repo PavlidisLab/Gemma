@@ -58,9 +58,11 @@ import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.persistence.CrudUtils;
+import ubic.gemma.persistence.CrudUtilsImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.security.authorization.acl.AclAdvice;
 import ubic.gemma.util.ConfigUtils;
+import ubic.gemma.util.EntityUtils;
 import ubic.gemma.util.ReflectionUtil;
 
 /**
@@ -104,13 +106,13 @@ public class AuditAdvice extends HibernateDaoSupport {
     public AuditAdvice( SessionFactory sessionFactory, PlatformTransactionManager transactionManager ) {
 
         try {
-
             AUDIT_UPDATE = ConfigUtils.getBoolean( "audit.update" );
             AUDIT_DELETE = ConfigUtils.getBoolean( "audit.delete" );
             AUDIT_CREATE = ConfigUtils.getBoolean( "audit.create" ) || AUDIT_UPDATE;
         } catch ( NoSuchElementException e ) {
             log.error( "Configuration error: " + e.getMessage() + "; will use default values" );
         }
+
         transactionTemplate = new TransactionTemplate( transactionManager );
         super.setSessionFactory( sessionFactory );
     }
@@ -162,7 +164,7 @@ public class AuditAdvice extends HibernateDaoSupport {
                 /*
                  * This can happen if we hit an auditable during a read-only event: programming error.
                  */
-                throw new IllegalStateException( "Invalid attempt to create an audit trail on" + a, e );
+                throw new IllegalStateException( "Invalid attempt to create an audit trail on: " + a, e );
             }
 
         }
@@ -289,7 +291,8 @@ public class AuditAdvice extends HibernateDaoSupport {
      * @return
      */
     private Object getPersistentObject( Object retValue, String methodName, Object[] args ) {
-        if ( CrudUtils.methodIsDelete( methodName ) || CrudUtils.methodIsUpdate( methodName ) ) {
+        if ( retValue == null
+                && ( CrudUtilsImpl.methodIsDelete( methodName ) || CrudUtilsImpl.methodIsUpdate( methodName ) ) ) {
 
             /*
              * Only deal with single-argument update methods.
@@ -356,6 +359,9 @@ public class AuditAdvice extends HibernateDaoSupport {
         }
     }
 
+    /**
+     * @param d
+     */
     private void updateStatus( Auditable d ) {
         statusDao.update( d );
     }
@@ -375,19 +381,21 @@ public class AuditAdvice extends HibernateDaoSupport {
             @Override
             protected void doInTransactionWithoutResult( TransactionStatus status ) {
 
-                assert a != null;
-                Session session = getSessionFactory().getCurrentSession();
+                assert a != null : "Null entity passed to auditing [" + methodName + " on " + a + "]";
+                assert a.getId() != null : "Transient instance passed to auditing [" + methodName + " on " + a + "]";
 
-                if ( !CrudUtils.methodIsDelete( methodName ) ) {
+                if ( !CrudUtilsImpl.methodIsDelete( methodName ) ) {
+                    Session session = getSession( false );
                     session.buildLockRequest( LockOptions.NONE ).lock( a );
                 }
 
                 Hibernate.initialize( a );
+                Hibernate.initialize( a.getAuditTrail() );
 
-                if ( AUDIT_CREATE && CrudUtils.methodIsCreate( methodName ) ) {
+                if ( AUDIT_CREATE && CrudUtilsImpl.methodIsCreate( methodName ) ) {
                     addCreateAuditEvent( a, "" );
                     processAssociations( methodName, a );
-                } else if ( AUDIT_UPDATE && CrudUtils.methodIsUpdate( methodName ) ) {
+                } else if ( AUDIT_UPDATE && CrudUtilsImpl.methodIsUpdate( methodName ) ) {
                     addUpdateAuditEvent( a );
 
                     /*
@@ -396,7 +404,7 @@ public class AuditAdvice extends HibernateDaoSupport {
                      * they might be proxies.
                      */
                     processAssociations( methodName, a );
-                } else if ( AUDIT_DELETE && CrudUtils.methodIsDelete( methodName ) ) {
+                } else if ( AUDIT_DELETE && CrudUtilsImpl.methodIsDelete( methodName ) ) {
                     addDeleteAuditEvent( a );
                 }
 
@@ -435,8 +443,8 @@ public class AuditAdvice extends HibernateDaoSupport {
 
                 String propertyName = propertyNames[j];
 
-                if ( ( canSkipAssociationCheck( object, propertyName ) || !crudUtils.needCascade( methodName, cs ) )
-                        && !specialCaseForAssociationFollow( object, propertyName ) ) {
+                if ( !specialCaseForAssociationFollow( object, propertyName )
+                        && ( canSkipAssociationCheck( object, propertyName ) || !crudUtils.needCascade( methodName, cs ) ) ) {
                     continue;
                 }
 
@@ -541,7 +549,8 @@ public class AuditAdvice extends HibernateDaoSupport {
      */
     private boolean specialCaseForAssociationFollow( Object object, String property ) {
 
-        if ( BioAssay.class.isAssignableFrom( object.getClass() ) && property.equals( "samplesUsed" ) ) {
+        if ( BioAssay.class.isAssignableFrom( object.getClass() )
+                && ( property.equals( "samplesUsed" ) || property.equals( "arrayDesignUsed" ) ) ) {
             return true;
         } else if ( DesignElementDataVector.class.isAssignableFrom( object.getClass() )
                 && property.equals( "bioAssayDimension" ) ) {

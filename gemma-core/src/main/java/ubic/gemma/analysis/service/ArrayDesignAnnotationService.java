@@ -46,8 +46,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.association.BioSequence2GeneProduct;
@@ -59,6 +58,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.PredictedGene;
 import ubic.gemma.model.genome.ProbeAlignedRegion;
 import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 import ubic.gemma.util.ConfigUtils;
 import ubic.gemma.util.DateUtil;
 
@@ -83,7 +83,7 @@ import ubic.gemma.util.DateUtil;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignAnnotationService {
 
     public static final String ANNOTATION_FILE_SUFFIX = ".an.txt.gz";
@@ -327,7 +327,7 @@ public class ArrayDesignAnnotationService {
 
     Transformer goTermExtractor = new Transformer() {
         public Object transform( Object input ) {
-            return GeneOntologyService.asRegularGoId( ( ( OntologyTerm ) input ) );
+            return GeneOntologyServiceImpl.asRegularGoId( ( ( OntologyTerm ) input ) );
         }
     };
 
@@ -544,7 +544,7 @@ public class ArrayDesignAnnotationService {
         if ( ontos.size() == 0 ) return results;
 
         for ( VocabCharacteristic vc : ontos ) {
-            results.add( GeneOntologyService.getTermForId( vc.getValue() ) );
+            results.add( GeneOntologyServiceImpl.getTermForId( vc.getValue() ) );
         }
 
         if ( ty.equals( OutputType.SHORT ) ) return results;

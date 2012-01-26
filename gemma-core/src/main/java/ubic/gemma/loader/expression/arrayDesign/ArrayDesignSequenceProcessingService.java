@@ -57,7 +57,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.biosequence.PolymerType;
 import ubic.gemma.model.genome.biosequence.SequenceType;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Handles collapsing the sequences, attaching sequences to DesignElements, either from provided input or via a fetch.
@@ -87,7 +87,7 @@ public class ArrayDesignSequenceProcessingService {
     private ArrayDesignService arrayDesignService;
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
 
     @Autowired
     private BioSequenceService bioSequenceService;
@@ -223,7 +223,7 @@ public class ArrayDesignSequenceProcessingService {
         if ( bs.getSequenceDatabaseEntry() == null ) {
             return null;
         }
-        bs = this.bioSequenceService.thaw( bs );
+        // bs = this.bioSequenceService.thaw( bs );
         return bs.getSequenceDatabaseEntry().getAccession();
     }
 
@@ -330,7 +330,7 @@ public class ArrayDesignSequenceProcessingService {
     }
 
     /**
-     * If the sequence already exists, we have to update it.
+     * If the sequence already exists
      * 
      * @param sequence
      * @return
@@ -393,7 +393,8 @@ public class ArrayDesignSequenceProcessingService {
                 arrayDesign.getCompositeSequences().add( newCompositeSequence );
             } else {
                 if ( force ) {
-                    persistSequence( collapsed );
+                    collapsed = persistSequence( collapsed );
+                    assert collapsed.getTaxon().equals( taxon );
                 }
                 quickFindMap.put( newCompositeSequence.getName(), newCompositeSequence );
             }
@@ -645,7 +646,7 @@ public class ArrayDesignSequenceProcessingService {
     public Collection<BioSequence> processArrayDesign( ArrayDesign arrayDesign, InputStream sequenceFile,
             SequenceType sequenceType, Taxon taxon ) throws IOException {
 
-        arrayDesign = arrayDesignService.thaw( arrayDesign );
+        // arrayDesign = arrayDesignService.thaw( arrayDesign );
 
         if ( sequenceType.equals( SequenceType.AFFY_PROBE ) ) {
             return this.processAffymetrixDesign( arrayDesign, sequenceFile, taxon, true );
@@ -673,7 +674,6 @@ public class ArrayDesignSequenceProcessingService {
             sequence.setType( sequenceType );
             sequence.setPolymerType( PolymerType.DNA );
             sequence.setTaxon( taxon );
-
             sequence = persistSequence( sequence );
 
             addToMaps( gbIdMap, nameMap, sequence );
@@ -1124,7 +1124,7 @@ public class ArrayDesignSequenceProcessingService {
         this.bioSequenceService = bioSequenceService;
     }
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 
@@ -1312,7 +1312,7 @@ public class ArrayDesignSequenceProcessingService {
             fillInDatabaseEntry( found, result );
         }
 
-        result = bioSequenceService.thaw( result );
+        // result = bioSequenceService.thaw( result );
 
         return result;
     }
@@ -1359,9 +1359,7 @@ public class ArrayDesignSequenceProcessingService {
 
         bioSequenceService.update( existing );
         if ( log.isDebugEnabled() )
-            log
-                    .debug( "Updated " + existing + " with sequence "
-                            + StringUtils.abbreviate( existing.getSequence(), 20 ) );
+            log.debug( "Updated " + existing + " with sequence " + StringUtils.abbreviate( existing.getSequence(), 20 ) );
 
         assert found.getSequenceDatabaseEntry().getExternalDatabase() != null;
         return existing;

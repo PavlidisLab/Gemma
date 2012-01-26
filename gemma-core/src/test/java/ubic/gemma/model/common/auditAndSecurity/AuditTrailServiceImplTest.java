@@ -35,6 +35,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignGeneMapping
 import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.common.auditAndSecurity.eventType.ValidatedFlagEvent;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
 
 /**
@@ -47,6 +48,10 @@ public class AuditTrailServiceImplTest extends BaseSpringContextTest {
 
     @Autowired
     AuditTrailService auditTrailService;
+
+    @Autowired
+    ArrayDesignService arrayDesignService;
+
     private int size;
 
     @Before

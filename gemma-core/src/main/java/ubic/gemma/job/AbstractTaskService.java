@@ -25,6 +25,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.job.grid.util.SpacesUtil;
+import ubic.gemma.job.grid.util.SpacesUtilImpl;
 import ubic.gemma.job.grid.util.TaskNotGridEnabledException;
 
 /**
@@ -109,7 +110,7 @@ public abstract class AbstractTaskService {
         String taskId = command.getTaskId();
         assert taskId != null;
 
-        boolean gigaspacesRunning = SpacesUtil.isSpaceRunning();
+        boolean gigaspacesRunning = SpacesUtilImpl.isSpaceRunning();
 
         BackgroundJob<?> job = null;
 

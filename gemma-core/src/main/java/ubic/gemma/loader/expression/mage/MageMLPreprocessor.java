@@ -38,7 +38,7 @@ import ubic.gemma.model.common.quantitationtype.QuantitationType;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVector;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -59,7 +59,7 @@ public class MageMLPreprocessor implements Preprocessor {
      * semi-deprecated?
      */
 
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
 
     Log log = LogFactory.getLog( MageMLPreprocessor.class.getName() );
     private int whichQuantitationType = -1;
@@ -145,7 +145,7 @@ public class MageMLPreprocessor implements Preprocessor {
     /**
      * @param persisterHelper The persisterHelper to set.
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

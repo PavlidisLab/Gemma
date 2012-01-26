@@ -45,7 +45,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister; 
 import ubic.gemma.util.SequenceBinUtils;
 
 /**
@@ -66,7 +66,7 @@ public class ArrayDesignSequenceAlignmentService {
     ArrayDesignService arrayDesignService;
 
     @Autowired
-    PersisterHelper persisterHelper;
+    Persister persisterHelper;
 
     @Autowired
     BioSequenceService bioSequenceService;
@@ -427,9 +427,7 @@ public class ArrayDesignSequenceAlignmentService {
                 pl.setStrand( br.getStrand() );
                 br.setTargetAlignedRegion( pl );
 
-                pl
-                        .setBin( SequenceBinUtils.binFromRange( br.getTargetStart().intValue(), br.getTargetEnd()
-                                .intValue() ) );
+                pl.setBin( SequenceBinUtils.binFromRange( br.getTargetStart().intValue(), br.getTargetEnd().intValue() ) );
             }
 
         }

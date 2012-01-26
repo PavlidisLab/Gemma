@@ -99,7 +99,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     private DifferentialExpressionAnalysisTask differentialExpressionAnalysisTask;
 
     @Autowired
-    private AnalysisSelectionAndExecutionService differentialExpressionAnalyzer;
+    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
 
     @Autowired
     private ExpressionExperimentService expressionExperimentService = null;
@@ -121,7 +121,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
         Collection<ExperimentalFactor> factorsWithoutBatch = ExperimentalDesignUtils.factorsWithoutBatch( ee
                 .getExperimentalDesign().getExperimentalFactors() );
 
-        AbstractDifferentialExpressionAnalyzer analyzer = this.differentialExpressionAnalyzer.determineAnalysis( ee,
+        AbstractDifferentialExpressionAnalyzer analyzer = this.analysisSelectionAndExecutionService.determineAnalysis( ee,
                 factorsWithoutBatch, null );
 
         DifferentialExpressionAnalyzerInfo result = new DifferentialExpressionAnalyzerInfo();
@@ -255,7 +255,7 @@ public class DifferentialExpressionAnalysisController extends AbstractTaskServic
     }
 
     public void setDifferentialExpressionAnalyzer( AnalysisSelectionAndExecutionService differentialExpressionAnalyzer ) {
-        this.differentialExpressionAnalyzer = differentialExpressionAnalyzer;
+        this.analysisSelectionAndExecutionService = differentialExpressionAnalyzer;
     }
 
     public void setExpressionExperimentService( ExpressionExperimentService expressionExperimentService ) {

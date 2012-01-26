@@ -29,15 +29,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.gene.GeneProductType;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Class to provide functionality to load genes from a tab delimited file. Typical usage is for non model organisms that
@@ -52,12 +51,12 @@ import ubic.gemma.persistence.PersisterHelper;
  * @author ldonnison
  * @version $Id$
  */
-@Service
+@Component
 public class ExternalFileGeneLoaderService {
     private static Log log = LogFactory.getLog( ExternalFileGeneLoaderService.class.getName() );
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
 
     @Autowired
     private TaxonService taxonService;

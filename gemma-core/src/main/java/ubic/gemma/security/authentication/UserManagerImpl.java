@@ -102,7 +102,6 @@ public class UserManagerImpl implements UserManager {
      * @see ubic.gemma.security.authentication.UserManagerI#addGroupAuthority(java.lang.String,
      * org.springframework.security.core.GrantedAuthority)
      */
-    @Transactional
     public void addGroupAuthority( String groupName, GrantedAuthority authority ) {
         UserGroup g = loadGroup( groupName );
 
@@ -126,7 +125,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#addUserToGroup(java.lang.String, java.lang.String)
      */
-    @Transactional
     public void addUserToGroup( String username, String groupName ) {
         User u = loadUser( username );
         UserGroup g = loadGroup( groupName );
@@ -138,8 +136,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#changePassword(java.lang.String, java.lang.String)
      */
-    @Transactional
-    @Secured( { "GROUP_USER" } )
+    @Secured({ "GROUP_USER" })
     public void changePassword( String oldPassword, String newPassword ) throws AuthenticationException {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -170,8 +167,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#changePasswordForUser(java.lang.String, java.lang.String)
      */
-    @Transactional
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public String changePasswordForUser( String email, String username, String newPassword )
             throws AuthenticationException {
         Authentication currentAuthentication = SecurityContextHolder.getContext().getAuthentication();
@@ -212,7 +208,6 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#createGroup(java.lang.String, java.util.List)
      */
-    @Transactional
     public void createGroup( String groupName, List<GrantedAuthority> authorities ) {
 
         UserGroup g = UserGroup.Factory.newInstance();
@@ -232,9 +227,14 @@ public class UserManagerImpl implements UserManager {
      * ubic.gemma.security.authentication.UserManagerI#createUser(org.springframework.security.core.userdetails.UserDetails
      * )
      */
-    @Transactional
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void createUser( UserDetails user ) {
+
+        /*
+         * UserDetails is not an entity, so this method is not directly managed by the Audit or ACL advice. However, it
+         * runs in a transaction and calls two service methods which are intercepted. This means it is intercepted
+         * before the transaction is flushed.
+         */
 
         validateUserName( user.getUsername() );
 
@@ -327,7 +327,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
      */
-    @Secured( { "GROUP_USER", "RUN_AS_ADMIN" })
+    @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     public User findbyEmail( String emailAddress ) {
         return findByEmail( emailAddress );
     }
@@ -337,7 +337,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#findbyEmail(java.lang.String)
      */
-    @Secured( { "GROUP_USER", "RUN_AS_ADMIN" })
+    @Secured({ "GROUP_USER", "RUN_AS_ADMIN" })
     public User findByEmail( String emailAddress ) {
         return userService.findByEmail( emailAddress );
     }
@@ -389,7 +389,7 @@ public class UserManagerImpl implements UserManager {
      * @see ubic.gemma.security.authentication.UserManagerI#findGroupsForUser(java.lang.String)
      */
     @Transactional(readOnly = true)
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_USER" })
     public Collection<String> findGroupsForUser( String userName ) {
 
         Collection<String> result = new HashSet<String>();
@@ -670,7 +670,7 @@ public class UserManagerImpl implements UserManager {
      * )
      */
     @Transactional
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public void updateUser( UserDetails user ) {
         String username = user.getUsername();
         User u = userService.findByUserName( username );
@@ -692,7 +692,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManagerI#userExists(java.lang.String)
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userExists( String username ) {
         return userService.findByUserName( username ) != null;
     }
@@ -702,7 +702,7 @@ public class UserManagerImpl implements UserManager {
      * 
      * @see ubic.gemma.security.authentication.UserManager#userWithEmailExists(java.lang.String)
      */
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean userWithEmailExists( String emailAddress ) {
         return userService.findByEmail( emailAddress ) != null;
     }
@@ -713,7 +713,7 @@ public class UserManagerImpl implements UserManager {
      * @see ubic.gemma.security.authentication.UserManager#validateSignupToken(java.lang.String, java.lang.String)
      */
     @Transactional
-    @Secured( { "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
+    @Secured({ "IS_AUTHENTICATED_ANONYMOUSLY", "RUN_AS_ADMIN" })
     public boolean validateSignupToken( String username, String key ) {
 
         UserDetailsImpl u = ( UserDetailsImpl ) loadUserByUsername( username );
@@ -754,8 +754,8 @@ public class UserManagerImpl implements UserManager {
             @SuppressWarnings("unused") String newPassword ) {
         UserDetails user = loadUserByUsername( currentAuth.getName() );
 
-        UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken( user, user
-                .getPassword(), user.getAuthorities() );
+        UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken( user,
+                user.getPassword(), user.getAuthorities() );
         newAuthentication.setDetails( currentAuth.getDetails() );
 
         return newAuthentication;

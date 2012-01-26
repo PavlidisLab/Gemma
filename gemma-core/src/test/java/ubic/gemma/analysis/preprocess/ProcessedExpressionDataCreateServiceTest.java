@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.basecode.io.ByteArrayConverter;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.bioAssay.BioAssayService;
@@ -61,7 +61,7 @@ public class ProcessedExpressionDataCreateServiceTest extends AbstractGeoService
     ExpressionExperimentService eeService;
 
     @Autowired
-    GeoDatasetService geoService;
+    GeoService geoService;
 
     @Autowired
     ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;

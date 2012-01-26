@@ -33,6 +33,7 @@ import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.type.LongType;
@@ -274,8 +275,9 @@ public class CompositeSequenceDaoImpl extends ubic.gemma.model.expression.design
         for ( CompositeSequence cs : compositeSequences ) {
             returnVal.put( cs, new HashSet<Gene>() );
         }
+
         List<Object> csGene = new ArrayList<Object>();
-        org.hibernate.classic.Session session = this.getHibernateTemplate().getSessionFactory().getCurrentSession();
+        Session session = this.getSession();
         org.hibernate.SQLQuery queryObject = session.createSQLQuery( nativeQuery );
         queryObject.addScalar( "cs", new LongType() );
         queryObject.addScalar( "gene", new LongType() );

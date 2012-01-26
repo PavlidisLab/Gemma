@@ -24,7 +24,7 @@ import java.util.Map;
 
 import ubic.basecode.dataStructure.matrix.ObjectMatrix;
 import ubic.basecode.dataStructure.matrix.ObjectMatrixImpl;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisHelperService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisUtil;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataMatrixColumnSort;
 import ubic.gemma.model.common.description.Characteristic;
@@ -153,7 +153,7 @@ public class ExperimentalDesignUtils {
      */
     public static List<BioMaterial> getOrderedSamples( ExpressionDataDoubleMatrix dmatrix,
             List<ExperimentalFactor> factors ) {
-        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisHelperService
+        List<BioMaterial> samplesUsed = DifferentialExpressionAnalysisUtil
                 .getBioMaterialsForBioAssays( dmatrix );
         samplesUsed = ExpressionDataMatrixColumnSort.orderByExperimentalDesign( samplesUsed, factors );
         return samplesUsed;

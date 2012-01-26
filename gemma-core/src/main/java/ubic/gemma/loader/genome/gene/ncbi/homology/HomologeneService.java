@@ -36,8 +36,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.util.FileTools;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.genome.Gene;
@@ -52,7 +51,7 @@ import ubic.gemma.util.ConfigUtils;
  * @author kelsey
  * @version $Id$
  */
-@Service
+@Component
 public class HomologeneService {
 
     protected static final Log log = LogFactory.getLog( HomologeneService.class );

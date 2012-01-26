@@ -330,7 +330,7 @@ public class LoadSimpleExpressionDataCli extends AbstractSpringAwareCLI {
 
         configureQuantitationType( fields, metaData );
 
-        ExpressionExperiment ee = eeLoaderService.load( metaData, data );
+        ExpressionExperiment ee = eeLoaderService.create( metaData, data );
 
         ee = eeService.thawLite( ee );
 

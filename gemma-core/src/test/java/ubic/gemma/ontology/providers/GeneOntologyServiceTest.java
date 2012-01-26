@@ -27,7 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import ubic.basecode.ontology.model.OntologyTerm;
-import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 
 /**
  * @author Paul
@@ -35,7 +35,7 @@ import ubic.gemma.ontology.providers.GeneOntologyService;
  */
 @SuppressWarnings("static-access")
 public class GeneOntologyServiceTest extends TestCase {
-    GeneOntologyService gos;
+    GeneOntologyServiceImpl gos;
     private static Log log = LogFactory.getLog( GeneOntologyServiceTest.class.getName() );
 
     public final void testAllParents() throws Exception {
@@ -51,15 +51,15 @@ public class GeneOntologyServiceTest extends TestCase {
     }
 
     public final void testGetAspect() throws Exception {
-        String aspect = GeneOntologyService.getTermAspect( "GO:1234567" ).toString().toLowerCase();
+        String aspect = GeneOntologyServiceImpl.getTermAspect( "GO:1234567" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyService.getTermAspect( "GO:0000107" ).toString().toLowerCase();
+        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0000107" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyService.getTermAspect( "GO:0016791" ).toString().toLowerCase();
+        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:0016791" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyService.getTermAspect( "GO:1234567" ).toString().toLowerCase(); // should be cached.
+        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:1234567" ).toString().toLowerCase(); // should be cached.
         assertEquals( "molecular_function", aspect );
-        aspect = GeneOntologyService.getTermAspect( "GO:1234567" ).toString().toLowerCase();
+        aspect = GeneOntologyServiceImpl.getTermAspect( "GO:1234567" ).toString().toLowerCase();
         assertEquals( "molecular_function", aspect );
     }
 
@@ -151,7 +151,7 @@ public class GeneOntologyServiceTest extends TestCase {
     // note: no spring context.
     @Override
     protected void setUp() throws Exception {
-        gos = new GeneOntologyService();
+        gos = new GeneOntologyServiceImpl();
         InputStream is = this.getClass().getResourceAsStream( "/data/loader/ontology/molecular-function.test.owl" );
         assert is != null;
         gos.loadTermsInNameSpace( is );

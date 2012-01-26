@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import ubic.gemma.analysis.preprocess.TwoChannelMissingValues;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -66,7 +66,7 @@ public class ProcessedExpressionDataVectorServiceTest extends BaseSpringContextT
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private GeoDatasetService geoService;
+    private GeoService geoService;
 
     @Autowired
     private ArrayDesignService arrayDesignService;

@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.util.AlreadyExistsInSystemException;
 import ubic.gemma.model.expression.experiment.ExperimentalFactor;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -39,7 +39,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  */
 public class BatchInfoPopulationServiceIntegrationTest extends AbstractGeoServiceTest {
     @Autowired
-    protected GeoDatasetService geoService;
+    protected GeoService geoService;
 
     @Autowired
     private BatchInfoPopulationService batchInfoPopulationService;

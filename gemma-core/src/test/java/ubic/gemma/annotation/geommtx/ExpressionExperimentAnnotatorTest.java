@@ -62,7 +62,7 @@ public class ExpressionExperimentAnnotatorTest extends BaseSpringContextTest {
             log.info( ".... waiting for Birnlex..." );
         }
 
-        while ( !ExpressionExperimentAnnotator.ready() ) {
+        while ( !ExpressionExperimentAnnotatorImpl.ready() ) {
             Thread.sleep( 5000 );
             log.info( ".... Waiting for MMTX ..." );
         }

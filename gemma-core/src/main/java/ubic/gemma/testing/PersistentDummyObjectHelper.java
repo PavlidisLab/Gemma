@@ -67,7 +67,7 @@ import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.gene.GeneProduct;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatAssociation;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Used to generate test data.
@@ -83,10 +83,13 @@ public class PersistentDummyObjectHelper {
     public static final int NUM_BIOMATERIALS = 8;
     private static final int RANDOM_STRING_LENGTH = 10;
     public static final int DEFAULT_TEST_ELEMENT_COLLECTION_SIZE = 6;
-    private PersisterHelper persisterHelper;
+
+    private Persister persisterHelper;
+
     private ExternalDatabaseService externalDatabaseService;
 
     private ExternalDatabase geo;
+
     private ExternalDatabase genbank;
 
     private int testElementCollectionSize = DEFAULT_TEST_ELEMENT_COLLECTION_SIZE;
@@ -161,8 +164,8 @@ public class PersistentDummyObjectHelper {
     private Collection<RawExpressionDataVector> getDesignElementDataVectors( ExpressionExperiment ee,
             Collection<QuantitationType> quantitationTypes, Collection<BioAssay> bioAssays, ArrayDesign ad ) {
 
-        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance( ee.getShortName() + "_"
-                + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
+        BioAssayDimension baDim = BioAssayDimension.Factory.newInstance(
+                ee.getShortName() + "_" + RandomStringUtils.randomAlphanumeric( 20 ), null, bioAssays );
 
         Collection<RawExpressionDataVector> vectors = new HashSet<RawExpressionDataVector>();
         for ( QuantitationType quantType : quantitationTypes ) {
@@ -426,6 +429,7 @@ public class PersistentDummyObjectHelper {
         ArrayDesign ad = ArrayDesign.Factory.newInstance();
 
         ad.setName( "arrayDesign_" + RandomStringUtils.randomAlphabetic( RANDOM_STRING_LENGTH ) );
+        ad.setShortName( "AD_" + RandomStringUtils.randomAlphabetic( 5 ) );
         ad.setTechnologyType( TechnologyType.ONECOLOR );
 
         ad.setPrimaryTaxon( this.getTestPersistentTaxon() );
@@ -710,11 +714,20 @@ public class PersistentDummyObjectHelper {
      * @return
      */
     public GeneProduct getTestPersistentGeneProduct( Gene gene ) {
+        GeneProduct gp = getTestNonPersistentGeneProduct( gene );
+        return ( GeneProduct ) persisterHelper.persist( gp );
+    }
+
+    /**
+     * @param gene
+     * @return
+     */
+    public GeneProduct getTestNonPersistentGeneProduct( Gene gene ) {
         GeneProduct gp = GeneProduct.Factory.newInstance();
         gp.setNcbiGi( RandomStringUtils.randomAlphanumeric( 10 ) );
         gp.setName( RandomStringUtils.randomAlphanumeric( 6 ) );
         gp.setGene( gene );
-        return ( GeneProduct ) persisterHelper.persist( gp );
+        return gp;
     }
 
     /**
@@ -790,7 +803,7 @@ public class PersistentDummyObjectHelper {
     /**
      * @param persisterHelper the persisterHelper to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

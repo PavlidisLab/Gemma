@@ -94,7 +94,7 @@ public class TwoWayAnovaWithInteractionTest2 extends BaseSpringContextTest {
         f.setPrimaryTaxon( metaData.getTaxon() );
         metaData.getArrayDesigns().add( f );
 
-        ee = dataLoaderService.load( metaData, io );
+        ee = dataLoaderService.create( metaData, io );
 
         designImporter.importDesign( ee,
                 this.getClass().getResourceAsStream( "/data/analysis/expression/606_GSE8441_expdesign.data.txt" ) );

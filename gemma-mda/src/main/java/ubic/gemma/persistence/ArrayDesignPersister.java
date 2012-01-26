@@ -24,21 +24,15 @@ import java.util.Map;
 import java.util.concurrent.CancellationException;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.orm.hibernate3.HibernateCallback;
-
 import ubic.gemma.model.common.description.DatabaseEntry;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
-import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
+import ubic.gemma.model.expression.arrayDesign.ArrayDesignDao;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
-import ubic.gemma.model.expression.designElement.CompositeSequenceService;
+import ubic.gemma.model.expression.designElement.CompositeSequenceDao;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
-import ubic.gemma.model.genome.biosequence.BioSequenceImpl;
 
 /**
  * This class handles persisting array designs. This is a bit of a special case, because Arraydesigns are very large
@@ -58,10 +52,10 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     protected static final String DESIGN_ELEMENT_KEY_SEPARATOR = ":::";
 
     @Autowired
-    protected ArrayDesignService arrayDesignService;
+    protected ArrayDesignDao arrayDesignDao;
 
     @Autowired
-    protected CompositeSequenceService compositeSequenceService;
+    protected CompositeSequenceDao compositeSequenceDao;
 
     private Map<String, ArrayDesign> arrayDesignCache = new HashMap<String, ArrayDesign>();
 
@@ -69,9 +63,9 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
     Map<String, CompositeSequence> designElementSequenceCache = new HashMap<String, CompositeSequence>();
 
-    public ArrayDesignPersister( SessionFactory sessionFactory ) {
-        super( sessionFactory );
-    }
+    // public ArrayDesignPersister( SessionFactory sessionFactory ) {
+    // super( sessionFactory );
+    // }
 
     public Map<String, CompositeSequence> getDesignElementCache() {
         return designElementCache;
@@ -112,17 +106,17 @@ abstract public class ArrayDesignPersister extends GenomePersister {
     }
 
     /**
-     * @param arrayDesignService The arrayDesignService to set.
+     * @param arrayDesignDao The arrayDesignDao to set.
      */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
+    public void setArrayDesignDao( ArrayDesignDao arrayDesignDao ) {
+        this.arrayDesignDao = arrayDesignDao;
     }
 
     /**
-     * @param compositeSequenceService The compositeSequenceService to set.
+     * @param compositeSequenceDao The compositeSequenceDao to set.
      */
-    public void setCompositeSequenceService( CompositeSequenceService compositeSequenceService ) {
-        this.compositeSequenceService = compositeSequenceService;
+    public void setCompositeSequenceDao( CompositeSequenceDao compositeSequenceDao ) {
+        this.compositeSequenceDao = compositeSequenceDao;
     }
 
     /**
@@ -143,14 +137,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             designElement
                     .setBiologicalCharacteristic( persistBioSequence( designElement.getBiologicalCharacteristic() ) );
         }
-        CompositeSequence persistedDE = compositeSequenceService.create( designElement );
+        CompositeSequence persistedDE = compositeSequenceDao.create( designElement );
 
         arrayDesign.getCompositeSequences().add( persistedDE );
 
         /*
          * FIXME This is VERY slow if we have to add a lot of designelements to the array.
          */
-        this.arrayDesignService.update( arrayDesign );
+        this.arrayDesignDao.update( arrayDesign );
 
         return persistedDE;
 
@@ -170,39 +164,28 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         log.info( "Caching array design elements for " + arrayDesign );
 
-        int startCacheSize = designElementCache.keySet().size();
-        this.getHibernateTemplate().executeWithNativeSession( new HibernateCallback<Object>() {
+        final Collection<CompositeSequence> compositeSequences = arrayDesignDao.loadCompositeSequences( arrayDesign
+                .getId() );
 
-            // We need to do this in hibernate to thaw the biosequences.
-            public Object doInHibernate( Session session ) throws HibernateException {
-                final Collection<CompositeSequence> compositeSequences = arrayDesignService
-                        .loadCompositeSequences( arrayDesign );
-
-                String adName = DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
-                int count = 0;
-                for ( CompositeSequence element : compositeSequences ) {
-                    assert element.getId() != null;
-                    designElementCache.put( element.getName() + adName, element );
-                    BioSequence seq = element.getBiologicalCharacteristic();
-                    if ( seq != null ) {
-                        seq = ( BioSequence ) session.get( BioSequenceImpl.class, seq.getId() );
-                        if ( StringUtils.isNotBlank( seq.getName() ) ) {
-                            designElementSequenceCache.put( seq.getName(), element );
-                        }
-                    }
-                    if ( ++count % 20000 == 0 ) {
-                        log.info( "Cached " + count + " probes" );
-                    }
-                    if ( count % 100 == 0 ) {
-                        session.clear();
-                    }
+        String adName = DESIGN_ELEMENT_KEY_SEPARATOR + arrayDesign.getName();
+        int count = 0;
+        for ( CompositeSequence element : compositeSequences ) {
+            assert element.getId() != null;
+            designElementCache.put( element.getName() + adName, element );
+            BioSequence seq = element.getBiologicalCharacteristic();
+            if ( seq != null ) {
+                if ( StringUtils.isNotBlank( seq.getName() ) ) {
+                    designElementSequenceCache.put( seq.getName(), element );
                 }
-                return null;
             }
-        } );
+            if ( ++count % 20000 == 0 ) {
+                log.info( "Cached " + count + " probes" );
+            }
+            if ( count % 100 == 0 ) {
+                // session.clear();
+            }
+        }
 
-        int endCacheSize = designElementCache.keySet().size();
-        log.debug( "Filled cache with " + ( endCacheSize - startCacheSize ) + " elements." );
     }
 
     /**
@@ -221,7 +204,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         if ( !arrayDesignCache.containsKey( cachedAd.getName() )
                 && !( cachedAd.getShortName() != null && arrayDesignCache.containsKey( cachedAd.getShortName() ) ) ) {
             cachedAd = persistArrayDesign( ad );
-            cachedAd = arrayDesignService.thaw( cachedAd );
+            // cachedAd = arrayDesignDao.thaw( cachedAd );
             assert !isTransient( cachedAd );
             addToDesignElementCache( cachedAd );
             arrayDesignCache.put( ad.getName(), cachedAd );
@@ -260,14 +243,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
         /*
          * Note we don't do a full find here.
          */
-        ArrayDesign existing = arrayDesignService.find( arrayDesign );
+        ArrayDesign existing = arrayDesignDao.find( arrayDesign );
 
         if ( existing == null ) {
 
             /*
              * Try less stringent search.
              */
-            existing = arrayDesignService.findByShortName( arrayDesign.getShortName() );
+            existing = arrayDesignDao.findByShortName( arrayDesign.getShortName() );
 
             if ( existing == null ) {
                 log.info( arrayDesign + " is new, processing..." );
@@ -281,7 +264,6 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             log.info( "Array Design " + arrayDesign + " already exists, returning..." );
         }
 
-        existing = arrayDesignService.thawLite( existing );
         return existing;
 
     }
@@ -331,8 +313,8 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
             }
             if ( count % SESSION_BATCH_SIZE == 0 ) {
-                this.getHibernateTemplate().flush();
-                this.getHibernateTemplate().clear();
+                // this.getHibernateTemplate().flush();
+                // this.getHibernateTemplate().clear();
                 if ( Thread.currentThread().isInterrupted() ) {
                     log.info( "Cancelled" );
                     /*
@@ -341,7 +323,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
                      * DB. Not sure how the collection delete will handle deletion of transtive objects not in db. might
                      * need to fix.
                      */
-                    compositeSequenceService.remove( c ); // etc
+                    compositeSequenceDao.remove( c ); // etc
                     throw new java.util.concurrent.CancellationException(
                             "Thread was terminated during persisting the arraydesign. " + this.getClass() );
                 }
@@ -355,7 +337,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         arrayDesign.setCompositeSequences( null );
 
-        arrayDesign = arrayDesignService.create( arrayDesign );
+        arrayDesign = arrayDesignDao.create( arrayDesign );
 
         arrayDesign.setCompositeSequences( c );
 
@@ -363,12 +345,14 @@ abstract public class ArrayDesignPersister extends GenomePersister {
 
         log.info( "Persisting " + arrayDesign );
 
-        arrayDesignService.update( arrayDesign );
+        arrayDesignDao.update( arrayDesign );
 
         if ( Thread.currentThread().isInterrupted() ) {
             log.info( "Cancelled" );
-            // TODO after cancelling, we should clean up after ourselves.
-            arrayDesignService.remove( arrayDesign ); // etc
+            /*
+             * FIXME this shouldn't be necessary as this method now runs in a transaction.
+             */
+            arrayDesignDao.remove( arrayDesign );
             throw new CancellationException(
                     "Thread was terminated during the final stage of persisting the arraydesign. " + this.getClass() );
         }
@@ -401,7 +385,7 @@ abstract public class ArrayDesignPersister extends GenomePersister {
             }
 
             if ( persistedBioSequences % SESSION_BATCH_SIZE == 0 ) {
-                this.getHibernateTemplate().flush();
+                // this.getHibernateTemplate().flush();
             }
 
         }

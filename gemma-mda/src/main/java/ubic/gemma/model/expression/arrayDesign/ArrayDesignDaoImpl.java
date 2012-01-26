@@ -30,7 +30,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
@@ -173,15 +172,12 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         if ( arrayDesign == null ) {
             throw new IllegalArgumentException( "array design cannot be null" );
         }
-        List<?> res = this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct a from ArrayDesignImpl a "
-                                + "left join fetch a.subsumedArrayDesigns "
-                                + " left join fetch a.mergees  left join fetch a.designProvider left join fetch a.primaryTaxon "
-                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
-                                + " left join fetch a.subsumedArrayDesigns left join fetch a.mergees left join fetch a.subsumingArrayDesign "
-                                + " left join fetch a.mergedInto " + "where a.id=:adid", "adid", arrayDesign.getId() );
+        List<?> res = this.getHibernateTemplate().findByNamedParam(
+                "select distinct a from ArrayDesignImpl a left join fetch a.subsumedArrayDesigns "
+                        + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
+                        + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
+                        + " left join fetch a.subsumingArrayDesign left join fetch a.mergedInto where a.id=:adid",
+                "adid", arrayDesign.getId() );
 
         if ( res.size() == 0 ) {
             throw new IllegalArgumentException( "No array design with id=" + arrayDesign.getId() + " could be loaded." );
@@ -193,16 +189,13 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
 
     public Collection<ArrayDesign> thawLite( Collection<ArrayDesign> arrayDesigns ) {
         if ( arrayDesigns.isEmpty() ) return arrayDesigns;
-        return this
-                .getHibernateTemplate()
-                .findByNamedParam(
-                        "select distinct a from ArrayDesignImpl a "
-                                + "left join fetch a.subsumedArrayDesigns "
-                                + " left join fetch a.mergees  left join fetch a.designProvider left join fetch a.primaryTaxon "
-                                + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
-                                + " left join fetch a.subsumedArrayDesigns left join fetch a.mergees left join fetch a.subsumingArrayDesign "
-                                + " left join fetch a.mergedInto where a.id in (:adids)", "adids",
-                        EntityUtils.getIds( arrayDesigns ) );
+        return this.getHibernateTemplate().findByNamedParam(
+                "select distinct a from ArrayDesignImpl a " + "left join fetch a.subsumedArrayDesigns "
+                        + " left join fetch a.mergees left join fetch a.designProvider left join fetch a.primaryTaxon "
+                        + " join fetch a.auditTrail trail join fetch trail.events left join fetch a.externalReferences"
+                        + " left join fetch a.subsumedArrayDesigns left join fetch a.subsumingArrayDesign "
+                        + " left join fetch a.mergedInto where a.id in (:adids)", "adids",
+                EntityUtils.getIds( arrayDesigns ) );
 
     }
 
@@ -214,28 +207,25 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
      */
     @Override
     public ArrayDesign find( ArrayDesign arrayDesign ) {
-        try {
 
-            BusinessKey.checkValidKey( arrayDesign );
-            Criteria queryObject = super.getSession().createCriteria( ArrayDesign.class );
-            BusinessKey.addRestrictions( queryObject, arrayDesign );
+        BusinessKey.checkValidKey( arrayDesign );
+        Criteria queryObject = super.getSession().createCriteria( ArrayDesign.class );
+        BusinessKey.addRestrictions( queryObject, arrayDesign );
 
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
-                            + ArrayDesign.class.getName() + "s were found when executing query" );
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                debug( results );
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException( results.size() + " "
+                        + ArrayDesign.class.getName() + "s were found when executing query" );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( ArrayDesign ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( ArrayDesign ) result;
+
     }
 
     /*
@@ -710,8 +700,6 @@ public class ArrayDesignDaoImpl extends ubic.gemma.model.expression.arrayDesign.
         final String queryString = "select cs from CompositeSequenceImpl as cs inner join cs.arrayDesign as ar where ar.id = :id";
         return getHibernateTemplate().findByNamedParam( queryString, "id", id );
     }
-
- 
 
     /*
      * (non-Javadoc)

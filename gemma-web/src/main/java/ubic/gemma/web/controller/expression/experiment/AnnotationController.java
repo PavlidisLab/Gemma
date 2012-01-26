@@ -40,7 +40,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.tasks.analysis.expression.AutoTaggerTask;
 
 /**
@@ -142,7 +142,7 @@ public class AnnotationController extends AbstractTaskService {
      * AJAX Note that this completely scraps the indices, and runs asynchronously.
      */
     public void reinitializeOntologyIndices() {
-        if ( !SecurityService.isRunningAsAdmin() ) {
+        if ( !SecurityServiceImpl.isRunningAsAdmin() ) {
             log.warn( "Attempt to run ontology re-indexing as non-admin." );
             return;
         }

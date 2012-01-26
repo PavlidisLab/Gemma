@@ -24,13 +24,12 @@ import java.util.Collection;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.preprocess.PreprocessorService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -38,12 +37,12 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoadTask {
     private Log log = LogFactory.getLog( this.getClass().getName() );
 
     @Autowired
-    private GeoDatasetService geoDatasetService = null;
+    private GeoService geoDatasetService = null;
 
     @Autowired
     private ArrayExpressLoadService arrayExpressLoadService;
@@ -99,8 +98,9 @@ public class ExpressionExperimentLoadTaskImpl implements ExpressionExperimentLoa
             }
             result = new TaskResult( command, minimalDesigns );
         } else {
-            Collection<ExpressionExperiment> datasets = geoDatasetService.fetchAndLoad( accession, loadPlatformOnly,
-                    doSampleMatching, aggressiveQtRemoval, splitByPlatform, allowSuperSeriesLoad, allowSubSeriesLoad );
+            Collection<ExpressionExperiment> datasets = ( Collection<ExpressionExperiment> ) geoDatasetService
+                    .fetchAndLoad( accession, loadPlatformOnly, doSampleMatching, aggressiveQtRemoval, splitByPlatform,
+                            allowSuperSeriesLoad, allowSubSeriesLoad );
 
             log.info( "Loading done, starting postprocessing" );
             postProcess( datasets );

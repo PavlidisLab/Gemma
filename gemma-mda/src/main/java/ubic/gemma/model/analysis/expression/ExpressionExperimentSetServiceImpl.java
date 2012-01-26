@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
+import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 
 /**
  * @version $Id$
@@ -44,7 +45,7 @@ public class ExpressionExperimentSetServiceImpl extends
     public Collection<ExpressionExperimentSet> load( Collection<Long> ids ) {
         return ( Collection<ExpressionExperimentSet> ) this.getExpressionExperimentSetDao().load( ids );
     }
-    
+
     public Collection<ExpressionExperimentSet> loadAllMultiExperimentSets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
@@ -62,12 +63,11 @@ public class ExpressionExperimentSetServiceImpl extends
     public Collection<ExpressionExperimentSet> loadMySets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
-    
+
     @Override
     public Collection<ExpressionExperimentSet> loadMySharedSets() {
         return this.getExpressionExperimentSetDao().loadAllExperimentSetsWithTaxon();
     }
-
 
     /**
      * @see ubic.gemma.model.analysis.expression.ExpressionExperimentSetService#create(ubic.gemma.model.analysis.expression.ExpressionExperimentSet)
@@ -135,7 +135,7 @@ public class ExpressionExperimentSetServiceImpl extends
     @Override
     protected void handleUpdate( ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet )
             throws java.lang.Exception {
-        
+
         if ( StringUtils.isBlank( expressionExperimentSet.getName() ) ) {
             throw new IllegalArgumentException( "Attempt to update an ExpressionExperimentSet so it has no name" );
         }
@@ -159,25 +159,30 @@ public class ExpressionExperimentSetServiceImpl extends
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id ) {
         return this.getExpressionExperimentSetDao().getExperimentsInSet( id );
     }
-    
+
     @Override
-    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet) {
+    public Collection<ExpressionExperimentSet> find( BioAssaySet bioAssaySet ) {
         return this.getExpressionExperimentSetDao().find( bioAssaySet );
     }
 
     @Override
-    public boolean isValidForFrontEnd(ExpressionExperimentSet eeSet) {
-        return (eeSet.getTaxon() != null);
+    public boolean isValidForFrontEnd( ExpressionExperimentSet eeSet ) {
+        return ( eeSet.getTaxon() != null );
     }
 
     @Override
-    public Collection<ExpressionExperimentSet> validateForFrontEnd(Collection<ExpressionExperimentSet> eeSets) {
+    public Collection<ExpressionExperimentSet> validateForFrontEnd( Collection<ExpressionExperimentSet> eeSets ) {
         Collection<ExpressionExperimentSet> valid = new ArrayList<ExpressionExperimentSet>();
-        for(ExpressionExperimentSet eeSet : eeSets){
-            if(isValidForFrontEnd( eeSet )){
+        for ( ExpressionExperimentSet eeSet : eeSets ) {
+            if ( isValidForFrontEnd( eeSet ) ) {
                 valid.add( eeSet );
             }
         }
         return valid;
+    }
+
+    @Override
+    public Collection<ExpressionExperimentSetValueObject> loadValueObjects( Collection<Long> ids ) {
+        return this.getExpressionExperimentSetDao().loadValueObjects( ids );
     }
 }

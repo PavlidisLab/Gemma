@@ -21,8 +21,6 @@ package ubic.gemma.ontology.providers;
 
 import java.io.BufferedReader;
 
-
-
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -35,8 +33,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.ontology.Configuration;
 import ubic.basecode.ontology.OntologyTreeNode;
 import ubic.basecode.ontology.model.OntologyTerm;
@@ -47,9 +44,9 @@ import ubic.basecode.ontology.providers.AbstractOntologyMemoryBackedService;
  * framework ontology i've added a feature so that the ontology can be changed dynamically via the web front end.
  * 
  * @author klc
- * @version $Id: MgedOntologyService.java
+ * @version $Id$
  */
-@Service
+@Component
 public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     public static final String MGED_ONTOLOGY_URL = "url.mgedOntology";
@@ -69,17 +66,27 @@ public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     static {
         keyToTermListUrl = new HashMap<String, URL>();
-        keyToTermListUrl.put( "design", MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.design.categories.txt" ) );
-        keyToTermListUrl.put( "experiment", MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.experiment.categories.txt" ) );
-        keyToTermListUrl.put( "factor", MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.factor.categories.txt" ) );
-        keyToTermListUrl.put( "factorvalue", MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.factorvalue.categories.txt" ) );
+        keyToTermListUrl.put( "design",
+                MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.design.categories.txt" ) );
+        keyToTermListUrl.put( "experiment",
+                MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.experiment.categories.txt" ) );
+        keyToTermListUrl.put( "factor",
+                MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.factor.categories.txt" ) );
+        keyToTermListUrl.put( "factorvalue",
+                MgedOntologyService.class.getResource( "/ubic/gemma/ontology/MO.factorvalue.categories.txt" ) );
     }
 
+    /**
+     * 
+     */
     public MgedOntologyService() {
         super();
         ontology_startingPoint = getOntologyStartingPoint();
     }
 
+    /**
+     * @return
+     */
     public Collection<OntologyTerm> getBioMaterialTerms() {
 
         if ( !isInitialized.get() ) return null;
@@ -92,6 +99,9 @@ public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     }
 
+    /**
+     * @return
+     */
     public Collection<OntologyTreeNode> getBioMaterialTreeNodeTerms() {
 
         if ( !isInitialized.get() ) return null;
@@ -217,6 +227,10 @@ public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     }
 
+    /**
+     * @param term
+     * @return
+     */
     protected Collection<OntologyTerm> getAllTerms( OntologyTerm term ) {
 
         Collection<OntologyTerm> children = term.getChildren( true );
@@ -235,6 +249,7 @@ public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.ontology.AbstractOntologyService#getOntologyName()
      */
     @Override
@@ -242,10 +257,18 @@ public class MgedOntologyService extends AbstractOntologyMemoryBackedService {
         return "mgedOntology";
     }
 
+    /**
+     * @return
+     */
     protected String getOntologyStartingPoint() {
         return ontology_URL + "#BioMaterialPackage";
     }
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see ubic.basecode.ontology.providers.AbstractOntologyService#getOntologyUrl()
+     */
     @Override
     protected String getOntologyUrl() {
         return Configuration.getString( MGED_ONTOLOGY_URL );

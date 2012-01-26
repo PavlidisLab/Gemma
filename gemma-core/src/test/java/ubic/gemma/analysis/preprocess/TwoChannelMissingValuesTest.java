@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.GeoConverter;
+import ubic.gemma.loader.expression.geo.GeoConverterImpl;
 import ubic.gemma.model.expression.bioAssayData.DesignElementDataVectorService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -33,7 +34,7 @@ import ubic.gemma.testing.BaseSpringContextTest;
  */
 public class TwoChannelMissingValuesTest extends BaseSpringContextTest {
 
-    GeoConverter gc = new GeoConverter();
+    GeoConverter gc = new GeoConverterImpl();
 
     @Autowired
     TwoChannelMissingValues tcmv;

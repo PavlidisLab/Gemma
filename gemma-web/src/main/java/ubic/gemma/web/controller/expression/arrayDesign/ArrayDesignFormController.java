@@ -30,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.servlet.ModelAndView;
@@ -49,18 +50,18 @@ import ubic.gemma.web.controller.BaseFormController;
  */
 public class ArrayDesignFormController extends BaseFormController {
 
-    ArrayDesignService arrayDesignService = null;
+    private ArrayDesignService arrayDesignService = null;
 
-    /**
-     * Case = POST: Step 5 - Custom logic is here. For instance, this is where you would actually save or delete the
-     * object.
+    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
+        this.arrayDesignService = arrayDesignService;
+    }
+
+    /*
+     * (non-Javadoc)
      * 
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
+     * @see ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController#onSubmit(javax.servlet.http.
+     * HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object,
+     * org.springframework.validation.BindException)
      */
     @Override
     public ModelAndView onSubmit( HttpServletRequest request, HttpServletResponse response, Object command,
@@ -93,15 +94,13 @@ public class ArrayDesignFormController extends BaseFormController {
         return new ModelAndView( new RedirectView( "/Gemma/arrays/showArrayDesign.html?id=" + ad.getId() ) );
     }
 
-    /**
-     * Case = POST: Step 5 - Used to process the form action (ie. clicking on the 'save' button or the 'cancel' button.
+    /*
+     * (non-Javadoc)
      * 
-     * @param request
-     * @param response
-     * @param command
-     * @param errors
-     * @return ModelAndView
-     * @throws Exception
+     * @see
+     * ubic.gemma.web.controller.expression.arrayDesign.ArrayDesignFormController#processFormSubmission(javax.servlet
+     * .http.HttpServletRequest, javax.servlet.http.HttpServletResponse, java.lang.Object,
+     * org.springframework.validation.BindException)
      */
     @Override
     public ModelAndView processFormSubmission( HttpServletRequest request, HttpServletResponse response,
@@ -110,13 +109,6 @@ public class ArrayDesignFormController extends BaseFormController {
         log.debug( "entering processFormSubmission" );
 
         return super.processFormSubmission( request, response, command, errors );
-    }
-
-    /**
-     * @param arrayDesignService The arrayDesignService to set.
-     */
-    public void setArrayDesignService( ArrayDesignService arrayDesignService ) {
-        this.arrayDesignService = arrayDesignService;
     }
 
     /**

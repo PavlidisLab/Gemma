@@ -113,12 +113,13 @@ import ubic.gemma.model.expression.experiment.FactorValueValueObject;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.search.SearchResult;
 import ubic.gemma.search.SearchResultDisplayObject;
 import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.tasks.analysis.expression.UpdateEEDetailsCommand;
 import ubic.gemma.tasks.analysis.expression.UpdatePubMedCommand;
 import ubic.gemma.util.EntityUtils;
@@ -302,7 +303,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
     private OntologyService ontologyService;
 
     @Autowired
-    private PersisterHelper persisterHelper = null;
+    private Persister  persisterHelper = null;
 
     @Autowired
     private SearchService searchService;
@@ -499,7 +500,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         // if an eeSet is owned by the user, mark it as such (used for giving it a special background colour in
         // search results)
-        if ( SecurityService.isUserLoggedIn() ) {
+        if ( SecurityServiceImpl.isUserLoggedIn() ) {
             // tag search result display objects appropriately
             for ( SearchResultDisplayObject srdo : experimentSets ) {
                 Long id = ( srdo.getResultValueObject() instanceof DatabaseBackedExpressionExperimentSetValueObject ) ? ( ( ExpressionExperimentSetValueObject ) srdo
@@ -1026,9 +1027,9 @@ public class ExpressionExperimentController extends AbstractTaskService {
 
         boolean filterDataByUser = false;
 
-        if ( SecurityService.isUserAdmin() ) {
+        if ( SecurityServiceImpl.isUserAdmin() ) {
             /* proceed, just being transparent */
-        } else if ( SecurityService.isUserLoggedIn() ) {
+        } else if ( SecurityServiceImpl.isUserLoggedIn() ) {
             filterDataByUser = true;
         } else {
             /* Anonymous */
@@ -1096,7 +1097,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         int stop = Math.min( origStart + limit, records.size() );
 
         // if user is not admin, remove troubled experiments
-        if ( !SecurityService.isUserAdmin() ) {
+        if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
         }
 
@@ -1112,7 +1113,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                 getExpressionExperimentValueObjects( recordsSubset ) );
 
         // if admin, want to show why experiment is troubled
-        if ( SecurityService.isUserAdmin() ) {
+        if ( SecurityServiceImpl.isUserAdmin() ) {
             expressionExperimentReportService.fillEventInformation( valueObjects );
         }
 
@@ -1161,7 +1162,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<ExpressionExperiment> records = loadAllOrdered( batch, noDupIds );
 
         // if user is not admin, remove troubled experiments
-        if ( !SecurityService.isUserAdmin() ) {
+        if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
         }
 
@@ -1170,7 +1171,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                         Math.min( origStart + origLimit, records.size() ) ) ) );
 
         // if admin, want to show if experiment is troubled
-        if ( SecurityService.isUserAdmin() ) {
+        if ( SecurityServiceImpl.isUserAdmin() ) {
             expressionExperimentReportService.fillEventInformation( valueObjects );
         }
 
@@ -1201,7 +1202,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<ExpressionExperiment> records = loadAllOrdered( batch, taxon );
 
         // if user is not admin, remove troubled experiments
-        if ( !SecurityService.isUserAdmin() ) {
+        if ( !SecurityServiceImpl.isUserAdmin() ) {
             records = removeTroubledExperiments( records );
         }
 
@@ -1216,7 +1217,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
                         Math.min( origStart + origLimit, records.size() ) ) ) );
 
         // if admin, want to show if experiment is troubled
-        if ( SecurityService.isUserAdmin() ) {
+        if ( SecurityServiceImpl.isUserAdmin() ) {
             expressionExperimentReportService.fillEventInformation( valueObjects );
         }
 
@@ -2042,11 +2043,11 @@ public class ExpressionExperimentController extends AbstractTaskService {
         List<ExpressionExperimentValueObject> valueObjs = ( List<ExpressionExperimentValueObject> ) expressionExperimentService
                 .loadValueObjects( EntityUtils.getIds( securedEEs ) );
 
-        if ( SecurityService.isUserAdmin() ) {
+        if ( SecurityServiceImpl.isUserAdmin() ) {
             for ( ExpressionExperimentValueObject vo : valueObjs ) {
                 vo.setCurrentUserHasWritePermission( true );
             }
-        } else if ( SecurityService.isUserLoggedIn() ) {
+        } else if ( SecurityServiceImpl.isUserLoggedIn() ) {
             Map<Long, Boolean> canEdit = new HashMap<Long, Boolean>();
             Map<Long, Boolean> owns = new HashMap<Long, Boolean>();
             for ( ExpressionExperiment ee : securedEEs ) {
@@ -2241,7 +2242,7 @@ public class ExpressionExperimentController extends AbstractTaskService {
         if ( expressionExperiment == null ) {
             throw new IllegalArgumentException( "Unable to access experiment with id=" + id );
         }
-        sampleCoexpressionMatrixService.getSampleCorrelationMatrix( expressionExperiment, true );
+        sampleCoexpressionMatrixService.create( expressionExperiment, true );
     }
 
     @Override

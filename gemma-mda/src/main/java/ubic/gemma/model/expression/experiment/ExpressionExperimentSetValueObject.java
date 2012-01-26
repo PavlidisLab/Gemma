@@ -25,15 +25,14 @@ import java.util.HashSet;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.util.EntityUtils;
 
-
 /**
- * @author paul
+ * @author tvrossum
  * @version $Id$
  */
 public class ExpressionExperimentSetValueObject implements Serializable, Comparable<ExpressionExperimentSetValueObject> {
 
     private static final long serialVersionUID = -6852364688337216390L;
-        
+
     private boolean currentUserHasWritePermission = false;
 
     private boolean currentUserIsOwner = false;
@@ -41,13 +40,13 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
     private boolean publik;
 
     private boolean shared;
-        
+
     private String description;
-    
+
     private Collection<Long> expressionExperimentIds;
-    
+
     private Long id;
-    
+
     /**
      * If modifying the set is constrained by existing analyses.
      */
@@ -59,7 +58,6 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
     private Long taxonId;
 
     private String taxonName;
-    
 
     /**
      * @return the publik
@@ -135,7 +133,7 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
     public Long getId() {
         return id;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -188,7 +186,7 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
     public void setId( Long id ) {
         this.id = id;
     }
-    
+
     public void setModifiable( boolean modifiable ) {
         this.modifiable = modifiable;
     }
@@ -222,5 +220,5 @@ public class ExpressionExperimentSetValueObject implements Serializable, Compara
     public boolean isCurrentUserIsOwner() {
         return currentUserIsOwner;
     }
-    
+
 }

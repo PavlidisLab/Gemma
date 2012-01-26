@@ -44,29 +44,26 @@ public class QuantitationTypeDaoImpl extends ubic.gemma.model.common.quantitatio
 
     @Override
     public QuantitationType find( QuantitationType quantitationType ) {
-        try {
-            Criteria queryObject = super.getSession().createCriteria( QuantitationType.class );
+        Criteria queryObject = super.getSession().createCriteria( QuantitationType.class );
 
-            BusinessKey.addRestrictions( queryObject, quantitationType );
+        BusinessKey.addRestrictions( queryObject, quantitationType );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    debug( results );
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '"
-                                    + ubic.gemma.model.common.quantitationtype.QuantitationType.class.getName()
-                                    + "' was found when executing query" );
+        java.util.List results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                debug( results );
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '"
+                                + ubic.gemma.model.common.quantitationtype.QuantitationType.class.getName()
+                                + "' was found when executing query" );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( QuantitationType ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( QuantitationType ) result;
+
     }
 
     @Override

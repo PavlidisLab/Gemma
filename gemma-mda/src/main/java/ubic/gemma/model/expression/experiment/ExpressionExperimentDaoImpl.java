@@ -252,9 +252,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
      */
     @Override
     public Collection<ArrayDesign> getArrayDesignsUsed( ExpressionExperiment expressionExperiment ) {
-        Session session = super.getSession();
-        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( expressionExperiment, session );
-        super.releaseSession( session );
+        Collection<ArrayDesign> ADs = CommonQueries.getArrayDesignsUsed( expressionExperiment, getSession() );
         return ADs;
     }
 
@@ -358,7 +356,6 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         if ( timer.getTime() > 1000 ) {
             log.info( ees.size() + " EEs loaded in " + timer.getTime() + "ms" );
         }
-        this.releaseSession( session );
 
         return ees;
     }
@@ -400,14 +397,14 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         query.setParameter( "taxon", taxon );
         return query.list();
     }
-    
+
     @Override
     public List<ExpressionExperiment> loadAllTaxon( Taxon taxon ) {
         String qs = "select distinct ee from ExpressionExperimentImpl as ee " + "inner join ee.bioAssays as ba "
                 + "inner join ba.samplesUsed as sample ";
         String where = " where sample.sourceTaxon = :taxon or sample.sourceTaxon.parentTaxon = :taxon ";
 
-        Query query = this.getSession().createQuery( qs+where );
+        Query query = this.getSession().createQuery( qs + where );
         query.setParameter( "taxon", taxon );
         return query.list();
     }
@@ -1519,6 +1516,7 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
                 + " group by ee.id ";
 
         Query queryObject = super.getSession().createQuery( queryString );
+
         Map<Long, Collection<QuantitationType>> qtMap;
         if ( ids != null ) {
             for ( Long id : ids ) {
@@ -1540,6 +1538,8 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             Object[] res = ( Object[] ) object;
 
             Long eeId = ( Long ) res[0];
+
+            assert eeId != null;
 
             ExpressionExperimentValueObject v;
             if ( vo.containsKey( eeId ) ) {
@@ -1569,18 +1569,33 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
             v.setClazz( ( String ) res[13] );
             v.setExperimentalDesign( ( Long ) res[14] );
             v.setDateLastUpdated( ( ( Date ) res[15] ) );
-            //System.out.println(res[16]);
+            // System.out.println(res[16]);
             vo.put( eeId, v );
         }
 
-        if ( isList ) {
-            List<ExpressionExperimentValueObject> result = new ArrayList<ExpressionExperimentValueObject>();
-            for ( Long id : vo.keySet() ) {
-                result.add( vo.get( id ) );
+        /*
+         * Remove items we didn't get back out. This is defensiveness!
+         */
+
+        Collection<ExpressionExperimentValueObject> finalValues = new HashSet<ExpressionExperimentValueObject>();
+
+        for ( Long id : vo.keySet() ) {
+            if ( vo.get( id ).getId() != null ) {
+                finalValues.add( vo.get( id ) );
+            } else {
+                log.warn( "No value object was fetched for EE with id=" + id );
             }
-            return result;
         }
-        return vo.values();
+
+        if ( finalValues.isEmpty() ) {
+            log.error( "No values were retrieved for the ids provided" );
+        }
+
+        if ( isList ) {
+            return new ArrayList<ExpressionExperimentValueObject>( finalValues );
+        }
+
+        return finalValues;
 
     }
 
@@ -1617,6 +1632,9 @@ public class ExpressionExperimentDaoImpl extends ExpressionExperimentDaoBase {
         Hibernate.initialize( result.getRawDataFile() );
         Hibernate.initialize( result.getPrimaryPublication() );
         Hibernate.initialize( result.getBioAssays() );
+        Hibernate.initialize( result.getAuditTrail() );
+        Hibernate.initialize( result.getAuditTrail().getEvents() );
+
         for ( BioAssay ba : result.getBioAssays() ) {
             Hibernate.initialize( ba.getArrayDesignUsed() );
             Hibernate.initialize( ba.getArrayDesignUsed().getDesignProvider() );

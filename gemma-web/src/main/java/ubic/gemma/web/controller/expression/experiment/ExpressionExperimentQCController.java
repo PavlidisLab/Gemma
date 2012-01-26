@@ -218,7 +218,7 @@ public class ExpressionExperimentQCController extends BaseController {
         }
 
         DoubleMatrix<BioAssay, BioAssay> sampleCorrelationMatrix = sampleCoexpressionMatrixService
-                .getSampleCorrelationMatrix( ee );
+                .create( ee );
 
         // TODO
 
@@ -253,7 +253,7 @@ public class ExpressionExperimentQCController extends BaseController {
             return null;
         }
 
-        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionMatrixService.getSampleCorrelationMatrix( ee );
+        DoubleMatrix<BioAssay, BioAssay> omatrix = sampleCoexpressionMatrixService.create( ee );
 
         List<String> stringNames = new ArrayList<String>();
         for ( BioAssay ba : omatrix.getRowNames() ) {

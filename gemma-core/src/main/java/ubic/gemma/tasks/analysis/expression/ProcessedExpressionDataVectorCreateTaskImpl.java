@@ -21,8 +21,7 @@ package ubic.gemma.tasks.analysis.expression;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.preprocess.ProcessedExpressionDataVectorCreateService;
 import ubic.gemma.analysis.preprocess.SampleCoexpressionMatrixService;
 import ubic.gemma.job.TaskMethod;
@@ -37,7 +36,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExpressionDataVectorCreateTask {
 
     @Autowired
@@ -72,7 +71,7 @@ public class ProcessedExpressionDataVectorCreateTaskImpl implements ProcessedExp
             processedVectors = processedExpressionDataVectorCreateService.computeProcessedExpressionData( ee );
         }
 
-        coexpressionMatrixService.getSampleCorrelationMatrix( ee, processedVectors );
+        coexpressionMatrixService.create( ee, processedVectors );
 
         TaskResult result = new TaskResult( command, processedVectors.size() );
         return result;

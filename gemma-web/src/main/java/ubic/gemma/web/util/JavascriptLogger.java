@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 
 import ubic.gemma.model.common.auditAndSecurity.User;
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.security.authentication.UserManager;
 import ubic.gemma.util.ConfigUtils;
 
@@ -157,7 +157,7 @@ public class JavascriptLogger {
         }
 
         if ( user != null ) {
-            name = user.getUserName() + " (id: " + user.getId() + ") (admin: " + SecurityService.isUserAdmin() + ")";
+            name = user.getUserName() + " (id: " + user.getId() + ") (admin: " + SecurityServiceImpl.isUserAdmin() + ")";
         }
 
         return "error[" + errorMessage + "] jsFile[" + url + ":ln" + line + "]" + " page[" + href + "] browser["

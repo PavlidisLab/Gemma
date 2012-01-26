@@ -38,6 +38,7 @@ import ubic.gemma.datastructure.matrix.ExpressioDataTestMatrix;
 import ubic.gemma.datastructure.matrix.ExpressionDataDoubleMatrix;
 import ubic.gemma.loader.expression.geo.DatasetCombiner;
 import ubic.gemma.loader.expression.geo.GeoConverter;
+import ubic.gemma.loader.expression.geo.GeoConverterImpl;
 import ubic.gemma.loader.expression.geo.GeoFamilyParser;
 import ubic.gemma.loader.expression.geo.GeoParseResult;
 import ubic.gemma.loader.expression.geo.GeoSampleCorrespondence;
@@ -178,7 +179,7 @@ public class ExpressionDataSVDTest {
      */
     @Test
     public void testMatrixReconstructB() throws Exception {
-        GeoConverter gc = new GeoConverter();
+        GeoConverter gc = new GeoConverterImpl();
         InputStream is = new GZIPInputStream( this.getClass().getResourceAsStream(
                 "/data/loader/expression/geo/fullSizeTests/GSE1623_family.soft.txt.gz" ) );
         GeoFamilyParser parser = new GeoFamilyParser();

@@ -212,22 +212,22 @@ public class ExpressionExperimentPlatformSwitchService extends ExpressionExperim
                             + " vectors that couldn't be matched to the new design for: " + type );
                 }
 
-                log.info( "Updating " + count + " vectors for " + type );
-                if ( vectorClass != null ) {
-                    if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
-                        designElementDataVectorService.update( vectorsForQt );
-                    } else {
-                        processedExpressionDataVectorService
-                                .update( ( Collection<ProcessedExpressionDataVector> ) vectorsForQt );
-                    }
-                }
+//                log.info( "Updating " + count + " vectors for " + type );
+//                if ( vectorClass != null ) {
+//                    if ( vectorClass.equals( RawExpressionDataVector.class ) ) {
+//                        designElementDataVectorService.update( vectorsForQt );
+//                    } else {
+//                        processedExpressionDataVectorService
+//                                .update( ( Collection<ProcessedExpressionDataVector> ) vectorsForQt );
+//                    }
+//                }
             }
         }
 
         log.info( "Updating bioAssays ... " );
         for ( BioAssay assay : expExp.getBioAssays() ) {
             assay.setArrayDesignUsed( arrayDesign );
-            bioAssayService.update( assay );
+            // bioAssayService.update( assay );
         }
 
         expExp.setDescription( expExp.getDescription() + " [Switched to use " + arrayDesign.getShortName()

@@ -30,6 +30,7 @@ import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import ubic.basecode.io.ByteArrayConverter;
@@ -68,7 +69,7 @@ import cern.colt.list.DoubleArrayList;
  * @author raymond
  * @version $Id$
  */
-@Service
+@Component
 public class ProcessedExpressionDataVectorCreateService {
 
     private static Log log = LogFactory.getLog( ProcessedExpressionDataVectorCreateService.class.getName() );
@@ -366,12 +367,16 @@ public class ProcessedExpressionDataVectorCreateService {
      */
     private Collection<ProcessedExpressionDataVector> updateRanks( ExpressionExperiment ee,
             Collection<ProcessedExpressionDataVector> processedVectors ) {
-        processedDataService.thaw( processedVectors );
 
         Collection<ArrayDesign> arrayDesignsUsed = this.eeService.getArrayDesignsUsed( ee );
 
+        assert !arrayDesignsUsed.isEmpty();
+        ArrayDesign arrayDesign = arrayDesignsUsed.iterator().next();
+        assert arrayDesign != null && arrayDesign.getTechnologyType() != null;
+
         ExpressionDataDoubleMatrix intensities;
-        if ( !arrayDesignsUsed.iterator().next().getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
+
+        if ( !arrayDesign.getTechnologyType().equals( TechnologyType.ONECOLOR ) ) {
 
             /*
              * Get vectors needed to compute intensities.

@@ -11,7 +11,7 @@ import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 
-import ubic.gemma.security.SecurityService;
+import ubic.gemma.security.SecurityServiceImpl;
 import ubic.gemma.util.JSONUtil;
 
 public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
@@ -40,7 +40,7 @@ public class AjaxAuthenticationSuccessHandler extends SavedRequestAwareAuthentic
             authentication.getName();
 
             jsonText = "{success:true,user:\'" + authentication.getName() + "\',isAdmin:"
-                    + SecurityService.isUserAdmin() + "}";
+                    + SecurityServiceImpl.isUserAdmin() + "}";
             jsonUtil.writeToResponse( jsonText );
         } else {
 

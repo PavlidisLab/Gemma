@@ -24,11 +24,10 @@ import java.util.HashSet;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.expression.diff.AbstractDifferentialExpressionAnalyzer;
-import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.AnalysisSelectionAndExecutionService;
+import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalysisConfig;
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionAnalyzerService;
 import ubic.gemma.analysis.preprocess.batcheffects.BatchInfoPopulationService;
 import ubic.gemma.job.TaskMethod;
@@ -45,7 +44,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
  * @author keshav
  * @version $Id$
  */
-@Service
+@Component
 public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpressionAnalysisTask {
 
     private static Log log = LogFactory.getLog( DifferentialExpressionAnalysisTaskImpl.class.getName() );
@@ -57,7 +56,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
-    private AnalysisSelectionAndExecutionService differentialExpressionAnalyzer;
+    private AnalysisSelectionAndExecutionService analysisSelectionAndExecutionService;
 
     @Autowired
     private DifferentialExpressionAnalysisService differentialExpressionAnalysisService;
@@ -109,7 +108,7 @@ public class DifferentialExpressionAnalysisTaskImpl implements DifferentialExpre
         Collection<DifferentialExpressionAnalysis> results;
 
         Collection<ExperimentalFactor> factors = command.getFactors();
-        AbstractDifferentialExpressionAnalyzer analyzer = differentialExpressionAnalyzer.determineAnalysis( ee,
+        AbstractDifferentialExpressionAnalyzer analyzer = analysisSelectionAndExecutionService.determineAnalysis( ee,
                 factors, command.getSubsetFactor() );
 
         if ( analyzer == null ) {

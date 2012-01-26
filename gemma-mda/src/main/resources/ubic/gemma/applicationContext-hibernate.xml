@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id$ -->
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+<!-- $Id: applicationContext-hibernate.xml,v 1.65 2011/10/25 00:20:57 tvrossum 
+	Exp $ -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
 	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:context="http://www.springframework.org/schema/context"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd 
            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
@@ -9,18 +11,24 @@
             http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
 
 
-	<!-- DONT include gemma.web here, it is brought in by gemma-servlet.xml -->
-	<context:component-scan
-		base-package="ubic.gemma.model.expression.experiment,ubic.gemma.expression.experiment,ubic.gemma.analysis,ubic.gemma.analysis.preprocess,ubic.gemma.association,ubic.gemma.genome.gene.service,ubic.gemma.loader,ubic.gemma.grid,ubic.gemma.image,ubic.gemma.visualization,ubic.gemma.search,ubic.gemma.util,ubic.gemma.model,ubic.gemma.persistence,ubic.gemma.security,ubic.gemma.ontology,ubic.gemma.annotation,ubic.gemma.job,ubic.gemma.tasks"
-		name-generator="ubic.gemma.util.BeanNameGenerator" />
+	<!-- This defines which classes are picked up by annotation-scanning for 
+		beans (e.g. @Component or @Service or @Repository or @Controller). We exclude 
+		ubic.gemma.web here, it is brought in by gemma-servlet.xml. -->
+	<context:component-scan base-package="ubic.gemma"
+		name-generator="ubic.gemma.util.BeanNameGenerator">
+		<context:exclude-filter type="regex"
+			expression="ubic\.gemma\.web\..*" />
+	</context:component-scan>
 
-	<!-- see http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings -->
+	<!-- Make all "serviceMethod"s transactional. See http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/ch10s05.html#transaction-declarative-txadvice-settings -->
 	<aop:config>
-		<aop:pointcut id="serviceMethod" expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
+		<aop:pointcut id="serviceMethod"
+			expression="ubic.gemma.util.SystemArchitectureAspect.serviceMethod()" />
 		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
 	</aop:config>
 
-	<bean id="transactionManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
 		<property name="sessionFactory" ref="sessionFactory" />
 	</bean>
 
@@ -28,7 +36,7 @@
 	<tx:annotation-driven />
 
 	<tx:advice id="txAdvice">
-		<!-- the transactional semantics... -->
+		<!-- Make some methods read-only -->
 		<tx:attributes>
 			<tx:method name="get*" read-only="true" />
 			<tx:method name="browse*" read-only="true" />
@@ -41,13 +49,14 @@
 			<tx:method name="lack*" read-only="true" />
 			<tx:method name="retain*" read-only="true" />
 			<tx:method name="findOrCreate" read-only="false" />
-			<!-- other methods use the default transaction settings -->
+			<!-- all other methods use the default transaction settings -->
 			<tx:method name="*" />
 		</tx:attributes>
 	</tx:advice>
 
 	<!-- Hibernate SessionFactory -->
-	<bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
 		<property name="dataSource">
 			<ref bean="dataSource" />
 		</property>
@@ -114,7 +123,8 @@
 				</value>
 				<value>classpath:ubic/gemma/model/common/quantitationtype/QuantitationType.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Status.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/common/auditAndSecurity/Status.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/FactorValue.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/expression/experiment/ExperimentalDesign.hbm.xml
@@ -173,7 +183,8 @@
 				</value>
 				<value>classpath:ubic/gemma/model/association/LiteratureAssociation.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/phenotype/PhenotypeAssociation.hbm.xml
+				</value>
 				<value>classpath:ubic/gemma/model/analysis/Analysis.hbm.xml
 				</value>
 				<value>classpath:ubic/gemma/model/analysis/AnalysisResult.hbm.xml
@@ -194,9 +205,11 @@
 				</value>
 				<value>classpath:ubic/gemma/model/genome/gene/GeneSetMember.hbm.xml
 				</value>
-				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/Gene2GeneProteinAssociation.hbm.xml
+				</value>
 
-				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml</value>
+				<value>classpath:ubic/gemma/model/association/PazarAssociation.hbm.xml
+				</value>
 			</list>
 		</property>
 		<property name="hibernateProperties">
@@ -213,7 +226,8 @@
 				<prop key="hibernate.cache.use_query_cache">${gemma.hibernate.use_query_cache}</prop>
 				<prop key="hibernate.cache.use_second_level_cache">${gemma.hibernate.use_second_level_cache}</prop>
 				<prop key="hibernate.generate_statistics">${gemma.hibernate.generate_statistics}</prop>
-				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}</prop>
+				<prop key="hibernate.cache.use_structured_entries">${gemma.hibernate.cache_use_structured_entries}
+				</prop>
 				<prop key="hibernate.order_updates">${gemma.hibernate.order_updates}</prop>
 				<!-- <prop key="hibernate.order_inserts">${gemma.hibernate.order_inserts}</prop> -->
 				<prop key="hibernate.format_sql">${gemma.hibernate.format_sql}</prop>
@@ -223,14 +237,16 @@
 		</property>
 
 		<!-- We have a annotation-configured ubic.gemma.persistence.ExternalCacheRegionFactory -->
-		<!-- <property name="cacheProvider"> <ref bean="externalCacheProvider" /> </property> -->
+		<!-- <property name="cacheProvider"> <ref bean="externalCacheProvider" 
+			/> </property> -->
 		<property name="cacheRegionFactory">
 			<ref bean="externalCacheRegionFactory" />
 		</property>
 		<!-- <property name="cacheRegionFactory" ref="cacheRegionFactory" /> -->
 	</bean>
 
-	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+	<bean id="cacheManager"
+		class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
 		<property name="configLocation" value="${gemma.ehcache.configfile.name}" />
 	</bean>
 

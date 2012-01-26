@@ -89,7 +89,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
 
         InputStream data = this.getClass().getResourceAsStream( "/data/testdata.txt" );
 
-        ee = service.load( metaData, data );
+        ee = service.create( metaData, data );
 
         ee = eeService.thaw( ee );
 
@@ -124,7 +124,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         InputStream data = this.getClass().getResourceAsStream( "/data/testdata.duprow.txt" );
 
         try {
-            ee = service.load( metaData, data );
+            ee = service.create( metaData, data );
             fail( "Should have gotten an exception about duplicated row" );
         } catch ( IllegalArgumentException e ) {
             // expected
@@ -160,7 +160,7 @@ public class SimpleExpressionDataLoaderServiceTest extends BaseSpringContextTest
         InputStream data = this.getClass().getResourceAsStream(
                 "/data/loader/aov.results-2-monocyte-data-bytime.bypat.data.sort" );
 
-        ee = service.load( metaData, data );
+        ee = service.create( metaData, data );
 
         ee = eeService.thaw( ee );
 

@@ -36,6 +36,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import ubic.gemma.model.common.Auditable;
 import ubic.gemma.model.common.auditAndSecurity.AuditAction;
 import ubic.gemma.model.common.auditAndSecurity.AuditEvent;
+import ubic.gemma.model.common.auditAndSecurity.AuditEventService;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrail;
 import ubic.gemma.model.common.auditAndSecurity.AuditTrailService;
 import ubic.gemma.model.common.auditAndSecurity.User;
@@ -70,6 +71,9 @@ public class AuditAdviceTest extends BaseSpringContextTest {
     private AuditTrailService auditTrailService;
 
     @Autowired
+    private AuditEventService auditEventService;
+
+    @Autowired
     private ExpressionExperimentService expressionExperimentService;
 
     @Autowired
@@ -90,7 +94,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         checkEEAuditTrails( ee, trailIds, eventIds );
 
-        assertEquals( 2, ee.getAuditTrail().getEvents().size() ); // 2 because of the way create happens
+        assertEquals( 1, ee.getAuditTrail().getEvents().size() );
 
         ee = expressionExperimentService.load( ee.getId() ); // so not thawed, which tests lazy issue in the advice.
 
@@ -98,13 +102,14 @@ public class AuditAdviceTest extends BaseSpringContextTest {
 
         expressionExperimentService.update( ee );
 
-        // make sure we added an update event on the ee (3 because of the way create happens)
-        assertEquals( 3, ee.getAuditTrail().getEvents().size() );
+        ee = expressionExperimentService.thawLite( ee );
 
-        expressionExperimentService.thawLite( ee );
+        // make sure we added an update event on the ee
+        assertEquals( 2, auditEventService.getEvents( ee ).size() );
 
         // check that we haven't added an update event to the design -- only a create.
-        assertEquals( 1, ee.getExperimentalDesign().getAuditTrail().getEvents().size() );
+
+        assertEquals( 1, auditEventService.getEvents( ee.getExperimentalDesign() ).size() );
 
         expressionExperimentService.delete( ee );
 
@@ -119,8 +124,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         g = this.geneService.load( g.getId() );
         g = this.geneService.thaw( g );
 
-        // should have create and 1 because we update to add the gene product.
-        assertEquals( 2, g.getAuditTrail().getEvents().size() );
+        // should have create only.
+        assertEquals( 1, g.getAuditTrail().getEvents().size() );
 
         GeneProduct gp = GeneProduct.Factory.newInstance();
         String name = RandomStringUtils.randomAlphabetic( 20 );
@@ -130,8 +135,8 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         this.geneService.update( g );
         assertNotNull( g.getAuditTrail() );
 
-        // should have create and 2 updates, because we update to add the gene product.
-        assertEquals( 3, g.getAuditTrail().getEvents().size() );
+        // should have create and 1 updates, because we update to add the gene product.
+        assertEquals( 2, g.getAuditTrail().getEvents().size() );
 
         for ( GeneProduct prod : g.getProducts() ) {
             assertNotNull( prod.getAuditTrail() );
@@ -147,7 +152,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         this.geneService.update( g );
         this.geneService.update( g );
 
-        assertEquals( 6, g.getAuditTrail().getEvents().size() );
+        assertEquals( 5, g.getAuditTrail().getEvents().size() );
 
         /*
          * Check we didn't get any extra events added to children.
@@ -170,7 +175,7 @@ public class AuditAdviceTest extends BaseSpringContextTest {
         g = this.geneService.thaw( g );
 
         // should have create and 1 because we update to add the gene product.
-        assertEquals( 2, g.getAuditTrail().getEvents().size() );
+        assertEquals( 1, g.getAuditTrail().getEvents().size() );
 
         assertEquals( 1, g.getProducts().size() );
 

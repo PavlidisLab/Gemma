@@ -34,7 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.genome.SimpleFastaCmd;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -144,7 +144,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
         }
 
         String path = ConfigUtils.getString( "gemma.home" );
-        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+        GeoService geoService = ( GeoService ) this.getBean( "geoService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
 
@@ -171,7 +171,7 @@ public class ArrayDesignSequenceProcessorTest extends BaseSpringContextTest {
     public void testFetchAndLoadWithSequences() throws Exception {
 
         String path = ConfigUtils.getString( "gemma.home" );
-        AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+        GeoService geoService = ( GeoService ) this.getBean( "geoService" );
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path
                 + AbstractGeoServiceTest.GEO_TEST_DATA_ROOT ) );
         final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( "GPL226", true, true,

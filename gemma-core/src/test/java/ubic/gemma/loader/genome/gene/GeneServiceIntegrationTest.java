@@ -31,7 +31,7 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignProbeMapperServiceInt
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentService;
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.service.AbstractGeoService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -61,7 +61,7 @@ public class GeneServiceIntegrationTest extends BaseSpringContextTest {
         if ( !setupDone ) {
             ArrayDesign ad;
             // first load small twoc-color
-            AbstractGeoService geoService = ( AbstractGeoService ) this.getBean( "geoDatasetService" );
+            GeoService geoService = ( GeoService ) this.getBean( "geoService" );
             geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGenerator() );
             final Collection<ArrayDesign> ads = ( Collection<ArrayDesign> ) geoService.fetchAndLoad( accession, true,
                     true, false, false, true, true );

@@ -38,7 +38,7 @@ import ubic.gemma.model.common.description.ExternalDatabaseService;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.BioSequence;
 import ubic.gemma.model.genome.biosequence.BioSequenceService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Persist biosequences generated from the IMAGE clone library. IMAGE contains ESTs from human, mouse, rat, rhesus and a
@@ -59,7 +59,7 @@ public class ImageCumulativePlatesLoader {
     boolean producerDone = false;
     private boolean consumerDone = false;
 
-    PersisterHelper persisterHelper;
+    Persister persisterHelper;
 
     ExternalDatabaseService externalDatabaseService;
     BioSequenceService bioSequenceService;
@@ -77,7 +77,7 @@ public class ImageCumulativePlatesLoader {
         this.bioSequenceService = bioSequenceService;
     }
 
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

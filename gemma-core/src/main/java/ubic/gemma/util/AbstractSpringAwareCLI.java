@@ -41,6 +41,7 @@ import ubic.gemma.model.common.auditAndSecurity.eventType.AuditEventType;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentService;
+import ubic.gemma.persistence.Persister;
 import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.security.authentication.ManualAuthenticationService;
 
@@ -60,7 +61,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     protected BeanFactory ctx = null;
     protected Collection<Exception> exceptionCache = new ArrayList<Exception>();
     private boolean forceGigaSpacesOn = false;
-    private PersisterHelper persisterHelper = null;
+    private Persister persisterHelper = null;
 
     public AbstractSpringAwareCLI() {
         super();
@@ -125,7 +126,7 @@ public abstract class AbstractSpringAwareCLI extends AbstractCLI {
     /**
      * @return
      */
-    protected PersisterHelper getPersisterHelper() {
+    protected Persister getPersisterHelper() {
         if ( persisterHelper != null ) {
             return persisterHelper;
         }

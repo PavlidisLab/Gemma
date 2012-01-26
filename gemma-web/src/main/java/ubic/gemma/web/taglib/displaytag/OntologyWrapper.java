@@ -22,7 +22,7 @@ import org.displaytag.decorator.TableDecorator;
 
 import ubic.gemma.model.common.description.Characteristic;
 import ubic.gemma.model.common.description.VocabCharacteristic;
-import ubic.gemma.ontology.providers.GeneOntologyService;
+import ubic.gemma.ontology.providers.GeneOntologyServiceImpl;
 
 /**
  * This is for Gene Ontology.
@@ -39,13 +39,13 @@ public class OntologyWrapper extends TableDecorator {
         Characteristic oe = ( Characteristic ) getCurrentRowObject();
 
         return "<a target='_blank' href='http://amigo.geneontology.org/cgi-bin/amigo/go.cgi?view=details&query="
-                + GeneOntologyService.asRegularGoId( oe ) + "'>" + GeneOntologyService.asRegularGoId( oe ) + "</a>";
+                + GeneOntologyServiceImpl.asRegularGoId( oe ) + "'>" + GeneOntologyServiceImpl.asRegularGoId( oe ) + "</a>";
 
     }
 
     public String getAspect() {
         VocabCharacteristic oe = ( VocabCharacteristic ) getCurrentRowObject();
-        return GeneOntologyService.getTermAspect( oe ).toString().toLowerCase();
+        return GeneOntologyServiceImpl.getTermAspect( oe ).toString().toLowerCase();
     }
 
 }

@@ -23,6 +23,7 @@ import org.apache.commons.lang.RandomStringUtils;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import ubic.gemma.model.common.auditAndSecurity.eventType.ArrayDesignMergeEventImpl;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.testing.BaseSpringContextTest;
@@ -48,15 +49,25 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         Collection<ArrayDesign> others = new HashSet<ArrayDesign>();
         others.add( ad2 );
         others.add( ad3 );
-        ArrayDesign merged = arrayDesignService.thaw( arrayDesignMergeService.merge( ad1, others, "foo1", "bar1"
-                + RandomStringUtils.randomAlphabetic( 4 ), false ) );
 
-        assertTrue( merged.getMergees().contains( ad2 ) );
-        assertTrue( merged.getMergees().contains( ad3 ) );
-        assertNull( merged.getMergedInto() );
-        assertTrue( merged.getCompositeSequences().size() == 30 );
-        ad3 = arrayDesignService.thawLite( arrayDesignService.load( ad3.getId() ) );
-        assertEquals( merged, ad3.getMergedInto() );
+        ArrayDesign ad1ad2ad3 = arrayDesignMergeService.merge( ad1, others,
+                "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ),
+                "ad1ad2ad3_" + RandomStringUtils.randomAlphabetic( 4 ), false );
+
+        /*
+         * merged contains all three.
+         */
+        assertTrue( ad1ad2ad3.getMergees().contains( ad1 ) );
+        assertTrue( ad1ad2ad3.getMergees().contains( ad2 ) );
+        assertTrue( ad1ad2ad3.getMergees().contains( ad3 ) );
+        assertNull( ad1ad2ad3.getMergedInto() );
+        assertEquals( 30, ad1ad2ad3.getCompositeSequences().size() );
+        assertEquals( ad1ad2ad3, ad1.getMergedInto() );
+        assertEquals( ad1ad2ad3, ad2.getMergedInto() );
+        assertEquals( ad1ad2ad3, ad3.getMergedInto() );
+        assertEquals( ArrayDesignMergeEventImpl.class, ad1.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEventImpl.class, ad2.getAuditTrail().getLast().getEventType().getClass() );
+        assertEquals( ArrayDesignMergeEventImpl.class, ad3.getAuditTrail().getLast().getEventType().getClass() );
 
         /*
          * Making a new one out of a merged design and an unmerged
@@ -64,12 +75,14 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         ArrayDesign ad4 = super.getTestPersistentArrayDesign( 10, true );
         others.clear();
         others.add( ad4 );
-        ArrayDesign merged2 = arrayDesignService.thaw( arrayDesignMergeService.merge( merged, others, "foo2", "bar2"
-                + RandomStringUtils.randomAlphabetic( 4 ), false ) );
-        assertTrue( merged2.getMergees().contains( ad4 ) );
-        assertTrue( merged2.getMergees().contains( merged ) );
-        assertTrue( merged2.getCompositeSequences().size() == 40 );
-        assertNull( merged2.getMergedInto() );
+        ArrayDesign ad1ad2ad3ad4 = arrayDesignMergeService.merge( ad1ad2ad3, others,
+                "foo2" + RandomStringUtils.randomAlphabetic( 4 ), "bar2" + RandomStringUtils.randomAlphabetic( 4 ),
+                false );
+
+        assertTrue( ad1ad2ad3ad4.getMergees().contains( ad1ad2ad3 ) );
+        assertTrue( ad1ad2ad3ad4.getMergees().contains( ad4 ) );
+        assertEquals( 40, ad1ad2ad3ad4.getCompositeSequences().size() );
+        assertNull( ad1ad2ad3ad4.getMergedInto() );
 
         /*
          * Add an array to an already merged design.
@@ -77,14 +90,15 @@ public class ArrayDesignMergeServiceTest extends BaseSpringContextTest {
         ArrayDesign ad5 = super.getTestPersistentArrayDesign( 10, true );
         others.clear();
         others.add( ad5 );
-        ArrayDesign merged3 = arrayDesignService.thaw( arrayDesignMergeService
-                .merge( merged2, others, null, null, true ) );
+        ArrayDesign merged3 = arrayDesignMergeService.merge( ad1ad2ad3ad4, others, null, null, true );
 
-        assertEquals( merged2, merged3 );
-        assertTrue( merged3.getMergees().contains( ad5 ) );
-        assertTrue( merged3.getMergees().contains( ad4 ) );
-        assertTrue( merged3.getMergees().contains( merged ) );
-        assertTrue( merged3.getCompositeSequences().size() == 50 );
+        assertEquals( ad1ad2ad3ad4, merged3 );
+        assertTrue( merged3.getMergees().contains( ad1ad2ad3 ) ); // from before.
+        assertTrue( merged3.getMergees().contains( ad4 ) ); // from before
+        assertTrue( merged3.getMergees().contains( ad5 ) ); // the extra one.
+        assertTrue( merged3.getMergees().contains( ad1ad2ad3 ) );
+        assertEquals( 50, merged3.getCompositeSequences().size() );
+
     }
 
 }

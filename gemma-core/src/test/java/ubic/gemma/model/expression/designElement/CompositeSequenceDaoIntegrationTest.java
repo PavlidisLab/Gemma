@@ -43,7 +43,6 @@ import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.persistence.TableMaintenenceUtil;
 import ubic.gemma.util.ConfigUtils;
 
@@ -87,7 +86,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
             // insert the needed genes and gene products into the system.(can use NCBI gene loader, but for subset)
             NcbiGeneLoader loader = new NcbiGeneLoader();
             loader.setTaxonService( ( TaxonService ) this.getBean( "taxonService" ) );
-            loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+            loader.setPersisterHelper( persisterHelper );
             String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
             filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
             String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";
@@ -125,6 +124,7 @@ public class CompositeSequenceDaoIntegrationTest extends AbstractArrayDesignProc
     @Test
     public void testFindByGene() {
         Collection<Gene> genes = geneService.findByOfficialSymbol( "PON2" );
+        assertTrue( genes.size() > 0 );
         Gene g = genes.iterator().next();
         Collection<CompositeSequence> collection = compositeSequenceService.findByGene( g );
         assertEquals( 1, collection.size() );

@@ -20,7 +20,7 @@
 package ubic.gemma.analysis.expression.diff;
 
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 /**
  * Linear model analyzer that doesn't have any special constraints.
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 @Scope(value = "prototype")
 public class GenericAncovaAnalyzer extends LinearModelAnalyzer {
 

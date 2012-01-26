@@ -58,7 +58,7 @@ import ubic.gemma.model.genome.gene.phenotype.valueObject.GenericEvidenceValueOb
 import ubic.gemma.model.genome.gene.phenotype.valueObject.LiteratureEvidenceValueObject;
 import ubic.gemma.model.genome.gene.phenotype.valueObject.UrlEvidenceValueObject;
 import ubic.gemma.ontology.OntologyService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
 @Component
@@ -74,7 +74,7 @@ public class PhenotypeAssoManagerServiceHelper {
     private PhenotypeAssociationService phenotypeAssociationService;
 
     @Autowired
-    private PersisterHelper persisterHelper;
+    private Persister  persisterHelper;
 
     @Autowired
     private ExternalDatabaseService externalDatabaseService;

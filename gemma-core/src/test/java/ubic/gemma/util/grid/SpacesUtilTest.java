@@ -27,11 +27,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import ubic.gemma.job.grid.util.SpacesUtil;
+import ubic.gemma.job.grid.util.SpacesUtilImpl;
 import ubic.gemma.testing.BaseSpringContextTest;
 import ubic.gemma.util.SpringContextUtil;
 
 /**
- * A test class for {@link SpacesUtil}.
+ * A test class for {@link SpacesUtilImpl}.
  * 
  * @author keshav
  * @version $Id$
@@ -47,7 +48,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     @Test
     public void testAddGigaspacesToBeanFactory() {
 
-        if ( !SpacesUtil.isSpaceRunning() ) {
+        if ( !SpacesUtilImpl.isSpaceRunning() ) {
             return;
         }
 
@@ -60,7 +61,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
         BeanFactory updatedCtx = spacesUtil.addGemmaSpacesToApplicationContext();
 
         /* verify that we have the new gigaspaces beans */
-        if ( !SpacesUtil.isSpaceRunning() )
+        if ( !SpacesUtilImpl.isSpaceRunning() )
             assertFalse( updatedCtx.containsBean( gigaspacesTemplate ) );
         else {
             assertTrue( updatedCtx.containsBean( gigaspacesTemplate ) );
@@ -74,7 +75,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     @Test
     public void testGetSpaceContainerAdmin() {
-        SpacesUtil.logRuntimeConfigurationReport();
+        SpacesUtilImpl.logRuntimeConfigurationReport();
     }
 
     /**
@@ -82,7 +83,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
      */
     @Test
     public void testLogSpaceStatistics() {
-        SpacesUtil.logSpaceStatistics();
+        SpacesUtilImpl.logSpaceStatistics();
     }
 
     /**
@@ -91,7 +92,7 @@ public class SpacesUtilTest extends BaseSpringContextTest {
     @Test
     public void testNumIdle() {
 
-        if ( !SpacesUtil.isSpaceRunning() ) {
+        if ( !SpacesUtilImpl.isSpaceRunning() ) {
             return;
         }
 

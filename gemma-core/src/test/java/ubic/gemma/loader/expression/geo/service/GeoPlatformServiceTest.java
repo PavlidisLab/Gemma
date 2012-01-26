@@ -33,7 +33,7 @@ import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
 public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
 
     @Autowired
-    GeoPlatformService geoService;
+    GeoService geoService;
 
     /*
      * Test method for 'ubic.gemma.loader.expression.geo.GeoPlatformService.fetchAndLoad(String)'
@@ -44,6 +44,6 @@ public class GeoPlatformServiceTest extends AbstractGeoServiceTest {
         String path = getTestFileBasePath();
         geoService.setGeoDomainObjectGenerator( new GeoDomainObjectGeneratorLocal( path + GEO_TEST_DATA_ROOT
                 + "platform" ) );
-        geoService.fetchAndLoad( "GPL101", false, true, false, false );
+        geoService.fetchAndLoad( "GPL101", true, true, false, false );
     }
 }

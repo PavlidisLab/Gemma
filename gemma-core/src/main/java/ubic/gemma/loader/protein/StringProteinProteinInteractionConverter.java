@@ -82,7 +82,7 @@ public class StringProteinProteinInteractionConverter implements Converter<Objec
     }
 
     @Override
-    public Collection<Object> convert( Collection<Object> sourceDomainObjects ) {
+    public Collection<Object> convert( Collection<? extends Object> sourceDomainObjects ) {
         long startTime = System.currentTimeMillis();
         Collection<Object> results = new HashSet<Object>();
         for ( Object object : sourceDomainObjects ) {

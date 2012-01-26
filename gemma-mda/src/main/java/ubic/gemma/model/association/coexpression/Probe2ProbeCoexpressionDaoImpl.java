@@ -352,7 +352,7 @@ public class Probe2ProbeCoexpressionDaoImpl extends
             throw new UnsupportedOperationException( "Sorry, filterNonSpecific is not supported yet" );
         }
 
-        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession( true ) );
+        Collection<CompositeSequence> probes = CommonQueries.getCompositeSequences( gene, this.getSession() );
 
         if ( probes.size() == 0 ) return new HashSet<BioAssaySet>();
 

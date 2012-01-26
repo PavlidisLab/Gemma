@@ -49,35 +49,29 @@ public class TaxonDaoImpl extends ubic.gemma.model.genome.TaxonDaoBase {
     /*
      * (non-Javadoc)
      * 
-     * @see ubic.gemma.model.genome.TaxonDaoBase#find(ubic.gemma.model.genome.Taxon)
+     * @see ubic.gemma.model.genome.TaxonDao#find(ubic.gemma.model.genome.Taxon)
      */
-    @SuppressWarnings("boxing")
     @Override
     public Taxon find( Taxon taxon ) {
-        try {
 
-            BusinessKey.checkValidKey( taxon );
+        BusinessKey.checkValidKey( taxon );
 
-            Criteria queryObject = super.getSession().createCriteria( Taxon.class );
+        Criteria queryObject = super.getSession().createCriteria( Taxon.class ).setReadOnly( true );
 
-            BusinessKey.addRestrictions( queryObject, taxon );
+        BusinessKey.addRestrictions( queryObject, taxon );
 
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + taxon.getClass().getName()
-                                    + "' was found when executing query" );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + taxon.getClass().getName() + "' was found when executing query" );
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( Taxon ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( Taxon ) result;
+
     }
 
     @Override

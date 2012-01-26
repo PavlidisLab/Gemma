@@ -46,13 +46,13 @@ public class LinkAnalysisServiceTest extends BaseSpringContextTest {
     private LinkAnalysisConfig linkAnalysisConfig = new LinkAnalysisConfig();
 
     @Autowired
-    LinkAnalysisService linkAnalysisService;
+    private LinkAnalysisService linkAnalysisService;
+
     @Autowired
-    ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
+    private ProcessedExpressionDataVectorCreateService processedExpressionDataVectorCreateService;
 
     @Before
     public void setup() {
-
         super.setTestCollectionSize( 100 );
     }
 

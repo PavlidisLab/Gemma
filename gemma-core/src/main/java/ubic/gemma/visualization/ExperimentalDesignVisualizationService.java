@@ -37,8 +37,7 @@ import org.apache.commons.lang.time.StopWatch;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.basecode.dataStructure.matrix.DoubleMatrix;
 import ubic.basecode.dataStructure.matrix.DoubleMatrixFactory;
 import ubic.basecode.graphics.ColorMap;
@@ -66,7 +65,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class ExperimentalDesignVisualizationService {
 
     protected Log log = LogFactory.getLog( getClass().getName() );

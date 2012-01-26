@@ -41,7 +41,7 @@ import ubic.gemma.job.TaskCommand;
 import ubic.gemma.job.TaskResult;
 import ubic.gemma.loader.expression.arrayExpress.ArrayExpressLoadService;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGenerator;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.TechnologyType;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
@@ -232,9 +232,9 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
             boolean allowSuperSeriesLoad = expressionExperimentLoadCommand.isAllowSuperSeriesLoad();
             boolean allowSubSeriesLoad = true; // FIXME
 
-            Collection<ExpressionExperiment> result = geoDatasetService.fetchAndLoad( accession, false,
-                    doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms, allowSuperSeriesLoad,
-                    allowSubSeriesLoad );
+            Collection<ExpressionExperiment> result = ( Collection<ExpressionExperiment> ) geoDatasetService
+                    .fetchAndLoad( accession, false, doSampleMatching, aggressiveQtRemoval, splitIncompatiblePlatforms,
+                            allowSuperSeriesLoad, allowSubSeriesLoad );
 
             if ( result == null ) {
                 throw new RuntimeException( "No results were returned (cancelled or failed)" );
@@ -350,7 +350,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
     }
 
     @Autowired
-    GeoDatasetService geoDatasetService;
+    GeoService geoDatasetService;
 
     @Autowired
     ArrayExpressLoadService arrayExpressLoadService;
@@ -395,7 +395,7 @@ public class ExpressionExperimentLoadController extends AbstractTaskService {
     /**
      * @param geoDatasetService the geoDatasetService to set
      */
-    public void setGeoDatasetService( GeoDatasetService geoDatasetService ) {
+    public void setGeoDatasetService( GeoService geoDatasetService ) {
         this.geoDatasetService = geoDatasetService;
     }
 

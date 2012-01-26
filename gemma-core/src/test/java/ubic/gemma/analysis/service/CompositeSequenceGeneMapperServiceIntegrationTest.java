@@ -36,7 +36,7 @@ import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceAlignmentServ
 import ubic.gemma.loader.expression.arrayDesign.ArrayDesignSequenceProcessingService;
 import ubic.gemma.loader.expression.geo.AbstractGeoServiceTest;
 import ubic.gemma.loader.expression.geo.GeoDomainObjectGeneratorLocal;
-import ubic.gemma.loader.expression.geo.service.GeoDatasetService;
+import ubic.gemma.loader.expression.geo.service.GeoService;
 import ubic.gemma.loader.genome.gene.ncbi.NcbiGeneLoader;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
@@ -47,7 +47,6 @@ import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.biosequence.SequenceType;
 import ubic.gemma.model.genome.gene.GeneService;
 import ubic.gemma.model.genome.sequenceAnalysis.BlatResult;
-import ubic.gemma.persistence.PersisterHelper;
 import ubic.gemma.util.ConfigUtils;
 
 /**
@@ -69,7 +68,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     ArrayDesignService arrayDesignService = null;
 
     @Autowired
-    GeoDatasetService geoService = null;
+    GeoService geoService = null;
 
     ArrayDesign ad = null;
 
@@ -201,7 +200,7 @@ public class CompositeSequenceGeneMapperServiceIntegrationTest extends AbstractG
     private void loadGeneData() {
         NcbiGeneLoader loader = new NcbiGeneLoader();
         loader.setTaxonService( taxonService );
-        loader.setPersisterHelper( ( PersisterHelper ) this.getBean( "persisterHelper" ) );
+        loader.setPersisterHelper( this.persisterHelper );
         String filePath = ConfigUtils.getString( "gemma.home" ) + File.separatorChar;
         filePath = filePath + "gemma-core/src/test/resources/data/loader/genome/gene";
         String geneInfoFile = filePath + File.separatorChar + "selected_gene_info.gz";

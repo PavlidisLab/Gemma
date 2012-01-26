@@ -35,7 +35,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Load or update information about genes from the NCBI Gene database.
@@ -50,7 +50,7 @@ public class NcbiGeneLoader {
     private AtomicBoolean generatorDone;
     private AtomicBoolean converterDone;
     private AtomicBoolean loaderDone;
-    private PersisterHelper persisterHelper;
+    private Persister persisterHelper;
     private int loadedGeneCount = 0;
     private TaxonService taxonService;
 
@@ -64,7 +64,7 @@ public class NcbiGeneLoader {
         loaderDone = new AtomicBoolean( false );
     }
 
-    public NcbiGeneLoader( PersisterHelper persisterHelper ) {
+    public NcbiGeneLoader( Persister persisterHelper ) {
         this();
         this.setPersisterHelper( persisterHelper );
     }
@@ -139,7 +139,7 @@ public class NcbiGeneLoader {
     /**
      * @param persisterHelper the persisterHelper to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

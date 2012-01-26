@@ -50,11 +50,12 @@ import ubic.gemma.session.GemmaSessionBackedValueObject;
  * @author tvrossum
  * @version $Id$
  */
-public class SessionBoundExpressionExperimentSetValueObject extends ExpressionExperimentSetValueObject implements GemmaSessionBackedValueObject {
+public class SessionBoundExpressionExperimentSetValueObject extends ExpressionExperimentSetValueObject implements
+        GemmaSessionBackedValueObject {
 
     private static final long serialVersionUID = 2068650886972222818L;
     private boolean modified;
-    
+
     public static Collection<ExpressionExperimentSetValueObject> makeValueObjects(
             Collection<ExpressionExperimentSet> entities ) {
         Collection<ExpressionExperimentSetValueObject> results = new HashSet<ExpressionExperimentSetValueObject>();
@@ -65,39 +66,43 @@ public class SessionBoundExpressionExperimentSetValueObject extends ExpressionEx
 
         return results;
     }
+
     /**
      * default constructor to satisfy java bean contract
      */
     public SessionBoundExpressionExperimentSetValueObject() {
         super();
     }
-    
-    public SessionBoundExpressionExperimentSetValueObject(ExpressionExperimentSet eeset) {
-        super(eeset);
+
+    public SessionBoundExpressionExperimentSetValueObject( ExpressionExperimentSet eeset ) {
+        super( eeset );
     }
 
-    /* can't implement this because sessionListManager in is 'web' package
-     * @Override
-    public Object loadEntity() {
-        return sessionListManager.getExperimentSetById( this.getId() );
-    }*/
+    /*
+     * can't implement this because sessionListManager in is 'web' package
+     * 
+     * @Override public Object loadEntity() { return sessionListManager.getExperimentSetById( this.getId() ); }
+     */
     @Override
     public boolean isModified() {
         return this.modified;
     }
+
     @Override
     public void setModified( boolean modified ) {
-       this.modified = modified; 
+        this.modified = modified;
     }
+
     /**
      * two value objects are equal if their types are the same and their ids are the same
      */
     public boolean equals( GemmaSessionBackedValueObject ervo ) {
-        if(ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() )){
+        if ( ervo.getClass().equals( this.getClass() ) && ervo.getId().equals( this.getId() ) ) {
             return true;
         }
-       return false;
+        return false;
     }
+
     @Override
     public Collection<Long> getMemberIds() {
         return this.getExpressionExperimentIds();

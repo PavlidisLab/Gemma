@@ -23,14 +23,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Tests the {@link DifferentialExpressionAnalysisHelperService}.
+ * Tests the {@link differentialExpressionAnalysisHelperService}.
  * 
  * @author keshav
  * @version $Id$
  */
 public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyzerConfigurationTest {
-
-    private DifferentialExpressionAnalysisHelperService differentialExpressionAnalysisHelperService = new DifferentialExpressionAnalysisHelperService();
 
     /*
      * (non-Javadoc)
@@ -40,9 +38,7 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
     @Override
     @Before
     public void configureMocks() throws Exception {
-
         configureMockAnalysisServiceHelper( 1 );
-
     }
 
     /**
@@ -52,7 +48,7 @@ public class DifferentialExpressionAnalysisHelperServiceTest extends BaseAnalyze
      */
     @Test
     public void testCheckBiologicalReplicates() throws Exception {
-        boolean result = differentialExpressionAnalysisHelperService.checkBiologicalReplicates( expressionExperiment,
+        boolean result = DifferentialExpressionAnalysisUtil.checkBiologicalReplicates( expressionExperiment,
                 expressionExperiment.getExperimentalDesign().getExperimentalFactors() );
         assertTrue( result );
     }

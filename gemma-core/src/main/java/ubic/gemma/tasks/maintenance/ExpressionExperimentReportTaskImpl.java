@@ -3,8 +3,7 @@ package ubic.gemma.tasks.maintenance;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
@@ -16,7 +15,7 @@ import ubic.gemma.job.TaskResult;
  * @version $Id$
  */
 
-@Service
+@Component
 public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentReportTask {
 
     private Log log = LogFactory.getLog( ExpressionExperimentReportTaskImpl.class.getName() );
@@ -26,6 +25,7 @@ public class ExpressionExperimentReportTaskImpl implements ExpressionExperimentR
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.grid.javaspaces.task.expression.experiment.ExpressionExperimentReportTask#execute()
      */
     @TaskMethod

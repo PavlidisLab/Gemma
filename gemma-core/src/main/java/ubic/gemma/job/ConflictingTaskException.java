@@ -24,7 +24,7 @@ package ubic.gemma.job;
  * 
  * @author paul
  * @version $Id$
- * @see TaskRunningService
+ * @see TaskRunningServiceImpl
  */
 public class ConflictingTaskException extends RuntimeException {
 

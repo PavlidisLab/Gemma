@@ -60,7 +60,7 @@ import ubic.gemma.util.ConfigUtils;
 public class GeoDatasetServiceIntegrationTest extends AbstractGeoServiceTest {
 
     @Autowired
-    private GeoDatasetService geoService;
+    private GeoService geoService;
 
     @Autowired
     private ExpressionExperimentService eeService;

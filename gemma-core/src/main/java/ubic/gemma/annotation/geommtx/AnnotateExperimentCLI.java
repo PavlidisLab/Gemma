@@ -46,7 +46,7 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
         }
     }
 
-    ExpressionExperimentAnnotator expressionExperimentAnnotator;
+    ExpressionExperimentAnnotatorImpl expressionExperimentAnnotator;
 
     @Override
     protected void buildOptions() {
@@ -88,13 +88,13 @@ public class AnnotateExperimentCLI extends ExpressionExperimentManipulatingCLI {
     protected void processOptions() {
         super.processOptions();
 
-        expressionExperimentAnnotator = ( ExpressionExperimentAnnotator ) this
+        expressionExperimentAnnotator = ( ExpressionExperimentAnnotatorImpl ) this
                 .getBean( "expressionExperimentAnnotator" );
 
         expressionExperimentAnnotator.init();
         log.info( "Initializing MMTx..." );
 
-        while ( !ExpressionExperimentAnnotator.ready() || !PredictedCharacteristicFactory.ready() ) {
+        while ( !ExpressionExperimentAnnotatorImpl.ready() || !PredictedCharacteristicFactoryImpl.ready() ) {
             try {
                 Thread.sleep( 10000 );
             } catch ( InterruptedException e ) {

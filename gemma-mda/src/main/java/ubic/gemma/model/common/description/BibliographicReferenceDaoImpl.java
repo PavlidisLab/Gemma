@@ -81,37 +81,35 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
      */
     @Override
     public BibliographicReference find( BibliographicReference bibliographicReference ) {
-        try {
-            BusinessKey.checkKey( bibliographicReference );
-            Criteria queryObject = super.getSession( true ).createCriteria( BibliographicReference.class );
 
-            /*
-             * This syntax allows you to look at an association.
-             */
-            if ( bibliographicReference.getPubAccession() != null ) {
-                queryObject.createCriteria( "pubAccession" ).add(
-                        Restrictions.eq( "accession", bibliographicReference.getPubAccession().getAccession() ) );
-            } else {
-                throw new NullPointerException( "PubAccession cannot be null" );
-            }
+        BusinessKey.checkKey( bibliographicReference );
+        Criteria queryObject = super.getSession().createCriteria( BibliographicReference.class );
 
-            java.util.List<?> results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '" + BibliographicReference.class.getName()
-                                    + "' with accession " + bibliographicReference.getPubAccession().getAccession()
-                                    + " was found when executing query" );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( BibliographicReference ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        /*
+         * This syntax allows you to look at an association.
+         */
+        if ( bibliographicReference.getPubAccession() != null ) {
+            queryObject.createCriteria( "pubAccession" ).add(
+                    Restrictions.eq( "accession", bibliographicReference.getPubAccession().getAccession() ) );
+        } else {
+            throw new NullPointerException( "PubAccession cannot be null" );
         }
+
+        java.util.List<?> results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + BibliographicReference.class.getName() + "' with accession "
+                                + bibliographicReference.getPubAccession().getAccession()
+                                + " was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        return ( BibliographicReference ) result;
+
     }
 
     /*
@@ -177,10 +175,12 @@ public class BibliographicReferenceDaoImpl extends ubic.gemma.model.common.descr
     @Override
     public BibliographicReference thaw( BibliographicReference bibliographicReference ) {
         if ( bibliographicReference == null || bibliographicReference.getId() == null ) return bibliographicReference;
-        return ( BibliographicReference ) this.getHibernateTemplate().findByNamedParam(
-                "select b from BibliographicReferenceImpl b left join fetch b.pubAccession left join fetch b.chemicals "
-                        + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id ", "id",
-                bibliographicReference.getId() ).iterator().next();
+        return ( BibliographicReference ) this
+                .getHibernateTemplate()
+                .findByNamedParam(
+                        "select b from BibliographicReferenceImpl b left join fetch b.pubAccession left join fetch b.chemicals "
+                                + "left join fetch b.meshTerms left join fetch b.keywords where b.id = :id ", "id",
+                        bibliographicReference.getId() ).iterator().next();
     }
 
     /*

@@ -12,8 +12,7 @@ import org.springframework.security.acls.domain.ObjectIdentityImpl;
 import org.springframework.security.acls.model.Acl;
 import org.springframework.security.acls.model.AclService;
 import org.springframework.security.acls.model.NotFoundException;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.model.common.description.LocalFile;
 import ubic.gemma.model.expression.bioAssay.BioAssay;
 import ubic.gemma.model.expression.biomaterial.BioMaterial;
@@ -29,7 +28,7 @@ import ubic.gemma.model.expression.experiment.FactorValue;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class AclTestUtils {
 
     private static Log log = LogFactory.getLog( AclTestUtils.class );

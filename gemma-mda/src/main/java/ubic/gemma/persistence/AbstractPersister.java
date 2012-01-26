@@ -26,11 +26,12 @@ import java.util.HashSet;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.hibernate.SessionFactory;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import ubic.gemma.util.ConfigUtils;
+
 /**
- * Base class for persisters, provides session management.
+ * Base class for persisters.
  * 
  * @author pavlidis
  * @version $Id$
@@ -47,16 +48,12 @@ public abstract class AbstractPersister extends HibernateDaoSupport implements P
     /**
      * This should match the JDBC batch size for Hibernate.
      */
-    protected static final int SESSION_BATCH_SIZE = 50;
+    protected static final int SESSION_BATCH_SIZE = ConfigUtils.getInt( "gemma.hibernate.jdbc_batch_size" );
 
     /**
      * Collections smaller than this don't result in logging about progress.
      */
     public static final int MINIMUM_COLLECTION_SIZE_FOR_NOTFICATIONS = 500;
-
-    public AbstractPersister( SessionFactory sessionFactory ) {
-        super.setSessionFactory( sessionFactory );
-    }
 
     /*
      * @see ubic.gemma.model.loader.loaderutils.Loader#create(java.util.Collection)

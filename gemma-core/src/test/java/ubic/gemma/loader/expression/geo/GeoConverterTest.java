@@ -63,9 +63,9 @@ import ubic.gemma.testing.BaseSpringContextTest;
 public class GeoConverterTest extends BaseSpringContextTest {
 
     @Autowired
-    GeoConverter gc;
+    private GeoConverter gc;
 
-    ByteArrayConverter bac = new ByteArrayConverter();
+    private ByteArrayConverter bac = new ByteArrayConverter();
 
     @Before
     public void setUp() throws Exception {

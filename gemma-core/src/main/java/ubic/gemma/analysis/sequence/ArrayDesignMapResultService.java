@@ -27,8 +27,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesign;
 import ubic.gemma.model.expression.arrayDesign.ArrayDesignService;
 import ubic.gemma.model.expression.designElement.CompositeSequence;
@@ -47,7 +46,7 @@ import ubic.gemma.model.genome.sequenceAnalysis.BlatResultService;
  * @author Paul
  * @version $Id$
  */
-@Service
+@Component
 public class ArrayDesignMapResultService {
 
     private static Log log = LogFactory.getLog( ArrayDesignMapResultService.class.getName() );

@@ -101,7 +101,7 @@ public class ExperimentalDesignImportDuplicateValueTest extends BaseSpringContex
         ad.setTechnologyType( TechnologyType.ONECOLOR );
         metaData.getArrayDesigns().add( ad );
 
-        ee = s.load( metaData, data );
+        ee = s.create( metaData, data );
         ee = eeService.thawLite( ee );
     }
 

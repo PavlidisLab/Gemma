@@ -20,8 +20,7 @@ package ubic.gemma.job.grid.util;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.job.TaskMethod;
 import ubic.gemma.job.TaskResult;
 
@@ -31,7 +30,7 @@ import ubic.gemma.job.TaskResult;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class MonitorTaskImpl implements MonitorTask {
 
     private static Log log = LogFactory.getLog( MonitorTaskImpl.class );

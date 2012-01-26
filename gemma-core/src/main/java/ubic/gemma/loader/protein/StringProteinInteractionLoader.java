@@ -26,7 +26,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.security.core.context.SecurityContext;
@@ -43,7 +42,7 @@ import ubic.gemma.model.genome.Gene;
 import ubic.gemma.model.genome.Taxon;
 import ubic.gemma.model.genome.TaxonService;
 import ubic.gemma.model.genome.gene.GeneService;
-import ubic.gemma.persistence.PersisterHelper;
+import ubic.gemma.persistence.Persister;
 
 /**
  * Loader class for loading protein protein interactions into Gemma from STRING. Either use local files or retrieve
@@ -67,7 +66,7 @@ public class StringProteinInteractionLoader {
 
     private int loadedGeneCount = 0;
 
-    protected PersisterHelper persisterHelper;
+    protected Persister persisterHelper;
 
     protected GeneService geneService;
 
@@ -302,7 +301,7 @@ public class StringProteinInteractionLoader {
     /**
      * @return the persisterHelper
      */
-    public PersisterHelper getPersisterHelper() {
+    public Persister getPersisterHelper() {
         return persisterHelper;
     }
 
@@ -311,7 +310,7 @@ public class StringProteinInteractionLoader {
      * 
      * @param persisterHelper the persisterHelper to set
      */
-    public void setPersisterHelper( PersisterHelper persisterHelper ) {
+    public void setPersisterHelper( Persister persisterHelper ) {
         this.persisterHelper = persisterHelper;
     }
 

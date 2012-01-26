@@ -39,31 +39,28 @@ public class ExternalDatabaseDaoImpl extends ubic.gemma.model.common.description
 
     @Override
     public ExternalDatabase find( ExternalDatabase externalDatabase ) {
-        try {
 
-            if ( externalDatabase == null || externalDatabase.getName() == null ) {
-                throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
-            }
-
-            Criteria queryObject = super.getSession().createCriteria( ExternalDatabase.class );
-            queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '"
-                                    + ubic.gemma.model.common.description.ExternalDatabase.class.getName()
-                                    + "' was found when executing query" );
-
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
-            }
-            return ( ExternalDatabase ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
+        if ( externalDatabase == null || externalDatabase.getName() == null ) {
+            throw new IllegalArgumentException( "No valid business key for " + externalDatabase );
         }
+
+        Criteria queryObject = super.getSession().createCriteria( ExternalDatabase.class );
+        queryObject.add( Restrictions.eq( "name", externalDatabase.getName() ) );
+        java.util.List results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '"
+                                + ubic.gemma.model.common.description.ExternalDatabase.class.getName()
+                                + "' was found when executing query" );
+
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
+            }
+        }
+        return ( ExternalDatabase ) result;
+
     }
 
     @Override

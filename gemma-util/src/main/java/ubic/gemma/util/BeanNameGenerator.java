@@ -24,8 +24,8 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.DefaultBeanNameGenerator;
 
 /**
- * Our \@Service annotations in classes end up generating names with "Impl" on the end, unless we explicitly provide a
- * name. To avoid us having to do that explicit declaration, I wrote this.
+ * Our \@Service etc. annotations in classes end up generating names with "Impl" on the end, unless we explicitly
+ * provide a name. To avoid us having to do that explicit declaration, I wrote this.
  * 
  * @author paul
  * @version $Id$
@@ -49,7 +49,7 @@ public class BeanNameGenerator implements org.springframework.beans.factory.supp
         String name = this.gen.generateBeanName( definition, registry ).replace( "Impl", "" ).replace( "#0", "" )
                 .replaceAll( ".+\\.", "" );
 
-        name = StringUtils.uncapitalize( name ); 
+        name = StringUtils.uncapitalize( name );
         return name;
     }
 

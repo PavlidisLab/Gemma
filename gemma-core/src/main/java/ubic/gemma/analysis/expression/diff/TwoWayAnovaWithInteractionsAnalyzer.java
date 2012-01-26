@@ -21,8 +21,7 @@ package ubic.gemma.analysis.expression.diff;
 import java.util.Collection;
 
 import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 
@@ -33,7 +32,7 @@ import ubic.gemma.model.expression.experiment.ExpressionExperiment;
  * @version $Id$
  * @see AbstractTwoWayAnovaAnalyzer
  */
-@Service
+@Component
 @Scope(value = "prototype")
 public class TwoWayAnovaWithInteractionsAnalyzer extends LinearModelAnalyzer {
 

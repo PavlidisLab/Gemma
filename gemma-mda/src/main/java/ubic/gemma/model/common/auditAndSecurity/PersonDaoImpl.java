@@ -36,35 +36,33 @@ public class PersonDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Pers
 
     /*
      * (non-Javadoc)
+     * 
      * @see ubic.gemma.model.common.auditAndSecurity.PersonDao#find(ubic.gemma.model.common.auditAndSecurity.Person)
      */
     public Person find( Person person ) {
-        try {
-            Criteria queryObject = super.getSession().createCriteria( Person.class );
+        Criteria queryObject = super.getSession().createCriteria( Person.class );
 
-            BusinessKey.addRestrictions( queryObject, person );
+        BusinessKey.addRestrictions( queryObject, person );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '"
-                                    + ubic.gemma.model.common.auditAndSecurity.Person.class.getName()
-                                    + "' was found when executing query - " + person );
+        java.util.List results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '" + ubic.gemma.model.common.auditAndSecurity.Person.class.getName()
+                                + "' was found when executing query - " + person );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( Person ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( Person ) result;
+
     }
 
     /*
      * (non-Javadoc)
+     * 
      * @see
      * ubic.gemma.model.common.auditAndSecurity.PersonDao#findOrCreate(ubic.gemma.model.common.auditAndSecurity.Person)
      */

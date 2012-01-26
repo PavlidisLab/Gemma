@@ -48,31 +48,28 @@ public class ContactDaoImpl extends ubic.gemma.model.common.auditAndSecurity.Con
      * ubic.gemma.model.common.auditAndSecurity.ContactDaoBase#find(ubic.gemma.model.common.auditAndSecurity.Contact)
      */
     public Contact find( Contact contact ) {
-        try {
 
-            BusinessKey.checkKey( contact );
-            Criteria queryObject = super.getSession().createCriteria( Contact.class );
+        BusinessKey.checkKey( contact );
+        Criteria queryObject = super.getSession().createCriteria( Contact.class );
 
-            BusinessKey.addRestrictions( queryObject, contact );
+        BusinessKey.addRestrictions( queryObject, contact );
 
-            java.util.List results = queryObject.list();
-            Object result = null;
-            if ( results != null ) {
-                if ( results.size() > 1 ) {
-                    throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
-                            "More than one instance of '"
-                                    + ubic.gemma.model.common.auditAndSecurity.Contact.class.getName()
-                                    + "' was found when executing query; query was " + contact + ", query object was "
-                                    + queryObject );
+        java.util.List results = queryObject.list();
+        Object result = null;
+        if ( results != null ) {
+            if ( results.size() > 1 ) {
+                throw new org.springframework.dao.InvalidDataAccessResourceUsageException(
+                        "More than one instance of '"
+                                + ubic.gemma.model.common.auditAndSecurity.Contact.class.getName()
+                                + "' was found when executing query; query was " + contact + ", query object was "
+                                + queryObject );
 
-                } else if ( results.size() == 1 ) {
-                    result = results.iterator().next();
-                }
+            } else if ( results.size() == 1 ) {
+                result = results.iterator().next();
             }
-            return ( Contact ) result;
-        } catch ( org.hibernate.HibernateException ex ) {
-            throw super.convertHibernateAccessException( ex );
         }
+        return ( Contact ) result;
+
     }
 
     /*

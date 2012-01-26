@@ -38,8 +38,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import org.springframework.stereotype.Component;
 import ubic.gemma.analysis.preprocess.ExpressionDataMatrixBuilder;
 import ubic.gemma.analysis.preprocess.filter.FilterConfig;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
@@ -82,7 +81,7 @@ import ubic.gemma.util.DifferentialExpressionAnalysisResultComparator;
  * @author paul
  * @version $Id$
  */
-@Service
+@Component
 public class ExpressionDataFileService {
 
     private static final String DECIMAL_FORMAT = "%.4g";
