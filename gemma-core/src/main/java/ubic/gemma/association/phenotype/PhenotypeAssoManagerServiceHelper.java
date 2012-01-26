@@ -109,172 +109,6 @@ public class PhenotypeAssoManagerServiceHelper {
         }
 
         return null;
-
-    }
-
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
-     */
-    private PhenotypeAssociation conversion2UrlEvidence( UrlEvidenceValueObject evidenceValueObject ) {
-
-        // create the entity to populate
-        UrlEvidence urlEvidence = UrlEvidence.Factory.newInstance();
-
-        // populate common field to all evidence
-        populatePhenotypeAssociation( urlEvidence, evidenceValueObject );
-
-        // populate specific fields for this evidence
-        urlEvidence.setUrl( evidenceValueObject.getUrl() );
-
-        return urlEvidence;
-    }
-
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
-     */
-    private PhenotypeAssociation conversion2GenericEvidence( GenericEvidenceValueObject evidenceValueObject ) {
-
-        // create the entity to populate
-        GenericEvidence genericEvidence = GenericEvidence.Factory.newInstance();
-
-        // populate common field to evidence
-        populatePhenotypeAssociation( genericEvidence, evidenceValueObject );
-
-        return genericEvidence;
-    }
-
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
-     */
-    private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
-
-        // create the entity to populate
-        LiteratureEvidence literatureEvidence = LiteratureEvidence.Factory.newInstance();
-
-        // populate common field to evidence
-        populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
-
-        // populate specific fields for this evidence
-        String pubmedId = evidenceValueObject.getCitationValueObject().getPubmedAccession();
-        literatureEvidence.setCitation( findOrCreateBibliographicReference( pubmedId ) );
-        return literatureEvidence;
-
-    }
-
-    /**
-     * @param evidenceValueObject the evidence we want to convert
-     * @return PhenotypeAssociation the entity created from the ValueObject
-     */
-    private PhenotypeAssociation conversion2ExperimentalEvidence( ExperimentalEvidenceValueObject evidenceValueObject ) {
-
-        // create the entity to populate
-        ExperimentalEvidence experimentalEvidence = ExperimentalEvidence.Factory.newInstance();
-
-        // populate common field to evidence
-        populatePhenotypeAssociation( experimentalEvidence, evidenceValueObject );
-
-        // we only need to create the experiment if its not already in the database
-        Collection<GenericExperiment> genericExperimentWithPubmed = this.phenotypeAssociationService
-                .findByPubmedID( evidenceValueObject.getPrimaryPublicationCitationValueObject().getPubmedAccession() );
-
-        GenericExperiment genericExperiment = null;
-
-        // for the list received we need to check each one to see if they are the same
-        for ( GenericExperiment genericExp : genericExperimentWithPubmed ) {
-
-            boolean sameFound = true;
-
-            HashSet<String> relevantPublication = new HashSet<String>();
-
-            for ( CitationValueObject relevantPubli : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
-
-                relevantPublication.add( relevantPubli.getPubmedAccession() );
-            }
-
-            for ( BibliographicReference bilbi : genericExp.getOtherRelevantPublications() ) {
-
-                // same relevant pubmed
-                if ( !relevantPublication.contains( bilbi.getPubAccession().getAccession() ) ) {
-                    sameFound = false;
-                }
-            }
-
-            // list of all values for a characteristic
-            Collection<String> values = new HashSet<String>();
-
-            for ( CharacteristicValueObject characteristic : evidenceValueObject.getExperimentCharacteristics() ) {
-                values.add( characteristic.getValue() );
-            }
-
-            if ( values.size() != genericExp.getCharacteristics().size() ) {
-                sameFound = false;
-            } else {
-
-                for ( Characteristic cha : genericExp.getCharacteristics() ) {
-                    if ( !values.contains( cha.getValue() ) ) {
-                        sameFound = false;
-                    }
-                }
-            }
-
-            // the Investigation is already present in the database so we can reuse it
-            if ( sameFound ) {
-                System.out
-                        .println( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
-                genericExperiment = genericExp;
-            }
-        }
-
-        // we didn't find the experiment in the database
-        if ( genericExperiment == null ) {
-
-            // create the GenericExperiment
-            genericExperiment = GenericExperiment.Factory.newInstance();
-
-            // find all pubmed id from the value object
-            String primaryPubmedId = evidenceValueObject.getPrimaryPublicationCitationValueObject()
-                    .getPubmedAccession();
-
-            Collection<String> relevantPubmedId = new HashSet<String>();
-
-            for ( CitationValueObject citationValueObject : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
-
-                relevantPubmedId.add( citationValueObject.getPubmedAccession() );
-            }
-
-            // creates or find those Bibliographic Reference and add them to the GenericExperiment
-            genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
-            genericExperiment.setOtherRelevantPublications( findOrCreateBibliographicReference( relevantPubmedId ) );
-
-            // characteristic
-            Collection<Characteristic> characteristics = null;
-
-            if ( evidenceValueObject.getExperimentCharacteristics() != null ) {
-
-                characteristics = new HashSet<Characteristic>();
-
-                for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getExperimentCharacteristics() ) {
-
-                    VocabCharacteristic experimentCha = VocabCharacteristic.Factory.newInstance();
-
-                    experimentCha.setValue( chaValueObject.getValue() );
-                    experimentCha.setCategory( chaValueObject.getCategory() );
-                    experimentCha.setValueUri( chaValueObject.getValueUri() );
-                    experimentCha.setCategoryUri( chaValueObject.getCategoryUri() );
-
-                    characteristics.add( experimentCha );
-                }
-            }
-
-            genericExperiment.getCharacteristics().addAll( characteristics );
-            this.phenotypeAssociationService.create( genericExperiment );
-        }
-
-        experimentalEvidence.setExperiment( genericExperiment );
-        return experimentalEvidence;
     }
 
     /**
@@ -284,32 +118,8 @@ public class PhenotypeAssoManagerServiceHelper {
      * @param evidenceValueObject the value object representing a phenotype
      */
     public void populatePhenotypeAssociation( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
-
         populatePheAssoWithoutPhenotypes( phe, evidenceValueObject );
-
-        // here lets add the phenotypes
-        Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
-
-        for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
-
-            VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
-
-            OntologyTerm ontologyTerm = this.ontologyService.getTerm( phenotype.getValueUri() );
-
-            if ( ontologyTerm == null ) {
-                throw new EntityNotFoundException( "Could not locate ontology term with uri: "
-                        + phenotype.getValueUri() );
-            }
-
-            myPhenotype.setValueUri( ontologyTerm.getUri() );
-            myPhenotype.setValue( ontologyTerm.getLabel() );
-            myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
-            myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
-
-            myPhenotypes.add( myPhenotype );
-        }
-
-        phe.getPhenotypes().addAll( myPhenotypes );
+        populatePheAssoPhenotypes( phe, evidenceValueObject );
     }
 
     /**
@@ -337,31 +147,23 @@ public class PhenotypeAssoManagerServiceHelper {
         if ( evidenceValueObject.getEvidenceSource() != null ) {
             populateEvidenceSource( phe, evidenceValueObject );
         }
-
     }
 
-    /**
-     * @param phe
-     * @param evidenceValueObject
-     */
-    protected void populateEvidenceSource( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
-        DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getEvidenceSource();
+    /** Ontology term to CharacteristicValueObject */
+    public Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
+            String ontologyUsed ) {
 
-        // find the correct database
-        ExternalDatabase externalDatabase = this.externalDatabaseService.find( databaseEntryValueObject
-                .getExternalDatabase().getName() );
+        Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
 
-        if ( externalDatabase == null ) {
-            throw new EntityNotFoundException( "Could not locate External Database: "
-                    + databaseEntryValueObject.getExternalDatabase().getName() );
+        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
+
+            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel(),
+                    ontologyTerm.getUri() );
+            phenotype.setOntologyUsed( ontologyUsed );
+            characteristicsVO.add( phenotype );
+
         }
-
-        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( externalDatabase );
-        databaseEntry.setAccession( databaseEntryValueObject.getAccession() );
-
-        databaseEntry = this.databaseEntryDao.create( databaseEntry );
-
-        phe.setEvidenceSource( databaseEntry );
+        return characteristicsVO;
     }
 
     // load evidence from the database and populate it with the updated information
@@ -485,12 +287,227 @@ public class PhenotypeAssoManagerServiceHelper {
         return result;
     }
 
+    /**
+     * @param evidenceValueObject the evidence we want to convert
+     * @return PhenotypeAssociation the entity created from the ValueObject
+     */
+    private PhenotypeAssociation conversion2UrlEvidence( UrlEvidenceValueObject evidenceValueObject ) {
+
+        // create the entity to populate
+        UrlEvidence urlEvidence = UrlEvidence.Factory.newInstance();
+
+        // populate common field to all evidence
+        populatePhenotypeAssociation( urlEvidence, evidenceValueObject );
+
+        // populate specific fields for this evidence
+        urlEvidence.setUrl( evidenceValueObject.getUrl() );
+
+        return urlEvidence;
+    }
+
+    /**
+     * @param evidenceValueObject the evidence we want to convert
+     * @return PhenotypeAssociation the entity created from the ValueObject
+     */
+    private PhenotypeAssociation conversion2GenericEvidence( GenericEvidenceValueObject evidenceValueObject ) {
+
+        // create the entity to populate
+        GenericEvidence genericEvidence = GenericEvidence.Factory.newInstance();
+
+        // populate common field to evidence
+        populatePhenotypeAssociation( genericEvidence, evidenceValueObject );
+
+        return genericEvidence;
+    }
+
+    /**
+     * @param evidenceValueObject the evidence we want to convert
+     * @return PhenotypeAssociation the entity created from the ValueObject
+     */
+    private PhenotypeAssociation conversion2LiteratureEvidence( LiteratureEvidenceValueObject evidenceValueObject ) {
+
+        // create the entity to populate
+        LiteratureEvidence literatureEvidence = LiteratureEvidence.Factory.newInstance();
+
+        // populate common field to evidence
+        populatePhenotypeAssociation( literatureEvidence, evidenceValueObject );
+
+        // populate specific fields for this evidence
+        String pubmedId = evidenceValueObject.getCitationValueObject().getPubmedAccession();
+        literatureEvidence.setCitation( findOrCreateBibliographicReference( pubmedId ) );
+        return literatureEvidence;
+    }
+
+    /**
+     * @param evidenceValueObject the evidence we want to convert
+     * @return PhenotypeAssociation the entity created from the ValueObject
+     */
+    private PhenotypeAssociation conversion2ExperimentalEvidence( ExperimentalEvidenceValueObject evidenceValueObject ) {
+
+        // create the entity to populate
+        ExperimentalEvidence experimentalEvidence = ExperimentalEvidence.Factory.newInstance();
+
+        // populate common field to evidence
+        populatePhenotypeAssociation( experimentalEvidence, evidenceValueObject );
+
+        // we only need to create the experiment if its not already in the database
+        Collection<GenericExperiment> genericExperimentWithPubmed = this.phenotypeAssociationService
+                .findByPubmedID( evidenceValueObject.getPrimaryPublicationCitationValueObject().getPubmedAccession() );
+
+        GenericExperiment genericExperiment = null;
+
+        // for the list received we need to check each one to see if they are the same
+        for ( GenericExperiment genericExp : genericExperimentWithPubmed ) {
+
+            boolean sameFound = true;
+
+            HashSet<String> relevantPublication = new HashSet<String>();
+
+            for ( CitationValueObject relevantPubli : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
+
+                relevantPublication.add( relevantPubli.getPubmedAccession() );
+            }
+
+            for ( BibliographicReference bilbi : genericExp.getOtherRelevantPublications() ) {
+
+                // same relevant pubmed
+                if ( !relevantPublication.contains( bilbi.getPubAccession().getAccession() ) ) {
+                    sameFound = false;
+                }
+            }
+
+            // list of all values for a characteristic
+            Collection<String> values = new HashSet<String>();
+
+            for ( CharacteristicValueObject characteristic : evidenceValueObject.getExperimentCharacteristics() ) {
+                values.add( characteristic.getValue() );
+            }
+
+            if ( values.size() != genericExp.getCharacteristics().size() ) {
+                sameFound = false;
+            } else {
+
+                for ( Characteristic cha : genericExp.getCharacteristics() ) {
+                    if ( !values.contains( cha.getValue() ) ) {
+                        sameFound = false;
+                    }
+                }
+            }
+
+            // the Investigation is already present in the database so we can reuse it
+            if ( sameFound ) {
+                System.out
+                        .println( "Investigation For the ExperimentalEvidence found in the database and will be reuse" );
+                genericExperiment = genericExp;
+            }
+        }
+
+        // we didn't find the experiment in the database
+        if ( genericExperiment == null ) {
+
+            // create the GenericExperiment
+            genericExperiment = GenericExperiment.Factory.newInstance();
+
+            // find all pubmed id from the value object
+            String primaryPubmedId = evidenceValueObject.getPrimaryPublicationCitationValueObject()
+                    .getPubmedAccession();
+
+            Collection<String> relevantPubmedId = new HashSet<String>();
+
+            for ( CitationValueObject citationValueObject : evidenceValueObject.getRelevantPublicationsValueObjects() ) {
+
+                relevantPubmedId.add( citationValueObject.getPubmedAccession() );
+            }
+
+            // creates or find those Bibliographic Reference and add them to the GenericExperiment
+            genericExperiment.setPrimaryPublication( findOrCreateBibliographicReference( primaryPubmedId ) );
+            genericExperiment.setOtherRelevantPublications( findOrCreateBibliographicReference( relevantPubmedId ) );
+
+            // characteristics for an experiment
+            Collection<Characteristic> characteristics = new HashSet<Characteristic>();
+
+            for ( CharacteristicValueObject chaValueObject : evidenceValueObject.getExperimentCharacteristics() ) {
+
+                VocabCharacteristic experimentCha = VocabCharacteristic.Factory.newInstance();
+
+                experimentCha.setValue( chaValueObject.getValue() );
+                experimentCha.setCategory( chaValueObject.getCategory() );
+                experimentCha.setValueUri( chaValueObject.getValueUri() );
+                experimentCha.setCategoryUri( chaValueObject.getCategoryUri() );
+
+                characteristics.add( experimentCha );
+            }
+
+            genericExperiment.getCharacteristics().addAll( characteristics );
+            this.phenotypeAssociationService.create( genericExperiment );
+        }
+
+        experimentalEvidence.setExperiment( genericExperiment );
+        return experimentalEvidence;
+    }
+
+    /**
+     * Populate the phenotypes for an PhenotypeAssociation using an EvidenceValueObject
+     * 
+     * @param phe The phenotype association (parent class of an evidence) we are interested in populating
+     * @param evidenceValueObject the value object representing a phenotype
+     */
+    private void populatePheAssoPhenotypes( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+        // here lets add the phenotypes
+        Collection<Characteristic> myPhenotypes = new HashSet<Characteristic>();
+
+        for ( CharacteristicValueObject phenotype : evidenceValueObject.getPhenotypes() ) {
+
+            VocabCharacteristic myPhenotype = VocabCharacteristic.Factory.newInstance();
+
+            OntologyTerm ontologyTerm = this.ontologyService.getTerm( phenotype.getValueUri() );
+
+            if ( ontologyTerm == null ) {
+                throw new EntityNotFoundException( "Could not locate ontology term with uri: "
+                        + phenotype.getValueUri() );
+            }
+
+            myPhenotype.setValueUri( ontologyTerm.getUri() );
+            myPhenotype.setValue( ontologyTerm.getLabel() );
+            myPhenotype.setCategory( PhenotypeAssociationConstants.PHENOTYPE );
+            myPhenotype.setCategoryUri( PhenotypeAssociationConstants.PHENOTYPE_CATEGORY_URI );
+
+            myPhenotypes.add( myPhenotype );
+        }
+
+        phe.getPhenotypes().addAll( myPhenotypes );
+    }
+
+    /**
+     * @param phe
+     * @param evidenceValueObject
+     */
+    private void populateEvidenceSource( PhenotypeAssociation phe, EvidenceValueObject evidenceValueObject ) {
+        DatabaseEntryValueObject databaseEntryValueObject = evidenceValueObject.getEvidenceSource();
+
+        // find the correct database
+        ExternalDatabase externalDatabase = this.externalDatabaseService.find( databaseEntryValueObject
+                .getExternalDatabase().getName() );
+
+        if ( externalDatabase == null ) {
+            throw new EntityNotFoundException( "Could not locate External Database: "
+                    + databaseEntryValueObject.getExternalDatabase().getName() );
+        }
+
+        DatabaseEntry databaseEntry = DatabaseEntry.Factory.newInstance( externalDatabase );
+        databaseEntry.setAccession( databaseEntryValueObject.getAccession() );
+
+        databaseEntry = this.databaseEntryDao.create( databaseEntry );
+
+        phe.setEvidenceSource( databaseEntry );
+    }
+
     /** calls findOrCreateBibliographicReference for a Collection */
     private Collection<BibliographicReference> findOrCreateBibliographicReference( Collection<String> pubMedIds ) {
 
         Collection<BibliographicReference> bibliographicReferences = null;
 
-        if ( pubMedIds != null && pubMedIds.size() != 0 ) {
+        if ( pubMedIds != null && !pubMedIds.isEmpty() ) {
 
             bibliographicReferences = new HashSet<BibliographicReference>();
 
@@ -525,27 +542,9 @@ public class PhenotypeAssoManagerServiceHelper {
 
             // this will create or find the BibliographicReference
             this.persisterHelper.persist( bibRef );
-
         }
 
         return bibRef;
-    }
-
-    /** Ontology term to CharacteristicValueObject */
-    public Set<CharacteristicValueObject> ontology2CharacteristicValueObject( Collection<OntologyTerm> ontologyTerms,
-            String ontologyUsed ) {
-
-        Set<CharacteristicValueObject> characteristicsVO = new HashSet<CharacteristicValueObject>();
-
-        for ( OntologyTerm ontologyTerm : ontologyTerms ) {
-
-            CharacteristicValueObject phenotype = new CharacteristicValueObject( ontologyTerm.getLabel(),
-                    ontologyTerm.getUri() );
-            phenotype.setOntologyUsed( ontologyUsed );
-            characteristicsVO.add( phenotype );
-
-        }
-        return characteristicsVO;
     }
 
 }
