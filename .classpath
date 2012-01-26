@@ -174,7 +174,7 @@
 			<attribute name="javadoc_location" value="http://www.representqueens.com/spark/release/spark-1.2/docs/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4.jar"/>
+	<classpathentry kind="var" path="M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4.jar" sourcepath="/M2_REPO/com/ibm/icu/icu4j/3.4.4/icu4j-3.4.4-sources.jar"/>
 	<classpathentry kind="var" path="M2_REPO/net/sf/json-lib/json-lib/2.2/json-lib-2.2-jdk15.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-orm/3.0.5.RELEASE/spring-orm-3.0.5.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-orm/3.0.5.RELEASE/spring-orm-3.0.5.RELEASE-sources.jar">
 		<attributes>
@@ -282,7 +282,7 @@
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.0.RC1/javadoc-api/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-beans/3.0.5.RELEASE/spring-beans-3.0.5.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/">
+	<classpathentry kind="var" path="M2_REPO/org/springframework/spring-beans/3.0.5.RELEASE/spring-beans-3.0.5.RELEASE.jar" sourcepath="/M2_REPO/org/springframework/spring-beans/3.0.5.RELEASE/spring-beans-3.0.5.RELEASE-sources.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="http://static.springsource.org/spring/docs/3.0.0.RC1/javadoc-api/"/>
 		</attributes>
@@ -327,13 +327,11 @@
 	<classpathentry kind="var" path="M2_REPO/xerces/xmlParserAPIs/2.6.2/xmlParserAPIs-2.6.2.jar"/>
 	<classpathentry kind="var" path="M2_REPO/wsdl4j/wsdl4j/1.6.1/wsdl4j-1.6.1.jar"/>
 	<classpathentry kind="var" path="M2_REPO/org/apache/poi/poi/3.5-beta6/poi-3.5-beta6.jar"/>
-	<classpathentry kind="var" path="M2_REPO/umls/mmtxProjectJS/2.4C/mmtxProjectJS-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mms/1.0/mms-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mmsObjects/1.0/mmsObjects-1.0.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/mmtx/2.4C/mmtx-2.4C.jar"/>
 	<classpathentry kind="var" path="M2_REPO/umls/kss-api-strip/5.0/kss-api-strip-5.0.jar"/>
-	<classpathentry kind="var" path="M2_REPO/umls/mmtxProject/2.4C/mmtxProject-2.4C.jar"/>
-	<classpathentry kind="var" path="M2_REPO/chibi/GEOMMTx/1.1-SNAPSHOT/GEOMMTx-1.1-SNAPSHOT.jar"/>
+	<classpathentry kind="var" path="M2_REPO/umls/mmtxProject/2.4D/mmtxProject-2.4D.jar"/>
 	<classpathentry kind="var" path="M2_REPO/RoSuDA/JRIEngine/0.5-0/JRIEngine-0.5-0.jar" sourcepath="/JAR_SRC/JRI/java/src">
 		<attributes>
 			<attribute name="javadoc_location" value="http://www.rforge.net/org/docs/"/>
@@ -362,10 +360,11 @@
 			<attribute name="owner.project.facets" value="jst.web"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk1.6.0_27">
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jre6">
 		<attributes>
 			<attribute name="owner.project.facets" value="java"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/GEOMMTx"/>
 	<classpathentry kind="output" path="build/Gemma/WEB-INF/classes"/>
 </classpath>

@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<name>Gemma</name>
 	<groupId>gemma</groupId>
@@ -273,7 +274,7 @@
 			<artifactId>aspectjweaver</artifactId>
 			<version>1.6.6</version>
 			<type>jar</type>
-			<scope>run</scope>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -660,7 +661,8 @@
 			</build>
 		</profile>
 		<profile>
-			<!-- For deployment where host is local (and ssh isn't available for builder, e.g. CI) -->
+			<!-- For deployment where host is local (and ssh isn't available for builder, 
+				e.g. CI) -->
 			<id>local-deploy</id>
 			<activation>
 				<activeByDefault>false</activeByDefault>
@@ -691,18 +693,18 @@
 		<site>
 			<id>website</id>
 			<url>
-				scp://katz.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
+				scp://krusty.pavlab.chibi.ubc.ca:/space/gemmaData/gemma-devsite
 			</url>
 		</site>
 		<repository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scp://katz.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>scp://krusty.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</repository>
 		<snapshotRepository>
 			<id>repo</id>
 			<name>Pavlab</name>
-			<url>scp://katz.pavlab.chibi.ubc.ca:/space/maven2</url>
+			<url>scp://krusty.pavlab.chibi.ubc.ca:/space/maven2</url>
 		</snapshotRepository>
 	</distributionManagement>
 
