@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.gemma.association.phenotype.PhenotypeExceptions.EntityNotFoundException;
@@ -61,7 +61,7 @@ import ubic.gemma.ontology.OntologyService;
 import ubic.gemma.persistence.Persister;
 
 /** This helper class is responsible to convert all types of EvidenceValueObjects to their corresponding entity */
-@Component
+@Service
 public class PhenotypeAssoManagerServiceHelper {
 
     @Autowired

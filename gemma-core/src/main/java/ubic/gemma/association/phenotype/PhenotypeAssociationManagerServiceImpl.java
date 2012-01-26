@@ -37,7 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import ubic.basecode.ontology.model.OntologyTerm;
 import ubic.basecode.ontology.providers.DiseaseOntologyService;
@@ -74,7 +74,7 @@ import ubic.gemma.search.SearchService;
 import ubic.gemma.search.SearchSettings;
 
 /** High Level Service used to add Candidate Gene Management System capabilities */
-@Component
+@Service
 public class PhenotypeAssociationManagerServiceImpl implements PhenotypeAssociationManagerService, InitializingBean {
 
     @Autowired
