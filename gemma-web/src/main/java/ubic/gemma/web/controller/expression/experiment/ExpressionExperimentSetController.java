@@ -34,9 +34,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 
 import ubic.gemma.analysis.report.ExpressionExperimentReportService;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentValueObject;
 import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;
 import ubic.gemma.expression.experiment.SessionBoundExpressionExperimentSetValueObject;
 import ubic.gemma.web.controller.BaseController;

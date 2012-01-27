@@ -36,10 +36,10 @@ import org.springframework.stereotype.Service;
 
 import ubic.basecode.dataStructure.CountingMap;
 import ubic.basecode.ontology.model.OntologyTerm;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.loader.protein.ProteinLinkOutFormatter;
 import ubic.gemma.model.analysis.Analysis;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressedGenesDetails;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionCollectionValueObject;
 import ubic.gemma.model.analysis.expression.coexpression.CoexpressionValueObject;

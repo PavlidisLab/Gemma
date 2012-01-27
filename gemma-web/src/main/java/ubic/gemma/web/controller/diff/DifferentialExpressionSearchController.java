@@ -37,9 +37,9 @@ import ubic.gemma.analysis.expression.diff.DifferentialExpressionMetaAnalysisVal
 import ubic.gemma.analysis.expression.diff.DifferentialExpressionValueObject;
 import ubic.gemma.analysis.expression.diff.GeneDifferentialExpressionService;
 import ubic.gemma.analysis.util.ExperimentalDesignUtils;
+import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.genome.gene.GeneSetValueObject;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.FactorAssociatedAnalysisResultSet;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysis;
 import ubic.gemma.model.analysis.expression.diff.DifferentialExpressionAnalysisService;

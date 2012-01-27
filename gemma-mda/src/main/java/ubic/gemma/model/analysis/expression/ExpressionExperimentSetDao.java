@@ -47,12 +47,12 @@ public interface ExpressionExperimentSetDao extends BaseDao<ExpressionExperiment
      * </p>
      */
     public java.util.Collection<ExpressionAnalysis> getAnalyses(
-            ubic.gemma.model.analysis.expression.ExpressionExperimentSet expressionExperimentSet );
+            ExpressionExperimentSet expressionExperimentSet );
 
     /**
      * @param id
      * @return
-     * @see ExpressionExperimentSetService.getExperimentsInSet
+     * @see ubic.gemma.expression.experiment.ExpressionExperimentSetService.getExperimentsInSet
      */
     public Collection<ExpressionExperiment> getExperimentsInSet( Long id );
 

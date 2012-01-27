@@ -16,13 +16,14 @@
  * limitations under the License.
  *
  */
-package ubic.gemma.model.analysis.expression;
+package ubic.gemma.expression.experiment;
 
 import java.util.Collection;
 
 import org.springframework.security.access.annotation.Secured;
 
-import ubic.gemma.expression.experiment.DatabaseBackedExpressionExperimentSetValueObject;
+import ubic.gemma.model.analysis.expression.ExpressionAnalysis;
+import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 import ubic.gemma.model.expression.experiment.ExpressionExperiment;
 import ubic.gemma.model.expression.experiment.ExpressionExperimentSetValueObject;

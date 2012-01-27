@@ -15,7 +15,8 @@
 package ubic.gemma.analysis.expression.coexpression;
 
 import java.util.Collection;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
+
+import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.coexpression.GeneCoexpressionAnalysisService;
 import ubic.gemma.model.association.coexpression.Gene2GeneCoexpressionService;
 import ubic.gemma.model.common.protocol.ProtocolService;

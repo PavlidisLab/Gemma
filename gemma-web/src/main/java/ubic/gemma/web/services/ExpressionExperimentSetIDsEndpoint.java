@@ -28,8 +28,8 @@ import org.apache.commons.logging.LogFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import ubic.gemma.expression.experiment.ExpressionExperimentSetService;
 import ubic.gemma.model.analysis.expression.ExpressionExperimentSet;
-import ubic.gemma.model.analysis.expression.ExpressionExperimentSetService;
 import ubic.gemma.model.expression.experiment.BioAssaySet;
 
 /**
@@ -73,7 +73,7 @@ public class ExpressionExperimentSetIDsEndpoint extends AbstractGemmaEndpoint {
 
         setLocalName( LOCAL_NAME );
 
-        Collection<ExpressionExperimentSet> eesCol = expressionExperimentSetService.loadAllMultiExperimentSets();
+        Collection<ExpressionExperimentSet> eesCol = expressionExperimentSetService.loadAllExperimentSetsWithTaxon();
 
         // retain expression experiment sets that have a name assigned
         Collection<ExpressionExperimentSet> eesColToUse = new HashSet<ExpressionExperimentSet>();
