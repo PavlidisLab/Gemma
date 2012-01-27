@@ -961,7 +961,7 @@ Gemma.GeneMembersSaveGrid = Ext.extend(Gemma.GeneMembersGrid, {
 		
 
 		GeneSetController.addSessionGroups(
-				[editedGroup], // returns datasets added
+				[editedGroup], true, // returns datasets added
 				function(geneSets) {
 					// should be at least one datasetSet
 					if (geneSets === null || geneSets.length === 0) {

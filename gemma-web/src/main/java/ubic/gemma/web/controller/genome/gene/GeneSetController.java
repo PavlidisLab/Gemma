@@ -132,9 +132,10 @@ public class GeneSetController {
      * sets the groups taxon value and reference
      * 
      * @param geneSetVo value object constructed on the client.
+     * @param modificationBased whether the set was modified by the user
      * @return collection of added session groups (with updated reference.id etc)
      */
-    public Collection<SessionBoundGeneSetValueObject> addSessionGroups( Collection<SessionBoundGeneSetValueObject> geneSetVos ) {
+    public Collection<SessionBoundGeneSetValueObject> addSessionGroups( Collection<SessionBoundGeneSetValueObject> geneSetVos, Boolean modificationBased ) {
 
         Collection<SessionBoundGeneSetValueObject> results = new HashSet<SessionBoundGeneSetValueObject>();
         
@@ -143,31 +144,7 @@ public class GeneSetController {
         for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
                         
             // sets the reference and stores the group
-            results.add( sessionListManager.addGeneSet( gsvo ) );
-
-        }
-
-        return results;
-    }
-
-    /**
-     * AJAX adds these gene groups to the session-bound list for groups that have been modified by the user
-     * 
-     * sets the groups taxon value and reference.id
-     * 
-     * @param geneSetVo value object constructed on the client.
-     * @return collection of added session groups (with updated reference.id etc)
-     */
-    public Collection<SessionBoundGeneSetValueObject> addNonModificationBasedSessionBoundGroups( Collection<SessionBoundGeneSetValueObject> geneSetVos ) {
-
-        Collection<SessionBoundGeneSetValueObject> results = new HashSet<SessionBoundGeneSetValueObject>();
-
-        geneSetVos = setSessionGroupTaxonValues( geneSetVos );
-        
-        for ( SessionBoundGeneSetValueObject gsvo : geneSetVos ) {
-
-            // sets the reference and stores the group
-            results.add( sessionListManager.addGeneSet( gsvo , false) );
+            results.add( sessionListManager.addGeneSet( gsvo , modificationBased ) );
 
         }
 
@@ -198,7 +175,7 @@ public class GeneSetController {
 
         result = create( result );
 
-        result.addAll( addSessionGroups( sessionResult ) );
+        result.addAll( addSessionGroups( sessionResult, true ) );
 
         return result;
     }

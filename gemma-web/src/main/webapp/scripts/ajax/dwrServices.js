@@ -537,12 +537,8 @@ ExpressionExperimentSetController.addUserAndSessionGroups = function(p0, callbac
 	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addUserAndSessionGroups', p0,
 			callback);
 }
-ExpressionExperimentSetController.addSessionGroups = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addSessionGroups', p0,
-			callback);
-}
-ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups = function(p0, callback) {
-	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addNonModificationBasedSessionBoundGroups', p0,
+ExpressionExperimentSetController.addSessionGroups = function(p0, p1, callback) {
+	dwr.engine._execute(ExpressionExperimentSetController._path, 'ExpressionExperimentSetController', 'addSessionGroups', p0, p1,
 			callback);
 }
 ExpressionExperimentSetController.updateUserAndSessionGroups = function(p0, callback) {
@@ -789,14 +785,11 @@ GeneSetController.updateUserAndSessionGroups = function(p0, callback) {
 GeneSetController.create = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'create', p0, callback);
 }
-GeneSetController.addSessionGroups = function(p0, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addSessionGroups', p0, callback);
+GeneSetController.addSessionGroups = function(p0, p1, callback) {
+	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addSessionGroups', p0, p1, callback);
 }
 GeneSetController.addUserAndSessionGroups = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addUserAndSessionGroups', p0, callback);
-}
-GeneSetController.addNonModificationBasedSessionBoundGroups = function(p0, callback) {
-	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'addNonModificationBasedSessionBoundGroups', p0, callback);
 }
 GeneSetController.remove = function(p0, callback) {
 	dwr.engine._execute(GeneSetController._path, 'GeneSetController', 'remove', p0, callback);

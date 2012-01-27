@@ -65,7 +65,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		var j;
 		if (geneGroupsToBindToSession.length !== 0) {
 			this.waitingForGeneSessionGroupBinding = true;
-			GeneSetController.addNonModificationBasedSessionBoundGroups(geneGroupsToBindToSession, function(geneSets) {
+			GeneSetController.addSessionGroups(geneGroupsToBindToSession, false, function(geneSets) {
 						// should be at least one geneset
 						if (geneSets === null || geneSets.length === 0) {
 							// TODO error message
@@ -98,7 +98,7 @@ Gemma.MetaHeatmapDataSelection = Ext.extend(Ext.Panel, {
 		}
 		if (datasetGroupsToBindToSession.length !== 0) {
 			this.waitingForDatasetSessionGroupBinding = true;
-			ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups(datasetGroupsToBindToSession,
+			ExpressionExperimentSetController.addSessionGroups(datasetGroupsToBindToSession, false,
 					function(datasetSets) {
 						// should be at least one datasetSet
 						if (datasetSets === null || datasetSets.length === 0) {

@@ -81,35 +81,17 @@ public class ExpressionExperimentSetController extends BaseController {
      * AJAX adds the Expression Experiment group to the session
      * 
      * @param eeSetVos value object constructed on the client.
+     * @param modificationBased whether the set was modified by the user
      * @return collection of added session groups (with updated reference.id etc)
      */
     public Collection<SessionBoundExpressionExperimentSetValueObject> addSessionGroups(
-            Collection<SessionBoundExpressionExperimentSetValueObject> eeSetVos ) {
+            Collection<SessionBoundExpressionExperimentSetValueObject> eeSetVos, Boolean modificationBased ) {
 
         Collection<SessionBoundExpressionExperimentSetValueObject> results = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
 
         for ( SessionBoundExpressionExperimentSetValueObject eesvo : eeSetVos ) {
 
-            results.add( sessionListManager.addExperimentSet( eesvo, true ) );
-        }
-
-        return results;
-    }
-
-    /**
-     * AJAX adds the Expression Experiment group to the session
-     * 
-     * @param eeSetVos value object constructed on the client.
-     * @return collection of added session groups (with updated reference.id etc)
-     */
-    public Collection<SessionBoundExpressionExperimentSetValueObject> addNonModificationBasedSessionBoundGroups(
-            Collection<SessionBoundExpressionExperimentSetValueObject> eeSetVos ) {
-
-        Collection<SessionBoundExpressionExperimentSetValueObject> results = new HashSet<SessionBoundExpressionExperimentSetValueObject>();
-
-        for ( SessionBoundExpressionExperimentSetValueObject eesvo : eeSetVos ) {
-
-            results.add( sessionListManager.addExperimentSet( eesvo, false ) );
+            results.add( sessionListManager.addExperimentSet( eesvo, modificationBased ) );
         }
 
         return results;
@@ -140,7 +122,7 @@ public class ExpressionExperimentSetController extends BaseController {
 
         result = create( result );
 
-        result.addAll( addSessionGroups( sessionResult ) );
+        result.addAll( addSessionGroups( sessionResult , true ) );
 
         return result;
 

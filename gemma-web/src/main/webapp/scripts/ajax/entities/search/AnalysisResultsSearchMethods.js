@@ -333,8 +333,7 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 		for (i = 0; i < geneSetValueObjects.length; i++) {
 			gsvo = geneSetValueObjects[i];
 			if (typeof gsvo !== 'undefined' && (gsvo.id === null || gsvo.id === -1)) {
-				// addNonModificationBasedSessionBoundGroups() takes a
-				// geneSetValueObject
+				// addSessionGroups() takes a geneSetValueObject (and boolean for isModificationBased)
 				var gsvoClone = Object.clone(gsvo);	
 				delete gsvoClone.memberIds;
 				// no memberIds field in a geneSetValueObject 
@@ -349,7 +348,7 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 		if (geneSetValObjsToRegister.length > 0) {
 			geneSetValueObjects = geneSetValObjsAlreadyRegistered;
 			this.waitingForGeneSessionGroupBinding = true;
-			GeneSetController.addNonModificationBasedSessionBoundGroups(geneSetValObjsToRegister, function(geneSets) {
+			GeneSetController.addSessionGroups(geneSetValObjsToRegister, false, function(geneSets) {
 						// should be at least one geneset
 						if (geneSets === null || geneSets.length === 0) {
 							// TODO error message
@@ -376,8 +375,8 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 			// if the group has a null value for id, then it hasn't been
 			// created as a group in the database nor session
 			if (typeof esvo !== 'undefined' && (esvo.id === -1 || esvo.id === null)) {
-				// addNonModificationBasedSessionBoundGroups() takes an
-				// experimentSetValueObject 	
+				// addSessionGroups() takes an experimentSetValueObject (and boolean for isModificationBased)
+
 				experimentGroupsToRegister.push(esvo);
 			} else {
 				experimentGroupsAlreadyRegistered.push(esvo);
@@ -386,7 +385,7 @@ Gemma.AnalysisResultsSearchMethods = Ext.extend(Ext.util.Observable, {
 		if (experimentGroupsToRegister.length > 0) {
 			experimentSetValueObjects = experimentGroupsAlreadyRegistered;
 			this.waitingForExperimentSessionGroupBinding = true;
-			ExpressionExperimentSetController.addNonModificationBasedSessionBoundGroups(experimentGroupsToRegister,
+			ExpressionExperimentSetController.addSessionGroups(experimentGroupsToRegister, false,
 					function(datasetSets) {
 						// should be at least one datasetSet
 						if (datasetSets === null || datasetSets.length === 0) {

@@ -149,7 +149,7 @@ Gemma.GeneSetPreview = Ext.extend(Gemma.SetPreview, {
 			editedGroup.publik = false;
 			
 			
-			GeneSetController.addSessionGroups([editedGroup], // returns datasets added
+			GeneSetController.addSessionGroups([editedGroup], true, // returns datasets added
  				function(geneSets){
 					// should be at least one datasetSet
 					if (geneSets === null || geneSets.length === 0) {

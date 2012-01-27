@@ -144,7 +144,7 @@ Gemma.ExperimentSetPreview = Ext.extend(Gemma.SetPreview, {
 			editedGroup.publik = false;
 			
 			
-			ExpressionExperimentSetController.addSessionGroups([editedGroup], // returns datasets added
+			ExpressionExperimentSetController.addSessionGroups([editedGroup], true, // returns datasets added
  				function(newValueObjects){
 				// should be at least one datasetSet
 				if (newValueObjects === null || newValueObjects.length === 0) {

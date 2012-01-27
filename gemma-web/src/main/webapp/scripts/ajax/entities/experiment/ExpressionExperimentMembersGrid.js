@@ -748,7 +748,7 @@ Gemma.ExpressionExperimentMembersGrid = Ext.extend(Ext.grid.GridPanel, {
 		
 
 		ExpressionExperimentSetController.addSessionGroups(
-				[editedGroup], // returns datasets added
+				[editedGroup], true, // returns datasets added
 				function(newValueObjects) {
 					// should be at least one datasetSet
 					if (newValueObjects === null || newValueObjects.length === 0) {
